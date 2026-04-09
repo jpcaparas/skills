@@ -1,0 +1,35 @@
+name: Validate Skills
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+
+      - name: Set Up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set Up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Validate Skill Structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          while IFS= read -r skill; do
+            echo "Validating ${skill}"
+            python3 "${skill}/scripts/validate.py" "${skill}"
+            python3 "${skill}/scripts/test_skill.py" "${skill}"
+          done < <(find skills -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/SKILL.md" ';' -print | sort)
+
+      - name: Check skills.sh Discovery
+        run: npx --yes skills add . --list

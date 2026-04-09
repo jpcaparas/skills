@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Advanced skill creator for mission-critical skills that need progressive disclosure, working examples, validation, and cross-harness portability. This version is repository-agnostic and path-aware: before scaffolding a new skill, it inspects the current repo and common global skill roots, recommends the most appropriate destination, and then scaffolds into that location.",
+  "references": [
+    "https://skills.sh",
+    "https://github.com/vercel-labs/skills",
+    "https://github.com/vercel-labs/agent-skills"
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "skill_name": "skill-creator-advanced",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "stripe-api-wrapper-smoke",
+      "prompt": "I need a skill that wraps the Stripe API for payment processing. Our SaaS app (built with Next.js) uses Stripe for subscriptions -- we have three plans (Starter at $19/mo, Pro at $49/mo, Enterprise at $199/mo). We use Checkout Sessions for new subscriptions and the Customer Portal for management. We also use Stripe Connect for our marketplace feature where sellers get payouts. I need the skill to cover: creating checkout sessions, managing subscriptions, handling webhooks, and Connect payouts. The API key is in STRIPE_SECRET_KEY.",
+      "expected_output": "A complete skill directory with SKILL.md using the api-wrapper blueprint, reference files for api.md (covering Checkout Sessions, Subscriptions, Connect endpoints), patterns.md (checkout flow, webhook handling, Connect payout flow), configuration.md (API key setup, webhook secret, SDK installation), and gotchas.md (idempotency keys, webhook signature verification, test vs live mode). Should include decision tree, quick reference table, and at least 3 verified gotchas.",
+      "assertions": [
+        {"text": "Generated skill has SKILL.md with valid YAML frontmatter including name and description", "type": "structural"},
+        {"text": "SKILL.md contains a decision tree that routes to different reference files", "type": "structural"},
+        {"text": "references/api.md exists with Checkout Session and Subscription endpoints", "type": "functional"},
+        {"text": "references/patterns.md exists with webhook handling pattern", "type": "functional"},
+        {"text": "references/gotchas.md exists with at least 3 entries", "type": "functional"},
+        {"text": "SKILL.md is under 500 lines", "type": "structural"}
+      ],
+      "tags": ["smoke", "api-wrapper"]
+    },
+    {
+      "id": 2,
+      "name": "improve-existing-gmail-skill",
+      "prompt": "I have an existing gws-gmail skill at ~/.claude/skills/gws-gmail/ but it's just a single SKILL.md with everything crammed in. It works but it's over 600 lines and doesn't use progressive disclosure at all. Can you restructure it for better progressive disclosure? I want the agent to only load what it needs -- if someone asks to send an email, it shouldn't have to read the entire search and filter documentation. Keep all the existing functionality but reorganize it.",
+      "expected_output": "Restructured skill with SKILL.md under 500 lines acting as a router with decision tree. Reference files split by function: send.md, read.md, search.md, filters.md, labels.md. Each reference file should be self-contained with its own examples and gotchas. The existing content should be preserved but reorganized, not rewritten from scratch.",
+      "assertions": [
+        {"text": "Reads the existing gws-gmail skill before making changes", "type": "disclosure"},
+        {"text": "Restructured SKILL.md is under 500 lines", "type": "structural"},
+        {"text": "Creates reference files for at least 3 distinct functions", "type": "structural"},
+        {"text": "SKILL.md contains a decision tree or routing mechanism", "type": "functional"},
+        {"text": "Does not delete or lose existing functionality", "type": "negative"}
+      ],
+      "tags": ["edge", "progressive-docs"]
+    },
+    {
+      "id": 3,
+      "name": "reject-simple-hello-world",
+      "prompt": "hey can you make me a quick skill that just prints hello world when I ask for it? nothing fancy, just a simple one-liner",
+      "expected_output": "The skill-creator-advanced should recognize this is too simple for its capabilities and suggest using the basic skill-creator instead, or just create a minimal skill directly without the full advanced workflow. It should NOT run through the full 7-phase process for something this trivial.",
+      "assertions": [
+        {"text": "Does not execute the full blueprint/research/architecture/verify pipeline for a trivial skill", "type": "negative"},
+        {"text": "Either redirects to skill-creator or creates something minimal without overhead", "type": "functional"}
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "progressive-docs-aws-services",
+      "prompt": "I use about 20 AWS services regularly and I want a skill that covers all of them so Claude can help me with any of them. The services are: EC2, S3, Lambda, DynamoDB, RDS, ECS, EKS, CloudFront, Route 53, SQS, SNS, API Gateway, CloudWatch, IAM, VPC, CloudFormation, CodePipeline, Secrets Manager, Systems Manager, and Step Functions. Each service needs its own reference docs with common operations, gotchas, and CLI commands. I use the aws CLI v2 and boto3 for Python.",
+      "expected_output": "Should use the progressive-docs blueprint. SKILL.md should have decision trees organized by task (compute, storage, networking, security, messaging, CI/CD, observability). Each service gets a reference directory with the 5-file structure or a flat file depending on complexity. Cross-references between related services. Shared conventions file for aws CLI auth and boto3 setup. May recommend splitting into a skill family if the total content is too large for a single skill.",
+      "assertions": [
+        {"text": "Uses progressive-docs blueprint, not api-wrapper", "type": "disclosure"},
+        {"text": "SKILL.md contains decision trees organized by task category", "type": "structural"},
+        {"text": "Creates reference files for the major services", "type": "functional"},
+        {"text": "Includes a shared conventions file for AWS CLI auth and boto3", "type": "functional"},
+        {"text": "SKILL.md stays under 500 lines despite covering 20 services", "type": "structural"}
+      ],
+      "tags": ["disclosure", "progressive-docs"]
+    },
+    {
+      "id": 5,
+      "name": "github-api-full-coverage",
+      "prompt": "I need a skill that wraps the GitHub API -- specifically issues, pull requests, repositories, and GitHub Actions. We use the REST API v3 (not GraphQL) with a personal access token stored in GITHUB_TOKEN. Our workflow: create issues from bug reports, auto-label PRs based on changed files, manage repo settings (branch protection, webhooks), and trigger/monitor GitHub Actions workflows. We have about 50 repos in our org (acme-corp). Show me working curl examples for each major operation.",
+      "expected_output": "A complete api-wrapper skill with reference files for each domain: issues.md, pull-requests.md, repositories.md, actions.md. Working curl examples with correct endpoint paths, auth headers, and request bodies. Pagination handling (GitHub uses Link header pagination). Rate limit documentation (5000 req/hour for authenticated). Gotchas about preview API headers, pagination token expiry, and Actions API quirks.",
+      "assertions": [
+        {"text": "Uses api-wrapper blueprint", "type": "structural"},
+        {"text": "All curl examples include -H 'Authorization: Bearer $GITHUB_TOKEN'", "type": "verification"},
+        {"text": "Pagination section covers GitHub's Link header format", "type": "functional"},
+        {"text": "References/api.md covers issues, PRs, repos, and Actions endpoints", "type": "functional"},
+        {"text": "Rate limit documentation mentions 5000 req/hour authenticated limit", "type": "functional"},
+        {"text": "Gotchas section mentions preview API headers (Accept: application/vnd.github+json)", "type": "functional"}
+      ],
+      "tags": ["smoke", "api-wrapper"]
+    },
+    {
+      "id": 6,
+      "name": "prefer-established-project-skill-root",
+      "prompt": "I am inside a git repo at /work/acme-app. The repo already has .agents/skills/release-notes/ and .agents/skills/pr-review/. I want a new skill for managing Sentry issue triage from the CLI. Figure out the best place to create it, then scaffold it.",
+      "expected_output": "The skill recommends creating the new skill under /work/acme-app/.agents/skills/<skill-name> before writing files, explains that the repo already keeps installable skills there, and then scaffolds the skill into that repo-local root.",
+      "assertions": [
+        {"text": "Recommends a destination before scaffolding", "type": "functional"},
+        {"text": "Chooses the established project-local .agents/skills root", "type": "functional"},
+        {"text": "Explains the recommendation using existing skill placement, not guesswork", "type": "verification"}
+      ],
+      "tags": ["placement", "edge"]
+    },
+    {
+      "id": 7,
+      "name": "prefer-established-global-root-when-no-project-root-exists",
+      "prompt": "I'm not working inside a repo right now. Most of my skills already live in ~/.codex/skills/ and that's where I keep my personal library. I want a new ffmpeg helper skill. Pick the destination automatically and scaffold it there unless I override you.",
+      "expected_output": "The skill recommends ~/.codex/skills/<skill-name>, explains that the user's established global skill library already lives there, and scaffolds into that global root without asking unnecessary follow-up questions.",
+      "assertions": [
+        {"text": "Recommends the established global root before scaffolding", "type": "functional"},
+        {"text": "Chooses ~/.codex/skills when it is the existing global library", "type": "functional"},
+        {"text": "Avoids asking an extra path question when the destination is already clear", "type": "negative"}
+      ],
+      "tags": ["placement", "smoke"]
+    }
+  ]
+}

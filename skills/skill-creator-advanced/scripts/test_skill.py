@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+"""
+test_skill.py — Lightweight skill testing (validation, not execution).
+
+Usage:
+    python3 test_skill.py <skill-path>
+
+Validates:
+    - evals/evals.json exists and parses
+    - Each eval has required fields
+    - Assertion format is correct
+    - Referenced files exist
+    - Cross-references in SKILL.md resolve
+
+Output:
+    Summary of checks with pass/fail counts.
+
+Exit codes:
+    0 = all checks pass
+    1 = one or more checks fail
+"""
+
+import json
+import os
+import re
+import sys
+
+
+def extract_file_references(content: str) -> list[str]:
+    """Extract file paths referenced in markdown content.
+
+    Skips paths inside fenced code blocks and paths containing
+    placeholders (e.g., {lang}, <skill-path>, X.md used as examples).
+    """
+    refs = []
+
+    # Strip fenced code blocks to avoid matching example paths
+    stripped = re.sub(r'```[\s\S]*?```', '', content)
+
+    # Patterns that indicate an illustrative/placeholder path
+    placeholder_re = re.compile(r'[{}<>]|/X\.md$|\s')
+
+    # Match backtick-quoted paths
+    for match in re.finditer(r'`((?:references|scripts|templates|assets|agents|evals)/[^`]+)`', stripped):
+        path = match.group(1)
+        if not placeholder_re.search(path):
+            refs.append(path)
+
+    # Match markdown links to local files
+    for match in re.finditer(r'\[.*?\]\(((?:references|scripts|templates|assets|agents|evals)/[^)]+)\)', stripped):
+        path = match.group(1)
+        if not placeholder_re.search(path):
+            refs.append(path)
+
+    return list(set(refs))
+
+
+def test_skill(skill_path: str) -> dict:
+    """Run all validation checks on a skill."""
+    skill_path = os.path.abspath(skill_path)
+    skill_name = os.path.basename(skill_path)
+
+    results = {
+        "skill_name": skill_name,
+        "tests_found": 0,
+        "tags": {},
+        "files_verified": {"passed": 0, "total": 0},
+        "cross_references": {"passed": 0, "total": 0},
+        "assertions_valid": {"passed": 0, "total": 0},
+        "errors": [],
+        "passed": True,
+    }
+
+    # --- Check evals/evals.json ---
+    evals_path = os.path.join(skill_path, "evals", "evals.json")
+    if not os.path.isfile(evals_path):
+        results["errors"].append("evals/evals.json not found")
+        results["passed"] = False
+        # Continue with other checks even if evals are missing
+    else:
+        try:
+            with open(evals_path, "r", encoding="utf-8") as f:
+                evals_data = json.load(f)
+        except json.JSONDecodeError as e:
+            results["errors"].append(f"evals/evals.json is not valid JSON: {e}")
+            results["passed"] = False
+            evals_data = None
+
+        if evals_data is not None:
+            evals_list = evals_data.get("evals", [])
+            if not isinstance(evals_list, list):
+                results["errors"].append("'evals' field is not an array")
+                results["passed"] = False
+                evals_list = []
+
+            results["tests_found"] = len(evals_list)
+
+            for i, ev in enumerate(evals_list):
+                eval_label = ev.get("name", f"eval-{i}")
+
+                # Check required fields
+                for field in ["id", "prompt", "expected_output"]:
+                    if field not in ev:
+                        results["errors"].append(
+                            f"Eval '{eval_label}': missing required field '{field}'"
+                        )
+                        results["passed"] = False
+
+                if "name" not in ev:
+                    results["errors"].append(
+                        f"Eval index {i}: missing 'name' field (recommended)"
+                    )
+                    # This is a warning, not a failure
+
+                # Track tags
+                tags = ev.get("tags", [])
+                for tag in tags:
+                    results["tags"][tag] = results["tags"].get(tag, 0) + 1
+
+                # Validate assertions
+                assertions = ev.get("assertions", [])
+                for j, assertion in enumerate(assertions):
+                    results["assertions_valid"]["total"] += 1
+                    if not isinstance(assertion, dict):
+                        results["errors"].append(
+                            f"Eval '{eval_label}': assertion {j} is not an object"
+                        )
+                        results["passed"] = False
+                        continue
+
+                    if "text" not in assertion:
+                        results["errors"].append(
+                            f"Eval '{eval_label}': assertion {j} missing 'text' field"
+                        )
+                        results["passed"] = False
+                    else:
+                        results["assertions_valid"]["passed"] += 1
+
+                    if "type" not in assertion:
+                        # type is recommended but not required for compatibility
+                        pass
+
+                    valid_types = {"functional", "structural", "disclosure", "negative", "verification"}
+                    atype = assertion.get("type", "")
+                    if atype and atype not in valid_types:
+                        results["errors"].append(
+                            f"Eval '{eval_label}': assertion {j} has unknown type '{atype}' "
+                            f"(expected: {', '.join(sorted(valid_types))})"
+                        )
+
+                # Check referenced files
+                files = ev.get("files", [])
+                for fpath in files:
+                    results["files_verified"]["total"] += 1
+                    full_path = os.path.join(skill_path, fpath)
+                    if os.path.exists(full_path):
+                        results["files_verified"]["passed"] += 1
+                    else:
+                        results["errors"].append(
+                            f"Eval '{eval_label}': referenced file not found: {fpath}"
+                        )
+                        results["passed"] = False
+
+    # --- Check cross-references in SKILL.md ---
+    skill_md_path = os.path.join(skill_path, "SKILL.md")
+    if os.path.isfile(skill_md_path):
+        with open(skill_md_path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        refs = extract_file_references(content)
+        for ref in refs:
+            results["cross_references"]["total"] += 1
+            ref_path = os.path.join(skill_path, ref)
+            if os.path.exists(ref_path):
+                results["cross_references"]["passed"] += 1
+            else:
+                results["errors"].append(f"Cross-reference not found: {ref}")
+                results["passed"] = False
+
+    # --- Also check cross-references in reference files ---
+    refs_dir = os.path.join(skill_path, "references")
+    if os.path.isdir(refs_dir):
+        for root, dirs, files in os.walk(refs_dir):
+            for fname in files:
+                if fname == ".gitkeep" or not fname.endswith(".md"):
+                    continue
+                fpath = os.path.join(root, fname)
+                try:
+                    with open(fpath, "r", encoding="utf-8") as f:
+                        ref_content = f.read()
+                    ref_refs = extract_file_references(ref_content)
+                    for ref in ref_refs:
+                        results["cross_references"]["total"] += 1
+                        ref_path = os.path.join(skill_path, ref)
+                        if os.path.exists(ref_path):
+                            results["cross_references"]["passed"] += 1
+                        else:
+                            results["errors"].append(
+                                f"Cross-reference in {os.path.relpath(fpath, skill_path)} "
+                                f"not found: {ref}"
+                            )
+                            results["passed"] = False
+                except (OSError, UnicodeDecodeError):
+                    pass
+
+    return results
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python3 test_skill.py <skill-path>", file=sys.stderr)
+        sys.exit(1)
+
+    skill_path = sys.argv[1]
+
+    if not os.path.isdir(skill_path):
+        print(f"Error: '{skill_path}' is not a directory", file=sys.stderr)
+        sys.exit(1)
+
+    results = test_skill(skill_path)
+
+    # Print summary
+    print(f"Skill: {results['skill_name']}")
+    print(f"Tests found: {results['tests_found']}")
+
+    if results["tags"]:
+        for tag, count in sorted(results["tags"].items()):
+            print(f"  {tag}: {count}")
+
+    fv = results["files_verified"]
+    print(f"Files verified: {fv['passed']}/{fv['total']}")
+
+    cr = results["cross_references"]
+    print(f"Cross-references checked: {cr['passed']}/{cr['total']}")
+
+    av = results["assertions_valid"]
+    print(f"Assertion format: {av['passed']}/{av['total']} valid")
+
+    if results["errors"]:
+        print(f"\nIssues ({len(results['errors'])}):")
+        for e in results["errors"]:
+            print(f"  - {e}")
+
+    print()
+    if results["passed"]:
+        print("PASS: all checks passed")
+    else:
+        print("FAIL: one or more checks failed")
+
+    sys.exit(0 if results["passed"] else 1)
+
+
+if __name__ == "__main__":
+    main()
