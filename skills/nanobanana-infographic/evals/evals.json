@@ -1,0 +1,126 @@
+{
+  "skill_name": "nanobanana-infographic",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-blog-brief-produces-three-default-variants",
+      "prompt": "Create a polished infographic for a blog post on AI incident response. Audience is senior engineering managers. The graphic needs to show Detect, Triage, and Contain, plus the numbers 15 min MTTD and 2x faster rollback. Keep it clean and executive-friendly.",
+      "expected_output": "Builds three default variants, defaults to 16:9, keeps visible text terse, and avoids asking unnecessary follow-up questions because the brief is already sufficient.",
+      "files": [
+        "templates/brief.json"
+      ],
+      "assertions": [
+        {
+          "text": "Response offers three distinct infographic directions by default",
+          "type": "functional"
+        },
+        {
+          "text": "Response defaults to aspect ratio 16:9",
+          "type": "functional"
+        },
+        {
+          "text": "Response keeps image text constraints short and explicit",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "prompt-pack"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-case-slide-override-respects-user-ratio",
+      "prompt": "I only want one version for a keynote slide. Make it 3:4, comparison-focused, and use our navy + teal palette. The topic is build vs buy for internal copilots.",
+      "expected_output": "Respects the 3:4 override and the single-variant request instead of forcing the default trio, while still applying the anti-noise rules.",
+      "assertions": [
+        {
+          "text": "Response respects an explicit aspect-ratio override",
+          "type": "functional"
+        },
+        {
+          "text": "Response respects an explicit request for one version",
+          "type": "functional"
+        },
+        {
+          "text": "Response still applies restrained palette and low-noise guidance",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "override"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-photorealistic-mascot-request-does-not-trigger-cleanly",
+      "prompt": "Make a photorealistic banana mascot in a hoodie for a launch meme. Add lots of neon lights and dramatic cinematic effects.",
+      "expected_output": "Recognizes that this skill is the wrong fit and does not force an infographic workflow onto a mascot illustration request.",
+      "assertions": [
+        {
+          "text": "Does not treat photorealistic mascot art as an infographic task",
+          "type": "negative"
+        },
+        {
+          "text": "Redirects away from the low-noise infographic workflow",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-api-question-loads-api-reference",
+      "prompt": "Show me the exact Gemini request body for rendering a 16:9 infographic image and tell me where the returned image bytes live in the response.",
+      "expected_output": "Loads the API reference, cites responseModalities and imageConfig, and points to inlineData in candidates content parts.",
+      "assertions": [
+        {
+          "text": "Agent reads references/api.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response mentions responseModalities and imageConfig",
+          "type": "functional"
+        },
+        {
+          "text": "Response explains that image bytes arrive in inlineData",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "api"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "current-nano-banana-2-model-id-stays-current",
+      "prompt": "We're only using Nano Banana 2 moving forward. What is the callable Gemini API model ID I should use today, and how is it different from the public name?",
+      "expected_output": "Uses Nano Banana 2 as the public-facing name and the current callable API model ID for code, without falling back to older image models.",
+      "assertions": [
+        {
+          "text": "Response uses the current Nano Banana 2 callable model ID",
+          "type": "functional"
+        },
+        {
+          "text": "Response distinguishes public naming from API model naming",
+          "type": "functional"
+        },
+        {
+          "text": "Does not recommend older image models by default",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "temporal",
+        "api"
+      ]
+    }
+  ]
+}

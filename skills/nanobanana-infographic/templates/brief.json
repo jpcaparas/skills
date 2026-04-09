@@ -1,0 +1,36 @@
+{
+  "topic": "AI cost discipline",
+  "core_message": "Three levers shrink inference spend without slowing product teams",
+  "audience": "C-suite presentation",
+  "context": "board pre-read slide",
+  "title": "Cut AI spend",
+  "must_include": [
+    "Model routing",
+    "Caching",
+    "Guardrails"
+  ],
+  "stats": [
+    "35% lower cost",
+    "48-hour rollout",
+    "No accuracy drop"
+  ],
+  "tone": [
+    "sleek",
+    "editorial",
+    "calm",
+    "high-trust"
+  ],
+  "palette": [
+    "#0F172A",
+    "#2563EB",
+    "#CBD5E1"
+  ],
+  "avoid": [
+    "busy dashboard",
+    "conference poster",
+    "cartoon mascot",
+    "neon gradients"
+  ],
+  "aspect_ratio": "16:9",
+  "variant_count": 3
+}

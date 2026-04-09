@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for creating sleek, rich, low-noise Nano Banana 2 infographics with a default three-variant review set, a default 16:9 aspect ratio, terse visible text, and live Gemini API verification scripts.",
+  "references": [
+    "https://ai.google.dev/api/generate-content",
+    "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/image-generation",
+    "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/gemini-image-generation-best-practices",
+    "https://docs.cloud.google.com/vertex-ai/generative-ai/docs/multimodal/gemini-image-generation-limitations",
+    "https://blog.google/innovation-and-ai/technology/ai/nano-banana-2/"
+  ]
+}

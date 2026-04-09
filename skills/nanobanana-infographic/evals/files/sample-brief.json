@@ -1,0 +1,31 @@
+{
+  "topic": "RAG failure modes",
+  "core_message": "Most production retrieval failures come from stale context, weak chunking, and poor routing",
+  "audience": "engineering blog",
+  "context": "supporting section visual",
+  "title": "RAG failure modes",
+  "must_include": [
+    "Stale context",
+    "Chunking",
+    "Routing"
+  ],
+  "stats": [
+    "42% fewer misses",
+    "3 root causes"
+  ],
+  "tone": [
+    "clean",
+    "analytical"
+  ],
+  "palette": [
+    "#111827",
+    "#2563EB",
+    "#E5E7EB"
+  ],
+  "avoid": [
+    "busy collage",
+    "3D dashboard"
+  ],
+  "aspect_ratio": "16:9",
+  "variant_count": 3
+}
