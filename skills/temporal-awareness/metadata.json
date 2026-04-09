@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for grounding an agent session in real system time and timezone, classifying whether a prompt requires live verification, converting relative dates into absolute dates, and defending against stale-memory failures such as outdated model-family references.",
+  "references": [
+    "https://docs.python.org/3/library/datetime.html",
+    "https://docs.python.org/3/library/zoneinfo.html",
+    "https://help.openai.com/en/articles/11909943-gpt-5-in-chatgpt"
+  ]
+}

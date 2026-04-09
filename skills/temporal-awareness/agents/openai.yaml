@@ -1,0 +1,4 @@
+interface:
+  display_name: "temporal-awareness"
+  short_description: "Ground a session in real time and force live verification for volatile facts"
+  default_prompt: "Load the current date, time, timezone, and recency-risk posture before answering a time-sensitive question"

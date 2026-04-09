@@ -1,0 +1,233 @@
+{
+  "skill_name": "temporal-awareness",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bootstrap-current-date-smoke",
+      "prompt": "Before answering anything else, tell me what date and timezone this session is using right now.",
+      "expected_output": "Runs the temporal capture workflow, reports the current local and UTC context, and routes to references/bootstrap.md.",
+      "assertions": [
+        {
+          "text": "Uses scripts/capture_temporal_context.py to establish the session anchor",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/bootstrap.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "bootstrap"
+      ],
+      "files": [
+        "scripts/capture_temporal_context.py",
+        "references/bootstrap.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "latest-model-live-verification",
+      "prompt": "What is the latest OpenAI model for coding right now? Do not give me a stale answer.",
+      "expected_output": "Classifies the prompt as live-verification-required, captures the current date context, and insists on official live documentation instead of memory.",
+      "assertions": [
+        {
+          "text": "Treats the prompt as live-verification-required",
+          "type": "verification"
+        },
+        {
+          "text": "Does not answer from stale memory or assume an older model family",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "models"
+      ],
+      "files": [
+        "scripts/recency_guard.py",
+        "references/verification-patterns.md",
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "relative-date-normalization",
+      "prompt": "Compare what changed yesterday versus today, and be explicit about the dates you're using.",
+      "expected_output": "Converts yesterday and today into absolute dates in the active timezone before answering.",
+      "assertions": [
+        {
+          "text": "Converts relative dates into absolute dates before answering",
+          "type": "verification"
+        },
+        {
+          "text": "Mentions the timezone used for the conversion",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "relative-dates"
+      ],
+      "files": [
+        "references/verification-patterns.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "timezone-comparison-smoke",
+      "prompt": "It is Thursday night in Auckland. What date is it in New York right now?",
+      "expected_output": "Uses the system clock plus an extra-zone lookup, not a web search, to answer the cross-zone date question.",
+      "assertions": [
+        {
+          "text": "Uses scripts/capture_temporal_context.py with an extra zone",
+          "type": "functional"
+        },
+        {
+          "text": "Does not require live external verification for clock-only timezone math",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "timezone"
+      ],
+      "files": [
+        "scripts/capture_temporal_context.py",
+        "references/bootstrap.md"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "stable-historical-election-edge",
+      "prompt": "Who won the 2024 US presidential election?",
+      "expected_output": "Treats the question as a stable historical fact with an explicit year instead of forcing a current-state verification workflow.",
+      "assertions": [
+        {
+          "text": "Classifies the prompt as stable rather than live-verification-required",
+          "type": "verification"
+        },
+        {
+          "text": "Does not over-browse a stable historical query just because it mentions politics",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "historical"
+      ],
+      "files": [
+        "references/recency-triage.md",
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "timeless-technical-negative",
+      "prompt": "Explain the TCP three-way handshake.",
+      "expected_output": "Does not force temporal-awareness as the primary workflow because the request is timeless and not recency-sensitive.",
+      "assertions": [
+        {
+          "text": "Does not force temporal tooling onto a timeless explanation",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "disclosure-bootstrap-file",
+      "prompt": "Ground this session in the current clock before you answer anything else.",
+      "expected_output": "Routes directly to references/bootstrap.md and the capture script.",
+      "assertions": [
+        {
+          "text": "Routes to references/bootstrap.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "bootstrap"
+      ],
+      "files": [
+        "references/bootstrap.md",
+        "scripts/capture_temporal_context.py"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "disclosure-gpt4o-drift",
+      "prompt": "Why do some agents still talk about GPT-4o like it's the main current model family?",
+      "expected_output": "Routes to references/gotchas.md and explains model-family drift as a stale-memory problem that requires live verification.",
+      "assertions": [
+        {
+          "text": "Routes to references/gotchas.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Explains stale-memory model drift and the need for live verification",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "models"
+      ],
+      "files": [
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "live-price-verification",
+      "prompt": "What's Tesla stock price today?",
+      "expected_output": "Treats the prompt as live-verification-required and ties the answer to the captured local date.",
+      "assertions": [
+        {
+          "text": "Classifies the prompt as live-verification-required",
+          "type": "verification"
+        },
+        {
+          "text": "Mentions that rolling numeric facts must be verified live",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "market-data"
+      ],
+      "files": [
+        "references/recency-triage.md",
+        "references/verification-patterns.md"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "long-horizon-refresh",
+      "prompt": "This session started this morning and now it's after midnight. Do I need to refresh the date context before I send the final answer?",
+      "expected_output": "Routes to references/long-horizon.md and recommends rerunning the temporal capture before finalizing.",
+      "assertions": [
+        {
+          "text": "Routes to references/long-horizon.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Recommends refreshing the temporal anchor after a day boundary",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "edge",
+        "long-horizon"
+      ],
+      "files": [
+        "references/long-horizon.md",
+        "scripts/capture_temporal_context.py"
+      ]
+    }
+  ]
+}

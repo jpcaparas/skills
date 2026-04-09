@@ -26,6 +26,10 @@ Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quo
 
 Production-grade skill creator with progressive disclosure, validation, cross-harness guidance, and path-aware destination inference.
 
+### `temporal-awareness`
+
+Production skill for grounding a session in real system time and timezone, triaging whether a prompt needs live verification, converting relative dates into absolute dates, and avoiding stale-memory answers for models, prices, schedules, laws, and other volatile facts.
+
 ### `tweet-replicate`
 
 Production skill for deterministically rebuilding a public X/Twitter post into a rerenderable local build with `snapshot.json`, local assets, MP4 output, and a companion GIF capped under 24 MB.
