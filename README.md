@@ -26,6 +26,10 @@ Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quo
 
 Production-grade skill creator with progressive disclosure, validation, cross-harness guidance, and path-aware destination inference.
 
+### `tweet-replicate`
+
+Production skill for deterministically rebuilding a public X/Twitter post into a rerenderable local build with `snapshot.json`, local assets, MP4 output, and a companion GIF capped under 24 MB.
+
 ## Repository Layout
 
 Installable skills live one level under `skills/` so `npx skills add` and [skills.sh](https://skills.sh) can discover them without special handling.

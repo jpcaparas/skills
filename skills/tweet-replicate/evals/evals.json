@@ -1,0 +1,109 @@
+{
+  "skill_name": "tweet-replicate",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-render-public-status-mp4-and-gif",
+      "prompt": "Replicate this public X post as both an MP4 and a GIF, keep a rerenderable build folder, and default to saving under ./pieces unless I override it: https://x.com/kunchenguid/status/2041900381350117648",
+      "expected_output": "Load {{ skill:tweet-replicate }}, propose ./pieces as the default save root, run scripts/render_tweet_replica.py against the status URL, and leave a build folder with snapshot, local assets, MP4, and GIF.",
+      "assertions": [
+        {
+          "text": "Uses scripts/render_tweet_replica.py as the primary workflow",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves a snapshot.json or equivalent frozen build artefact",
+          "type": "verification"
+        },
+        {
+          "text": "Produces both an MP4 and a GIF output",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "video",
+        "gif"
+      ],
+      "files": [
+        "scripts/render_tweet_replica.py",
+        "templates/tweet_replica.html"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "smoke-explicit-save-root",
+      "prompt": "Replicate this public X post, but save the build under ./exports/social instead of the default path: https://x.com/aidenybai/status/2041909114872459554",
+      "expected_output": "Use the explicit destination instead of the default save root, while still generating the same build layout and both output formats.",
+      "assertions": [
+        {
+          "text": "Honors an explicit save destination when the user provides one",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "pathing"
+      ],
+      "files": [
+        "references/workflow.md",
+        "scripts/render_tweet_replica.py"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "rerender-from-snapshot",
+      "prompt": "The CSS is close. Re-render the tweet from ./tweet-build/snapshot.json so the counts do not change, and regenerate both the MP4 and the GIF.",
+      "expected_output": "Use the saved snapshot path as the source and avoid refetching the live tweet.",
+      "assertions": [
+        {
+          "text": "Chooses the snapshot-driven path instead of hitting the live URL again",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "snapshot"
+      ],
+      "files": [
+        "references/workflow.md",
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "negative-download-only",
+      "prompt": "Download the video from this tweet and nothing else: https://x.com/chatgpt21/status/2041958700236026310",
+      "expected_output": "Do not load {{ skill:tweet-replicate }} as the primary workflow. Route to a raw media downloader instead.",
+      "assertions": [
+        {
+          "text": "Rejects raw media download requests as out of scope for this skill",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "disclosure-call-bluff",
+      "prompt": "Make me a pixel-perfect clone of this tweet exactly as X would render it forever: https://x.com/BentoBoiNFT/status/2041936833102086518",
+      "expected_output": "Call out that exact browser-level parity is not guaranteed, then offer a deterministic frozen-state replica instead.",
+      "assertions": [
+        {
+          "text": "States the pixel-perfect limitation before proceeding",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "scope"
+      ],
+      "files": [
+        "SKILL.md"
+      ]
+    }
+  ]
+}
