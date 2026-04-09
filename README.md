@@ -14,9 +14,17 @@ npx skills add https://github.com/jpcaparas/skills
 
 ## Available Skills
 
+### `azure-devops-wiki-markdown`
+
+Production skill for Azure DevOps wiki Markdown covering wiki-only blocks, Mermaid-safe authoring, code-fence language identifiers, and surface-specific support differences across Wiki, PR, README, Widget, and Done fields.
+
 ### `markdown-new`
 
 Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
+
+### `nanobanana-infographic`
+
+Production skill for Nano Banana 2 infographic prompting and verification covering low-noise prompt variants, default `16:9` review sets, terse in-image copy rules, and live Gemini image API probes for executive and editorial visuals.
 
 ### `synthetic-search`
 
