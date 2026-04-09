@@ -1,0 +1,251 @@
+{
+  "skill_name": "markdown-new",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "single-page-conversion-smoke",
+      "prompt": "Use markdown.new to convert https://example.com into Markdown and show me the safest way to get JSON back instead of plain text.",
+      "expected_output": "Routes to the single-page conversion guidance, uses either GET with ?format=json or POST / with a JSON body, and points to references/url-conversion.md for the exact request patterns.",
+      "assertions": [
+        {
+          "text": "Mentions GET path-prefix conversion and the JSON mode for single-page conversion",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/url-conversion.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "url-conversion"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "blob-vs-raw-edge-case",
+      "prompt": "I tried markdown.new on a GitHub blob URL and got garbage HTML. What should I change?",
+      "expected_output": "Explains that GitHub blob URLs are page views, recommends switching to the raw.githubusercontent.com URL, and points to the relevant gotcha and file conversion guidance.",
+      "assertions": [
+        {
+          "text": "Explains the GitHub blob vs raw distinction",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/gotchas.md or references/file-conversion.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "file-conversion"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "crawl-disclosure",
+      "prompt": "Use markdown.new to crawl this docs section and give me one Markdown file I can download later. I also want to know how to poll the job status.",
+      "expected_output": "Routes to references/crawl.md, uses POST /crawl to start the job, explains the status endpoint, and mentions that default status output is combined Markdown while ?format=json returns structured records.",
+      "assertions": [
+        {
+          "text": "Routes to references/crawl.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Mentions both crawl start and crawl status endpoints",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "crawl"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "query-string-url-edge-case",
+      "prompt": "The source URL I need to convert already has query params and markdown.new keeps breaking when I stuff it into the path. What is the safer request shape?",
+      "expected_output": "Recommends POST / with a JSON body instead of GET path-prefix mode, explains that nested query strings are brittle, and routes to references/url-conversion.md plus references/gotchas.md.",
+      "assertions": [
+        {
+          "text": "Recommends POST / for URLs with their own query strings",
+          "type": "functional"
+        },
+        {
+          "text": "Surfaces the query-string gotcha",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "edge",
+        "url-conversion"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-local-markdown-editing",
+      "prompt": "Please clean up this local README.md and improve the Markdown style. Do not use any external services.",
+      "expected_output": "Does not trigger markdown.new because the task is local Markdown editing with no need for a public URL, file upload, crawl, or markdown.new-specific behavior.",
+      "assertions": [
+        {
+          "text": "Does not route to markdown.new for purely local Markdown editing",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "searched-python-docs-page",
+      "prompt": "I found https://docs.python.org/3/tutorial/index.html from a web search. Use markdown.new to convert it and tell me which response shape is safest if I need to inspect the title, method, token count, and content separately.",
+      "expected_output": "Routes to the URL conversion guidance, recommends JSON output, and treats the Python docs page as a clean public docs-page example that markdown.new handles well.",
+      "assertions": [
+        {
+          "text": "Routes to references/url-conversion.md for a searched docs page",
+          "type": "disclosure"
+        },
+        {
+          "text": "Recommends GET with ?format=json or POST / for structured output fields",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "searched-url",
+        "docs-page"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "searched-mdn-reference-page",
+      "prompt": "I found https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API in search results. Show me how to run it through markdown.new and what metadata fields I should expect back.",
+      "expected_output": "Uses markdown.new's single-page conversion flow, treats the MDN page as a handled public reference page, and mentions fields like success, url, title, content, method, duration_ms, and tokens when available.",
+      "assertions": [
+        {
+          "text": "Treats the MDN page as a standard URL conversion case",
+          "type": "functional"
+        },
+        {
+          "text": "Mentions that metadata fields beyond content are available in JSON mode",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "searched-url",
+        "docs-page"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "searched-public-pdf-file",
+      "prompt": "I found this public PDF in search results: https://ontheline.trincoll.edu/images/bookdown/sample-local-pdf.pdf. Use markdown.new on it and tell me whether to treat it as page conversion or file conversion.",
+      "expected_output": "Routes to the file conversion guidance, treats the PDF as a remote file URL, and prefers JSON output if the caller wants metadata plus content.",
+      "assertions": [
+        {
+          "text": "Routes to references/file-conversion.md for a searched PDF URL",
+          "type": "disclosure"
+        },
+        {
+          "text": "Treats a direct PDF URL as a file conversion case, not a normal HTML page",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "searched-url",
+        "file-conversion",
+        "pdf"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "searched-public-csv-file",
+      "prompt": "I found this CSV from a web search: https://web.stanford.edu/class/archive/cs/cs109/cs109.1166/stuff/titanic.csv. Show me the markdown.new path that should handle it best and what shape of result to expect.",
+      "expected_output": "Routes to file conversion guidance, treats the CSV as a remote file URL, and notes that tokens may be missing even when the conversion succeeds.",
+      "assertions": [
+        {
+          "text": "Routes to references/file-conversion.md for a searched CSV URL",
+          "type": "disclosure"
+        },
+        {
+          "text": "Mentions that some file conversions succeed without a tokens field",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "edge",
+        "searched-url",
+        "file-conversion",
+        "csv"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "searched-raw-github-markdown-file",
+      "prompt": "Search surfaced this raw GitHub file URL: https://raw.githubusercontent.com/aurule/json-kv/master/README.md. Use markdown.new on it and explain why this is better than a normal GitHub blob page.",
+      "expected_output": "Uses markdown.new file conversion or URL conversion successfully on the raw file URL and explicitly contrasts it with the bad blob-URL pattern.",
+      "assertions": [
+        {
+          "text": "Explains that raw GitHub URLs work better than blob URLs",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/file-conversion.md or references/gotchas.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "searched-url",
+        "file-conversion",
+        "github-raw"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "searched-large-react-reference-page",
+      "prompt": "I found https://react.dev/reference/react/useEffect from search. Use markdown.new if it makes sense, but tell me if the output is likely to be too large to hand straight to another agent.",
+      "expected_output": "Acknowledges that markdown.new can convert the page, but warns that large successful conversions can still be operationally awkward and may need trimming or a narrower URL.",
+      "assertions": [
+        {
+          "text": "Recognizes large successful conversions as a separate risk",
+          "type": "verification"
+        },
+        {
+          "text": "Routes to references/url-conversion.md and references/gotchas.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "searched-url",
+        "large-page"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "searched-huge-wikipedia-page",
+      "prompt": "A search result gave me https://en.wikipedia.org/wiki/Alan_Turing. If I run that through markdown.new, should I use the result directly or do something more careful?",
+      "expected_output": "Explains that the page is technically convertible but potentially enormous, recommends a more targeted URL or a summarization/slicing step, and treats this as a large-page gotcha rather than a hard failure.",
+      "assertions": [
+        {
+          "text": "Warns that a huge page can be a bad direct input even when conversion succeeds",
+          "type": "verification"
+        },
+        {
+          "text": "Does not present the Wikipedia page as a simple happy-path case without caveats",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "searched-url",
+        "large-page"
+      ]
+    }
+  ]
+}

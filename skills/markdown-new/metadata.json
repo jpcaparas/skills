@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for markdown.new, covering single-page URL conversion, remote file and upload conversion, crawl job handling, hosted editor pages, and live-tested edge cases verified on April 9, 2026.",
+  "references": [
+    "https://markdown.new/",
+    "https://markdown.new/file-to-markdown",
+    "https://markdown.new/crawl",
+    "https://markdown.new/markdown-editor",
+    "https://blog.cloudflare.com/markdown-for-agents/"
+  ]
+}

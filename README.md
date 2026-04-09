@@ -14,6 +14,10 @@ npx skills add https://github.com/jpcaparas/skills
 
 ## Available Skills
 
+### `markdown-new`
+
+Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
+
 ### `skill-creator-advanced`
 
 Production-grade skill creator with progressive disclosure, validation, cross-harness guidance, and path-aware destination inference.

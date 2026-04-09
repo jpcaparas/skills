@@ -1,0 +1,4 @@
+interface:
+  display_name: "markdown.new"
+  short_description: "Use markdown.new for URL-to-Markdown, file conversion, crawl jobs, and the hosted editor"
+  default_prompt: "Help me use markdown.new to convert a public URL or file into Markdown, or to crawl a docs section"
