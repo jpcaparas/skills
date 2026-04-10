@@ -1,0 +1,339 @@
+{
+  "version": 1,
+  "verified_on": "2026-04-10",
+  "verified_from": [
+    "https://code.claude.com/docs/en/hooks",
+    "https://code.claude.com/docs/en/hooks-guide",
+    "https://reading.sh/claude-code-hooks-a-bookmarkable-guide-to-git-automation-11b4516adc5d",
+    "https://reading.sh/claude-code-async-hooks-what-they-are-and-when-to-use-them-61b21cd71aad"
+  ],
+  "notes": [
+    "Official Claude Code docs are the source of truth.",
+    "The two reading.sh articles are secondary guidance for real-world patterns and async trade-offs.",
+    "Async is documented in the official hooks reference as of 2026-04-10.",
+    "Only command hooks support async execution."
+  ],
+  "hook_type_support": {
+    "all_four": [
+      "PermissionRequest",
+      "PostToolUse",
+      "PostToolUseFailure",
+      "PreToolUse",
+      "Stop",
+      "SubagentStop",
+      "TaskCompleted",
+      "TaskCreated",
+      "UserPromptSubmit"
+    ],
+    "command_http_only": [
+      "ConfigChange",
+      "CwdChanged",
+      "Elicitation",
+      "ElicitationResult",
+      "FileChanged",
+      "InstructionsLoaded",
+      "Notification",
+      "PermissionDenied",
+      "PostCompact",
+      "PreCompact",
+      "SessionEnd",
+      "StopFailure",
+      "SubagentStart",
+      "TeammateIdle",
+      "WorktreeCreate",
+      "WorktreeRemove"
+    ],
+    "command_only": [
+      "SessionStart"
+    ]
+  },
+  "events": [
+    {
+      "name": "SessionStart",
+      "script_name": "session-start.sh",
+      "description": "Runs when a session begins or resumes.",
+      "matcher_kind": "session start reason",
+      "matcher_examples": ["startup", "resume", "clear", "compact"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command"],
+      "async_guidance": "Use sync when you need context, environment, or bootstrap work before Claude continues."
+    },
+    {
+      "name": "InstructionsLoaded",
+      "script_name": "instructions-loaded.sh",
+      "description": "Runs when a CLAUDE.md file or .claude/rules markdown file is loaded into context.",
+      "matcher_kind": "instruction load reason",
+      "matcher_examples": ["session_start", "nested_traversal", "path_glob_match", "include", "compact"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Keep sync when you need to enforce policy or inject context. Use async only for passive audit work."
+    },
+    {
+      "name": "UserPromptSubmit",
+      "script_name": "user-prompt-submit.sh",
+      "description": "Runs when the user submits a prompt, before Claude processes it.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Usually keep sync because this event is most valuable as an input gate."
+    },
+    {
+      "name": "PreToolUse",
+      "script_name": "pre-tool-use.sh",
+      "description": "Runs before a tool call executes and can block it.",
+      "matcher_kind": "tool name",
+      "matcher_examples": ["Bash", "Edit|Write", "mcp__.*"],
+      "supports_matcher": true,
+      "supports_if": true,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Keep sync for safety or policy gates. Async is not useful when you need to block."
+    },
+    {
+      "name": "PermissionRequest",
+      "script_name": "permission-request.sh",
+      "description": "Runs when a permission dialog appears.",
+      "matcher_kind": "tool name",
+      "matcher_examples": ["ExitPlanMode", "Bash", "Write"],
+      "supports_matcher": true,
+      "supports_if": true,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Usually keep sync because the value of this event is the permission decision."
+    },
+    {
+      "name": "PermissionDenied",
+      "script_name": "permission-denied.sh",
+      "description": "Runs when a tool call is denied by the auto mode classifier.",
+      "matcher_kind": "tool name",
+      "matcher_examples": ["Bash", "Write", "mcp__.*"],
+      "supports_matcher": true,
+      "supports_if": true,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Keep sync when you want to suggest a retry or a deterministic recovery path."
+    },
+    {
+      "name": "PostToolUse",
+      "script_name": "post-tool-use.sh",
+      "description": "Runs after a tool call succeeds.",
+      "matcher_kind": "tool name",
+      "matcher_examples": ["Edit|Write", "Bash", "mcp__.*"],
+      "supports_matcher": true,
+      "supports_if": true,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "This is the strongest async candidate for formatters, targeted tests, notifications, and metrics."
+    },
+    {
+      "name": "PostToolUseFailure",
+      "script_name": "post-tool-use-failure.sh",
+      "description": "Runs after a tool call fails.",
+      "matcher_kind": "tool name",
+      "matcher_examples": ["Bash", "Edit|Write", "mcp__.*"],
+      "supports_matcher": true,
+      "supports_if": true,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Use async for alerts or logging. Keep sync when the failure handler must shape Claude's next move."
+    },
+    {
+      "name": "Notification",
+      "script_name": "notification.sh",
+      "description": "Runs when Claude Code sends a notification.",
+      "matcher_kind": "notification type",
+      "matcher_examples": ["permission_prompt", "idle_prompt", "auth_success", "elicitation_dialog"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Usually async because this event is mostly about side effects."
+    },
+    {
+      "name": "SubagentStart",
+      "script_name": "subagent-start.sh",
+      "description": "Runs when a subagent is spawned.",
+      "matcher_kind": "agent type",
+      "matcher_examples": ["Bash", "Explore", "Plan"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Often async for logging or external coordination. Keep sync only when startup must finish first."
+    },
+    {
+      "name": "SubagentStop",
+      "script_name": "subagent-stop.sh",
+      "description": "Runs when a subagent finishes.",
+      "matcher_kind": "agent type",
+      "matcher_examples": ["Bash", "Explore", "Plan"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Use sync for completion checks. Use async for logging or notifications."
+    },
+    {
+      "name": "TaskCreated",
+      "script_name": "task-created.sh",
+      "description": "Runs when a task is being created via TaskCreate.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Depends on whether the task creation needs a gate or only an audit trail."
+    },
+    {
+      "name": "TaskCompleted",
+      "script_name": "task-completed.sh",
+      "description": "Runs when a task is being marked as completed.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Depends on whether the completion check must gate or only report."
+    },
+    {
+      "name": "Stop",
+      "script_name": "stop.sh",
+      "description": "Runs when Claude finishes responding.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "async_guidance": "Keep sync for end-of-turn quality gates. Use async only for passive side effects like notifications."
+    },
+    {
+      "name": "StopFailure",
+      "script_name": "stop-failure.sh",
+      "description": "Runs when a turn ends because of an API error.",
+      "matcher_kind": "error type",
+      "matcher_examples": ["rate_limit", "authentication_failed", "billing_error", "server_error"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Often async because the main value is audit or alerting, and output is ignored."
+    },
+    {
+      "name": "TeammateIdle",
+      "script_name": "teammate-idle.sh",
+      "description": "Runs when an agent-team teammate is about to go idle.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Depends on whether you need a blocking intervention or only a notification."
+    },
+    {
+      "name": "ConfigChange",
+      "script_name": "config-change.sh",
+      "description": "Runs when a configuration file changes during a session.",
+      "matcher_kind": "configuration source",
+      "matcher_examples": ["user_settings", "project_settings", "local_settings", "policy_settings", "skills"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Use async for audit logs. Keep sync when a policy decision must block the change."
+    },
+    {
+      "name": "CwdChanged",
+      "script_name": "cwd-changed.sh",
+      "description": "Runs when the working directory changes.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Usually keep sync when the hook updates the environment before the next Bash command."
+    },
+    {
+      "name": "FileChanged",
+      "script_name": "file-changed.sh",
+      "description": "Runs when a watched file changes on disk.",
+      "matcher_kind": "watched filename",
+      "matcher_examples": [".envrc", ".env"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Keep sync when the file change must immediately refresh environment state."
+    },
+    {
+      "name": "WorktreeCreate",
+      "script_name": "worktree-create.sh",
+      "description": "Runs when a worktree is being created.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Usually sync because this event can replace the default worktree behavior."
+    },
+    {
+      "name": "WorktreeRemove",
+      "script_name": "worktree-remove.sh",
+      "description": "Runs when a worktree is being removed.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Often async for cleanup, unless the cleanup must complete before the worktree is considered gone."
+    },
+    {
+      "name": "PreCompact",
+      "script_name": "pre-compact.sh",
+      "description": "Runs before context compaction.",
+      "matcher_kind": "compaction trigger",
+      "matcher_examples": ["manual", "auto"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Usually sync because pre-compaction work often needs to finish before compaction proceeds."
+    },
+    {
+      "name": "PostCompact",
+      "script_name": "post-compact.sh",
+      "description": "Runs after context compaction completes.",
+      "matcher_kind": "compaction trigger",
+      "matcher_examples": ["manual", "auto"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Use async for passive logging. Keep sync only when the follow-up state must be ready immediately."
+    },
+    {
+      "name": "SessionEnd",
+      "script_name": "session-end.sh",
+      "description": "Runs when a session terminates.",
+      "matcher_kind": "session end reason",
+      "matcher_examples": ["clear", "resume", "logout", "prompt_input_exit", "bypass_permissions_disabled", "other"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Often async for cleanup or audit. Keep sync when shutdown work must finish first."
+    },
+    {
+      "name": "Elicitation",
+      "script_name": "elicitation.sh",
+      "description": "Runs when an MCP server requests user input during a tool call.",
+      "matcher_kind": "MCP server name",
+      "matcher_examples": ["github", "filesystem", "your-server-name"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Keep sync because the hook can accept, decline, or cancel the elicitation."
+    },
+    {
+      "name": "ElicitationResult",
+      "script_name": "elicitation-result.sh",
+      "description": "Runs after a user responds to an MCP elicitation, before the response is sent back.",
+      "matcher_kind": "MCP server name",
+      "matcher_examples": ["github", "filesystem", "your-server-name"],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": ["command", "http"],
+      "async_guidance": "Keep sync because the hook can rewrite or block the elicitation response."
+    }
+  ]
+}
+

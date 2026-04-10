@@ -1,0 +1,37 @@
+{
+  "settings_target": ".claude/settings.json",
+  "managed_root": ".claude/hooks/generated",
+  "mode": "additive",
+  "enabled_events": [
+    {
+      "name": "PreToolUse",
+      "matcher": "Bash|Edit|Write|MultiEdit",
+      "async": false,
+      "timeout": 30,
+      "if": "",
+      "notes": "Use this for hard policy and safety gates."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "Edit|Write|MultiEdit|Bash",
+      "async": true,
+      "timeout": 180,
+      "if": "",
+      "notes": "Use this for formatters, targeted tests, logging, or metrics."
+    },
+    {
+      "name": "Notification",
+      "matcher": "",
+      "async": true,
+      "timeout": 15,
+      "notes": "Use this for desktop or remote notifications."
+    },
+    {
+      "name": "Stop",
+      "async": false,
+      "timeout": 30,
+      "notes": "Use this when the project needs an end-of-turn quality gate."
+    }
+  ]
+}
+

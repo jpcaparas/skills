@@ -1,0 +1,80 @@
+{
+  "skill_name": "scaffold-cc-hooks",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-project-hooks-scaffold",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Claude Code hook setup yet. Audit the repo first, then scaffold project hooks with a generated hooks README and bash stubs for every current Claude Code hook event.",
+      "expected_output": "The response verifies the live official Claude Code hook docs first, audits the repo in detail, creates a deterministic managed hook scaffold, and wires only the chosen events into project settings.",
+      "files": ["templates/hook-plan.example.json"],
+      "assertions": [
+        {
+          "text": "Response verifies the live official hooks docs before scaffolding",
+          "type": "verification"
+        },
+        {
+          "text": "Response audits the project before deciding which events to enable",
+          "type": "functional"
+        },
+        {
+          "text": "Response creates one managed bash stub per current official hook event",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "hooks", "scaffold"]
+    },
+    {
+      "id": 2,
+      "name": "existing-hooks-additive-refresh",
+      "prompt": "This project already has .claude/settings.json and a few custom hook scripts. Add a managed scaffold for the missing official hook events, but keep the custom hooks unless they are inside the managed generated folder.",
+      "expected_output": "The response chooses additive mode, preserves non-managed hooks, and refreshes the managed layer only.",
+      "assertions": [
+        {
+          "text": "Response distinguishes managed hooks from non-managed hooks",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses additive mode for a partial refresh",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "merge", "repeat-run"]
+    },
+    {
+      "id": 3,
+      "name": "event-set-drift-detected",
+      "prompt": "Scaffold Claude Code hooks into this repo, but first confirm whether the live official docs added any new hook events since the baked-in manifest was written. If they did, update the scaffold inputs before generating the managed hook tree.",
+      "expected_output": "The response treats live official docs as the source of truth and refreshes the event manifest before scaffolding if the docs changed.",
+      "assertions": [
+        {
+          "text": "Response re-verifies the official docs on every real scaffold run",
+          "type": "verification"
+        },
+        {
+          "text": "Response does not trust the static manifest without live confirmation",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "docs-drift", "verification"]
+    },
+    {
+      "id": 4,
+      "name": "hooks-explanation-only",
+      "prompt": "Explain how I should structure Claude Code hooks in this project, but do not scaffold or edit anything yet.",
+      "expected_output": "The response explains the recommended structure and event strategy without generating or editing files.",
+      "assertions": [
+        {
+          "text": "Response can answer in design mode without scaffolding",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not force file creation when the user asked for explanation only",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "design-only"]
+    }
+  ]
+}
+

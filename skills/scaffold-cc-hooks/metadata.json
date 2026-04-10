@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Project-aware Claude Code hook scaffolder that verifies the live official hook docs, audits a target repository in detail, and then generates a deterministic bash-first hook scaffold with one managed script per current event, repeatable settings merges, and a generated hooks README for the target project.",
+  "references": [
+    "https://code.claude.com/docs/en/hooks",
+    "https://code.claude.com/docs/en/hooks-guide",
+    "https://reading.sh/claude-code-hooks-a-bookmarkable-guide-to-git-automation-11b4516adc5d",
+    "https://reading.sh/claude-code-async-hooks-what-they-are-and-when-to-use-them-61b21cd71aad"
+  ]
+}
+
