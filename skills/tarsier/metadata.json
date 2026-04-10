@@ -1,0 +1,11 @@
+{
+  "name": "tarsier",
+  "version": "1.0.0",
+  "description": "One-shot generator for a tarsier-on-a-bicycle SVG plus a padded 500x500 PNG and a markdown transcript.",
+  "category": "creative",
+  "tags": ["svg", "raster", "oneshot", "creative", "tarsier", "bicycle"],
+  "requires": {
+    "bins": ["python3", "rsvg-convert"]
+  },
+  "entrypoint": "SKILL.md"
+}

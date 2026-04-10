@@ -1,0 +1,95 @@
+{
+  "skill_name": "tarsier",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-basic-invocation",
+      "prompt": "/tarsier",
+      "expected_output": "A new folder named tarsier-<model>-<reasoning>-<NZST-timestamp> is created in the current working directory containing three files: <BASE>.svg (valid SVG with xmlns and viewBox, depicting a tarsier on a bicycle), <BASE>.png (500x500 PNG, non-empty), and <BASE>.md (markdown transcript with Date/Model/Reasoning/Prompt table and the SVG source fenced in a ```svg block).",
+      "assertions": [
+        {
+          "text": "Output folder name matches pattern tarsier-<model>-<reasoning>-<NZST-timestamp>",
+          "type": "structural"
+        },
+        {
+          "text": "Folder contains exactly three files with extensions .svg, .png, .md sharing the same base name",
+          "type": "structural"
+        },
+        {
+          "text": "SVG file is valid XML, contains xmlns=\"http://www.w3.org/2000/svg\" and a viewBox attribute",
+          "type": "functional"
+        },
+        {
+          "text": "PNG file is non-empty and decodes as a 500x500 raster",
+          "type": "functional"
+        },
+        {
+          "text": "Transcript uses the prompt verbatim: 'Generate an SVG of a tarsier riding a bicycle'",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke"]
+    },
+    {
+      "id": 2,
+      "name": "edge-unknown-model-metadata",
+      "prompt": "Invoke /tarsier in a harness that does not expose a model ID or reasoning level.",
+      "expected_output": "Output folder name falls back to tarsier-unknown-model-default-<NZST-timestamp>. All three files are still produced. The transcript's Model field reads 'unknown-model' and Reasoning reads 'default'.",
+      "assertions": [
+        {
+          "text": "Fallback base name uses unknown-model and default when harness metadata is absent",
+          "type": "structural"
+        },
+        {
+          "text": "All three output files are still produced despite missing metadata",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge"]
+    },
+    {
+      "id": 3,
+      "name": "negative-other-animal-request",
+      "prompt": "Draw me an SVG of a sloth on a unicycle.",
+      "expected_output": "The tarsier skill does NOT trigger. The request is for a different animal and a different vehicle, so the skill's frontmatter negative trigger ('Do not use for other animals, other vehicles, or arbitrary SVG generation') applies. The agent either refuses to use this skill or handles the request via a generic SVG generation path instead.",
+      "assertions": [
+        {
+          "text": "The tarsier skill is not invoked for sloth/unicycle requests",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "edge-missing-rsvg-convert",
+      "prompt": "Invoke /tarsier on a system where rsvg-convert is not installed on PATH.",
+      "expected_output": "The rasterize.py script detects the missing binary and exits with a non-zero code plus a clear installation hint ('brew install librsvg' / 'apt install librsvg2-bin'). The SVG and transcript may still be produced, but the PNG step fails loudly rather than silently writing a zero-byte file. The agent surfaces the error to the user.",
+      "assertions": [
+        {
+          "text": "rasterize.py exits non-zero and prints an installation hint when rsvg-convert is missing",
+          "type": "functional"
+        },
+        {
+          "text": "The failure is reported to the user, not swallowed",
+          "type": "verification"
+        }
+      ],
+      "tags": ["edge"]
+    },
+    {
+      "id": 5,
+      "name": "verification-static-prompt",
+      "prompt": "/tarsier but also make it cyberpunk and render it in the style of Studio Ghibli please",
+      "expected_output": "The skill ignores the extra creative guidance and uses the static prompt verbatim: 'Generate an SVG of a tarsier riding a bicycle'. The transcript records the static prompt, not the user's embellishment. The art itself may or may not reflect the embellishment — that is up to the model — but the recorded prompt never changes.",
+      "assertions": [
+        {
+          "text": "Transcript's Prompt field is 'Generate an SVG of a tarsier riding a bicycle' regardless of extra user instructions",
+          "type": "verification"
+        }
+      ],
+      "tags": ["edge", "verification"]
+    }
+  ]
+}
