@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Modern writing skill built as a broader successor to obra/the-elements-of-style. It keeps Strunk's durable clarity rules and adds progressive disclosure, staged revision passes, cadence repair, genericity cleanup, genre routing, and bundled style families for technical, analytical, editorial, reflective, and conversion writing.",
+  "references": [
+    "https://github.com/obra/the-elements-of-style",
+    "https://www.gutenberg.org/files/37134/37134-h/37134-h.htm"
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "better-writing"
+  short_description: "Modern writing system for clarity, cadence, structure, and style-family calibration"
+  default_prompt: "Help me draft, rewrite, or edit prose with stronger clarity, rhythm, specificity, and genre fit"

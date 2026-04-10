@@ -1,0 +1,87 @@
+{
+  "skill_name": "better-writing",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "docs_clarity_smoke",
+      "prompt": "Rewrite this README section so a new engineer can follow it on the first read. The current version is bloated and vague.",
+      "expected_output": "Routes to first-principles clarity and the revision pass stack, then favors a technical-doc shape rather than a general essay voice.",
+      "assertions": [
+        {
+          "text": "Loads references/revision-pass-stack.md for editing order",
+          "type": "disclosure"
+        },
+        {
+          "text": "Uses references/genre-modes.md to keep the output in a documentation shape",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "disclosure"]
+    },
+    {
+      "id": 2,
+      "name": "stiff_memo_edge",
+      "prompt": "This memo is clear enough but still sounds stiff, corporate, and too polished. Make it feel more owned.",
+      "expected_output": "Routes to cadence, ownership, and genericity cleanup rather than only grammar rules.",
+      "assertions": [
+        {
+          "text": "Loads references/voice-and-rhythm.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Loads references/genericity-and-stiffness.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["edge", "disclosure"]
+    },
+    {
+      "id": 3,
+      "name": "style_bundle_calibration",
+      "prompt": "Turn this technical walkthrough into something with more Simon Willison or Julia Evans energy, but keep the commands exact.",
+      "expected_output": "Routes to the technical teacher style bundle and the correct genre mode without turning the piece into imitation or loose personal essay.",
+      "assertions": [
+        {
+          "text": "Loads references/style-bundles.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Keeps the piece in a technical guide mode",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke"]
+    },
+    {
+      "id": 4,
+      "name": "negative_non_writing_prompt",
+      "prompt": "Fix this failing React hydration test and tell me why the state mismatches on the client.",
+      "expected_output": "Does not treat a code-debugging request as a writing problem.",
+      "assertions": [
+        {
+          "text": "Does not route a code-only debugging prompt through the writing references",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 5,
+      "name": "essay_shape_disclosure",
+      "prompt": "This reflective essay probably wants a braided structure and a less tidy ending.",
+      "expected_output": "Routes to essay-appropriate shape and style guidance rather than documentation or copywriting guidance.",
+      "assertions": [
+        {
+          "text": "Loads references/genre-modes.md for page architecture",
+          "type": "disclosure"
+        },
+        {
+          "text": "Loads references/style-bundles.md for essay and reflection calibration",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["edge", "disclosure"]
+    }
+  ]
+}
