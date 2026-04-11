@@ -395,12 +395,13 @@ done < <(
 if compgen -G "$TEMP_GROUPS_DIR/*.json" >/dev/null; then
     jq -s '
         {
-            hooks:
+            hooks: (
                 reduce .[] as $item ({};
                     reduce ($item | to_entries[]) as $entry (.;
                         .[$entry.key] = ((.[$entry.key] // []) + $entry.value)
                     )
                 )
+            )
         }
     ' "$TEMP_GROUPS_DIR"/*.json > "$FRAGMENT_FILE"
 else

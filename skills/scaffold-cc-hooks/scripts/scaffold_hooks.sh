@@ -273,7 +273,7 @@ jq \
     ($manifest[0].events | map({(.name): .}) | add) as $event_map
     | ($plan[0].enabled_events // []) as $enabled
     | {
-        hooks:
+        hooks: (
             reduce $enabled[] as $item ({};
                 ($event_map[$item.name]) as $event
                 | .[$item.name] = (
@@ -305,6 +305,7 @@ jq \
                     ]
                 )
             )
+        )
     }
     ' "$MANIFEST_SOURCE" > "$SETTINGS_FRAGMENT_FILE"
 
