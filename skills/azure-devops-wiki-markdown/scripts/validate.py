@@ -6,6 +6,8 @@ Usage:
     python3 validate.py <skill-path>
 """
 
+from __future__ import annotations
+
 import json
 import os
 import re
@@ -164,4 +166,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
