@@ -1,0 +1,4 @@
+interface:
+  display_name: "scaffold-codex-hooks"
+  short_description: "Audit a repo, enable Codex hooks if needed, and scaffold a managed `.codex/hooks.json` setup"
+  default_prompt: "Help me scaffold or refresh Codex hooks in this project, including feature-flag inspection and managed hook generation"

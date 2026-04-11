@@ -1,0 +1,127 @@
+{
+  "skill_name": "scaffold-codex-hooks",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-project-codex-hook-scaffold",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Codex hook setup yet. Audit the repo first, verify the live official Codex hook docs and schemas, inspect whether `codex_hooks` is enabled, enable it if needed, then scaffold project-local Codex hooks with a generated hooks README and bash stubs for every current official Codex hook event.",
+      "expected_output": "The response verifies live official Codex hook sources first, audits the repo, inspects and enables the feature if needed, creates a deterministic managed `.codex/hooks.json` scaffold, and generates one bash stub per official Codex hook event.",
+      "files": [
+        "templates/hook-plan.example.json",
+        "assets/hook-events.json"
+      ],
+      "assertions": [
+        {
+          "text": "Response verifies the live official Codex hooks docs and schemas before scaffolding",
+          "type": "verification"
+        },
+        {
+          "text": "Response inspects the effective `codex_hooks` feature before treating repo-local hooks as active",
+          "type": "functional"
+        },
+        {
+          "text": "Response scaffolds `.codex/hooks.json`, not `.claude/settings.json`",
+          "type": "functional"
+        },
+        {
+          "text": "Response creates one managed bash stub per current official Codex hook event",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "hooks",
+        "scaffold"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "existing-project-hooks-additive-refresh",
+      "prompt": "This repo already has `.codex/hooks.json` with a couple of custom handlers plus a stale generated layer. Add the missing current official Codex hook events, preserve the custom handlers, refresh the managed layer only, and keep the generated README current.",
+      "expected_output": "The response chooses additive mode, preserves non-managed custom handlers, refreshes the managed layer, and updates the generated README.",
+      "assertions": [
+        {
+          "text": "Response distinguishes managed handlers from unrelated custom handlers",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses additive mode unless the managed layer is structurally stale",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "merge",
+        "repeat-run"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "feature-flag-first-troubleshooting",
+      "prompt": "The repo has `.codex/hooks.json`, but nothing seems to happen. Before you rewrite the hooks, inspect whether the effective `codex_hooks` feature is actually on for this project, enable it if needed, and only then debug the hook files.",
+      "expected_output": "The response treats the feature flag as the first diagnostic, inspects the effective feature state, enables it in the correct scope if needed, and only then moves to hook-file debugging.",
+      "assertions": [
+        {
+          "text": "Response checks the effective feature state before changing hook files",
+          "type": "functional"
+        },
+        {
+          "text": "Response mentions project-vs-user config scope when enabling the feature",
+          "type": "functional"
+        },
+        {
+          "text": "Agent reads references/feature-flag.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "troubleshooting",
+        "feature-flag",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "docs-drift-detected-before-scaffold",
+      "prompt": "Scaffold Codex hooks into this repo, but first confirm whether the live official docs or generated schemas changed since the baked-in manifest was written. If they did, update the scaffold inputs before generating the managed hook tree.",
+      "expected_output": "The response treats live official docs and schemas as the source of truth and refreshes the manifest inputs before scaffolding if they changed.",
+      "assertions": [
+        {
+          "text": "Response does not trust the static manifest without live confirmation",
+          "type": "verification"
+        },
+        {
+          "text": "Response consults the generated schemas in addition to the docs",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "verification",
+        "docs-drift"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-claude-code-hooks-request",
+      "prompt": "I need Claude Code hooks scaffolded into `.claude/settings.json` with `Notification` and `SubagentStop` handlers. Do that in this repo.",
+      "expected_output": "The response declines to use the Codex hook scaffold and instead routes to the Claude-specific hook workflow.",
+      "assertions": [
+        {
+          "text": "Does not scaffold `.codex/hooks.json` for a Claude Code request",
+          "type": "negative"
+        },
+        {
+          "text": "Does not hallucinate Codex support for Claude-only events like `Notification` or `SubagentStop`",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "triggering"
+      ]
+    }
+  ]
+}

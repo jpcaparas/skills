@@ -1,0 +1,41 @@
+{
+  "hooks_target": ".codex/hooks.json",
+  "managed_root": ".codex/hooks/generated",
+  "feature_scope": "project",
+  "mode": "additive",
+  "enabled_events": [
+    {
+      "name": "SessionStart",
+      "matcher": "startup|resume",
+      "timeout": 20,
+      "status_message": "Loading Codex session context",
+      "notes": "Use this for lightweight bootstrap context, runtime checks, or repo reminders."
+    },
+    {
+      "name": "PreToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Checking Bash command policy",
+      "notes": "Use this for Bash guardrails only. Do not assume `Write` or `MCP` interception."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "Bash",
+      "timeout": 90,
+      "status_message": "Reviewing Bash command result",
+      "notes": "Use this for post-command notes, quick validation, or lightweight follow-up checks."
+    },
+    {
+      "name": "UserPromptSubmit",
+      "timeout": 15,
+      "status_message": "Reviewing prompt context",
+      "notes": "Use this to add extra developer context or ask for clearer prompts when needed."
+    },
+    {
+      "name": "Stop",
+      "timeout": 45,
+      "status_message": "Running end-of-turn review",
+      "notes": "Use this for one more Codex pass, final checks, or concise completion reminders."
+    }
+  ]
+}

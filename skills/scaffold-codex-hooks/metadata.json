@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Project-aware Codex hooks scaffolder that verifies the live official Codex hook docs and open-source schemas, audits a target repository in detail, inspects and enables the `codex_hooks` feature when needed, and then generates a deterministic bash-first managed hook scaffold with one script per current event, repeatable `hooks.json` merges, and a generated hooks README for the target project.",
+  "references": [
+    "https://developers.openai.com/codex/hooks",
+    "https://developers.openai.com/codex/config-basic",
+    "https://developers.openai.com/codex/config-reference",
+    "https://github.com/openai/codex/tree/main/codex-rs/hooks/schema/generated",
+    "https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b"
+  ]
+}

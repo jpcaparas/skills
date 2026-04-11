@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# {{SCRIPT_NAME}}
+#
+# Managed hook stub for Codex {{EVENT_NAME}}.
+#
+# Event purpose:
+#   {{EVENT_DESCRIPTION}}
+#
+# Matcher notes:
+#   {{MATCHER_GUIDANCE}}
+#
+# Output contract:
+#   {{OUTPUT_GUIDANCE}}
+#
+# Blocking / control notes:
+#   {{BLOCKING_GUIDANCE}}
+#
+# Replace the example logic below with project-specific behavior.
+# Keep stdout empty unless you intentionally emit hook output.
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=../lib/common.sh
+. "$SCRIPT_DIR/../lib/common.sh"
+
+HOOK_INPUT="$(read_hook_input)"
+
+# Common helpers:
+#   hook_json FILTER [FALLBACK]
+#   emit_additional_context EVENT MESSAGE
+#   emit_system_message MESSAGE
+#   deny_pre_tool_use REASON
+#   block_with_reason REASON
+#   exit_with_block_reason REASON
+#
+# Example:
+#   CWD="$(hook_json '.cwd')"
+
+# TODO: add project-specific logic here.
+
+exit 0
