@@ -8,3 +8,8 @@ __pycache__/
 # and fail on GitHub Actions.
 !AGENTS.md
 !**/AGENTS.md
+
+# Commit the repo-local Codex hook scaffold even when a user-global gitignore
+# hides .codex/** for personal machine config.
+!.codex/
+!.codex/**

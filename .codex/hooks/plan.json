@@ -1,0 +1,35 @@
+{
+  "hooks_target": ".codex/hooks.json",
+  "managed_root": ".codex/hooks/generated",
+  "feature_scope": "project",
+  "mode": "additive",
+  "enabled_events": [
+    {
+      "name": "SessionStart",
+      "matcher": "startup|resume",
+      "timeout": 20,
+      "status_message": "Loading skills repo hook context",
+      "notes": "Inject the repository's skill layout and validation rules when a Codex session starts or resumes."
+    },
+    {
+      "name": "PreToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Checking destructive Bash commands",
+      "notes": "Block destructive git and shell commands that could wipe local work or the repository."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Reviewing Bash command impact",
+      "notes": "Add repo-specific reminders after Bash commands that touch skill directories or validation entry points."
+    },
+    {
+      "name": "Stop",
+      "timeout": 300,
+      "status_message": "Running skills repository validation",
+      "notes": "Run the shared validation script before the turn ends so Codex catches the same failures as CI."
+    }
+  ]
+}

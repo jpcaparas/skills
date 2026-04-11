@@ -1,0 +1,55 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env bash -lc 'exec \"$(git rev-parse --show-toplevel)/.codex/hooks/generated/events/post_tool_use.sh\"'",
+            "timeout": 20,
+            "statusMessage": "Reviewing Bash command impact"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env bash -lc 'exec \"$(git rev-parse --show-toplevel)/.codex/hooks/generated/events/pre_tool_use.sh\"'",
+            "timeout": 20,
+            "statusMessage": "Checking destructive Bash commands"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env bash -lc 'exec \"$(git rev-parse --show-toplevel)/.codex/hooks/generated/events/session_start.sh\"'",
+            "timeout": 20,
+            "statusMessage": "Loading skills repo hook context"
+          }
+        ],
+        "matcher": "startup|resume"
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/usr/bin/env bash -lc 'exec \"$(git rev-parse --show-toplevel)/.codex/hooks/generated/events/stop.sh\"'",
+            "timeout": 300,
+            "statusMessage": "Running skills repository validation"
+          }
+        ]
+      }
+    ]
+  }
+}

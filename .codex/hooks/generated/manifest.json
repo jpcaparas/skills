@@ -1,0 +1,160 @@
+{
+  "verified_on": "2026-04-11",
+  "verified_with": {
+    "codex_cli_version": "codex-cli 0.118.0",
+    "official_docs": [
+      "https://developers.openai.com/codex/hooks",
+      "https://developers.openai.com/codex/config-basic",
+      "https://developers.openai.com/codex/config-reference"
+    ],
+    "schemas": [
+      "https://github.com/openai/codex/tree/main/codex-rs/hooks/schema/generated",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/session-start.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/pre-tool-use.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/post-tool-use.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/user-prompt-submit.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/stop.command.output.schema.json"
+    ],
+    "runtime_source": [
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/engine/discovery.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/engine/config.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/common.rs"
+    ],
+    "secondary_sources": [
+      "https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b"
+    ]
+  },
+  "supported_handler_types": [
+    "command"
+  ],
+  "unsupported_handler_types": [
+    "prompt",
+    "agent"
+  ],
+  "async_supported": false,
+  "default_timeout_seconds": 600,
+  "timeout_aliases": [
+    "timeoutSec"
+  ],
+  "merge_behavior": [
+    "Matching hooks from multiple files all run.",
+    "Multiple matching command hooks for the same event are launched concurrently, so one hook cannot prevent another matching hook from starting."
+  ],
+  "events": [
+    {
+      "name": "SessionStart",
+      "script_name": "session_start.sh",
+      "description": "Bootstrap session context or run lightweight environment checks before Codex starts working.",
+      "matcher_supported": true,
+      "matcher_target": "source",
+      "current_matcher_values": [
+        "startup",
+        "resume"
+      ],
+      "matcher_guidance": "Use a matcher only for `startup` or `resume`. `*` and an empty matcher both mean match all.",
+      "output_guidance": "Plain text stdout is added as extra developer context. JSON can return `hookSpecificOutput.additionalContext`.",
+      "blocking_guidance": "There is no dedicated blocking shape for this event. Keep it lightweight and context-oriented."
+    },
+    {
+      "name": "PreToolUse",
+      "script_name": "pre_tool_use.sh",
+      "description": "Gate or deny Bash commands before they run.",
+      "matcher_supported": true,
+      "matcher_target": "tool_name",
+      "current_matcher_values": [
+        "Bash"
+      ],
+      "matcher_guidance": "Current Codex runtime only emits `Bash` here. Other matcher regexes parse, but they do not match anything useful today.",
+      "output_guidance": "Plain text stdout is ignored. JSON can deny with `hookSpecificOutput.permissionDecision = \"deny\"` or the legacy `decision: \"block\"` shape.",
+      "blocking_guidance": "Use `deny_pre_tool_use` or exit code `2` with a reason on stderr to block the Bash command before it runs."
+    },
+    {
+      "name": "PostToolUse",
+      "script_name": "post_tool_use.sh",
+      "description": "React to Bash command results after the command has already run.",
+      "matcher_supported": true,
+      "matcher_target": "tool_name",
+      "current_matcher_values": [
+        "Bash"
+      ],
+      "matcher_guidance": "Current Codex runtime only emits `Bash` here, and not every shell path is intercepted yet.",
+      "output_guidance": "Plain text stdout is ignored. JSON can add context, replace the feedback Codex sees next, or return `continue: false`.",
+      "blocking_guidance": "This event cannot undo command side effects. Treat `decision: \"block\"` here as feedback control, not as prevention."
+    },
+    {
+      "name": "UserPromptSubmit",
+      "script_name": "user_prompt_submit.sh",
+      "description": "Inject context into user prompts or block a prompt before it is sent.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Current runtime ignores `matcher` for this event.",
+      "output_guidance": "Plain text stdout is added as extra developer context. JSON can add context or block with `decision: \"block\"`.",
+      "blocking_guidance": "Use `block_with_reason` or exit code `2` with stderr when you need Codex to stop and ask for a clearer prompt."
+    },
+    {
+      "name": "Stop",
+      "script_name": "stop.sh",
+      "description": "Run end-of-turn review or request one more Codex pass before the turn fully stops.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Current runtime ignores `matcher` for this event.",
+      "output_guidance": "When exiting `0`, stdout must be JSON. `decision: \"block\"` continues Codex with your `reason` as a new continuation prompt.",
+      "blocking_guidance": "Treat `block` on `Stop` as 'continue and do one more pass', not as a normal reject decision."
+    }
+  ],
+  "generated_at": "2026-04-11T09:00:28Z",
+  "managed_root": ".codex/hooks/generated",
+  "hooks_target": ".codex/hooks.json",
+  "mode": "additive",
+  "feature_scope": "project",
+  "feature_status": {
+    "project_path": "/Users/jp/Repos/jpcaparas/skills",
+    "home_path": "/Users/jp",
+    "feature_name": "codex_hooks",
+    "codex_bin": "codex",
+    "codex_version": "codex-cli 0.120.0",
+    "effective": true,
+    "status": "enabled",
+    "recommended_enable_scope": "project",
+    "user_config_path": "/Users/jp/.codex/config.toml",
+    "user_config_exists": true,
+    "user_explicit": null,
+    "project_config_path": "/Users/jp/Repos/jpcaparas/skills/.codex/config.toml",
+    "project_config_exists": true,
+    "project_explicit": true,
+    "warnings": [],
+    "changed": false,
+    "enabled_scope": null
+  },
+  "enabled_events": [
+    {
+      "name": "SessionStart",
+      "matcher": "startup|resume",
+      "timeout": 20,
+      "status_message": "Loading skills repo hook context",
+      "notes": "Inject the repository's skill layout and validation rules when a Codex session starts or resumes."
+    },
+    {
+      "name": "PreToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Checking destructive Bash commands",
+      "notes": "Block destructive git and shell commands that could wipe local work or the repository."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Reviewing Bash command impact",
+      "notes": "Add repo-specific reminders after Bash commands that touch skill directories or validation entry points."
+    },
+    {
+      "name": "Stop",
+      "timeout": 300,
+      "status_message": "Running skills repository validation",
+      "notes": "Run the shared validation script before the turn ends so Codex catches the same failures as CI."
+    }
+  ]
+}
