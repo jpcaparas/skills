@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for deterministically rebuilding one public Instagram video post or reel into a rerenderable local build with snapshot freezing, Playwright recording, MP4 export, and a GIF preview capped under 24 MB.",
+  "references": [
+    "https://www.instagram.com/",
+    "https://github.com/yt-dlp/yt-dlp",
+    "https://playwright.dev/python/",
+    "https://ffmpeg.org/ffmpeg.html"
+  ]
+}

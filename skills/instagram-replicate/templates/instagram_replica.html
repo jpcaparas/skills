@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Instagram Replica</title>
+    <style>
+      :root {
+        --canvas-width: 1492px;
+        --page-padding-x: 70px;
+        --media-width: 678px;
+        --media-height: 1204px;
+        --sidebar-width: 674px;
+        --text: #262626;
+        --muted: #737373;
+        --line: #dbdbdb;
+        --soft-line: #efefef;
+        --link: #0095f6;
+        --button: #4f5cf3;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+      }
+
+      body {
+        width: var(--canvas-width);
+        overflow: hidden;
+        color: var(--text);
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      .instagram-root {
+        width: var(--canvas-width);
+        background: #fff;
+      }
+
+      .topbar {
+        height: 112px;
+        padding: 0 30px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .wordmark {
+        font-family: "Brush Script MT", "Snell Roundhand", "Segoe Script", cursive;
+        font-size: 60px;
+        line-height: 1;
+        font-weight: 700;
+        color: #000;
+      }
+
+      .topbar-actions {
+        display: flex;
+        align-items: center;
+        gap: 34px;
+      }
+
+      .login-pill {
+        padding: 16px 28px;
+        border-radius: 18px;
+        background: var(--button);
+        color: #fff;
+        font-size: 27px;
+        line-height: 1;
+        font-weight: 700;
+      }
+
+      .signup-link {
+        color: #3f51e8;
+        font-size: 27px;
+        line-height: 1;
+        font-weight: 600;
+      }
+
+      .page-main {
+        padding-top: 65px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .post-shell {
+        display: flex;
+        align-items: stretch;
+        width: calc(var(--media-width) + var(--sidebar-width));
+        border: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .media-pane {
+        position: relative;
+        width: var(--media-width);
+        min-width: var(--media-width);
+        height: var(--media-height);
+        background: #000;
+        overflow: hidden;
+      }
+
+      .post-media {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #000;
+      }
+
+      .mute-badge {
+        position: absolute;
+        right: 22px;
+        bottom: 22px;
+        width: 64px;
+        height: 64px;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.55);
+        color: #fff;
+      }
+
+      .sidebar {
+        width: var(--sidebar-width);
+        min-width: var(--sidebar-width);
+        height: var(--media-height);
+        display: flex;
+        flex-direction: column;
+        border-left: 1px solid var(--line);
+        background: #fff;
+      }
+
+      .sidebar-head {
+        padding: 28px 30px;
+        display: flex;
+        align-items: flex-start;
+        gap: 16px;
+        border-bottom: 1px solid var(--soft-line);
+      }
+
+      .sidebar-body {
+        flex: 1 1 auto;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .profile-avatar,
+      .comment-avatar,
+      .avatar-fallback {
+        border-radius: 999px;
+        flex: 0 0 auto;
+        display: block;
+        object-fit: cover;
+      }
+
+      .profile-avatar,
+      .avatar-fallback.profile {
+        width: 58px;
+        height: 58px;
+      }
+
+      .comment-avatar,
+      .avatar-fallback.comment {
+        width: 42px;
+        height: 42px;
+      }
+
+      .avatar-fallback {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #efefef;
+        color: #666;
+        font-weight: 700;
+      }
+
+      .head-main,
+      .caption-main,
+      .comment-main {
+        min-width: 0;
+        flex: 1 1 auto;
+      }
+
+      .author-line,
+      .caption-line,
+      .comment-line {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .author-name,
+      .caption-name,
+      .comment-name {
+        font-size: 23px;
+        line-height: 1.1;
+        font-weight: 700;
+        white-space: nowrap;
+      }
+
+      .caption-name,
+      .comment-name {
+        font-size: 21px;
+      }
+
+      .verified {
+        width: 24px;
+        height: 24px;
+        color: var(--link);
+        flex: 0 0 auto;
+      }
+
+      .timestamp-short,
+      .comment-meta {
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .follow-link {
+        color: #4c5cf0;
+        font-size: 23px;
+        line-height: 1.1;
+        font-weight: 600;
+      }
+
+      .audio-label {
+        margin-top: 6px;
+        font-size: 17px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .more-icon {
+        width: 32px;
+        height: 32px;
+        color: #111;
+        flex: 0 0 auto;
+        margin-top: 6px;
+      }
+
+      .caption-block {
+        padding: 24px 30px 0;
+        display: flex;
+        gap: 16px;
+      }
+
+      .caption-copy {
+        margin-top: 10px;
+        font-size: 21px;
+        line-height: 1.36;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .plus-wrap {
+        padding: 36px 0 34px;
+        display: flex;
+        justify-content: center;
+      }
+
+      .plus-icon {
+        width: 48px;
+        height: 48px;
+        color: #111;
+      }
+
+      .comment-block {
+        padding: 0 30px;
+        display: flex;
+        gap: 14px;
+      }
+
+      .comment-handle {
+        margin-top: 6px;
+        color: #4c5cf0;
+        font-size: 19px;
+        line-height: 1.2;
+        font-weight: 500;
+      }
+
+      .comment-actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 24px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.2;
+        font-weight: 600;
+      }
+
+      .comment-copy {
+        margin-top: 4px;
+        font-size: 20px;
+        line-height: 1.3;
+        word-break: break-word;
+      }
+
+      .sidebar-spacer {
+        flex: 1 1 auto;
+      }
+
+      .actions-shell {
+        border-top: 1px solid var(--soft-line);
+        padding: 24px 30px 26px;
+      }
+
+      .actions-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .actions-left,
+      .action-with-count {
+        display: flex;
+        align-items: center;
+      }
+
+      .actions-left {
+        gap: 20px;
+      }
+
+      .action-with-count {
+        gap: 12px;
+      }
+
+      .action-icon,
+      .bookmark-icon {
+        width: 34px;
+        height: 34px;
+        color: #111;
+        flex: 0 0 auto;
+      }
+
+      .action-count {
+        font-size: 20px;
+        line-height: 1.2;
+        font-weight: 600;
+      }
+
+      .timestamp-long {
+        margin-top: 20px;
+        color: var(--muted);
+        font-size: 18px;
+        line-height: 1.2;
+      }
+
+      .login-callout {
+        margin-top: 34px;
+        font-size: 19px;
+        line-height: 1.25;
+        color: var(--muted);
+      }
+
+      .login-callout .link {
+        color: #4c5cf0;
+      }
+
+      .page-divider {
+        margin: 72px 30px 0;
+        border-top: 1px solid var(--line);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app" class="instagram-root"></div>
+    <script>
+      const data = __REPLICA_JSON__;
+      const root = document.getElementById("app");
+
+      function escapeHtml(value) {
+        return String(value || "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+
+      function nl2br(value) {
+        return escapeHtml(value).replace(/\n/g, "<br>");
+      }
+
+      function monogram(value) {
+        const text = String(value || "").trim();
+        return text ? text[0].toUpperCase() : "?";
+      }
+
+      function verifiedIcon() {
+        return `
+          <svg class="verified" viewBox="0 0 40 40" aria-hidden="true">
+            <path fill="currentColor" fill-rule="evenodd" d="M19.998 3.094 14.638 0l-2.972 5.15H5.432v6.354L0 14.64 3.094 20 0 25.359l5.432 3.137v5.905h5.975L14.638 40l5.36-3.094L25.358 40l3.232-5.6h6.162v-6.01L40 25.359 36.905 20 40 14.641l-5.248-3.03v-6.46h-6.419L25.358 0l-5.36 3.094Zm7.415 11.225 2.254 2.287-11.43 11.5-6.835-6.93 2.244-2.258 4.587 4.581 9.18-9.18Z"></path>
+          </svg>
+        `;
+      }
+
+      function ellipsisIcon() {
+        return `
+          <svg class="more-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="5" cy="12" r="1.8" fill="currentColor"></circle>
+            <circle cx="12" cy="12" r="1.8" fill="currentColor"></circle>
+            <circle cx="19" cy="12" r="1.8" fill="currentColor"></circle>
+          </svg>
+        `;
+      }
+
+      function plusIcon() {
+        return `
+          <svg class="plus-icon" viewBox="0 0 48 48" aria-hidden="true">
+            <circle cx="24" cy="24" r="22" fill="none" stroke="currentColor" stroke-width="3"></circle>
+            <path d="M24 14v20M14 24h20" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"></path>
+          </svg>
+        `;
+      }
+
+      function heartIcon() {
+        return `
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16.792 3.904A4.989 4.989 0 0 0 12 6.28a4.989 4.989 0 0 0-4.792-2.376C4.25 4.145 2 6.46 2 9.357c0 3.332 2.972 5.95 7.469 9.915L12 21.35l2.531-2.078C19.028 15.307 22 12.69 22 9.357c0-2.897-2.25-5.212-5.208-5.453Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+          </svg>
+        `;
+      }
+
+      function commentIcon() {
+        return `
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 11.5A8.5 8.5 0 0 1 11.5 20H5l1.8-3.6A8.5 8.5 0 1 1 20 11.5Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+          </svg>
+        `;
+      }
+
+      function planeIcon() {
+        return `
+          <svg class="action-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21.5 3.5 10 14l-1.5 6 3.5-3.5 4 3 5.5-16Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+          </svg>
+        `;
+      }
+
+      function bookmarkIcon() {
+        return `
+          <svg class="bookmark-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M6 3.5h12v17l-6-4.2-6 4.2v-17Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+          </svg>
+        `;
+      }
+
+      function muteIcon() {
+        return `
+          <svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14.5 5 9 9H5v6h4l5.5 4V5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+            <path d="M17 9l4 6M21 9l-4 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>
+          </svg>
+        `;
+      }
+
+      function renderAvatar(uri, label, variant) {
+        if (uri) {
+          const className = variant === "comment" ? "comment-avatar" : "profile-avatar";
+          return `<img class="${className}" src="${uri}" alt="">`;
+        }
+        const extra = variant === "comment" ? "comment" : "profile";
+        return `<span class="avatar-fallback ${extra}" aria-hidden="true">${monogram(label)}</span>`;
+      }
+
+      function renderMedia(media) {
+        if (!media) {
+          return "";
+        }
+        if (media.kind === "video") {
+          const posterAttr = media.posterUri ? ` poster="${media.posterUri}"` : "";
+          return `<video class="post-media" src="${media.uri}"${posterAttr} playsinline muted preload="auto"></video>`;
+        }
+        return `<img class="post-media" src="${media.posterUri || media.uri}" alt="">`;
+      }
+
+      function renderComment(comment) {
+        if (!comment) {
+          return "";
+        }
+        return `
+          <div class="comment-block">
+            ${renderAvatar(null, comment.authorName || comment.authorHandle, "comment")}
+            <div class="comment-main">
+              <div class="comment-line">
+                <span class="comment-name">${escapeHtml(comment.authorName || comment.authorHandle)}</span>
+                <span class="comment-meta">${escapeHtml(comment.relative || "")}</span>
+              </div>
+              <div class="comment-handle">@${escapeHtml(comment.authorHandle || comment.authorName || "")}</div>
+              <div class="comment-copy">${nl2br(comment.text || "")}</div>
+              <div class="comment-actions"><span>Like</span><span>Reply</span></div>
+            </div>
+          </div>
+        `;
+      }
+
+      const layout = data.layout || {};
+      const post = data.post || {};
+      const author = post.author || {};
+      const media = post.media || null;
+
+      document.documentElement.style.setProperty("--canvas-width", `${layout.canvasWidth || 1492}px`);
+      document.documentElement.style.setProperty("--page-padding-x", `${layout.pagePaddingX || 70}px`);
+      document.documentElement.style.setProperty("--media-width", `${layout.mediaWidth || 678}px`);
+      document.documentElement.style.setProperty("--media-height", `${layout.mediaHeight || 1204}px`);
+      document.documentElement.style.setProperty("--sidebar-width", `${layout.sidebarWidth || 674}px`);
+
+      root.innerHTML = `
+        <div class="topbar">
+          <div class="wordmark">Instagram</div>
+          <div class="topbar-actions">
+            <div class="login-pill">Log In</div>
+            <div class="signup-link">Sign Up</div>
+          </div>
+        </div>
+        <div class="page-main">
+          <div class="post-shell">
+            <div class="media-pane">
+              ${renderMedia(media)}
+              ${media && media.hasAudio ? `<div class="mute-badge">${muteIcon()}</div>` : ""}
+            </div>
+            <div class="sidebar">
+              <div class="sidebar-head">
+                ${renderAvatar(author.avatarUri, author.name || author.handle, "profile")}
+                <div class="head-main">
+                  <div class="author-line">
+                    <span class="author-name">${escapeHtml(author.handle || author.name || "")}</span>
+                    ${author.verified ? verifiedIcon() : ""}
+                    <span class="follow-link">Follow</span>
+                  </div>
+                  <div class="audio-label">${escapeHtml(post.audioLabel || "Original audio")}</div>
+                </div>
+                ${ellipsisIcon()}
+              </div>
+              <div class="sidebar-body">
+                <div class="caption-block">
+                  ${renderAvatar(author.avatarUri, author.name || author.handle, "profile")}
+                  <div class="caption-main">
+                    <div class="caption-line">
+                      <span class="caption-name">${escapeHtml(author.handle || author.name || "")}</span>
+                      ${author.verified ? verifiedIcon() : ""}
+                      <span class="timestamp-short">${escapeHtml(post.timestampShort || "")}</span>
+                    </div>
+                    <div class="caption-copy">${nl2br(post.caption || "")}</div>
+                  </div>
+                </div>
+                <div class="plus-wrap">${plusIcon()}</div>
+                ${renderComment(post.comment)}
+                <div class="sidebar-spacer"></div>
+                <div class="actions-shell">
+                  <div class="actions-row">
+                    <div class="actions-left">
+                      <div class="action-with-count">${heartIcon()}<span class="action-count">${escapeHtml(post.counts?.like || "0")}</span></div>
+                      <div class="action-with-count">${commentIcon()}<span class="action-count">${escapeHtml(post.counts?.comment || "0")}</span></div>
+                      ${planeIcon()}
+                    </div>
+                    ${bookmarkIcon()}
+                  </div>
+                  <div class="timestamp-long">${escapeHtml(post.timestampLong || "")}</div>
+                  <div class="login-callout"><span class="link">Log in</span> to like or comment.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="page-divider"></div>
+      `;
+
+      const mediaEl = root.querySelector(".post-media");
+      window.__replicaReady = false;
+      window.__getRecordDurationMs = () => Number(post.recordDurationMs || 4000);
+      window.__startPlayback = async () => {
+        if (mediaEl && mediaEl.tagName === "VIDEO") {
+          mediaEl.currentTime = 0;
+          try {
+            await mediaEl.play();
+          } catch (error) {
+            console.warn("video playback failed", error);
+          }
+        }
+      };
+
+      function markReady() {
+        window.__replicaReady = true;
+      }
+
+      if (!mediaEl) {
+        markReady();
+      } else if (mediaEl.tagName === "VIDEO") {
+        mediaEl.addEventListener("loadeddata", markReady, { once: true });
+        mediaEl.addEventListener("error", markReady, { once: true });
+        if (mediaEl.readyState >= 2) {
+          markReady();
+        }
+      } else if (mediaEl.complete) {
+        markReady();
+      } else {
+        mediaEl.addEventListener("load", markReady, { once: true });
+        mediaEl.addEventListener("error", markReady, { once: true });
+      }
+    </script>
+  </body>
+</html>

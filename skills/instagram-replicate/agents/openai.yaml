@@ -1,0 +1,7 @@
+interface:
+  display_name: "Instagram Replicate"
+  short_description: "Deterministic MP4 plus capped GIF replicas for public Instagram video posts"
+  default_prompt: "Replicate this public Instagram video post into an MP4 and a GIF under 24 MB: "
+
+policy:
+  allow_implicit_invocation: false
