@@ -150,8 +150,8 @@ EVALEOF
 
 case "$BLUEPRINT" in
     api-wrapper)
-        if [ -f "$TEMPLATES_DIR/api-wrapper/SKILL.md" ]; then
-            sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/api-wrapper/SKILL.md" > "$OUTPUT_DIR/SKILL.md"
+        if [ -f "$TEMPLATES_DIR/api-wrapper/SKILL.template.md" ]; then
+            sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/api-wrapper/SKILL.template.md" > "$OUTPUT_DIR/SKILL.md"
             # Copy reference templates if they exist
             for ref in api.md patterns.md configuration.md gotchas.md; do
                 if [ -f "$TEMPLATES_DIR/api-wrapper/references/$ref" ]; then
@@ -159,37 +159,37 @@ case "$BLUEPRINT" in
                 fi
             done
         else
-            echo "Warning: api-wrapper template not found at $TEMPLATES_DIR/api-wrapper/SKILL.md"
+            echo "Warning: api-wrapper template not found at $TEMPLATES_DIR/api-wrapper/SKILL.template.md"
             echo "Creating minimal SKILL.md instead."
             BLUEPRINT="minimal"
         fi
         ;;
 
     cli-tool)
-        if [ -f "$TEMPLATES_DIR/cli-tool/SKILL.md" ]; then
-            sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/cli-tool/SKILL.md" > "$OUTPUT_DIR/SKILL.md"
+        if [ -f "$TEMPLATES_DIR/cli-tool/SKILL.template.md" ]; then
+            sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/cli-tool/SKILL.template.md" > "$OUTPUT_DIR/SKILL.md"
             for ref in commands.md patterns.md configuration.md gotchas.md; do
                 if [ -f "$TEMPLATES_DIR/cli-tool/references/$ref" ]; then
                     sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/cli-tool/references/$ref" > "$OUTPUT_DIR/references/$ref"
                 fi
             done
         else
-            echo "Warning: cli-tool template not found at $TEMPLATES_DIR/cli-tool/SKILL.md"
+            echo "Warning: cli-tool template not found at $TEMPLATES_DIR/cli-tool/SKILL.template.md"
             echo "Creating minimal SKILL.md instead."
             BLUEPRINT="minimal"
         fi
         ;;
 
     progressive-docs)
-        if [ -f "$TEMPLATES_DIR/progressive-docs/SKILL.md" ]; then
-            sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/progressive-docs/SKILL.md" > "$OUTPUT_DIR/SKILL.md"
+        if [ -f "$TEMPLATES_DIR/progressive-docs/SKILL.template.md" ]; then
+            sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/progressive-docs/SKILL.template.md" > "$OUTPUT_DIR/SKILL.md"
             for ref in shared.md; do
                 if [ -f "$TEMPLATES_DIR/progressive-docs/references/$ref" ]; then
                     sed "s/{{SKILL_NAME}}/$SKILL_NAME/g" "$TEMPLATES_DIR/progressive-docs/references/$ref" > "$OUTPUT_DIR/references/$ref"
                 fi
             done
         else
-            echo "Warning: progressive-docs template not found at $TEMPLATES_DIR/progressive-docs/SKILL.md"
+            echo "Warning: progressive-docs template not found at $TEMPLATES_DIR/progressive-docs/SKILL.template.md"
             echo "Creating minimal SKILL.md instead."
             BLUEPRINT="minimal"
         fi
