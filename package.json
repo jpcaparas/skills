@@ -1,0 +1,13 @@
+{
+  "name": "jpcaparas-skills",
+  "private": true,
+  "packageManager": "pnpm@10.22.0",
+  "scripts": {
+    "prepare": "husky",
+    "validate": "bash scripts/validate-all-skills.sh",
+    "validate:readme": "python3 scripts/validate-readme-skills.py"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

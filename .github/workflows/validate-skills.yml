@@ -11,6 +11,11 @@ jobs:
       - name: Check Out Repository
         uses: actions/checkout@v4
 
+      - name: Set Up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
       - name: Set Up Python
         uses: actions/setup-python@v5
         with:
@@ -20,6 +25,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "pnpm"
+          cache-dependency-path: pnpm-lock.yaml
+
+      - name: Install Node Dependencies
+        run: pnpm install --frozen-lockfile
 
       - name: Install ripgrep
         # Required by skills/ripgrep/scripts/probe_ripgrep.py, which shells
@@ -29,4 +39,4 @@ jobs:
 
       - name: Validate Skills
         shell: bash
-        run: bash scripts/validate-all-skills.sh
+        run: pnpm run validate
