@@ -48,6 +48,12 @@ Production skill for Nano Banana 2 infographic prompting and verification coveri
 
 Production skill for making `rg` the default search tool instead of `grep`, covering recursive text search, ignore-aware filename discovery via `rg --files`, config files, machine-readable output, and verified edge cases around globs, hidden files, multiline search, and PCRE2.
 
+### `seo-analysis`
+
+`npx skills add jpcaparas/skills --skill seo-analysis`
+
+Production skill for framework-agnostic SEO analysis of real codebases, covering crawlability, rendering, canonicals, robots directives, sitemaps, metadata, OG and social previews, structured data, information architecture, and AI-era search readiness, with a deterministic handoff prompt for another session to implement fixes.
+
 ### `scaffold-cc-hooks`
 
 `npx skills add jpcaparas/skills --skill scaffold-cc-hooks`

@@ -1,0 +1,99 @@
+{
+  "skill_name": "seo-analysis",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-full-audit-routes-to-methodology-and-fix-prompt",
+      "prompt": "Audit this marketing site for SEO issues from the codebase, tell me what is broken around canonicals, OG tags, and schema, and then give me a prompt I can hand to another session to fix everything.",
+      "expected_output": "Uses the methodology, performs a technical and metadata review, and produces a second-session implementation prompt instead of generic SEO advice.",
+      "files": [
+        "references/methodology.md",
+        "references/fix-prompt-spec.md",
+        "templates/fix-prompt-template.md"
+      ],
+      "assertions": [
+        {
+          "text": "Response starts with repository and page-type analysis rather than framework assumptions",
+          "type": "functional"
+        },
+        {
+          "text": "Response covers canonicals, OG tags, and schema distinctly",
+          "type": "functional"
+        },
+        {
+          "text": "Response includes a structured handoff prompt for another session",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "handoff"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-case-intentional-noindex-pages-are-not-flagged-as-errors",
+      "prompt": "Check the repo's SEO, but note that account, cart, checkout, and internal search routes are intentionally noindexed. Focus on real mistakes only.",
+      "expected_output": "Keeps intentional noindex rules out of the critical findings and focuses on true index-worthy pages.",
+      "assertions": [
+        {
+          "text": "Response distinguishes intentional exclusions from accidental ones",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not recommend indexing account or checkout pages by default",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "indexing"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-link-building-request-does-not-trigger-cleanly",
+      "prompt": "I need 100 backlink ideas and outreach email copy to raise domain authority fast.",
+      "expected_output": "Recognizes that this skill is for on-site code and content analysis, not off-page link building or outreach.",
+      "assertions": [
+        {
+          "text": "Response does not force a codebase SEO audit onto an outreach request",
+          "type": "negative"
+        },
+        {
+          "text": "Response identifies off-page SEO as out of scope for this skill",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-social-preview-question-loads-preview-reference",
+      "prompt": "Why do link previews break even though the title tag looks fine? Check OG tags, twitter cards, favicon, and preview image behavior.",
+      "expected_output": "Loads the metadata and previews reference and separates search metadata from social metadata.",
+      "assertions": [
+        {
+          "text": "Agent reads references/metadata-and-previews.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response checks OG tags and social card fields directly",
+          "type": "functional"
+        },
+        {
+          "text": "Response explains that search metadata and social metadata are related but distinct",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "metadata"
+      ]
+    }
+  ]
+}

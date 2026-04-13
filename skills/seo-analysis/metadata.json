@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for framework-agnostic SEO analysis of source code and rendered output, covering crawlability, renderability, canonicalization, metadata, social previews, structured data, information architecture, and AI-era search readiness, with deterministic prompt generation for a second implementation session.",
+  "references": [
+    "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+    "https://developers.google.com/search/docs/fundamentals/creating-helpful-content",
+    "https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics",
+    "https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag",
+    "https://developers.google.com/search/docs/crawling-indexing/consolidate-duplicate-urls",
+    "https://developers.google.com/search/docs/appearance/snippet",
+    "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data",
+    "https://developers.google.com/search/docs/crawling-indexing/sitemaps/build-sitemap",
+    "https://developers.google.com/search/docs/appearance/site-names",
+    "https://developers.google.com/search/docs/appearance/favicon-in-search",
+    "https://developers.google.com/search/docs/appearance/preferred-sources",
+    "https://ogp.me/"
+  ]
+}
