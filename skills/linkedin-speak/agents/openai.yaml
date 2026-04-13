@@ -1,0 +1,4 @@
+interface:
+  display_name: "linkedin-speak"
+  short_description: "Translate plain English into deterministic LinkedIn-speak parody or reverse inflated posts back into blunt English"
+  default_prompt: "Turn this text into LinkedIn-speak or decode a bloated LinkedIn post back into plain English"

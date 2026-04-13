@@ -1,0 +1,86 @@
+{
+  "skill_name": "linkedin-speak",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "translate-basic-update",
+      "prompt": "Translate 'I got a new job.' into LinkedIn-speak with deterministic hashtags.",
+      "expected_output": "A hype-heavy announcement with a career-change framing, an emoji, and relevant hashtags.",
+      "assertions": [
+        {
+          "text": "Output includes a celebratory opener",
+          "type": "functional"
+        },
+        {
+          "text": "Output includes hashtags related to career growth",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "scripts/linkedin_speak.py",
+        "references/patterns.md"
+      ],
+      "tags": [
+        "smoke",
+        "translate"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "reverse-bloated-post",
+      "prompt": "Reverse 'Thrilled to announce...' into plain English.",
+      "expected_output": "A much shorter statement with hype, emoji, and hashtags removed.",
+      "assertions": [
+        {
+          "text": "Reverse output removes emoji and hashtags",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "scripts/linkedin_speak.py",
+        "references/gotchas.md"
+      ],
+      "tags": [
+        "edge-case",
+        "reverse"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-not-for-subtle-editing",
+      "prompt": "Help me gently polish this executive update without sounding silly.",
+      "expected_output": "The skill should not be the first choice because the user wants tasteful editing, not parody.",
+      "assertions": [
+        {
+          "text": "Description and scope clearly mark subtle editing as a negative trigger",
+          "type": "policy"
+        }
+      ],
+      "files": [
+        "SKILL.md"
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-kagi-comparison-flow",
+      "prompt": "Show me how to compare the local translator against Kagi Translate's web UI.",
+      "expected_output": "The response should point to the configuration reference and the compare URL flag.",
+      "assertions": [
+        {
+          "text": "Configuration docs mention compare mode and the Kagi URL shape",
+          "type": "disclosure"
+        }
+      ],
+      "files": [
+        "references/configuration.md"
+      ],
+      "tags": [
+        "disclosure"
+      ]
+    }
+  ]
+}

@@ -30,6 +30,12 @@ Production writing skill that starts from Strunk's durable rules, then extends t
 
 Production skill for deterministically rebuilding a public Instagram video post or reel into a rerenderable local build with a frozen snapshot, local assets, MP4 output, and a companion GIF capped under 24 MB.
 
+### `linkedin-speak`
+
+`npx skills add jpcaparas/skills --skill linkedin-speak`
+
+Fun production skill for deterministically translating plain English into exaggerated LinkedIn-speak parody, reversing bloated thought-leader posts back into blunt English, and generating Kagi comparison URLs for side-by-side checks.
+
 ### `markdown-new`
 
 `npx skills add jpcaparas/skills --skill markdown-new`

@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Fun installable skill that deterministically translates plain English into exaggerated LinkedIn-speak and reverses corporate-thought-leader posts back into blunt English. Ships a local Python CLI, probe script, evals, and reference docs, with optional comparison links to Kagi Translate's public LinkedIn Speak web UI.",
+  "references": [
+    "https://www.xda-developers.com/tool-translates-your-thoughts-into-linkedin-speak/",
+    "https://kagifeedback.org/d/10140-march-19th-2026-small-web-expansion-and-translate-goes-viral",
+    "https://alternativeto.net/news/2026/3/kagi-translate-introduces-linkedin-speak-for-satirical-corporate-style-announcements/"
+  ]
+}
