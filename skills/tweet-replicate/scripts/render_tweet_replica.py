@@ -16,7 +16,14 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from fetch_tweet_snapshot import create_snapshot, download_file, extract_status_id, probe_media
+from fetch_tweet_snapshot import (
+    create_snapshot,
+    download_file,
+    download_with_ytdlp,
+    extract_status_id,
+    probe_media,
+    safe_extension,
+)
 from record_tweet_replica import record_html_to_webm
 
 
@@ -28,6 +35,9 @@ QUOTE_MEDIA_MAX_WIDTH = 506
 QUOTE_MEDIA_MAX_HEIGHT = 606
 DEFAULT_SAVE_ROOT = "pieces"
 DEFAULT_GIF_MAX_BYTES = 24 * 1024 * 1024
+DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR = 2
+MP4_CRF = 14
+MP4_PRESET = "slow"
 GIF_PRESETS = [
     {"fps": 10, "width": 480, "colors": 96},
     {"fps": 8, "width": 420, "colors": 80},
@@ -156,12 +166,22 @@ def ensure_local_assets(snapshot: dict[str, Any], snapshot_path: Path) -> dict[s
             author["local_avatar_path"] = str(avatar_path)
 
         media = post.get("media")
-        if media and media.get("remote_url") and media.get("local_path"):
+        if media and media.get("local_path") and (media.get("remote_url") or media.get("source_status_url")):
             media_path = Path(media["local_path"])
             if not media_path.is_absolute():
                 media_path = (base_dir / media_path).resolve()
             if not media_path.exists():
-                download_file(media["remote_url"], media_path)
+                restored_path = None
+                if media.get("kind") in {"video", "gif"} and media.get("source_status_url"):
+                    try:
+                        restored_path = download_with_ytdlp(media["source_status_url"], media_path.parent, stem=media_path.stem)
+                    except Exception:
+                        restored_path = None
+                if restored_path is None and media.get("remote_url"):
+                    restored_path = media_path.with_suffix(safe_extension(media["remote_url"], media_path.suffix or ".bin"))
+                    download_file(media["remote_url"], restored_path)
+                if restored_path is not None:
+                    media_path = restored_path.resolve()
             if media_path.exists():
                 details = probe_media(media_path)
                 media["local_path"] = str(media_path)
@@ -280,6 +300,14 @@ def transcode_to_mp4(recording_path: Path, output_path: Path, media: dict[str, A
         "-y",
         "-i",
         str(recording_path),
+        "-c:v",
+        "libx264",
+        "-preset",
+        MP4_PRESET,
+        "-crf",
+        str(MP4_CRF),
+        "-pix_fmt",
+        "yuv420p",
     ]
     use_audio = bool(media and media.get("local_path") and media.get("kind") in {"video", "gif"} and media.get("has_audio"))
     if use_audio:
@@ -291,12 +319,10 @@ def transcode_to_mp4(recording_path: Path, output_path: Path, media: dict[str, A
                 "0:v:0",
                 "-map",
                 "1:a:0",
-                "-c:v",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
                 "-c:a",
                 "aac",
+                "-b:a",
+                "192k",
                 "-movflags",
                 "+faststart",
                 "-shortest",
@@ -306,10 +332,6 @@ def transcode_to_mp4(recording_path: Path, output_path: Path, media: dict[str, A
     else:
         command.extend(
             [
-                "-c:v",
-                "libx264",
-                "-pix_fmt",
-                "yuv420p",
                 "-an",
                 "-movflags",
                 "+faststart",
@@ -440,7 +462,15 @@ def main() -> int:
     render_html(template_path, html_path, payload)
 
     webm_path = workdir / "capture.webm"
-    asyncio.run(record_html_to_webm(html_path, webm_path, CANVAS_WIDTH, args.tail_hold_ms))
+    asyncio.run(
+        record_html_to_webm(
+            html_path,
+            webm_path,
+            CANVAS_WIDTH,
+            args.tail_hold_ms,
+            DEFAULT_CAPTURE_DEVICE_SCALE_FACTOR,
+        )
+    )
     output_path.parent.mkdir(parents=True, exist_ok=True)
     transcode_to_mp4(webm_path, output_path, active_media_from_snapshot(snapshot))
 

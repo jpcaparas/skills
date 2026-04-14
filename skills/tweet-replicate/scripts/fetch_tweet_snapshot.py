@@ -89,17 +89,25 @@ def download_with_ytdlp(status_url: str, asset_dir: Path, stem: str = "media") -
     command = [
         "yt-dlp",
         "--no-playlist",
+        "--quiet",
+        "--no-progress",
+        "--merge-output-format",
+        "mp4",
         "-f",
-        "bv*[ext=mp4]+ba[ext=m4a]/b[ext=mp4]/b/best",
+        "bestvideo*+bestaudio/best",
         "-o",
         str(output_template),
         status_url,
     ]
     subprocess.run(command, check=True)
-    candidates = sorted(asset_dir.glob(f"{stem}.*"))
+    candidates = [
+        path
+        for path in asset_dir.glob(f"{stem}.*")
+        if path.is_file() and path.suffix not in {".part", ".ytdl"}
+    ]
     if not candidates:
         raise RuntimeError("yt-dlp succeeded but did not leave a media file behind")
-    return candidates[0]
+    return max(candidates, key=lambda path: path.stat().st_size)
 
 
 def pick_primary_media(status: dict[str, Any]) -> dict[str, Any] | None:
@@ -114,9 +122,17 @@ def pick_primary_media(status: dict[str, Any]) -> dict[str, Any] | None:
     media_type = primary.get("type") or "unknown"
     if media_type in {"video", "gif"}:
         formats = primary.get("formats") or []
-        mp4_formats = [item for item in formats if item.get("container") == "mp4" and item.get("url")]
-        if mp4_formats:
-            primary["download_url"] = max(mp4_formats, key=lambda item: item.get("bitrate") or 0)["url"]
+        downloadable_formats = [item for item in formats if item.get("url")]
+        if downloadable_formats:
+            primary["download_url"] = max(
+                downloadable_formats,
+                key=lambda item: (
+                    item.get("height") or 0,
+                    item.get("width") or 0,
+                    item.get("bitrate") or 0,
+                    1 if item.get("container") == "mp4" else 0,
+                ),
+            )["url"]
         elif primary.get("url"):
             primary["download_url"] = primary["url"]
     elif primary.get("url"):
@@ -163,15 +179,19 @@ def build_media_snapshot(
     remote_url = primary_media.get("download_url")
     media_destination = None
     stem = f"{prefix}media" if prefix else "media"
-    if remote_url:
+    source_status_url = post.get("url") or fallback_url
+    if media_type in {"video", "gif"}:
+        try:
+            media_destination = download_with_ytdlp(source_status_url, asset_dir, stem=stem)
+        except Exception:
+            media_destination = None
+    if media_destination is None and remote_url:
         try:
             media_extension = safe_extension(remote_url, ".bin")
             media_destination = asset_dir / f"{stem}{media_extension}"
             download_file(remote_url, media_destination)
         except Exception:
             media_destination = None
-    if media_destination is None and media_type in {"video", "gif"}:
-        media_destination = download_with_ytdlp(post.get("url") or fallback_url, asset_dir, stem=stem)
 
     local_media_path = None
     local_media_probe: dict[str, Any] = {}
@@ -181,6 +201,7 @@ def build_media_snapshot(
 
     return {
         "kind": media_type,
+        "source_status_url": source_status_url,
         "remote_url": remote_url,
         "thumbnail_url": primary_media.get("thumbnail_url"),
         "width": primary_media.get("width") or local_media_probe.get("width"),

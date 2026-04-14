@@ -32,6 +32,12 @@ If the timing looks off, debug the start-playback timing before changing ffmpeg.
 
 The GIF is silent by design.
 
+## MP4 master quality
+
+Treat the MP4 as the master output, not the file that absorbs the GIF budget. Keep the MP4 visually sharp and let the GIF absorb the size-driven quality reductions.
+
+When a rerender is needed, prefer restoring the original local media or re-downloading the highest-quality source variant instead of lowering the MP4 encode target.
+
 ## GIF ceiling
 
 The renderer treats the 24 MB GIF limit as a hard constraint. If the first pass is too large, it will reduce frame rate, width, and palette depth until the GIF fits.

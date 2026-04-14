@@ -12,12 +12,18 @@ from pathlib import Path
 from playwright.async_api import async_playwright
 
 
-async def measure_page(playwright, html_path: Path, width: int) -> tuple[int, int]:
+DEFAULT_DEVICE_SCALE_FACTOR = 2
+
+
+async def measure_page(playwright, html_path: Path, width: int, device_scale_factor: int) -> tuple[int, int]:
     browser = await playwright.chromium.launch(
         headless=True,
         args=["--autoplay-policy=no-user-gesture-required"],
     )
-    page = await browser.new_page(viewport={"width": width, "height": 1400})
+    page = await browser.new_page(
+        viewport={"width": width, "height": 1400},
+        device_scale_factor=device_scale_factor,
+    )
     await page.goto(html_path.as_uri(), wait_until="load")
     await page.wait_for_function("window.__replicaReady === true")
     height = await page.evaluate(
@@ -38,9 +44,15 @@ async def measure_page(playwright, html_path: Path, width: int) -> tuple[int, in
     return int(height), int(duration_ms)
 
 
-async def record_html_to_webm(html_path: Path, output_path: Path, width: int, tail_hold_ms: int) -> Path:
+async def record_html_to_webm(
+    html_path: Path,
+    output_path: Path,
+    width: int,
+    tail_hold_ms: int,
+    device_scale_factor: int = DEFAULT_DEVICE_SCALE_FACTOR,
+) -> Path:
     async with async_playwright() as playwright:
-        height, duration_ms = await measure_page(playwright, html_path, width)
+        height, duration_ms = await measure_page(playwright, html_path, width, device_scale_factor)
         record_dir = Path(tempfile.mkdtemp(prefix="tweet-replicate-record-"))
         browser = await playwright.chromium.launch(
             headless=True,
@@ -48,8 +60,9 @@ async def record_html_to_webm(html_path: Path, output_path: Path, width: int, ta
         )
         context = await browser.new_context(
             viewport={"width": width, "height": height},
+            device_scale_factor=device_scale_factor,
             record_video_dir=str(record_dir),
-            record_video_size={"width": width, "height": height},
+            record_video_size={"width": width * device_scale_factor, "height": height * device_scale_factor},
         )
         page = await context.new_page()
         await page.goto(html_path.as_uri(), wait_until="load")
@@ -79,6 +92,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("output_path", help="Output WebM path")
     parser.add_argument("--width", type=int, default=594, help="Viewport width in pixels")
     parser.add_argument(
+        "--device-scale-factor",
+        type=int,
+        default=DEFAULT_DEVICE_SCALE_FACTOR,
+        help="Render scale multiplier for a sharper capture without changing the CSS layout width",
+    )
+    parser.add_argument(
         "--tail-hold-ms",
         type=int,
         default=450,
@@ -95,6 +114,7 @@ def main() -> int:
             Path(args.output_path).resolve(),
             args.width,
             args.tail_hold_ms,
+            args.device_scale_factor,
         )
     )
     return 0

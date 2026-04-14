@@ -7,11 +7,11 @@
 1. Offer a designated save root first. Default to `./pieces/` if the user does not care.
 2. Run `scripts/fetch_tweet_snapshot.py` on a public status URL.
 3. Save a frozen `snapshot.json`.
-4. Download the avatar and primary media into the chosen asset directory.
+4. Download the avatar and primary media into the chosen asset directory, preferring the highest-quality media variant available.
 5. Run `scripts/render_tweet_replica.py` to turn the snapshot into local HTML.
 6. Record that HTML with `scripts/record_tweet_replica.py`.
-7. Transcode the recorded WebM to MP4 and mux original audio when present.
-8. Derive a GIF from the final MP4 and step down quality until it fits under 24 MB.
+7. Transcode the recorded WebM to a high-quality MP4 master and mux original audio when present.
+8. Derive a GIF from the final MP4 and step down only the GIF quality until it fits under 24 MB.
 
 ## Recommended build layout
 
