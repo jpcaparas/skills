@@ -1,0 +1,4 @@
+interface:
+  display_name: "client-report-from-commits"
+  short_description: "Turn git changes since an exact date into a non-technical client update"
+  default_prompt: "Summarize this git repository's accomplishments for a non-technical client using changes since an exact start date"

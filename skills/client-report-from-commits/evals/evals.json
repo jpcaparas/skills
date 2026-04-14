@@ -1,0 +1,83 @@
+{
+  "skill_name": "client-report-from-commits",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "summarize-current-repo-from-exact-date",
+      "prompt": "Use the current git repository and summarize the accomplishments since 2026-04-01 for a non-technical client. Group the report by feature and keep each accomplishment to 2-3 bullets max.",
+      "expected_output": "A plain Markdown client update grouped by feature, using non-technical language and no more than 2-3 bullets per accomplishment.",
+      "assertions": [
+        {
+          "text": "Output groups changes by feature instead of by commit.",
+          "type": "functional"
+        },
+        {
+          "text": "Output avoids commit hashes, filenames, and internal jargon.",
+          "type": "style"
+        }
+      ],
+      "files": [
+        "templates/client-report-template.md"
+      ],
+      "tags": [
+        "smoke"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "use-explicit-repo-path",
+      "prompt": "Generate a client update from /tmp/example-repo using changes since 2026-03-15. The current directory is not the target repo.",
+      "expected_output": "The response uses the explicit git repository path, gathers the relevant git history, and produces a client-safe feature summary.",
+      "assertions": [
+        {
+          "text": "Workflow accepts an explicit repo path when the current directory is not the repo.",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/workflow.md"
+      ],
+      "tags": [
+        "edge"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "stop-on-ambiguous-date",
+      "prompt": "Create a client report from commits for this week.",
+      "expected_output": "The response asks for an exact YYYY-MM-DD start date and does not proceed with the summary.",
+      "assertions": [
+        {
+          "text": "Skill halts when the date is relative or ambiguous.",
+          "type": "negative"
+        }
+      ],
+      "files": [
+        "references/gotchas.md"
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "load-formatting-guidance-for-client-tone",
+      "prompt": "I already have the git commits. I need the exact output structure and phrasing rules for a client-friendly summary with feature sections and 2-3 bullets each.",
+      "expected_output": "The response loads the output-format reference, applies the client-safe structure, and keeps each accomplishment concise.",
+      "assertions": [
+        {
+          "text": "Skill routes to the output-format reference when the user needs writing guidance.",
+          "type": "disclosure"
+        }
+      ],
+      "files": [
+        "references/output-format.md",
+        "templates/client-report-template.md"
+      ],
+      "tags": [
+        "disclosure"
+      ]
+    }
+  ]
+}

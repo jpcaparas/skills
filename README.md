@@ -24,6 +24,12 @@ Production skill for Azure DevOps wiki Markdown covering wiki-only blocks, Merma
 
 Production writing skill that starts from Strunk's durable rules, then extends them with progressive disclosure, staged revision passes, cadence repair, genre routing, and bundled style families for technical, analytical, editorial, reflective, and conversion writing.
 
+### `client-report-from-commits`
+
+`npx skills add jpcaparas/skills --skill client-report-from-commits`
+
+Production skill for turning git commits and diffs since an exact date into a feature-grouped, non-technical client update, with strict date handling and repository checks.
+
 ### `instagram-replicate`
 
 `npx skills add jpcaparas/skills --skill instagram-replicate`
