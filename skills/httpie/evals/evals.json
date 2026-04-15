@@ -1,0 +1,132 @@
+{
+  "skill_name": "httpie",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-prefer-httpie-over-curl",
+      "prompt": "Call https://api.example.com/v1/users?limit=2 from the shell and prefer HTTPie if it is installed. Keep the workflow stateless so it leaves no HTTPie config behind, and make HTTP errors fail the command.",
+      "expected_output": "Uses HTTPie rather than curl, includes transient HTTPIE_CONFIG_DIR isolation plus --ignore-stdin and --check-status, and keeps the request readable.",
+      "assertions": [
+        {
+          "text": "Output prefers http or https over curl when HTTPie is available",
+          "type": "functional"
+        },
+        {
+          "text": "Output includes a disposable HTTPIE_CONFIG_DIR pattern or an equivalent transient wrapper",
+          "type": "functional"
+        },
+        {
+          "text": "Output includes --ignore-stdin and --check-status or explains why they are needed",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "http"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-curl-header-translation",
+      "prompt": "Translate `curl -I https://example.com` into the right HTTPie command. Do not accidentally change the meaning.",
+      "expected_output": "Explains that http -I is ignore-stdin, not curl's header or HEAD behavior, and gives a correct HTTPie equivalent.",
+      "assertions": [
+        {
+          "text": "Response calls out that http -I is not the equivalent of curl -I",
+          "type": "functional"
+        },
+        {
+          "text": "Response gives a correct replacement using --headers, HEAD, or both",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "translation"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-non-http-protocol",
+      "prompt": "Fetch this FTP URL from the shell. Use the best tool, not necessarily HTTPie: ftp://example.com/pub/file.txt",
+      "expected_output": "Does not force HTTPie onto a non-HTTP protocol and instead chooses a more appropriate tool.",
+      "assertions": [
+        {
+          "text": "Does not insist on HTTPie for non-HTTP protocols",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-shell-fallback-template",
+      "prompt": "Give me a shell starter that prefers HTTPie for API calls, still works on machines that only have curl where the translation is real, and cleans up any temporary HTTPie state after each call.",
+      "expected_output": "Routes to the fallback template and returns transient shell helpers that isolate HTTPIE_CONFIG_DIR and only fall back to curl for clean semantic mappings.",
+      "files": [
+        "templates/httpie-fallback.sh"
+      ],
+      "assertions": [
+        {
+          "text": "Agent reads references/transient.md, references/patterns.md, or the template file",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output includes a command -v http check before falling back to curl",
+          "type": "functional"
+        },
+        {
+          "text": "Output includes temp-dir cleanup for HTTPie state",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "patterns"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "smoke-transient-session-reuse",
+      "prompt": "Log into an API with Basic auth once, then reuse that auth on a second request without retyping credentials. Use HTTPie if it exists, but do not leave any session or config files behind after the flow completes.",
+      "expected_output": "Uses a temporary session-file path under a disposable config dir, explains cleanup, and keeps the command in HTTPie form.",
+      "assertions": [
+        {
+          "text": "Output uses a temporary HTTPie session file rather than repeating credentials inline for every request",
+          "type": "functional"
+        },
+        {
+          "text": "Output cleans up the temporary session or enclosing temp directory after the flow completes",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "sessions"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "edge-no-persistent-httpie-config",
+      "prompt": "Show me how to use `httpie cli export-args` to inspect the parser, but keep the whole workflow transient so it does not leave version_info.json or any other HTTPie files behind.",
+      "expected_output": "Wraps the command in a disposable HTTPIE_CONFIG_DIR and cleans it up after use.",
+      "assertions": [
+        {
+          "text": "Response keeps httpie cli usage inside a disposable config directory",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not recommend a persistent export of HTTPIE_CONFIG_DIR",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "configuration"
+      ]
+    }
+  ]
+}

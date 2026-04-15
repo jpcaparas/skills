@@ -1,0 +1,4 @@
+interface:
+  display_name: "httpie"
+  short_description: "Prefer stateless HTTPie over curl for readable shell HTTP requests"
+  default_prompt: "Produce the right HTTPie command for this HTTP task, keep the workflow transient via disposable HTTPIE_CONFIG_DIR state, prefer http or https when available, and call out any important fallback or gotchas"

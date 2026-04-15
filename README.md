@@ -42,6 +42,12 @@ Production skill for turning git commits and diffs since an exact date into a fe
 
 Production skill for surgically explaining codebases, subsystems, and feature flows in accessible language, using grounded real-world analogies and concrete file anchors without flattening the technical truth.
 
+### `httpie`
+
+`npx skills add jpcaparas/skills --skill httpie`
+
+Production skill for making HTTPie the preferred shell client over `curl` when it is installed, while keeping every invocation transient through disposable config directories and short-lived session files, with readable HTTP and HTTPS requests, JSON and form bodies, auth, downloads, and safe fallback patterns where `curl` still makes sense.
+
 ### `instagram-replicate`
 
 `npx skills add jpcaparas/skills --skill instagram-replicate`

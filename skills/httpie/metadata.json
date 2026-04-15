@@ -1,0 +1,17 @@
+{
+  "version": "1.1.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for preferring HTTPie over curl for readable HTTP requests while keeping every invocation transient through disposable config directories and short-lived session files, with verified guidance for JSON, forms, auth, redirects, streaming, downloads, and safe curl fallbacks.",
+  "references": [
+    "https://httpie.io/",
+    "https://httpie.io/docs/cli",
+    "https://httpie.io/docs/cli/request-items",
+    "https://httpie.io/docs/cli/authentication",
+    "https://httpie.io/docs/cli/sessions",
+    "https://httpie.io/docs/cli/downloads",
+    "https://httpie.io/docs/cli/config-file-directory",
+    "https://httpie.io/docs/cli/meta",
+    "https://github.com/httpie/cli"
+  ]
+}
