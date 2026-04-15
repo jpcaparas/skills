@@ -1,0 +1,77 @@
+{
+  "skill_name": "eli12",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "broad_flow_smoke",
+      "prompt": "Walk me through what happens when a user signs in across this codebase, and keep it simple.",
+      "expected_output": "Routes to a broad exploration pass, then synthesizes the result into a digestible explanation with concrete file anchors.",
+      "assertions": [
+        {
+          "text": "Loads references/explorer-prompt.md for the evidence-gathering pass",
+          "type": "disclosure"
+        },
+        {
+          "text": "Loads references/explainer-prompt.md for the final explanation",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["smoke", "disclosure"],
+      "files": [
+        "references/explorer-prompt.md",
+        "references/explainer-prompt.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "analogy_edge_case",
+      "prompt": "Explain the cache layer simply and use a real-life analogy, but do not make it sloppy.",
+      "expected_output": "Keeps the explanation accessible, uses one grounded analogy, and ties that analogy back to the real cache implementation.",
+      "assertions": [
+        {
+          "text": "Loads references/analogy-patterns.md when analogy choice matters",
+          "type": "disclosure"
+        },
+        {
+          "text": "Reconnects the analogy to exact code roles instead of leaving it abstract",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "disclosure"],
+      "files": [
+        "references/analogy-patterns.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative_review_prompt",
+      "prompt": "Review this PR for bugs and tell me what could break in production.",
+      "expected_output": "Does not route a code-review request through the accessible explainer workflow.",
+      "assertions": [
+        {
+          "text": "Declines explanation mode for bug-finding and review requests",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "narrow_symbol_direct",
+      "prompt": "Explain this auth middleware simply.",
+      "expected_output": "Uses a direct explanation pass instead of fan-out exploration for a narrow symbol question.",
+      "assertions": [
+        {
+          "text": "Routes narrow symbol questions to a direct explanation pass",
+          "type": "functional"
+        },
+        {
+          "text": "Loads references/explainer-prompt.md for tone and output shape",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["smoke"]
+    }
+  ]
+}

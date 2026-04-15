@@ -30,6 +30,12 @@ Production writing skill that starts from Strunk's durable rules, then extends t
 
 Production skill for turning git commits and diffs since an exact date into a feature-grouped, non-technical client update, with strict date handling and repository checks.
 
+### `eli12`
+
+`npx skills add jpcaparas/skills --skill eli12`
+
+Production skill for surgically explaining codebases, subsystems, and feature flows in accessible language, using grounded real-world analogies and concrete file anchors without flattening the technical truth.
+
 ### `instagram-replicate`
 
 `npx skills add jpcaparas/skills --skill instagram-replicate`

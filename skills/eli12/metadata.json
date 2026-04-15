@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Installable skill for explaining codebases, subsystems, and runtime flows in accessible language. Inspired by poteto/how, but optimized for digestible teaching: plain words first, grounded real-world analogies, concrete file references, and strict guardrails against oversimplification.",
+  "references": [
+    "https://github.com/poteto/how"
+  ]
+}
