@@ -18,6 +18,12 @@ npx skills add jpcaparas/skills
 
 Production skill for Azure DevOps wiki Markdown covering wiki-only blocks, Mermaid-safe authoring, code-fence language identifiers, and surface-specific support differences across Wiki, PR, README, Widget, and Done fields.
 
+### `azure-devops-create-work-item`
+
+`npx skills add jpcaparas/skills --skill azure-devops-create-work-item`
+
+Production skill for drafting local Azure DevOps work item packets from loose context, using official Azure Boards work item primitives and reusable templates for Agile epics, features, user stories, tasks, issues, and bugs.
+
 ### `better-writing`
 
 `npx skills add jpcaparas/skills --skill better-writing`

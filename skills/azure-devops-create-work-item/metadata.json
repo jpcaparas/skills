@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for drafting local Azure DevOps work item packets from loose context using official Azure Boards work item primitives, with deterministic folder output and reusable templates for Agile Epic, Feature, User Story, Task, Issue, and Bug work item types.",
+  "references": [
+    "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops&tabs=agile-process",
+    "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/guidance/agile-process-workflow?view=azure-devops",
+    "https://learn.microsoft.com/en-us/azure/devops/boards/backlogs/manage-bugs?view=azure-devops",
+    "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/guidance/choose-process?view=azure-devops"
+  ]
+}

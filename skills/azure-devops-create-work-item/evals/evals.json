@@ -1,0 +1,118 @@
+{
+  "skill_name": "azure-devops-create-work-item",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-feature-packet-from-loose-context",
+      "prompt": "Turn these notes into an Azure DevOps feature work item and leave a local folder beside where you are working: users lose progress when the login token expires midway through sign-in, support is handling repeat calls, and we want a recovery path that returns people to the login flow instead of a blank error page.",
+      "expected_output": "Load {{ skill:azure-devops-create-work-item }}, choose the Feature template, create a packet in the current working directory, and produce work-item.md plus supporting artefacts.",
+      "assertions": [
+        {
+          "text": "Uses scripts/create_work_item_packet.py as the deterministic packet scaffold",
+          "type": "functional"
+        },
+        {
+          "text": "Creates or references work-item.md, context.md, sources.md, and metadata.json",
+          "type": "verification"
+        },
+        {
+          "text": "Uses the feature template contract with Problem, Requirements/Solution, Action, Outcome, and Acceptance criteria",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "feature"
+      ],
+      "files": [
+        "scripts/create_work_item_packet.py",
+        "templates/feature-template.md",
+        "references/output-packet.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "smoke-bug-packet-with-repro-steps",
+      "prompt": "Draft an Azure DevOps bug work item from this incident summary and save the local packet here: Safari users click Checkout after applying a coupon, the button spins forever, no order is submitted, and refresh clears the cart state.",
+      "expected_output": "Choose Bug, keep the draft defect-focused, and include a Reproduction steps section in the main work item file.",
+      "assertions": [
+        {
+          "text": "Uses the bug template instead of a generic issue or feature template",
+          "type": "functional"
+        },
+        {
+          "text": "Includes a Reproduction steps section for the bug draft",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "bug"
+      ],
+      "files": [
+        "templates/bug-template.md",
+        "references/official-primitives.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "edge-user-story-not-task",
+      "prompt": "Create the right Azure DevOps work item packet for this note: as an account owner, I want to resend an invite from the team page so I do not have to leave the page and start again. Keep the draft user-facing, not implementation-heavy.",
+      "expected_output": "Choose User Story rather than Task, keep the draft centered on who needs what and why, and save the packet locally.",
+      "assertions": [
+        {
+          "text": "Chooses User Story when the context is naturally who/what/why instead of implementation work",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "classification"
+      ],
+      "files": [
+        "templates/user-story-template.md",
+        "references/official-primitives.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "negative-live-api-creation",
+      "prompt": "Create this Azure DevOps work item directly in our project through the REST API and return the new work item ID.",
+      "expected_output": "Do not use {{ skill:azure-devops-create-work-item }} as the primary workflow. Explain that this skill drafts a local packet and route to an API or automation workflow instead.",
+      "assertions": [
+        {
+          "text": "Rejects direct live Azure DevOps creation as out of scope for this skill",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ],
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "disclosure-basic-process-bug-mismatch",
+      "prompt": "We use the Basic process. Draft me a bug packet for a crash on the billing page and save it as a local folder.",
+      "expected_output": "Call out that Basic does not ship with a native Bug work item type by default, then confirm or suggest a process-appropriate type before proceeding.",
+      "assertions": [
+        {
+          "text": "Flags the Basic process bug mismatch instead of silently drafting an Agile bug packet",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "process"
+      ],
+      "files": [
+        "references/official-primitives.md",
+        "references/gotchas.md"
+      ]
+    }
+  ]
+}
