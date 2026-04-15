@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Project-aware OpenCode hook scaffolder that verifies the live official OpenCode plugin, config, SDK, custom-tools, and troubleshooting docs; audits a target repository in detail; inspects existing project and global OpenCode plugin state; and then generates a deterministic managed `.opencode/plugins/` layer with repeatable config and package merges, full hook-surface stub coverage, and a generated plugin README.",
+  "references": [
+    "https://opencode.ai/docs/plugins/",
+    "https://opencode.ai/docs/config/",
+    "https://opencode.ai/docs/sdk",
+    "https://opencode.ai/docs/custom-tools",
+    "https://opencode.ai/docs/troubleshooting",
+    "https://blog.devgenius.io/opencode-auto-lint-your-ai-agents-code-with-a-post-turn-biome-hook-7158d75c63db?postPublishedType=repub"
+  ]
+}
+

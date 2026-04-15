@@ -78,6 +78,12 @@ Production scaffold skill for Claude Code hooks that audits the target project, 
 
 Production scaffold skill for Codex hooks that audits the repo, verifies the live docs and schemas, checks the effective feature flag state, and generates repo-local lifecycle hook scaffolding.
 
+### `scaffold-opencode-hooks`
+
+`npx skills add jpcaparas/skills --skill scaffold-opencode-hooks`
+
+Production scaffold skill for OpenCode hooks that audits the repo, verifies the live plugin and config docs, inspects existing project-vs-global OpenCode state, and generates a managed `.opencode/plugins/` scaffold with repeatable config and package merges.
+
 ### `synthetic-search`
 
 `npx skills add jpcaparas/skills --skill synthetic-search`

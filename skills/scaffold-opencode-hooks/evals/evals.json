@@ -1,0 +1,124 @@
+{
+  "skill_name": "scaffold-opencode-hooks",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-project-opencode-hook-scaffold",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, `.envrc`, and no OpenCode plugin setup yet. Audit the repo first, verify the live official OpenCode plugin docs, inspect existing OpenCode config state, then scaffold project-local OpenCode hooks with managed plugin files, surface stubs, and a generated plugin README.",
+      "expected_output": "The response verifies live official OpenCode plugin sources first, audits the repo, chooses project-local scope, and creates a deterministic managed `.opencode/plugins/` scaffold with live plugin files plus reference stubs for the current surface set.",
+      "files": [
+        "templates/hook-plan.example.json",
+        "assets/hook-events.json"
+      ],
+      "assertions": [
+        {
+          "text": "Response verifies the live official OpenCode plugin docs before scaffolding",
+          "type": "verification"
+        },
+        {
+          "text": "Response inspects existing OpenCode config and plugin state before choosing scope",
+          "type": "functional"
+        },
+        {
+          "text": "Response scaffolds `.opencode/plugins/`, not `.codex/hooks.json` or `.claude/settings.json`",
+          "type": "functional"
+        },
+        {
+          "text": "Response generates live managed plugin files plus non-loading stubs for the current hook surfaces",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "hooks",
+        "scaffold"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "existing-project-additive-refresh",
+      "prompt": "This repo already has `.opencode/plugins/` with a couple of hand-written plugins plus a stale generated layer. Add the missing current hook surfaces, preserve the custom plugins, refresh only the managed layer, and keep the generated README current.",
+      "expected_output": "The response chooses additive mode, preserves non-managed plugin files, refreshes the managed layer, and updates the generated README.",
+      "assertions": [
+        {
+          "text": "Response distinguishes managed plugin files from unrelated custom plugins",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses additive mode unless the managed layer is structurally stale",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "merge",
+        "repeat-run"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "scope-first-troubleshooting",
+      "prompt": "The repo already has `opencode.json` and `.opencode/plugins/`, but the plugin behavior is confusing. Before rewriting anything, inspect the current OpenCode config and plugin directories, determine whether the behavior is coming from project-local or global scope, and only then suggest changes.",
+      "expected_output": "The response treats config layering and plugin scope as the first diagnostic, inspects project and global state, and only then moves to code changes.",
+      "assertions": [
+        {
+          "text": "Response checks project-vs-global OpenCode setup before changing plugin files",
+          "type": "functional"
+        },
+        {
+          "text": "Agent reads references/config-layering.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "troubleshooting",
+        "scope",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "post-turn-lint-pattern",
+      "prompt": "Set up OpenCode so it runs my Biome or test check after the agent finishes editing files, but avoid thrashing the session. Use the official plugin docs first and then apply the post-turn pattern from the article carefully.",
+      "expected_output": "The response combines official plugin guidance with the secondary post-turn article, using `tool.execute.after` plus `event`/`session.idle` with edit tracking and a cooldown.",
+      "assertions": [
+        {
+          "text": "Response does not treat the article as authoritative over the official docs",
+          "type": "verification"
+        },
+        {
+          "text": "Response uses edit tracking and cooldown for a post-turn validator",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "post-turn",
+        "validation"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-codex-hooks-request",
+      "prompt": "I need Codex hooks scaffolded into `.codex/hooks.json` with `PreToolUse` and `Stop` handlers. Do that in this repo.",
+      "expected_output": "The response declines to use the OpenCode plugin scaffold and routes to the Codex-specific hook workflow instead.",
+      "assertions": [
+        {
+          "text": "Does not scaffold `.opencode/plugins/` for a Codex hook request",
+          "type": "negative"
+        },
+        {
+          "text": "Does not hallucinate OpenCode plugin surfaces as Codex hook events",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "triggering"
+      ]
+    }
+  ]
+}
+

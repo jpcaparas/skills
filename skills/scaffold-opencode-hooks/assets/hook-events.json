@@ -1,0 +1,293 @@
+{
+  "verified_on": "2026-04-15",
+  "verified_with": {
+    "official_docs": [
+      "https://opencode.ai/docs/plugins/",
+      "https://opencode.ai/docs/config/",
+      "https://opencode.ai/docs/sdk",
+      "https://opencode.ai/docs/custom-tools",
+      "https://opencode.ai/docs/troubleshooting"
+    ],
+    "secondary_sources": [
+      "https://blog.devgenius.io/opencode-auto-lint-your-ai-agents-code-with-a-post-turn-biome-hook-7158d75c63db?postPublishedType=repub"
+    ],
+    "runtime_package": {
+      "name": "@opencode-ai/plugin",
+      "version": "1.4.3",
+      "checked_via": "npm view @opencode-ai/plugin version"
+    }
+  },
+  "default_scope": "project",
+  "default_deployment": "local-files",
+  "default_module_format": "js",
+  "recommended_dependency_versions": {
+    "@opencode-ai/plugin": "^1.4.3"
+  },
+  "load_order": [
+    "global-config",
+    "project-config",
+    "global-plugin-directory",
+    "project-plugin-directory"
+  ],
+  "plugin_directories": {
+    "project": ".opencode/plugins",
+    "global": "~/.config/opencode/plugins"
+  },
+  "config_files": {
+    "project": "opencode.json or opencode.jsonc",
+    "global": "~/.config/opencode/opencode.json or opencode.jsonc"
+  },
+  "special_surfaces": [
+    {
+      "name": "event",
+      "stub_file": "event.catch-all.js.txt",
+      "category": "special",
+      "kind": "catch-all",
+      "description": "Observe all OpenCode events through one handler.",
+      "guidance": "Use this for session.idle or any workflow that coordinates multiple event types."
+    },
+    {
+      "name": "tool",
+      "stub_file": "tool.registry.js.txt",
+      "category": "special",
+      "kind": "custom-tool",
+      "description": "Register custom tools from a plugin.",
+      "guidance": "Requires the official @opencode-ai/plugin helper in the documented examples."
+    }
+  ],
+  "events": [
+    {
+      "name": "command.executed",
+      "stub_file": "command.executed.js.txt",
+      "category": "command",
+      "kind": "named-event",
+      "description": "React after an OpenCode command executes.",
+      "guidance": "Prefer lightweight bookkeeping, logging, or follow-up context."
+    },
+    {
+      "name": "file.edited",
+      "stub_file": "file.edited.js.txt",
+      "category": "file",
+      "kind": "named-event",
+      "description": "Observe file edits.",
+      "guidance": "Use this when the plugin needs file-level bookkeeping beyond tool-name checks."
+    },
+    {
+      "name": "file.watcher.updated",
+      "stub_file": "file.watcher.updated.js.txt",
+      "category": "file",
+      "kind": "named-event",
+      "description": "React to file watcher updates.",
+      "guidance": "Good for syncing state from watcher-driven changes."
+    },
+    {
+      "name": "installation.updated",
+      "stub_file": "installation.updated.js.txt",
+      "category": "installation",
+      "kind": "named-event",
+      "description": "React when installation state changes.",
+      "guidance": "Use this for setup reminders or dependency-related follow-up."
+    },
+    {
+      "name": "lsp.client.diagnostics",
+      "stub_file": "lsp.client.diagnostics.js.txt",
+      "category": "lsp",
+      "kind": "named-event",
+      "description": "Observe LSP diagnostics from the client.",
+      "guidance": "Useful for editor-driven validation or error aggregation."
+    },
+    {
+      "name": "lsp.updated",
+      "stub_file": "lsp.updated.js.txt",
+      "category": "lsp",
+      "kind": "named-event",
+      "description": "React when LSP state updates.",
+      "guidance": "Keep this lightweight unless the repo depends heavily on LSP status."
+    },
+    {
+      "name": "message.part.removed",
+      "stub_file": "message.part.removed.js.txt",
+      "category": "message",
+      "kind": "named-event",
+      "description": "Observe message part removals.",
+      "guidance": "Rarely the first scaffold choice; use only for message lifecycle workflows."
+    },
+    {
+      "name": "message.part.updated",
+      "stub_file": "message.part.updated.js.txt",
+      "category": "message",
+      "kind": "named-event",
+      "description": "Observe message part updates.",
+      "guidance": "Use when the plugin needs fine-grained message stream awareness."
+    },
+    {
+      "name": "message.removed",
+      "stub_file": "message.removed.js.txt",
+      "category": "message",
+      "kind": "named-event",
+      "description": "Observe message removals.",
+      "guidance": "Keep ownership clear if you also subscribe to catch-all event hooks."
+    },
+    {
+      "name": "message.updated",
+      "stub_file": "message.updated.js.txt",
+      "category": "message",
+      "kind": "named-event",
+      "description": "Observe message updates.",
+      "guidance": "Use for logging or synchronization, not heavy computation."
+    },
+    {
+      "name": "permission.asked",
+      "stub_file": "permission.asked.js.txt",
+      "category": "permission",
+      "kind": "named-event",
+      "description": "React when OpenCode asks for permission.",
+      "guidance": "Use this for notifications or state tracking, not as the primary guardrail."
+    },
+    {
+      "name": "permission.replied",
+      "stub_file": "permission.replied.js.txt",
+      "category": "permission",
+      "kind": "named-event",
+      "description": "React after a permission reply.",
+      "guidance": "Useful for analytics or workflow bookkeeping."
+    },
+    {
+      "name": "server.connected",
+      "stub_file": "server.connected.js.txt",
+      "category": "server",
+      "kind": "named-event",
+      "description": "React when a server connection is established.",
+      "guidance": "Good for startup notifications or environment checks."
+    },
+    {
+      "name": "session.created",
+      "stub_file": "session.created.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "React when a session is created.",
+      "guidance": "Use for bootstrap context or welcome-state logic."
+    },
+    {
+      "name": "session.compacted",
+      "stub_file": "session.compacted.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "React after a session compacts.",
+      "guidance": "Pair carefully with experimental compaction hooks to avoid duplicate logic."
+    },
+    {
+      "name": "session.deleted",
+      "stub_file": "session.deleted.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "React when a session is deleted.",
+      "guidance": "Good for cleanup or archival bookkeeping."
+    },
+    {
+      "name": "session.diff",
+      "stub_file": "session.diff.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "Observe session diff updates.",
+      "guidance": "Use when the workflow depends on diff-level tracking."
+    },
+    {
+      "name": "session.error",
+      "stub_file": "session.error.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "React to session errors.",
+      "guidance": "Good for notifications, logging, or recovery prompts."
+    },
+    {
+      "name": "session.idle",
+      "stub_file": "session.idle.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "React when a session goes idle.",
+      "guidance": "The key post-turn validation trigger; usually coordinated through the catch-all event handler."
+    },
+    {
+      "name": "session.status",
+      "stub_file": "session.status.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "React to session status changes.",
+      "guidance": "Use for progress reporting or state transitions."
+    },
+    {
+      "name": "session.updated",
+      "stub_file": "session.updated.js.txt",
+      "category": "session",
+      "kind": "named-event",
+      "description": "Observe session updates.",
+      "guidance": "Useful for session metadata sync or instrumentation."
+    },
+    {
+      "name": "todo.updated",
+      "stub_file": "todo.updated.js.txt",
+      "category": "todo",
+      "kind": "named-event",
+      "description": "React to todo state updates.",
+      "guidance": "Use for todo-aware workflow nudges or analytics."
+    },
+    {
+      "name": "shell.env",
+      "stub_file": "shell.env.js.txt",
+      "category": "shell",
+      "kind": "named-event",
+      "description": "Inject environment variables into shell execution.",
+      "guidance": "Mutate output.env to add variables for shell commands."
+    },
+    {
+      "name": "tool.execute.after",
+      "stub_file": "tool.execute.after.js.txt",
+      "category": "tool",
+      "kind": "named-event",
+      "description": "Observe tool execution after it completes.",
+      "guidance": "Use this to track edits, stash output, or trigger post-turn checks after the fact."
+    },
+    {
+      "name": "tool.execute.before",
+      "stub_file": "tool.execute.before.js.txt",
+      "category": "tool",
+      "kind": "named-event",
+      "description": "Inspect or rewrite a tool call before it runs.",
+      "guidance": "Use this for guardrails, rewrites, or policy enforcement."
+    },
+    {
+      "name": "tui.prompt.append",
+      "stub_file": "tui.prompt.append.js.txt",
+      "category": "tui",
+      "kind": "named-event",
+      "description": "React when prompt text is appended in the TUI.",
+      "guidance": "Use when the TUI prompt needs augmentation or observation."
+    },
+    {
+      "name": "tui.command.execute",
+      "stub_file": "tui.command.execute.js.txt",
+      "category": "tui",
+      "kind": "named-event",
+      "description": "React when a TUI command executes.",
+      "guidance": "Useful for lightweight command analytics or assistance."
+    },
+    {
+      "name": "tui.toast.show",
+      "stub_file": "tui.toast.show.js.txt",
+      "category": "tui",
+      "kind": "named-event",
+      "description": "React when a TUI toast is shown.",
+      "guidance": "Best for UX instrumentation or notification coordination."
+    },
+    {
+      "name": "experimental.session.compacting",
+      "stub_file": "experimental.session.compacting.js.txt",
+      "category": "experimental",
+      "kind": "experimental",
+      "description": "Inject or replace compaction context before OpenCode summarizes a session.",
+      "guidance": "Use for context carry-over only. Do not build critical guardrails on this."
+    }
+  ]
+}
+

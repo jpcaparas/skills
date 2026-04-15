@@ -1,0 +1,5 @@
+interface:
+  display_name: "scaffold-opencode-hooks"
+  short_description: "Audit a repo, inspect OpenCode plugin state, and scaffold a managed OpenCode plugin-based hook setup"
+  default_prompt: "Help me scaffold or refresh OpenCode hooks in this project, including config inspection, managed plugin generation, and repeatable config merges"
+

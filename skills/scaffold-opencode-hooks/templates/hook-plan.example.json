@@ -1,0 +1,40 @@
+{
+  "scope": "project",
+  "deployment": "local-files",
+  "mode": "additive",
+  "module_format": "js",
+  "plugin_root": ".opencode/plugins",
+  "managed_state_dir": ".opencode/plugins/.managed",
+  "config_target": "opencode.json",
+  "package_target": ".opencode/package.json",
+  "package_dependencies": {},
+  "npm_plugins": [],
+  "enabled_plugins": [
+    {
+      "name": "guard-sensitive-files",
+      "filename": "opencode_hook_guard_sensitive_files.js",
+      "surfaces": [
+        "tool.execute.before"
+      ],
+      "notes": "Block reads and edits against secrets, lockfiles, and other protected paths."
+    },
+    {
+      "name": "post-turn-check",
+      "filename": "opencode_hook_post_turn_check.js",
+      "surfaces": [
+        "tool.execute.after",
+        "event"
+      ],
+      "notes": "Track edit tools, wait for session.idle, then run lint or tests and feed results back to the agent."
+    },
+    {
+      "name": "shell-env",
+      "filename": "opencode_hook_shell_env.js",
+      "surfaces": [
+        "shell.env"
+      ],
+      "notes": "Inject project-specific environment variables into shell execution."
+    }
+  ]
+}
+
