@@ -66,6 +66,15 @@ NARROW_PATTERNS = [
     r"\bmiddleware\b",
 ]
 
+VAGUE_PATTERNS = [
+    r"^explain(?: this| the)? (?:repo|app|system|codebase)\b",
+    r"^how does(?: this| the)? (?:repo|app|system|codebase) work\b",
+    r"^walk me through(?: this| the)? (?:repo|app|system|codebase)\b",
+    r"^explain this[.!?]?$",
+    r"^how does this work[?!.]?$",
+    r"^walk me through this[.!?]?$",
+]
+
 
 @dataclass
 class ProbeResult:
@@ -104,6 +113,15 @@ def analyze_prompt(prompt: str) -> ProbeResult:
         "references/analogy-patterns.md",
     ]
 
+    if _matches_any(VAGUE_PATTERNS, text):
+        reasons.append("request is too vague for an efficient explain pass")
+        return ProbeResult(
+            True,
+            "clarify",
+            reasons,
+            ["references/explainer-prompt.md", "references/gotchas.md"],
+        )
+
     if _matches_any(BROAD_PATTERNS, text):
         reasons.append("broad architecture or flow question")
         return ProbeResult(
@@ -132,6 +150,11 @@ def run_suite() -> dict[str, object]:
             "name": "narrow_function",
             "prompt": "Explain this auth middleware simply.",
             "expect": {"should_trigger": True, "mode": "direct"},
+        },
+        {
+            "name": "vague_repo_prompt",
+            "prompt": "Explain this repo.",
+            "expect": {"should_trigger": True, "mode": "clarify"},
         },
         {
             "name": "negative_bug_fix",

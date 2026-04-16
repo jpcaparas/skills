@@ -27,3 +27,11 @@ Words like "hydration," "memoization," "fan-out," or "idempotent" are fine only 
 ## 7. Observation and inference are not the same
 
 When a behavior is implied by naming or nearby code but not directly confirmed, mark it as an inference.
+
+## 8. Vague prompts can waste a lot of tokens
+
+If "Explain this app" could mean five subsystems, ask a short narrowing question before exploring. Fast clarification beats a sprawling answer aimed at the wrong target.
+
+## 9. ASCII charts should clarify, not decorate
+
+Use tiny sketches for flow or boundaries when they make the explanation easier to scan. Skip them when a sentence is clearer.

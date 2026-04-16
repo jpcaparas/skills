@@ -25,15 +25,17 @@ Inspired by [`poteto/how`](https://github.com/poteto/how), but tuned for accessi
 ## Decision Tree
 
 1. If the user is asking how a subsystem, feature flow, runtime path, or file cluster works, use this skill.
-2. If the question is narrow and local to one function, class, hook, or file, do a direct explain pass after a focused code search.
-3. If the question spans multiple modules, services, or an end-to-end flow, split it into 2-4 exploration angles, gather findings in parallel when the harness allows it, then synthesize.
-4. If the user mainly wants bugs, risks, or architectural critique, explain only enough to ground the discussion, then switch to normal review mode instead of staying inside the teaching frame.
-5. If a real-world analogy would make the explanation fuzzier, use fewer analogies and stay closer to the code.
+2. If the request is very vague and the likely search space is large, ask 1-3 short narrowing questions before exploring. Default to scope-first questions such as "Which feature or path do you care about?", "Do you want runtime flow, architecture, or file tour?", and "Should I stay focused on frontend, backend, or data?".
+3. If the question is narrow and local to one function, class, hook, or file, do a direct explain pass after a focused code search.
+4. If the question spans multiple modules, services, or an end-to-end flow, split it into 2-4 exploration angles, gather findings in parallel when the harness allows it, then synthesize.
+5. If the user mainly wants bugs, risks, or architectural critique, explain only enough to ground the discussion, then switch to normal review mode instead of staying inside the teaching frame.
+6. If a real-world analogy would make the explanation fuzzier, use fewer analogies and stay closer to the code.
 
 ## Quick Reference
 
 | Situation | Open / do | Why |
 | --- | --- | --- |
+| User asks something broad like "Explain this repo" with no target | Ask a few short scope questions before reading deeply | Prevents token waste and irrelevant architecture tours |
 | Explain one file, class, or helper simply | Read `references/explainer-prompt.md` | Keeps the answer direct and digestible |
 | Explain a broad subsystem or runtime flow | Read `references/explorer-prompt.md`, then `references/explainer-prompt.md` | Gather evidence first, simplify second |
 | Need better analogies without getting sloppy | Read `references/analogy-patterns.md` | Maps abstract code ideas to grounded everyday systems |
@@ -44,19 +46,23 @@ Inspired by [`poteto/how`](https://github.com/poteto/how), but tuned for accessi
 ## What This Skill Optimizes For
 
 - building the smallest correct mental model first
+- asking for scope before doing an expensive repo tour
 - defining jargon right when it appears
 - using short, concrete paragraphs instead of wall-of-text explainers
+- using friendly ASCII sketches when a flow or boundary is easier to see than to read
 - tying every analogy back to real files, functions, and data flow
 - helping the reader know where to look next in the codebase
 
 ## Default Operating Mode
 
-1. State your interpretation of the question if the scope is fuzzy.
-2. Search for entry points, key types, and the files that actually move data or decisions.
-3. Trace the real path from trigger to effect. Do not explain from filenames alone.
-4. Collapse the findings into plain language.
-5. Use one grounded analogy per important concept, then tie it back to exact code names.
-6. End with a short map of where the important pieces live.
+1. If the request is too vague to answer efficiently, ask 1-3 short narrowing questions before opening a large slice of the repo.
+2. State your interpretation of the question once the target is clear.
+3. Search for entry points, key types, and the files that actually move data or decisions.
+4. Trace the real path from trigger to effect. Do not explain from filenames alone.
+5. Collapse the findings into plain language.
+6. Use one grounded analogy per important concept when it helps, then tie it back to exact code names.
+7. Add a small ASCII sketch when topology, control flow, or data movement is easier to grasp visually than in prose.
+8. End with a short map of where the important pieces live.
 
 ## Output Shape
 
@@ -65,6 +71,7 @@ Use the sections that help. Skip the ones that would add noise.
 - **Big Picture** - What this thing does and why it exists.
 - **Main Pieces** - The handful of concepts or files the reader needs in order to follow the rest.
 - **The Story** - The step-by-step flow from input to output, trigger to effect, or request to response.
+- **ASCII Sketch** - A compact text diagram for flow, boundaries, or ownership when that clarifies the system faster than prose.
 - **Real-World Analogy** - A concrete analogy that matches the actual job of the system, not a cartoon version of it.
 - **Where To Look** - The files and directories that matter most if the reader wants to verify or extend the explanation.
 - **Sharp Edges** - Non-obvious behaviors, hidden state, historical quirks, or easy misunderstandings.
@@ -94,6 +101,24 @@ Name the actual files, symbols, or directories that support the explanation. Mak
 ### 6. Mark inference vs observation
 
 If part of the explanation is inferred rather than directly observed, say so plainly.
+
+### 7. Use ASCII sketches with discipline
+
+Prefer a tiny chart over a paragraph only when it reduces confusion. Keep it narrow, label the real code concepts, and avoid decorative boxes.
+
+Example:
+
+```text
+request
+  -> auth middleware
+  -> controller
+  -> service
+  -> database
+```
+
+### 8. Spend tokens on the right scope
+
+If the user asks something like "How does this app work?" and the repo is large, clarify the target before exploring. A short question is better than an unfocused architecture dump.
 
 ## When To Fan Out
 

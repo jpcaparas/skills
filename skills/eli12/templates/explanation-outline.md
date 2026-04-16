@@ -21,6 +21,11 @@ Use this outline when you want a stable answer shape.
 4. Where the important decision points are
 5. What final effect the user or system sees
 
+## ASCII Sketch
+
+- Optional compact flow or boundary diagram
+- Use only when the shape is easier to see than to read
+
 ## Real-World Analogy
 
 - Everyday system:

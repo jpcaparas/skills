@@ -72,6 +72,26 @@
         }
       ],
       "tags": ["smoke"]
+    },
+    {
+      "id": 5,
+      "name": "vague_scope_clarification",
+      "prompt": "Explain this repo.",
+      "expected_output": "Asks a few short scope questions before doing an expensive repo tour.",
+      "assertions": [
+        {
+          "text": "Asks for narrower scope when the request is too vague for an efficient explain pass",
+          "type": "functional"
+        },
+        {
+          "text": "Loads references/gotchas.md when guarding against a broad, unfocused answer",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["edge", "disclosure"],
+      "files": [
+        "references/gotchas.md"
+      ]
     }
   ]
 }
