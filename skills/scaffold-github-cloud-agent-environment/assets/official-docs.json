@@ -1,0 +1,44 @@
+{
+  "docs": [
+    {
+      "id": "environment",
+      "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/customize-the-agent-environment",
+      "purpose": "Primary contract for the Copilot setup workflow."
+    },
+    {
+      "id": "firewall",
+      "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/customize-the-agent-firewall",
+      "purpose": "Firewall behavior, allowlists, and limitations."
+    },
+    {
+      "id": "runners",
+      "url": "https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/configure-runner-for-coding-agent",
+      "purpose": "Organization-level runner defaults and repository override policy."
+    },
+    {
+      "id": "troubleshoot",
+      "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/troubleshoot-cloud-agent",
+      "purpose": "Official troubleshooting entry point."
+    },
+    {
+      "id": "sessions",
+      "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/track-copilot-sessions",
+      "purpose": "Session logs and investigation workflow."
+    },
+    {
+      "id": "settings",
+      "url": "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/configuring-agent-settings",
+      "purpose": "Workflow approval and built-in validation settings."
+    },
+    {
+      "id": "best-practices",
+      "url": "https://docs.github.com/en/copilot/tutorials/cloud-agent/get-the-best-results",
+      "purpose": "Custom instructions and task quality guidance."
+    },
+    {
+      "id": "workflow-syntax",
+      "url": "https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions",
+      "purpose": "Authoritative syntax for supported job keys."
+    }
+  ]
+}

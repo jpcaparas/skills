@@ -1,0 +1,118 @@
+{
+  "skill_name": "scaffold-github-cloud-agent-environment",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bootstrap-node-repo-environment",
+      "prompt": "This repository has no `.github/workflows/copilot-setup-steps.yml`. Audit the repo, verify the live GitHub Docs for Copilot cloud agent environment customization, ask only the missing questions, then scaffold a deterministic setup workflow for a Node.js project that uses npm and Git LFS.",
+      "expected_output": "The response verifies the live docs first, audits the repo, drafts or confirms a plan, and creates `.github/workflows/copilot-setup-steps.yml` with the required `copilot-setup-steps` job, checkout with LFS enabled, and deterministic npm dependency installation.",
+      "files": [
+        "templates/plan.example.json",
+        "assets/official-docs.json"
+      ],
+      "assertions": [
+        {
+          "text": "Response verifies the live official GitHub Docs before scaffolding",
+          "type": "verification"
+        },
+        {
+          "text": "Response writes `.github/workflows/copilot-setup-steps.yml`, not a generic workflow path",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses the `copilot-setup-steps` job name",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "scaffold",
+        "node"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "refresh-existing-workflow",
+      "prompt": "This repo already has a weak `copilot-setup-steps.yml`, but agent runs still install dependencies by trial and error. Audit the repo, compare the workflow against the live docs, then refresh the workflow without inventing unsupported keys.",
+      "expected_output": "The response audits the repo, treats the current workflow as refresh mode, preserves the documented contract, and improves dependency bootstrapping without hallucinating unsupported job keys.",
+      "assertions": [
+        {
+          "text": "Response distinguishes bootstrap from refresh mode",
+          "type": "functional"
+        },
+        {
+          "text": "Response limits the job to supported documented keys",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "refresh"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "doctor-private-registry-failure",
+      "prompt": "Copilot cloud agent cannot install dependencies in this repository because network and auth keep failing. Run doctor mode, inspect the current setup, and tell me which fixes belong in repo files versus GitHub settings.",
+      "expected_output": "The response uses doctor mode first, separates local workflow fixes from firewall or `copilot` environment settings changes, and avoids pretending a YAML edit alone will solve registry auth or allowlist problems.",
+      "assertions": [
+        {
+          "text": "Response runs doctor mode before rewriting the workflow",
+          "type": "functional"
+        },
+        {
+          "text": "Response distinguishes repo-local fixes from GitHub settings fixes",
+          "type": "functional"
+        },
+        {
+          "text": "Agent reads references/doctor-mode.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "doctor",
+        "registry",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "runner-policy-ambiguity",
+      "prompt": "Scaffold a Copilot cloud agent environment for this repository, but the org may force a runner type and this project may need access to internal resources. Ask the right questions instead of guessing.",
+      "expected_output": "The response identifies runner-policy ambiguity, asks targeted questions about self-hosted versus GitHub-hosted runners and internal access, and avoids hardcoding a risky guess.",
+      "assertions": [
+        {
+          "text": "Response asks targeted runner questions when repo signals are ambiguous",
+          "type": "functional"
+        },
+        {
+          "text": "Response mentions organization runner override policy when relevant",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "questions",
+        "runners"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-generic-actions-request",
+      "prompt": "Write me a generic GitHub Actions workflow to publish a Docker image. I am not using Copilot cloud agent at all.",
+      "expected_output": "The response does not trigger this skill and does not force a `copilot-setup-steps.yml` workflow for a generic Actions request.",
+      "assertions": [
+        {
+          "text": "Does not use the Copilot cloud agent environment scaffold for unrelated GitHub Actions work",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "triggering"
+      ]
+    }
+  ]
+}

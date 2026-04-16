@@ -1,0 +1,44 @@
+{
+  "mode": "bootstrap",
+  "workflow_path": ".github/workflows/copilot-setup-steps.yml",
+  "job_name": "copilot-setup-steps",
+  "runner": {
+    "kind": "github-hosted-standard",
+    "runs_on": "ubuntu-latest"
+  },
+  "permissions": {
+    "contents": "read"
+  },
+  "timeout_minutes": 30,
+  "include_validation_triggers": true,
+  "steps": [
+    {
+      "name": "Checkout code",
+      "uses": "actions/checkout@v5"
+    },
+    {
+      "name": "Set up Node.js",
+      "uses": "actions/setup-node@v4",
+      "with": {
+        "node-version-file": ".nvmrc",
+        "cache": "npm"
+      }
+    },
+    {
+      "name": "Install JavaScript dependencies",
+      "run": "npm ci"
+    }
+  ],
+  "services": {},
+  "manual_settings": [
+    "Add any required registry credentials to the repository's `copilot` environment."
+  ],
+  "assumptions": [
+    "Ubuntu is a valid runner for build and validation.",
+    "npm is the authoritative package manager."
+  ],
+  "questions": [],
+  "notes": [
+    "Pair the workflow with `.github/copilot-instructions.md` if build and validation commands are not already clear."
+  ]
+}

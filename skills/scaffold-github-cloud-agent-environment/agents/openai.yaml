@@ -1,0 +1,4 @@
+interface:
+  display_name: "scaffold-github-cloud-agent-environment"
+  short_description: "Audit a repo, scaffold or repair `copilot-setup-steps.yml`, and diagnose Copilot cloud agent environment failures"
+  default_prompt: "Help me scaffold or repair GitHub Copilot cloud agent's repository environment, including live-doc verification, repo audit, workflow generation, and doctor-mode troubleshooting"

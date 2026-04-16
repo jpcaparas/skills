@@ -96,6 +96,12 @@ Production scaffold skill for Claude Code hooks that audits the target project, 
 
 Production scaffold skill for Codex hooks that audits the repo, verifies the live docs and schemas, checks the effective feature flag state, and generates repo-local lifecycle hook scaffolding.
 
+### `scaffold-github-cloud-agent-environment`
+
+`npx skills add jpcaparas/skills --skill scaffold-github-cloud-agent-environment`
+
+Production scaffold-and-doctor skill for GitHub Copilot cloud agent environments that audits the repo, verifies the live GitHub Docs contract, and scaffolds or repairs `.github/workflows/copilot-setup-steps.yml` while separating repo-local fixes from GitHub settings changes.
+
 ### `scaffold-opencode-hooks`
 
 `npx skills add jpcaparas/skills --skill scaffold-opencode-hooks`

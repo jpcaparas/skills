@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Project-aware GitHub Copilot cloud agent environment scaffolder and doctor that verifies the live official GitHub Docs contract, audits a target repository for runner, dependency, toolchain, LFS, container, and registry signals, then drafts or repairs a deterministic `.github/workflows/copilot-setup-steps.yml` workflow while separating repo-local fixes from repository and organization settings changes.",
+  "references": [
+    "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/customize-the-agent-environment",
+    "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/customize-the-agent-firewall",
+    "https://docs.github.com/en/copilot/how-tos/administer-copilot/manage-for-organization/configure-runner-for-coding-agent",
+    "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/troubleshoot-cloud-agent",
+    "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/track-copilot-sessions",
+    "https://docs.github.com/en/copilot/how-tos/use-copilot-agents/cloud-agent/configuring-agent-settings",
+    "https://docs.github.com/en/copilot/tutorials/cloud-agent/get-the-best-results",
+    "https://docs.github.com/actions/using-workflows/workflow-syntax-for-github-actions"
+  ]
+}

@@ -1,0 +1,21 @@
+name: "Copilot Setup Steps"
+
+# Validate this workflow when it changes and allow manual test runs from the Actions tab.
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # Copilot only reads the job named `copilot-setup-steps`.
+  copilot-setup-steps:
+    runs-on: {{RUNS_ON}}
+{{PERMISSIONS_BLOCK}}
+{{SERVICES_BLOCK}}
+{{TIMEOUT_BLOCK}}
+    steps:
+{{STEPS_BLOCK}}
