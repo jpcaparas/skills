@@ -84,6 +84,106 @@ class AudifyUnitTests(unittest.TestCase):
         self.assertEqual(long["label"], "often 2-6 minutes")
         self.assertGreater(long["recommended_poll_interval_seconds"], short["recommended_poll_interval_seconds"])
 
+    def test_chunk_timeout_falls_back_to_smaller_chunks_with_same_voice(self) -> None:
+        text = ("Paragraph one. " * 20) + "\n\n" + ("Paragraph two. " * 20) + "\n\n" + ("Paragraph three. " * 20)
+        calls: list[tuple[str, str, str, str]] = []
+        progress_messages: list[str] = []
+        original = audify.synthesize_chunk
+
+        def fake_synthesize_chunk(
+            transcript: str,
+            *,
+            api_key: str,
+            model: str,
+            voice: str,
+            nuance: str,
+            timeout: int,
+            retries: int,
+            title: str | None,
+        ) -> tuple[bytes, int]:
+            calls.append((transcript, model, voice, nuance))
+            if len(transcript) > 500:
+                raise audify.ApiError(0, "Gemini API request failed: timed out")
+            return b"pcm", 1
+
+        audify.synthesize_chunk = fake_synthesize_chunk
+        try:
+            pcm, meta = audify.synthesize_text(
+                text,
+                api_key="test-key",
+                model="test-model",
+                voice="TestVoice",
+                nuance="Steady narrator",
+                timeout=1,
+                retries=1,
+                max_chunk_chars=2000,
+                progress=progress_messages.append,
+            )
+        finally:
+            audify.synthesize_chunk = original
+
+        self.assertTrue(meta["fallback_used"])
+        self.assertGreater(len(meta["fallback_events"]), 0)
+        self.assertGreater(meta["chunk_count"], meta["planned_chunk_count"])
+        self.assertGreater(len(pcm), 0)
+        self.assertTrue(any("keeping model, voice, and nuance unchanged" in message for message in progress_messages))
+        self.assertTrue(all(call[1] == "test-model" for call in calls))
+        self.assertTrue(all(call[2] == "TestVoice" for call in calls))
+        self.assertTrue(all(call[3] == "Steady narrator" for call in calls))
+
+    def test_request_json_wraps_raw_timeout_as_transient_api_error(self) -> None:
+        original = audify.urllib.request.urlopen
+
+        def fake_urlopen(*_args, **_kwargs):
+            raise TimeoutError("The read operation timed out")
+
+        audify.urllib.request.urlopen = fake_urlopen
+        try:
+            with self.assertRaises(audify.ApiError) as context:
+                audify.request_json("https://example.com", timeout=1)
+        finally:
+            audify.urllib.request.urlopen = original
+
+        self.assertEqual(context.exception.status, 408)
+        self.assertIn("timed out", str(context.exception))
+
+    def test_small_transient_chunk_can_split_below_five_hundred_chars(self) -> None:
+        text = " ".join(["sentence."] * 45)
+        original = audify.synthesize_chunk
+
+        def fake_synthesize_chunk(
+            transcript: str,
+            *,
+            api_key: str,
+            model: str,
+            voice: str,
+            nuance: str,
+            timeout: int,
+            retries: int,
+            title: str | None,
+        ) -> tuple[bytes, int]:
+            if len(transcript) > 200:
+                raise audify.ApiError(408, "Gemini API request timed out: The read operation timed out")
+            return b"pcm", 1
+
+        audify.synthesize_chunk = fake_synthesize_chunk
+        try:
+            _pcm, meta = audify.synthesize_text(
+                text,
+                api_key="test-key",
+                model="test-model",
+                voice="TestVoice",
+                nuance="Steady narrator",
+                timeout=1,
+                retries=1,
+                max_chunk_chars=500,
+            )
+        finally:
+            audify.synthesize_chunk = original
+
+        self.assertTrue(meta["fallback_used"])
+        self.assertTrue(all(length <= 200 for length in meta["chunk_lengths"]))
+
 
 if __name__ == "__main__":
     unittest.main()

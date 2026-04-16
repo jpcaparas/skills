@@ -62,6 +62,7 @@ What kind of input are you handling?
 5. Stop when read attempts are exhausted. Do not silently fall back from a bad fetch or undecodable file to a hallucinated summary.
 6. Set runtime expectations before long runs. For multi-chunk TTS, tell the user a realistic range such as "often 2-6 minutes" and that silence between chunk completions is normal.
 7. Do not badger the user with polling updates. After the initial expectation-setting message, only report meaningful state changes such as chunk progress, retries, or final completion.
+8. Auto-split large transiently failing chunks before giving up. Keep the same voice, nuance, model, and output format while retrying with smaller chunk boundaries.
 
 ## Output Contract
 
@@ -73,6 +74,7 @@ The folder contains:
 - `cleaned.txt` with the final spoken transcript
 - `manifest.json` with source, voice, nuance, chunking, and retry metadata
 - runtime expectations in both the wrapper output JSON and the status stream
+- fallback chunk-split metadata when a large chunk had to be retried in smaller pieces
 
 Use `--format wav` when MP3 conversion is not wanted.
 
@@ -84,6 +86,7 @@ Use `--format wav` when MP3 conversion is not wanted.
 4. **Voice and prompt can clash**: Google warns that strong speaker mismatches can sound wrong. When the user asks for a very specific persona, make sure the selected voice and nuance point in the same direction.
 5. **HTML extraction is best-effort**: Blog chrome, nav text, or legal footer text can still leak through on messy pages. If the cleaned preview looks wrong, stop and ask for a narrower source.
 6. **Long silence is not the same as failure**: A multi-chunk run can spend a couple of minutes inside Gemini calls and local MP3 conversion. Do not treat every quiet 30-second interval as a problem.
+7. **A single large chunk can still fail transiently**: When that happens, the wrapper should split just that chunk into smaller pieces and continue with the same voice, nuance, model, and format instead of forcing a full manual rerun.
 
 ## Helper Scripts
 

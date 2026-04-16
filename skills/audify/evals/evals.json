@@ -108,6 +108,31 @@
         "edge",
         "disclosure"
       ]
+    },
+    {
+      "id": 6,
+      "name": "transient-large-chunk-fallback",
+      "prompt": "Audify this cleaned article file. If one large Gemini TTS call times out, recover without asking me to rerun it manually.",
+      "expected_output": "The wrapper keeps the same voice, nuance, model, and output format, then retries only the failing chunk as smaller pieces and records that fallback in the manifest.",
+      "assertions": [
+        {
+          "text": "A transient large-chunk failure is handled by subdividing that chunk instead of restarting the entire run",
+          "type": "functional"
+        },
+        {
+          "text": "The fallback preserves the original voice, nuance, model, and output format",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "scripts/audify.py",
+        "references/patterns.md",
+        "references/gotchas.md"
+      ],
+      "tags": [
+        "edge",
+        "functional"
+      ]
     }
   ]
 }

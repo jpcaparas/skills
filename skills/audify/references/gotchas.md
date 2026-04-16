@@ -17,6 +17,7 @@
 - Do not retry `401`, `403`, or `404` blindly. Those are configuration errors, not transient failures.
 - Long-form jobs can sit quietly for 1-3+ minutes while a chunk is in flight. That is normal for larger transcripts; restarting too quickly just throws away completed work.
 - Status polling should be slower for long jobs. For multi-chunk runs, a 60-120 second check interval is more realistic than rapid-fire polling.
+- A timeout on one large chunk does not mean the whole job should restart. Split that chunk smaller and continue with the original voice, nuance, model, and output settings.
 
 ## Resource-Cleaning Gotchas
 

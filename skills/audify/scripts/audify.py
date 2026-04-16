@@ -14,6 +14,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import socket
 import subprocess
 import sys
 import tempfile
@@ -32,6 +33,7 @@ DEFAULT_OUTPUT_ROOT = "audify-output"
 DEFAULT_MAX_CHUNK_CHARS = 5500
 DEFAULT_TIMEOUT_SECONDS = 30
 DEFAULT_RETRIES = 3
+MIN_FALLBACK_CHUNK_CHARS = 200
 USER_AGENT = "audify-skill/1.0"
 MODEL_LIST_URL = "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200"
 
@@ -224,6 +226,9 @@ def fetch_text_from_url(url: str, *, timeout: int, attempts: list[str]) -> tuple
             content_type = response.headers.get("Content-Type", "")
             charset = response.headers.get_content_charset()
             payload = response.read()
+    except (TimeoutError, socket.timeout) as exc:
+        attempts.append(f"URL fetch timed out: {exc}")
+        raise ResourceReadError(f"could not fetch URL {url}: {exc}") from exc
     except urllib.error.URLError as exc:
         attempts.append(f"URL fetch failed: {exc}")
         raise ResourceReadError(f"could not fetch URL {url}: {exc}") from exc
@@ -537,6 +542,34 @@ def split_into_chunks(text: str, *, max_chars: int = DEFAULT_MAX_CHUNK_CHARS) ->
     return chunks
 
 
+def split_chunk_for_fallback(
+    text: str,
+    *,
+    current_max_chars: int,
+    min_chunk_chars: int = MIN_FALLBACK_CHUNK_CHARS,
+) -> tuple[list[str], int] | None:
+    if len(text) <= min_chunk_chars:
+        return None
+
+    candidate_limits = []
+    for candidate in (
+        len(text) // 2,
+        len(text) // 3,
+        max(current_max_chars // 2, min_chunk_chars),
+        max(current_max_chars // 3, min_chunk_chars),
+    ):
+        bounded = max(min_chunk_chars, min(len(text) - 1, candidate))
+        if bounded < len(text) and bounded not in candidate_limits:
+            candidate_limits.append(bounded)
+
+    for candidate_limit in candidate_limits:
+        subchunks = split_into_chunks(text, max_chars=candidate_limit)
+        if len(subchunks) > 1:
+            return subchunks, candidate_limit
+
+    return None
+
+
 def estimate_runtime_expectation(*, word_count: int, chunk_count: int) -> dict[str, object]:
     if chunk_count <= 1 and word_count <= 250:
         label = "usually under 1 minute"
@@ -558,6 +591,14 @@ def estimate_runtime_expectation(*, word_count: int, chunk_count: int) -> dict[s
         "word_count": word_count,
         "note": "Longer TTS jobs can stay quiet between chunk completions. Do not treat 30-90 seconds of silence as failure.",
     }
+
+
+def is_auto_split_candidate(exc: Exception, transcript: str) -> bool:
+    if len(transcript) <= MIN_FALLBACK_CHUNK_CHARS:
+        return False
+    if isinstance(exc, ApiError):
+        return exc.status in {0, 408, 500, 502, 503, 504}
+    return False
 
 
 def build_prompt(transcript: str, *, nuance: str, title: str | None = None) -> str:
@@ -594,6 +635,8 @@ def request_json(
         with urllib.request.urlopen(request, timeout=timeout) as response:
             raw = response.read().decode("utf-8")
             return json.loads(raw) if raw else {}
+    except (TimeoutError, socket.timeout) as exc:
+        raise ApiError(408, f"Gemini API request timed out: {exc}") from exc
     except urllib.error.HTTPError as exc:
         raw = exc.read().decode("utf-8", "replace")
         try:
@@ -691,31 +734,84 @@ def synthesize_text(
     if not chunks:
         raise AudifyError("no transcript chunks were created")
 
+    fallback_events: list[dict[str, object]] = []
     combined = bytearray()
     attempts_per_chunk: list[int] = []
+    actual_chunk_lengths: list[int] = []
     total_chunks = len(chunks)
-    for index, chunk in enumerate(chunks, start=1):
+
+    def synthesize_with_fallback(
+        transcript: str,
+        *,
+        chunk_label: str,
+        current_max_chars: int,
+    ) -> None:
         if progress is not None:
-            progress(f"audify: synthesizing chunk {index}/{total_chunks} ({len(chunk)} chars)")
-        audio, attempts_used = synthesize_chunk(
-            chunk,
-            api_key=api_key,
-            model=model,
-            voice=voice,
-            nuance=nuance,
-            timeout=timeout,
-            retries=retries,
-            title=title,
-        )
+            progress(f"audify: synthesizing chunk {chunk_label} ({len(transcript)} chars)")
+        try:
+            audio, attempts_used = synthesize_chunk(
+                transcript,
+                api_key=api_key,
+                model=model,
+                voice=voice,
+                nuance=nuance,
+                timeout=timeout,
+                retries=retries,
+                title=title,
+            )
+        except ApiError as exc:
+            fallback = split_chunk_for_fallback(
+                transcript,
+                current_max_chars=current_max_chars,
+            )
+            if not is_auto_split_candidate(exc, transcript) or fallback is None:
+                raise
+            subchunks, new_max_chars = fallback
+            fallback_events.append(
+                {
+                    "chunk_label": chunk_label,
+                    "reason": str(exc),
+                    "original_length": len(transcript),
+                    "split_into": len(subchunks),
+                    "new_max_chunk_chars": new_max_chars,
+                    "subchunk_lengths": [len(piece) for piece in subchunks],
+                }
+            )
+            if progress is not None:
+                progress(
+                    "audify: "
+                    f"chunk {chunk_label} hit a transient failure; retrying as {len(subchunks)} smaller chunks "
+                    "while keeping model, voice, and nuance unchanged"
+                )
+            for sub_index, subchunk in enumerate(subchunks, start=1):
+                synthesize_with_fallback(
+                    subchunk,
+                    chunk_label=f"{chunk_label}.{sub_index}",
+                    current_max_chars=new_max_chars,
+                )
+            return
+
         combined.extend(audio)
         attempts_per_chunk.append(attempts_used)
+        actual_chunk_lengths.append(len(transcript))
         if progress is not None:
-            progress(f"audify: finished chunk {index}/{total_chunks} in {attempts_used} attempt(s)")
+            progress(f"audify: finished chunk {chunk_label} in {attempts_used} attempt(s)")
+
+    for index, chunk in enumerate(chunks, start=1):
+        synthesize_with_fallback(
+            chunk,
+            chunk_label=f"{index}/{total_chunks}",
+            current_max_chars=max_chunk_chars,
+        )
 
     return bytes(combined), {
-        "chunk_count": len(chunks),
-        "chunk_lengths": [len(chunk) for chunk in chunks],
+        "planned_chunk_count": len(chunks),
+        "planned_chunk_lengths": [len(chunk) for chunk in chunks],
+        "chunk_count": len(actual_chunk_lengths),
+        "chunk_lengths": actual_chunk_lengths,
         "attempts_per_chunk": attempts_per_chunk,
+        "fallback_used": bool(fallback_events),
+        "fallback_events": fallback_events,
     }
 
 

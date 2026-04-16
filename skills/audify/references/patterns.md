@@ -97,6 +97,21 @@ Use that to shape the user-facing update cadence:
 - do not keep saying "still running" every few seconds
 - only send another update when a chunk finishes, a retry happens, or the run completes
 
+When a large chunk times out or hits a transient 5xx, keep the same synthesis parameters and retry that chunk as smaller subchunks. Example status stream:
+
+```text
+audify: chunk 1/1 hit a transient failure; retrying as 3 smaller chunks while keeping model, voice, and nuance unchanged
+audify: synthesizing chunk 1/1.1 (1124 chars)
+audify: finished chunk 1/1.1 in 1 attempt(s)
+```
+
+That fallback should not:
+
+- reset the selected voice
+- rewrite the nuance prompt
+- switch models silently
+- start a brand-new output bundle unless the whole run actually failed
+
 Observed benchmark from a real local run:
 
 - `cleaned.txt` length: 810 words, 5180 bytes
@@ -124,9 +139,11 @@ audify-output/
 - selected voice
 - nuance string
 - chunk count
+- planned chunk count before fallback
 - retry counts
 - rejected or removed content metrics
 - runtime expectation label and recommended poll interval in the wrapper JSON output
+- fallback event metadata when large chunks had to be subdivided
 
 ## Cleaning and Bail Behavior
 
