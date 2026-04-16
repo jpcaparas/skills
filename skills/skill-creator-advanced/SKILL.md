@@ -54,6 +54,8 @@ Reason: <one sentence based on existing skills or current install context>
 Alternative: <optional fallback path if there is a reasonable second choice>
 ```
 
+Treat that recommendation as author-time context only. Do not copy it into the generated skill's `SKILL.md`, `README.md`, `AGENTS.md`, or `metadata.json`.
+
 Classify the skill into a blueprint type:
 
 | Blueprint | When to use | Template |

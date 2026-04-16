@@ -38,6 +38,12 @@ while IFS= read -r skill; do
     python3 "${skill}/scripts/test_skill.py" "${skill}"
 done < <(find skills -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/SKILL.md" ';' -print | LC_ALL=C sort)
 
+echo "Checking for leaked builder-only placement metadata"
+if grep -n -E '^## Recommended Destination$' skills/*/SKILL.md; then
+    echo "ERROR: remove builder-only placement sections from shipped SKILL.md files" >&2
+    exit 1
+fi
+
 # Cross-check: files under skills/ that a fresh CI checkout will NOT see.
 # This catches two classes of footgun that each skill's own validate.py
 # cannot detect, because validate.py only inspects the working tree:

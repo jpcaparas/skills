@@ -82,9 +82,3 @@ Default to the deterministic local translator first. It is reproducible, fast, a
 3. Deterministic output means the same input stays stable across runs. That is useful for tests and memes, but it also means the phrasing can feel formulaic on repeated use.
 4. Kagi's public LinkedIn Speak implementation is not a documented API. This skill uses a local engine by default and only emits a comparison URL for the web UI.
 5. Hashtag selection is keyword-driven. If the input is too vague, the fallback tags will lean generic on purpose.
-
-## Recommended Destination
-
-Recommended destination: `skills/linkedin-speak`
-Reason: this repo is already a public installable skills source that stores canonical skills under `skills/<skill-name>/`.
-Alternative: none needed for this repository.

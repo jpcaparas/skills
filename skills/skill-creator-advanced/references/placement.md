@@ -144,4 +144,6 @@ Reason: this repo already keeps 3 installable skills under .agents/skills
 Alternative: ~/.codex/skills/<skill-name>
 ```
 
+This is conversational guidance for the author before scaffolding. Do not write this block into the generated skill files or repository wrappers.
+
 Then proceed unless the user overrides the destination.

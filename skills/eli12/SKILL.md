@@ -123,9 +123,3 @@ Stay in one pass for narrow questions. Extra delegation slows simple explanation
 3. Explaining a subsystem by listing files is not enough. Trace what actually happens.
 4. If the user asked for one narrow thing, do not balloon the answer into a whole-architecture tour.
 5. If the code is messy, say that directly. Accessibility should not sand off real complexity.
-
-## Recommended Destination
-
-Recommended destination: `skills/eli12`
-Reason: this repository already keeps canonical installable skills under `skills/<skill-name>/`.
-Alternative: none needed for this repository.
