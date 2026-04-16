@@ -11,6 +11,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from render_tweet_replica import CANVAS_WIDTH
+
 
 DEFAULT_GIF_MAX_BYTES = 24 * 1024 * 1024
 
@@ -33,6 +35,28 @@ def probe_duration_seconds(path: Path) -> float:
         ]
     )
     return float(result.stdout.strip())
+
+
+def probe_video_geometry(path: Path) -> dict[str, int]:
+    result = run_command(
+        [
+            "ffprobe",
+            "-v",
+            "error",
+            "-show_entries",
+            "stream=width,height",
+            "-of",
+            "json",
+            str(path),
+        ]
+    )
+    payload = json.loads(result.stdout)
+    for stream in payload.get("streams", []):
+        width = stream.get("width")
+        height = stream.get("height")
+        if width and height:
+            return {"width": int(width), "height": int(height)}
+    raise RuntimeError(f"Could not read video geometry for {path}")
 
 
 def verify_artifact(path: Path) -> dict[str, Any]:
@@ -63,9 +87,18 @@ def run_probe(source: str, save_root: Path, cleanup: bool, gif_max_bytes: int) -
     gif_path = Path(summary["output_gif"])
     html_path = Path(summary["html"])
     webm_path = Path(summary["recording"])
+    recording_geometry = probe_video_geometry(webm_path)
+    mp4_geometry = probe_video_geometry(mp4_path)
+    gif_geometry = probe_video_geometry(gif_path)
 
     with snapshot_path.open("r", encoding="utf-8") as handle:
         snapshot = json.load(handle)
+
+    geometry_checks = {
+        "recording_matches_canvas_width": recording_geometry["width"] == CANVAS_WIDTH,
+        "mp4_matches_canvas_width": mp4_geometry["width"] == CANVAS_WIDTH,
+        "recording_matches_mp4_geometry": recording_geometry == mp4_geometry,
+    }
 
     result = {
         "source": source,
@@ -78,12 +111,26 @@ def run_probe(source: str, save_root: Path, cleanup: bool, gif_max_bytes: int) -
             "mp4": verify_artifact(mp4_path),
             "gif": verify_artifact(gif_path),
         },
+        "geometry": {
+            "recording": recording_geometry,
+            "mp4": mp4_geometry,
+            "gif": gif_geometry,
+        },
+        "geometry_checks": geometry_checks,
         "mp4_duration_seconds": probe_duration_seconds(mp4_path),
         "gif_duration_seconds": probe_duration_seconds(gif_path),
         "gif_within_limit": gif_path.stat().st_size <= gif_max_bytes,
         "gif_limit_bytes": gif_max_bytes,
         "gif_preset": summary.get("gif_preset"),
     }
+
+    failed_checks = [name for name, ok in geometry_checks.items() if not ok]
+    if failed_checks:
+        raise RuntimeError(
+            "Viewport capture geometry drifted: "
+            + ", ".join(failed_checks)
+            + f". recording={recording_geometry}, mp4={mp4_geometry}, expected_canvas_width={CANVAS_WIDTH}"
+        )
 
     if cleanup and workdir.exists():
         shutil.rmtree(workdir)

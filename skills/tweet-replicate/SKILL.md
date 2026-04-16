@@ -1,9 +1,9 @@
 ---
 name: tweet-replicate
-description: "Rebuild a public X/Twitter status into a deterministic local replica with a frozen snapshot, local HTML/CSS, Playwright capture, a high-quality MP4 master, and a companion GIF capped under 24 MB. Use when asked to replicate a tweet/X post, freeze a status into video, make a tweet look like X offline, or create rerenderable tweet assets with a saved build folder. Trigger on: 'replicate this tweet', 'turn this X post into MP4', 'make this tweet into a GIF too', 'freeze this status locally'. Do NOT use for plain tweet text extraction, raw media download only, live X browser capture, authenticated pages, DMs, or promises of a pixel-perfect private X renderer."
+description: "Rebuild a public X/Twitter status into a deterministic local replica with a frozen snapshot, local HTML/CSS, Playwright capture, X-like media-frame fill behavior, a high-quality MP4 master, and a companion GIF capped under 24 MB. Use when asked to replicate a tweet/X post, freeze a status into video, make a tweet look like X offline, or create rerenderable tweet assets with a saved build folder. Trigger on: 'replicate this tweet', 'turn this X post into MP4', 'make this tweet into a GIF too', 'freeze this status locally'. Do NOT use for plain tweet text extraction, raw media download only, live X browser capture, authenticated pages, DMs, or promises of a pixel-perfect private X renderer."
 compatibility: "Requires: python3, ffmpeg, ffprobe, yt-dlp, Playwright with Chromium, and outbound HTTPS for snapshotting and media downloads."
 metadata:
-  version: "1.0.0"
+  version: "1.0.1"
   repo_tags:
     - video-generation
     - social-media
@@ -24,7 +24,7 @@ What this skill does well:
 - capture a public status into a frozen `snapshot.json`
 - download the avatar and primary media locally at the highest available quality
 - rebuild the tweet chrome in deterministic local HTML/CSS
-- record the replica viewport with Playwright
+- record the replica viewport with Playwright without creating a larger padded stage around the tweet
 - export a high-quality MP4 master and a companion GIF in the same directory
 
 ## Decision Tree
@@ -60,7 +60,7 @@ The generated build layout stays the same:
 | Keep everything in one named build folder | `python3 scripts/render_tweet_replica.py '<url>' --workdir ./tweet-build` | Leaves snapshot, local high-quality assets, HTML, WebM, MP4, and GIF together |
 | Inspect the extracted snapshot only | `python3 scripts/fetch_tweet_snapshot.py '<url>' --output ./tweet-build/snapshot.json --asset-dir ./tweet-build/assets` | Useful before layout tuning |
 | Record a prepared HTML replica only | `python3 scripts/record_tweet_replica.py ./tweet-build/tweet-replica.html ./tweet-build/capture.webm` | Useful when tuning CSS without refetching |
-| Run real pipeline checks against live tweet URLs | `python3 scripts/probe_tweet_replica.py 'https://x.com/.../status/...' --save-root ./tmp-tests --cleanup` | Verifies MP4, GIF, durations, and GIF size cap |
+| Run real pipeline checks against live tweet URLs | `python3 scripts/probe_tweet_replica.py 'https://x.com/.../status/...' --save-root ./tmp-tests --cleanup` | Verifies MP4, GIF, durations, GIF size cap, and output frame geometry |
 
 ## Scope
 
@@ -103,3 +103,4 @@ Treat the snapshot as the truth, not the live tweet page. Fetch once, freeze the
 4. Public X media URLs can expire. Keep the downloaded local media inside the workdir if the output may need to be reproduced later.
 5. Playwright's viewport recording is visual-only. The final MP4 preserves the recorded visual master at high quality and muxes original media audio back in when a local video file has an audio stream. The GIF never carries audio.
 6. One nested quoted post is supported, including quoted video playback, but deeper quote chains and full thread reconstruction are out of scope.
+7. The rendered WebM and MP4 should match the tweet canvas width and the measured tweet height. If the post appears stuck in the upper-left with extra gray or empty space, fix the capture geometry before retuning the tweet CSS.

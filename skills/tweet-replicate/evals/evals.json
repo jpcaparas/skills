@@ -104,6 +104,32 @@
       "files": [
         "SKILL.md"
       ]
+    },
+    {
+      "id": 6,
+      "name": "edge-no-oversized-capture-stage",
+      "prompt": "The last render put the tweet in the upper-left corner with empty space around it. Re-render from ./tweet-build/snapshot.json and keep the final WebM/MP4 sized to the tweet canvas instead of a larger padded stage.",
+      "expected_output": "Use the saved snapshot, preserve the frozen tweet state, and ensure the recorder geometry matches the canvas rather than multiplying the recorded frame size.",
+      "assertions": [
+        {
+          "text": "Treats top-left underfill as a capture-geometry problem instead of a snapshot problem",
+          "type": "edge"
+        },
+        {
+          "text": "Keeps the rendered frame matched to the tweet canvas",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "edge",
+        "video"
+      ],
+      "files": [
+        "scripts/record_tweet_replica.py",
+        "scripts/probe_tweet_replica.py",
+        "references/layout.md",
+        "references/gotchas.md"
+      ]
     }
   ]
 }

@@ -32,6 +32,12 @@ If the timing looks off, debug the start-playback timing before changing ffmpeg.
 
 The GIF is silent by design.
 
+## Oversized capture stage
+
+If the rendered WebM or MP4 shows the tweet pinned to the upper-left with extra gray or empty space on the right or bottom, the capture stage is larger than the tweet canvas.
+
+Treat that as a recorder-geometry bug, not a media-sizing bug. The WebM and MP4 should share the tweet canvas width, and the measured tweet height should drive the frame height.
+
 ## MP4 master quality
 
 Treat the MP4 as the master output, not the file that absorbs the GIF budget. Keep the MP4 visually sharp and let the GIF absorb the size-driven quality reductions.

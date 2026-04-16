@@ -62,7 +62,10 @@ async def record_html_to_webm(
             viewport={"width": width, "height": height},
             device_scale_factor=device_scale_factor,
             record_video_dir=str(record_dir),
-            record_video_size={"width": width * device_scale_factor, "height": height * device_scale_factor},
+            # Keep the recording surface in CSS pixels. Multiplying this by the
+            # device scale factor records a larger stage and strands the tweet in
+            # the top-left of the exported video.
+            record_video_size={"width": width, "height": height},
         )
         page = await context.new_page()
         await page.goto(html_path.as_uri(), wait_until="load")

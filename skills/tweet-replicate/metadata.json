@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
+  "version": "1.0.1",
   "organization": "JP Caparas",
   "date": "April 2026",
-  "abstract": "Production skill for deterministically rebuilding a public X/Twitter status into a rerenderable local build with snapshot freezing, Playwright recording, MP4 export, and a GIF preview capped under 24 MB.",
+  "abstract": "Production skill for deterministically rebuilding a public X/Twitter status into a rerenderable local build with snapshot freezing, Playwright recording, canvas-matched MP4 export, and a GIF preview capped under 24 MB.",
   "references": [
     "https://api.fxtwitter.com/",
     "https://github.com/yt-dlp/yt-dlp",
