@@ -9,34 +9,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repository
-        uses: actions/checkout@v4
-
-      - name: Set Up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
+        uses: actions/checkout@v6
 
       - name: Set Up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
       - name: Set Up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
-          cache: "pnpm"
-          cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install Node Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install ripgrep
-        # Required by skills/ripgrep/scripts/probe_ripgrep.py, which shells
-        # out to `rg --version` during validation. ubuntu-latest does not
-        # ship ripgrep preinstalled.
-        run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - name: Install Validation Tools
+        # Required by skill probe suites that shell out to external CLIs:
+        # - skills/ripgrep/scripts/probe_ripgrep.py -> `rg --version`
+        # - skills/httpie/scripts/probe_httpie.py -> `http`, `https`, `httpie`
+        run: sudo apt-get update && sudo apt-get install -y ripgrep httpie
 
       - name: Validate Skills
         shell: bash
-        run: pnpm run validate
+        # CI validation is driven by the repository scripts directly; it does
+        # not depend on node_modules, so skip pnpm install and run the shared
+        # validator entrypoint that local validation uses too.
+        run: bash scripts/validate-all-skills.sh

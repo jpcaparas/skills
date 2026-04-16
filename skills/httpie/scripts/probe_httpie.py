@@ -29,15 +29,24 @@ def run_command(
     if env:
         merged_env.update(env)
 
-    proc = subprocess.run(
-        args,
-        env=merged_env,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        check=False,
-    )
+    try:
+        proc = subprocess.run(
+            args,
+            env=merged_env,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            check=False,
+        )
+    except OSError as exc:
+        return {
+            "args": args,
+            "returncode": 127,
+            "stdout": "",
+            "stderr": str(exc),
+            "ok": False,
+        }
     return {
         "args": args,
         "returncode": proc.returncode,
@@ -81,6 +90,36 @@ def run_suite(*, keep_temp: bool = False) -> dict[str, object]:
     payload_path.write_text('{"name":"JP","active":true}\n', encoding="utf-8")
 
     try:
+        required_commands = ["http", "https", "httpie"]
+        missing_commands = [command for command in required_commands if shutil.which(command) is None]
+        if missing_commands:
+            detail = (
+                "Missing required HTTPie CLI commands on PATH: "
+                + ", ".join(missing_commands)
+                + ". Install HTTPie before running the probe suite."
+            )
+            checks.append(
+                {
+                    "name": "dependencies",
+                    "passed": False,
+                    "command": [],
+                    "returncode": 127,
+                    "detail": detail,
+                    "stdout": "",
+                    "stderr": detail,
+                }
+            )
+            return {
+                "passed": False,
+                "summary": {
+                    "checks_total": 1,
+                    "checks_passed": 0,
+                    "checks_skipped": 0,
+                },
+                "checks": checks,
+                "tempdir": str(temp_root) if keep_temp else None,
+            }
+
         version = run_command(["http", "--version"], env=env)
         checks.append(
             check(
