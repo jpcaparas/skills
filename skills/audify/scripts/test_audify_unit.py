@@ -77,6 +77,13 @@ class AudifyUnitTests(unittest.TestCase):
         self.assertIn("Warm narrator", prompt)
         self.assertIn("Hello there.", prompt)
 
+    def test_runtime_expectation_scales_for_longer_jobs(self) -> None:
+        short = audify.estimate_runtime_expectation(word_count=120, chunk_count=1)
+        long = audify.estimate_runtime_expectation(word_count=900, chunk_count=3)
+        self.assertEqual(short["label"], "usually under 1 minute")
+        self.assertEqual(long["label"], "often 2-6 minutes")
+        self.assertGreater(long["recommended_poll_interval_seconds"], short["recommended_poll_interval_seconds"])
+
 
 if __name__ == "__main__":
     unittest.main()

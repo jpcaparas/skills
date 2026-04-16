@@ -82,6 +82,32 @@
       "tags": [
         "disclosure"
       ]
+    },
+    {
+      "id": 5,
+      "name": "long-form-runtime-expectations",
+      "prompt": "Audify this long cleaned article file. It may take a few chunks to synthesize.",
+      "expected_output": "The response sets a realistic multi-minute expectation up front, says quiet periods are normal, and avoids repetitive short-interval polling updates unless there is chunk progress or a retry.",
+      "assertions": [
+        {
+          "text": "Longer TTS runs are described as normal multi-minute jobs rather than apparent hangs",
+          "type": "functional"
+        },
+        {
+          "text": "The skill prefers meaningful progress updates over repetitive short poll narration",
+          "type": "disclosure"
+        }
+      ],
+      "files": [
+        "SKILL.md",
+        "references/patterns.md",
+        "references/gotchas.md",
+        "scripts/audify.py"
+      ],
+      "tags": [
+        "edge",
+        "disclosure"
+      ]
     }
   ]
 }

@@ -18,6 +18,7 @@ import subprocess
 import sys
 import tempfile
 import time
+from typing import Callable
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -536,6 +537,29 @@ def split_into_chunks(text: str, *, max_chars: int = DEFAULT_MAX_CHUNK_CHARS) ->
     return chunks
 
 
+def estimate_runtime_expectation(*, word_count: int, chunk_count: int) -> dict[str, object]:
+    if chunk_count <= 1 and word_count <= 250:
+        label = "usually under 1 minute"
+        poll_seconds = 45
+    elif chunk_count <= 2 and word_count <= 600:
+        label = "often 1-3 minutes"
+        poll_seconds = 60
+    elif chunk_count <= 4 and word_count <= 1500:
+        label = "often 2-6 minutes"
+        poll_seconds = 90
+    else:
+        label = "can take 5-10+ minutes"
+        poll_seconds = 120
+
+    return {
+        "label": label,
+        "recommended_poll_interval_seconds": poll_seconds,
+        "chunk_count": chunk_count,
+        "word_count": word_count,
+        "note": "Longer TTS jobs can stay quiet between chunk completions. Do not treat 30-90 seconds of silence as failure.",
+    }
+
+
 def build_prompt(transcript: str, *, nuance: str, title: str | None = None) -> str:
     title_line = f"Context: {title}\n" if title else ""
     return (
@@ -660,14 +684,19 @@ def synthesize_text(
     retries: int,
     max_chunk_chars: int,
     title: str | None = None,
+    precomputed_chunks: list[str] | None = None,
+    progress: Callable[[str], None] | None = None,
 ) -> tuple[bytes, dict[str, object]]:
-    chunks = split_into_chunks(cleaned_text, max_chars=max_chunk_chars)
+    chunks = precomputed_chunks or split_into_chunks(cleaned_text, max_chars=max_chunk_chars)
     if not chunks:
         raise AudifyError("no transcript chunks were created")
 
     combined = bytearray()
     attempts_per_chunk: list[int] = []
-    for chunk in chunks:
+    total_chunks = len(chunks)
+    for index, chunk in enumerate(chunks, start=1):
+        if progress is not None:
+            progress(f"audify: synthesizing chunk {index}/{total_chunks} ({len(chunk)} chars)")
         audio, attempts_used = synthesize_chunk(
             chunk,
             api_key=api_key,
@@ -680,6 +709,8 @@ def synthesize_text(
         )
         combined.extend(audio)
         attempts_per_chunk.append(attempts_used)
+        if progress is not None:
+            progress(f"audify: finished chunk {index}/{total_chunks} in {attempts_used} attempt(s)")
 
     return bytes(combined), {
         "chunk_count": len(chunks),
@@ -804,12 +835,23 @@ def main(argv: list[str] | None = None) -> int:
         if not suitability.ok:
             raise SuitabilityError("; ".join(suitability.reasons))
 
+        word_count = len(re.findall(r"\b[\w'-]+\b", resource_result.cleaned_text))
+        planned_chunks = split_into_chunks(
+            resource_result.cleaned_text,
+            max_chars=max(500, args.max_chunk_chars),
+        )
+        runtime_expectation = estimate_runtime_expectation(
+            word_count=word_count,
+            chunk_count=len(planned_chunks),
+        )
+
         report = {
             "source": resource_result.source,
             "source_kind": resource_result.source_kind,
             "cleaning_stats": resource_result.cleaning_stats,
             "suitability": dataclasses.asdict(suitability),
             "cleaned_preview": resource_result.cleaned_text[:300],
+            "runtime_expectation": runtime_expectation,
         }
 
         if args.check_only:
@@ -818,6 +860,21 @@ def main(argv: list[str] | None = None) -> int:
 
         api_key = require_gemini_api_key()
         ensure_model_available(api_key=api_key, model=args.model, timeout=args.timeout)
+        print(
+            (
+                "audify: "
+                f"{runtime_expectation['word_count']} words across {runtime_expectation['chunk_count']} chunk(s); "
+                f"expected runtime {runtime_expectation['label']}. "
+                f"Wait about {runtime_expectation['recommended_poll_interval_seconds']} seconds between status checks."
+            ),
+            file=sys.stderr,
+            flush=True,
+        )
+        print(
+            f"audify: {runtime_expectation['note']}",
+            file=sys.stderr,
+            flush=True,
+        )
         pcm_data, synthesis_meta = synthesize_text(
             resource_result.cleaned_text,
             api_key=api_key,
@@ -828,6 +885,8 @@ def main(argv: list[str] | None = None) -> int:
             retries=max(1, args.retries),
             max_chunk_chars=max(500, args.max_chunk_chars),
             title=args.title,
+            precomputed_chunks=planned_chunks,
+            progress=lambda message: print(message, file=sys.stderr, flush=True),
         )
         output_paths = write_output_bundle(
             pcm_data,
@@ -841,6 +900,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         report.update(output_paths)
         report["synthesis"] = synthesis_meta
+        report["runtime_expectation"] = runtime_expectation
         print(json.dumps(report, indent=2))
         return 0
     except AudifyError as exc:

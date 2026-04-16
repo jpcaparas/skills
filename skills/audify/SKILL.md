@@ -27,6 +27,10 @@ What kind of input are you handling?
 - A request where the user does not care about style details
   - Default to `Kore` plus a clear neutral narrator nuance.
 
+- A longer job with multiple chunks or a large cleaned transcript
+  - Tell the user up front that multi-chunk TTS can take a few minutes and that quiet periods are normal.
+  - Do not keep narrating every short poll. Prefer one expectation-setting update, then wait for chunk progress or completion.
+
 - Missing `GEMINI_API_KEY`, unavailable `gemini-3.1-flash-tts-preview`, missing `ffmpeg`, or exhausted read attempts
   - Bail with the concrete failed prerequisite.
 
@@ -56,6 +60,8 @@ What kind of input are you handling?
 3. Preserve human text whenever possible. Keep visible anchor text, headings, paragraph content, and inline prose; drop boilerplate that is structural rather than spoken.
 4. Stop when the source is not narration-friendly. Do not read code dumps, logs, stack traces, raw tables, or binary blobs aloud just because they decoded as text.
 5. Stop when read attempts are exhausted. Do not silently fall back from a bad fetch or undecodable file to a hallucinated summary.
+6. Set runtime expectations before long runs. For multi-chunk TTS, tell the user a realistic range such as "often 2-6 minutes" and that silence between chunk completions is normal.
+7. Do not badger the user with polling updates. After the initial expectation-setting message, only report meaningful state changes such as chunk progress, retries, or final completion.
 
 ## Output Contract
 
@@ -66,6 +72,7 @@ The folder contains:
 - `audio.mp3` by default
 - `cleaned.txt` with the final spoken transcript
 - `manifest.json` with source, voice, nuance, chunking, and retry metadata
+- runtime expectations in both the wrapper output JSON and the status stream
 
 Use `--format wav` when MP3 conversion is not wanted.
 
@@ -76,6 +83,7 @@ Use `--format wav` when MP3 conversion is not wanted.
 3. **Vague prompts can get rejected or spoken aloud**: The wrapper uses an explicit "synthesize speech only" preamble and a labeled `TRANSCRIPT` section so instructions do not become narration.
 4. **Voice and prompt can clash**: Google warns that strong speaker mismatches can sound wrong. When the user asks for a very specific persona, make sure the selected voice and nuance point in the same direction.
 5. **HTML extraction is best-effort**: Blog chrome, nav text, or legal footer text can still leak through on messy pages. If the cleaned preview looks wrong, stop and ask for a narrower source.
+6. **Long silence is not the same as failure**: A multi-chunk run can spend a couple of minutes inside Gemini calls and local MP3 conversion. Do not treat every quiet 30-second interval as a problem.
 
 ## Helper Scripts
 

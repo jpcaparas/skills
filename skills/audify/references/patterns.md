@@ -5,6 +5,7 @@
 - [When to ask a question](#when-to-ask-a-question)
 - [Supported resource types](#supported-resource-types)
 - [Production commands](#production-commands)
+- [Runtime expectations and user updates](#runtime-expectations-and-user-updates)
 - [Output bundle layout](#output-bundle-layout)
 - [Cleaning and bail behavior](#cleaning-and-bail-behavior)
 
@@ -70,6 +71,40 @@ Write a WAV bundle instead of MP3:
 python3 scripts/audify.py --file templates/sample-input.md --format wav
 ```
 
+## Runtime Expectations and User Updates
+
+Set expectations once before long synthesis runs instead of narrating every short poll.
+
+Practical guidance:
+
+- 1 short chunk, roughly under 250 cleaned words: usually under 1 minute
+- 1-2 chunks, roughly up to 600 cleaned words: often 1-3 minutes
+- 2-4 chunks, roughly up to 1500 cleaned words: often 2-6 minutes
+- 5 or more chunks: can take 5-10+ minutes
+
+The wrapper now prints an upfront estimate and chunk progress to `stderr`, for example:
+
+```text
+audify: 810 words across 3 chunk(s); expected runtime often 2-6 minutes. Wait about 90 seconds between status checks.
+audify: Longer TTS jobs can stay quiet between chunk completions. Do not treat 30-90 seconds of silence as failure.
+audify: synthesizing chunk 1/3 (1915 chars)
+audify: finished chunk 1/3 in 1 attempt(s)
+```
+
+Use that to shape the user-facing update cadence:
+
+- give one expectation-setting message before synthesis starts
+- do not keep saying "still running" every few seconds
+- only send another update when a chunk finishes, a retry happens, or the run completes
+
+Observed benchmark from a real local run:
+
+- `cleaned.txt` length: 810 words, 5180 bytes
+- chunking: 3 chunks
+- completion time: a bit over 2 minutes
+
+That is a normal long-form run, not a warning sign.
+
 ## Output Bundle Layout
 
 The wrapper creates a timestamped folder by default:
@@ -91,6 +126,7 @@ audify-output/
 - chunk count
 - retry counts
 - rejected or removed content metrics
+- runtime expectation label and recommended poll interval in the wrapper JSON output
 
 ## Cleaning and Bail Behavior
 
