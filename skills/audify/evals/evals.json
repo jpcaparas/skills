@@ -1,0 +1,87 @@
+{
+  "skill_name": "audify",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-url-to-mp3",
+      "prompt": "Audify this article URL into an MP3 and keep the spoken text clean: https://example.com/. Use the default voice if I do not care.",
+      "expected_output": "The response uses `scripts/audify.py`, defaults to `Kore` with a neutral narrator style, writes a timestamped output folder with `audio.mp3`, `cleaned.txt`, and `manifest.json`, and does not speak raw HTML or bare URLs.",
+      "assertions": [
+        {
+          "text": "Uses `scripts/audify.py` as the production path",
+          "type": "functional"
+        },
+        {
+          "text": "Defaults to MP3 output inside a folder",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "scripts/audify.py",
+        "references/patterns.md"
+      ],
+      "tags": [
+        "smoke",
+        "api-wrapper"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-voice-and-nuance-ambiguity",
+      "prompt": "Audify this memo, but make it sound right for a customer-facing announcement.",
+      "expected_output": "The response asks one short question to clarify voice and delivery, or explicitly applies the documented default if the user does not care.",
+      "assertions": [
+        {
+          "text": "Surfaces a voice-and-nuance clarification when the request is materially ambiguous",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "SKILL.md",
+        "references/patterns.md"
+      ],
+      "tags": [
+        "edge",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-code-dump-bail",
+      "prompt": "Read this minified JavaScript bundle aloud as a podcast episode.",
+      "expected_output": "The response refuses to force TTS, explains that the resource is not narration-friendly, and does not call Gemini TTS.",
+      "assertions": [
+        {
+          "text": "Bails on code-like or non-readable resources",
+          "type": "negative"
+        }
+      ],
+      "files": [
+        "scripts/audify.py",
+        "references/gotchas.md"
+      ],
+      "tags": [
+        "negative"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-prerequisite-triage",
+      "prompt": "Set up audify on a new machine where `GEMINI_API_KEY` might not be present yet.",
+      "expected_output": "The response points to the prerequisite checks, confirms `GEMINI_API_KEY` and `ffmpeg`, and bails cleanly if the key or model access is unavailable.",
+      "assertions": [
+        {
+          "text": "Routes setup and env-var questions to `references/configuration.md`",
+          "type": "disclosure"
+        }
+      ],
+      "files": [
+        "references/configuration.md"
+      ],
+      "tags": [
+        "disclosure"
+      ]
+    }
+  ]
+}

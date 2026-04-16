@@ -1,0 +1,4 @@
+interface:
+  display_name: "audify"
+  short_description: "Turn a readable resource into cleaned Gemini TTS narration with an MP3 output bundle"
+  default_prompt: "Help me audify a URL, file, or text resource into a cleaned MP3 narration using Gemini 3.1 Flash TTS"

@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for turning readable resources into cleaned Gemini 3.1 Flash TTS narration. Covers URL and file cleaning, voice and nuance control, default MP3 bundle output, fail-fast prerequisite checks, and live Gemini model probes.",
+  "references": [
+    "https://ai.google.dev/gemini-api/docs/speech-generation",
+    "https://ai.google.dev/gemini-api/docs/changelog",
+    "https://cloud.google.com/blog/products/ai-machine-learning/gemini-3-1-flash-tts-on-google-cloud",
+    "https://generativelanguage.googleapis.com/v1beta/models"
+  ]
+}

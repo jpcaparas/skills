@@ -12,6 +12,12 @@ npx skills add jpcaparas/skills
 
 ## Available Skills
 
+### `audify`
+
+`npx skills add jpcaparas/skills --skill audify`
+
+Production skill for turning readable URLs, files, and raw text into cleaned Gemini 3.1 Flash TTS narration, with markup stripping, default MP3 bundle output, and fail-fast prerequisite checks.
+
 ### `azure-devops-wiki-markdown`
 
 `npx skills add jpcaparas/skills --skill azure-devops-wiki-markdown`
