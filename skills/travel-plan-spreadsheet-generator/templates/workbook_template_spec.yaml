@@ -1,0 +1,206 @@
+name: travel-plan-spreadsheet-generator
+version: 1
+default_filename:
+  with_destination: "<PrimaryDestination>_Travel_Itinerary_<Month>_<Year>.xlsx"
+  fallback: "Travel_Itinerary_<Month>_<Year>.xlsx"
+planner_window:
+  start: "departure_date - 1 day"
+  end: "final_home_arrival_date + 1 day"
+sheet_order:
+  - Overview
+  - Bookings
+  - Daily Plan
+  - dynamic_options_sheet
+  - Prep & Compliance
+  - Pack List
+  - Buy List
+  - Sources
+dynamic_sheet_names:
+  options_sheet:
+    tokyo: "Tokyo Options"
+    single_base: "<PrimaryDestination> Options"
+    multi_city: "Destination Options"
+  buy_in_destination_status:
+    tokyo: "Buy in Tokyo"
+    other: "Buy in <PrimaryDestination>"
+palette:
+  header_navy: "#1F4E78"
+  header_teal: "#0F766E"
+  static_label_fill: "#F3F4F6"
+  zebra_fill_a: "#FAFAFA"
+  zebra_fill_b: "#F4F7FB"
+  control_fill: "#F3E8FF"
+  metric_fill: "#E6FFFB"
+  soft_caution_fill: "#FFF4E5"
+  caution_chip_fill: "#FED7AA"
+  soft_error_fill: "#FDECEC"
+  success_fill: "#DCFCE7"
+  info_fill: "#DBEAFE"
+  buy_in_destination_fill: "#E9D5FF"
+  recovery_fill: "#CCFBF1"
+sheets:
+  Overview:
+    widths:
+      A: 19
+      B: 16
+      C: 15
+      D: 18
+      E: 20
+      F: 20
+      G: 17
+      H: 17
+      I: 24
+    merges:
+      - A1:I1
+      - A2:I2
+      - A4:C4
+      - E4:I4
+      - G5:H5
+      - G6:H6
+      - G7:H7
+      - G8:H8
+      - G9:H9
+      - E10:I11
+      - A13:D13
+      - F13:I13
+      - F14:I14
+      - F15:I15
+      - F16:I16
+      - F17:I17
+      - F18:I18
+      - C19:D19
+      - A22:I22
+      - B23:D23
+      - E23:F23
+      - G23:I23
+      - B24:D24
+      - E24:F24
+      - G24:I24
+      - B25:D25
+      - E25:F25
+      - G25:I25
+      - B26:D26
+      - E26:F26
+      - G26:I26
+      - B27:D27
+      - E27:F27
+      - G27:I27
+      - B28:D28
+      - E28:F28
+      - G28:I28
+      - B29:D29
+      - E29:F29
+      - G29:I29
+      - B30:D30
+      - E30:F30
+      - G30:I30
+      - A33:I33
+      - B34:I34
+      - B35:I35
+      - B36:I36
+      - B37:I37
+      - B38:I38
+  Bookings:
+    widths:
+      A: 13
+      B: 32
+      C: 14
+      D: 18
+      E: 24
+      F: 14
+      G: 14
+      H: 14
+      I: 8
+      J: 16
+      K: 15
+      L: 40
+      M: 46
+    merges: [A1:M1, A2:M2]
+    validations:
+      status: "Booked,Planned,To confirm"
+  Daily Plan:
+    widths:
+      A: 12
+      B: 8
+      C: 14
+      D: 34
+      E: 30
+      F: 30
+      G: 18
+      H: 24
+      I: 20
+      J: 10
+      K: 14
+      L: 28
+    merges: [A1:L1, A2:L2]
+    row_pattern: [AM, PM, Eve]
+    validations:
+      status: "Locked,Flexible,Weather watch,Done"
+  Destination Options:
+    widths:
+      A: 16
+      B: 26
+      C: 24
+      D: 10
+      E: 16
+      F: 13
+      G: 12
+      H: 40
+      I: 16
+    merges: [A1:I1, A2:I2]
+  Prep & Compliance:
+    widths:
+      A: 12
+      B: 13
+      C: 28
+      D: 38
+      E: 12
+      F: 16
+      G: 14
+      H: 34
+      I: 26
+    merges: [A1:I1, A2:I2]
+    validations:
+      priority: "High,Medium,Low"
+      status: "Not started,In progress,Review,Done"
+  Pack List:
+    widths:
+      A: 12
+      B: 28
+      C: 14
+      D: 11
+      E: 12
+      F: 16
+      G: 16
+      H: 30
+    merges: [A1:H1, A2:H2]
+    validations:
+      priority: "High,Medium,Low"
+      status: "To pack,Need to buy,Packed,Clarify"
+  Buy List:
+    widths:
+      A: 13
+      B: 12
+      C: 14
+      D: 26
+      E: 24
+      F: 12
+      G: 17
+      H: 10
+      I: 34
+      J: 24
+    merges: [A1:J1, A2:J2]
+    validations:
+      priority: "High,Medium,Low"
+      status_template:
+        tokyo: "Need to buy,Watch price,Buy in Tokyo,Bought,Skip,Clarify"
+        other: "Need to buy,Watch price,Buy in <PrimaryDestination>,Bought,Skip,Clarify"
+  Sources:
+    widths:
+      A: 12
+      B: 24
+      C: 48
+      D: 28
+      E: 18
+      F: 26
+    merges: [A1:F1, A2:F2]

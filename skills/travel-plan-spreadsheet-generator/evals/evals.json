@@ -1,0 +1,90 @@
+{
+  "skill_name": "travel-plan-spreadsheet-generator",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "tokyo-family-trip-with-partial-coverage-and-shopping",
+      "prompt": "Build an .xlsx travel itinerary workbook from a hotel PDF, outbound e-ticket PDF, attraction screenshots, conference dates, and shopping notes for a four-person Tokyo trip.",
+      "expected_output": "The response uses this skill, extracts facts from the attachments first, asks at most one consolidated clarification batch if blockers remain, and produces an .xlsx workbook with the required sheet order, visible review flags for partial coverage, protected conference days, and shopping still visible.",
+      "assertions": [
+        { "text": "Skill triggers for workbook generation", "type": "functional" },
+        { "text": "Clarification stays in one grouped batch", "type": "functional" },
+        { "text": "Workbook is created", "type": "verification" },
+        { "text": "Coverage review flags remain visible", "type": "structural" },
+        { "text": "Shopping remains visible in Daily Plan and Buy List", "type": "structural" }
+      ],
+      "tags": ["smoke", "xlsx", "tokyo", "travel"]
+    },
+    {
+      "id": 2,
+      "name": "multi-city-leisure-trip-with-solid-bookings",
+      "prompt": "Turn these Paris-Lyon-Nice bookings and short notes into a trip spreadsheet. The bookings are complete, but the daily plan should stay geographically sensible.",
+      "expected_output": "The skill uses the same workbook architecture, names the options sheet appropriately for a non-Tokyo trip, preserves booked anchors, and avoids absurd cross-city daily routes.",
+      "assertions": [
+        { "text": "Options sheet name adapts for non-Tokyo travel", "type": "structural" },
+        { "text": "Daily plans stay geographically coherent", "type": "functional" },
+        { "text": "No Tokyo-only labels leak into the workbook", "type": "negative" }
+      ],
+      "tags": ["multi-city", "travel", "structural"]
+    },
+    {
+      "id": 3,
+      "name": "solo-work-trip-with-fixed-conference",
+      "prompt": "Create an xlsx conference travel workbook for a solo Berlin work trip with fixed event days and no shopping goals.",
+      "expected_output": "The workbook protects the conference days, keeps shopping minimal rather than invented, and still includes the workbook tabs for prep, pack, buy, and sources.",
+      "assertions": [
+        { "text": "Conference days are protected in Daily Plan", "type": "functional" },
+        { "text": "Shopping is not hallucinated when absent", "type": "negative" },
+        { "text": "Workbook still includes the full sheet order", "type": "structural" }
+      ],
+      "tags": ["conference", "solo", "work"]
+    },
+    {
+      "id": 4,
+      "name": "traveller-count-mismatch-needs-one-batch-clarification",
+      "prompt": "Build a holiday itinerary spreadsheet from conflicting hotel and flight documents where the hotel covers 3 adults and the flights show 2, but the notes talk about 4 travellers.",
+      "expected_output": "The skill asks exactly one consolidated clarification batch because coverage is materially contradictory, then keeps the mismatch visible as review flags rather than silently choosing one source.",
+      "assertions": [
+        { "text": "Exactly one clarification batch is used", "type": "functional" },
+        { "text": "Contradictions become review flags", "type": "structural" },
+        { "text": "The skill does not silently overwrite one source with another", "type": "negative" }
+      ],
+      "tags": ["edge", "clarification", "coverage"]
+    },
+    {
+      "id": 5,
+      "name": "negative-markdown-itinerary-request",
+      "prompt": "Write me a markdown itinerary for Kyoto with a few things to do each day. I do not need a spreadsheet.",
+      "expected_output": "This skill should not be the primary tool because the user asked for prose, not workbook generation.",
+      "assertions": [
+        { "text": "Skill should not be the primary tool", "type": "negative" }
+      ],
+      "tags": ["negative", "triggering"]
+    },
+    {
+      "id": 6,
+      "name": "rough-notes-only-no-uploaded-files",
+      "prompt": "I only have rough notes for a family Singapore trip. Build a travel prep spreadsheet and itinerary workbook anyway, using assumptions and visible flags where needed.",
+      "expected_output": "The skill generates a workbook from rough notes, asks at most one blocker batch, and uses explicit assumptions and review flags instead of freezing.",
+      "assertions": [
+        { "text": "Workbook can be generated without uploaded files", "type": "functional" },
+        { "text": "Assumptions are explicit", "type": "structural" },
+        { "text": "The skill does not stall on non-blockers", "type": "functional" }
+      ],
+      "tags": ["edge", "assumptions", "rough-notes"]
+    },
+    {
+      "id": 7,
+      "name": "no-return-flight-yet",
+      "prompt": "Make a trip spreadsheet for a Lisbon trip where the outbound flight and hotel are booked but the return flight is not booked yet.",
+      "expected_output": "The skill still generates the workbook, keeps the missing return coverage visible in review flags and prep actions, and does not hallucinate a return booking.",
+      "assertions": [
+        { "text": "Workbook still gets created", "type": "verification" },
+        { "text": "Missing return coverage is flagged clearly", "type": "structural" },
+        { "text": "No fake return booking is invented", "type": "negative" }
+      ],
+      "tags": ["edge", "return-flight", "review-flags"]
+    }
+  ]
+}

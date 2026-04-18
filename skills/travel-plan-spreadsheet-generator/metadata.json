@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "aliases": [
+    "travel-plan-generator",
+    "travel itinerary spreadsheet",
+    "travel planner xlsx",
+    "trip spreadsheet",
+    "itinerary workbook",
+    "travel prep spreadsheet",
+    "travel shopping tracker",
+    "holiday itinerary spreadsheet",
+    "conference travel spreadsheet"
+  ],
+  "tags": [
+    "travel",
+    "spreadsheet",
+    "xlsx",
+    "itinerary",
+    "planning",
+    "trip-planning",
+    "shopping",
+    "compliance",
+    "operations"
+  ],
+  "abstract": "Production-grade skill for turning messy travel inputs into a deterministic, easy-to-edit `.xlsx` itinerary workbook with bookings, daily plans, prep and compliance tasks, pack and buy tracking, source logging, and explicit review flags."
+}

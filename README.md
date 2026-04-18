@@ -144,6 +144,12 @@ Creative one-shot skill that generates a tarsier riding a bicycle as an SVG, a p
 
 Production skill for grounding a session in real system time and timezone, triaging whether a prompt needs live verification, converting relative dates into absolute dates, and avoiding stale-memory answers for models, prices, schedules, laws, and other volatile facts.
 
+### `travel-plan-spreadsheet-generator`
+
+`npx skills add jpcaparas/skills --skill travel-plan-spreadsheet-generator`
+
+Production skill for turning messy travel notes, PDFs, screenshots, shopping asks, and fixed commitments into a polished `.xlsx` travel itinerary workbook with bookings, daily plans, prep/compliance tracking, pack and buy lists, source logging, and visible review flags.
+
 ### `tweet-replicate`
 
 `npx skills add jpcaparas/skills --skill tweet-replicate`

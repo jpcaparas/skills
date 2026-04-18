@@ -1,0 +1,304 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "travel-plan-spreadsheet-generator trip model",
+  "type": "object",
+  "required": [
+    "trip_title",
+    "primary_destination",
+    "destinations",
+    "travellers",
+    "stay_start_date",
+    "stay_end_date",
+    "departure_date",
+    "final_home_arrival_date",
+    "transport_legs",
+    "accommodation",
+    "bookings",
+    "fixed_events",
+    "daily_rows",
+    "options_bank",
+    "prep_tasks",
+    "pack_items",
+    "buy_items",
+    "sources",
+    "assumptions",
+    "review_flags",
+    "timezones",
+    "shopping_objectives",
+    "notes_raw",
+    "notes_normalised"
+  ],
+  "properties": {
+    "trip_title": { "type": "string" },
+    "primary_destination": { "type": "string" },
+    "destinations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name"],
+        "properties": {
+          "name": { "type": "string" },
+          "country": { "type": "string" },
+          "is_primary": { "type": "boolean" },
+          "base": { "type": "boolean" }
+        }
+      }
+    },
+    "travellers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "role"],
+        "properties": {
+          "name": { "type": "string" },
+          "role": { "type": "string" },
+          "included_in_day_plans": { "type": "boolean" },
+          "notes": { "type": "string" }
+        }
+      }
+    },
+    "stay_start_date": { "type": "string", "format": "date" },
+    "stay_end_date": { "type": "string", "format": "date" },
+    "departure_date": { "type": "string", "format": "date" },
+    "final_home_arrival_date": { "type": "string", "format": "date" },
+    "planner_start_date": { "type": "string", "format": "date" },
+    "planner_end_date": { "type": "string", "format": "date" },
+    "transport_legs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/transportLeg" }
+    },
+    "accommodation": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/accommodation" }
+    },
+    "bookings": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/booking" }
+    },
+    "fixed_events": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/fixedEvent" }
+    },
+    "daily_rows": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/dailyRow" }
+    },
+    "options_bank": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/optionBankRow" }
+    },
+    "prep_tasks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/prepTask" }
+    },
+    "pack_items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/packItem" }
+    },
+    "buy_items": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/buyItem" }
+    },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "review_flags": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "required": ["message"],
+            "properties": {
+              "message": { "type": "string" },
+              "severity": { "type": "string" },
+              "sheet_targets": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "source_refs": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "timezones": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "shopping_objectives": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["goal"],
+        "properties": {
+          "requester": { "type": "string" },
+          "goal": { "type": "string" },
+          "priority": { "type": "string" },
+          "timing": { "type": "string" }
+        }
+      }
+    },
+    "notes_raw": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "notes_normalised": {
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  },
+  "$defs": {
+    "transportLeg": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "carrier": { "type": "string" },
+        "route": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time_local": { "type": "string" },
+        "booking_ref": { "type": "string" },
+        "covered_adults": { "type": "integer" },
+        "notes": { "type": "string" }
+      }
+    },
+    "accommodation": {
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "area": { "type": "string" },
+        "check_in_date": { "type": "string", "format": "date" },
+        "check_out_date": { "type": "string", "format": "date" },
+        "booking_ref": { "type": "string" },
+        "covered_adults": { "type": "integer" },
+        "notes": { "type": "string" }
+      }
+    },
+    "booking": {
+      "type": "object",
+      "required": ["type", "item", "date"],
+      "properties": {
+        "type": { "type": "string" },
+        "item": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time_local": { "type": "string" },
+        "area_route": { "type": "string" },
+        "booking_ref": { "type": "string" },
+        "covered_adults": { "type": "integer" },
+        "status": { "type": "string" },
+        "action_needed": { "type": "string" },
+        "notes_source": { "type": "string" },
+        "why_it_matters": { "type": "string" }
+      }
+    },
+    "fixedEvent": {
+      "type": "object",
+      "required": ["date", "anchor"],
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "anchor": { "type": "string" },
+        "area_route": { "type": "string" },
+        "why_it_matters": { "type": "string" }
+      }
+    },
+    "dailyRow": {
+      "type": "object",
+      "required": ["date", "block"],
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "block": { "type": "string", "enum": ["AM", "PM", "Eve"] },
+        "phase": { "type": "string" },
+        "primary_plan": { "type": "string" },
+        "fallback_option_1": { "type": "string" },
+        "fallback_split_plan": { "type": "string" },
+        "area_base": { "type": "string" },
+        "shopping_focus": { "type": "string" },
+        "fixed_booking_time": { "type": "string" },
+        "pace": { "type": "string" },
+        "status": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "optionBankRow": {
+      "type": "object",
+      "required": ["area", "place_cluster"],
+      "properties": {
+        "area": { "type": "string" },
+        "place_cluster": { "type": "string" },
+        "best_for": { "type": "string" },
+        "indoor": { "type": "string" },
+        "shopping_strength": { "type": "integer" },
+        "group_fit": { "type": "string" },
+        "best_day": { "type": "string" },
+        "why_it_earns_a_place": { "type": "string" },
+        "trigger_source": { "type": "string" }
+      }
+    },
+    "prepTask": {
+      "type": "object",
+      "required": ["task"],
+      "properties": {
+        "due_date": { "type": "string", "format": "date" },
+        "category": { "type": "string" },
+        "task": { "type": "string" },
+        "practical_note": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "owner": { "type": "string" },
+        "source_url": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "packItem": {
+      "type": "object",
+      "required": ["item"],
+      "properties": {
+        "zone": { "type": "string" },
+        "item": { "type": "string" },
+        "who": { "type": "string" },
+        "need_first": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "pack_note": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "buyItem": {
+      "type": "object",
+      "required": ["item"],
+      "properties": {
+        "phase": { "type": "string" },
+        "requester": { "type": "string" },
+        "category": { "type": "string" },
+        "item": { "type": "string" },
+        "best_place_timing": { "type": "string" },
+        "priority": { "type": "string" },
+        "status": { "type": "string" },
+        "budget": { "type": "string" },
+        "why_it_matters": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": ["type", "source_name", "used_for"],
+      "properties": {
+        "type": { "type": "string" },
+        "source_name": { "type": "string" },
+        "url_or_file_note": { "type": "string" },
+        "used_for": { "type": "string" },
+        "last_checked_or_file_date": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
