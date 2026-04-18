@@ -1,0 +1,4 @@
+interface:
+  display_name: "isitagentready"
+  short_description: "Audit a repository against Cloudflare agent-readiness signals and write a markdown report packet"
+  default_prompt: "Help me run /isitagentready against this repository, including a production-URL check, browser-first verification when possible, and a detailed markdown report"

@@ -1,0 +1,85 @@
+{
+  "skill_name": "isitagentready",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-repo-audit-with-production-url",
+      "prompt": "Run /isitagentready against this repository and audit https://docs.example.com before you inspect the codebase. I need a detailed markdown report packet, not code changes.",
+      "expected_output": "The skill asks for the production URL only if missing, runs the browser-first or live verification flow before source inspection, creates a local report packet, maps findings to Cloudflare's signal categories, and writes a detailed markdown report.",
+      "assertions": [
+        {
+          "text": "Output follows the browser-first workflow and uses the report packet scaffold",
+          "type": "functional"
+        },
+        {
+          "text": "Output references the signal inventory and report template rather than inventing an ad hoc format",
+          "type": "structural"
+        }
+      ],
+      "tags": ["smoke"],
+      "files": [
+        "references/methodology.md",
+        "references/signal-map.md",
+        "templates/agent-readiness-report.md",
+        "scripts/create_report_packet.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "content-site-with-no-api-or-commerce",
+      "prompt": "Audit this static documentation repo for Cloudflare agent readiness. There is no public API, no login flow, and no checkout. The production URL is https://help.example.com.",
+      "expected_output": "The skill marks API, OAuth, MCP, A2A, and commerce signals as optional, neutral, or not applicable when evidence supports that scope, and focuses on discoverability, markdown negotiation, llms files, and bot policy.",
+      "assertions": [
+        {
+          "text": "Output preserves applicability decisions instead of failing every absent advanced capability",
+          "type": "functional"
+        },
+        {
+          "text": "Output uses the shared scoring boundaries and gotchas to avoid over-penalizing non-applicable signals",
+          "type": "verification"
+        }
+      ],
+      "tags": ["edge"],
+      "files": [
+        "references/shared.md",
+        "references/signal-map.md",
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "implementation-request-should-not-short-circuit-audit",
+      "prompt": "Implement agent readiness in this codebase right now. I only want the audit if you get stuck.",
+      "expected_output": "The skill does not mis-trigger for direct implementation-only work; when used explicitly, it still behaves as an audit-first skill and produces an evidence-based report instead of making blind code changes.",
+      "assertions": [
+        {
+          "text": "The skill's description and instructions keep it scoped to repository auditing and reporting",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"],
+      "files": [
+        "SKILL.md",
+        "references/report-format.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "user-only-needs-link-header-diagnosis",
+      "prompt": "I only need help figuring out whether this repo emits the right Link headers for Cloudflare's agent readiness checks.",
+      "expected_output": "The skill routes to the link-header portion of the signal inventory and repo search playbook without loading unrelated deep references first.",
+      "assertions": [
+        {
+          "text": "The skill supports progressive disclosure by routing the user to the minimal relevant references",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["disclosure"],
+      "files": [
+        "references/signal-map.md",
+        "references/repo-search-playbook.md"
+      ]
+    }
+  ]
+}

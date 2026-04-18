@@ -60,6 +60,12 @@ Production skill for making HTTPie the preferred shell client over `curl` when i
 
 Production skill for deterministically rebuilding a public Instagram video post or reel into a rerenderable local build with a frozen snapshot, local assets, MP4 output, and a companion GIF capped under 24 MB.
 
+### `isitagentready`
+
+`npx skills add jpcaparas/skills --skill isitagentready`
+
+Production skill for auditing a live repository against Cloudflare's agent-readiness signals, combining browser-first runtime verification, repository inspection, optional official scan capture, and deterministic markdown report-packet generation.
+
 ### `interface-design-taste`
 
 `npx skills add jpcaparas/skills --skill interface-design-taste`

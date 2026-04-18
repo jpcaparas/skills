@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for auditing repositories against Cloudflare's agent-readiness signals from isitagentready.com and the April 17, 2026 Cloudflare launch post, combining browser-first runtime verification, repository inspection, and deterministic markdown report generation.",
+  "references": [
+    "https://isitagentready.com/",
+    "https://blog.cloudflare.com/agent-readiness/",
+    "https://isitagentready.com/.well-known/agent-skills/index.json",
+    "https://isitagentready.com/.well-known/mcp.json"
+  ]
+}
