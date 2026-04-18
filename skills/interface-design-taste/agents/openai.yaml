@@ -1,0 +1,5 @@
+display_name: "Interface Design Taste"
+short_description: "Shape web, app, and desktop interfaces with stronger hierarchy and product-appropriate taste"
+default_prompt: "Help me define or critique the design direction for a digital interface and make it feel more intentional"
+icon: "palette"
+

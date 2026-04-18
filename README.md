@@ -60,6 +60,12 @@ Production skill for making HTTPie the preferred shell client over `curl` when i
 
 Production skill for deterministically rebuilding a public Instagram video post or reel into a rerenderable local build with a frozen snapshot, local assets, MP4 output, and a companion GIF capped under 24 MB.
 
+### `interface-design-taste`
+
+`npx skills add jpcaparas/skills --skill interface-design-taste`
+
+Production skill for shaping web, app, and desktop interfaces with stronger hierarchy, cleaner typography, tighter color and surface systems, platform-aware interaction design, and redesign-first critique workflows that avoid generic AI UI defaults.
+
 ### `linkedin-speak`
 
 `npx skills add jpcaparas/skills --skill linkedin-speak`

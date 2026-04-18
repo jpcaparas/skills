@@ -1,0 +1,84 @@
+{
+  "skill_name": "interface-design-taste",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "desktop-ops-direction-smoke",
+      "prompt": "I am designing a desktop operations app for finance analysts. It needs to feel calm and precise instead of flashy. Give me the design direction, the taste axes, and the main layout rules.",
+      "expected_output": "Routes through the core principles, picks a fitting style family, sets the taste axes, and adapts the advice for dense desktop work rather than landing-page theatrics.",
+      "assertions": [
+        {
+          "text": "Response defines the taste axes before discussing decorative details",
+          "type": "functional"
+        },
+        {
+          "text": "Agent reads references/platform-adaptation.md for desktop-specific guidance",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "disclosure",
+        "desktop"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "redesign-existing-dashboard-edge",
+      "prompt": "Our existing dashboard has too many floating cards, weak table hierarchy, and loading states that feel unfinished. I do not want a full redesign from zero. Tell me what to fix first.",
+      "expected_output": "Uses the critique workflow, prioritizes hierarchy and state fixes before styling, and avoids proposing a ground-up rewrite.",
+      "assertions": [
+        {
+          "text": "Response prioritizes hierarchy, layout, and state model before polish changes",
+          "type": "functional"
+        },
+        {
+          "text": "Agent reads references/critique-workflow.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "redesign"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "logo-only-negative",
+      "prompt": "I need a logo mark and mascot illustration for a new coffee brand. Help me craft the visual concept.",
+      "expected_output": "Recognizes that the task is outside the scope of this interface-design skill and does not overapply screen-layout guidance.",
+      "assertions": [
+        {
+          "text": "Does not frame the task as a web, app, or desktop interface problem",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "motion-and-state-disclosure",
+      "prompt": "The onboarding flow looks polished when static, but hover, focus, loading, and error states still feel cheap. Where should I focus?",
+      "expected_output": "Routes to the interaction and state guidance, emphasizing state completeness before decorative motion.",
+      "assertions": [
+        {
+          "text": "Agent reads references/interaction-motion-and-states.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response treats state design as higher priority than extra animation",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "states"
+      ]
+    }
+  ]
+}
+
