@@ -1,0 +1,22 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "April 2026",
+  "abstract": "Production skill for minimizing context burn during coding sessions by preferring compact filesystem, git, test, and container commands, with verified local probes and clean fallbacks when preferred binaries are absent.",
+  "references": [
+    "https://git-scm.com/docs",
+    "https://git-scm.com/docs/git-status",
+    "https://git-scm.com/docs/git-diff",
+    "https://git-scm.com/docs/git-log",
+    "https://git-scm.com/docs/git-push",
+    "https://github.com/BurntSushi/ripgrep",
+    "https://tree-cli.com/tree/manpage/",
+    "https://docs.npmjs.com/cli/v11/commands/npm-test",
+    "https://doc.rust-lang.org/cargo/commands/cargo-test.html",
+    "https://docs.astral.sh/ruff/check/",
+    "https://docs.pytest.org/",
+    "https://pkg.go.dev/cmd/go",
+    "https://docs.docker.com/reference/cli/docker/container/ls/",
+    "https://jqlang.org/manual/"
+  ]
+}

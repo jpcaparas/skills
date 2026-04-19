@@ -1,0 +1,4 @@
+interface:
+  display_name: "implicit-token-savings"
+  short_description: "Prefer compact repo, git, test, and container commands that minimize context burn"
+  default_prompt: "Choose the smallest command that answers the question, prefer terse inventories and path-selective probes, degrade cleanly when a preferred binary is missing, and only escalate to full output when the narrow summary is insufficient"

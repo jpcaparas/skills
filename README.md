@@ -54,6 +54,12 @@ Production skill for surgically explaining codebases, subsystems, and feature fl
 
 Production skill for making HTTPie the preferred shell client over `curl` when it is installed, while keeping every invocation transient through disposable config directories and short-lived session files, with readable HTTP and HTTPS requests, JSON and form bodies, auth, downloads, and safe fallback patterns where `curl` still makes sense.
 
+### `implicit-token-savings`
+
+`npx skills add jpcaparas/skills --skill implicit-token-savings`
+
+Production skill for minimizing context burn during coding sessions by preferring compact filesystem, git, test, and container commands, with verified local probes and clean fallbacks when preferred binaries are absent.
+
 ### `instagram-replicate`
 
 `npx skills add jpcaparas/skills --skill instagram-replicate`

@@ -1,0 +1,93 @@
+{
+  "skill_name": "implicit-token-savings",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "smoke-session-opener",
+      "prompt": "I just landed in a large repository and need the fastest high-signal first pass before I open any files. Use implicit-token-savings.",
+      "expected_output": "The response starts with compact inventory commands such as ls, tree, or rg --files, and points to the probe script rather than dumping whole files.",
+      "assertions": [
+        {
+          "text": "Mentions a compact repo inventory command such as ls -1, tree -L 2, or rg --files",
+          "type": "functional"
+        },
+        {
+          "text": "Mentions scripts/probe_implicit_token_savings.py when environment availability matters",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "verification"],
+      "files": [
+        "SKILL.md",
+        "references/filesystem.md",
+        "references/patterns.md",
+        "scripts/probe_implicit_token_savings.py"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "edge-rg-missed-file",
+      "prompt": "rg returned nothing, but I am certain the string exists somewhere in a hidden or ignored file. What is the cheapest next step?",
+      "expected_output": "The response escalates from rg to --hidden, -u, or --debug before suggesting broader or noisier reads.",
+      "assertions": [
+        {
+          "text": "Escalates with rg --hidden, rg -u, or rg --debug before suggesting a different tool",
+          "type": "functional"
+        },
+        {
+          "text": "Avoids jumping straight to full-file dumps or whole-repo reads",
+          "type": "structural"
+        }
+      ],
+      "tags": ["edge"],
+      "files": [
+        "references/filesystem.md",
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "negative-full-file-request",
+      "prompt": "The user explicitly asked for the full contents of a short config file and does not want optimization advice. How should the skill behave?",
+      "expected_output": "The response allows a direct full-file read and does not force tree, rg, or git summaries when the user explicitly wants the literal file contents.",
+      "assertions": [
+        {
+          "text": "States that a full-file read is acceptable when the file is short and explicitly requested",
+          "type": "negative"
+        },
+        {
+          "text": "Does not insist on compact commands when they would block the explicit user request",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"],
+      "files": [
+        "SKILL.md",
+        "references/filesystem.md",
+        "references/patterns.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "disclosure-git-scope-review",
+      "prompt": "I want the narrowest command sequence for checking staged scope and recent commit history before committing. Which part of the skill should I read and what commands should I use?",
+      "expected_output": "The response routes to references/git.md and recommends short git status, staged diff stat, and oneline log commands before full diffs.",
+      "assertions": [
+        {
+          "text": "Routes the user to references/git.md for compact git workflows",
+          "type": "disclosure"
+        },
+        {
+          "text": "Uses git status --short, git diff --cached --stat, or git log --oneline before wider diffs",
+          "type": "functional"
+        }
+      ],
+      "tags": ["disclosure"],
+      "files": [
+        "references/git.md",
+        "SKILL.md"
+      ]
+    }
+  ]
+}
