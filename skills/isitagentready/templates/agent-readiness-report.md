@@ -2,7 +2,7 @@
 
 | Field | Value |
 | --- | --- |
-| Repository | `{{REPO_PATH}}` |
+| Repository | `{{REPO_NAME}}` |
 | Production URL | {{PRODUCTION_URL}} |
 | Created | {{CREATED_AT}} |
 | Official scan JSON | `scan-results.json` if collected |
@@ -80,6 +80,8 @@ Leave this section explicit even when a live scan was unavailable.
 <!-- Explain why any signal was marked neutral, not applicable, or supporting-only. -->
 
 ## Repository Coverage
+
+Use repo-relative paths such as `apps/web/app/robots.ts` in this section. Do not copy absolute workstation paths into the report.
 
 | Area | Files, routes, or config inspected | Notes |
 | --- | --- | --- |

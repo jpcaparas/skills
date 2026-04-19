@@ -45,6 +45,7 @@ The report must:
 - note when a check is supporting-only or non-scoring
 - keep unresolved items visible
 - prioritize fixes instead of ending with a flat checklist
+- use repo-relative paths in the markdown report instead of absolute local filesystem paths
 
 ## Minimum Table Shape
 

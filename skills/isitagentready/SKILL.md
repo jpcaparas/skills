@@ -82,6 +82,8 @@ Produce these artifacts in the report packet:
 4. Mark optional or neutral checks explicitly. A static content site should not be penalized for lacking commerce flows or OAuth protected resource metadata unless the product genuinely exposes those capabilities.
 5. Search deployment surfaces, not just app code. Headers and well-known routes are often emitted by CDN rules, edge middleware, or reverse proxies.
 6. Distinguish `missing in source`, `present but unverified`, and `failing in production`. Those are different remediation paths.
+7. When the repository has separate web and API apps, treat the user-supplied production URL as the authoritative runtime surface. Source-only backend OpenAPI or MCP config is not a deployed pass unless the public site exposes or links it.
+8. Keep user-facing evidence repo-relative. Cite paths such as `apps/web/app/robots.ts`, not absolute workstation paths.
 
 ## Reading Guide
 

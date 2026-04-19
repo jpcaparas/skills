@@ -18,6 +18,7 @@ Follow these stages in order. Do not skip the browser or live-site step when a p
    - auth flows
    - commerce or checkout routes
    - any `.well-known` endpoints
+   - separate web and API apps that may deploy independently
 3. Decide whether the repo is primarily:
    - content site
    - API or application
@@ -101,6 +102,7 @@ For each signal, collect:
 - repo evidence: file paths, routes, config entries, or search hits
 - runtime evidence: browser observations or scan JSON
 - applicability note: required, optional, neutral, or not applicable
+- note whether the authoritative production URL maps to the same app surface as the source evidence
 
 ### Stage 7: Reconcile Evidence
 
@@ -113,6 +115,8 @@ Classify each signal into one of these evidence patterns:
 | runtime unknown + repo evidence | likely implemented but unverified | request live access or staging verification |
 | runtime fail + no repo evidence | missing implementation | add the feature |
 | neutral or not applicable | deliberate omission | document the rationale |
+
+When a split repository exposes backend OpenAPI or MCP configuration but the user-supplied production URL is a separate public web app, record that as `present in source` or `runtime unverified` until the deployed surface exposes or links the capability.
 
 ### Stage 8: Write the Report
 
@@ -135,6 +139,7 @@ Use direct evidence whenever possible:
 - specific headers or content types
 - official scan JSON snippets summarized in your own words
 - browser observations tied to exact URLs
+- repo-relative paths in user-facing markdown, not absolute local filesystem paths
 
 Avoid vague claims such as "probably supported" or "should work" unless you mark them as `unknown`.
 

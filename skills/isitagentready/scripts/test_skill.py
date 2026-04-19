@@ -153,6 +153,18 @@ def test_skill(skill_path: str) -> dict:
             else:
                 results["errors"].append(f"Report template missing heading: {heading}")
                 results["passed"] = False
+        results["helper_checks"]["total"] += 1
+        if "{{REPO_PATH}}" in template_text:
+            results["errors"].append("Report template leaks the absolute repo path placeholder")
+            results["passed"] = False
+        else:
+            results["helper_checks"]["passed"] += 1
+        results["helper_checks"]["total"] += 1
+        if "repo-relative paths" in template_text:
+            results["helper_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Report template is missing repo-relative path guidance")
+            results["passed"] = False
 
     create_report_script = skill_root / "scripts" / "create_report_packet.py"
     results["helper_checks"]["total"] += 1

@@ -42,3 +42,11 @@ Client-side source hits are useful clues, but the signal is most credible when c
 ## 9. Commerce is currently non-scoring
 
 Cloudflare's April 17, 2026 blog says x402, UCP, and ACP are checked but do not currently contribute to the score. Report them, but do not let them dominate the summary for a non-commerce product.
+
+## 10. Split frontend and backend repos can overstate readiness
+
+If the authoritative production URL is a public web app but the repository also contains a separate API app, backend OpenAPI or MCP packages are not enough for a pass. Count them as source evidence only until the public runtime exposes or links the discovery surface.
+
+## 11. Keep absolute workstation paths out of the report
+
+Use repo-relative paths such as `apps/web/app/robots.ts` in the markdown report. Reserve absolute local paths for machine-local metadata only when they are genuinely necessary.

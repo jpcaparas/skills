@@ -80,6 +80,58 @@
         "references/signal-map.md",
         "references/repo-search-playbook.md"
       ]
+    },
+    {
+      "id": 5,
+      "name": "split-surface-public-site-with-backend-capability-hints",
+      "prompt": "Audit this mixed travel product repository. The authoritative production URL is https://www.travelpedia.ai/. The repo has `apps/web` and `apps/api`. Browser checks on the public site show `robots.txt` and `sitemap.xml`, but the homepage returns plain HTML from Vercel with no `Link` header, no markdown negotiation, no WebMCP registration, and 404s for `/.well-known/mcp.json` and `/.well-known/agent-skills/index.json`. The official scan helper is rate-limited with HTTP 429. Source inspection finds `apps/api/config/api-platform.php` with OpenAPI docs formats enabled and `mcp` enabled.",
+      "expected_output": "The skill still follows the browser-first workflow, continues without claiming an official Cloudflare level when the live scan is rate-limited, records the public-runtime gaps, and classifies backend OpenAPI or MCP clues as present in source but not yet proven deployed instead of overclaiming a pass.",
+      "assertions": [
+        {
+          "text": "Output distinguishes public runtime evidence from backend source-only capability hints and does not promote source-only MCP or OpenAPI configuration to a deployed pass",
+          "type": "functional"
+        },
+        {
+          "text": "Output keeps the official level unverified when the live scan is unavailable or rate-limited",
+          "type": "verification"
+        },
+        {
+          "text": "Output anchors the audit in browser and HTTP evidence before drawing repository conclusions",
+          "type": "structural"
+        }
+      ],
+      "tags": ["edge", "real-world"],
+      "files": [
+        "SKILL.md",
+        "references/methodology.md",
+        "references/runtime-and-browser.md",
+        "references/signal-map.md",
+        "references/gotchas.md"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "report-packet-keeps-evidence-repo-relative",
+      "prompt": "Create the markdown report packet for a private monorepo audit and cite evidence from files like `apps/web/app/robots.ts`, `apps/web/app/sitemap.xml/route.ts`, and `apps/api/config/api-platform.php`. The report may be shared outside the local machine.",
+      "expected_output": "The skill keeps the markdown report user-safe by referring to the repository by name and by repo-relative evidence paths, not absolute workstation paths, while still preserving enough detail for remediation.",
+      "assertions": [
+        {
+          "text": "User-facing markdown avoids absolute local filesystem paths such as `/Users/...`",
+          "type": "functional"
+        },
+        {
+          "text": "Repository coverage and evidence sections cite repo-relative paths only",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["disclosure", "real-world"],
+      "files": [
+        "SKILL.md",
+        "templates/agent-readiness-report.md",
+        "references/report-format.md",
+        "references/gotchas.md",
+        "references/methodology.md"
+      ]
     }
   ]
 }
