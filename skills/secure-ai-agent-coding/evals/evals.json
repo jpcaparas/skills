@@ -1,0 +1,82 @@
+{
+  "skill_name": "secure-ai-agent-coding",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "review-existing-agent",
+      "prompt": "Review this repository for dangerous AI agent coding patterns before we deploy an LLM tool-calling workflow.",
+      "expected_output": "Runs or recommends the pattern scanner when code is available, then produces findings using the review workflow with controls for prompt boundaries, tool authorization, output validation, rollback, logging, and tests.",
+      "assertions": [
+        {
+          "text": "Output uses references/review-workflow.md and references/controls.md for the review shape.",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output treats scanner results as triage rather than proof of safety.",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/review-workflow.md",
+        "references/controls.md",
+        "scripts/scan_patterns.py"
+      ],
+      "tags": ["smoke", "review", "disclosure"]
+    },
+    {
+      "id": 2,
+      "name": "high-impact-action-gate",
+      "prompt": "Add a feature where an AI agent can send customer emails and update CRM records automatically.",
+      "expected_output": "Classifies sending emails and CRM writes as high or medium risk, requires server-side authorization, explicit tool allowlists, preview or approval before high-impact sends, rate limits, audit logs, and rollback or recovery behavior.",
+      "assertions": [
+        {
+          "text": "Output routes to references/implementation-patterns.md for action registry and approval patterns.",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output does not rely on prompt instructions as the only safety control.",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/implementation-patterns.md"
+      ],
+      "tags": ["smoke", "tool-use"]
+    },
+    {
+      "id": 3,
+      "name": "negative-generic-security",
+      "prompt": "Review this static marketing site for ordinary CSP and image alt text issues. There is no AI feature.",
+      "expected_output": "Does not use the secure-ai-agent-coding skill except to say it is not the right fit; handles the request as generic web security or accessibility work.",
+      "assertions": [
+        {
+          "text": "Output recognizes the negative trigger when no AI, model, RAG, or agent surface exists.",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "rag-poisoning-edge-case",
+      "prompt": "Our RAG agent indexes customer-uploaded PDFs and can call internal admin APIs. What should we threat model?",
+      "expected_output": "Loads the threat model and governance references, treats retrieved PDF text as untrusted data, covers RAG poisoning, provenance, source controls, tool authorization, data minimization, monitoring, and deletion or re-indexing.",
+      "assertions": [
+        {
+          "text": "Output uses references/threat-model.md for RAG and tool misuse scenarios.",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output includes customer-uploaded PDFs as untrusted input and the admin APIs as high-risk tools.",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/threat-model.md",
+        "references/governance.md"
+      ],
+      "tags": ["edge", "rag", "disclosure"]
+    }
+  ]
+}

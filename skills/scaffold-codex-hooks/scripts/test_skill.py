@@ -237,7 +237,12 @@ def test_skill(skill_path: Path) -> dict:
         )
         if feature_before.returncode == 0:
             data = json.loads(feature_before.stdout)
-            if data["status"] in {"disabled", "unknown"}:
+            default_enabled = (
+                data["status"] == "enabled"
+                and data.get("user_explicit") is not True
+                and data.get("project_explicit") is not True
+            )
+            if data["status"] in {"disabled", "unknown"} or default_enabled:
                 results["integration_checks"]["passed"] += 1
             else:
                 results["errors"].append("check_hooks_feature.py reported hooks enabled before any setup")

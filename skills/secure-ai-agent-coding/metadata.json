@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "May 2026",
+  "abstract": "Production skill for building, reviewing, and hardening AI agents and LLM applications with prompt boundaries, least-privilege tool access, per-action authorization, approval gates, data minimization, structured output validation, observability, safety regression tests, and lifecycle controls.",
+  "references": [
+    "https://galdren.com/secure-ai-agent-coding-policy/"
+  ]
+}
