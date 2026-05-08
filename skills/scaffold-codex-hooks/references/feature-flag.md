@@ -1,12 +1,16 @@
 # Feature Flag
 
-Codex hooks are behind the under-development `codex_hooks` feature.
+Codex hooks use the canonical `hooks` feature flag. The old `codex_hooks` key is a legacy alias accepted by current source for backward compatibility.
 
 Official sources:
 
 - `https://developers.openai.com/codex/hooks`
 - `https://developers.openai.com/codex/config-basic`
 - `https://developers.openai.com/codex/config-reference`
+- `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/lib.rs`
+- `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/legacy.rs`
+
+As of the 2026-05-08 verification pass, `codex features list` reports `hooks stable true`, and source maps legacy `codex_hooks` to the same feature. Write canonical `[features].hooks = true` when editing config.
 
 ## What To Inspect First
 
@@ -18,15 +22,15 @@ python3 scripts/check_hooks_feature.py --project /absolute/path/to/project --jso
 
 That checks:
 
-- the effective `codex_hooks` state in the target project
-- the user config path and explicit user value, if any
-- the project config path and explicit project value, if any
+- the effective `hooks` state in the target project
+- the user config path and explicit canonical or legacy value, if any
+- the project config path and explicit canonical or legacy value, if any
 - the current Codex CLI version, if available
 
 You can also inspect the effective state directly:
 
 ```bash
-codex -C /absolute/path/to/project features list | rg 'codex_hooks'
+codex -C /absolute/path/to/project features list | rg '^hooks\s'
 ```
 
 ## Choosing Scope
@@ -57,7 +61,7 @@ Enable user scope:
 python3 scripts/check_hooks_feature.py --project /absolute/path/to/project --enable --scope user
 ```
 
-Re-run the inspection after enabling.
+Re-run the inspection after enabling. The helper writes `[features].hooks = true`; if it finds an existing `codex_hooks` line in the `[features]` table, it migrates that line to `hooks`.
 
 ## Trust Rule
 
@@ -67,7 +71,7 @@ From the official config basics page:
 - project overrides live in `.codex/config.toml`
 - Codex loads project config files only when you trust the project
 
-That means a repo-local `.codex/config.toml` can contain `codex_hooks = true`, but the effective feature can still look off until the project config layer is active.
+That means a repo-local `.codex/config.toml` can contain `hooks = true`, but the effective feature can still look off until the project config layer is active.
 
 ## Precedence Recap
 

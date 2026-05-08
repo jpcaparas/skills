@@ -16,7 +16,10 @@ from pathlib import Path
 EXPECTED_EVENT_NAMES = {
     "SessionStart",
     "PreToolUse",
+    "PermissionRequest",
     "PostToolUse",
+    "PreCompact",
+    "PostCompact",
     "UserPromptSubmit",
     "Stop",
 }

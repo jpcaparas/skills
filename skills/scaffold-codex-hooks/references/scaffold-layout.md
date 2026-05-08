@@ -16,7 +16,10 @@
         └── events/
             ├── session_start.sh
             ├── pre_tool_use.sh
+            ├── permission_request.sh
             ├── post_tool_use.sh
+            ├── pre_compact.sh
+            ├── post_compact.sh
             ├── user_prompt_submit.sh
             └── stop.sh
 ```

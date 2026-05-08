@@ -54,7 +54,7 @@ Before every real scaffold:
 
 1. Verify the live official hook docs.
 2. Compare them with `assets/hook-events.json`.
-3. Re-check the generated schemas and runtime source for parser changes.
+3. Re-check the generated schemas, feature registry, and runtime source for parser changes.
 4. If the event set or support matrix changed, update the manifest inputs first.
 
 Do not trust early blog posts or stale local assumptions over the official docs and schemas.

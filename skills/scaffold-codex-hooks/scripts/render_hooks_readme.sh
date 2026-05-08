@@ -92,7 +92,9 @@ mkdir -p "$(dirname "$README_FILE")"
 
     printf '## Notes\n\n'
     printf -- '- Current Codex runtime only supports command hooks in practice today.\n'
-    printf -- '- `PreToolUse` and `PostToolUse` currently match Bash-only traffic.\n'
+    printf -- '- The canonical feature flag is `[features].hooks`; `[features].codex_hooks` is a legacy alias.\n'
+    printf -- '- `PreToolUse`, `PermissionRequest`, and `PostToolUse` can match Bash, `apply_patch`, and MCP tool traffic when those tool paths expose hook payloads.\n'
+    printf -- '- `PreCompact` and `PostCompact` match compaction triggers: `manual` or `auto`.\n'
     printf -- '- Project-local hooks run alongside any active user-global `~/.codex/hooks.json` handlers.\n'
     printf -- '- Re-run the scaffold when the official docs or schemas change.\n\n'
 

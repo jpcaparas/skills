@@ -2,7 +2,7 @@
 """
 check_hooks_feature.py
 
-Inspect or enable the Codex `codex_hooks` feature in user or project config.
+Inspect or enable the Codex `hooks` feature in user or project config.
 
 Usage:
     python3 check_hooks_feature.py --project /path/to/project
@@ -22,9 +22,17 @@ import sys
 from pathlib import Path
 
 
+FEATURE_NAME = "hooks"
+LEGACY_FEATURE_NAMES = ("codex_hooks",)
+ALL_FEATURE_NAMES = (FEATURE_NAME, *LEGACY_FEATURE_NAMES)
+
 SECTION_RE = re.compile(r"^\s*\[([^\]]+)\]\s*$")
-FEATURE_LINE_RE = re.compile(r"^(\s*codex_hooks\s*=\s*)(true|false)(\s*(?:#.*)?)$")
-FEATURE_LIST_RE = re.compile(r"^codex_hooks\s+.+?\s+(true|false)\s*$")
+FEATURE_LINE_RE = re.compile(
+    rf"^(\s*)({'|'.join(re.escape(name) for name in ALL_FEATURE_NAMES)})(\s*=\s*)(true|false)(\s*(?:#.*)?)$"
+)
+FEATURE_LIST_RE = re.compile(
+    rf"^({'|'.join(re.escape(name) for name in ALL_FEATURE_NAMES)})\s+.+?\s+(true|false)\s*$"
+)
 
 
 def canonical_dir(path: str) -> Path:
@@ -54,7 +62,8 @@ def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def parse_feature_value(content: str) -> bool | None:
+def parse_feature_values(content: str) -> dict[str, bool]:
+    values: dict[str, bool] = {}
     current_section: str | None = None
     for raw_line in content.splitlines():
         section_match = SECTION_RE.match(raw_line)
@@ -65,8 +74,12 @@ def parse_feature_value(content: str) -> bool | None:
             continue
         feature_match = FEATURE_LINE_RE.match(raw_line)
         if feature_match:
-            return feature_match.group(2) == "true"
-    return None
+            values[feature_match.group(2)] = feature_match.group(4) == "true"
+    return values
+
+
+def parse_feature_value(content: str, feature_name: str = FEATURE_NAME) -> bool | None:
+    return parse_feature_values(content).get(feature_name)
 
 
 def upsert_feature_value(path: Path, value: bool) -> bool:
@@ -93,18 +106,33 @@ def upsert_feature_value(path: Path, value: bool) -> bool:
     changed = False
 
     if section_start is not None:
+        canonical_idx: int | None = None
+        legacy_idx: int | None = None
         for idx in range(section_start + 1, section_end):
             feature_match = FEATURE_LINE_RE.match(lines[idx].rstrip("\n"))
             if feature_match:
-                replacement = f"{feature_match.group(1)}{desired}{feature_match.group(3)}"
-                if lines[idx].endswith("\n"):
-                    replacement += "\n"
-                if lines[idx] != replacement:
-                    lines[idx] = replacement
-                    changed = True
-                break
+                if feature_match.group(2) == FEATURE_NAME:
+                    canonical_idx = idx
+                    break
+                if legacy_idx is None:
+                    legacy_idx = idx
+
+        target_idx = canonical_idx if canonical_idx is not None else legacy_idx
+        if target_idx is not None:
+            feature_match = FEATURE_LINE_RE.match(lines[target_idx].rstrip("\n"))
+            if feature_match is None:
+                raise AssertionError("target feature line did not match")
+            replacement = (
+                f"{feature_match.group(1)}{FEATURE_NAME}"
+                f"{feature_match.group(3)}{desired}{feature_match.group(5)}"
+            )
+            if lines[target_idx].endswith("\n"):
+                replacement += "\n"
+            if lines[target_idx] != replacement:
+                lines[target_idx] = replacement
+                changed = True
         else:
-            insertion = f"codex_hooks = {desired}\n"
+            insertion = f"{FEATURE_NAME} = {desired}\n"
             lines.insert(section_end, insertion)
             changed = True
     else:
@@ -113,7 +141,7 @@ def upsert_feature_value(path: Path, value: bool) -> bool:
             lines[-1] += "\n"
         if lines and lines[-1].strip():
             block.append("\n")
-        block.extend(["[features]\n", f"codex_hooks = {desired}\n"])
+        block.extend(["[features]\n", f"{FEATURE_NAME} = {desired}\n"])
         lines.extend(block)
         changed = True
 
@@ -153,12 +181,23 @@ def inspect_effective_feature(project: Path, home: Path, codex_bin: str) -> tupl
         )
         return None, warnings
 
+    legacy_effective: bool | None = None
     for raw_line in result.stdout.splitlines():
         match = FEATURE_LIST_RE.match(raw_line.strip())
-        if match:
-            return match.group(1) == "true", warnings
+        if not match:
+            continue
+        value = match.group(2) == "true"
+        if match.group(1) == FEATURE_NAME:
+            return value, warnings
+        legacy_effective = value
 
-    warnings.append("could not find codex_hooks in `codex features list` output")
+    if legacy_effective is not None:
+        warnings.append(
+            "`codex features list` reported the legacy `codex_hooks` key; prefer canonical `hooks`."
+        )
+        return legacy_effective, warnings
+
+    warnings.append("could not find hooks in `codex features list` output")
     return None, warnings
 
 
@@ -195,22 +234,37 @@ def build_report(project: Path, home: Path, user_config: Path, project_config: P
     effective, effective_warnings = inspect_effective_feature(project, home, codex_bin)
     warnings.extend(effective_warnings)
 
-    user_explicit = parse_feature_value(read_text(user_config))
-    project_explicit = parse_feature_value(read_text(project_config))
+    user_values = parse_feature_values(read_text(user_config))
+    project_values = parse_feature_values(read_text(project_config))
+    user_explicit = user_values.get(FEATURE_NAME)
+    project_explicit = project_values.get(FEATURE_NAME)
+    user_legacy_explicit = user_values.get("codex_hooks")
+    project_legacy_explicit = project_values.get("codex_hooks")
 
     recommended_scope = "project" if (project / ".git").exists() else "user"
     status = "enabled" if effective is True else "disabled" if effective is False else "unknown"
 
-    if effective is False and project_explicit is True:
+    if user_legacy_explicit is not None:
         warnings.append(
-            "project config explicitly enables `codex_hooks`, but the effective feature is still off. "
+            "user config uses legacy `[features].codex_hooks`; prefer `[features].hooks`."
+        )
+    if project_legacy_explicit is not None:
+        warnings.append(
+            "project config uses legacy `[features].codex_hooks`; prefer `[features].hooks`."
+        )
+
+    project_config_enables_hooks = project_explicit is True or project_legacy_explicit is True
+    if effective is False and project_config_enables_hooks:
+        warnings.append(
+            "project config explicitly enables `hooks`, but the effective feature is still off. "
             "Project config only loads when the project layer is active."
         )
 
     return {
         "project_path": str(project),
         "home_path": str(home),
-        "feature_name": "codex_hooks",
+        "feature_name": FEATURE_NAME,
+        "legacy_feature_names": list(LEGACY_FEATURE_NAMES),
         "codex_bin": codex_bin,
         "codex_version": codex_version,
         "effective": effective,
@@ -219,9 +273,11 @@ def build_report(project: Path, home: Path, user_config: Path, project_config: P
         "user_config_path": str(user_config),
         "user_config_exists": user_config.exists(),
         "user_explicit": user_explicit,
+        "user_legacy_explicit": user_legacy_explicit,
         "project_config_path": str(project_config),
         "project_config_exists": project_config.exists(),
         "project_explicit": project_explicit,
+        "project_legacy_explicit": project_legacy_explicit,
         "warnings": warnings,
     }
 
@@ -247,9 +303,13 @@ def parse_args() -> argparse.Namespace:
 def print_human(report: dict) -> None:
     print(f"project: {report['project_path']}")
     print(f"codex version: {report['codex_version'] or 'unknown'}")
-    print(f"effective codex_hooks: {report['effective']}")
+    print(f"effective hooks: {report['effective']}")
     print(f"user config: {report['user_config_path']} (explicit={report['user_explicit']})")
+    if report.get("user_legacy_explicit") is not None:
+        print(f"user legacy codex_hooks: {report['user_legacy_explicit']}")
     print(f"project config: {report['project_config_path']} (explicit={report['project_explicit']})")
+    if report.get("project_legacy_explicit") is not None:
+        print(f"project legacy codex_hooks: {report['project_legacy_explicit']}")
     print(f"recommended scope: {report['recommended_enable_scope']}")
     if report["warnings"]:
         print("warnings:")

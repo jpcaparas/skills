@@ -6,24 +6,45 @@
   "enabled_events": [
     {
       "name": "SessionStart",
-      "matcher": "startup|resume",
+      "matcher": "startup|resume|clear",
       "timeout": 20,
       "status_message": "Loading Codex session context",
       "notes": "Use this for lightweight bootstrap context, runtime checks, or repo reminders."
     },
     {
       "name": "PreToolUse",
-      "matcher": "Bash",
+      "matcher": "Bash|apply_patch",
       "timeout": 20,
-      "status_message": "Checking Bash command policy",
-      "notes": "Use this for Bash guardrails only. Do not assume `Write` or `MCP` interception."
+      "status_message": "Checking tool policy",
+      "notes": "Use this for Bash, apply_patch, and MCP guardrails that need to run before the tool."
+    },
+    {
+      "name": "PermissionRequest",
+      "matcher": "Bash|apply_patch",
+      "timeout": 20,
+      "status_message": "Checking approval request",
+      "notes": "Use this to allow or deny approval prompts before the normal user or guardian approval flow."
     },
     {
       "name": "PostToolUse",
-      "matcher": "Bash",
+      "matcher": "Bash|apply_patch",
       "timeout": 90,
-      "status_message": "Reviewing Bash command result",
-      "notes": "Use this for post-command notes, quick validation, or lightweight follow-up checks."
+      "status_message": "Reviewing tool result",
+      "notes": "Use this for post-tool notes, quick validation, or lightweight follow-up checks."
+    },
+    {
+      "name": "PreCompact",
+      "matcher": "manual|auto",
+      "timeout": 15,
+      "status_message": "Checking compaction policy",
+      "notes": "Use this to stop or annotate manual and automatic compaction before it happens."
+    },
+    {
+      "name": "PostCompact",
+      "matcher": "manual|auto",
+      "timeout": 15,
+      "status_message": "Reviewing compaction result",
+      "notes": "Use this to run lightweight checks after manual or automatic compaction."
     },
     {
       "name": "UserPromptSubmit",

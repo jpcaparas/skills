@@ -5,8 +5,8 @@
     {
       "id": 1,
       "name": "new-project-codex-hook-scaffold",
-      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Codex hook setup yet. Audit the repo first, verify the live official Codex hook docs and schemas, inspect whether `codex_hooks` is enabled, enable it if needed, then scaffold project-local Codex hooks with a generated hooks README and bash stubs for every current official Codex hook event.",
-      "expected_output": "The response verifies live official Codex hook sources first, audits the repo, inspects and enables the feature if needed, creates a deterministic managed `.codex/hooks.json` scaffold, and generates one bash stub per official Codex hook event.",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Codex hook setup yet. Audit the repo first, verify the live official Codex hook docs, schemas, and runtime source, inspect whether `hooks` is enabled, enable it if needed, then scaffold project-local Codex hooks with a generated hooks README and bash stubs for every current official Codex hook event.",
+      "expected_output": "The response verifies live official Codex hook sources first, audits the repo, inspects and enables the canonical `hooks` feature if needed, creates a deterministic managed `.codex/hooks.json` scaffold, and generates one bash stub per official Codex hook event.",
       "files": [
         "templates/hook-plan.example.json",
         "assets/hook-events.json"
@@ -17,7 +17,7 @@
           "type": "verification"
         },
         {
-          "text": "Response inspects the effective `codex_hooks` feature before treating repo-local hooks as active",
+          "text": "Response inspects the effective `hooks` feature before treating repo-local hooks as active",
           "type": "functional"
         },
         {
@@ -59,7 +59,7 @@
     {
       "id": 3,
       "name": "feature-flag-first-troubleshooting",
-      "prompt": "The repo has `.codex/hooks.json`, but nothing seems to happen. Before you rewrite the hooks, inspect whether the effective `codex_hooks` feature is actually on for this project, enable it if needed, and only then debug the hook files.",
+      "prompt": "The repo has `.codex/hooks.json`, but nothing seems to happen. Before you rewrite the hooks, inspect whether the effective `hooks` feature is actually on for this project, enable it if needed, and only then debug the hook files.",
       "expected_output": "The response treats the feature flag as the first diagnostic, inspects the effective feature state, enables it in the correct scope if needed, and only then moves to hook-file debugging.",
       "assertions": [
         {

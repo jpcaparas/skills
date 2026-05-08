@@ -184,17 +184,21 @@ if [ -n "$DUPLICATE_EVENTS" ]; then
     exit 1
 fi
 
-FEATURE_ARGS=()
-if [ -n "$HOME_OVERRIDE" ]; then
-    FEATURE_ARGS+=(--home "$HOME_OVERRIDE")
-fi
+run_check_hooks_feature() {
+    if [ -n "$HOME_OVERRIDE" ]; then
+        python3 "$SCRIPT_DIR/check_hooks_feature.py" \
+            --project "$PROJECT_ROOT" \
+            --home "$HOME_OVERRIDE" \
+            "$@"
+    else
+        python3 "$SCRIPT_DIR/check_hooks_feature.py" \
+            --project "$PROJECT_ROOT" \
+            "$@"
+    fi
+}
 
 FEATURE_STATUS_JSON="$(
-    python3 "$SCRIPT_DIR/check_hooks_feature.py" \
-        --project "$PROJECT_ROOT" \
-        --json \
-        "${FEATURE_ARGS[@]}" \
-        2>/dev/null || printf '{}\n'
+    run_check_hooks_feature --json 2>/dev/null || printf '{}\n'
 )"
 FEATURE_EFFECTIVE="$(printf '%s' "$FEATURE_STATUS_JSON" | jq -r '.effective // "unknown"')"
 TEMP_FEATURE_STATUS="$(mktemp)"
@@ -220,24 +224,18 @@ scaffold_hooks.sh dry run
   feature active:  $FEATURE_EFFECTIVE
 EOF
     if [ "$ENSURE_FEATURE" != "off" ] && [ "$FEATURE_EFFECTIVE" != "true" ]; then
-        printf '  note: would enable codex_hooks in %s scope\n' "$ENSURE_FEATURE"
+        printf '  note: would enable hooks in %s scope\n' "$ENSURE_FEATURE"
     fi
     exit 0
 fi
 
 if [ "$ENSURE_FEATURE" != "off" ] && [ "$FEATURE_EFFECTIVE" != "true" ]; then
-    python3 "$SCRIPT_DIR/check_hooks_feature.py" \
-        --project "$PROJECT_ROOT" \
+    run_check_hooks_feature \
         --enable \
         --scope "$ENSURE_FEATURE" \
-        --json \
-        "${FEATURE_ARGS[@]}" >/dev/null
+        --json >/dev/null
     FEATURE_STATUS_JSON="$(
-        python3 "$SCRIPT_DIR/check_hooks_feature.py" \
-            --project "$PROJECT_ROOT" \
-            --json \
-            "${FEATURE_ARGS[@]}" \
-            2>/dev/null || printf '{}\n'
+        run_check_hooks_feature --json 2>/dev/null || printf '{}\n'
     )"
     printf '%s\n' "$FEATURE_STATUS_JSON" > "$TEMP_FEATURE_STATUS"
 fi
@@ -294,9 +292,25 @@ deny_pre_tool_use() {
         '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
 }
 
+allow_permission_request() {
+    jq -n \
+        '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "allow"}}}'
+}
+
+deny_permission_request() {
+    local message="$1"
+    jq -n --arg message "$message" \
+        '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "deny", message: $message}}}'
+}
+
 block_with_reason() {
     local reason="$1"
     jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
+}
+
+stop_processing() {
+    local reason="$1"
+    jq -n --arg reason "$reason" '{continue: false, stopReason: $reason}'
 }
 
 exit_with_block_reason() {
