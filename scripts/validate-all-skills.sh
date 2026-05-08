@@ -8,16 +8,17 @@
 # This script is the shared source of truth between:
 #   1. .github/workflows/validate-skills.yml
 #   2. .claude/hooks/generated/events/stop.sh
+#   3. .codex/hooks/generated/events/stop.sh
 #
-# If you change a step here, both callers pick it up.
+# If you change a step here, all callers pick it up.
 #
 # Steps:
 #   1. Confirm README.md lists every installable skill and includes the
 #      expected skills.sh install commands.
 #   2. For every skills/<name>/ that has a SKILL.md, run validate.py and
 #      test_skill.py.
-#   3. Confirm skills.sh discovery still works via `npx --yes skills add .
-#      --list`.
+#   3. Confirm skills.sh discovery still works and does not emit Codex
+#      skills context-budget warnings.
 #
 # Usage:
 #   bash scripts/validate-all-skills.sh
@@ -93,5 +94,5 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
     fi
 fi
 
-echo "Checking skills.sh discovery"
-npx --yes skills add . --list
+echo "Checking skills.sh discovery and Codex skills context budget"
+bash scripts/check-codex-skills-context-budget.sh

@@ -23,7 +23,7 @@ Managed Codex hook scaffold for this project.
 | `PreToolUse` | yes | `Bash` | `20` | `pre_tool_use.sh` | Block destructive git and shell commands that could wipe local work or the repository. |
 | `PostToolUse` | yes | `Bash` | `20` | `post_tool_use.sh` | Add repo-specific reminders after Bash commands that touch skill directories or validation entry points. |
 | `UserPromptSubmit` | no | `ignored` | `—` | `user_prompt_submit.sh` | Inject context into user prompts or block a prompt before it is sent. |
-| `Stop` | yes | `ignored` | `300` | `stop.sh` | Run the shared validation script before the turn ends so Codex catches the same failures as CI. |
+| `Stop` | yes | `ignored` | `300` | `stop.sh` | Run the shared validation script before the turn ends so Codex catches CI failures and Codex skills context-budget warnings. |
 
 ## Sources
 

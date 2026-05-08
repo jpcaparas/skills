@@ -76,7 +76,7 @@ fi
 
 VALIDATION_OUTPUT="$(printf '%s\n' "$VALIDATION_OUTPUT" | tail -n 200)"
 REASON="$(cat <<EOF
-Validation failed. Run \`bash scripts/validate-all-skills.sh\`, fix the reported issues below, and stop again only after it passes.
+Validation failed. Run \`bash scripts/validate-all-skills.sh\`, fix the reported issues below, and stop again only after it passes. This includes the Codex skills context-budget guard: keep canonical SKILL.md descriptions concise and front-loaded, or disable unrelated local skills/plugins in ~/.codex/config.toml.
 
 ${VALIDATION_OUTPUT}
 EOF

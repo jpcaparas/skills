@@ -28,8 +28,8 @@
     {
       "name": "Stop",
       "timeout": 300,
-      "status_message": "Running skills repository validation",
-      "notes": "Run the shared validation script before the turn ends so Codex catches the same failures as CI."
+      "status_message": "Checking skills budget and repository validation",
+      "notes": "Run the shared validation script before the turn ends so Codex catches CI failures and Codex skills context-budget warnings."
     }
   ]
 }

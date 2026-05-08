@@ -46,7 +46,7 @@
             "type": "command",
             "command": "/usr/bin/env bash -lc 'exec \"$(git rev-parse --show-toplevel)/.codex/hooks/generated/events/stop.sh\"'",
             "timeout": 300,
-            "statusMessage": "Running skills repository validation"
+            "statusMessage": "Checking skills budget and repository validation"
           }
         ]
       }
