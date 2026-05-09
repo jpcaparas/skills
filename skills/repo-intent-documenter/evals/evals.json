@@ -1,0 +1,62 @@
+{
+  "skill_name": "repo-intent-documenter",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "draft-root-intent-doc",
+      "prompt": "Read this repository and write a markdown doc that makes the high-level intent obvious to future agents. Ask me questions for anything unclear.",
+      "expected_output": "Creates or updates REPO_INTENT.md with evidence-backed purpose, confidence labels, open questions, and a short review prompt.",
+      "assertions": [
+        {
+          "text": "Runs the inventory script or equivalent repo scan before drafting",
+          "type": "functional"
+        },
+        {
+          "text": "Separates certain facts from inferences and open questions",
+          "type": "quality"
+        }
+      ],
+      "tags": ["smoke", "document"]
+    },
+    {
+      "id": 2,
+      "name": "ambiguous-scaffold",
+      "prompt": "This repo is mostly generated starter code. Figure out what intent is clear and what I need to clarify.",
+      "expected_output": "Marks weak claims as tentative, avoids invented product strategy, and asks targeted questions tied to sparse evidence.",
+      "assertions": [
+        {
+          "text": "Does not overclaim from framework defaults or directory names",
+          "type": "safety"
+        }
+      ],
+      "tags": ["edge", "ambiguity"]
+    },
+    {
+      "id": 3,
+      "name": "negative-readme-polish",
+      "prompt": "Rewrite the README introduction to sound cleaner, but do not inspect the whole repo or create new docs.",
+      "expected_output": "Does not trigger this skill; this is a prose rewrite task, not repository intent discovery.",
+      "assertions": [
+        {
+          "text": "Recognizes that ordinary README polishing is a negative trigger",
+          "type": "routing"
+        }
+      ],
+      "tags": ["negative", "routing"]
+    },
+    {
+      "id": 4,
+      "name": "confidence-label-help",
+      "prompt": "How should I decide whether a repo-intent claim is certain or just an inference?",
+      "expected_output": "Loads references/methodology.md and explains the confidence labels with examples.",
+      "assertions": [
+        {
+          "text": "Routes to the methodology reference for confidence labels",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["disclosure", "methodology"]
+    }
+  ]
+}

@@ -9,7 +9,7 @@ The packet always lives under the caller's current working directory unless the 
 Each packet contains:
 
 - `work-item.md` - the main draft intended to be pasted into Azure DevOps
-- `context.md` - the extracted or raw source context that informed the draft
+- `context.md` - the extracted source context, codebase investigation notes, and supporting snippets that informed the draft
 - `sources.md` - the official Microsoft Learn links used for type guidance
 - `metadata.json` - machine-readable packet metadata
 
@@ -19,8 +19,9 @@ Each packet contains:
 2. Run `python3 scripts/create_work_item_packet.py --title "<title>"` from the current working directory for the default PBI.
 3. Add `--type <type>` only when the user specifies or clearly needs another work item type.
 4. Add `--context-file /path/to/file.md` when the source notes already exist on disk.
-5. Open the generated `work-item.md` and replace the placeholders with a final audience-safe draft.
-6. Keep spillover notes, raw reproduction details, design scraps, or open questions in `context.md`.
+5. If the packet is being drafted inside a repository, inspect the codebase before replacing placeholders.
+6. Open the generated `work-item.md` and replace the placeholders with a final audience-safe draft.
+7. Keep spillover notes, raw reproduction details, design scraps, code snippets, or open questions in `context.md`.
 
 ## Recommended Command Patterns
 
@@ -53,6 +54,17 @@ Each packet contains:
 - `Developer Notes` is for implementation constraints, dependencies, rollout notes, environment notes, and known unknowns. Keep it bullet-based.
 - `Test Scenario` is for QA-facing validation notes. Use bullets unless the user supplies a more structured scenario.
 
+## Codebase Investigation
+
+When run inside a project or repository, investigate the structure before finalizing the draft:
+
+1. Check repo state and shape: `git status --short`, `rg --files`, manifests, app entry points, routes, services, tests, migrations, and configuration.
+2. Search for terms from the title, user flow, error text, entity names, API names, UI labels, and likely module names.
+3. Read the smallest relevant files needed to identify likely ownership and implementation surfaces.
+4. Add concise file references and up to 2-4 short snippets to `**Developer Notes**` when they would help the implementer or reviewer.
+5. Put longer code excerpts, search notes, dead ends, and assumptions in `context.md` under `**Codebase investigation**`.
+6. If no relevant code is found, state that in `context.md`; do not invent a code path.
+
 ## What Goes Where
 
 Put these in `work-item.md`:
@@ -63,7 +75,7 @@ Put these in `work-item.md`:
 - the high-level action
 - the intended outcome
 - acceptance criteria
-- developer notes that materially guide delivery
+- developer notes that materially guide delivery, including concise code references or snippets when useful
 - QA-specific test scenario notes
 
 Put these in `context.md`:
@@ -72,6 +84,7 @@ Put these in `context.md`:
 - assumptions and missing details
 - implementation specifics that would distract from the main work item
 - long reproduction notes, logs, or supporting details
+- codebase investigation notes, relevant snippets, and searched paths
 
 Put these in `metadata.json`:
 

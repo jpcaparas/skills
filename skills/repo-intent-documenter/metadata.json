@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "May 2026",
+  "abstract": "Production skill for creating evidence-backed repository intent documents that explain the high-level purpose of a codebase, label certainty, preserve open questions, and give future coding agents a durable briefing.",
+  "references": [
+    "https://x.com/nbaschez/status/2052386211809919330",
+    "https://nitter.net/nbaschez/status/2052386211809919330"
+  ]
+}

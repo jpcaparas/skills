@@ -155,6 +155,11 @@ def build_context_document(process: str, item_type: str, context_text: str) -> s
             f"- Work item type: {display_type}",
             "- Audience: Mixed technical and non-technical",
             "- Main draft file: work-item.md",
+            "",
+            "**Codebase investigation**",
+            "- If this packet is drafted inside a repository, inspect project structure, likely owning modules, tests, config, and relevant code before finalizing work-item.md.",
+            "- Add concise snippets or file references to Developer Notes when they materially help implementation or triage.",
+            "- Keep longer snippets, searched paths, and dead ends here.",
         ]
     ).rstrip() + "\n"
 

@@ -10,3 +10,5 @@
 8. Avoid overfilling the main draft. If a sentence only helps engineers during implementation, it usually belongs in `context.md`.
 9. Do not add `Requirements/Solution` or other extra top-level sections unless the user explicitly requests that shape. Use `**Action**`, `**Developer Notes**`, and `**Test Scenario**` instead. `**Reproduction Steps**` is the one intentional bug-only exception.
 10. When source notes mention sensitive hostnames, environments, customers, or incident details, redact or generalize them in examples and keep only the detail needed to draft the work item.
+11. Do not skip repo inspection just because the user provided a good narrative. If the skill is run inside a repository, the draft should reflect relevant code ownership, test surfaces, config, or snippets when they exist.
+12. Do not dump large code blocks into `work-item.md`. Keep main-draft snippets short and move longer excerpts to `context.md`.

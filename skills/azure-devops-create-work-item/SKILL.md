@@ -1,9 +1,9 @@
 ---
 name: azure-devops-create-work-item
-description: "Draft a local Azure DevOps work item packet from loose context, defaulting to a Scrum Product Backlog Item unless the user specifies Bug, Feature, User Story, Task, Issue, or Epic. Save `work-item.md`, `context.md`, `sources.md`, and `metadata.json` in the caller's current directory. Use for ADO tickets, PBIs, bug reports, feature tickets, user stories, tasks, issues, and epics from notes or chats. Do NOT use for live Azure DevOps REST/CLI creation, bulk migration, wiki authoring, or status reporting."
+description: "Draft a local Azure DevOps work item packet from loose context, defaulting to a Scrum Product Backlog Item unless the user specifies Bug, Feature, User Story, Task, Issue, or Epic. When run inside a repo, inspect the codebase and include relevant snippets. Save `work-item.md`, `context.md`, `sources.md`, and `metadata.json`. Do NOT use for live Azure DevOps REST/CLI creation, bulk migration, wiki authoring, or status reporting."
 compatibility: "Requires: python3. Optional network access only when re-checking Microsoft Learn documentation."
 metadata:
-  version: "1.0.2"
+  version: "1.0.3"
   repo_tags:
     - azure-devops
     - work-items
@@ -26,6 +26,7 @@ What this skill does well:
 - create a deterministic folder in the caller's current directory
 - produce a copy-pastable `work-item.md` plus supporting artefacts
 - default unspecified work to `Product Backlog Item`
+- inspect the surrounding repo when run inside a project and surface relevant code snippets
 - keep the main draft aligned to the standard field schema, with `Reproduction Steps` added for `Bug`
 - keep the writing readable for mixed technical and non-technical audiences
 - use official Azure Boards work item primitives instead of invented ticket shapes
@@ -37,7 +38,8 @@ What this skill does well:
 3. If the work item type is missing, draft a `Product Backlog Item`.
 4. If the work item type is explicit, use the matching template.
 5. If the explicit type is ambiguous, infer it with `references/official-primitives.md`. If the choice is still ambiguous between `Product Backlog Item`, `Feature`, `User Story`, and `Task`, ask one short question.
-6. If the context is too thin to explain the problem or outcome, ask for missing context before drafting.
+6. If the current directory is a project or git repository, inspect the codebase before finalizing the draft.
+7. If the context is too thin to explain the problem or outcome, ask for missing context before drafting.
 
 ## Default Save Path Rule
 
@@ -82,6 +84,13 @@ The generated packet layout is:
 8. Put supporting detail, assumptions, raw notes, and source excerpts in `context.md`, not in the main work item draft.
 9. Write for mixed audiences. Prefer plain language, explain the business effect, and keep implementation detail only where it materially changes the request.
 10. For security, upgrade, compliance, maintenance, and dependency work, still default to `Product Backlog Item` unless the user asks for `Task`, `Feature`, or another type. Preserve direct title prefixes such as `SECURITY:`, `MAINTENANCE:`, or `COMPLIANCE:` when the source context supports them.
+11. When run inside a repository, perform a codebase pass before finalizing `work-item.md`:
+   - identify the project structure and likely owning modules with `git status --short`, `rg --files`, package manifests, routing files, service folders, tests, and nearby docs
+   - search for domain terms from the work item title, symptoms, UI labels, API names, entities, errors, and likely file names
+   - read the smallest relevant files needed to understand the affected path
+   - add concise file references and up to 2-4 short snippets in `**Developer Notes**` when they help implementation or triage
+   - put longer snippets, investigation notes, and rejected leads in `context.md`
+   - do not invent snippets or include unrelated code just to prove investigation happened
 
 ## Type Contract
 
@@ -96,10 +105,11 @@ The generated packet layout is:
 ## Recommended Workflow
 
 1. Read the source context and extract the core problem, audience, and desired outcome.
-2. Choose the best-fit work item type with `references/official-primitives.md`.
-3. Run `python3 scripts/create_work_item_packet.py --title "<title>"` in the caller's current directory for the default PBI, or add `--type <type>` when the user explicitly names another type. Add `--context-file` when notes already exist on disk.
-4. Fill `work-item.md` using the selected template and the writing rules in `references/output-packet.md`.
-5. Keep the final file surgical, plain, and ready to paste into Azure DevOps. Do not add extra top-level sections unless the user explicitly asks for them.
+2. If the caller is inside a repository, inspect the codebase and collect relevant file paths, functions, config, tests, and short snippets.
+3. Choose the best-fit work item type with `references/official-primitives.md`.
+4. Run `python3 scripts/create_work_item_packet.py --title "<title>"` in the caller's current directory for the default PBI, or add `--type <type>` when the user explicitly names another type. Add `--context-file` when notes already exist on disk.
+5. Fill `work-item.md` using the selected template and the writing rules in `references/output-packet.md`.
+6. Keep the final file surgical, plain, and ready to paste into Azure DevOps. Do not add extra top-level sections unless the user explicitly asks for them.
 
 ## Reading Guide
 
@@ -126,3 +136,4 @@ The generated packet layout is:
 6. Bugs need a `**Reproduction Steps**` section with simple numbered steps. If the context lacks that detail, ask for it or call out the gap in `context.md`.
 7. Do not bury the business impact in engineering detail. Mixed audiences should understand why the item matters after the first short section.
 8. Do not invent confidential environment names, URLs, customer names, or system identifiers. Redact or generalize details that are not in the user's supplied context.
+9. Code snippets should be evidence, not filler. Include them only when they point to a likely implementation area, defect source, test surface, config dependency, or rollout concern.

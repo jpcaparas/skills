@@ -142,6 +142,36 @@
         "references/official-primitives.md",
         "references/gotchas.md"
       ]
+    },
+    {
+      "id": 7,
+      "name": "repo-context-investigation-with-snippets",
+      "prompt": "From inside this repository, draft an Azure DevOps work item for the mirror executor tile showing incomplete when partner address details exist. Include any relevant code snippets or file paths that would help a developer pick up the work.",
+      "expected_output": "Inspect the repository structure and relevant files before finalizing the packet, then include concise code references or snippets in Developer Notes and fuller investigation notes in context.md.",
+      "assertions": [
+        {
+          "text": "Runs a repository/codebase investigation when invoked from inside a project",
+          "type": "functional"
+        },
+        {
+          "text": "Includes relevant file paths or short snippets when they materially help implementation or triage",
+          "type": "verification"
+        },
+        {
+          "text": "Places longer snippets and searched paths in context.md instead of overfilling work-item.md",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "repo-context",
+        "codebase",
+        "snippets"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/output-packet.md",
+        "references/gotchas.md"
+      ]
     }
   ]
 }

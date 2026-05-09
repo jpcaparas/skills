@@ -96,6 +96,12 @@ Production skill for markdown.new covering URL-to-Markdown conversion, file conv
 
 Production skill for Nano Banana 2 infographic prompting and verification covering low-noise prompt variants, default `16:9` review sets, terse in-image copy rules, and live Gemini image API probes for executive and editorial visuals.
 
+### `repo-intent-documenter`
+
+`npx skills add jpcaparas/skills --skill repo-intent-documenter`
+
+Production skill for creating evidence-backed repository intent documents that explain the high-level purpose of a codebase, label certainty, preserve open questions, and give future coding agents a durable briefing.
+
 ### `ripgrep`
 
 `npx skills add jpcaparas/skills --skill ripgrep`

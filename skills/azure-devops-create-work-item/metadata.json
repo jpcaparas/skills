@@ -1,8 +1,8 @@
 {
-  "version": "1.0.2",
+  "version": "1.0.3",
   "organization": "JP Caparas",
   "date": "April 2026",
-  "abstract": "Production skill for drafting local Azure DevOps work item packets from loose context using official Azure Boards work item primitives, defaulting to Product Backlog Item with deterministic folder output, reusable templates, and dedicated Reproduction Steps for bugs.",
+  "abstract": "Production skill for drafting local Azure DevOps work item packets from loose context using official Azure Boards work item primitives, defaulting to Product Backlog Item with deterministic folder output, repo-aware code investigation, reusable templates, and dedicated Reproduction Steps for bugs.",
   "references": [
     "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/about-work-items?view=azure-devops&tabs=agile-process",
     "https://learn.microsoft.com/en-us/azure/devops/boards/work-items/guidance/scrum-process-workflow?view=azure-devops",
