@@ -1,9 +1,9 @@
 ---
 name: azure-devops-create-work-item
-description: "Draft a local Azure DevOps work item packet from loose context using official Azure Boards work item primitives, then save it in the caller's current directory as a folder with `work-item.md`, `context.md`, `sources.md`, and `metadata.json`. Use when asked to create an Azure DevOps work item, feature ticket, bug report, user story, task, issue, or epic from notes, chats, requirements, or defect reports, especially when the output should be surgical, copy-pastable, and readable by both technical and non-technical audiences. Trigger on: 'create an Azure DevOps work item', 'turn this into a feature ticket', 'draft a bug work item', 'make an ADO user story', 'create a work item folder'. Do NOT use for live Azure DevOps REST or CLI creation, bulk migration, wiki authoring, or project status reporting."
+description: "Draft a local Azure DevOps work item packet from loose context, defaulting to a Scrum Product Backlog Item unless the user specifies Bug, Feature, User Story, Task, Issue, or Epic. Save `work-item.md`, `context.md`, `sources.md`, and `metadata.json` in the caller's current directory. Use for ADO tickets, PBIs, bug reports, feature tickets, user stories, tasks, issues, and epics from notes or chats. Do NOT use for live Azure DevOps REST/CLI creation, bulk migration, wiki authoring, or status reporting."
 compatibility: "Requires: python3. Optional network access only when re-checking Microsoft Learn documentation."
 metadata:
-  version: "1.0.0"
+  version: "1.0.2"
   repo_tags:
     - azure-devops
     - work-items
@@ -14,7 +14,7 @@ metadata:
 
 Turn loose context into a local Azure DevOps work item packet grounded in the official Azure Boards work item model.
 
-Verified against Microsoft Learn pages for About work items and work item types, Agile workflow in Azure Boards, Define, capture, triage, and manage bugs in Azure Boards, and Choose a process on April 15, 2026.
+Verified against Microsoft Learn pages for About work items and work item types, Scrum workflow in Azure Boards, Agile workflow in Azure Boards, Define, capture, triage, and manage bugs in Azure Boards, and Choose a process on May 9, 2026.
 
 ## Call-Bluff First
 
@@ -22,9 +22,11 @@ This skill drafts a local packet. It does not create or update a live Azure DevO
 
 What this skill does well:
 
-- extract the working context and commit to one primary Agile work item type
+- extract the working context and commit to one primary Azure Boards work item type
 - create a deterministic folder in the caller's current directory
 - produce a copy-pastable `work-item.md` plus supporting artefacts
+- default unspecified work to `Product Backlog Item`
+- keep the main draft aligned to the standard field schema, with `Reproduction Steps` added for `Bug`
 - keep the writing readable for mixed technical and non-technical audiences
 - use official Azure Boards work item primitives instead of invented ticket shapes
 
@@ -32,9 +34,10 @@ What this skill does well:
 
 1. If the user wants a local Azure DevOps-ready draft from notes, chat context, or rough requirements, use this skill.
 2. If they want the item created directly in Azure DevOps through the browser, REST API, or Azure CLI, stop and route to an automation or API workflow instead.
-3. If the work item type is explicit, use the matching template.
-4. If the type is missing, infer it with `references/official-primitives.md`. If the choice is still ambiguous between `Feature`, `User Story`, and `Task`, ask one short question.
-5. If the context is too thin to explain the problem or outcome, ask for missing context before drafting.
+3. If the work item type is missing, draft a `Product Backlog Item`.
+4. If the work item type is explicit, use the matching template.
+5. If the explicit type is ambiguous, infer it with `references/official-primitives.md`. If the choice is still ambiguous between `Product Backlog Item`, `Feature`, `User Story`, and `Task`, ask one short question.
+6. If the context is too thin to explain the problem or outcome, ask for missing context before drafting.
 
 ## Default Save Path Rule
 
@@ -54,7 +57,7 @@ The generated packet layout is:
 
 | Task | Command | Why |
 | --- | --- | --- |
-| Create a feature packet in the current directory | `python3 scripts/create_work_item_packet.py --type feature --title "Restore team login after token expiry"` | Creates the default packet folder beside the command |
+| Create the default PBI packet in the current directory | `python3 scripts/create_work_item_packet.py --title "Restore team login after token expiry"` | Creates a Product Backlog Item packet beside the command |
 | Create a packet from saved notes | `python3 scripts/create_work_item_packet.py --type bug --title "Checkout button freezes on Safari" --context-file ./notes/checkout-bug.md` | Seeds `context.md` from existing notes |
 | Save the packet under an explicit directory | `python3 scripts/create_work_item_packet.py --type user-story --title "Resend invite from team page" --save-root ./work-items` | Keeps the packet under a chosen visible folder |
 | Check the packet workflow end to end | `python3 scripts/probe_create_work_item_packet.py` | Verifies the scaffold command creates the expected artefacts |
@@ -62,30 +65,41 @@ The generated packet layout is:
 
 ## Operating Rules
 
-1. Default to the Agile process unless the user explicitly says their project uses Basic, Scrum, or CMMI.
+1. Default to a Scrum `Product Backlog Item` unless the user explicitly asks for a different type or process.
 2. Extract the context first. Capture the raw source material in `context.md` even when `work-item.md` becomes more concise.
-3. Pick one primary type only: `Epic`, `Feature`, `User Story`, `Task`, `Issue`, or `Bug`.
-4. Keep `work-item.md` simple. Do not use `#`, `##`, or `###` headings. Use bold section labels such as `**Problem**` and ordinary paragraphs, bullets, and numbered lists.
-5. Write for mixed audiences. Prefer plain language, explain the business effect, and keep implementation detail only where it materially changes the request.
-6. Use the type template as the contract. `Feature` and `Bug` are strict; the other types should stay close to their templates unless the context forces a small adjustment.
-7. Put supporting detail, assumptions, raw notes, and source excerpts in `context.md`, not in the main work item draft.
+3. Pick one primary type only: `Product Backlog Item`, `Epic`, `Feature`, `User Story`, `Task`, `Issue`, or `Bug`.
+4. Keep `work-item.md` simple. Do not use `#`, `##`, or `###` headings. Use bold section labels.
+5. Use this visible schema for non-bug drafts:
+   - `**Title**`
+   - `**Problem**`
+   - `**Action**`
+   - `**Outcome**`
+   - `**Acceptance Criteria**`
+   - `**Developer Notes**`
+   - `**Test Scenario**`
+6. For `Bug`, add `**Reproduction Steps**` immediately after `**Problem**`. Keep it as simple numbered steps that QA, product, or developers can follow.
+7. Treat the type template as the content contract. The section labels stay consistent; the content inside each section changes for `Product Backlog Item`, `Feature`, `Bug`, `Task`, and other types.
+8. Put supporting detail, assumptions, raw notes, and source excerpts in `context.md`, not in the main work item draft.
+9. Write for mixed audiences. Prefer plain language, explain the business effect, and keep implementation detail only where it materially changes the request.
+10. For security, upgrade, compliance, maintenance, and dependency work, still default to `Product Backlog Item` unless the user asks for `Task`, `Feature`, or another type. Preserve direct title prefixes such as `SECURITY:`, `MAINTENANCE:`, or `COMPLIANCE:` when the source context supports them.
 
 ## Type Contract
 
+- `Product Backlog Item`: use by default for a user story, requirement, or functional enhancement. Use `templates/product-backlog-item-template.md`.
 - `Epic`: use for a larger scenario or initiative that groups multiple features.
 - `Feature`: use for a concrete capability with user or business value. Use `templates/feature-template.md`.
 - `User Story`: use for who/what/why statements that describe a user need without prescribing implementation. Use `templates/user-story-template.md`.
 - `Task`: use for sprint-scale execution work. Use `templates/task-template.md`.
 - `Issue`: use for blockers or non-code project issues that could slow or stop delivery. Use `templates/issue-template.md`.
-- `Bug`: use for a code defect with reproducible behavior. Use `templates/bug-template.md`.
+- `Bug`: use for a code defect with reproducible behavior. Use `templates/bug-template.md`; include `Reproduction Steps`.
 
 ## Recommended Workflow
 
 1. Read the source context and extract the core problem, audience, and desired outcome.
 2. Choose the best-fit work item type with `references/official-primitives.md`.
-3. Run `python3 scripts/create_work_item_packet.py --type <type> --title "<title>"` in the caller's current directory, adding `--context-file` when notes already exist on disk.
+3. Run `python3 scripts/create_work_item_packet.py --title "<title>"` in the caller's current directory for the default PBI, or add `--type <type>` when the user explicitly names another type. Add `--context-file` when notes already exist on disk.
 4. Fill `work-item.md` using the selected template and the writing rules in `references/output-packet.md`.
-5. Keep the final file surgical, plain, and ready to paste into Azure DevOps.
+5. Keep the final file surgical, plain, and ready to paste into Azure DevOps. Do not add extra top-level sections unless the user explicitly asks for them.
 
 ## Reading Guide
 
@@ -94,6 +108,7 @@ The generated packet layout is:
 | Official Azure Boards type semantics and cross-process notes | `references/official-primitives.md` |
 | Packet layout, section-writing rules, and current-directory behavior | `references/output-packet.md` |
 | Failure modes and classification traps | `references/gotchas.md` |
+| Product Backlog Item template | `templates/product-backlog-item-template.md` |
 | Epic template | `templates/epic-template.md` |
 | Feature template | `templates/feature-template.md` |
 | User story template | `templates/user-story-template.md` |
@@ -104,9 +119,10 @@ The generated packet layout is:
 ## Gotchas
 
 1. This skill creates a local packet, not a live Azure DevOps item.
-2. `Feature`, `User Story`, and `Task` are not interchangeable. A `User Story` expresses a user need, a `Feature` groups or frames a deliverable capability, and a `Task` captures execution work.
+2. `Product Backlog Item`, `Feature`, `User Story`, and `Task` are not interchangeable. A PBI is the default Scrum backlog item, a `Feature` groups or frames a deliverable capability, a `User Story` is explicit Agile-process wording, and a `Task` captures execution work.
 3. `Bug` means a code defect. If the item is a blocker or dependency without defective behavior, use `Issue` instead.
 4. Microsoft documents that Azure DevOps work item types depend on the process. If the user is on Basic, Scrum, or CMMI, confirm the mapping before you draft.
-5. The main work item draft should stay light on markup. Use bold section labels only and avoid heading syntax.
-6. Bugs need reproducible steps and expected behavior. If the context lacks that detail, ask for it or call out the gap in `context.md`.
+5. The main work item draft should stay light on markup. Use bold section labels and avoid heading syntax.
+6. Bugs need a `**Reproduction Steps**` section with simple numbered steps. If the context lacks that detail, ask for it or call out the gap in `context.md`.
 7. Do not bury the business impact in engineering detail. Mixed audiences should understand why the item matters after the first short section.
+8. Do not invent confidential environment names, URLs, customer names, or system identifiers. Redact or generalize details that are not in the user's supplied context.

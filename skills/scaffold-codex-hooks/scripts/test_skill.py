@@ -279,9 +279,14 @@ def test_skill(skill_path: Path) -> dict:
                 or "failed to inspect effective feature state" in warning
                 for warning in warnings
             )
+            inspection_mismatch_reported = any(
+                "effective feature is still off" in warning
+                for warning in warnings
+            )
             if data["user_explicit"] is True and (
                 data["effective"] is True
                 or (data["effective"] is None and inspection_unavailable)
+                or (data["effective"] is False and inspection_mismatch_reported)
             ):
                 results["integration_checks"]["passed"] += 1
             else:

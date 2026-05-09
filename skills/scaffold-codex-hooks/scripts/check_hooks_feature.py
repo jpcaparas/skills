@@ -157,6 +157,7 @@ def upsert_feature_value(path: Path, value: bool) -> bool:
 def run_codex(project: Path, home: Path, codex_bin: str, *args: str) -> subprocess.CompletedProcess[str]:
     env = os.environ.copy()
     env["HOME"] = str(home)
+    env["CODEX_HOME"] = str(home / ".codex")
     return subprocess.run(
         [codex_bin, "-C", str(project), *args],
         check=False,
@@ -205,6 +206,7 @@ def inspect_codex_version(home: Path, codex_bin: str) -> tuple[str | None, list[
     warnings: list[str] = []
     env = os.environ.copy()
     env["HOME"] = str(home)
+    env["CODEX_HOME"] = str(home / ".codex")
     try:
         result = subprocess.run(
             [codex_bin, "--version"],
@@ -254,6 +256,13 @@ def build_report(project: Path, home: Path, user_config: Path, project_config: P
         )
 
     project_config_enables_hooks = project_explicit is True or project_legacy_explicit is True
+    user_config_enables_hooks = user_explicit is True or user_legacy_explicit is True
+    if effective is False and user_config_enables_hooks:
+        warnings.append(
+            "user config explicitly enables `hooks`, but the effective feature is still off. "
+            "Runtime inspection may be using a different Codex home or feature source."
+        )
+
     if effective is False and project_config_enables_hooks:
         warnings.append(
             "project config explicitly enables `hooks`, but the effective feature is still off. "

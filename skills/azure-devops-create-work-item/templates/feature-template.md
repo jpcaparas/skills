@@ -2,10 +2,7 @@
 {{TITLE}}
 
 **Problem**
-[Start with a high-level overview of the problem, then get more surgical. Start with a one- or two-line paragraph. Keep this section to a maximum of three short paragraphs. Use bullets where needed.]
-
-**Requirements/Solution**
-[Explain the high-level solution without going too implementation-heavy. Keep this section to a maximum of three short paragraphs. Use bullets where needed.]
+[Describe why this work is needed now, who or what is affected, and the risk or delivery impact. Keep this to one or two short paragraphs.]
 
 **Action**
 1. [High-level action]
@@ -15,7 +12,17 @@
 5. [High-level action]
 
 **Outcome**
-[Write a one- or two-line paragraph that explains the outcome once the actions succeed.]
+[Write a one- or two-line paragraph that explains what becomes true once the actions succeed.]
 
-**Acceptance criteria**
-[Write very high-level acceptance criteria in mixed-audience language.]
+**Acceptance Criteria**
+
+As a [role], I can [confirm or complete the expected behavior] so that [business, security, operational, or user outcome].
+
+**Developer Notes**
+
+- [Implementation constraint, dependency, rollout note, environment note, or known unknown.]
+- [Specific technical note only if it materially guides delivery.]
+
+**Test Scenario**
+
+- [QA-specific validation note, scenario, or environment coverage expectation.]

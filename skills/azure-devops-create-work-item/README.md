@@ -4,9 +4,9 @@ Production skill for drafting local Azure DevOps work item packets from loose co
 
 ## What It Covers
 
-- Agile-first work item selection for `Epic`, `Feature`, `User Story`, `Task`, `Issue`, and `Bug`
+- Product Backlog Item by default, with explicit support for `Epic`, `Feature`, `User Story`, `Task`, `Issue`, and `Bug`
 - Deterministic packet creation in the caller's current directory
-- Reusable per-type Markdown templates with simple section labels
+- Reusable per-type Markdown templates using the standard schema, with dedicated `Reproduction Steps` for bugs
 - Mixed-audience writing guidance for work item drafts
 
 ## Key Files

@@ -1,16 +1,10 @@
 **Title**
 {{TITLE}}
 
-**Context**
-[Explain the wider business, product, or delivery context in plain language.]
-
 **Problem**
 [Describe the broader problem or opportunity this epic addresses. Focus on why it matters now.]
 
-**Strategic outcome**
-[Explain the higher-level result this epic should unlock once the related features land.]
-
-**Feature candidates**
+**Action**
 1. [High-level feature or workstream]
 2. [High-level feature or workstream]
 3. [High-level feature or workstream]
@@ -18,5 +12,15 @@
 **Outcome**
 [Explain what becomes true for the business, team, or end users once this epic is complete.]
 
-**Success signal**
-[Describe the simple signal that shows this epic delivered its intended value.]
+**Acceptance Criteria**
+
+As a [stakeholder or team], I can [confirm the epic-level capability or outcome] so that [strategic result].
+
+**Developer Notes**
+
+- [Major dependency, sequencing note, ownership note, or risk.]
+- [Follow-up feature candidate only if it materially helps planning.]
+
+**Test Scenario**
+
+- [Epic-level validation signal, release-readiness check, or evidence expected from child work items.]

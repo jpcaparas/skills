@@ -1,16 +1,26 @@
 **Title**
 {{TITLE}}
 
-**Context**
-[State where this task sits and what it supports or unblocks.]
+**Problem**
+[State what needs to be completed, supported, or unblocked.]
 
-**Work**
+**Action**
 1. [Concrete delivery step]
 2. [Concrete delivery step]
 3. [Concrete delivery step]
 
-**Done when**
-[Describe the high-level completion condition.]
+**Outcome**
+[Describe the high-level completion state.]
 
-**Notes**
-[Add dependencies, assumptions, or handoff notes only if they materially help execution.]
+**Acceptance Criteria**
+
+As a developer, I can [confirm the task is complete] so that [supported work can proceed].
+
+**Developer Notes**
+
+- [Dependency, assumption, handoff note, environment note, or known unknown.]
+- [Specific technical detail only if it materially guides execution.]
+
+**Test Scenario**
+
+- [Validation note, smoke check, or handoff evidence expected when the task is complete.]
