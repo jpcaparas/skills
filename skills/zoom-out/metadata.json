@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "May 2026",
+  "abstract": "Installable skill for mapping unfamiliar code one layer up: relevant modules, callers, callees, entrypoints, dependencies, boundaries, evidence labels, unknowns, and next reads before editing or explaining details.",
+  "tags": [
+    "architecture",
+    "call-graph",
+    "codebase",
+    "orientation",
+    "modules"
+  ]
+}

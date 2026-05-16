@@ -48,11 +48,11 @@ Production skill for turning git commits and diffs since an exact date into a fe
 
 Production skill for surgically explaining codebases, subsystems, and feature flows in accessible language, using grounded real-world analogies and concrete file anchors without flattening the technical truth.
 
-### `httpie`
+### `google-search-ai-optimization`
 
-`npx skills add jpcaparas/skills --skill httpie`
+`npx skills add jpcaparas/skills --skill google-search-ai-optimization`
 
-Production skill for making HTTPie the preferred shell client over `curl` when it is installed, while keeping every invocation transient through disposable config directories and short-lived session files, with readable HTTP and HTTPS requests, JSON and form bodies, auth, downloads, and safe fallback patterns where `curl` still makes sense.
+Production skill for implementing Google-grounded SEO/GEO optimization in web development, covering Search generative AI features, crawlability, indexability, snippets, structured data, content quality, ecommerce/local details, and agentic website readiness without unsupported AI-search hacks.
 
 ### `implicit-token-savings`
 
@@ -179,6 +179,12 @@ Production skill for turning messy travel notes, PDFs, screenshots, shopping ask
 `npx skills add jpcaparas/skills --skill tweet-replicate`
 
 Production skill for deterministically rebuilding a public X/Twitter post into a rerenderable local build with `snapshot.json`, local assets, MP4 output, and a companion GIF capped under 24 MB.
+
+### `zoom-out`
+
+`npx skills add jpcaparas/skills --skill zoom-out`
+
+Production skill for mapping unfamiliar code one layer up, covering relevant modules, callers, callees, entrypoints, boundaries, dependencies, evidence labels, unknowns, and concise next-read lists before editing or detailed explanation.
 
 ## Repository Layout
 

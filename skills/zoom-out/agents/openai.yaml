@@ -1,0 +1,4 @@
+display_name: "Zoom Out"
+short_description: "Map unfamiliar code one layer up before editing"
+default_prompt: "Go up a layer of abstraction and map the relevant modules, callers, boundaries, and next reads for this code area."
+icon: "map"

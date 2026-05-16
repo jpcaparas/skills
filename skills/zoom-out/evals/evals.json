@@ -1,0 +1,91 @@
+{
+  "skill_name": "zoom-out",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "map-symbol-callers",
+      "prompt": "I don't know this area of code well. Go up a layer of abstraction around SessionService in /repo/src/auth/session.ts and give me a map of the relevant modules and callers before we edit it.",
+      "expected_output": "Produces a responsibility-grouped map with target owner, upstream callers, downstream dependencies, boundaries, evidence, uncertainty labels, and next reads.",
+      "assertions": [
+        {
+          "text": "Output includes a one-layer map rather than a line-by-line explanation",
+          "type": "functional"
+        },
+        {
+          "text": "Output distinguishes verified caller paths from textual search leads",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "callers", "codebase"]
+    },
+    {
+      "id": 2,
+      "name": "ambiguous-monorepo-target",
+      "prompt": "Zoom out on the Order module in this monorepo. There are frontend, API, worker, and shared packages, and I only know the product term 'order cancellation'.",
+      "expected_output": "Starts by finding concrete handles and package boundaries, searches routes/jobs/tests/schema names, narrows to center files, and asks one concise scope question only if the target cannot be inferred.",
+      "assertions": [
+        {
+          "text": "Output checks workspace/package boundaries before reading every matching file",
+          "type": "functional"
+        },
+        {
+          "text": "Output avoids presenting same-name matches across domains as the same subsystem without evidence",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "monorepo"]
+    },
+    {
+      "id": 3,
+      "name": "not-generic-explanation",
+      "prompt": "Can you explain what a closure is in JavaScript? I don't have a repository; I just need the concept.",
+      "expected_output": "Does not trigger zoom-out behavior, does not invent modules or callers, and answers as a general programming explanation or routes to a teaching skill.",
+      "assertions": [
+        {
+          "text": "Does not produce a repository module map",
+          "type": "negative"
+        },
+        {
+          "text": "Does not claim caller paths without repository evidence",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "loads-caller-mapping-reference",
+      "prompt": "Who calls PaymentIntentBuilder? I need to know the caller chain, but I only trust verified paths, not random grep hits.",
+      "expected_output": "Reads the caller mapping reference, ranks evidence by runtime wiring/direct invocation/tests/exports/textual matches, and labels each path as verified, likely, lead, or unknown.",
+      "assertions": [
+        {
+          "text": "Agent reads references/caller-mapping.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response uses evidence labels for caller relationships",
+          "type": "functional"
+        }
+      ],
+      "tags": ["disclosure", "callers"]
+    },
+    {
+      "id": 5,
+      "name": "output-contract-map",
+      "prompt": "Give me a concise architecture map around the nightlyBillingJob. I need the entrypoints, downstream dependencies, unknowns, and the next three files to read.",
+      "expected_output": "Uses the output contract with Target, One-Layer Map, Caller Paths, Boundaries, Evidence, Unknowns, and Next Reads, keeping the result concise.",
+      "assertions": [
+        {
+          "text": "Agent reads references/output-contract.md or uses templates/zoom-out-map.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output ends with an ordered next-read list",
+          "type": "structural"
+        }
+      ],
+      "tags": ["disclosure", "structural"]
+    }
+  ]
+}

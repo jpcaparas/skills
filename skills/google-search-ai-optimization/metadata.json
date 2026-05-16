@@ -1,0 +1,18 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "May 2026",
+  "abstract": "Production skill for implementing Google-grounded SEO/GEO optimization in web development, covering Google Search generative AI features, crawlability, indexability, snippets, structured data, content/entity quality, ecommerce/local details, and agentic website readiness.",
+  "references": [
+    "https://developers.google.com/search/docs/fundamentals/ai-optimization-guide",
+    "https://developers.google.com/search/docs/essentials",
+    "https://developers.google.com/search/docs/fundamentals/seo-starter-guide",
+    "https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics",
+    "https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag",
+    "https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data",
+    "https://developers.google.com/search/docs/appearance/structured-data/sd-policies",
+    "https://developers.google.com/search/docs/specialty/ecommerce",
+    "https://developers.google.com/search/docs/appearance/structured-data/local-business",
+    "https://web.dev/articles/ai-agent-site-ux"
+  ]
+}

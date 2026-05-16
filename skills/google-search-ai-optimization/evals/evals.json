@@ -1,0 +1,91 @@
+{
+  "skill_name": "google-search-ai-optimization",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "implementation-smoke",
+      "prompt": "Audit a product detail page for Google AI Overviews readiness and provide implementation fixes.",
+      "expected_output": "Loads SKILL.md, routes to technical implementation and ecommerce/local references, checks indexability/snippet/canonical/rendered content, rejects unsupported AI-only hacks, and produces implementation-ready findings.",
+      "files": [
+        "SKILL.md",
+        "references/technical-implementation.md",
+        "references/ecommerce-local-agentic.md",
+        "scripts/audit_page.py"
+      ],
+      "assertions": [
+        {
+          "text": "Output treats Google GEO/AEO as SEO rather than a separate hack layer.",
+          "type": "functional"
+        },
+        {
+          "text": "Output checks indexability, snippet eligibility, canonical, crawlable links, and structured data.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "implementation"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "preview-control-edge",
+      "prompt": "The page has meta robots nosnippet but the team wants visibility in AI Mode. What should we do?",
+      "expected_output": "Loads gotchas and technical implementation, explains that restrictive snippet controls can limit direct use in AI Overviews and AI Mode, and asks whether the restriction is intentional for legal/product reasons before changing it.",
+      "files": [
+        "references/gotchas.md",
+        "references/technical-implementation.md"
+      ],
+      "assertions": [
+        {
+          "text": "Output does not blindly remove preview controls without documenting tradeoffs.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "llms-txt-negative",
+      "prompt": "Add llms.txt because Google now requires it for AI Overviews.",
+      "expected_output": "Rejects the premise for Google Search, cites the Google AI Search guidance summary in the skill, and avoids adding unsupported AI-only files unless there is a separate explicit consumer.",
+      "files": [
+        "references/google-guidance.md",
+        "references/gotchas.md"
+      ],
+      "assertions": [
+        {
+          "text": "Output says llms.txt is not required for Google Search generative AI features.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "myth"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "content-disclosure",
+      "prompt": "Improve an expert services page so it can be cited in AI Overviews without creating a page for every query variant.",
+      "expected_output": "Loads content-and-entity patterns, recommends non-commodity content, entity clarity, useful media, internal links, and query fan-out coverage on strong pages rather than scaled long-tail pages.",
+      "files": [
+        "references/content-and-entity-patterns.md"
+      ],
+      "assertions": [
+        {
+          "text": "Output routes to content-and-entity-patterns and avoids scaled content abuse.",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "content"
+      ]
+    }
+  ]
+}
