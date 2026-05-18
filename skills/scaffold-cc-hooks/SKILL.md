@@ -102,6 +102,7 @@ Before choosing any hook structure, inspect:
 - the exact absolute project path Claude Code will trust, because trust is keyed by path in `~/.claude.json`
 - languages and package managers
 - build, test, lint, and format entry points
+- existing repo-owned command entry points such as task runners, package scripts, framework commands documented in the repo, CI jobs, Make/Just/Taskfile targets, and local scripts
 - monorepo tools like Turborepo, Nx, pnpm workspaces, Bun workspaces, or custom task runners
 - existing Claude Code settings, rules, hooks, plugins, and skills
 - existing Git hooks, Husky, Lefthook, or CI gates
@@ -128,6 +129,7 @@ Allow these parts to stay project-specific:
 - sync vs async choice
 - `if` filters on tool events
 - timeouts
+- configured repo commands that an event should run before custom hook logic
 - the actual logic inside enabled event scripts
 - whether the refresh is `additive` or `overhaul`
 
@@ -147,6 +149,8 @@ When the skill is invoked again against a project:
 
 - Generate bash scripts, not Python, for the project hook runtime.
 - Comment the generated bash stubs in plain language.
+- Structure generated event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
+- Support language-agnostic `commands` entries in the hook plan for cases where the hook only needs to run existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into generated scripts.
 - Use `$CLAUDE_PROJECT_DIR` in generated command paths.
 - Default to a managed root of `.claude/hooks/generated` unless the project already has a stronger convention.
 - Default to `.claude/settings.json` when the hook setup should be shared. Use `.claude/settings.local.json` only when the project needs machine-local behavior or already uses that pattern.

@@ -9,6 +9,7 @@
       "matcher": "startup|resume|clear",
       "timeout": 20,
       "status_message": "Loading Codex session context",
+      "commands": [],
       "notes": "Use this for lightweight bootstrap context, runtime checks, or repo reminders."
     },
     {
@@ -16,6 +17,7 @@
       "matcher": "Bash|apply_patch",
       "timeout": 20,
       "status_message": "Checking tool policy",
+      "commands": [],
       "notes": "Use this for Bash, apply_patch, and MCP guardrails that need to run before the tool."
     },
     {
@@ -30,6 +32,7 @@
       "matcher": "Bash|apply_patch",
       "timeout": 90,
       "status_message": "Reviewing tool result",
+      "commands": [],
       "notes": "Use this for post-tool notes, quick validation, or lightweight follow-up checks."
     },
     {
@@ -56,6 +59,7 @@
       "name": "Stop",
       "timeout": 45,
       "status_message": "Running end-of-turn review",
+      "commands": [],
       "notes": "Use this for one more Codex pass, final checks, or concise completion reminders."
     }
   ]

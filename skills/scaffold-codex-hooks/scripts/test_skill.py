@@ -103,6 +103,43 @@ def first_hook_command(hooks_data: dict, event_name: str) -> str | None:
     return None
 
 
+def readable_stub_errors(script_path: Path) -> list[str]:
+    content = script_path.read_text(encoding="utf-8")
+    required_snippets = [
+        "How this script is organized:",
+        "Safe editing rule:",
+        "handle_event()",
+        "Project-specific logic belongs here.",
+        "run_configured_commands",
+        "PROJECT_COMMANDS_JSON",
+        'HOOK_INPUT="$(read_hook_input)"',
+        'main "$@"',
+    ]
+    return [
+        f"{script_path.name} is missing readable stub marker: {snippet}"
+        for snippet in required_snippets
+        if snippet not in content
+    ]
+
+
+def readable_common_errors(common_path: Path) -> list[str]:
+    content = common_path.read_text(encoding="utf-8")
+    required_snippets = [
+        "require_jq()",
+        "Read one value from HOOK_INPUT with jq.",
+        "Hook output helpers build JSON with jq",
+        "run_project_command()",
+        "handle_project_command_failure()",
+        "This is deliberately language-agnostic.",
+        "Some hook contracts treat exit code 2 plus stderr as a block signal.",
+    ]
+    return [
+        f"common.sh is missing helper documentation: {snippet}"
+        for snippet in required_snippets
+        if snippet not in content
+    ]
+
+
 def test_skill(skill_path: Path) -> dict:
     results = {
         "skill_name": skill_path.name,
@@ -299,6 +336,15 @@ def test_skill(skill_path: Path) -> dict:
         temp_plan = tmp / "plan.json"
         plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
         plan_data["feature_scope"] = "user"
+        for enabled_event in plan_data.get("enabled_events", []):
+            if enabled_event.get("name") == "SessionStart":
+                enabled_event["commands"] = [
+                    {
+                        "label": "portable hook command",
+                        "command": "printf 'portable hook command\\n' >&2",
+                        "cwd": ".",
+                    }
+                ]
         temp_plan.write_text(json.dumps(plan_data, indent=2) + "\n", encoding="utf-8")
 
         results["integration_checks"]["total"] += 1
@@ -348,6 +394,30 @@ def test_skill(skill_path: Path) -> dict:
         else:
             results["errors"].append(f"scaffold_hooks.sh failed: {scaffold.stderr.strip()}")
             results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        readability_errors: list[str] = []
+        generated_root = project / ".codex" / "hooks" / "generated"
+        for rel_path in [
+            "events/session_start.sh",
+            "events/pre_tool_use.sh",
+            "events/stop.sh",
+        ]:
+            script_path = generated_root / rel_path
+            if script_path.exists():
+                readability_errors.extend(readable_stub_errors(script_path))
+            else:
+                readability_errors.append(f"generated script missing before readability check: {rel_path}")
+        common_path = generated_root / "lib" / "common.sh"
+        if common_path.exists():
+            readability_errors.extend(readable_common_errors(common_path))
+        else:
+            readability_errors.append("generated common.sh missing before readability check")
+        if readability_errors:
+            results["errors"].extend(readability_errors)
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
 
         results["integration_checks"]["total"] += 1
         hooks_json_path = project / ".codex" / "hooks.json"
@@ -419,6 +489,10 @@ def test_skill(skill_path: Path) -> dict:
                         command_errors.append(
                             f"generated {event_name} command did not execute cleanly: "
                             f"{proc.stderr.strip() or proc.stdout.strip() or 'unknown error'}"
+                        )
+                    if event_name == "SessionStart" and "portable hook command" not in proc.stderr:
+                        command_errors.append(
+                            "generated SessionStart command did not run the configured language-agnostic command"
                         )
                 if command_errors:
                     results["errors"].extend(command_errors)

@@ -119,6 +119,7 @@ Before choosing any hook structure, inspect:
 - whether the project already has `.codex/config.toml`, `.codex/hooks.json`, or `.codex/hooks/`
 - languages and package managers
 - build, test, lint, format, and validation entry points
+- existing repo-owned command entry points such as task runners, package scripts, framework commands documented in the repo, CI jobs, Make/Just/Taskfile targets, and local scripts
 - monorepo tools like Turborepo, Nx, pnpm workspaces, Bun workspaces, Cargo workspaces, or custom task runners
 - existing AI instructions such as `AGENTS.md`, project rules, or repo automation docs
 - existing Git hooks, Husky, Lefthook, or CI gates
@@ -144,6 +145,7 @@ Allow these parts to stay project-specific:
 - which events are enabled
 - matcher regexes for supported events
 - timeouts and status messages
+- configured repo commands that an event should run before custom hook logic
 - whether feature enablement belongs in project or user config
 - the actual logic inside enabled event scripts
 - whether the refresh is `additive` or `overhaul`
@@ -164,6 +166,8 @@ When the skill is invoked again against a project:
 
 - Generate bash scripts, not Python, for the managed runtime hook stubs.
 - Comment the generated bash stubs with the event-specific input and output contract.
+- Structure generated event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
+- Support language-agnostic `commands` entries in the hook plan for cases where the hook only needs to run existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into generated scripts.
 - Default to a managed root of `.codex/hooks/generated`.
 - Default to a hooks file target of `.codex/hooks.json`.
 - Default to enabling `hooks` in `.codex/config.toml` for shared repo scaffolds.

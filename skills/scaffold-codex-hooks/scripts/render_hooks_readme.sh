@@ -96,11 +96,12 @@ mkdir -p "$(dirname "$README_FILE")"
     printf -- '- `PreToolUse`, `PermissionRequest`, and `PostToolUse` can match Bash, `apply_patch`, and MCP tool traffic when those tool paths expose hook payloads.\n'
     printf -- '- `PreCompact` and `PostCompact` match compaction triggers: `manual` or `auto`.\n'
     printf -- '- Project-local hooks run alongside any active user-global `~/.codex/hooks.json` handlers.\n'
+    printf -- '- Put existing repo commands in the plan'\''s `commands` array instead of hard-coding a language or package manager into generated bash.\n'
     printf -- '- Re-run the scaffold when the official docs or schemas change.\n\n'
 
     printf '## Event Map\n\n'
-    printf '| Event | Enabled | Matcher | Timeout | Script | Notes |\n'
-    printf '|------|---------|---------|---------|--------|-------|\n'
+    printf '| Event | Enabled | Matcher | Timeout | Plan Commands | Script | Notes |\n'
+    printf '|------|---------|---------|---------|---------------|--------|-------|\n'
 
     jq -r '
         (.enabled_events // []) as $enabled
@@ -111,13 +112,15 @@ mkdir -p "$(dirname "$README_FILE")"
             (if $enabled_map[.name] then "yes" else "no" end),
             ($enabled_map[.name].matcher // (if .matcher_supported then "*" else "ignored" end)),
             (if $enabled_map[.name] then (($enabled_map[.name].timeout // 600) | tostring) else "—" end),
+            (if (($enabled_map[.name].commands // []) | length) == 0 then "none" else (($enabled_map[.name].commands // []) | map(.label // .name // .command) | join("<br>")) end),
             (.script_name),
             ($enabled_map[.name].notes // .description)
           ]
         | @tsv
-    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r event enabled matcher timeout script_name notes; do
-        printf '| `%s` | %s | `%s` | `%s` | `%s` | %s |\n' \
-            "$event" "$enabled" "$matcher" "$timeout" "$script_name" "$notes"
+    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r event enabled matcher timeout command_labels script_name notes; do
+        command_labels="$(printf '%s' "$command_labels" | sed 's/|/\\|/g')"
+        printf '| `%s` | %s | `%s` | `%s` | %s | `%s` | %s |\n' \
+            "$event" "$enabled" "$matcher" "$timeout" "$command_labels" "$script_name" "$notes"
     done
 
     printf '\n'

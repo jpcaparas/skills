@@ -41,7 +41,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script reports repo f
 | Existing `.codex/config.toml` | Strong signal that project-scoped feature config is already acceptable |
 | Existing `.codex/hooks.json` | Determines whether the refresh should be additive or a managed-overhaul |
 | Existing `.codex/hooks/README.md` or managed manifest | Tells you whether the repo already has a convention worth preserving |
-| `package.json` with `lint`, `test`, or `check` scripts | Good candidates for `PostToolUse` or `Stop` hooks |
+| Existing repo command sources | Good candidates for `PostToolUse` or `Stop` hooks when the project already owns the check |
 | Monorepo markers like `pnpm-workspace.yaml`, `turbo.json`, or `nx.json` | Hooks may need workspace-aware commands and narrow checks |
 | `.envrc`, `.env`, or toolchain files | Good candidates for lightweight `SessionStart` reminders or environment checks |
 | Existing Git hook managers like Husky or Lefthook | Codex hooks should complement, not silently duplicate, human Git hooks |
@@ -52,6 +52,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script reports repo f
 - Should the scaffold commit `.codex/config.toml`, or should the feature remain user-local?
 - Does the project already have custom hook handlers that must stay untouched?
 - Which commands are cheap enough for `SessionStart` versus expensive enough to defer to `Stop`?
+- Are those commands already available as documented repo commands, task-runner entries, CI jobs, or local scripts that the hook can call directly?
 - Does the repo need tool safety gates, approval decisions, compaction checks, or only start/stop bookends?
 - Are there already CI or Git hooks that make some Codex checks redundant?
 - Does the project need repo-shared hooks, or only personal/local automation?
@@ -65,5 +66,6 @@ A project-specific plan JSON should answer at least:
 - `feature_scope`
 - `mode`
 - `enabled_events`
+- optional per-event `commands` arrays for existing repo commands the generated hook should run before custom logic
 
 Keep the plan narrow and explicit. The scaffold script should not guess repo policy on its own.

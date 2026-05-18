@@ -16,6 +16,16 @@
 # Recommended starting style:
 #   {{ASYNC_GUIDANCE}}
 #
+# How this script is organized:
+#   1. main() reads Claude Code's JSON payload from stdin exactly once.
+#   2. handle_event() contains the project-specific logic for this event.
+#   3. run_configured_commands() runs any repo commands listed in the plan.
+#   4. Shared JSON/output helpers live in ../lib/common.sh.
+#
+# Safe editing rule:
+#   Start by editing handle_event(). Leave main() and the bootstrap section
+#   boring unless you need to change how hook input is read.
+#
 
 set -euo pipefail
 
@@ -23,12 +33,57 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=/dev/null
 source "$SCRIPT_DIR/../lib/common.sh"
 
-HOOK_INPUT="$(read_hook_input)"
-readonly HOOK_INPUT
+HOOK_INPUT=""
 
-# This default scaffold does nothing yet.
-# Add project-specific logic below after you decide whether this event should
-# block Claude, observe work in the background, or stay as an empty placeholder.
+read_project_commands_json() {
+    # This JSON is injected from the hook plan for this specific event.
+    # It is intentionally data, not generated shell logic, so existing project
+    # commands stay easy to inspect and change.
+    cat <<'PROJECT_COMMANDS_JSON'
+{{PROJECT_COMMANDS_JSON}}
+PROJECT_COMMANDS_JSON
+}
 
-exit 0
+PROJECT_COMMANDS_JSON="$(read_project_commands_json)"
 
+handle_event() {
+    # Project-specific logic belongs here.
+    # As the hook grows, add small helper functions above handle_event() and
+    # call them from here instead of turning this function into a long script.
+    #
+    # If this event is only a wrapper around existing repo commands, put those
+    # commands in the plan's commands array instead of hard-coding a toolchain
+    # here. Examples of valid commands are whatever this repo already owns:
+    # make targets, package-manager scripts, framework CLIs, shell scripts, or
+    # any other language-specific command.
+    if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
+        handle_project_command_failure "{{EVENT_NAME}}" "$(configured_command_failure_message)"
+        return $?
+    fi
+    #
+    # Useful helpers from ../lib/common.sh:
+    #   hook_json FILTER [FALLBACK]
+    #   write_system_message MESSAGE
+    #   write_additional_context MESSAGE
+    #   run_project_command LABEL COMMAND [CWD]
+    #
+    # Examples:
+    #   CWD="$(hook_json '.cwd' "$CLAUDE_PROJECT_DIR")"
+    #   write_additional_context "Remember to run the targeted test."
+    #
+    # Keep stdout empty unless this hook intentionally sends JSON back to
+    # Claude Code. Plain logging should go to stderr.
+    return 0
+}
+
+main() {
+    # Claude Code sends one JSON payload to this script on stdin.
+    # Store it globally so helper functions can read it without passing it
+    # through every project-specific function.
+    HOOK_INPUT="$(read_hook_input)"
+    readonly HOOK_INPUT
+
+    handle_event "$@"
+}
+
+main "$@"

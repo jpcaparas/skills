@@ -127,6 +127,26 @@ instruction_files_json="$(
         'README*'
 )"
 
+command_source_files_json="$(
+    collect_globs_json "$REPO_ROOT" \
+        'package.json' \
+        'composer.json' \
+        'pyproject.toml' \
+        'Cargo.toml' \
+        'go.mod' \
+        'Gemfile' \
+        'Makefile' \
+        'justfile' \
+        'Taskfile.yml' \
+        'Taskfile.yaml' \
+        'scripts/*' \
+        'bin/*' \
+        '.github/workflows/*' \
+        '.gitlab-ci.yml' \
+        '.circleci/config.yml' \
+        'azure-pipelines.yml'
+)"
+
 protected_candidates_json="$(
     collect_globs_json "$REPO_ROOT" \
         '.env' \
@@ -220,6 +240,7 @@ RESULT_JSON="$(
         --argjson codex_files "$codex_files_json" \
         --argjson git_hook_files "$git_hook_files_json" \
         --argjson instruction_files "$instruction_files_json" \
+        --argjson command_source_files "$command_source_files_json" \
         --argjson protected_candidates "$protected_candidates_json" \
         --argjson package_scripts "$package_scripts_json" \
         --argjson workspace_kinds "$workspace_kinds_json" \
@@ -244,6 +265,10 @@ RESULT_JSON="$(
                 recommended_feature_scope: $recommended_feature_scope
             },
             instructions: $instruction_files,
+            command_sources: {
+                files: $command_source_files,
+                package_scripts: $package_scripts
+            },
             git_hooks: $git_hook_files,
             protected_candidates: $protected_candidates
         }

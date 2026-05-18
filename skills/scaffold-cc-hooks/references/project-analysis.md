@@ -23,7 +23,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script is intentional
 
 | Signal | Why it matters for hook planning |
 |--------|----------------------------------|
-| `package.json` with `lint`, `test`, or `format` scripts | Good candidates for `PostToolUse`, `Stop`, or `TaskCompleted` hooks |
+| Existing repo command sources | Good candidates for `PostToolUse`, `Stop`, or `TaskCompleted` hooks when the project already owns the check |
 | Monorepo markers like `pnpm-workspace.yaml`, `turbo.json`, or `nx.json` | Hooks may need package-aware matching, targeted tests, or workspace-relative commands |
 | `.envrc`, `.env`, or toolchain files | Strong candidate for `CwdChanged` or `FileChanged` hooks |
 | Existing `.claude/settings*.json` | Determines whether the refresh should be additive or managed-overhaul |
@@ -35,6 +35,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script is intentional
 ## Questions To Answer Before Scaffolding
 
 - Which commands are the real source of truth for lint, test, format, and typecheck?
+- Are those commands already available as documented repo commands, task-runner entries, CI jobs, or local scripts that the hook can call directly?
 - Does the project need shareable hooks in `.claude/settings.json`, or machine-local hooks in `.claude/settings.local.json`?
 - Are there existing custom hooks that must stay untouched?
 - If hooks already exist or the user wants verification, is the exact repo path already trusted in `~/.claude.json`?
@@ -51,5 +52,6 @@ After the audit, create a small plan JSON with:
 - `managed_root`
 - `mode`
 - `enabled_events`
+- optional per-event `commands` arrays for existing repo commands the generated hook should run before custom logic
 
 Keep the plan narrow and explicit. The scaffold script should not guess project policy on its own.

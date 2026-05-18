@@ -27,6 +27,14 @@
         {
           "text": "Response creates one managed bash stub per current official Codex hook event",
           "type": "functional"
+        },
+        {
+          "text": "Generated hook stubs are modular, commented, and expose a clear handle_event edit point",
+          "type": "functional"
+        },
+        {
+          "text": "Generated hook stubs can run language-agnostic repo commands from the plan without hard-coded toolchain assumptions",
+          "type": "functional"
         }
       ],
       "tags": [

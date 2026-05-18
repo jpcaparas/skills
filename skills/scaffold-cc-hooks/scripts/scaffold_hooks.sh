@@ -152,6 +152,22 @@ if [ -n "$DUPLICATE_EVENTS" ]; then
     exit 1
 fi
 
+INVALID_COMMAND_EVENTS="$(
+    jq -r '
+        .enabled_events[]?
+        | .name as $event_name
+        | (.commands // [])[]?
+        | (.command // null) as $command
+        | select(if ($command | type) == "string" then ($command | length) == 0 else true end)
+        | $event_name
+    ' "$PLAN_FILE" | LC_ALL=C sort -u
+)"
+if [ -n "$INVALID_COMMAND_EVENTS" ]; then
+    echo "Plan file contains command entries without a non-empty command string:" >&2
+    printf '  - %s\n' $INVALID_COMMAND_EVENTS >&2
+    exit 1
+fi
+
 if [ "$DRY_RUN" = "true" ]; then
     cat <<EOF
 scaffold_hooks.sh dry run
@@ -180,37 +196,42 @@ cat > "$LIB_DIR/common.sh" <<'EOF'
 #
 # Shared helper functions for generated Claude Code hook scripts.
 #
-# Keep this file small and boring. The goal is to make each event stub easier
-# to extend, not to hide important behavior.
+# Keep this file small and explicit. Event scripts should be easy to read on
+# their own; this file only holds repeated input, JSON, and output helpers.
 #
 
 set -euo pipefail
 
+require_jq() {
+    # Hook output helpers build JSON with jq so quoting stays correct.
+    # Fail with a clear message instead of returning malformed JSON.
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "jq is required by generated Claude Code hook helpers." >&2
+        return 1
+    fi
+}
+
 read_hook_input() {
-    # Claude Code passes JSON to command hooks on stdin.
-    # Read the whole payload so each stub can inspect it later.
+    # Claude Code passes one JSON object to command hooks on stdin.
+    # Read the whole payload once; event scripts store it in HOOK_INPUT.
     cat
 }
 
 hook_json() {
-    # Read a value from the hook JSON payload with jq.
+    # Read one value from HOOK_INPUT with jq.
     #
     # Arguments:
-    #   1. jq filter
-    #   2. optional fallback string
+    #   $1 - jq filter, for example '.cwd'
+    #   $2 - optional fallback printed when the filter is missing or null
+    #
+    # Examples:
+    #   hook_json '.cwd' "$CLAUDE_PROJECT_DIR"
+    #   hook_json '.tool.name'
     local filter="$1"
-    local fallback="${2:-}"
+    require_jq
 
-    if ! command -v jq >/dev/null 2>&1; then
-        if [ -n "$fallback" ]; then
-            printf '%s\n' "$fallback"
-            return 0
-        fi
-        echo "jq is required to parse hook JSON." >&2
-        return 1
-    fi
-
-    if [ -n "$fallback" ]; then
+    if [ "$#" -ge 2 ]; then
+        local fallback="$2"
         printf '%s' "$HOOK_INPUT" | jq -er "$filter" 2>/dev/null || printf '%s\n' "$fallback"
     else
         printf '%s' "$HOOK_INPUT" | jq -er "$filter"
@@ -218,15 +239,185 @@ hook_json() {
 }
 
 write_system_message() {
-    # Return a systemMessage payload Claude Code can consume on the next turn.
+    # Emit a systemMessage payload Claude Code can consume on the next turn.
+    # Use this only when the hook should add visible guidance.
     local message="$1"
+    require_jq
     jq -n --arg message "$message" '{systemMessage: $message}'
 }
 
 write_additional_context() {
-    # Return additionalContext text for the next Claude turn.
+    # Emit additionalContext text for the next Claude turn.
+    # Use this for lightweight context that should not look like user text.
     local message="$1"
+    require_jq
     jq -n --arg message "$message" '{additionalContext: $message}'
+}
+
+write_block_decision() {
+    # Ask Claude Code to continue or block when the current event supports the
+    # top-level decision/reason contract. Stop and SubagentStop use this shape
+    # to keep the agent working.
+    local reason="$1"
+    require_jq
+    jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
+}
+
+stop_processing() {
+    # Stop the current hook flow when an event supports continue=false.
+    local reason="$1"
+    require_jq
+    jq -n --arg reason "$reason" '{continue: false, stopReason: $reason}'
+}
+
+deny_pre_tool_use() {
+    # Deny a PreToolUse event before the tool runs.
+    local reason="$1"
+    require_jq
+    jq -n --arg reason "$reason" \
+        '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
+}
+
+deny_permission_request() {
+    # Deny a PermissionRequest event before the normal permission dialog.
+    local message="$1"
+    require_jq
+    jq -n --arg message "$message" \
+        '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "deny", message: $message}}}'
+}
+
+hook_project_root() {
+    # Prefer Claude's project root, then the hook payload cwd, then the process
+    # cwd. This keeps command execution language-agnostic and repo-local.
+    if [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then
+        printf '%s\n' "$CLAUDE_PROJECT_DIR"
+        return 0
+    fi
+
+    local payload_cwd
+    payload_cwd="$(printf '%s' "$HOOK_INPUT" | jq -er '.cwd // empty' 2>/dev/null || true)"
+    if [ -n "$payload_cwd" ]; then
+        printf '%s\n' "$payload_cwd"
+        return 0
+    fi
+
+    pwd -P
+}
+
+resolve_command_cwd() {
+    # Command cwd can be absolute or relative to the project root.
+    local requested_cwd="${1:-.}"
+    case "$requested_cwd" in
+        ""|".")
+            hook_project_root
+            ;;
+        /*)
+            printf '%s\n' "$requested_cwd"
+            ;;
+        *)
+            printf '%s/%s\n' "$(hook_project_root)" "$requested_cwd"
+            ;;
+    esac
+}
+
+COMMAND_FAILURE_SUMMARY=""
+
+append_command_failure() {
+    local label="$1"
+    local command="$2"
+    local status="$3"
+
+    COMMAND_FAILURE_SUMMARY="${COMMAND_FAILURE_SUMMARY}- ${label}: exited with ${status} while running \`${command}\`
+"
+}
+
+configured_command_failure_message() {
+    printf 'One or more project hook commands failed.\n\n%s\nFix the failing command output, then retry the agent action.' "$COMMAND_FAILURE_SUMMARY"
+}
+
+run_project_command() {
+    # Run an existing repo command exactly as configured in the hook plan.
+    # The command string is trusted project configuration, not user input from
+    # the hook payload. Keep toolchain-specific details in the plan.
+    local label="$1"
+    local command="$2"
+    local cwd
+    cwd="$(resolve_command_cwd "${3:-.}")"
+
+    printf '[hook] %s\n' "$label" >&2
+    printf '[hook] cwd: %s\n' "$cwd" >&2
+    printf '[hook] command: %s\n' "$command" >&2
+
+    (
+        cd "$cwd"
+        /usr/bin/env bash -lc "$command"
+    )
+}
+
+run_configured_commands() {
+    # Execute command entries from an event plan:
+    #   [{"label":"quality gate","command":"your repo command","cwd":"."}]
+    #
+    # This is deliberately language-agnostic. It can run package-manager,
+    # framework, Make, Just, Taskfile, shell, or custom repo commands.
+    local commands_json="$1"
+    local failed="false"
+
+    require_jq
+
+    if [ "$(printf '%s' "$commands_json" | jq 'length')" -eq 0 ]; then
+        return 0
+    fi
+
+    while IFS= read -r command_item; do
+        local label
+        local command
+        local cwd
+        local status
+
+        label="$(printf '%s' "$command_item" | jq -r '.label // .name // .command')"
+        command="$(printf '%s' "$command_item" | jq -r '.command')"
+        cwd="$(printf '%s' "$command_item" | jq -r '.cwd // "."')"
+
+        if run_project_command "$label" "$command" "$cwd"; then
+            :
+        else
+            status="$?"
+            append_command_failure "$label" "$command" "$status"
+            failed="true"
+        fi
+    done < <(printf '%s' "$commands_json" | jq -c '.[]')
+
+    [ "$failed" = "false" ]
+}
+
+handle_project_command_failure() {
+    # Convert failed project commands into the safest output shape for each
+    # event. Events that cannot block get a system message or stderr instead.
+    local event_name="$1"
+    local message="$2"
+
+    case "$event_name" in
+        PreToolUse)
+            deny_pre_tool_use "$message"
+            ;;
+        PermissionRequest)
+            deny_permission_request "$message"
+            ;;
+        Stop|SubagentStop|TeammateIdle|TaskCreated|TaskCompleted|PostToolBatch|ConfigChange|Elicitation|ElicitationResult)
+            write_block_decision "$message"
+            ;;
+        PreCompact)
+            stop_processing "$message"
+            ;;
+        PostToolUse|PostToolUseFailure|SessionStart|Setup|Notification|SubagentStart|PostCompact|SessionEnd|CwdChanged|FileChanged|InstructionsLoaded|StopFailure|PermissionDenied|WorktreeRemove)
+            write_system_message "$message"
+            ;;
+        *)
+            printf '%s\n' "$message" >&2
+            return 1
+            ;;
+    esac
 }
 EOF
 chmod +x "$LIB_DIR/common.sh"
@@ -239,11 +430,28 @@ while IFS=$'\t' read -r event_name script_name description async_guidance; do
         continue
     fi
 
+    event_commands_json="$(
+        jq -c --arg name "$event_name" '
+            [
+                .enabled_events[]?
+                | select(.name == $name)
+                | (.commands // [])[]?
+                | {
+                    label: (.label // .name // .command),
+                    command: .command,
+                    cwd: (.cwd // "."),
+                    notes: (.notes // "")
+                }
+            ]
+        ' "$PLAN_FILE"
+    )"
+
     sed \
         -e "s|{{SCRIPT_NAME}}|$(escape_for_sed "$script_name")|g" \
         -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
         -e "s|{{EVENT_DESCRIPTION}}|$(escape_for_sed "$description")|g" \
         -e "s|{{ASYNC_GUIDANCE}}|$(escape_for_sed "$async_guidance")|g" \
+        -e "s|{{PROJECT_COMMANDS_JSON}}|$(escape_for_sed "$event_commands_json")|g" \
         "$EVENT_TEMPLATE" > "$TARGET_SCRIPT"
 
     chmod +x "$TARGET_SCRIPT"

@@ -184,6 +184,22 @@ if [ -n "$DUPLICATE_EVENTS" ]; then
     exit 1
 fi
 
+INVALID_COMMAND_EVENTS="$(
+    jq -r '
+        .enabled_events[]?
+        | .name as $event_name
+        | (.commands // [])[]?
+        | (.command // null) as $command
+        | select(if ($command | type) == "string" then ($command | length) == 0 else true end)
+        | $event_name
+    ' "$PLAN_FILE" | LC_ALL=C sort -u
+)"
+if [ -n "$INVALID_COMMAND_EVENTS" ]; then
+    echo "Plan file contains command entries without a non-empty command string:" >&2
+    printf '  - %s\n' $INVALID_COMMAND_EVENTS >&2
+    exit 1
+fi
+
 run_check_hooks_feature() {
     if [ -n "$HOME_OVERRIDE" ]; then
         python3 "$SCRIPT_DIR/check_hooks_feature.py" \
@@ -255,68 +271,241 @@ cat > "$LIB_DIR/common.sh" <<'EOF'
 # common.sh
 #
 # Shared helper functions for generated Codex hook scripts.
+# Event scripts should stay readable on their own; this file only holds
+# repeated input, JSON, and output helpers.
 #
 
 set -euo pipefail
 
+require_jq() {
+    # Hook output helpers build JSON with jq so quoting stays correct.
+    # Fail with a clear message instead of returning malformed JSON.
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "jq is required by generated Codex hook helpers." >&2
+        return 1
+    fi
+}
+
 read_hook_input() {
+    # Codex passes one JSON object to command hooks on stdin.
+    # Read the whole payload once; event scripts store it in HOOK_INPUT.
     cat
 }
 
 hook_json() {
+    # Read one value from HOOK_INPUT with jq.
+    #
+    # Arguments:
+    #   $1 - jq filter, for example '.cwd'
+    #   $2 - optional fallback printed when the filter is missing or null
+    #
+    # Examples:
+    #   hook_json '.cwd' "$PWD"
+    #   hook_json '.tool_name' ''
     local filter="$1"
-    local fallback="${2:-__NO_FALLBACK__}"
+    require_jq
 
-    if [ "$fallback" = "__NO_FALLBACK__" ]; then
-        printf '%s' "$HOOK_INPUT" | jq -er "$filter"
-    else
+    if [ "$#" -ge 2 ]; then
+        local fallback="$2"
         printf '%s' "$HOOK_INPUT" | jq -er "$filter" 2>/dev/null || printf '%s\n' "$fallback"
+    else
+        printf '%s' "$HOOK_INPUT" | jq -er "$filter"
     fi
 }
 
 emit_additional_context() {
+    # Send event-specific context back to Codex.
+    # This is useful when a hook wants to annotate what Codex should consider
+    # next without failing the event.
     local event_name="$1"
     local message="$2"
+    require_jq
     jq -n --arg event_name "$event_name" --arg message "$message" \
         '{hookSpecificOutput: {hookEventName: $event_name, additionalContext: $message}}'
 }
 
 emit_system_message() {
+    # Send a general system message back to Codex.
     local message="$1"
+    require_jq
     jq -n --arg message "$message" '{systemMessage: $message}'
 }
 
 deny_pre_tool_use() {
+    # Deny a PreToolUse event before the tool runs.
+    # The reason is returned to Codex as structured hook output.
     local reason="$1"
+    require_jq
     jq -n --arg reason "$reason" \
         '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
 }
 
 allow_permission_request() {
+    # Approve a PermissionRequest event before the normal approval flow.
+    require_jq
     jq -n \
         '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "allow"}}}'
 }
 
 deny_permission_request() {
+    # Deny a PermissionRequest event with a message Codex can show/use.
     local message="$1"
+    require_jq
     jq -n --arg message "$message" \
         '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "deny", message: $message}}}'
 }
 
 block_with_reason() {
+    # Block events that support the generic decision/reason contract.
     local reason="$1"
+    require_jq
     jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
 }
 
 stop_processing() {
+    # Tell Codex to stop processing when the event supports continue=false.
     local reason="$1"
+    require_jq
     jq -n --arg reason "$reason" '{continue: false, stopReason: $reason}'
 }
 
 exit_with_block_reason() {
+    # Some hook contracts treat exit code 2 plus stderr as a block signal.
+    # Use this helper only when the event documentation says that is supported.
     local reason="$1"
     printf '%s\n' "$reason" >&2
     exit 2
+}
+
+hook_project_root() {
+    # Prefer Codex's hook payload cwd, then the process cwd. The generated hook
+    # command starts from the project root when possible, but this fallback keeps
+    # the command runner understandable in non-git fixtures too.
+    local payload_cwd
+    payload_cwd="$(printf '%s' "$HOOK_INPUT" | jq -er '.cwd // empty' 2>/dev/null || true)"
+    if [ -n "$payload_cwd" ]; then
+        printf '%s\n' "$payload_cwd"
+        return 0
+    fi
+
+    pwd -P
+}
+
+resolve_command_cwd() {
+    # Command cwd can be absolute or relative to the project root.
+    local requested_cwd="${1:-.}"
+    case "$requested_cwd" in
+        ""|".")
+            hook_project_root
+            ;;
+        /*)
+            printf '%s\n' "$requested_cwd"
+            ;;
+        *)
+            printf '%s/%s\n' "$(hook_project_root)" "$requested_cwd"
+            ;;
+    esac
+}
+
+COMMAND_FAILURE_SUMMARY=""
+
+append_command_failure() {
+    local label="$1"
+    local command="$2"
+    local status="$3"
+
+    COMMAND_FAILURE_SUMMARY="${COMMAND_FAILURE_SUMMARY}- ${label}: exited with ${status} while running \`${command}\`
+"
+}
+
+configured_command_failure_message() {
+    printf 'One or more project hook commands failed.\n\n%s\nFix the failing command output, then retry the agent action.' "$COMMAND_FAILURE_SUMMARY"
+}
+
+run_project_command() {
+    # Run an existing repo command exactly as configured in the hook plan.
+    # The command string is trusted project configuration, not user input from
+    # the hook payload. Keep toolchain-specific details in the plan.
+    local label="$1"
+    local command="$2"
+    local cwd
+    cwd="$(resolve_command_cwd "${3:-.}")"
+
+    printf '[hook] %s\n' "$label" >&2
+    printf '[hook] cwd: %s\n' "$cwd" >&2
+    printf '[hook] command: %s\n' "$command" >&2
+
+    (
+        cd "$cwd"
+        /usr/bin/env bash -lc "$command"
+    )
+}
+
+run_configured_commands() {
+    # Execute command entries from an event plan:
+    #   [{"label":"quality gate","command":"your repo command","cwd":"."}]
+    #
+    # This is deliberately language-agnostic. It can run package-manager,
+    # framework, Make, Just, Taskfile, shell, or custom repo commands.
+    local commands_json="$1"
+    local failed="false"
+
+    require_jq
+
+    if [ "$(printf '%s' "$commands_json" | jq 'length')" -eq 0 ]; then
+        return 0
+    fi
+
+    while IFS= read -r command_item; do
+        local label
+        local command
+        local cwd
+        local status
+
+        label="$(printf '%s' "$command_item" | jq -r '.label // .name // .command')"
+        command="$(printf '%s' "$command_item" | jq -r '.command')"
+        cwd="$(printf '%s' "$command_item" | jq -r '.cwd // "."')"
+
+        if run_project_command "$label" "$command" "$cwd"; then
+            :
+        else
+            status="$?"
+            append_command_failure "$label" "$command" "$status"
+            failed="true"
+        fi
+    done < <(printf '%s' "$commands_json" | jq -c '.[]')
+
+    [ "$failed" = "false" ]
+}
+
+handle_project_command_failure() {
+    # Convert failed project commands into the safest output shape for each
+    # event. Stop failures continue Codex with a new prompt; they do not reject
+    # the turn.
+    local event_name="$1"
+    local message="$2"
+
+    case "$event_name" in
+        PreToolUse)
+            deny_pre_tool_use "$message"
+            ;;
+        PermissionRequest)
+            deny_permission_request "$message"
+            ;;
+        PreCompact|PostCompact)
+            stop_processing "$message"
+            ;;
+        Stop|UserPromptSubmit|PostToolUse)
+            block_with_reason "$message"
+            ;;
+        SessionStart)
+            emit_additional_context "$event_name" "$message"
+            ;;
+        *)
+            printf '%s\n' "$message" >&2
+            return 1
+            ;;
+    esac
 }
 EOF
 chmod +x "$LIB_DIR/common.sh"
@@ -329,6 +518,22 @@ while IFS=$'\t' read -r event_name script_name description matcher_guidance outp
         continue
     fi
 
+    event_commands_json="$(
+        jq -c --arg name "$event_name" '
+            [
+                .enabled_events[]?
+                | select(.name == $name)
+                | (.commands // [])[]?
+                | {
+                    label: (.label // .name // .command),
+                    command: .command,
+                    cwd: (.cwd // "."),
+                    notes: (.notes // "")
+                }
+            ]
+        ' "$PLAN_FILE"
+    )"
+
     sed \
         -e "s|{{SCRIPT_NAME}}|$(escape_for_sed "$script_name")|g" \
         -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
@@ -336,6 +541,7 @@ while IFS=$'\t' read -r event_name script_name description matcher_guidance outp
         -e "s|{{MATCHER_GUIDANCE}}|$(escape_for_sed "$matcher_guidance")|g" \
         -e "s|{{OUTPUT_GUIDANCE}}|$(escape_for_sed "$output_guidance")|g" \
         -e "s|{{BLOCKING_GUIDANCE}}|$(escape_for_sed "$blocking_guidance")|g" \
+        -e "s|{{PROJECT_COMMANDS_JSON}}|$(escape_for_sed "$event_commands_json")|g" \
         "$EVENT_TEMPLATE" > "$target_script"
 
     chmod +x "$target_script"

@@ -17,7 +17,9 @@ from __future__ import annotations
 import json
 import os
 import re
+import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -87,6 +89,61 @@ def load_json(path: Path) -> dict:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def run(
+    cmd: list[str],
+    cwd: Path | None = None,
+    input_text: str | None = None,
+) -> subprocess.CompletedProcess[str]:
+    """Run a command and capture output for test assertions."""
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        input=input_text,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+
+def readable_stub_errors(script_path: Path) -> list[str]:
+    """Assert generated event scripts expose a clear edit point."""
+    content = script_path.read_text(encoding="utf-8")
+    required_snippets = [
+        "How this script is organized:",
+        "Safe editing rule:",
+        "handle_event()",
+        "Project-specific logic belongs here.",
+        "run_configured_commands",
+        "PROJECT_COMMANDS_JSON",
+        'HOOK_INPUT="$(read_hook_input)"',
+        'main "$@"',
+    ]
+    return [
+        f"{script_path.name} is missing readable stub marker: {snippet}"
+        for snippet in required_snippets
+        if snippet not in content
+    ]
+
+
+def readable_common_errors(common_path: Path) -> list[str]:
+    """Assert generated common.sh documents the helper layer."""
+    content = common_path.read_text(encoding="utf-8")
+    required_snippets = [
+        "require_jq()",
+        "Read one value from HOOK_INPUT with jq.",
+        "Hook output helpers build JSON with jq",
+        "run_project_command()",
+        "handle_project_command_failure()",
+        "This is deliberately language-agnostic.",
+        "Emit additionalContext text for the next Claude turn.",
+    ]
+    return [
+        f"common.sh is missing helper documentation: {snippet}"
+        for snippet in required_snippets
+        if snippet not in content
+    ]
+
+
 def test_skill(skill_path: Path) -> dict:
     """Run lightweight behavioral checks on the skill contents."""
     results = {
@@ -94,6 +151,7 @@ def test_skill(skill_path: Path) -> dict:
         "tests_found": 0,
         "files_verified": {"passed": 0, "total": 0},
         "cross_references": {"passed": 0, "total": 0},
+        "integration_checks": {"passed": 0, "total": 0},
         "errors": [],
         "passed": True,
     }
@@ -161,6 +219,106 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(f"Script is not executable: {rel_path}")
             results["passed"] = False
 
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmp = Path(tmpdir)
+        project = tmp / "project"
+        project.mkdir()
+        temp_plan = tmp / "hook-plan.json"
+        plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
+        for enabled_event in plan_data.get("enabled_events", []):
+            if enabled_event.get("name") == "Stop":
+                enabled_event["commands"] = [
+                    {
+                        "label": "portable hook command",
+                        "command": "printf 'portable hook command\\n' >&2",
+                        "cwd": ".",
+                    }
+                ]
+        temp_plan.write_text(json.dumps(plan_data, indent=2) + "\n", encoding="utf-8")
+
+        results["integration_checks"]["total"] += 1
+        scaffold = run(
+            [
+                "bash",
+                str(skill_path / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(project),
+                "--plan",
+                str(temp_plan),
+            ],
+            cwd=skill_path,
+        )
+        if scaffold.returncode == 0:
+            manifest_script_names = [
+                event["script_name"] for event in load_json(skill_path / "assets" / "hook-events.json")["events"]
+            ]
+            expected_files = [
+                project / ".claude" / "settings.json",
+                project / ".claude" / "hooks" / "README.md",
+                project / ".claude" / "hooks" / "generated" / "manifest.json",
+                project / ".claude" / "hooks" / "generated" / "settings.generated.json",
+                project / ".claude" / "hooks" / "generated" / "lib" / "common.sh",
+            ]
+            expected_files.extend(
+                project / ".claude" / "hooks" / "generated" / "events" / script_name
+                for script_name in manifest_script_names
+            )
+            if all(path.exists() for path in expected_files):
+                results["integration_checks"]["passed"] += 1
+            else:
+                missing = [str(path.relative_to(project)) for path in expected_files if not path.exists()]
+                results["errors"].append(f"scaffold_hooks.sh missed files: {', '.join(missing)}")
+                results["passed"] = False
+        else:
+            results["errors"].append(f"scaffold_hooks.sh failed: {scaffold.stderr.strip()}")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        readability_errors: list[str] = []
+        generated_root = project / ".claude" / "hooks" / "generated"
+        for rel_path in [
+            "events/session-start.sh",
+            "events/pre-tool-use.sh",
+            "events/stop.sh",
+        ]:
+            script_path = generated_root / rel_path
+            if script_path.exists():
+                readability_errors.extend(readable_stub_errors(script_path))
+            else:
+                readability_errors.append(f"generated script missing before readability check: {rel_path}")
+        common_path = generated_root / "lib" / "common.sh"
+        if common_path.exists():
+            readability_errors.extend(readable_common_errors(common_path))
+        else:
+            readability_errors.append("generated common.sh missing before readability check")
+        if readability_errors:
+            results["errors"].extend(readability_errors)
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
+
+        results["integration_checks"]["total"] += 1
+        stop_script = generated_root / "events" / "stop.sh"
+        if stop_script.exists():
+            stop_payload = json.dumps(
+                {
+                    "hook_event_name": "Stop",
+                    "cwd": str(project),
+                    "stop_hook_active": False,
+                }
+            )
+            stop_proc = run([str(stop_script)], cwd=project, input_text=stop_payload)
+            if stop_proc.returncode == 0 and "portable hook command" in stop_proc.stderr:
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append(
+                    "generated Stop hook did not run the configured language-agnostic command"
+                )
+                results["passed"] = False
+        else:
+            results["errors"].append("generated Stop hook missing before command execution check")
+            results["passed"] = False
+
     return results
 
 
@@ -185,6 +343,10 @@ def main() -> int:
     print(
         f"Cross-references checked: {results['cross_references']['passed']}/"
         f"{results['cross_references']['total']}"
+    )
+    print(
+        f"Integration checks: {results['integration_checks']['passed']}/"
+        f"{results['integration_checks']['total']}"
     )
 
     if results["errors"]:

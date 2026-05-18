@@ -19,6 +19,16 @@
 # Replace the example logic below with project-specific behavior.
 # Keep stdout empty unless you intentionally emit hook output.
 #
+# How this script is organized:
+#   1. main() reads Codex's JSON payload from stdin exactly once.
+#   2. handle_event() contains the project-specific logic for this event.
+#   3. run_configured_commands() runs any repo commands listed in the plan.
+#   4. Shared JSON/output helpers live in ../lib/common.sh.
+#
+# Safe editing rule:
+#   Start by editing handle_event(). Leave main() and the bootstrap section
+#   boring unless you need to change how hook input is read.
+#
 
 set -euo pipefail
 
@@ -26,22 +36,63 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=../lib/common.sh
 . "$SCRIPT_DIR/../lib/common.sh"
 
-HOOK_INPUT="$(read_hook_input)"
+HOOK_INPUT=""
 
-# Common helpers:
-#   hook_json FILTER [FALLBACK]
-#   emit_additional_context EVENT MESSAGE
-#   emit_system_message MESSAGE
-#   deny_pre_tool_use REASON
-#   allow_permission_request
-#   deny_permission_request MESSAGE
-#   block_with_reason REASON
-#   stop_processing REASON
-#   exit_with_block_reason REASON
-#
-# Example:
-#   CWD="$(hook_json '.cwd')"
+read_project_commands_json() {
+    # This JSON is injected from the hook plan for this specific event.
+    # It is intentionally data, not generated shell logic, so existing project
+    # commands stay easy to inspect and change.
+    cat <<'PROJECT_COMMANDS_JSON'
+{{PROJECT_COMMANDS_JSON}}
+PROJECT_COMMANDS_JSON
+}
 
-# TODO: add project-specific logic here.
+PROJECT_COMMANDS_JSON="$(read_project_commands_json)"
 
-exit 0
+handle_event() {
+    # Project-specific logic belongs here.
+    # As the hook grows, add small helper functions above handle_event() and
+    # call them from here instead of turning this function into a long script.
+    #
+    # If this event is only a wrapper around existing repo commands, put those
+    # commands in the plan's commands array instead of hard-coding a toolchain
+    # here. Examples of valid commands are whatever this repo already owns:
+    # make targets, package-manager scripts, framework CLIs, shell scripts, or
+    # any other language-specific command.
+    if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
+        handle_project_command_failure "{{EVENT_NAME}}" "$(configured_command_failure_message)"
+        return $?
+    fi
+    #
+    # Common helpers from ../lib/common.sh:
+    #   hook_json FILTER [FALLBACK]
+    #   emit_additional_context EVENT MESSAGE
+    #   emit_system_message MESSAGE
+    #   deny_pre_tool_use REASON
+    #   allow_permission_request
+    #   deny_permission_request MESSAGE
+    #   block_with_reason REASON
+    #   stop_processing REASON
+    #   exit_with_block_reason REASON
+    #   run_project_command LABEL COMMAND [CWD]
+    #
+    # Examples:
+    #   CWD="$(hook_json '.cwd' "$PWD")"
+    #   TOOL_NAME="$(hook_json '.tool_name' '')"
+    #
+    # Keep stdout empty unless this hook intentionally sends JSON back to Codex.
+    # Plain logging should go to stderr.
+    return 0
+}
+
+main() {
+    # Codex sends one JSON payload to this script on stdin.
+    # Store it globally so helper functions can read it without passing it
+    # through every project-specific function.
+    HOOK_INPUT="$(read_hook_input)"
+    readonly HOOK_INPUT
+
+    handle_event "$@"
+}
+
+main "$@"
