@@ -1,0 +1,4 @@
+interface:
+  display_name: "repository-readme-writer"
+  short_description: "Create and improve concise, durable repository READMEs with strong quickstarts"
+  default_prompt: "Create or improve this repository README with a concise quickstart-first structure"

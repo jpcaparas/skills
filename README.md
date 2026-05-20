@@ -102,6 +102,12 @@ Production skill for Nano Banana 2 infographic prompting and verification coveri
 
 Production skill for creating evidence-backed repository intent documents that explain the high-level purpose of a codebase, label certainty, preserve open questions, and give future coding agents a durable briefing.
 
+### `repository-readme-writer`
+
+`npx skills add jpcaparas/skills --skill repository-readme-writer`
+
+Production skill for creating and improving concise repository READMEs with mandatory quickstarts, stable project orientation, repository-grounded commands, version-source guidance, and agent-safe wording that avoids brittle path inventories.
+
 ### `ripgrep`
 
 `npx skills add jpcaparas/skills --skill ripgrep`

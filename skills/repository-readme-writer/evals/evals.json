@@ -1,0 +1,66 @@
+{
+  "skill_name": "repository-readme-writer",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "draft-new-readme-from-package-manifest",
+      "prompt": "Create a new README for this repository after inspecting its package manager, scripts, env examples, and deployment files.",
+      "expected_output": "A concise README with title, summary, Quickstart, project shape, configuration, local development, quality checks, and deployment notes grounded in repository evidence.",
+      "assertions": [
+        {
+          "text": "Output includes a Quickstart section near the top.",
+          "type": "structural"
+        },
+        {
+          "text": "Commands are grounded in manifest or task-runner scripts.",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke"]
+    },
+    {
+      "id": 2,
+      "name": "simplify-overgrown-readme",
+      "prompt": "Improve this README. It currently has a full directory tree, exact Node and package manager versions in prose, and a long script catalog.",
+      "expected_output": "A simplified README that replaces path inventory with stable boundaries, removes prose version pins, and keeps only the important commands.",
+      "assertions": [
+        {
+          "text": "Output avoids fragile path tours unless paths are required for setup.",
+          "type": "quality"
+        },
+        {
+          "text": "Output points exact versions back to repository toolchain sources.",
+          "type": "quality"
+        }
+      ],
+      "tags": ["edge"]
+    },
+    {
+      "id": 3,
+      "name": "reject-api-reference-task",
+      "prompt": "Write full endpoint documentation for every REST API route in this codebase.",
+      "expected_output": "Do not treat the task as README writing unless the user asks for README content; recommend a dedicated API reference approach instead.",
+      "assertions": [
+        {
+          "text": "Skill should not trigger for full API reference docs.",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "route-quickstart-only-request",
+      "prompt": "The README is fine, but the quickstart is confusing. Fix just that section.",
+      "expected_output": "Load quickstart-design guidance and rewrite only the quickstart with install, config, run, verification, and quality gate steps.",
+      "assertions": [
+        {
+          "text": "Task routes to references/quickstart-design.md.",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["disclosure"]
+    }
+  ]
+}
