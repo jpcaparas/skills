@@ -7,7 +7,7 @@ Repository-agnostic skill for auditing a project and scaffolding OpenCode hooks 
 - live-doc verification against the current official OpenCode plugin, config, SDK, custom-tools, and troubleshooting docs
 - a deep project audit before any plugin plan is chosen
 - deterministic inspection of project-vs-global OpenCode plugin state
-- a managed `.opencode/plugins/` workflow that preserves unrelated user plugins
+- a TypeScript-only managed `.opencode/plugins/` workflow that preserves unrelated user plugins
 - full hook-surface stub coverage under managed state without loading dormant stubs at runtime
 - repeatable merges for `opencode.json` plugin arrays and config-dir `package.json` dependencies
 - additive and overhaul refresh modes for projects that already use OpenCode plugins
@@ -24,9 +24,8 @@ Repository-agnostic skill for auditing a project and scaffolding OpenCode hooks 
 - `references/merge-strategy.md` for repeat-run behavior
 - `references/gotchas.md` for runtime limits, path drift, and cache traps
 - `scripts/audit_project.sh` to profile a real project
-- `scripts/check_plugin_setup.py` to inspect OpenCode config and plugin directories
+- `scripts/check_plugin_setup.ts` to inspect OpenCode config and plugin directories
 - `scripts/scaffold_hooks.sh` to build or refresh the managed plugin scaffold
-- `scripts/merge_opencode_config.py` to merge npm plugin entries into config
-- `scripts/merge_package_json.py` to merge config-dir dependencies for local plugins
+- `scripts/merge_opencode_config.ts` to merge npm plugin entries into config
+- `scripts/merge_package_json.ts` to merge config-dir dependencies for local plugins
 - `assets/hook-events.json` for the current static hook-surface manifest used by the deterministic scaffold
-

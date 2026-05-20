@@ -10,17 +10,17 @@ opencode.json                     # Optional, only when npm plugin entries are p
 ├── package.json                  # Created when the scaffold needs stable module semantics or config-dir dependencies
 └── plugins/
     ├── README.md                 # Generated plugin and hook-surface map
-    ├── opencode_hook_guard.js    # Managed live plugin module
-    ├── opencode_hook_post_turn.js
-    ├── opencode_hook_shell_env.js
+    ├── opencode_hook_guard.ts    # Managed live plugin module
+    ├── opencode_hook_post_turn.ts
+    ├── opencode_hook_shell_env.ts
     └── .managed/
         ├── manifest.json         # Snapshot of the scaffold inputs used
         ├── plan.snapshot.json    # Normalized plan used for generation
         └── surfaces/
-            ├── command.executed.js.txt
-            ├── file.edited.js.txt
+            ├── command.executed.ts.txt
+            ├── file.edited.ts.txt
             ├── ...
-            └── experimental.session.compacting.js.txt
+            └── experimental.session.compacting.ts.txt
 ```
 
 Global scope uses the same shape under `~/.config/opencode/`.
@@ -32,6 +32,7 @@ Global scope uses the same shape under `~/.config/opencode/`.
 - the managed state directory is easy to replace or inspect
 - config and dependency merges stay separate from plugin-file generation
 - the README gives the target project a stable event and plugin map
+- the active load path contains TypeScript plugin modules only; this scaffold rewrites any `.js` filename in a plan to `.ts`
 
 ## Plan File Shape
 
@@ -42,7 +43,7 @@ Top-level fields:
 - `scope`
 - `deployment`
 - `mode`
-- `module_format`
+- `module_format` (`ts` only)
 - `plugin_root`
 - `managed_state_dir`
 - `config_target`

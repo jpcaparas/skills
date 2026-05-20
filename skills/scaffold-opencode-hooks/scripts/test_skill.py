@@ -54,10 +54,14 @@ BASH_SCRIPTS = [
     "scripts/render_hooks_readme.sh",
     "scripts/scaffold_hooks.sh",
 ]
-PYTHON_SCRIPTS = [
-    "scripts/check_plugin_setup.py",
-    "scripts/merge_opencode_config.py",
-    "scripts/merge_package_json.py",
+TS_SCRIPTS = [
+    "scripts/check_plugin_setup.ts",
+    "scripts/merge_opencode_config.ts",
+    "scripts/merge_package_json.ts",
+    "scripts/opencode_json_utils.ts",
+    "scripts/render_plugin_module.ts",
+]
+PYTHON_VALIDATION_SCRIPTS = [
     "scripts/validate.py",
     "scripts/test_skill.py",
 ]
@@ -182,7 +186,16 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(f"bash -n failed for {rel_path}: {proc.stderr.strip()}")
             results["passed"] = False
 
-    for rel_path in PYTHON_SCRIPTS:
+    for rel_path in TS_SCRIPTS:
+        results["syntax_checks"]["total"] += 1
+        proc = run(["node", "--experimental-strip-types", "--check", str(skill_path / rel_path)])
+        if proc.returncode == 0:
+            results["syntax_checks"]["passed"] += 1
+        else:
+            results["errors"].append(f"TypeScript syntax check failed for {rel_path}: {proc.stderr.strip()}")
+            results["passed"] = False
+
+    for rel_path in PYTHON_VALIDATION_SCRIPTS:
         results["syntax_checks"]["total"] += 1
         try:
             py_compile.compile(str(skill_path / rel_path), doraise=True)
@@ -234,8 +247,8 @@ def test_skill(skill_path: Path) -> dict:
         results["integration_checks"]["total"] += 1
         inspect_before = run(
             [
-                "python3",
-                str(skill_path / "scripts" / "check_plugin_setup.py"),
+                "bun",
+                str(skill_path / "scripts" / "check_plugin_setup.ts"),
                 "--project",
                 str(project),
                 "--home",
@@ -246,13 +259,17 @@ def test_skill(skill_path: Path) -> dict:
         )
         if inspect_before.returncode == 0:
             data = json.loads(inspect_before.stdout)
-            if data["scope_recommendation"] == "project" and not data["project"]["local_plugin_files"]:
+            if (
+                data["scope_recommendation"] == "project"
+                and data["recommended_module_format"] == "ts"
+                and not data["project"]["local_plugin_files"]
+            ):
                 results["integration_checks"]["passed"] += 1
             else:
-                results["errors"].append("check_plugin_setup.py returned unexpected initial state")
+                results["errors"].append("check_plugin_setup.ts returned unexpected initial state")
                 results["passed"] = False
         else:
-            results["errors"].append(f"check_plugin_setup.py failed before scaffold: {inspect_before.stderr.strip()}")
+            results["errors"].append(f"check_plugin_setup.ts failed before scaffold: {inspect_before.stderr.strip()}")
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
@@ -263,8 +280,8 @@ def test_skill(skill_path: Path) -> dict:
         )
         merge_config = run(
             [
-                "python3",
-                str(skill_path / "scripts" / "merge_opencode_config.py"),
+                "bun",
+                str(skill_path / "scripts" / "merge_opencode_config.ts"),
                 "--config-file",
                 str(config_jsonc),
                 "--plugins",
@@ -278,18 +295,18 @@ def test_skill(skill_path: Path) -> dict:
             if merged.get("plugin") == ["existing-plugin", "opencode-wakatime"]:
                 results["integration_checks"]["passed"] += 1
             else:
-                results["errors"].append("merge_opencode_config.py did not merge plugin entries correctly")
+                results["errors"].append("merge_opencode_config.ts did not merge plugin entries correctly")
                 results["passed"] = False
         else:
-            results["errors"].append(f"merge_opencode_config.py failed: {merge_config.stderr.strip()}")
+            results["errors"].append(f"merge_opencode_config.ts failed: {merge_config.stderr.strip()}")
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
         package_target = project / ".opencode" / "package.json"
         merge_package = run(
             [
-                "python3",
-                str(skill_path / "scripts" / "merge_package_json.py"),
+                "bun",
+                str(skill_path / "scripts" / "merge_package_json.ts"),
                 "--package-file",
                 str(package_target),
                 "--dependencies-json",
@@ -302,10 +319,10 @@ def test_skill(skill_path: Path) -> dict:
             if package_data.get("type") == "module" and package_data.get("dependencies", {}).get("zod") == "^3.25.0":
                 results["integration_checks"]["passed"] += 1
             else:
-                results["errors"].append("merge_package_json.py did not create module package.json correctly")
+                results["errors"].append("merge_package_json.ts did not create module package.json correctly")
                 results["passed"] = False
         else:
-            results["errors"].append(f"merge_package_json.py failed: {merge_package.stderr.strip()}")
+            results["errors"].append(f"merge_package_json.ts failed: {merge_package.stderr.strip()}")
             results["passed"] = False
 
         temp_plan = tmp / "plan.json"
@@ -338,9 +355,9 @@ def test_skill(skill_path: Path) -> dict:
             expected_files.extend(
                 project / ".opencode" / "plugins" / filename
                 for filename in [
-                    "opencode_hook_guard_sensitive_files.js",
-                    "opencode_hook_post_turn_check.js",
-                    "opencode_hook_shell_env.js",
+                    "opencode_hook_guard_sensitive_files.ts",
+                    "opencode_hook_post_turn_check.ts",
+                    "opencode_hook_shell_env.ts",
                 ]
             )
             if all(path.exists() for path in expected_files):
@@ -351,6 +368,17 @@ def test_skill(skill_path: Path) -> dict:
                 results["passed"] = False
         else:
             results["errors"].append(f"scaffold_hooks.sh failed: {scaffold.stderr.strip()}")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        generated_js = sorted(
+            path.relative_to(project).as_posix()
+            for path in (project / ".opencode" / "plugins").rglob("*.js")
+        ) if (project / ".opencode" / "plugins").is_dir() else []
+        if not generated_js:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(f"scaffold generated JavaScript files: {', '.join(generated_js)}")
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
@@ -371,13 +399,13 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         plugin_files = [
-            project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.js",
-            project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.js",
-            project / ".opencode" / "plugins" / "opencode_hook_shell_env.js",
+            project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.ts",
+            project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.ts",
+            project / ".opencode" / "plugins" / "opencode_hook_shell_env.ts",
         ]
         parse_errors: list[str] = []
         for plugin_file in plugin_files:
-            proc = run(["node", "--check", str(plugin_file)], cwd=project)
+            proc = run(["node", "--experimental-strip-types", "--check", str(plugin_file)], cwd=project)
             if proc.returncode != 0:
                 parse_errors.append(f"{plugin_file.name}: {proc.stderr.strip()}")
         if parse_errors:
@@ -387,8 +415,8 @@ def test_skill(skill_path: Path) -> dict:
             results["integration_checks"]["passed"] += 1
 
         results["integration_checks"]["total"] += 1
-        custom_plugin = project / ".opencode" / "plugins" / "custom_local_plugin.js"
-        custom_plugin.write_text("export default async () => ({})\n", encoding="utf-8")
+        custom_plugin = project / ".opencode" / "plugins" / "custom_local_plugin.ts"
+        custom_plugin.write_text("import type { Plugin } from \"@opencode-ai/plugin\"\nconst plugin: Plugin = async () => ({})\nexport default plugin\n", encoding="utf-8")
         config_data = json.loads((project / "opencode.json").read_text(encoding="utf-8"))
         config_data.setdefault("plugin", []).append("custom-third-party")
         (project / "opencode.json").write_text(json.dumps(config_data, indent=2) + "\n", encoding="utf-8")
@@ -462,4 +490,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

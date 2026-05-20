@@ -1,6 +1,6 @@
 # Config Layering
 
-Verified against the official OpenCode config and plugin docs on 2026-04-15.
+Verified against the official OpenCode config and plugin docs on 2026-05-21.
 
 ## Config Precedence
 
@@ -38,7 +38,7 @@ If local plugins need external npm packages, add a `package.json` to the matchin
 
 OpenCode runs `bun install` at startup for those config-dir dependencies.
 
-The managed scaffold may also create that config-dir `package.json` to normalize `"type": "module"` for local JavaScript plugin modules, even when there are no extra dependencies yet.
+The managed scaffold may also create that config-dir `package.json` for local TypeScript plugin dependencies. Keep dependencies in the config directory rather than the repository root unless the project itself also needs them.
 
 ## Scope Guidance
 

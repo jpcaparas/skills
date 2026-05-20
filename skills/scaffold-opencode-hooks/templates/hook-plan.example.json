@@ -2,7 +2,7 @@
   "scope": "project",
   "deployment": "local-files",
   "mode": "additive",
-  "module_format": "js",
+  "module_format": "ts",
   "plugin_root": ".opencode/plugins",
   "managed_state_dir": ".opencode/plugins/.managed",
   "config_target": "opencode.json",
@@ -12,7 +12,7 @@
   "enabled_plugins": [
     {
       "name": "guard-sensitive-files",
-      "filename": "opencode_hook_guard_sensitive_files.js",
+      "filename": "opencode_hook_guard_sensitive_files.ts",
       "surfaces": [
         "tool.execute.before"
       ],
@@ -20,7 +20,7 @@
     },
     {
       "name": "post-turn-check",
-      "filename": "opencode_hook_post_turn_check.js",
+      "filename": "opencode_hook_post_turn_check.ts",
       "surfaces": [
         "tool.execute.after",
         "event"
@@ -29,7 +29,7 @@
     },
     {
       "name": "shell-env",
-      "filename": "opencode_hook_shell_env.js",
+      "filename": "opencode_hook_shell_env.ts",
       "surfaces": [
         "shell.env"
       ],
@@ -37,4 +37,3 @@
     }
   ]
 }
-

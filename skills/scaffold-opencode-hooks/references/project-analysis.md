@@ -37,7 +37,7 @@ Audit the target project before you decide anything about OpenCode hooks.
    - no -> global `~/.config/opencode/plugins/`
 
 2. Does the plugin logic need external dependencies?
-   - no -> plain local JavaScript or TypeScript module is enough
+   - no -> plain local TypeScript module is enough
    - yes -> merge dependencies into the config-dir `package.json`
 
 3. Does the repo already have OpenCode plugins?
@@ -58,7 +58,6 @@ Audit the target project before you decide anything about OpenCode hooks.
 ## Recommended Defaults
 
 - Use project-local scope for real repos unless the user explicitly wants a personal global hook.
-- Use JavaScript by default for the first scaffold because it avoids unnecessary dependency or type-check friction.
+- Use TypeScript for every managed plugin module. OpenCode supports JavaScript too, but this skill intentionally keeps the scaffold TS-only so lifecycle plugins stay typed and consistent.
 - Only add config-dir dependencies when the generated plugin code actually imports external packages.
 - Prefer local plugin files over npm plugin publishing for the first iteration. Promote to npm only after the behavior stabilizes.
-

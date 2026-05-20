@@ -142,7 +142,7 @@ Production scaffold-and-doctor skill for GitHub Copilot cloud agent environments
 
 `npx skills add jpcaparas/skills --skill scaffold-opencode-hooks`
 
-Production scaffold skill for OpenCode hooks that audits the repo, verifies the live plugin and config docs, inspects existing project-vs-global OpenCode state, and generates a managed `.opencode/plugins/` scaffold with repeatable config and package merges.
+Production scaffold skill for OpenCode hooks that audits the repo, verifies the live plugin and config docs, inspects existing project-vs-global OpenCode state, and generates a TypeScript-only managed `.opencode/plugins/` scaffold with repeatable config and package merges.
 
 ### `secure-ai-agent-coding`
 

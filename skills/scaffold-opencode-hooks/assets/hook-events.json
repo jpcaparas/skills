@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-04-15",
+  "verified_on": "2026-05-21",
   "verified_with": {
     "official_docs": [
       "https://opencode.ai/docs/plugins/",
@@ -13,15 +13,15 @@
     ],
     "runtime_package": {
       "name": "@opencode-ai/plugin",
-      "version": "1.4.3",
+      "version": "1.15.5",
       "checked_via": "npm view @opencode-ai/plugin version"
     }
   },
   "default_scope": "project",
   "default_deployment": "local-files",
-  "default_module_format": "js",
+  "default_module_format": "ts",
   "recommended_dependency_versions": {
-    "@opencode-ai/plugin": "^1.4.3"
+    "@opencode-ai/plugin": "^1.15.5"
   },
   "load_order": [
     "global-config",
@@ -40,7 +40,7 @@
   "special_surfaces": [
     {
       "name": "event",
-      "stub_file": "event.catch-all.js.txt",
+      "stub_file": "event.catch-all.ts.txt",
       "category": "special",
       "kind": "catch-all",
       "description": "Observe all OpenCode events through one handler.",
@@ -48,7 +48,7 @@
     },
     {
       "name": "tool",
-      "stub_file": "tool.registry.js.txt",
+      "stub_file": "tool.registry.ts.txt",
       "category": "special",
       "kind": "custom-tool",
       "description": "Register custom tools from a plugin.",
@@ -58,7 +58,7 @@
   "events": [
     {
       "name": "command.executed",
-      "stub_file": "command.executed.js.txt",
+      "stub_file": "command.executed.ts.txt",
       "category": "command",
       "kind": "named-event",
       "description": "React after an OpenCode command executes.",
@@ -66,7 +66,7 @@
     },
     {
       "name": "file.edited",
-      "stub_file": "file.edited.js.txt",
+      "stub_file": "file.edited.ts.txt",
       "category": "file",
       "kind": "named-event",
       "description": "Observe file edits.",
@@ -74,7 +74,7 @@
     },
     {
       "name": "file.watcher.updated",
-      "stub_file": "file.watcher.updated.js.txt",
+      "stub_file": "file.watcher.updated.ts.txt",
       "category": "file",
       "kind": "named-event",
       "description": "React to file watcher updates.",
@@ -82,7 +82,7 @@
     },
     {
       "name": "installation.updated",
-      "stub_file": "installation.updated.js.txt",
+      "stub_file": "installation.updated.ts.txt",
       "category": "installation",
       "kind": "named-event",
       "description": "React when installation state changes.",
@@ -90,7 +90,7 @@
     },
     {
       "name": "lsp.client.diagnostics",
-      "stub_file": "lsp.client.diagnostics.js.txt",
+      "stub_file": "lsp.client.diagnostics.ts.txt",
       "category": "lsp",
       "kind": "named-event",
       "description": "Observe LSP diagnostics from the client.",
@@ -98,7 +98,7 @@
     },
     {
       "name": "lsp.updated",
-      "stub_file": "lsp.updated.js.txt",
+      "stub_file": "lsp.updated.ts.txt",
       "category": "lsp",
       "kind": "named-event",
       "description": "React when LSP state updates.",
@@ -106,7 +106,7 @@
     },
     {
       "name": "message.part.removed",
-      "stub_file": "message.part.removed.js.txt",
+      "stub_file": "message.part.removed.ts.txt",
       "category": "message",
       "kind": "named-event",
       "description": "Observe message part removals.",
@@ -114,7 +114,7 @@
     },
     {
       "name": "message.part.updated",
-      "stub_file": "message.part.updated.js.txt",
+      "stub_file": "message.part.updated.ts.txt",
       "category": "message",
       "kind": "named-event",
       "description": "Observe message part updates.",
@@ -122,7 +122,7 @@
     },
     {
       "name": "message.removed",
-      "stub_file": "message.removed.js.txt",
+      "stub_file": "message.removed.ts.txt",
       "category": "message",
       "kind": "named-event",
       "description": "Observe message removals.",
@@ -130,7 +130,7 @@
     },
     {
       "name": "message.updated",
-      "stub_file": "message.updated.js.txt",
+      "stub_file": "message.updated.ts.txt",
       "category": "message",
       "kind": "named-event",
       "description": "Observe message updates.",
@@ -138,7 +138,7 @@
     },
     {
       "name": "permission.asked",
-      "stub_file": "permission.asked.js.txt",
+      "stub_file": "permission.asked.ts.txt",
       "category": "permission",
       "kind": "named-event",
       "description": "React when OpenCode asks for permission.",
@@ -146,7 +146,7 @@
     },
     {
       "name": "permission.replied",
-      "stub_file": "permission.replied.js.txt",
+      "stub_file": "permission.replied.ts.txt",
       "category": "permission",
       "kind": "named-event",
       "description": "React after a permission reply.",
@@ -154,7 +154,7 @@
     },
     {
       "name": "server.connected",
-      "stub_file": "server.connected.js.txt",
+      "stub_file": "server.connected.ts.txt",
       "category": "server",
       "kind": "named-event",
       "description": "React when a server connection is established.",
@@ -162,7 +162,7 @@
     },
     {
       "name": "session.created",
-      "stub_file": "session.created.js.txt",
+      "stub_file": "session.created.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "React when a session is created.",
@@ -170,7 +170,7 @@
     },
     {
       "name": "session.compacted",
-      "stub_file": "session.compacted.js.txt",
+      "stub_file": "session.compacted.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "React after a session compacts.",
@@ -178,7 +178,7 @@
     },
     {
       "name": "session.deleted",
-      "stub_file": "session.deleted.js.txt",
+      "stub_file": "session.deleted.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "React when a session is deleted.",
@@ -186,7 +186,7 @@
     },
     {
       "name": "session.diff",
-      "stub_file": "session.diff.js.txt",
+      "stub_file": "session.diff.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "Observe session diff updates.",
@@ -194,7 +194,7 @@
     },
     {
       "name": "session.error",
-      "stub_file": "session.error.js.txt",
+      "stub_file": "session.error.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "React to session errors.",
@@ -202,7 +202,7 @@
     },
     {
       "name": "session.idle",
-      "stub_file": "session.idle.js.txt",
+      "stub_file": "session.idle.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "React when a session goes idle.",
@@ -210,7 +210,7 @@
     },
     {
       "name": "session.status",
-      "stub_file": "session.status.js.txt",
+      "stub_file": "session.status.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "React to session status changes.",
@@ -218,7 +218,7 @@
     },
     {
       "name": "session.updated",
-      "stub_file": "session.updated.js.txt",
+      "stub_file": "session.updated.ts.txt",
       "category": "session",
       "kind": "named-event",
       "description": "Observe session updates.",
@@ -226,7 +226,7 @@
     },
     {
       "name": "todo.updated",
-      "stub_file": "todo.updated.js.txt",
+      "stub_file": "todo.updated.ts.txt",
       "category": "todo",
       "kind": "named-event",
       "description": "React to todo state updates.",
@@ -234,7 +234,7 @@
     },
     {
       "name": "shell.env",
-      "stub_file": "shell.env.js.txt",
+      "stub_file": "shell.env.ts.txt",
       "category": "shell",
       "kind": "named-event",
       "description": "Inject environment variables into shell execution.",
@@ -242,7 +242,7 @@
     },
     {
       "name": "tool.execute.after",
-      "stub_file": "tool.execute.after.js.txt",
+      "stub_file": "tool.execute.after.ts.txt",
       "category": "tool",
       "kind": "named-event",
       "description": "Observe tool execution after it completes.",
@@ -250,7 +250,7 @@
     },
     {
       "name": "tool.execute.before",
-      "stub_file": "tool.execute.before.js.txt",
+      "stub_file": "tool.execute.before.ts.txt",
       "category": "tool",
       "kind": "named-event",
       "description": "Inspect or rewrite a tool call before it runs.",
@@ -258,7 +258,7 @@
     },
     {
       "name": "tui.prompt.append",
-      "stub_file": "tui.prompt.append.js.txt",
+      "stub_file": "tui.prompt.append.ts.txt",
       "category": "tui",
       "kind": "named-event",
       "description": "React when prompt text is appended in the TUI.",
@@ -266,7 +266,7 @@
     },
     {
       "name": "tui.command.execute",
-      "stub_file": "tui.command.execute.js.txt",
+      "stub_file": "tui.command.execute.ts.txt",
       "category": "tui",
       "kind": "named-event",
       "description": "React when a TUI command executes.",
@@ -274,7 +274,7 @@
     },
     {
       "name": "tui.toast.show",
-      "stub_file": "tui.toast.show.js.txt",
+      "stub_file": "tui.toast.show.ts.txt",
       "category": "tui",
       "kind": "named-event",
       "description": "React when a TUI toast is shown.",
@@ -282,7 +282,7 @@
     },
     {
       "name": "experimental.session.compacting",
-      "stub_file": "experimental.session.compacting.js.txt",
+      "stub_file": "experimental.session.compacting.ts.txt",
       "category": "experimental",
       "kind": "experimental",
       "description": "Inject or replace compaction context before OpenCode summarizes a session.",

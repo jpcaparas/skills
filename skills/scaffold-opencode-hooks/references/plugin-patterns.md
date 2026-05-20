@@ -15,8 +15,10 @@ Typical cases:
 
 Minimal pattern:
 
-```js
-export default async () => {
+```ts
+import type { Plugin } from "@opencode-ai/plugin"
+
+const plugin: Plugin = async () => {
   return {
     "tool.execute.before": async (input, output) => {
       if (input.tool === "read" && output.args.filePath.includes(".env")) {
@@ -25,6 +27,8 @@ export default async () => {
     },
   }
 }
+
+export default plugin
 ```
 
 ## 2. Post-Turn Lint or Test Feedback
@@ -69,4 +73,3 @@ This is the point where you usually need `@opencode-ai/plugin`.
 Use `experimental.session.compacting` when important project state gets lost during long sessions and the default compaction prompt is not enough.
 
 Keep this experimental and low-risk. Do not make core safety policies or business-critical behavior depend on it.
-

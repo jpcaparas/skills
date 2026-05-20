@@ -27,6 +27,10 @@
         {
           "text": "Response generates live managed plugin files plus non-loading stubs for the current hook surfaces",
           "type": "functional"
+        },
+        {
+          "text": "Response generates TypeScript `.ts` plugin files and no managed `.js` plugin files",
+          "type": "functional"
         }
       ],
       "tags": [
@@ -121,4 +125,3 @@
     }
   ]
 }
-

@@ -36,10 +36,10 @@ resolve_target_path() {
 
 normalize_filename() {
     local filename="$1"
-    local module_format="$2"
     case "$filename" in
-        *.js|*.ts|*.mjs|*.cjs|*.jsx|*.tsx) printf '%s\n' "$filename" ;;
-        *) printf '%s.%s\n' "$filename" "$module_format" ;;
+        *.ts) printf '%s\n' "$filename" ;;
+        *.js|*.mjs|*.cjs|*.jsx|*.tsx) printf '%s.ts\n' "${filename%.*}" ;;
+        *) printf '%s.ts\n' "$filename" ;;
     esac
 }
 
@@ -218,12 +218,11 @@ if [ -z "$PROJECT_ROOT" ] || [ -z "$PLAN_FILE" ]; then
 fi
 
 require_command jq
-require_command python3
+require_command bun
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
-JS_TEMPLATE="$SKILL_ROOT/templates/plugin-module.js.tmpl"
 TS_TEMPLATE="$SKILL_ROOT/templates/plugin-module.ts.tmpl"
 
 PROJECT_ROOT="$(
@@ -270,11 +269,11 @@ case "$DEPLOYMENT" in
         ;;
 esac
 
-MODULE_FORMAT="$(jq -r '.module_format // "js"' "$PLAN_FILE")"
+MODULE_FORMAT="$(jq -r '.module_format // "ts"' "$PLAN_FILE")"
 case "$MODULE_FORMAT" in
-    js|ts) ;;
+    ts) ;;
     *)
-        echo "module_format must be js or ts. Got: $MODULE_FORMAT" >&2
+        echo "module_format must be ts. OpenCode supports JavaScript, but this managed scaffold is TypeScript-only. Got: $MODULE_FORMAT" >&2
         exit 1
         ;;
 esac
@@ -350,7 +349,7 @@ fi
 
 DUPLICATE_FILENAMES="$(
     jq -r '.enabled_plugins[]?.filename // empty' "$PLAN_FILE" \
-        | while IFS= read -r filename; do normalize_filename "$filename" "$MODULE_FORMAT"; done \
+        | while IFS= read -r filename; do normalize_filename "$filename"; done \
         | LC_ALL=C sort \
         | uniq -d
 )"
@@ -365,7 +364,7 @@ if [ -n "$HOME_OVERRIDE" ]; then
     SETUP_ARGS+=(--home "$HOME_OVERRIDE")
 fi
 SETUP_STATUS_JSON="$(
-    python3 "$SCRIPT_DIR/check_plugin_setup.py" "${SETUP_ARGS[@]}"
+    bun "$SCRIPT_DIR/check_plugin_setup.ts" "${SETUP_ARGS[@]}"
 )"
 
 PACKAGE_DEPS_JSON="$(jq -c '.package_dependencies // {}' "$PLAN_FILE")"
@@ -456,7 +455,7 @@ while IFS= read -r row; do
     name="$(printf '%s' "$row" | jq -r '.name')"
     notes="$(printf '%s' "$row" | jq -r '.notes // ""')"
     filename_raw="$(printf '%s' "$row" | jq -r '.filename')"
-    filename="$(normalize_filename "$filename_raw" "$MODULE_FORMAT")"
+    filename="$(normalize_filename "$filename_raw")"
     target_path="$PLUGIN_ROOT_ABS/$filename"
     surfaces_json="$(printf '%s' "$row" | jq -c '.surfaces // []')"
 
@@ -478,7 +477,9 @@ while IFS= read -r row; do
     } > "$handlers_file"
     {
         if printf '%s' "$surfaces_json" | jq -e 'index("tool")' >/dev/null; then
-            printf 'import { tool } from "@opencode-ai/plugin"\n\n'
+            printf 'import { type Plugin, tool } from "@opencode-ai/plugin"\n\n'
+        else
+            printf 'import type { Plugin } from "@opencode-ai/plugin"\n\n'
         fi
     } > "$imports_file"
 
@@ -487,33 +488,14 @@ while IFS= read -r row; do
         printf '\n' >> "$handlers_file"
     done < <(printf '%s' "$surfaces_json" | jq -r '.[]')
 
-    template_path="$JS_TEMPLATE"
-    if [ "$MODULE_FORMAT" = "ts" ]; then
-        template_path="$TS_TEMPLATE"
-    fi
-
-    PLUGIN_NAME="$name" \
-    PLUGIN_NOTES="$notes" \
-    PLUGIN_SURFACES="$(printf '%s' "$surfaces_json" | jq -r 'join(", ")')" \
-    python3 - "$template_path" "$imports_file" "$handlers_file" <<'PY' > "$target_path"
-from pathlib import Path
-import os
-import sys
-
-template = Path(sys.argv[1]).read_text(encoding="utf-8")
-imports = Path(sys.argv[2]).read_text(encoding="utf-8")
-handlers = Path(sys.argv[3]).read_text(encoding="utf-8").rstrip()
-values = {
-    "{{PLUGIN_NAME}}": os.environ["PLUGIN_NAME"],
-    "{{NOTES}}": os.environ["PLUGIN_NOTES"],
-    "{{SURFACES}}": os.environ["PLUGIN_SURFACES"],
-    "{{IMPORTS}}": imports,
-    "{{HANDLERS}}": handlers,
-}
-for key, value in values.items():
-    template = template.replace(key, value)
-print(template.rstrip() + "\n")
-PY
+    bun "$SCRIPT_DIR/render_plugin_module.ts" \
+        --template "$TS_TEMPLATE" \
+        --imports "$imports_file" \
+        --handlers "$handlers_file" \
+        --output "$target_path" \
+        --name "$name" \
+        --notes "$notes" \
+        --surfaces "$(printf '%s' "$surfaces_json" | jq -r 'join(", ")')"
 
     rm -f "$handlers_file" "$imports_file"
 
@@ -522,25 +504,18 @@ PY
 done < <(jq -c '.enabled_plugins[]? // empty' "$PLAN_FILE")
 
 if [ "$ENABLED_PLUGIN_COUNT" -gt 0 ]; then
-    python3 "$SCRIPT_DIR/merge_package_json.py" \
+    bun "$SCRIPT_DIR/merge_package_json.ts" \
         --package-file "$PACKAGE_TARGET_ABS" \
         --dependencies-json "$PACKAGE_DEPS_JSON" >/dev/null
 fi
 
 if [ "${#NPM_PLUGIN_ARGS[@]}" -gt 0 ]; then
-    python3 "$SCRIPT_DIR/merge_opencode_config.py" \
+    bun "$SCRIPT_DIR/merge_opencode_config.ts" \
         --config-file "$CONFIG_TARGET_ABS" \
         --plugins "${NPM_PLUGIN_ARGS[@]}" >/dev/null
 fi
 
-python3 - <<'PY' "$PLAN_FILE" "$PLAN_SNAPSHOT_FILE"
-import json
-import sys
-from pathlib import Path
-
-plan = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
-Path(sys.argv[2]).write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
-PY
+jq '.' "$PLAN_FILE" > "$PLAN_SNAPSHOT_FILE"
 
 jq -n \
     --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

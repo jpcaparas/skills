@@ -7,7 +7,7 @@
  */
 
 {{IMPORTS}}
-export default async ({ project, client, $, directory, worktree }) => {
+const plugin: Plugin = async ({ project, client, $, directory, worktree }) => {
   void project
   void client
   void $
@@ -19,3 +19,4 @@ export default async ({ project, client, $, directory, worktree }) => {
   }
 }
 
+export default plugin

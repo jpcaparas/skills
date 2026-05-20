@@ -47,9 +47,11 @@ EXPECTED_EVENT_NAMES = {
 }
 REQUIRED_OPERATIONAL_SCRIPTS = [
     "scripts/audit_project.sh",
-    "scripts/check_plugin_setup.py",
-    "scripts/merge_opencode_config.py",
-    "scripts/merge_package_json.py",
+    "scripts/check_plugin_setup.ts",
+    "scripts/merge_opencode_config.ts",
+    "scripts/merge_package_json.ts",
+    "scripts/opencode_json_utils.ts",
+    "scripts/render_plugin_module.ts",
     "scripts/render_hooks_readme.sh",
     "scripts/scaffold_hooks.sh",
     "scripts/validate.py",
@@ -58,7 +60,6 @@ REQUIRED_OPERATIONAL_SCRIPTS = [
 REQUIRED_SUPPORT_FILES = [
     "assets/hook-events.json",
     "templates/hook-plan.example.json",
-    "templates/plugin-module.js.tmpl",
     "templates/plugin-module.ts.tmpl",
     "references/project-analysis.md",
     "references/config-layering.md",
@@ -170,8 +171,15 @@ def validate_manifest(skill_path: Path, errors: list[str], warnings: list[str]) 
     if len(set(stub_files)) != len(stub_files):
         errors.append("assets/hook-events.json contains duplicate stub_file values")
 
-    if manifest.get("default_module_format") != "js":
-        warnings.append("assets/hook-events.json should default module format to js")
+    if manifest.get("default_module_format") != "ts":
+        errors.append("assets/hook-events.json must default module format to ts")
+
+    non_ts_stubs = [stub for stub in stub_files if not stub.endswith(".ts.txt")]
+    if non_ts_stubs:
+        errors.append(
+            "assets/hook-events.json contains non-TypeScript stub filenames: "
+            + ", ".join(sorted(non_ts_stubs))
+        )
 
 
 def validate_skill(skill_path: Path) -> dict:
@@ -220,6 +228,9 @@ def validate_skill(skill_path: Path) -> dict:
         if not (skill_path / rel_path).exists():
             errors.append(f"Missing required file: {rel_path}")
 
+    if (skill_path / "templates" / "plugin-module.js.tmpl").exists():
+        errors.append("Do not ship a JavaScript plugin template; managed plugins must be TypeScript-only")
+
     validate_manifest(skill_path, errors, warnings)
 
     refs_dir = skill_path / "references"
@@ -253,4 +264,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -1,14 +1,14 @@
 ---
 name: scaffold-opencode-hooks
-description: "Scaffold OpenCode hooks by generating OpenCode plugins into a real project after auditing the repo, verifying the live official plugin docs, inspecting config precedence and existing `.opencode/plugins` state, then building a deterministic managed plugin layer with repeatable config and package merges. Trigger on OpenCode hooks, OpenCode plugins, `.opencode/plugins`, `opencode.json`, `tool.execute.before`, `tool.execute.after`, `session.idle`, `shell.env`, custom tools, or post-turn checks. Do NOT use for Codex hooks, Claude Code hooks, or generic npm package publishing with no OpenCode runtime."
-compatibility: "Requires: bash, jq, git, rg, python3"
+description: "Scaffold OpenCode hooks by generating TypeScript-only OpenCode plugins into a real project after auditing the repo, verifying the live official plugin docs, inspecting config precedence and existing `.opencode/plugins` state, then building a deterministic managed plugin layer with repeatable config and package merges. Trigger on OpenCode hooks, OpenCode plugins, `.opencode/plugins`, TypeScript lifecycle plugins, `opencode.json`, `tool.execute.before`, `tool.execute.after`, `session.idle`, `shell.env`, custom tools, or post-turn checks. Do NOT use for Codex hooks, Claude Code hooks, JavaScript-only plugin scaffolds, or generic npm package publishing with no OpenCode runtime."
+compatibility: "Requires: bash, jq, git, rg, bun"
 metadata:
   version: "1.0.0"
   short-description: "Project-aware OpenCode hook and plugin scaffolder"
   openclaw:
     category: "development"
     requires:
-      bins: [bash, jq, git, rg, python3]
+      bins: [bash, jq, git, rg, bun]
 references:
   - project-analysis
   - config-layering
@@ -46,9 +46,9 @@ What is the user asking for?
 |------|--------|
 | Verify the current official OpenCode plugin model | Read `https://opencode.ai/docs/plugins/`, `https://opencode.ai/docs/config/`, `https://opencode.ai/docs/sdk`, `https://opencode.ai/docs/custom-tools`, and compare them with `assets/hook-events.json` |
 | Audit a target repo | Run `scripts/audit_project.sh /path/to/project` |
-| Inspect project-vs-global OpenCode setup | Run `python3 scripts/check_plugin_setup.py --project /path/to/project --json` |
-| Merge npm plugin names into an OpenCode config file | Run `python3 scripts/merge_opencode_config.py --config-file /path/to/opencode.json --plugins plugin-a plugin-b` |
-| Merge config-dir dependencies for local plugins | Run `python3 scripts/merge_package_json.py --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.4.3"}'` |
+| Inspect project-vs-global OpenCode setup | Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json` |
+| Merge npm plugin names into an OpenCode config file | Run `bun scripts/merge_opencode_config.ts --config-file /path/to/opencode.json --plugins plugin-a plugin-b` |
+| Merge config-dir dependencies for local plugins | Run `bun scripts/merge_package_json.ts --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.15.5"}'` |
 | Generate or refresh the managed OpenCode hook scaffold | Run `bash scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
 | Regenerate the plugin README in a target project | Run `bash scripts/render_hooks_readme.sh --project /path/to/project --plan /path/to/plan.json` |
 
@@ -80,7 +80,7 @@ Inspect OpenCode setup early whenever any of these signals appear:
 Use this flow:
 
 1. Canonicalize the target project path first.
-2. Run `python3 scripts/check_plugin_setup.py --project /path/to/project --json`.
+2. Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json`.
 3. Decide scope from the existing OpenCode footprint:
    - existing repo-local `.opencode/` setup or a shared repo use case -> project
    - personal or cross-repo behavior -> global
@@ -135,7 +135,7 @@ Allow these parts to stay project-specific:
 
 - which live plugin modules are enabled
 - whether the scaffold targets project or global scope
-- whether the generated modules are JavaScript or TypeScript
+- whether the generated modules are TypeScript
 - whether npm plugin entries should be merged into config
 - the actual plugin logic inside enabled modules
 - cooldowns, tool lists, validation commands, and feedback prompts
@@ -156,17 +156,17 @@ When the skill is invoked again against a project:
 
 ## Scaffold Rules
 
-- Generate JavaScript plugin modules by default. Switch to TypeScript only when the repo already leans heavily on TypeScript or the user explicitly wants typed plugin authoring.
+- Generate TypeScript plugin modules only. Do not create `.js`, `.mjs`, `.cjs`, `.jsx`, or `.tsx` plugin files from this managed scaffold.
 - Keep live managed plugin modules directly in the active plugin directory so OpenCode definitely loads them.
 - Keep full hook-surface stubs under a non-loading managed state directory as `.txt` reference files.
 - Default to project-local `.opencode/plugins/` for shared repo scaffolds.
 - Default to global `~/.config/opencode/plugins/` only when the behavior should remain personal or cross-project.
-- Create or normalize the config-dir `package.json` when live plugin modules need a stable ESM boundary or extra runtime dependencies.
+- Create or normalize the config-dir `package.json` when live TypeScript plugin modules need external runtime dependencies.
 - Only add `@opencode-ai/plugin` when the generated scaffold actually needs the `tool()` helper or typed imports.
 - Prefer `client.app.log()` over `console.log()` for plugin logging.
 - Use `tool.execute.before` for prevention, `tool.execute.after` for observation, and `event` for cross-event coordination like `session.idle`.
 - Treat `experimental.session.compacting` as opt-in and experimental. Do not make core safety logic depend on it.
-- Never assume local helper `.js` or `.ts` files under the plugin directory are inert. Anything with a runtime module extension may load as a plugin.
+- Never assume local helper `.js` or `.ts` files under the plugin directory are inert. Anything with a runtime module extension may load as a plugin, so this scaffold writes only enabled `.ts` plugin modules into the active plugin directory.
 
 ## Reading Guide
 
@@ -183,9 +183,9 @@ When the skill is invoked again against a project:
 ## Operational Scripts
 
 - `scripts/audit_project.sh` builds a project profile from real repo signals.
-- `scripts/check_plugin_setup.py` inspects project and global OpenCode config, plugin directories, and config-dir package files.
-- `scripts/merge_opencode_config.py` preserves unrelated config keys while merging plugin-array entries into `opencode.json` or `opencode.jsonc`.
-- `scripts/merge_package_json.py` preserves unrelated package fields while merging config-dir dependencies needed by local plugins.
+- `scripts/check_plugin_setup.ts` inspects project and global OpenCode config, plugin directories, and config-dir package files.
+- `scripts/merge_opencode_config.ts` preserves unrelated config keys while merging plugin-array entries into `opencode.json` or `opencode.jsonc`.
+- `scripts/merge_package_json.ts` preserves unrelated package fields while merging config-dir dependencies needed by local plugins.
 - `scripts/scaffold_hooks.sh` renders live managed plugin modules, hook-surface stubs, the manifest, and the plugin README.
 - `scripts/render_hooks_readme.sh` rebuilds `.opencode/plugins/README.md` from the manifest and the current plan.
 - `scripts/validate.py` checks structure, frontmatter, manifest integrity, and cross-references.

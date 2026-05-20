@@ -1,6 +1,6 @@
 # Hook Surfaces
 
-Current OpenCode hook surface catalog, verified on 2026-04-15 against the official plugin, config, SDK, custom-tools, and troubleshooting docs.
+Current OpenCode hook surface catalog, verified on 2026-05-21 against the official plugin, config, SDK, custom-tools, and troubleshooting docs.
 
 Primary sources:
 
@@ -19,6 +19,7 @@ Use `assets/hook-events.json` as the deterministic scaffold input. Re-verify the
 ## Current Runtime Model
 
 - OpenCode hooks are plugin modules, not a separate hook config file.
+- OpenCode supports local JavaScript or TypeScript plugin files, but this managed scaffold generates TypeScript only.
 - Plugins can load from local files or npm packages.
 - Local plugin files load from `.opencode/plugins/` or `~/.config/opencode/plugins/`.
 - npm plugin packages load through the `plugin` array in config.
@@ -119,4 +120,3 @@ These are not just named event strings, but they materially change how you scaff
 - Use `client.session.prompt()` when the plugin needs to feed results back into a session.
 - Use `client.app.log()` for structured logs instead of `console.log()`.
 - Use config-dir dependencies only when the plugin imports external packages.
-
