@@ -50,7 +50,9 @@ render_handler_block() {
             cat <<'EOF'
     event: async ({ event }) => {
       if (event.type === "session.idle") {
+        await showToast(client, "info", "Background hook work started")
         // TODO: coordinate post-turn validation, notifications, or idle-triggered follow-up here.
+        await showToast(client, "success", "Background hook work completed")
       }
     },
 EOF
@@ -94,6 +96,7 @@ EOF
       // TODO: track edit tools or capture output for post-turn validation.
       if (input.tool === "write" || input.tool === "edit") {
         // Record that the agent changed files this turn.
+        await showToast(client, "info", "Post-action hook work started")
       }
     },
 EOF
@@ -112,6 +115,7 @@ EOF
     "${surface}": async (input, output) => {
       void input
       void output
+      // TODO: call showToast(client, "info" | "success" | "warning" | "error", "...") when this hook does meaningful background work.
       // TODO: implement logic for ${surface}.
     },
 EOF
@@ -126,7 +130,9 @@ stub_snippet_for_surface() {
             cat <<'EOF'
 event: async ({ event }) => {
   if (event.type === "session.idle") {
+    await showToast(client, "info", "Background hook work started")
     // TODO: run post-turn validation or notifications here.
+    await showToast(client, "success", "Background hook work completed")
   }
 },
 EOF
@@ -147,6 +153,7 @@ EOF
         *)
             cat <<EOF
 "${surface}": async (input, output) => {
+  // TODO: use client.tui.showToast through a best-effort helper when this hook performs meaningful background work.
   // TODO: implement logic for ${surface}.
 },
 EOF
@@ -224,6 +231,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
 TS_TEMPLATE="$SKILL_ROOT/templates/plugin-module.ts.tmpl"
+LIFECYCLE_TEMPLATE="$SKILL_ROOT/templates/lifecycle-action-plugin.ts.tmpl"
 
 PROJECT_ROOT="$(
     cd "$PROJECT_ROOT"
@@ -265,6 +273,15 @@ case "$DEPLOYMENT" in
     local-files|hybrid) ;;
     *)
         echo "Deployment must be local-files or hybrid. Got: $DEPLOYMENT" >&2
+        exit 1
+        ;;
+esac
+
+SURFACE_CATALOG="$(jq -r '.surface_catalog // false' "$PLAN_FILE")"
+case "$SURFACE_CATALOG" in
+    true|false) ;;
+    *)
+        echo "surface_catalog must be true or false. Got: $SURFACE_CATALOG" >&2
         exit 1
         ;;
 esac
@@ -425,24 +442,30 @@ if [ "$MODE" = "overhaul" ] && [ -f "$MANIFEST_TARGET_FILE" ]; then
     rm -rf "$MANAGED_STATE_ABS"
 fi
 
-mkdir -p "$SURFACES_DIR"
+mkdir -p "$MANAGED_STATE_ABS"
 
-while IFS=$'\t' read -r surface stub_file category kind description guidance; do
-    write_surface_stub \
-        "$surface" \
-        "$category" \
-        "$kind" \
-        "$description" \
-        "$guidance" \
-        "$SURFACES_DIR/$stub_file"
-done < <(
-    jq -r '
-        ((.special_surfaces // []) + (.events // []))
-        | .[]
-        | [.name, .stub_file, .category, .kind, .description, .guidance]
-        | @tsv
-    ' "$MANIFEST_SOURCE"
-)
+if [ "$SURFACE_CATALOG" = "true" ]; then
+    mkdir -p "$SURFACES_DIR"
+
+    while IFS=$'\t' read -r surface stub_file category kind description guidance; do
+        write_surface_stub \
+            "$surface" \
+            "$category" \
+            "$kind" \
+            "$description" \
+            "$guidance" \
+            "$SURFACES_DIR/$stub_file"
+    done < <(
+        jq -r '
+            ((.special_surfaces // []) + (.events // []))
+            | .[]
+            | [.name, .stub_file, .category, .kind, .description, .guidance]
+            | @tsv
+        ' "$MANIFEST_SOURCE"
+    )
+else
+    rm -rf "$SURFACES_DIR"
+fi
 
 TEMP_MANAGED_FILES="$(mktemp)"
 TEMP_ENABLED_PLUGINS="$(mktemp)"
@@ -454,6 +477,7 @@ trap cleanup EXIT
 while IFS= read -r row; do
     name="$(printf '%s' "$row" | jq -r '.name')"
     notes="$(printf '%s' "$row" | jq -r '.notes // ""')"
+    pattern="$(printf '%s' "$row" | jq -r '.pattern // "surface-handlers"')"
     filename_raw="$(printf '%s' "$row" | jq -r '.filename')"
     filename="$(normalize_filename "$filename_raw")"
     target_path="$PLUGIN_ROOT_ABS/$filename"
@@ -476,26 +500,35 @@ while IFS= read -r row; do
         printf ''
     } > "$handlers_file"
     {
-        if printf '%s' "$surfaces_json" | jq -e 'index("tool")' >/dev/null; then
+        if [ "$pattern" != "lifecycle-action" ] && printf '%s' "$surfaces_json" | jq -e 'index("tool")' >/dev/null; then
             printf 'import { type Plugin, tool } from "@opencode-ai/plugin"\n\n'
-        else
-            printf 'import type { Plugin } from "@opencode-ai/plugin"\n\n'
         fi
     } > "$imports_file"
 
-    while IFS= read -r surface; do
-        render_handler_block "$surface" >> "$handlers_file"
-        printf '\n' >> "$handlers_file"
-    done < <(printf '%s' "$surfaces_json" | jq -r '.[]')
+    if [ "$pattern" != "lifecycle-action" ]; then
+        while IFS= read -r surface; do
+            render_handler_block "$surface" >> "$handlers_file"
+            printf '\n' >> "$handlers_file"
+        done < <(printf '%s' "$surfaces_json" | jq -r '.[]')
+    fi
+
+    template_path="$TS_TEMPLATE"
+    if [ "$pattern" = "lifecycle-action" ]; then
+        template_path="$LIFECYCLE_TEMPLATE"
+    fi
 
     bun "$SCRIPT_DIR/render_plugin_module.ts" \
-        --template "$TS_TEMPLATE" \
+        --template "$template_path" \
         --imports "$imports_file" \
         --handlers "$handlers_file" \
         --output "$target_path" \
         --name "$name" \
         --notes "$notes" \
-        --surfaces "$(printf '%s' "$surfaces_json" | jq -r 'join(", ")')"
+        --surfaces "$(printf '%s' "$surfaces_json" | jq -r 'join(", ")')" \
+        --context-script "$(printf '%s' "$row" | jq -r '.context_script // "scripts/agent-session-context.sh"')" \
+        --action-script "$(printf '%s' "$row" | jq -r '.action_script // "scripts/validate-project.sh"')" \
+        --action-label "$(printf '%s' "$row" | jq -r '.action_label // "Project validation"')" \
+        --service-name "$(printf '%s' "$row" | jq -r '.service // "opencode-lifecycle-hooks"')"
 
     rm -f "$handlers_file" "$imports_file"
 
@@ -503,7 +536,8 @@ while IFS= read -r row; do
     printf '%s\n' "$(printf '%s' "$row" | jq -c --arg filename "$filename" '. + {filename: $filename}')" >> "$TEMP_ENABLED_PLUGINS"
 done < <(jq -c '.enabled_plugins[]? // empty' "$PLAN_FILE")
 
-if [ "$ENABLED_PLUGIN_COUNT" -gt 0 ]; then
+PACKAGE_DEPS_COUNT="$(printf '%s' "$PACKAGE_DEPS_JSON" | jq 'length')"
+if [ "$PACKAGE_DEPS_COUNT" -gt 0 ]; then
     bun "$SCRIPT_DIR/merge_package_json.ts" \
         --package-file "$PACKAGE_TARGET_ABS" \
         --dependencies-json "$PACKAGE_DEPS_JSON" >/dev/null
@@ -523,6 +557,7 @@ jq -n \
     --arg deployment "$DEPLOYMENT" \
     --arg mode "$MODE" \
     --arg module_format "$MODULE_FORMAT" \
+    --argjson surface_catalog "$SURFACE_CATALOG" \
     --arg plugin_root "$PLUGIN_ROOT_VALUE" \
     --arg managed_state_dir "$MANAGED_STATE_VALUE" \
     --arg config_target "$CONFIG_TARGET_VALUE" \
@@ -538,6 +573,7 @@ jq -n \
         deployment: $deployment,
         mode: $mode,
         module_format: $module_format,
+        surface_catalog: $surface_catalog,
         plugin_root: $plugin_root,
         managed_state_dir: $managed_state_dir,
         config_target: $config_target,

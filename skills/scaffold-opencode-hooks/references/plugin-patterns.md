@@ -2,7 +2,72 @@
 
 Use these patterns when the user wants an actual OpenCode hook workflow, not just a blank plugin file.
 
-## 1. Guardrails Before Tool Execution
+## 1. Minimal Lifecycle/Action Plugin
+
+Use this as the default when the user wants to mirror existing lifecycle hooks, run validation after agent work, inject session context, repair generated-file drift, check dependency setup, or run policy checks.
+
+Generate one live plugin file. Do not generate the full hook-surface catalog unless the user asks for a broad scaffold.
+
+Reusable shape:
+
+- `session.created` injects no-reply context from a repo-owned session-context script.
+- `session.idle` or another meaningful event runs a repo-owned validation, formatter, dependency, generated-file, or policy script.
+- background work shows TUI toasts for start, success, warning, and error states.
+- first failure sends one repair prompt without `noReply`.
+- persistent failure sends a final no-reply notice and stops prompting.
+
+Keep these state flags:
+
+- `inFlight`
+- `repairPromptSent`
+- `persistentFailureReported`
+
+Use repo-owned scripts for project-specific behavior. The plugin should orchestrate lifecycle, visibility, and follow-up; the script should own validation, formatting, dependency checks, generated-file checks, or policy details.
+
+## 2. TUI Toasts For Background Work
+
+`client.app.log()` is diagnostic. It is not enough for user-visible TUI feedback.
+
+Add this helper to generated plugins that do meaningful background work:
+
+```ts
+type ToastVariant = "info" | "success" | "warning" | "error"
+
+async function showToast(
+  client: { tui?: { showToast(input: { body: { message: string; variant?: ToastVariant } }): Promise<unknown> } },
+  variant: ToastVariant,
+  message: string,
+) {
+  try {
+    await client.tui?.showToast({ body: { message, variant } })
+  } catch {
+    // Toast failures must never break hook behavior.
+  }
+}
+```
+
+Use `info` when work starts, `success` when it completes, and `warning` or `error` when intervention is needed. Apply this generically to `session.idle`, `tool.execute.after`, `command.executed`, `file.edited`, `installation.updated`, `session.error`, and custom cross-event workflows whenever they perform meaningful work.
+
+Keep logging separate:
+
+- `client.app.log()` for structured diagnostics and captured details
+- `client.tui.showToast()` for what the user should see
+
+## 3. Controlled Automatic Repair
+
+Use this pattern when a hook can reasonably ask OpenCode for one follow-up turn.
+
+Rules:
+
+- guard with `inFlight` so overlapping events do not launch duplicate work
+- on first failure, set `repairPromptSent = true` and call `client.session.prompt()` without `noReply`
+- on persistent failure, set `persistentFailureReported = true` and call `client.session.prompt()` with `noReply: true`
+- after persistent failure has been reported, do not ask for another automatic repair turn
+- clear repair state only after a successful run
+
+This fits validation failures, formatter failures, generated-file drift, missing dependency setup, policy checks, and other automatable outcomes.
+
+## 4. Guardrails Before Tool Execution
 
 Use `tool.execute.before` when the plugin should deny or rewrite risky actions before they run.
 
@@ -16,9 +81,7 @@ Typical cases:
 Minimal pattern:
 
 ```ts
-import type { Plugin } from "@opencode-ai/plugin"
-
-const plugin: Plugin = async () => {
+const plugin = async () => {
   return {
     "tool.execute.before": async (input, output) => {
       if (input.tool === "read" && output.args.filePath.includes(".env")) {
@@ -31,7 +94,7 @@ const plugin: Plugin = async () => {
 export default plugin
 ```
 
-## 2. Post-Turn Lint or Test Feedback
+## 5. Post-Turn Lint or Test Feedback
 
 The article pattern is still the best practical example:
 
@@ -46,7 +109,9 @@ Use this when the repo has strong formatter, lint, typecheck, or affected-test c
 
 From the official SDK docs, add `noReply: true` when you only want to inject context without forcing an immediate assistant reply. Leave `noReply` off when you want the agent to act on the validation output right away.
 
-## 3. Shell Environment Injection
+Prefer calling a repo-owned validation script from the plugin over hard-coding command lists in the plugin body. This keeps project logic reusable across OpenCode, Codex, CI, and local shell workflows.
+
+## 6. Shell Environment Injection
 
 Use `shell.env` when the plugin should add environment variables to shell execution without hard-coding them into repo scripts.
 
@@ -56,7 +121,7 @@ Typical cases:
 - inject temporary API endpoints
 - attach per-project feature flags to shell tools
 
-## 4. Custom Tools
+## 7. Custom Tools
 
 Use the `tool` surface when the repo needs a reusable domain-specific tool instead of repeated shell commands.
 
@@ -68,7 +133,7 @@ Typical cases:
 
 This is the point where you usually need `@opencode-ai/plugin`.
 
-## 5. Compaction Context
+## 8. Compaction Context
 
 Use `experimental.session.compacting` when important project state gets lost during long sessions and the default compaction prompt is not enough.
 

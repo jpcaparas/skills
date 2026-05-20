@@ -9,7 +9,7 @@ Use these reference files on demand. `SKILL.md` is the entry point and should st
 | `project-analysis.md` | the repo audit checklist and planning questions |
 | `config-layering.md` | project-vs-global scope, config precedence, plugin directories, JSON vs JSONC, or cache disable flows |
 | `hook-events.md` | the current OpenCode hook surface catalog and plugin lifecycle model |
-| `plugin-patterns.md` | ready-made guardrail, post-turn, shell env, custom-tool, or compaction patterns |
+| `plugin-patterns.md` | ready-made lifecycle/action, toast, repair, guardrail, post-turn, shell env, custom-tool, or compaction patterns |
 | `scaffold-layout.md` | the generated target structure and plan file shape |
 | `merge-strategy.md` | additive vs overhaul rules and repeat-run behavior |
 | `gotchas.md` | runtime traps, stale path examples, and failure modes that are easy to miss |
@@ -21,4 +21,3 @@ Use these reference files on demand. `SKILL.md` is the entry point and should st
 3. Secondary article material
 
 When the official docs and the article disagree, follow the official docs and update the local references.
-

@@ -49,6 +49,7 @@ Audit the target project before you decide anything about OpenCode hooks.
    - no -> keep config untouched unless the plan explicitly needs npm packages
 
 5. Which plugin pattern fits the repo?
+   - lifecycle mirroring, validation, generated-file drift, dependency setup, or policy checks -> one minimal lifecycle/action plugin that calls repo-owned scripts
    - secret guardrails -> `tool.execute.before`
    - post-turn lint or test -> `tool.execute.after` plus `event` for `session.idle`
    - runtime env injection -> `shell.env`
@@ -60,4 +61,6 @@ Audit the target project before you decide anything about OpenCode hooks.
 - Use project-local scope for real repos unless the user explicitly wants a personal global hook.
 - Use TypeScript for every managed plugin module. OpenCode supports JavaScript too, but this skill intentionally keeps the scaffold TS-only so lifecycle plugins stay typed and consistent.
 - Only add config-dir dependencies when the generated plugin code actually imports external packages.
+- Use repo-owned scripts for project-specific checks instead of hard-coding command lists into plugin bodies.
+- Prefer visible TUI toasts for meaningful background work, and keep `client.app.log()` for diagnostics.
 - Prefer local plugin files over npm plugin publishing for the first iteration. Promote to npm only after the behavior stabilizes.

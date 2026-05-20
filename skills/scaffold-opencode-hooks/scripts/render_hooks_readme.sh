@@ -127,6 +127,74 @@ fi
 
 mkdir -p "$(dirname "$README_FILE")"
 
+if ! jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
+    {
+        printf '# OpenCode Hooks\n\n'
+        if [ "$SCOPE" = "global" ]; then
+            printf 'Global OpenCode hook plugin scaffold for this target.\n\n'
+        else
+            printf 'Project-local OpenCode hook plugin scaffold for this repo.\n\n'
+        fi
+
+        printf '## Active Plugins\n\n'
+        jq -r '
+            (.enabled_plugins // [])
+            | .[]
+            | [.filename, (.notes // "")]
+            | @tsv
+        ' "$MANIFEST_FILE" | while IFS=$'\t' read -r file notes; do
+            if [ -n "$notes" ]; then
+                printf -- '- `%s` - %s\n' "$file" "$notes"
+            else
+                printf -- '- `%s`\n' "$file"
+            fi
+        done
+        printf '\n'
+
+        printf '## Behavior\n\n'
+        jq -r '
+            (.enabled_plugins // [])
+            | .[]
+            | [
+                (.pattern // "surface-handlers"),
+                .filename,
+                ((.surfaces // []) | join(", ")),
+                (.context_script // ""),
+                (.action_script // ""),
+                (.action_label // "background work"),
+                (.notes // "")
+              ]
+            | @tsv
+        ' "$MANIFEST_FILE" | while IFS=$'\t' read -r pattern file surfaces context_script action_script action_label notes; do
+            if [ "$pattern" = "lifecycle-action" ]; then
+                if [ -n "$context_script" ]; then
+                    printf -- '- `session.created` injects no-reply context from `%s`.\n' "$context_script"
+                fi
+                if [ -n "$action_script" ]; then
+                    printf -- '- `session.idle` runs `%s` for %s.\n' "$action_script" "$action_label"
+                fi
+                printf -- '- Meaningful background work uses TUI toasts for start, success, warning, and error states.\n'
+                printf -- '- First failure gets one automatic repair prompt; persistent failure is reported with `noReply: true`.\n'
+            else
+                printf -- '- `%s` handles `%s`: %s\n' "$file" "$surfaces" "$notes"
+            fi
+        done
+        printf '\n'
+
+        printf '## Notes\n\n'
+        printf -- '- OpenCode hooks are plugins loaded from the configured plugin directory.\n'
+        printf -- '- This setup keeps only active plugin behavior and does not generate a full hook-surface catalog.\n'
+        printf -- '- `client.app.log()` is for diagnostics; `client.tui.showToast()` is the user-visible feedback path.\n'
+        printf -- '- Config-dir dependencies and lockfiles are only needed when plugin code imports external packages.\n\n'
+
+        printf '## Sources\n\n'
+        jq -r '.verified_with.official_docs[]' "$MANIFEST_FILE" | while IFS= read -r url; do
+            printf -- '- %s\n' "$url"
+        done
+    } > "$README_FILE"
+    exit 0
+fi
+
 {
     printf '# OpenCode Hooks\n\n'
     printf 'Managed OpenCode plugin scaffold for this target.\n\n'
@@ -140,7 +208,11 @@ mkdir -p "$(dirname "$README_FILE")"
     printf '## Notes\n\n'
     printf -- '- OpenCode hooks are implemented as plugins, not a separate hook config file.\n'
     printf -- '- Only the enabled managed plugin modules live in the active plugin directory.\n'
-    printf -- '- The managed state directory keeps the full surface catalog as `.txt` stubs so dormant handlers do not load at runtime.\n'
+    if jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
+        printf -- '- The managed state directory keeps the full surface catalog as `.txt` stubs so dormant handlers do not load at runtime.\n'
+    else
+        printf -- '- This is a minimal scaffold: it keeps only active plugin behavior and does not generate a full hook-surface catalog.\n'
+    fi
     printf -- '- Project-local plugins do not replace global plugins; OpenCode loads all configured sources in sequence.\n\n'
 
     printf '## Active Managed Plugins\n\n'
@@ -161,26 +233,28 @@ mkdir -p "$(dirname "$README_FILE")"
     done
     printf '\n'
 
-    printf '## Hook Surface Map\n\n'
-    printf '| Surface | Active | Kind | Stub | Guidance |\n'
-    printf '|---------|--------|------|------|----------|\n'
-    jq -r '
-        ((.enabled_plugins // []) | map(.surfaces // []) | add // []) as $active
-        | ((.special_surfaces // []) + (.events // []))[]
-        as $surface
-        | [
-            $surface.name,
-            (if ($active | index($surface.name)) then "yes" else "no" end),
-            $surface.kind,
-            $surface.stub_file,
-            $surface.guidance
-          ]
-        | @tsv
-    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r name active kind stub guidance; do
-        printf '| `%s` | %s | `%s` | `%s` | %s |\n' \
-            "$name" "$active" "$kind" "$stub" "$guidance"
-    done
-    printf '\n'
+    if jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
+        printf '## Hook Surface Map\n\n'
+        printf '| Surface | Active | Kind | Stub | Guidance |\n'
+        printf '|---------|--------|------|------|----------|\n'
+        jq -r '
+            ((.enabled_plugins // []) | map(.surfaces // []) | add // []) as $active
+            | ((.special_surfaces // []) + (.events // []))[]
+            as $surface
+            | [
+                $surface.name,
+                (if ($active | index($surface.name)) then "yes" else "no" end),
+                $surface.kind,
+                $surface.stub_file,
+                $surface.guidance
+              ]
+            | @tsv
+        ' "$MANIFEST_FILE" | while IFS=$'\t' read -r name active kind stub guidance; do
+            printf '| `%s` | %s | `%s` | `%s` | %s |\n' \
+                "$name" "$active" "$kind" "$stub" "$guidance"
+        done
+        printf '\n'
+    fi
 
     printf '## Sources\n\n'
     jq -r '.verified_with.official_docs[]' "$MANIFEST_FILE" | while IFS= read -r url; do

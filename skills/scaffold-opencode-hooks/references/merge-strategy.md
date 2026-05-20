@@ -9,9 +9,9 @@ Use `additive` when the project already has useful OpenCode plugins or config th
 Additive mode:
 
 - creates missing managed plugin files
-- refreshes `manifest.json`, `plan.snapshot.json`, the hook-surface stubs, and `.opencode/plugins/README.md`
+- refreshes `manifest.json`, `plan.snapshot.json`, optional hook-surface stubs, and `.opencode/plugins/README.md`
 - merges npm plugin entries into config without deleting unrelated entries
-- merges config-dir dependencies without deleting unrelated dependencies
+- merges config-dir dependencies without deleting unrelated dependencies when dependencies are needed
 - leaves existing managed plugin file bodies alone if they already exist
 - leaves unrelated user plugins alone
 
@@ -30,7 +30,7 @@ Overhaul mode:
 - backs up the old managed state directory before replacing it
 - removes previously managed live plugin files recorded in the old manifest
 - re-renders every managed live plugin file from the current template
-- rebuilds `manifest.json`, `plan.snapshot.json`, the surface stubs, and `.opencode/plugins/README.md`
+- rebuilds `manifest.json`, `plan.snapshot.json`, optional surface stubs, and `.opencode/plugins/README.md`
 - keeps unrelated non-managed plugins unless the user explicitly asks to remove them
 - preserves unrelated config keys, plugin-array entries, and package dependencies
 
@@ -49,4 +49,3 @@ OpenCode loads plugins from all configured sources in sequence. That means:
 - a project-local scaffold does not own `~/.config/opencode/plugins/`
 
 Do not pretend one managed scaffold owns every OpenCode source layer unless the plan explicitly targets that scope.
-

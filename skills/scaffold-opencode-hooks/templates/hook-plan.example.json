@@ -3,6 +3,7 @@
   "deployment": "local-files",
   "mode": "additive",
   "module_format": "ts",
+  "surface_catalog": false,
   "plugin_root": ".opencode/plugins",
   "managed_state_dir": ".opencode/plugins/.managed",
   "config_target": "opencode.json",
@@ -11,29 +12,17 @@
   "npm_plugins": [],
   "enabled_plugins": [
     {
-      "name": "guard-sensitive-files",
-      "filename": "opencode_hook_guard_sensitive_files.ts",
+      "name": "project-session-lifecycle",
+      "pattern": "lifecycle-action",
+      "filename": "opencode_hook_project_session_lifecycle.ts",
       "surfaces": [
-        "tool.execute.before"
-      ],
-      "notes": "Block reads and edits against secrets, lockfiles, and other protected paths."
-    },
-    {
-      "name": "post-turn-check",
-      "filename": "opencode_hook_post_turn_check.ts",
-      "surfaces": [
-        "tool.execute.after",
         "event"
       ],
-      "notes": "Track edit tools, wait for session.idle, then run lint or tests and feed results back to the agent."
-    },
-    {
-      "name": "shell-env",
-      "filename": "opencode_hook_shell_env.ts",
-      "surfaces": [
-        "shell.env"
-      ],
-      "notes": "Inject project-specific environment variables into shell execution."
+      "context_script": "scripts/agent-session-context.sh",
+      "action_script": "scripts/validate-project.sh",
+      "action_label": "Project validation",
+      "service": "project-opencode-hooks",
+      "notes": "Inject reusable session context on session.created, then run the shared project validation script on session.idle with visible TUI feedback and one controlled repair prompt."
     }
   ]
 }

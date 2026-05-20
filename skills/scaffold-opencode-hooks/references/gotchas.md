@@ -39,3 +39,11 @@ This skill can read JSONC config, but the managed merge scripts write normalized
 ## 10. Post-turn checks need both state and cooldown
 
 Without edit tracking and a cooldown, a `session.idle`-driven validator can thrash the agent with repeated lint or test prompts.
+
+## 11. Logs are not user-visible TUI feedback
+
+Use `client.app.log()` for diagnostics and captured details. When background work matters to the user, also call `client.tui.showToast()` through a best-effort helper.
+
+## 12. Repair prompts need an exit condition
+
+If a hook asks OpenCode to repair a failure, send only one automatic repair prompt. Persistent failure should be reported with `noReply: true` so the plugin does not create an infinite follow-up loop.

@@ -1,13 +1,26 @@
 # Scaffold Layout
 
-## Managed Target Layout
+## Minimal Managed Target Layout
 
-Project-local default:
+Project-local default for lifecycle/action work:
+
+```text
+.opencode/
+└── plugins/
+    ├── README.md
+    └── opencode_hook_project_session_lifecycle.ts
+```
+
+The minimal scaffold intentionally skips `opencode.json`, `.opencode/package.json`, `node_modules`, lockfiles, and broad hook-surface stubs unless the plan actually needs them.
+
+## Broad Managed Target Layout
+
+Use this only when the user asks for a broad surface catalog:
 
 ```text
 opencode.json                     # Optional, only when npm plugin entries are part of the plan
 .opencode/
-├── package.json                  # Created when the scaffold needs stable module semantics or config-dir dependencies
+├── package.json                  # Created only when generated plugins import external packages
 └── plugins/
     ├── README.md                 # Generated plugin and hook-surface map
     ├── opencode_hook_guard.ts    # Managed live plugin module
@@ -28,7 +41,7 @@ Global scope uses the same shape under `~/.config/opencode/`.
 ## Why This Layout
 
 - live plugin files stay in the documented plugin load path
-- dormant surface stubs stay out of the runtime load path
+- dormant surface stubs stay out of the runtime load path when broad mode is requested
 - the managed state directory is easy to replace or inspect
 - config and dependency merges stay separate from plugin-file generation
 - the README gives the target project a stable event and plugin map
@@ -44,6 +57,7 @@ Top-level fields:
 - `deployment`
 - `mode`
 - `module_format` (`ts` only)
+- `surface_catalog` (`false` for minimal, `true` for broad)
 - `plugin_root`
 - `managed_state_dir`
 - `config_target`
@@ -55,8 +69,10 @@ Top-level fields:
 Each enabled plugin entry carries:
 
 - `name`
+- `pattern` (`lifecycle-action` for the minimal reusable pattern; omit for broad surface handlers)
 - `filename`
 - `surfaces`
+- optional `context_script`, `action_script`, `action_label`, and `service`
 - `notes`
 
 Keep project-specific judgment in the plan. The scaffold should remain deterministic.

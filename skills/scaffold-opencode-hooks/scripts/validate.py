@@ -60,6 +60,8 @@ REQUIRED_OPERATIONAL_SCRIPTS = [
 REQUIRED_SUPPORT_FILES = [
     "assets/hook-events.json",
     "templates/hook-plan.example.json",
+    "templates/hook-plan.broad.example.json",
+    "templates/lifecycle-action-plugin.ts.tmpl",
     "templates/plugin-module.ts.tmpl",
     "references/project-analysis.md",
     "references/config-layering.md",

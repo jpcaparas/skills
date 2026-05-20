@@ -6,8 +6,9 @@ Use this skill when a user wants OpenCode hooks scaffolded or refreshed in a rea
 
 - live verification of the current official OpenCode plugin and config docs
 - deterministic inspection of project-vs-global OpenCode plugin state
-- a TypeScript-only managed `.opencode/plugins/` scaffold that preserves unrelated user plugins
-- repeatable merges for `opencode.json` plugin arrays and config-dir package dependencies
-- one generated reference stub per current OpenCode hook surface, plus live managed plugin files for only the enabled patterns
+- a minimal TypeScript lifecycle/action plugin with visible OpenCode TUI feedback
+- one controlled automatic repair/follow-up pass without infinite loops
+- repeatable merges for `opencode.json` plugin arrays and config-dir package dependencies only when needed
+- optional broad hook-surface stubs when the user explicitly asks for a full catalog
 
 Read `SKILL.md` for the canonical workflow.

@@ -119,4 +119,5 @@ These are not just named event strings, but they materially change how you scaff
 - Use `event` when the logic needs cross-event state, especially idle detection after edits.
 - Use `client.session.prompt()` when the plugin needs to feed results back into a session.
 - Use `client.app.log()` for structured logs instead of `console.log()`.
+- Use `client.tui.showToast()` for visible start/pass/fail feedback when a hook performs meaningful background work.
 - Use config-dir dependencies only when the plugin imports external packages.

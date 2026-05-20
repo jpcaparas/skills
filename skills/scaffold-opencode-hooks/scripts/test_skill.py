@@ -325,9 +325,35 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(f"merge_package_json.ts failed: {merge_package.stderr.strip()}")
             results["passed"] = False
 
-        temp_plan = tmp / "plan.json"
+        minimal_project = tmp / "minimal-project"
+        minimal_project.mkdir()
+        (minimal_project / "package.json").write_text(
+            json.dumps({"name": "minimal-project", "scripts": {"validate": "bash scripts/validate-project.sh"}}, indent=2)
+            + "\n",
+            encoding="utf-8",
+        )
+        (minimal_project / "scripts").mkdir()
+        (minimal_project / "scripts" / "agent-session-context.sh").write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            "printf '## Project Session Context\\nUse repo-owned scripts for validation.\\n'\n",
+            encoding="utf-8",
+        )
+        (minimal_project / "scripts" / "validate-project.sh").write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            "if [ -f .pass-validation ]; then\n"
+            "  printf 'validation passed\\n'\n"
+            "  exit 0\n"
+            "fi\n"
+            "printf 'validation failed\\n' >&2\n"
+            "exit 1\n",
+            encoding="utf-8",
+        )
+        run(["git", "init"], cwd=minimal_project)
+
+        temp_plan = tmp / "minimal-plan.json"
         plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
-        plan_data["npm_plugins"] = ["opencode-wakatime"]
         temp_plan.write_text(json.dumps(plan_data, indent=2) + "\n", encoding="utf-8")
 
         results["integration_checks"]["total"] += 1
@@ -336,7 +362,7 @@ def test_skill(skill_path: Path) -> dict:
                 "bash",
                 str(skill_path / "scripts" / "scaffold_hooks.sh"),
                 "--project",
-                str(project),
+                str(minimal_project),
                 "--plan",
                 str(temp_plan),
                 "--home",
@@ -346,24 +372,15 @@ def test_skill(skill_path: Path) -> dict:
         )
         if scaffold.returncode == 0:
             expected_files = [
-                project / "opencode.json",
-                project / ".opencode" / "package.json",
-                project / ".opencode" / "plugins" / "README.md",
-                project / ".opencode" / "plugins" / ".managed" / "manifest.json",
-                project / ".opencode" / "plugins" / ".managed" / "plan.snapshot.json",
+                minimal_project / ".opencode" / "plugins" / "README.md",
+                minimal_project / ".opencode" / "plugins" / ".managed" / "manifest.json",
+                minimal_project / ".opencode" / "plugins" / ".managed" / "plan.snapshot.json",
+                minimal_project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts",
             ]
-            expected_files.extend(
-                project / ".opencode" / "plugins" / filename
-                for filename in [
-                    "opencode_hook_guard_sensitive_files.ts",
-                    "opencode_hook_post_turn_check.ts",
-                    "opencode_hook_shell_env.ts",
-                ]
-            )
             if all(path.exists() for path in expected_files):
                 results["integration_checks"]["passed"] += 1
             else:
-                missing = [str(path.relative_to(project)) for path in expected_files if not path.exists()]
+                missing = [str(path.relative_to(minimal_project)) for path in expected_files if not path.exists()]
                 results["errors"].append(f"scaffold_hooks.sh missed files: {', '.join(missing)}")
                 results["passed"] = False
         else:
@@ -372,9 +389,9 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         generated_js = sorted(
-            path.relative_to(project).as_posix()
-            for path in (project / ".opencode" / "plugins").rglob("*.js")
-        ) if (project / ".opencode" / "plugins").is_dir() else []
+            path.relative_to(minimal_project).as_posix()
+            for path in (minimal_project / ".opencode" / "plugins").rglob("*.js")
+        ) if (minimal_project / ".opencode" / "plugins").is_dir() else []
         if not generated_js:
             results["integration_checks"]["passed"] += 1
         else:
@@ -382,10 +399,152 @@ def test_skill(skill_path: Path) -> dict:
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
-        manifest_path = project / ".opencode" / "plugins" / ".managed" / "manifest.json"
+        dependency_churn = [
+            rel_path
+            for rel_path in [
+                ".opencode/package.json",
+                ".opencode/node_modules",
+                ".opencode/package-lock.json",
+                ".opencode/bun.lock",
+                ".opencode/bun.lockb",
+            ]
+            if (minimal_project / rel_path).exists()
+        ]
+        if not dependency_churn:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "minimal scaffold created config-dir dependency artifacts: "
+                + ", ".join(dependency_churn)
+            )
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        surfaces_dir = minimal_project / ".opencode" / "plugins" / ".managed" / "surfaces"
+        if not surfaces_dir.exists():
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("minimal scaffold unexpectedly created a broad surface catalog")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        plugin_file = minimal_project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts"
+        proc = run(
+            [
+                "node",
+                "--experimental-strip-types",
+                "--input-type=module",
+                "--eval",
+                f"await import({json.dumps(plugin_file.as_uri())})",
+            ],
+            cwd=minimal_project,
+        )
+        if proc.returncode == 0:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(f"generated lifecycle plugin syntax check failed: {proc.stderr.strip()}")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        simulator = tmp / "simulate-lifecycle-plugin.mjs"
+        simulator.write_text(
+            f"""
+import {{ writeFileSync }} from "node:fs"
+import pluginFactory from {json.dumps(plugin_file.as_uri())}
+
+const toasts = []
+const prompts = []
+const logs = []
+const client = {{
+  tui: {{ showToast: async (input) => toasts.push(input.body) }},
+  app: {{ log: async (input) => logs.push(input.body) }},
+  session: {{ prompt: async (input) => prompts.push(input.body) }},
+}}
+
+const plugin = await pluginFactory({{ client }})
+await plugin.event({{ event: {{ type: "session.created", properties: {{ info: {{ id: "s1" }} }} }} }})
+await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
+await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
+await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
+writeFileSync({json.dumps((minimal_project / ".pass-validation").as_posix())}, "ok\\n", "utf8")
+await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
+
+const variants = toasts.map((toast) => toast.variant)
+const messages = toasts.map((toast) => toast.message)
+if (!variants.includes("info")) throw new Error("missing info toast")
+if (!variants.includes("success")) throw new Error("missing success toast")
+if (!variants.includes("error")) throw new Error("missing error toast")
+if (!messages.some((message) => message.includes("Project validation started"))) throw new Error("missing start toast")
+if (!messages.some((message) => message.includes("Project validation passed"))) throw new Error("missing pass toast")
+if (!messages.some((message) => message.includes("Project validation failed"))) throw new Error("missing fail toast")
+if (!messages.some((message) => message.includes("still failing"))) throw new Error("missing persistent failure toast")
+if (prompts.length !== 3) throw new Error(`expected 3 prompts, got ${{prompts.length}}`)
+if (prompts[0].noReply !== true) throw new Error("session context prompt must be noReply")
+if (prompts[1].noReply === true) throw new Error("first repair prompt must allow a reply")
+if (prompts[2].noReply !== true) throw new Error("persistent failure prompt must be noReply")
+if (logs.length === 0) throw new Error("expected diagnostic app logs")
+""".lstrip(),
+            encoding="utf-8",
+        )
+        simulation = run(["node", "--experimental-strip-types", str(simulator)], cwd=minimal_project)
+        if simulation.returncode == 0:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "generated lifecycle plugin did not satisfy toast/repair simulation: "
+                + (simulation.stderr.strip() or simulation.stdout.strip())
+            )
+            results["passed"] = False
+
+        broad_project = tmp / "broad-project"
+        broad_project.mkdir()
+        (broad_project / "package.json").write_text(
+            json.dumps({"name": "broad-project"}, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        run(["git", "init"], cwd=broad_project)
+        broad_plan = tmp / "broad-plan.json"
+        broad_plan.write_text(
+            (skill_path / "templates" / "hook-plan.broad.example.json").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+
+        results["integration_checks"]["total"] += 1
+        broad_scaffold = run(
+            [
+                "bash",
+                str(skill_path / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(broad_project),
+                "--plan",
+                str(broad_plan),
+                "--home",
+                str(home),
+            ],
+            cwd=skill_path,
+        )
+        if broad_scaffold.returncode == 0:
+            broad_expected = [
+                broad_project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.ts",
+                broad_project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.ts",
+                broad_project / ".opencode" / "plugins" / "opencode_hook_shell_env.ts",
+                broad_project / ".opencode" / "plugins" / ".managed" / "surfaces",
+            ]
+            if all(path.exists() for path in broad_expected):
+                results["integration_checks"]["passed"] += 1
+            else:
+                missing = [str(path.relative_to(broad_project)) for path in broad_expected if not path.exists()]
+                results["errors"].append(f"broad scaffold missed files: {', '.join(missing)}")
+                results["passed"] = False
+        else:
+            results["errors"].append(f"broad scaffold failed: {broad_scaffold.stderr.strip()}")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        manifest_path = broad_project / ".opencode" / "plugins" / ".managed" / "manifest.json"
         if manifest_path.exists():
             manifest_data = load_json(manifest_path)
-            stub_dir = project / ".opencode" / "plugins" / ".managed" / "surfaces"
+            stub_dir = broad_project / ".opencode" / "plugins" / ".managed" / "surfaces"
             expected_stub_count = len(manifest_data["special_surfaces"]) + len(manifest_data["events"])
             actual_stub_count = len(list(stub_dir.glob("*.txt")))
             if expected_stub_count == actual_stub_count:
@@ -399,13 +558,22 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         plugin_files = [
-            project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.ts",
-            project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.ts",
-            project / ".opencode" / "plugins" / "opencode_hook_shell_env.ts",
+            broad_project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.ts",
+            broad_project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.ts",
+            broad_project / ".opencode" / "plugins" / "opencode_hook_shell_env.ts",
         ]
         parse_errors: list[str] = []
         for plugin_file in plugin_files:
-            proc = run(["node", "--experimental-strip-types", "--check", str(plugin_file)], cwd=project)
+            proc = run(
+                [
+                    "node",
+                    "--experimental-strip-types",
+                    "--input-type=module",
+                    "--eval",
+                    f"await import({json.dumps(plugin_file.as_uri())})",
+                ],
+                cwd=broad_project,
+            )
             if proc.returncode != 0:
                 parse_errors.append(f"{plugin_file.name}: {proc.stderr.strip()}")
         if parse_errors:
@@ -415,17 +583,16 @@ def test_skill(skill_path: Path) -> dict:
             results["integration_checks"]["passed"] += 1
 
         results["integration_checks"]["total"] += 1
-        custom_plugin = project / ".opencode" / "plugins" / "custom_local_plugin.ts"
-        custom_plugin.write_text("import type { Plugin } from \"@opencode-ai/plugin\"\nconst plugin: Plugin = async () => ({})\nexport default plugin\n", encoding="utf-8")
-        config_data = json.loads((project / "opencode.json").read_text(encoding="utf-8"))
-        config_data.setdefault("plugin", []).append("custom-third-party")
-        (project / "opencode.json").write_text(json.dumps(config_data, indent=2) + "\n", encoding="utf-8")
+        custom_plugin = minimal_project / ".opencode" / "plugins" / "custom_local_plugin.ts"
+        custom_plugin.write_text("const plugin = async () => ({})\nexport default plugin\n", encoding="utf-8")
+        config_path = minimal_project / "opencode.json"
+        config_path.write_text(json.dumps({"plugin": ["custom-third-party"]}, indent=2) + "\n", encoding="utf-8")
         rerun = run(
             [
                 "bash",
                 str(skill_path / "scripts" / "scaffold_hooks.sh"),
                 "--project",
-                str(project),
+                str(minimal_project),
                 "--plan",
                 str(temp_plan),
                 "--home",
@@ -434,7 +601,7 @@ def test_skill(skill_path: Path) -> dict:
             cwd=skill_path,
         )
         if rerun.returncode == 0:
-            config_after = json.loads((project / "opencode.json").read_text(encoding="utf-8"))
+            config_after = json.loads(config_path.read_text(encoding="utf-8"))
             if custom_plugin.exists() and "custom-third-party" in config_after.get("plugin", []):
                 results["integration_checks"]["passed"] += 1
             else:

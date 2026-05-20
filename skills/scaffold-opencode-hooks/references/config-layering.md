@@ -38,7 +38,7 @@ If local plugins need external npm packages, add a `package.json` to the matchin
 
 OpenCode runs `bun install` at startup for those config-dir dependencies.
 
-The managed scaffold may also create that config-dir `package.json` for local TypeScript plugin dependencies. Keep dependencies in the config directory rather than the repository root unless the project itself also needs them.
+The managed scaffold creates that config-dir `package.json` only when generated plugin code imports external runtime packages. Simple lifecycle/action plugins that call repo-owned scripts should not create `.opencode/package.json`, `node_modules`, or lockfiles.
 
 ## Scope Guidance
 
