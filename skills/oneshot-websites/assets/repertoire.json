@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "styles": [
+    {"slug": "restaurant", "tier": 1, "label": "Elegant Restaurant"},
+    {"slug": "perfume", "tier": 1, "label": "Luxury Perfume House"},
+    {"slug": "bookshop", "tier": 1, "label": "Antiquarian Bookshop"},
+    {"slug": "deep-sea", "tier": 1, "label": "Deep Sea Research Station"},
+    {"slug": "jazz", "tier": 1, "label": "Jazz Club and Vinyl Lounge"},
+    {"slug": "botanical", "tier": 2, "label": "Living Botanical Garden"},
+    {"slug": "mineral", "tier": 2, "label": "Crystal and Mineral Specimen House"},
+    {"slug": "observatory", "tier": 2, "label": "Night Sky Observatory"},
+    {"slug": "night-market", "tier": 2, "label": "Southeast Asian Night Market"},
+    {"slug": "distillery", "tier": 2, "label": "Distillery and Whisky House"},
+    {"slug": "architecture", "tier": 2, "label": "Modernist Architecture Studio"}
+  ]
+}

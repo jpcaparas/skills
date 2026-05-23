@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "May 2026",
+  "abstract": "Generate semi-deterministic catalogs of parallel one-shot single-file website variants, with a style repertoire, prompt-per-route output, fairness-aware catalog index, and validation scripts for benchmark-ready directories.",
+  "references": [
+    "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
+    "https://kimi-k25-synthetic.pages.dev/",
+    "https://ui.sh/"
+  ]
+}

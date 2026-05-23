@@ -1,0 +1,59 @@
+{
+  "skill_name": "oneshot-websites",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "full-repertoire-catalog",
+      "prompt": "Generate a complete one-shot website repertoire catalog for a model benchmark. Include every website style, PROMPT.md for each route, a root index, and a fairness note.",
+      "expected_output": "Plans all 11 canonical route slugs, generates route-level PROMPT.md and index.html files, writes manifest.json, and builds a root catalog that exposes path, prompt, type, status, and summary.",
+      "assertions": [
+        {"text": "Uses every canonical style from references/repertoire.md", "type": "functional"},
+        {"text": "Applies isolated single-pass route generation in benchmark mode", "type": "functional"},
+        {"text": "Creates a catalog index with the required columns", "type": "structural"}
+      ],
+      "tags": ["smoke", "catalog"]
+    },
+    {
+      "id": 2,
+      "name": "seeded-subset",
+      "prompt": "Create five semi-deterministic oneshot website variants for a Kimi comparison run. Use a stable selection and record the selection in the manifest.",
+      "expected_output": "Selects five stable style routes using the protocol, records selection metadata, and keeps route slugs stable.",
+      "assertions": [
+        {"text": "Uses deterministic selection rather than ad hoc random choices", "type": "functional"},
+        {"text": "Writes required manifest item fields for every selected route", "type": "structural"}
+      ],
+      "tags": ["edge", "manifest"]
+    },
+    {
+      "id": 3,
+      "name": "not-normal-landing-page",
+      "prompt": "Build me one normal SaaS landing page for an invoicing product.",
+      "expected_output": "Does not force a full benchmark catalog; treats the task as a normal single website unless the user asks for one-shot catalog behavior.",
+      "assertions": [
+        {"text": "Does not over-trigger the full repertoire workflow", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "catalog-reference-routing",
+      "prompt": "How should the root directory page list generated one-shot websites and expose their prompts?",
+      "expected_output": "Routes to references/catalog-index.md and describes path, experience, prompt, type, status, summary, and fairness note requirements.",
+      "assertions": [
+        {"text": "Loads or cites references/catalog-index.md for the directory page rules", "type": "disclosure"}
+      ],
+      "tags": ["disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "validate-generated-catalog",
+      "prompt": "Check this generated oneshot-websites directory before I publish it.",
+      "expected_output": "Runs scripts/validate_catalog.py against the output directory and reports missing route files, prompt links, status issues, or external image/script violations.",
+      "assertions": [
+        {"text": "Uses scripts/validate_catalog.py for deterministic validation", "type": "verification"}
+      ],
+      "tags": ["verification"]
+    }
+  ]
+}

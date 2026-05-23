@@ -96,6 +96,12 @@ Production skill for markdown.new covering URL-to-Markdown conversion, file conv
 
 Production skill for Nano Banana 2 infographic prompting and verification covering low-noise prompt variants, default `16:9` review sets, terse in-image copy rules, and live Gemini image API probes for executive and editorial visuals.
 
+### `oneshot-websites`
+
+`npx skills add jpcaparas/skills --skill oneshot-websites`
+
+Production skill for generating semi-deterministic catalogs of parallel one-shot single-file website variants, with a full style repertoire, route-level `PROMPT.md` files, a fairness-aware directory index, and validation scripts.
+
 ### `repo-intent-documenter`
 
 `npx skills add jpcaparas/skills --skill repo-intent-documenter`

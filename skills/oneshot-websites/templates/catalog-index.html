@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{CATALOG_TITLE}}</title>
+  <meta name="description" content="{{CATALOG_DESCRIPTION}}">
+  <style>
+    :root {
+      --bg: #f5f3ef;
+      --panel: #fffdf8;
+      --ink: #171513;
+      --muted: #5f5b56;
+      --line: #d7d0c8;
+      --accent: #0f766e;
+      --accent-soft: #d9f4ef;
+      --error: #9f1239;
+      --error-soft: #fde7ef;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: linear-gradient(180deg, #efe9df 0%, var(--bg) 18rem);
+    }
+    main { max-width: 1100px; margin: 0 auto; padding: 32px 20px 56px; }
+    .hero, table, .footer-note {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 16px 40px rgba(23, 21, 19, 0.06);
+    }
+    .hero { padding: 28px; }
+    .eyebrow {
+      margin: 0 0 10px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    h1 { margin: 0; font-size: clamp(32px, 5vw, 52px); line-height: 1; }
+    .sub { max-width: 52rem; margin: 14px 0 0; color: var(--muted); line-height: 1.55; }
+    .meta { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; color: var(--muted); }
+    .meta span, code {
+      background: #f0ebe4;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 6px 10px;
+    }
+    .fairness {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: #f4eee7;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+    .fairness h2 { margin: 0; font-size: 15px; letter-spacing: 0.08em; text-transform: uppercase; }
+    .fairness p { margin: 10px 0 0; color: var(--muted); line-height: 1.55; }
+    table { width: 100%; margin-top: 26px; border-collapse: collapse; overflow: hidden; }
+    th, td { padding: 14px 16px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+    th { background: #f2ece4; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.12em; }
+    tr:last-child td { border-bottom: 0; }
+    a { color: var(--ink); font-weight: 700; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .status { display: inline-block; border-radius: 999px; padding: 5px 10px; font-size: 12px; font-weight: 700; }
+    .status-ok { color: var(--accent); background: var(--accent-soft); }
+    .status-error { color: var(--error); background: var(--error-soft); }
+    .muted { color: var(--muted); }
+    .footer-note { margin-top: 24px; padding: 18px 22px; color: var(--muted); text-align: center; }
+    @media (max-width: 880px) {
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tbody tr { border-bottom: 1px solid var(--line); padding: 10px 0; }
+      tbody td { border: 0; padding: 8px 16px; }
+      tbody td::before {
+        content: attr(data-label);
+        display: block;
+        margin-bottom: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Master Oneshot Catalog</p>
+      <h1>{{CATALOG_TITLE}}</h1>
+      <p class="sub">{{CATALOG_DESCRIPTION}}</p>
+      <div class="meta">{{META_CHIPS}}</div>
+      <section class="fairness">
+        <h2>Fairness Note</h2>
+        <p>{{FAIRNESS_NOTE}}</p>
+      </section>
+    </section>
+    <table>
+      <thead>
+        <tr>
+          <th>Path</th>
+          <th>Experience</th>
+          <th>Prompt</th>
+          <th>Type</th>
+          <th>Status</th>
+          <th>Summary</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{ROWS}}
+      </tbody>
+    </table>
+    <footer class="footer-note">{{FOOTER_NOTE}}</footer>
+  </main>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "catalogTitle": "Oneshot Websites",
+  "harness": "OpenCode",
+  "generated": "2026-05-23",
+  "mode": "single-pass",
+  "selection": "all-canonical",
+  "fairness": "isolated route context; no retries unless marked curated",
+  "items": [
+    {
+      "path": "restaurant/",
+      "title": "Maison Vorieux",
+      "prompt": "restaurant/PROMPT.md",
+      "type": "restaurant",
+      "typeLabel": "Elegant Restaurant",
+      "status": "OK",
+      "summary": "Fine dining storefront with candlelit course reveals."
+    }
+  ]
+}
