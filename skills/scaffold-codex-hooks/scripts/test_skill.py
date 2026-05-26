@@ -188,6 +188,17 @@ def test_skill(skill_path: Path) -> dict:
         results["passed"] = False
 
     skill_md = (skill_path / "SKILL.md").read_text(encoding="utf-8")
+    for snippet in [
+        "## Progressive Maintainer Drift Check",
+        "Live-fetch the official Codex hook docs",
+        "generated schemas, and runtime source",
+        "validators, tests, evals",
+        "Do not update this skill from memory",
+    ]:
+        if snippet not in skill_md:
+            results["errors"].append(f"SKILL.md is missing maintainer drift guidance: {snippet}")
+            results["passed"] = False
+
     for ref in extract_file_references(skill_md):
         results["cross_references"]["total"] += 1
         if (skill_path / ref).exists():

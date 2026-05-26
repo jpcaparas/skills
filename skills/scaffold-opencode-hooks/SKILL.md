@@ -110,6 +110,15 @@ Use the article at `https://blog.devgenius.io/opencode-auto-lint-your-ai-agents-
 
 If the official docs and the article disagree, follow the official docs and update the local references.
 
+## Progressive Maintainer Drift Check
+
+When updating this skill itself, make docs drift the first maintenance step:
+
+1. Live-fetch the official OpenCode plugin, config, SDK, and custom-tool docs on the day of the edit, then compare plugin loading rules, hook/event surfaces, config precedence, TypeScript guidance, and package expectations with `assets/hook-events.json`.
+2. Check local version evidence when available, such as `opencode --version` and `npm view @opencode-ai/plugin version`, and record the version that explains the update.
+3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/plugin-patterns.md`, scaffold layout docs, scaffold generators, templates, package/config helpers, validators, tests, evals, and thin wrappers.
+4. If no drift exists, still mention that the live docs and package version were checked. Do not update this skill from memory or by copying assumptions from Claude Code or Codex.
+
 ## Project Analysis Rules
 
 Before choosing any OpenCode hook structure, inspect:

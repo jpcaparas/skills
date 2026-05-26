@@ -116,6 +116,15 @@ If docs and runtime source disagree, prefer the source-backed current CLI behavi
 
 Use the article at `https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b` as secondary material for practical patterns, not as the source of truth. Early hook writeups drifted as the feature evolved.
 
+## Progressive Maintainer Drift Check
+
+When updating this skill itself, make docs drift the first maintenance step:
+
+1. Live-fetch the official Codex hook docs, config docs, generated schemas, and runtime source on the day of the edit, then compare event names, matcher rules, input/output contracts, trust behavior, and feature flags with `assets/hook-events.json`.
+2. Check local version evidence when available, such as `codex --version`, and record the Codex source commit or schema URLs that explain the update.
+3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/hook-events.md`, feature-flag and gotchas references, scaffold generators, templates, plan examples, validators, tests, evals, and thin wrappers.
+4. If no drift exists, still mention that the live docs, schemas, and source were checked. Do not update this skill from memory or by copying assumptions from Claude Code or OpenCode.
+
 ## Project Analysis Rules
 
 Before choosing any hook structure, inspect:

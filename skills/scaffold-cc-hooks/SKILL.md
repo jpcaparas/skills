@@ -97,6 +97,15 @@ Use the two reading.sh articles only as secondary material for practical pattern
 
 If the official docs and the secondary articles disagree, follow the official docs and update the local references.
 
+## Progressive Maintainer Drift Check
+
+When updating this skill itself, make docs drift the first maintenance step:
+
+1. Live-fetch the official Claude Code docs on the day of the edit, then compare the current event list, handler types, matcher rules, input/output contracts, async behavior, and trust behavior with `assets/hook-events.json`.
+2. Check local version evidence when available, such as `claude --version`, and record any source or docs date that explains the update.
+3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/hook-events.md`, scaffold generators, templates, plan examples, validators, tests, evals, and thin wrappers.
+4. If no drift exists, still mention that the live docs were checked. Do not update this skill from memory or by copying assumptions from Codex or OpenCode.
+
 ## Project Analysis Rules
 
 Before choosing any hook structure, inspect:
