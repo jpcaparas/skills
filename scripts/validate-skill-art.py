@@ -12,7 +12,7 @@ from pathlib import Path
 
 CARD_FILENAME = "skill-card.png"
 PROMPT_FILENAME = "skill-card.prompt.md"
-CARD_WIDTH = "640"
+CARD_WIDTH = "480"
 FINAL_WIDTH = 1024
 FINAL_HEIGHT = 576
 MAX_CARD_BYTES = 750_000
@@ -120,19 +120,35 @@ def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> Non
     if "skill-card.svg" in readme:
         errors.append("README.md must use generated raster PNG cards, not SVG cards.")
 
+    old_placement = re.findall(
+        r"<p align=\"center\">\n"
+        r"  <img src=\"skills/([^/]+)/skill-card\.png\"[^>]*>\n"
+        r"</p>\n\n"
+        r"### `([^`]+)`",
+        readme,
+    )
+    if old_placement:
+        misplaced = sorted({name for name, heading in old_placement if name == heading})
+        errors.append(
+            "README.md must place each skill-card PNG after the install command, not above "
+            f"the section heading. Old-placement sections: {', '.join(misplaced)}"
+        )
+
     for name in names:
         expected = (
+            f"### `{name}`\n\n"
+            f"`npx skills add jpcaparas/skills --skill {name}`\n\n"
             f'<p align="center">\n'
             f'  <img src="skills/{name}/{CARD_FILENAME}" '
             f'alt="16-bit side-scrolling pixel art badge for {name}" '
             f'width="{CARD_WIDTH}">\n'
             f'</p>\n\n'
-            f'### `{name}`'
         )
         if expected not in readme:
             errors.append(
                 "README.md must place the constrained PNG skill card immediately "
-                f"above section `{name}` with path skills/{name}/{CARD_FILENAME}."
+                f"after the install command for `{name}` with path "
+                f"skills/{name}/{CARD_FILENAME}."
             )
 
 

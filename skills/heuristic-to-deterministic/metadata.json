@@ -1,0 +1,16 @@
+{
+  "name": "heuristic-to-deterministic",
+  "display_name": "Heuristic to Deterministic",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Convert repeated heuristics, session discoveries, and manual review habits into deterministic validators, normalizers, fixtures, generators, CI checks, and hook-ready workflows.",
+  "tags": [
+    "determinism",
+    "validators",
+    "normalizers",
+    "ci",
+    "hooks",
+    "agent-workflows"
+  ]
+}

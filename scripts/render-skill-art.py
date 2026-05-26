@@ -21,7 +21,7 @@ from pathlib import Path
 
 CARD_FILENAME = "skill-card.png"
 PROMPT_FILENAME = "skill-card.prompt.md"
-CARD_WIDTH = "640"
+CARD_WIDTH = "480"
 FINAL_WIDTH = 1024
 FINAL_HEIGHT = 576
 DEFAULT_MODEL = "gemini-3.1-flash-image-preview"
@@ -42,6 +42,7 @@ SKILL_SCENES = {
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",
+    "heuristic-to-deterministic": "a workshop converting fuzzy clue clouds into locked gears, check rails, and repeatable test gems",
     "implicit-token-savings": "a compact token backpack moving through a narrow efficient corridor",
     "instagram-replicate": "a camera portal rebuilding a scene into film reels, snapshot tiles, and local asset crates",
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",
@@ -108,7 +109,7 @@ Subject: {scene}.
 Composition: one central readable illustration, a few supporting environmental elements, generous negative space, no crowded UI, no poster collage, no photorealism, no mockup frame.
 Forbidden objects unless unavoidable: pages, documents, signs, posters, terminal windows, dashboard windows, browser windows, charts with axes, speech bubbles, calendars with grids, spreadsheets, tickets with markings, maps with markings, and social media post mockups.
 Blank-surface rule: any paper, book, ticket, screen, terminal, dashboard, chart, browser, sign, speech bubble, social post, calendar, spreadsheet, map, or interface surface must be visually blank or represented only by solid unlabeled rectangles, bars, dots, connectors, and simple icons. Do not draw interior strokes that resemble writing.
-Palette: deep midnight navy background, cool teal and blue shadows, one warm amber accent, limited saturated highlights, cohesive with the rest of a 32-card skill collection.
+Palette: deep midnight navy background, cool teal and blue shadows, one warm amber accent, limited saturated highlights, cohesive with the rest of the README skill-card collection.
 Lighting: soft game-like glow, clear silhouette separation, no blur, no grain, no lens effects.
 {NO_TEXT_RULE}
 Return only the image.
@@ -127,23 +128,30 @@ def readme_image_block(name: str) -> str:
 
 def update_readme_cards(readme_path: Path, names: list[str]) -> None:
     readme = readme_path.read_text(encoding="utf-8")
-    block_pattern = re.compile(
-        r'(?:<p align="center">\n'
+    card_block_pattern = re.compile(
+        r'<p align="center">\n'
         r'  <img src="skills/[^"]+/skill-card\.(?:svg|png)" '
         r'alt="16-bit side-scrolling pixel art badge for [^"]+" '
         r'width="\d+">\n'
-        r'</p>\n\n)?'
-        r'(### `([^`]+)`)',
+        r'</p>\n\n',
+        re.MULTILINE,
+    )
+    readme = card_block_pattern.sub("", readme)
+
+    section_pattern = re.compile(
+        r"(### `([^`]+)`\n\n"
+        r"`npx skills add jpcaparas/skills --skill ([^`]+)`\n\n)",
         re.MULTILINE,
     )
 
     def replace(match: re.Match[str]) -> str:
         name = match.group(2)
-        if name not in names:
+        command_name = match.group(3)
+        if name not in names or command_name != name:
             return match.group(0)
-        return readme_image_block(name) + match.group(1)
+        return match.group(1) + readme_image_block(name)
 
-    updated = block_pattern.sub(replace, readme)
+    updated = section_pattern.sub(replace, readme)
     readme_path.write_text(updated, encoding="utf-8")
 
 

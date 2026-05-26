@@ -1,0 +1,91 @@
+{
+  "skill_name": "heuristic-to-deterministic",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "readme-art-contract",
+      "prompt": "We learned README skill images should sit below each install command, render at width 480, and stop hooks should block missing images. Convert that into deterministic behavior.",
+      "expected_output": "The response extracts inspectable invariants, updates or creates a README/art validator, keeps image generation separate from structural validation, and wires the shared check into hooks and CI with exit code 2 for policy failures.",
+      "assertions": [
+        {
+          "text": "Identifies README placement and width as validator-friendly invariants",
+          "type": "functional"
+        },
+        {
+          "text": "Keeps hook and CI behavior delegated to one shared script",
+          "type": "integration"
+        },
+        {
+          "text": "Uses exit code 2 for deterministic policy failures when matching the repository convention",
+          "type": "behavioral"
+        }
+      ],
+      "tags": ["smoke", "validator", "hook"]
+    },
+    {
+      "id": 2,
+      "name": "generated-art-boundary",
+      "prompt": "Nano Banana art varies creatively. Make the generation as deterministic as possible without pretending the pixels are fully predictable.",
+      "expected_output": "The response preserves a prompt harness, normalizes generated rasters, validates deterministic properties such as dimensions, path, file type, byte size, and prompt drift, and leaves subjective visual taste as review guidance.",
+      "assertions": [
+        {
+          "text": "Separates creative generation from deterministic post-generation checks",
+          "type": "edge"
+        },
+        {
+          "text": "Recommends normalizers such as metadata stripping and fixed dimensions before validation",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "normalizer", "prompt-harness"]
+    },
+    {
+      "id": 3,
+      "name": "subjective-no-trigger",
+      "prompt": "Brainstorm whether this interface feels premium and emotionally resonant.",
+      "expected_output": "The response does not force a deterministic validator. It asks for measurable acceptance criteria or keeps the work as subjective review guidance.",
+      "assertions": [
+        {
+          "text": "Declines to convert subjective taste into a hard gate without measurable criteria",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "choose-reference",
+      "prompt": "I need to decide whether a repeated agent mistake should become a validator, normalizer, fixture, manifest, or CI check.",
+      "expected_output": "The response loads conversion-patterns for artifact selection and verification for proof depth, then chooses the lowest-freedom artifact that enforces the stable invariant.",
+      "assertions": [
+        {
+          "text": "Uses references/conversion-patterns.md for artifact selection",
+          "type": "disclosure"
+        },
+        {
+          "text": "Uses references/verification.md for proof ladder and cross-platform checks",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "runtime-drift",
+      "prompt": "A GitHub Actions matrix is flaky because one runner lacks a Node flag that works locally. Turn that lesson into deterministic behavior.",
+      "expected_output": "The response recommends runtime pinning or feature detection, a preflight version check, a fixture or smoke test for the flag, and a shared CI/local validation command.",
+      "assertions": [
+        {
+          "text": "Treats runtime support as an environment invariant to probe or pin",
+          "type": "verification"
+        },
+        {
+          "text": "Keeps local and GitHub Actions checks on the same core command",
+          "type": "integration"
+        }
+      ],
+      "tags": ["edge", "ci"]
+    }
+  ]
+}
