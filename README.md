@@ -102,6 +102,12 @@ Production skill for Nano Banana 2 infographic prompting and verification coveri
 
 Production skill for generating semi-deterministic catalogs of parallel one-shot single-file website variants, with a full style repertoire, route-level `PROMPT.md` files, a fairness-aware directory index, and validation scripts.
 
+### `reading-notes`
+
+`npx skills add jpcaparas/skills --skill reading-notes`
+
+Production skill for turning supplied resources such as notes, documents, webpages, YouTube videos, transcripts, screenshots, talks, and PDFs into high-level topics, interesting ideas, research leads, open questions, and concrete homework todos.
+
 ### `repo-intent-documenter`
 
 `npx skills add jpcaparas/skills --skill repo-intent-documenter`

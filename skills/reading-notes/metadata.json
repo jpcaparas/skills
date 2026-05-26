@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "May 2026",
+  "abstract": "Production skill for turning any supplied resource into practical reading notes: high-level topics, interesting ideas, research leads, open questions, and concrete homework todos, with format-aware export guidance for Markdown, DOCX, PDF, CSV, XLSX, and JSON.",
+  "tags": [
+    "notes",
+    "research",
+    "summarization",
+    "todos",
+    "study",
+    "conference-notes"
+  ]
+}

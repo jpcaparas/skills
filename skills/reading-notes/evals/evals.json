@@ -1,0 +1,85 @@
+{
+  "skill_name": "reading-notes",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "laracon-live-notes-to-homework",
+      "prompt": "Turn these Laracon Live JP notes into reading notes and homework: Generics RFC link; Nightwatch stack with Kafka, ClickPipes, ClickHouse, MergeTree, AggregatingMergeTree; strict Laravel engineering with Model::shouldBeStrict, DB::prohibitDestructiveCommands(), Process::preventStrayProcesses; testing pipeline with composer lint, type coverage, Pest coverage.",
+      "expected_output": "A Markdown reading-notes response with topics for PHP generics, Nightwatch/ClickHouse architecture, strict Laravel engineering, and testing pipeline; interesting ideas with why they matter; concrete homework todos; further research links/terms; open questions about ambiguous behavior.",
+      "assertions": [
+        {
+          "text": "Includes a Homework / Todos section with checkbox actions.",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves specific named tools, commands, and RFC references from the source.",
+          "type": "content"
+        },
+        {
+          "text": "Asks at the end whether to save/export as Markdown, DOCX, PDF, or another format.",
+          "type": "behavioral"
+        }
+      ],
+      "files": [
+        "references/synthesis.md",
+        "templates/reading-notes.md"
+      ],
+      "tags": ["smoke"]
+    },
+    {
+      "id": 2,
+      "name": "video-url-without-transcript",
+      "prompt": "Make reading notes from this YouTube URL, but assume captions are unavailable: https://www.youtube.com/watch?v=example",
+      "expected_output": "A grounded partial response that captures available metadata, states that captions/transcript were unavailable, does not invent talk content, and asks for a transcript or notes only after producing what can be supported.",
+      "assertions": [
+        {
+          "text": "Does not hallucinate content that was not accessible.",
+          "type": "safety"
+        },
+        {
+          "text": "Mentions transcript/caption limitations and useful next input.",
+          "type": "functional"
+        }
+      ],
+      "files": [
+        "references/intake.md",
+        "references/gotchas.md"
+      ],
+      "tags": ["edge"]
+    },
+    {
+      "id": 3,
+      "name": "negative-code-review",
+      "prompt": "Review this pull request for bugs and regressions. Do not make study notes.",
+      "expected_output": "The reading-notes skill should not be used. The assistant should switch to code-review behavior rather than producing topics, interesting ideas, or homework.",
+      "assertions": [
+        {
+          "text": "Respects the negative trigger for code review.",
+          "type": "routing"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "save-format-routing",
+      "prompt": "Summarize this conference note dump into homework and save it as a DOCX after the summary.",
+      "expected_output": "The assistant uses the reading-notes output contract, reads output-format guidance, and creates or plans a DOCX export without asking for a format that was already specified.",
+      "assertions": [
+        {
+          "text": "Loads output format guidance for export behavior.",
+          "type": "disclosure"
+        },
+        {
+          "text": "Does not ask which format when DOCX was already requested.",
+          "type": "behavioral"
+        }
+      ],
+      "files": [
+        "references/output-formats.md"
+      ],
+      "tags": ["disclosure"]
+    }
+  ]
+}

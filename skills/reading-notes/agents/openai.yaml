@@ -1,0 +1,4 @@
+interface:
+  display_name: "reading-notes"
+  short_description: "Turn resources into topics, interesting ideas, research leads, and homework todos"
+  default_prompt: "Turn this resource into reading notes with topics, interesting ideas, further research, open questions, and concrete homework todos"
