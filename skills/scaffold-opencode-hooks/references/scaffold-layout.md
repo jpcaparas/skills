@@ -75,4 +75,6 @@ Each enabled plugin entry carries:
 - optional `context_script`, `action_script`, `action_label`, and `service`
 - `notes`
 
+For lifecycle/action plugins, `context_script` and `action_script` are resolved against OpenCode's active project/worktree/directory context. Do not assume `.opencode/plugins/../..` is the repo root, because global plugins and custom config directories break that assumption.
+
 Keep project-specific judgment in the plan. The scaffold should remain deterministic.

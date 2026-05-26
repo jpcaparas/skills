@@ -3,7 +3,7 @@ name: scaffold-opencode-hooks
 description: "Scaffold OpenCode hooks by generating TypeScript-only OpenCode plugins into a real project after auditing the repo, verifying the live official plugin docs, and inspecting config precedence. Defaults to a minimal lifecycle/action plugin with visible TUI toasts, repo-owned scripts, and one controlled automatic follow-up; generates broad hook-surface catalogs only when requested. Trigger on OpenCode hooks, OpenCode plugins, `.opencode/plugins`, TypeScript lifecycle plugins, `opencode.json`, `tool.execute.before`, `tool.execute.after`, `session.idle`, `shell.env`, custom tools, or post-turn checks. Do NOT use for Codex hooks, Claude Code hooks, JavaScript-only plugin scaffolds, or generic npm package publishing with no OpenCode runtime."
 compatibility: "Requires: bash, jq, git, rg, bun"
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   short-description: "Project-aware OpenCode hook and plugin scaffolder"
   openclaw:
     category: "development"
@@ -15,6 +15,7 @@ references:
   - hook-events
   - plugin-patterns
   - scaffold-layout
+  - reusable-scripts
   - merge-strategy
   - gotchas
 ---
@@ -50,7 +51,8 @@ What is the user asking for?
 | Audit a target repo | Run `scripts/audit_project.sh /path/to/project` |
 | Inspect project-vs-global OpenCode setup | Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json` |
 | Merge npm plugin names into an OpenCode config file | Run `bun scripts/merge_opencode_config.ts --config-file /path/to/opencode.json --plugins plugin-a plugin-b` |
-| Merge config-dir dependencies for local plugins | Run `bun scripts/merge_package_json.ts --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.15.5"}'` |
+| Merge config-dir dependencies for local plugins | Run `bun scripts/merge_package_json.ts --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.15.10"}'` |
+| Design reusable repo-owned scripts | Read `references/reusable-scripts.md` |
 | Generate the minimal lifecycle/action scaffold | Start from `templates/hook-plan.example.json`, then run `bash scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
 | Generate a broad hook-surface scaffold | Start from `templates/hook-plan.broad.example.json` and set `surface_catalog: true` |
 | Regenerate the plugin README in a target project | Run `bash scripts/render_hooks_readme.sh --project /path/to/project --plan /path/to/plan.json` |
@@ -66,10 +68,11 @@ What is the user asking for?
    - default to global only when the behavior should stay personal or cross-project
 6. Produce or update a concrete plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
 7. Prefer the minimal lifecycle/action plugin for lifecycle mirroring, post-action automation, validation, formatter repair, generated-file drift, dependency setup, or policy checks.
-8. Scaffold reference stubs for every current official OpenCode hook surface only when the user asks for a broad scaffold or the plan sets `surface_catalog: true`.
-9. Generate only the enabled managed plugin modules into the active plugin load path so dormant stubs do not become runtime plugins by accident.
-10. Merge config plugin arrays and config-dir package dependencies deterministically, without deleting unrelated user-owned entries. Do not create config-dir package files when no runtime dependency is needed.
-11. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
+8. Keep project behavior in repo-owned scripts when it may move to Codex, Claude Code, Git hooks, GitHub Actions, or local shell usage. The plugin should orchestrate OpenCode lifecycle, feedback, and repair prompts around those scripts.
+9. Scaffold reference stubs for every current official OpenCode hook surface only when the user asks for a broad scaffold or the plan sets `surface_catalog: true`.
+10. Generate only the enabled managed plugin modules into the active plugin load path so dormant stubs do not become runtime plugins by accident.
+11. Merge config plugin arrays and config-dir package dependencies deterministically, without deleting unrelated user-owned entries. Do not create config-dir package files when no runtime dependency is needed.
+12. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
 
 ## Config Layer First Heuristic
 
@@ -120,6 +123,7 @@ Before choosing any OpenCode hook structure, inspect:
 - sensitive paths like `.env`, secrets, lockfiles, generated code, migrations, and infra directories
 - whether the hook setup should be shareable in-repo or remain machine-local
 - whether local plugin logic needs config-dir dependencies, Bun shell calls, or SDK-driven feedback loops
+- reusable agent or automation scripts such as `<project>/scripts/agent-session-context.sh`, `<project>/scripts/agent-stop-checks.sh`, adapter scripts, Husky hooks, and GitHub Actions jobs that should share logic
 
 Run `scripts/audit_project.sh` first, then read `references/project-analysis.md` when you need the full checklist.
 
@@ -174,6 +178,7 @@ When the skill is invoked again against a project:
 - Show an `info` toast when meaningful background work starts, a `success` toast when it completes, and a `warning` or `error` toast when intervention is needed. Apply this to `session.idle`, `tool.execute.after`, `command.executed`, `file.edited`, `installation.updated`, `session.error`, and custom cross-event workflows when they do real work.
 - For automatic repair or follow-up, allow one `client.session.prompt()` without `noReply` on the first failure. Track `inFlight`, `repairPromptSent`, and `persistentFailureReported`; use `noReply: true` for persistent failure notices so the plugin cannot loop indefinitely.
 - Call repo-owned scripts for project-specific behavior instead of hard-coding build, test, lint, or policy commands in plugin bodies. Prefer reusable project conventions such as a session-context script and a shared validation script under the target repo's scripts directory.
+- Resolve project script paths from OpenCode's active project/worktree/directory context. Do not assume a fixed path depth from `.opencode/plugins/`, especially for global plugin scopes or custom config directories.
 - Use `tool.execute.before` for prevention, `tool.execute.after` for observation, and `event` for cross-event coordination like `session.idle`.
 - Treat `experimental.session.compacting` as opt-in and experimental. Do not make core safety logic depend on it.
 - Never assume local helper `.js` or `.ts` files under the plugin directory are inert. Anything with a runtime module extension may load as a plugin, so this scaffold writes only enabled `.ts` plugin modules into the active plugin directory.
@@ -187,6 +192,7 @@ When the skill is invoked again against a project:
 | Current official hook surfaces, event groups, and special plugin capabilities | `references/hook-events.md` |
 | Common plugin archetypes like guardrails, post-turn checks, shell env, and custom tools | `references/plugin-patterns.md` |
 | Managed folder layout and plan file shape | `references/scaffold-layout.md` |
+| Reusable script placement across OpenCode, Codex, Claude Code, Git hooks, and CI | `references/reusable-scripts.md` |
 | Additive versus overhaul behavior | `references/merge-strategy.md` |
 | Runtime traps, path drift, cache issues, and JSONC caveats | `references/gotchas.md` |
 
@@ -213,3 +219,4 @@ When the skill is invoked again against a project:
 6. Local plugin dependencies belong in the config directory package file, not in the repo root package by default.
 7. `experimental.session.compacting` is real in the docs examples, but it is explicitly experimental.
 8. OpenCode startup issues often trace back to bad plugins or stale cache, so troubleshooting sometimes matters more than rewriting logic.
+9. Do not bury reusable validation or context logic inside generated `.opencode/plugins/*.ts` files. Put it in repo-owned scripts and let OpenCode plugins call those scripts as lifecycle adapters.

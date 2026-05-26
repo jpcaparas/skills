@@ -1,8 +1,8 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "organization": "JP Caparas",
   "date": "May 2026",
-  "abstract": "Project-aware OpenCode hook scaffolder that verifies the live official OpenCode plugin, config, SDK, custom-tools, and troubleshooting docs; audits a target repository in detail; inspects existing project and global OpenCode plugin state; and then generates deterministic TypeScript-only `.opencode/plugins/` scaffolds, defaulting to a minimal lifecycle/action plugin with visible TUI feedback, repo-owned scripts, controlled automatic follow-up, optional broad hook-surface stubs, and dependency/config merges only when needed.",
+  "abstract": "Project-aware OpenCode hook scaffolder that verifies the live official OpenCode plugin, config, SDK, custom-tools, and troubleshooting docs; audits a target repository in detail; inspects existing project and global OpenCode plugin state; and then generates deterministic TypeScript-only `.opencode/plugins/` scaffolds, defaulting to a path-aware minimal lifecycle/action plugin with visible TUI feedback, repo-owned reusable scripts, controlled automatic follow-up, optional broad hook-surface stubs, and dependency/config merges only when needed.",
   "references": [
     "https://opencode.ai/docs/plugins/",
     "https://opencode.ai/docs/config/",

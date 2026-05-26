@@ -25,13 +25,16 @@ from pathlib import Path
 
 EXPECTED_EVENT_NAMES = {
     "SessionStart",
+    "Setup",
     "InstructionsLoaded",
     "UserPromptSubmit",
+    "UserPromptExpansion",
     "PreToolUse",
     "PermissionRequest",
     "PermissionDenied",
     "PostToolUse",
     "PostToolUseFailure",
+    "PostToolBatch",
     "Notification",
     "SubagentStart",
     "SubagentStop",
@@ -113,7 +116,9 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "Safe editing rule:",
         "handle_event()",
         "Project-specific logic belongs here.",
+        "run_configured_scripts",
         "run_configured_commands",
+        "PROJECT_SCRIPTS_JSON",
         "PROJECT_COMMANDS_JSON",
         'HOOK_INPUT="$(read_hook_input)"',
         'main "$@"',
@@ -133,6 +138,8 @@ def readable_common_errors(common_path: Path) -> list[str]:
         "Read one value from HOOK_INPUT with jq.",
         "Hook output helpers build JSON with jq",
         "run_project_command()",
+        "run_project_script()",
+        "run_configured_scripts()",
         "handle_project_command_failure()",
         "This is deliberately language-agnostic.",
         "Emit additionalContext text for the next Claude turn.",
@@ -223,10 +230,25 @@ def test_skill(skill_path: Path) -> dict:
         tmp = Path(tmpdir)
         project = tmp / "project"
         project.mkdir()
+        (project / "scripts").mkdir()
+        (project / "scripts" / "agent-stop-checks.sh").write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            "printf 'portable shared script %s\\n' \"${1:-}\" >&2\n",
+            encoding="utf-8",
+        )
         temp_plan = tmp / "hook-plan.json"
         plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
         for enabled_event in plan_data.get("enabled_events", []):
             if enabled_event.get("name") == "Stop":
+                enabled_event["scripts"] = [
+                    {
+                        "label": "shared stop checks",
+                        "path": "scripts/agent-stop-checks.sh",
+                        "args": ["claude"],
+                        "cwd": ".",
+                    }
+                ]
                 enabled_event["commands"] = [
                     {
                         "label": "portable hook command",
@@ -308,11 +330,15 @@ def test_skill(skill_path: Path) -> dict:
                 }
             )
             stop_proc = run([str(stop_script)], cwd=project, input_text=stop_payload)
-            if stop_proc.returncode == 0 and "portable hook command" in stop_proc.stderr:
+            if (
+                stop_proc.returncode == 0
+                and "portable shared script claude" in stop_proc.stderr
+                and "portable hook command" in stop_proc.stderr
+            ):
                 results["integration_checks"]["passed"] += 1
             else:
                 results["errors"].append(
-                    "generated Stop hook did not run the configured language-agnostic command"
+                    "generated Stop hook did not run the configured reusable script and language-agnostic command"
                 )
                 results["passed"] = False
         else:

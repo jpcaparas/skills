@@ -1,8 +1,8 @@
 {
-  "verified_on": "2026-05-08",
+  "verified_on": "2026-05-26",
   "verified_with": {
-    "codex_cli_version": "codex-cli 0.129.0",
-    "codex_source_commit": "a3de5bde6e6cc33140f1b0af9afc3beea68ca1a2",
+    "codex_cli_version": "codex-cli 0.133.0",
+    "codex_source_commit": "8a94430bb273623be42b68f144f1ab1df343bb53",
     "official_docs": [
       "https://developers.openai.com/codex/hooks",
       "https://developers.openai.com/codex/config-basic",
@@ -25,7 +25,11 @@
       "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/user-prompt-submit.command.input.schema.json",
       "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/user-prompt-submit.command.output.schema.json",
       "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/stop.command.input.schema.json",
-      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/stop.command.output.schema.json"
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/stop.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-start.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-start.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-stop.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-stop.command.output.schema.json"
     ],
     "runtime_source": [
       "https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/lib.rs",
@@ -63,7 +67,9 @@
   ],
   "merge_behavior": [
     "Matching hooks from multiple files all run.",
-    "Multiple matching command hooks for the same event are launched concurrently, so one hook cannot prevent another matching hook from starting."
+    "Multiple matching command hooks for the same event are launched concurrently, so one hook cannot prevent another matching hook from starting.",
+    "Non-managed command hooks must be reviewed and trusted before they run.",
+    "Project-local hooks load only when the project .codex/ layer is trusted."
   ],
   "events": [
     {
@@ -82,15 +88,19 @@
       "blocking_guidance": "There is no dedicated block shape for this event. Keep it lightweight and context-oriented."
     },
     {
-      "name": "UserPromptSubmit",
-      "script_name": "user_prompt_submit.sh",
-      "description": "Inject context into user prompts or block a prompt before it is sent.",
-      "matcher_supported": false,
-      "matcher_target": null,
-      "current_matcher_values": [],
-      "matcher_guidance": "Current runtime ignores `matcher` for this event.",
-      "output_guidance": "Plain text stdout is added as extra developer context. JSON can add context with `hookSpecificOutput.additionalContext` or block with `decision: \"block\"` and `reason`.",
-      "blocking_guidance": "Use `block_with_reason` or exit code `2` with stderr when Codex should stop and ask for a clearer prompt."
+      "name": "SubagentStart",
+      "script_name": "subagent_start.sh",
+      "description": "Bootstrap subagent-specific context when Codex starts a subagent.",
+      "matcher_supported": true,
+      "matcher_target": "agent_type",
+      "current_matcher_values": [
+        "general-purpose",
+        "review",
+        "custom-agent"
+      ],
+      "matcher_guidance": "Match the `agent_type` field. Use this for subagent profile-specific bootstrap context.",
+      "output_guidance": "Plain text stdout is added as extra developer context for the subagent. JSON can return `hookSpecificOutput.additionalContext` with `hookEventName: \"SubagentStart\"`.",
+      "blocking_guidance": "`continue: false` is parsed for compatibility but does not stop the subagent from starting. Use this as context, not a hard gate."
     },
     {
       "name": "PreToolUse",
@@ -106,8 +116,8 @@
         "mcp__server__tool"
       ],
       "matcher_guidance": "Match the canonical `tool_name` or matcher aliases. Bash uses `Bash`; file edits use canonical `apply_patch` and aliases `Edit` and `Write`; MCP tools use namespaced tool names.",
-      "output_guidance": "Plain text stdout is ignored. JSON can add context with `hookSpecificOutput.additionalContext` or deny with `hookSpecificOutput.permissionDecision = \"deny\"` plus `permissionDecisionReason`; the legacy `decision: \"block\"` shape still works.",
-      "blocking_guidance": "Use `deny_pre_tool_use` or exit code `2` with a reason on stderr to block before the tool runs. `allow`, `ask`, `updatedInput`, `continue: false`, `stopReason`, and `suppressOutput` are not supported."
+      "output_guidance": "Plain text stdout is ignored. JSON can add context with `hookSpecificOutput.additionalContext`, deny with `hookSpecificOutput.permissionDecision = \"deny\"` plus `permissionDecisionReason`, or rewrite supported input with `permissionDecision = \"allow\"` plus `updatedInput`; the legacy `decision: \"block\"` shape still works.",
+      "blocking_guidance": "Use `deny_pre_tool_use` or exit code `2` with a reason on stderr to block before the tool runs. `permissionDecision: \"ask\"`, legacy `decision: \"approve\"`, `continue: false`, `stopReason`, and `suppressOutput` are not supported."
     },
     {
       "name": "PermissionRequest",
@@ -170,6 +180,32 @@
       "matcher_guidance": "Match the compaction `trigger`. Current values are `manual` and `auto`. `*` and an empty matcher both mean match all.",
       "output_guidance": "Plain text stdout is ignored. JSON supports common output fields; `continue: false` stops follow-on processing and `stopReason` supplies the reason.",
       "blocking_guidance": "`decision: \"block\"` is not supported for this event. Use `continue: false` if Codex should stop after compaction."
+    },
+    {
+      "name": "UserPromptSubmit",
+      "script_name": "user_prompt_submit.sh",
+      "description": "Inject context into user prompts or block a prompt before it is sent.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Current runtime ignores `matcher` for this event.",
+      "output_guidance": "Plain text stdout is added as extra developer context. JSON can add context with `hookSpecificOutput.additionalContext` or block with `decision: \"block\"` and `reason`.",
+      "blocking_guidance": "Use `block_with_reason` or exit code `2` with stderr when Codex should stop and ask for a clearer prompt."
+    },
+    {
+      "name": "SubagentStop",
+      "script_name": "subagent_stop.sh",
+      "description": "Run subagent completion review or request one more focused subagent pass.",
+      "matcher_supported": true,
+      "matcher_target": "agent_type",
+      "current_matcher_values": [
+        "general-purpose",
+        "review",
+        "custom-agent"
+      ],
+      "matcher_guidance": "Match the `agent_type` field. The event also exposes `agent_id`, `agent_transcript_path`, `stop_hook_active`, and `last_assistant_message`.",
+      "output_guidance": "When exiting `0`, stdout must be JSON. JSON supports common output fields and `decision: \"block\"` plus `reason` to continue the subagent.",
+      "blocking_guidance": "Treat `decision: \"block\"` as \"continue this subagent with the reason as its next prompt\". `continue: false` takes precedence over continuation decisions from other matching SubagentStop hooks."
     },
     {
       "name": "Stop",

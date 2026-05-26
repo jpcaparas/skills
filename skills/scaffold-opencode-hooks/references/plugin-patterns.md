@@ -24,6 +24,8 @@ Keep these state flags:
 
 Use repo-owned scripts for project-specific behavior. The plugin should orchestrate lifecycle, visibility, and follow-up; the script should own validation, formatting, dependency checks, generated-file checks, or policy details.
 
+Resolve repo scripts from OpenCode's active plugin context (`worktree`, `directory`, then project fields) before falling back to the plugin file location. This keeps the same generated plugin usable when it is project-local, global, or loaded from a custom config directory.
+
 ## 2. TUI Toasts For Background Work
 
 `client.app.log()` is diagnostic. It is not enough for user-visible TUI feedback.

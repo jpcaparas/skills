@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_EVENT_COUNT = 26
+EXPECTED_EVENT_COUNT = 29
 REQUIRED_OPERATIONAL_SCRIPTS = [
     "scripts/audit_project.sh",
     "scripts/check_workspace_trust.sh",
@@ -36,6 +36,7 @@ REQUIRED_SUPPORT_FILES = [
     "references/project-analysis.md",
     "references/hook-events.md",
     "references/scaffold-layout.md",
+    "references/reusable-scripts.md",
     "references/merge-strategy.md",
     "references/gotchas.md",
 ]

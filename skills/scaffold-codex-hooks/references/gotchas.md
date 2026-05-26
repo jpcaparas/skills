@@ -2,11 +2,11 @@
 
 ## 1. The feature flag is `hooks`
 
-Current Codex source and `codex features list` use canonical `[features].hooks`. The old `[features].codex_hooks` key is a legacy alias. When writing config, use `hooks = true`.
+Current Codex source and `codex features list` use canonical `[features].hooks`. The old `[features].codex_hooks` key is a legacy alias. When writing config, use `hooks = true`. Hooks are enabled by default today, so feature inspection is mainly for detecting explicit disables, legacy keys, or policy overrides.
 
 ## 2. Docs can lag runtime source
 
-The public hooks guide may lag the generated schemas and runtime source. On 2026-05-08, the source-backed event set had eight events, including `PermissionRequest`, `PreCompact`, and `PostCompact`. Re-check docs, schemas, and source before scaffolding for real.
+The public hooks guide may lag the generated schemas and runtime source. On 2026-05-26, the released docs and generated schemas include ten events, adding `SubagentStart` and `SubagentStop` to the earlier eight-event set. Re-check docs, schemas, and source before scaffolding for real.
 
 ## 3. Tool hooks are broad, but not universal
 
@@ -40,19 +40,27 @@ Use `continue: false` and optional `stopReason` for compaction hooks. `decision:
 
 For `Stop`, `decision: "block"` means "continue Codex with this new prompt text." It does not reject the turn in the normal policy sense.
 
-## 11. Repo-local config needs an active project layer
+## 11. `SubagentStop` also uses `block` to continue
+
+For `SubagentStop`, `decision: "block"` means "continue the subagent with this new prompt text." Use `stop_hook_active` to avoid infinite continuation loops.
+
+## 12. Repo-local config needs an active project layer
 
 The official config basics page says project config files only load when you trust the project. If `.codex/config.toml` contains `hooks = true` but the effective feature stays off, the project layer may not be active yet.
 
-## 12. Plain text stdout is not always safe
+## 13. Non-managed hook definitions need review
 
-- `SessionStart` and `UserPromptSubmit` accept plain text stdout as extra developer context.
+Codex requires review and trust for non-managed command hooks before they run. After scaffolding or changing `.codex/hooks.json`, open `/hooks` in Codex to review the hook definitions. If a project-local scaffold looks correct but does not run, check both project-layer trust and hook-definition trust before rewriting scripts.
+
+## 14. Plain text stdout is not always safe
+
+- `SessionStart`, `SubagentStart`, and `UserPromptSubmit` accept plain text stdout as extra developer context.
 - `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, and `PostCompact` ignore plain text stdout.
-- `Stop` requires JSON on stdout when exiting `0`.
+- `SubagentStop` and `Stop` require JSON on stdout when exiting `0`.
 
 Write the event-specific output contract into the generated stub comments and follow it.
 
-## 13. There is no documented per-hook verbosity flag
+## 15. There is no documented per-hook verbosity flag
 
 The current official docs do not document a hook-specific `verbose` or `debug` switch.
 

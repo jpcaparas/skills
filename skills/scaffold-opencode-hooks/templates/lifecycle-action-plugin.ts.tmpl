@@ -46,7 +46,18 @@ type OpenCodeClient = {
   }
 }
 
-type PluginInput = { client: OpenCodeClient }
+type OpenCodeProject = {
+  root?: string
+  directory?: string
+  path?: string
+  worktree?: string
+}
+type PluginInput = {
+  client: OpenCodeClient
+  project?: OpenCodeProject
+  directory?: string
+  worktree?: string
+}
 type OpenCodeEvent = {
   type: string
   properties?: {
@@ -71,14 +82,25 @@ type ScriptResult = {
 
 const execFileAsync = promisify(execFile)
 const pluginDir = dirname(fileURLToPath(import.meta.url))
-const repoRoot = resolve(pluginDir, "..", "..")
-const contextScript = resolve(repoRoot, "{{CONTEXT_SCRIPT}}")
-const actionScript = resolve(repoRoot, "{{ACTION_SCRIPT}}")
+const fallbackRepoRoot = resolve(pluginDir, "..", "..")
 const serviceName = "{{SERVICE_NAME}}"
 const actionLabel = "{{ACTION_LABEL}}"
 const timeoutMs = 10 * 60 * 1000
 const outputTailLines = 160
 const sessionState = new Map<string, SessionState>()
+
+function resolveRepoRoot(input: PluginInput): string {
+  const candidates = [
+    input.worktree,
+    input.directory,
+    input.project?.worktree,
+    input.project?.root,
+    input.project?.directory,
+    input.project?.path,
+  ]
+  const candidate = candidates.find((value): value is string => typeof value === "string" && value.length > 0)
+  return candidate ? resolve(candidate) : fallbackRepoRoot
+}
 
 function stateFor(sessionID: string): SessionState {
   const existingState = sessionState.get(sessionID)
@@ -128,20 +150,22 @@ async function showToast(client: OpenCodeClient, variant: ToastVariant, message:
   }
 }
 
-async function runScript(script: string, args: string[], timeout: number): Promise<ScriptResult> {
+async function runScript(repoRoot: string, script: string, args: string[], timeout: number): Promise<ScriptResult> {
+  const scriptPath = resolve(repoRoot, script)
+
   try {
-    await access(script)
+    await access(scriptPath)
   } catch {
     return {
       ok: false,
       status: "missing",
       stdout: "",
-      stderr: `Missing project hook script: ${script}`,
+      stderr: `Missing project hook script: ${scriptPath}`,
     }
   }
 
   try {
-    const result = await execFileAsync("bash", [script, ...args], {
+    const result = await execFileAsync("bash", [scriptPath, ...args], {
       cwd: repoRoot,
       maxBuffer: 10 * 1024 * 1024,
       timeout,
@@ -169,10 +193,10 @@ async function runScript(script: string, args: string[], timeout: number): Promi
   }
 }
 
-async function injectSessionContext(client: OpenCodeClient, sessionID: string, state: SessionState) {
+async function injectSessionContext(client: OpenCodeClient, sessionID: string, state: SessionState, repoRoot: string) {
   if (state.contextInjected) return
 
-  const result = await runScript(contextScript, ["opencode-session-created"], 20_000)
+  const result = await runScript(repoRoot, "{{CONTEXT_SCRIPT}}", ["opencode-session-created"], 20_000)
   if (!result.ok) {
     await log(client, "warn", "Session context script failed", {
       sessionID,
@@ -239,7 +263,7 @@ ${outputTail}`,
   })
 }
 
-async function runAction(client: OpenCodeClient, sessionID: string, state: SessionState) {
+async function runAction(client: OpenCodeClient, sessionID: string, state: SessionState, repoRoot: string) {
   if (state.inFlight) return
 
   state.inFlight = true
@@ -247,7 +271,7 @@ async function runAction(client: OpenCodeClient, sessionID: string, state: Sessi
     await showToast(client, "info", `${actionLabel} started`)
     await log(client, "info", `${actionLabel} started`, { sessionID })
 
-    const result = await runScript(actionScript, [], timeoutMs)
+    const result = await runScript(repoRoot, "{{ACTION_SCRIPT}}", [], timeoutMs)
     if (result.ok) {
       state.persistentFailureReported = false
       state.repairPromptSent = false
@@ -269,14 +293,17 @@ async function runAction(client: OpenCodeClient, sessionID: string, state: Sessi
   }
 }
 
-export const ProjectLifecycleAction = async ({ client }: PluginInput) => {
+export const ProjectLifecycleAction = async (input: PluginInput) => {
+  const { client } = input
+  const repoRoot = resolveRepoRoot(input)
+
   return {
     event: async ({ event }: { event: OpenCodeEvent }) => {
       if (event.type === "session.created") {
         const sessionID = event.properties?.info?.id
         if (!sessionID) return
 
-        await injectSessionContext(client, sessionID, stateFor(sessionID))
+        await injectSessionContext(client, sessionID, stateFor(sessionID), repoRoot)
         return
       }
 
@@ -284,7 +311,7 @@ export const ProjectLifecycleAction = async ({ client }: PluginInput) => {
         const sessionID = event.properties?.sessionID
         if (!sessionID) return
 
-        await runAction(client, sessionID, stateFor(sessionID))
+        await runAction(client, sessionID, stateFor(sessionID), repoRoot)
       }
     },
   }

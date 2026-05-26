@@ -461,7 +461,7 @@ const client = {{
   session: {{ prompt: async (input) => prompts.push(input.body) }},
 }}
 
-const plugin = await pluginFactory({{ client }})
+const plugin = await pluginFactory({{ client, directory: {json.dumps(minimal_project.as_posix())} }})
 await plugin.event({{ event: {{ type: "session.created", properties: {{ info: {{ id: "s1" }} }} }} }})
 await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
 await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})

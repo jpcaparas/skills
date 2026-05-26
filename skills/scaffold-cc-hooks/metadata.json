@@ -1,8 +1,8 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "organization": "JP Caparas",
-  "date": "April 2026",
-  "abstract": "Project-aware Claude Code hook scaffolder that verifies the live official hook docs, audits a target repository in detail, offers deterministic workspace-trust checks for the exact project path, and then generates a deterministic bash-first hook scaffold with one managed script per current event, repeatable settings merges, and a generated hooks README for the target project.",
+  "date": "May 2026",
+  "abstract": "Project-aware Claude Code hook scaffolder that verifies the live official hook docs, audits a target repository in detail, offers deterministic workspace-trust checks for the exact project path, and then generates a deterministic bash-first hook scaffold with one managed script per current event, repeatable settings merges, reusable repo-owned script delegation, and a generated hooks README for the target project.",
   "references": [
     "https://code.claude.com/docs/en/hooks",
     "https://code.claude.com/docs/en/hooks-guide",

@@ -19,12 +19,14 @@ from pathlib import Path
 
 EXPECTED_EVENT_NAMES = {
     "SessionStart",
+    "SubagentStart",
     "PreToolUse",
     "PermissionRequest",
     "PostToolUse",
     "PreCompact",
     "PostCompact",
     "UserPromptSubmit",
+    "SubagentStop",
     "Stop",
 }
 BASH_SCRIPTS = [
@@ -110,7 +112,9 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "Safe editing rule:",
         "handle_event()",
         "Project-specific logic belongs here.",
+        "run_configured_scripts",
         "run_configured_commands",
+        "PROJECT_SCRIPTS_JSON",
         "PROJECT_COMMANDS_JSON",
         'HOOK_INPUT="$(read_hook_input)"',
         'main "$@"',
@@ -128,7 +132,10 @@ def readable_common_errors(common_path: Path) -> list[str]:
         "require_jq()",
         "Read one value from HOOK_INPUT with jq.",
         "Hook output helpers build JSON with jq",
+        "allow_pre_tool_use_with_updated_input()",
         "run_project_command()",
+        "run_project_script()",
+        "run_configured_scripts()",
         "handle_project_command_failure()",
         "This is deliberately language-agnostic.",
         "Some hook contracts treat exit code 2 plus stderr as a block signal.",
@@ -242,6 +249,13 @@ def test_skill(skill_path: Path) -> dict:
             encoding="utf-8",
         )
         (project / ".envrc").write_text("layout node\n", encoding="utf-8")
+        (project / "scripts").mkdir()
+        (project / "scripts" / "agent-session-context.sh").write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            "printf 'portable shared script %s\\n' \"${1:-}\" >&2\n",
+            encoding="utf-8",
+        )
 
         env = os.environ.copy()
         env["HOME"] = str(home)
@@ -338,6 +352,14 @@ def test_skill(skill_path: Path) -> dict:
         plan_data["feature_scope"] = "user"
         for enabled_event in plan_data.get("enabled_events", []):
             if enabled_event.get("name") == "SessionStart":
+                enabled_event["scripts"] = [
+                    {
+                        "label": "shared session context",
+                        "path": "scripts/agent-session-context.sh",
+                        "args": ["codex"],
+                        "cwd": ".",
+                    }
+                ]
                 enabled_event["commands"] = [
                     {
                         "label": "portable hook command",
@@ -376,12 +398,14 @@ def test_skill(skill_path: Path) -> dict:
                 project / ".codex" / "hooks" / "generated" / "events" / name
                 for name in [
                     "session_start.sh",
+                    "subagent_start.sh",
                     "pre_tool_use.sh",
                     "permission_request.sh",
                     "post_tool_use.sh",
                     "pre_compact.sh",
                     "post_compact.sh",
                     "user_prompt_submit.sh",
+                    "subagent_stop.sh",
                     "stop.sh",
                 ]
             )
@@ -490,9 +514,12 @@ def test_skill(skill_path: Path) -> dict:
                             f"generated {event_name} command did not execute cleanly: "
                             f"{proc.stderr.strip() or proc.stdout.strip() or 'unknown error'}"
                         )
-                    if event_name == "SessionStart" and "portable hook command" not in proc.stderr:
+                    if event_name == "SessionStart" and (
+                        "portable shared script codex" not in proc.stderr
+                        or "portable hook command" not in proc.stderr
+                    ):
                         command_errors.append(
-                            "generated SessionStart command did not run the configured language-agnostic command"
+                            "generated SessionStart command did not run the configured reusable script and language-agnostic command"
                         )
                 if command_errors:
                     results["errors"].extend(command_errors)

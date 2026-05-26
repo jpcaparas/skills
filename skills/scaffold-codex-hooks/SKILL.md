@@ -1,9 +1,9 @@
 ---
 name: scaffold-codex-hooks
-description: "Scaffold Codex hooks into a real project after auditing the repo, verifying the live official docs, schemas, and runtime source, inspecting the effective `hooks` feature flag, and enabling it in project or user config if needed. Use when a user wants Codex hooks, `.codex/hooks.json`, managed Codex hook refreshes, repo-local lifecycle hooks, or help with `SessionStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, or `Stop`. Trigger on: Codex hooks, hooks.json, hooks feature flag, codex_hooks legacy alias, .codex/config.toml, managed hook scaffold. Do NOT use for Claude Code hooks, `.claude/settings.json`, Husky-only setups, or non-Codex agents."
+description: "Scaffold Codex hooks into a real project after auditing the repo, verifying the live official docs, schemas, and runtime source, inspecting the effective `hooks` feature flag, and enabling it in project or user config if needed. Use when a user wants Codex hooks, `.codex/hooks.json`, managed Codex hook refreshes, repo-local lifecycle hooks, reusable agent scripts, or help with `SessionStart`, `SubagentStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `SubagentStop`, or `Stop`. Trigger on: Codex hooks, hooks.json, hooks feature flag, codex_hooks legacy alias, .codex/config.toml, managed hook scaffold. Do NOT use for Claude Code hooks, `.claude/settings.json`, Husky-only setups, or non-Codex agents."
 compatibility: "Requires: codex CLI with the stable `hooks` feature available, plus bash, jq, git, rg, and python3."
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   short-description: "Project-aware Codex hooks scaffolder"
   openclaw:
     category: "development"
@@ -14,6 +14,7 @@ references:
   - feature-flag
   - hook-events
   - scaffold-layout
+  - reusable-scripts
   - merge-strategy
   - gotchas
 ---
@@ -42,9 +43,11 @@ What is the user asking for?
 | Verify the current official Codex hook model | Read `https://developers.openai.com/codex/hooks`, `https://developers.openai.com/codex/config-basic`, the generated schemas listed in `assets/hook-events.json`, and the runtime source links in that manifest |
 | Audit a target repo | Run `scripts/audit_project.sh /path/to/project` |
 | Inspect the effective `hooks` feature | Run `python3 scripts/check_hooks_feature.py --project /path/to/project --json` |
+| Review/trust generated hook definitions | Open `/hooks` in Codex after scaffolding or changing `.codex/hooks.json` |
 | Enable hooks in project config | Run `python3 scripts/check_hooks_feature.py --project /path/to/project --enable --scope project` |
 | Enable hooks in user config | Run `python3 scripts/check_hooks_feature.py --project /path/to/project --enable --scope user` |
 | Understand the current event catalog | Read `references/hook-events.md` |
+| Design reusable repo-owned scripts | Read `references/reusable-scripts.md` |
 | Decide additive vs overhaul | Read `references/merge-strategy.md` |
 | Generate or refresh the managed hook scaffold | Run `scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul --ensure-feature project|user|off` |
 | Merge generated handlers into `.codex/hooks.json` | Let `scripts/scaffold_hooks.sh` call `scripts/merge_hooks_json.sh`, or run the merge script directly |
@@ -61,10 +64,11 @@ What is the user asking for?
    - use user scope for personal/global hooks or when the repo should not commit `.codex/config.toml`
 6. Inspect any existing `.codex/config.toml`, `.codex/hooks.json`, `.codex/hooks/`, `AGENTS.md`, `README*`, and other automation files before choosing a merge mode.
 7. Produce or update a concrete hook plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
-8. Scaffold every current official event as a commented bash stub under the managed hook root, even if that event stays disabled in `hooks.json`.
-9. Wire only the enabled events into `.codex/hooks.json` so inactive stubs stay cheap.
-10. Regenerate `.codex/hooks/README.md` so the target project always has a readable event map.
-11. If hooks still appear inactive after a real scaffold, re-check the effective feature state and remember that project config files only load in trusted projects.
+8. Prefer repo-owned shared scripts for behavior that may move to Claude Code, OpenCode, Git hooks, GitHub Actions, or local shell usage. Keep generated Codex hook files as thin adapters around those scripts.
+9. Scaffold every current official event as a commented bash stub under the managed hook root, even if that event stays disabled in `hooks.json`.
+10. Wire only the enabled events into `.codex/hooks.json` so inactive stubs stay cheap.
+11. Regenerate `.codex/hooks/README.md` so the target project always has a readable event map.
+12. If hooks still appear inactive after a real scaffold, re-check the effective feature state, confirm the project layer is trusted, and review/trust the hook definitions in `/hooks`.
 
 ## Feature First Heuristic
 
@@ -84,7 +88,8 @@ Use this flow:
    - `--scope project` for shared repo-local setups
    - `--scope user` for personal/global setups
 4. Re-run the inspection after enabling.
-5. Only then spend time debugging `hooks.json`, matcher choices, or hook script logic.
+5. After scaffolding or changing hook definitions, use `/hooks` to review and trust non-managed command hooks.
+6. Only then spend time debugging `hooks.json`, matcher choices, or hook script logic.
 
 ## Live Docs First
 
@@ -120,6 +125,7 @@ Before choosing any hook structure, inspect:
 - languages and package managers
 - build, test, lint, format, and validation entry points
 - existing repo-owned command entry points such as task runners, package scripts, framework commands documented in the repo, CI jobs, Make/Just/Taskfile targets, and local scripts
+- reusable agent or automation scripts such as `<project>/scripts/agent-session-context.sh`, `<project>/scripts/agent-stop-checks.sh`, adapter scripts, Husky hooks, and GitHub Actions jobs that should share logic
 - monorepo tools like Turborepo, Nx, pnpm workspaces, Bun workspaces, Cargo workspaces, or custom task runners
 - existing AI instructions such as `AGENTS.md`, project rules, or repo automation docs
 - existing Git hooks, Husky, Lefthook, or CI gates
@@ -146,6 +152,7 @@ Allow these parts to stay project-specific:
 - matcher regexes for supported events
 - timeouts and status messages
 - configured repo commands that an event should run before custom hook logic
+- reusable repo-owned scripts that an event should delegate to before custom hook logic
 - whether feature enablement belongs in project or user config
 - the actual logic inside enabled event scripts
 - whether the refresh is `additive` or `overhaul`
@@ -167,7 +174,8 @@ When the skill is invoked again against a project:
 - Generate bash scripts, not Python, for the managed runtime hook stubs.
 - Comment the generated bash stubs with the event-specific input and output contract.
 - Structure generated event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
-- Support language-agnostic `commands` entries in the hook plan for cases where the hook only needs to run existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into generated scripts.
+- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into generated scripts.
+- Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `codex` when output protocols differ. Generated event stubs should stay thin.
 - Default to a managed root of `.codex/hooks/generated`.
 - Default to a hooks file target of `.codex/hooks.json`.
 - Default to enabling `hooks` in `.codex/config.toml` for shared repo scaffolds.
@@ -176,6 +184,7 @@ When the skill is invoked again against a project:
 - Keep the merged `hooks.json` deterministic: remove only previously managed handlers, never unrelated custom hooks.
 - Never assume `async`, `prompt`, or `agent` hooks work today. The current runtime skips them.
 - Treat `PreToolUse`, `PermissionRequest`, and `PostToolUse` as tool-path-specific. Current support covers Bash, `apply_patch` with `Edit`/`Write` matcher aliases, and MCP tool names when those paths expose hook payloads; it still does not cover `WebSearch` or every possible shell path.
+- Treat `SubagentStart` and `SubagentStop` as agent-type-specific. `SubagentStop` with `decision: "block"` continues the subagent, not the parent turn.
 - Treat `PreCompact` and `PostCompact` as compaction-trigger hooks. Their matcher values are `manual` and `auto`.
 - Treat `Stop` carefully. For that event, `decision: "block"` means "continue Codex with this new prompt", not "reject the turn".
 
@@ -187,6 +196,7 @@ When the skill is invoked again against a project:
 | How to inspect and enable `hooks` safely | `references/feature-flag.md` |
 | Current source-backed event list, matcher support, and output semantics | `references/hook-events.md` |
 | Managed folder layout and plan file shape | `references/scaffold-layout.md` |
+| Reusable script placement across Codex, Claude Code, OpenCode, Git hooks, and CI | `references/reusable-scripts.md` |
 | Additive versus overhaul behavior | `references/merge-strategy.md` |
 | Runtime limits, docs drift, and fail-open traps | `references/gotchas.md` |
 
@@ -202,11 +212,14 @@ When the skill is invoked again against a project:
 
 ## Gotchas
 
-1. The feature key is `hooks`; `codex_hooks` is only a legacy alias. Write the canonical key when editing config.
+1. The feature key is `hooks`; `codex_hooks` is only a legacy alias. Write the canonical key when editing config. Hooks are enabled by default today unless config or policy turns them off.
 2. `matcher` is ignored for `UserPromptSubmit` and `Stop`. Do not design logic that depends on those matchers.
 3. `async`, `prompt`, and `agent` parse in config shapes, but the current runtime skips them with warnings.
 4. Multiple matching command hooks for the same event run concurrently. One hook cannot stop another matching hook from starting.
 5. `PostToolUse` cannot undo command side effects. At best it can replace the feedback Codex sees next.
 6. `Stop` with `decision: "block"` continues Codex with a new prompt. It does not reject the turn.
-7. Repo-local `.codex/config.toml` only loads in trusted projects. If you enable the feature in project scope but the project is not trusted, the effective feature can still look off.
-8. Generated schemas currently list eight hook events, including `PermissionRequest`, `PreCompact`, and `PostCompact`. Early docs and articles described smaller event sets, so re-check the official docs, schemas, and runtime source every time you scaffold for real.
+7. `SubagentStop` with `decision: "block"` continues the subagent with a new prompt. Honor `stop_hook_active` to avoid loops.
+8. Repo-local `.codex/config.toml` only loads in trusted projects. If you enable the feature in project scope but the project is not trusted, the effective feature can still look off.
+9. Non-managed command hooks must be reviewed and trusted in `/hooks` before they run.
+10. Generated schemas currently list ten hook events, including `SubagentStart` and `SubagentStop`. Early docs and articles described smaller event sets, so re-check the official docs, schemas, and runtime source every time you scaffold for real.
+11. Do not bury reusable validation or context logic inside generated `.codex/hooks/generated/events/*.sh` files. Put it in repo-owned scripts and let Codex hooks call those scripts as adapters.

@@ -9,6 +9,7 @@
       "async": false,
       "timeout": 30,
       "if": "",
+      "scripts": [],
       "commands": [],
       "notes": "Use this for hard policy and safety gates."
     },
@@ -18,6 +19,7 @@
       "async": true,
       "timeout": 180,
       "if": "",
+      "scripts": [],
       "commands": [],
       "notes": "Use this for formatters, targeted tests, logging, or metrics."
     },
@@ -32,6 +34,7 @@
       "name": "Stop",
       "async": false,
       "timeout": 30,
+      "scripts": [],
       "commands": [],
       "notes": "Use this when the project needs an end-of-turn quality gate."
     }

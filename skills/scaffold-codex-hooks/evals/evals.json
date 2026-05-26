@@ -35,6 +35,10 @@
         {
           "text": "Generated hook stubs can run language-agnostic repo commands from the plan without hard-coded toolchain assumptions",
           "type": "functional"
+        },
+        {
+          "text": "Generated hook stubs can delegate to reusable repo-owned scripts that are path-agnostic and portable across agent harnesses",
+          "type": "functional"
         }
       ],
       "tags": [
@@ -114,7 +118,7 @@
     {
       "id": 5,
       "name": "negative-claude-code-hooks-request",
-      "prompt": "I need Claude Code hooks scaffolded into `.claude/settings.json` with `Notification` and `SubagentStop` handlers. Do that in this repo.",
+      "prompt": "I need Claude Code hooks scaffolded into `.claude/settings.json` with `Notification` and `TaskCreated` handlers. Do that in this repo.",
       "expected_output": "The response declines to use the Codex hook scaffold and instead routes to the Claude-specific hook workflow.",
       "assertions": [
         {
@@ -122,7 +126,7 @@
           "type": "negative"
         },
         {
-          "text": "Does not hallucinate Codex support for Claude-only events like `Notification` or `SubagentStop`",
+          "text": "Does not hallucinate Codex support for Claude-only events like `Notification` or `TaskCreated`",
           "type": "negative"
         }
       ],
@@ -130,6 +134,23 @@
         "negative",
         "triggering"
       ]
+    },
+    {
+      "id": 6,
+      "name": "shared-script-adapter-layout",
+      "prompt": "Scaffold Codex hooks that run the same validation logic I may later use from Claude Code, OpenCode, Husky, and GitHub Actions. Keep the scripts DRY and path-agnostic.",
+      "expected_output": "The response places reusable behavior in repo-owned scripts and keeps generated Codex hook files as thin adapters that call those scripts with a harness/mode argument.",
+      "assertions": [
+        {
+          "text": "Response uses references/reusable-scripts.md for placement guidance",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response keeps generated hook stubs thin and puts reusable behavior under repo-owned scripts",
+          "type": "functional"
+        }
+      ],
+      "tags": ["scripts", "cross-harness", "adapter"]
     }
   ]
 }

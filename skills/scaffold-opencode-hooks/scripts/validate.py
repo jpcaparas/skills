@@ -68,6 +68,7 @@ REQUIRED_SUPPORT_FILES = [
     "references/hook-events.md",
     "references/plugin-patterns.md",
     "references/scaffold-layout.md",
+    "references/reusable-scripts.md",
     "references/merge-strategy.md",
     "references/gotchas.md",
     "agents/openai.yaml",

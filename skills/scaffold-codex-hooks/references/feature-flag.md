@@ -10,7 +10,7 @@ Official sources:
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/lib.rs`
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/legacy.rs`
 
-As of the 2026-05-08 verification pass, `codex features list` reports `hooks stable true`, and source maps legacy `codex_hooks` to the same feature. Write canonical `[features].hooks = true` when editing config.
+As of the 2026-05-26 verification pass with Codex CLI `0.133.0`, `codex features list` reports `hooks stable true`, and source maps legacy `codex_hooks` to the same feature. Hooks are enabled by default unless config, requirements, or policy turns them off. Write canonical `[features].hooks = true` when editing config.
 
 ## What To Inspect First
 
@@ -63,7 +63,7 @@ python3 scripts/check_hooks_feature.py --project /absolute/path/to/project --ena
 
 Re-run the inspection after enabling. The helper writes `[features].hooks = true`; if it finds an existing `codex_hooks` line in the `[features]` table, it migrates that line to `hooks`.
 
-## Trust Rule
+## Trust Rules
 
 From the official config basics page:
 
@@ -72,6 +72,8 @@ From the official config basics page:
 - Codex loads project config files only when you trust the project
 
 That means a repo-local `.codex/config.toml` can contain `hooks = true`, but the effective feature can still look off until the project config layer is active.
+
+Hook definitions have their own review path. Non-managed command hooks must be reviewed and trusted before Codex runs them. After scaffolding or changing `.codex/hooks.json`, open `/hooks` to review the new or changed definitions. If hooks look correctly configured but do not run, check both the project config layer and the hook-definition trust state before rewriting scripts.
 
 ## Precedence Recap
 

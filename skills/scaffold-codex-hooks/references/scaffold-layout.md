@@ -15,12 +15,14 @@
         │   └── common.sh       # Helper functions for generated stubs
         └── events/
             ├── session_start.sh
+            ├── subagent_start.sh
             ├── pre_tool_use.sh
             ├── permission_request.sh
             ├── post_tool_use.sh
             ├── pre_compact.sh
             ├── post_compact.sh
             ├── user_prompt_submit.sh
+            ├── subagent_stop.sh
             └── stop.sh
 ```
 
@@ -33,21 +35,49 @@ Generated event scripts are intentionally plain bash with one obvious edit point
 ```text
 bootstrap imports ../lib/common.sh
 main() reads the hook JSON payload from stdin into HOOK_INPUT
+run_configured_scripts() delegates to repo-owned scripts listed for the event
 run_configured_commands() runs any repo commands listed for the event
 handle_event() contains the project-specific hook logic
 ```
 
-Keep `main()` boring. Add project checks, policy gates, logging, or structured hook output inside `handle_event()`. Shared helpers such as `hook_json`, `run_configured_commands`, `emit_additional_context`, `deny_pre_tool_use`, and `block_with_reason` live in `lib/common.sh` and are commented where they are defined.
+Keep `main()` boring. Add project checks, policy gates, logging, or structured hook output inside `handle_event()`. Shared helpers such as `hook_json`, `run_configured_scripts`, `run_configured_commands`, `emit_additional_context`, `deny_pre_tool_use`, and `block_with_reason` live in `lib/common.sh` and are commented where they are defined.
+
+## Reusable Project Scripts
+
+Prefer repo-owned scripts for behavior that may need to move between Codex, Claude Code, OpenCode, Git hooks, GitHub Actions, or a local shell. Keep generated Codex hook files as adapters that read hook input and translate failures into Codex's output contract.
+
+Plan shape:
+
+```json
+{
+  "name": "Stop",
+  "timeout": 120,
+  "status_message": "Running shared stop checks",
+  "scripts": [
+    {
+      "label": "shared stop checks",
+      "path": "scripts/agent-stop-checks.sh",
+      "args": ["codex"],
+      "cwd": ".",
+      "notes": "Script is repo-owned and can also be called by CI or other agent adapters."
+    }
+  ],
+  "commands": []
+}
+```
+
+Resolve `path` relative to the target project root. Keep shared scripts path-agnostic by discovering the repo root at runtime, for example with `git rev-parse --show-toplevel`, and by accepting a harness/mode argument when output protocols differ.
 
 ## Existing Project Commands
 
-Many useful hooks do not need custom logic. They need to run commands the project already owns, such as a documented quality gate, formatter, test target, task-runner recipe, or local script. Model that as data in the plan instead of hard-coding a language or package manager into the generated bash:
+Use `commands` for existing command entry points that are already stable and reusable, such as a documented quality gate, formatter, test target, task-runner recipe, or package script. Use `scripts` when you need a small repo-owned adapter or a shared shell script that other harnesses can call directly.
 
 ```json
 {
   "name": "Stop",
   "timeout": 120,
   "status_message": "Running project quality gate",
+  "scripts": [],
   "commands": [
     {
       "label": "repo quality gate",
@@ -88,6 +118,7 @@ Each enabled event entry can carry:
 - `matcher`
 - `timeout`
 - `status_message`
+- `scripts`
 - `commands`
 - `notes`
 

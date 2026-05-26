@@ -30,6 +30,10 @@
           "type": "functional"
         },
         {
+          "text": "Generated lifecycle plugin resolves repo-owned scripts from the active OpenCode project/worktree/directory context",
+          "type": "functional"
+        },
+        {
           "text": "Response generates TypeScript `.ts` plugin files and no managed `.js` plugin files",
           "type": "functional"
         },

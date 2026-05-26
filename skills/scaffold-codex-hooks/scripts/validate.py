@@ -15,12 +15,14 @@ from pathlib import Path
 
 EXPECTED_EVENT_NAMES = {
     "SessionStart",
+    "SubagentStart",
     "PreToolUse",
     "PermissionRequest",
     "PostToolUse",
     "PreCompact",
     "PostCompact",
     "UserPromptSubmit",
+    "SubagentStop",
     "Stop",
 }
 REQUIRED_OPERATIONAL_SCRIPTS = [
@@ -40,6 +42,7 @@ REQUIRED_SUPPORT_FILES = [
     "references/feature-flag.md",
     "references/hook-events.md",
     "references/scaffold-layout.md",
+    "references/reusable-scripts.md",
     "references/merge-strategy.md",
     "references/gotchas.md",
     "agents/openai.yaml",

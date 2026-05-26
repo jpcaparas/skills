@@ -112,12 +112,13 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
     echo
     echo "## Event Map"
     echo
-    echo "| Event | Enabled | Async When Enabled | Plan Commands | Managed Script | Purpose |"
-    echo "|------|---------|--------------------|---------------|----------------|---------|"
+    echo "| Event | Enabled | Async When Enabled | Plan Scripts | Plan Commands | Managed Script | Purpose |"
+    echo "|------|---------|--------------------|--------------|---------------|----------------|---------|"
 
     while IFS=$'\t' read -r event_name script_name description; do
         enabled="No"
         async_value="n/a"
+        script_labels="none"
         command_labels="none"
 
         if jq -e --arg name "$event_name" '.enabled_events[]? | select(.name == $name)' "$PLAN_FILE" >/dev/null; then
@@ -140,12 +141,24 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
                     | if length == 0 then "none" else join("<br>") end
                 ' "$PLAN_FILE" | sed 's/|/\\|/g'
             )"
+            script_labels="$(
+                jq -r --arg name "$event_name" '
+                    [
+                        .enabled_events[]?
+                        | select(.name == $name)
+                        | (.scripts // [])[]?
+                        | (.label // .name // .path // .script)
+                    ]
+                    | if length == 0 then "none" else join("<br>") end
+                ' "$PLAN_FILE" | sed 's/|/\\|/g'
+            )"
         fi
 
-        printf '| `%s` | %s | %s | %s | `%s/events/%s` | %s |\n' \
+        printf '| `%s` | %s | %s | %s | %s | `%s/events/%s` | %s |\n' \
             "$event_name" \
             "$enabled" \
             "$async_value" \
+            "$script_labels" \
             "$command_labels" \
             "$MANAGED_ROOT_REL" \
             "$script_name" \
@@ -157,6 +170,7 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
     echo
     echo "- Use sync hooks for blocking gates, permission decisions, and environment changes that must land before the next action."
     echo "- Use async hooks for logging, notifications, metrics, and background test or formatting work that should not slow Claude down."
+    echo "- Put reusable project behavior in repo-owned scripts and reference it through the plan's \`scripts\` array."
     echo "- Put existing repo commands in the plan's \`commands\` array instead of hard-coding a language or package manager into generated bash."
     echo "- Keep unrelated custom hooks outside the managed folder if you do not want future scaffold refreshes to replace them."
 } > "$OUTPUT_FILE"

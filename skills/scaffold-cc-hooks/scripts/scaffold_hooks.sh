@@ -168,6 +168,22 @@ if [ -n "$INVALID_COMMAND_EVENTS" ]; then
     exit 1
 fi
 
+INVALID_SCRIPT_EVENTS="$(
+    jq -r '
+        .enabled_events[]?
+        | .name as $event_name
+        | (.scripts // [])[]?
+        | (.path // .script // null) as $script_path
+        | select(if ($script_path | type) == "string" then ($script_path | length) == 0 else true end)
+        | $event_name
+    ' "$PLAN_FILE" | LC_ALL=C sort -u
+)"
+if [ -n "$INVALID_SCRIPT_EVENTS" ]; then
+    echo "Plan file contains script entries without a non-empty path string:" >&2
+    printf '  - %s\n' $INVALID_SCRIPT_EVENTS >&2
+    exit 1
+fi
+
 if [ "$DRY_RUN" = "true" ]; then
     cat <<EOF
 scaffold_hooks.sh dry run
@@ -354,6 +370,93 @@ run_project_command() {
     )
 }
 
+run_project_script() {
+    # Run a reusable repo-owned script by path, with optional args from the plan.
+    # Prefer this over embedding toolchain commands directly in agent hook stubs
+    # when the same behavior may also be called by Codex, OpenCode, Husky, CI,
+    # or a human in a terminal.
+    local label="$1"
+    local script_path="$2"
+    local args_json="${3:-[]}"
+    local cwd
+    local resolved_script
+    local -a script_args=()
+
+    cwd="$(resolve_command_cwd "${4:-.}")"
+    case "$script_path" in
+        /*)
+            resolved_script="$script_path"
+            ;;
+        *)
+            resolved_script="$(hook_project_root)/$script_path"
+            ;;
+    esac
+
+    require_jq
+    while IFS= read -r script_arg; do
+        script_args+=("$script_arg")
+    done < <(printf '%s' "$args_json" | jq -r '.[]?')
+
+    if [ ! -f "$resolved_script" ]; then
+        printf '[hook] missing script: %s\n' "$resolved_script" >&2
+        return 127
+    fi
+
+    printf '[hook] %s\n' "$label" >&2
+    printf '[hook] cwd: %s\n' "$cwd" >&2
+    printf '[hook] script: %s\n' "$resolved_script" >&2
+
+    (
+        cd "$cwd"
+        /usr/bin/env bash "$resolved_script" "${script_args[@]}"
+    )
+}
+
+run_configured_scripts() {
+    # Execute reusable script entries from an event plan:
+    #   [{"label":"stop checks","path":"scripts/agent-stop-checks.sh","args":["claude"],"cwd":"."}]
+    #
+    # Keep project behavior in these repo-owned scripts when it needs to be
+    # shared with other agent harnesses, Git hooks, GitHub Actions, or humans.
+    local scripts_json="$1"
+    local failed="false"
+
+    require_jq
+
+    if [ "$(printf '%s' "$scripts_json" | jq 'length')" -eq 0 ]; then
+        return 0
+    fi
+
+    while IFS= read -r script_item; do
+        local label
+        local script_path
+        local script_args_json
+        local cwd
+        local status
+
+        script_path="$(printf '%s' "$script_item" | jq -r '.path // .script // empty')"
+        label="$(printf '%s' "$script_item" | jq -r '.label // .name // .path // .script')"
+        script_args_json="$(printf '%s' "$script_item" | jq -c '.args // []')"
+        cwd="$(printf '%s' "$script_item" | jq -r '.cwd // "."')"
+
+        if [ -z "$script_path" ]; then
+            append_command_failure "$label" "<missing script path>" 64
+            failed="true"
+            continue
+        fi
+
+        if run_project_script "$label" "$script_path" "$script_args_json" "$cwd"; then
+            :
+        else
+            status="$?"
+            append_command_failure "$label" "$script_path" "$status"
+            failed="true"
+        fi
+    done < <(printf '%s' "$scripts_json" | jq -c '.[]')
+
+    [ "$failed" = "false" ]
+}
+
 run_configured_commands() {
     # Execute command entries from an event plan:
     #   [{"label":"quality gate","command":"your repo command","cwd":"."}]
@@ -404,7 +507,7 @@ handle_project_command_failure() {
         PermissionRequest)
             deny_permission_request "$message"
             ;;
-        Stop|SubagentStop|TeammateIdle|TaskCreated|TaskCompleted|PostToolBatch|ConfigChange|Elicitation|ElicitationResult)
+        Stop|SubagentStop|TeammateIdle|TaskCreated|TaskCompleted|PostToolBatch|ConfigChange|Elicitation|ElicitationResult|UserPromptExpansion)
             write_block_decision "$message"
             ;;
         PreCompact)
@@ -445,12 +548,29 @@ while IFS=$'\t' read -r event_name script_name description async_guidance; do
             ]
         ' "$PLAN_FILE"
     )"
+    event_scripts_json="$(
+        jq -c --arg name "$event_name" '
+            [
+                .enabled_events[]?
+                | select(.name == $name)
+                | (.scripts // [])[]?
+                | {
+                    label: (.label // .name // .path // .script),
+                    path: (.path // .script),
+                    args: (.args // []),
+                    cwd: (.cwd // "."),
+                    notes: (.notes // "")
+                }
+            ]
+        ' "$PLAN_FILE"
+    )"
 
     sed \
         -e "s|{{SCRIPT_NAME}}|$(escape_for_sed "$script_name")|g" \
         -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
         -e "s|{{EVENT_DESCRIPTION}}|$(escape_for_sed "$description")|g" \
         -e "s|{{ASYNC_GUIDANCE}}|$(escape_for_sed "$async_guidance")|g" \
+        -e "s|{{PROJECT_SCRIPTS_JSON}}|$(escape_for_sed "$event_scripts_json")|g" \
         -e "s|{{PROJECT_COMMANDS_JSON}}|$(escape_for_sed "$event_commands_json")|g" \
         "$EVENT_TEMPLATE" > "$TARGET_SCRIPT"
 

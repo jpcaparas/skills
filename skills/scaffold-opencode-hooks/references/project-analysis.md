@@ -22,6 +22,8 @@ Audit the target project before you decide anything about OpenCode hooks.
   - `.husky/`
   - `lefthook.yml`
   - `.githooks/`
+  - `.github/workflows/`
+  - `<project>/scripts/agent-*.sh` or other reusable automation scripts
 - sensitive paths:
   - `.env`
   - `.env.*`

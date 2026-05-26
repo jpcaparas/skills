@@ -8,6 +8,7 @@ Repository-agnostic skill for auditing a project and scaffolding OpenCode hooks 
 - a deep project audit before any plugin plan is chosen
 - deterministic inspection of project-vs-global OpenCode plugin state
 - a minimal TypeScript lifecycle/action plugin by default for repo-owned validation, session context, and post-action automation
+- path-aware script resolution from the active OpenCode project/worktree/directory context
 - visible OpenCode TUI feedback through best-effort toasts, with diagnostic logs kept separate
 - one controlled automatic repair/follow-up prompt for automatable failures
 - optional broad hook-surface stub coverage only when the user asks for a broad scaffold
@@ -23,6 +24,7 @@ Repository-agnostic skill for auditing a project and scaffolding OpenCode hooks 
 - `references/hook-events.md` for the current surface catalog and lifecycle semantics
 - `references/plugin-patterns.md` for lifecycle/action, repair, toast, guardrail, post-turn, shell env, and custom-tool patterns
 - `references/scaffold-layout.md` for the generated target structure
+- `references/reusable-scripts.md` for cross-agent and CI-friendly script placement
 - `references/merge-strategy.md` for repeat-run behavior
 - `references/gotchas.md` for runtime limits, path drift, and cache traps
 - `scripts/audit_project.sh` to profile a real project

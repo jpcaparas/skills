@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "verified_on": "2026-04-10",
+  "verified_on": "2026-05-26",
   "verified_from": [
     "https://code.claude.com/docs/en/hooks",
     "https://code.claude.com/docs/en/hooks-guide",
@@ -10,12 +10,16 @@
   "notes": [
     "Official Claude Code docs are the source of truth.",
     "The two reading.sh articles are secondary guidance for real-world patterns and async trade-offs.",
-    "Async is documented in the official hooks reference as of 2026-04-10.",
-    "Only command hooks support async execution."
+    "Async is documented in the official hooks reference as of 2026-05-26.",
+    "Only command hooks support async execution.",
+    "Claude Code now documents five handler types: command, http, mcp_tool, prompt, and agent.",
+    "SessionStart and Setup support command and mcp_tool only."
   ],
   "hook_type_support": {
-    "all_four": [
+    "all_five": [
+      "PermissionDenied",
       "PermissionRequest",
+      "PostToolBatch",
       "PostToolUse",
       "PostToolUseFailure",
       "PreToolUse",
@@ -23,9 +27,11 @@
       "SubagentStop",
       "TaskCompleted",
       "TaskCreated",
+      "TeammateIdle",
+      "UserPromptExpansion",
       "UserPromptSubmit"
     ],
-    "command_http_only": [
+    "command_http_mcp_tool_only": [
       "ConfigChange",
       "CwdChanged",
       "Elicitation",
@@ -33,41 +39,75 @@
       "FileChanged",
       "InstructionsLoaded",
       "Notification",
-      "PermissionDenied",
       "PostCompact",
       "PreCompact",
       "SessionEnd",
       "StopFailure",
       "SubagentStart",
-      "TeammateIdle",
       "WorktreeCreate",
       "WorktreeRemove"
     ],
-    "command_only": [
-      "SessionStart"
+    "command_mcp_tool_only": [
+      "SessionStart",
+      "Setup"
     ]
   },
   "events": [
     {
       "name": "SessionStart",
       "script_name": "session-start.sh",
-      "description": "Runs when a session begins or resumes.",
+      "description": "Runs when a session begins, resumes, clears, or starts after compaction.",
       "matcher_kind": "session start reason",
-      "matcher_examples": ["startup", "resume", "clear", "compact"],
+      "matcher_examples": [
+        "startup",
+        "resume",
+        "clear",
+        "compact"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command"],
+      "supported_hook_types": [
+        "command",
+        "mcp_tool"
+      ],
       "async_guidance": "Use sync when you need context, environment, or bootstrap work before Claude continues."
+    },
+    {
+      "name": "Setup",
+      "script_name": "setup.sh",
+      "description": "Runs only for explicit initialization or maintenance invocations such as --init-only, or --init/--maintenance in print mode.",
+      "matcher_kind": "setup trigger",
+      "matcher_examples": [
+        "init",
+        "maintenance"
+      ],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "mcp_tool"
+      ],
+      "async_guidance": "Keep sync for explicit setup work, but do not rely on this for normal session startup."
     },
     {
       "name": "InstructionsLoaded",
       "script_name": "instructions-loaded.sh",
       "description": "Runs when a CLAUDE.md file or .claude/rules markdown file is loaded into context.",
       "matcher_kind": "instruction load reason",
-      "matcher_examples": ["session_start", "nested_traversal", "path_glob_match", "include", "compact"],
+      "matcher_examples": [
+        "session_start",
+        "nested_traversal",
+        "path_glob_match",
+        "include",
+        "compact"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Keep sync when you need to enforce policy or inject context. Use async only for passive audit work."
     },
     {
@@ -78,18 +118,55 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Usually keep sync because this event is most valuable as an input gate."
+    },
+    {
+      "name": "UserPromptExpansion",
+      "script_name": "user-prompt-expansion.sh",
+      "description": "Runs when a user-typed slash command or MCP prompt expands before reaching Claude.",
+      "matcher_kind": "command name",
+      "matcher_examples": [
+        "example-skill",
+        "deploy",
+        "your-command-name"
+      ],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
+      "async_guidance": "Keep sync when you need to block a command expansion or inject expansion-specific context."
     },
     {
       "name": "PreToolUse",
       "script_name": "pre-tool-use.sh",
       "description": "Runs before a tool call executes and can block it.",
       "matcher_kind": "tool name",
-      "matcher_examples": ["Bash", "Edit|Write", "mcp__.*"],
+      "matcher_examples": [
+        "Bash",
+        "Edit|Write",
+        "mcp__.*"
+      ],
       "supports_matcher": true,
       "supports_if": true,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Keep sync for safety or policy gates. Async is not useful when you need to block."
     },
     {
@@ -97,10 +174,20 @@
       "script_name": "permission-request.sh",
       "description": "Runs when a permission dialog appears.",
       "matcher_kind": "tool name",
-      "matcher_examples": ["ExitPlanMode", "Bash", "Write"],
+      "matcher_examples": [
+        "ExitPlanMode",
+        "Bash",
+        "Write"
+      ],
       "supports_matcher": true,
       "supports_if": true,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Usually keep sync because the value of this event is the permission decision."
     },
     {
@@ -108,10 +195,20 @@
       "script_name": "permission-denied.sh",
       "description": "Runs when a tool call is denied by the auto mode classifier.",
       "matcher_kind": "tool name",
-      "matcher_examples": ["Bash", "Write", "mcp__.*"],
+      "matcher_examples": [
+        "Bash",
+        "Write",
+        "mcp__.*"
+      ],
       "supports_matcher": true,
       "supports_if": true,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Keep sync when you want to suggest a retry or a deterministic recovery path."
     },
     {
@@ -119,10 +216,20 @@
       "script_name": "post-tool-use.sh",
       "description": "Runs after a tool call succeeds.",
       "matcher_kind": "tool name",
-      "matcher_examples": ["Edit|Write", "Bash", "mcp__.*"],
+      "matcher_examples": [
+        "Edit|Write",
+        "Bash",
+        "mcp__.*"
+      ],
       "supports_matcher": true,
       "supports_if": true,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "This is the strongest async candidate for formatters, targeted tests, notifications, and metrics."
     },
     {
@@ -130,21 +237,57 @@
       "script_name": "post-tool-use-failure.sh",
       "description": "Runs after a tool call fails.",
       "matcher_kind": "tool name",
-      "matcher_examples": ["Bash", "Edit|Write", "mcp__.*"],
+      "matcher_examples": [
+        "Bash",
+        "Edit|Write",
+        "mcp__.*"
+      ],
       "supports_matcher": true,
       "supports_if": true,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Use async for alerts or logging. Keep sync when the failure handler must shape Claude's next move."
+    },
+    {
+      "name": "PostToolBatch",
+      "script_name": "post-tool-batch.sh",
+      "description": "Runs once after every tool call in a parallel batch resolves and before the next model request.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
+      "async_guidance": "Use sync when batch-level context must reach Claude before the next model call; use async only for passive side effects."
     },
     {
       "name": "Notification",
       "script_name": "notification.sh",
       "description": "Runs when Claude Code sends a notification.",
       "matcher_kind": "notification type",
-      "matcher_examples": ["permission_prompt", "idle_prompt", "auth_success", "elicitation_dialog"],
+      "matcher_examples": [
+        "permission_prompt",
+        "idle_prompt",
+        "auth_success",
+        "elicitation_dialog"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Usually async because this event is mostly about side effects."
     },
     {
@@ -152,21 +295,39 @@
       "script_name": "subagent-start.sh",
       "description": "Runs when a subagent is spawned.",
       "matcher_kind": "agent type",
-      "matcher_examples": ["Bash", "Explore", "Plan"],
+      "matcher_examples": [
+        "Bash",
+        "Explore",
+        "Plan"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
-      "async_guidance": "Often async for logging or external coordination. Keep sync only when startup must finish first."
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
+      "async_guidance": "Often async for logging or external coordination. Keep sync only when startup context must finish first."
     },
     {
       "name": "SubagentStop",
       "script_name": "subagent-stop.sh",
       "description": "Runs when a subagent finishes.",
       "matcher_kind": "agent type",
-      "matcher_examples": ["Bash", "Explore", "Plan"],
+      "matcher_examples": [
+        "Bash",
+        "Explore",
+        "Plan"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Use sync for completion checks. Use async for logging or notifications."
     },
     {
@@ -177,7 +338,13 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Depends on whether the task creation needs a gate or only an audit trail."
     },
     {
@@ -188,7 +355,13 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Depends on whether the completion check must gate or only report."
     },
     {
@@ -199,7 +372,13 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http", "prompt", "agent"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Keep sync for end-of-turn quality gates. Use async only for passive side effects like notifications."
     },
     {
@@ -207,10 +386,19 @@
       "script_name": "stop-failure.sh",
       "description": "Runs when a turn ends because of an API error.",
       "matcher_kind": "error type",
-      "matcher_examples": ["rate_limit", "authentication_failed", "billing_error", "server_error"],
+      "matcher_examples": [
+        "rate_limit",
+        "authentication_failed",
+        "billing_error",
+        "server_error"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Often async because the main value is audit or alerting, and output is ignored."
     },
     {
@@ -221,7 +409,13 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool",
+        "prompt",
+        "agent"
+      ],
       "async_guidance": "Depends on whether you need a blocking intervention or only a notification."
     },
     {
@@ -229,10 +423,20 @@
       "script_name": "config-change.sh",
       "description": "Runs when a configuration file changes during a session.",
       "matcher_kind": "configuration source",
-      "matcher_examples": ["user_settings", "project_settings", "local_settings", "policy_settings", "skills"],
+      "matcher_examples": [
+        "user_settings",
+        "project_settings",
+        "local_settings",
+        "policy_settings",
+        "skills"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Use async for audit logs. Keep sync when a policy decision must block the change."
     },
     {
@@ -243,7 +447,11 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Usually keep sync when the hook updates the environment before the next Bash command."
     },
     {
@@ -251,10 +459,17 @@
       "script_name": "file-changed.sh",
       "description": "Runs when a watched file changes on disk.",
       "matcher_kind": "watched filename",
-      "matcher_examples": [".envrc", ".env"],
+      "matcher_examples": [
+        ".envrc",
+        ".env"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Keep sync when the file change must immediately refresh environment state."
     },
     {
@@ -265,7 +480,11 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Usually sync because this event can replace the default worktree behavior."
     },
     {
@@ -276,7 +495,11 @@
       "matcher_examples": [],
       "supports_matcher": false,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Often async for cleanup, unless the cleanup must complete before the worktree is considered gone."
     },
     {
@@ -284,10 +507,17 @@
       "script_name": "pre-compact.sh",
       "description": "Runs before context compaction.",
       "matcher_kind": "compaction trigger",
-      "matcher_examples": ["manual", "auto"],
+      "matcher_examples": [
+        "manual",
+        "auto"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Usually sync because pre-compaction work often needs to finish before compaction proceeds."
     },
     {
@@ -295,10 +525,17 @@
       "script_name": "post-compact.sh",
       "description": "Runs after context compaction completes.",
       "matcher_kind": "compaction trigger",
-      "matcher_examples": ["manual", "auto"],
+      "matcher_examples": [
+        "manual",
+        "auto"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Use async for passive logging. Keep sync only when the follow-up state must be ready immediately."
     },
     {
@@ -306,10 +543,21 @@
       "script_name": "session-end.sh",
       "description": "Runs when a session terminates.",
       "matcher_kind": "session end reason",
-      "matcher_examples": ["clear", "resume", "logout", "prompt_input_exit", "bypass_permissions_disabled", "other"],
+      "matcher_examples": [
+        "clear",
+        "resume",
+        "logout",
+        "prompt_input_exit",
+        "bypass_permissions_disabled",
+        "other"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Often async for cleanup or audit. Keep sync when shutdown work must finish first."
     },
     {
@@ -317,10 +565,18 @@
       "script_name": "elicitation.sh",
       "description": "Runs when an MCP server requests user input during a tool call.",
       "matcher_kind": "MCP server name",
-      "matcher_examples": ["github", "filesystem", "your-server-name"],
+      "matcher_examples": [
+        "github",
+        "filesystem",
+        "your-server-name"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Keep sync because the hook can accept, decline, or cancel the elicitation."
     },
     {
@@ -328,12 +584,19 @@
       "script_name": "elicitation-result.sh",
       "description": "Runs after a user responds to an MCP elicitation, before the response is sent back.",
       "matcher_kind": "MCP server name",
-      "matcher_examples": ["github", "filesystem", "your-server-name"],
+      "matcher_examples": [
+        "github",
+        "filesystem",
+        "your-server-name"
+      ],
       "supports_matcher": true,
       "supports_if": false,
-      "supported_hook_types": ["command", "http"],
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
       "async_guidance": "Keep sync because the hook can rewrite or block the elicitation response."
     }
   ]
 }
-

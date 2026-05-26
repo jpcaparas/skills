@@ -22,8 +22,9 @@
 # How this script is organized:
 #   1. main() reads Codex's JSON payload from stdin exactly once.
 #   2. handle_event() contains the project-specific logic for this event.
-#   3. run_configured_commands() runs any repo commands listed in the plan.
-#   4. Shared JSON/output helpers live in ../lib/common.sh.
+#   3. run_configured_scripts() delegates to reusable repo-owned scripts.
+#   4. run_configured_commands() runs any repo commands listed in the plan.
+#   5. Shared JSON/output helpers live in ../lib/common.sh.
 #
 # Safe editing rule:
 #   Start by editing handle_event(). Leave main() and the bootstrap section
@@ -38,6 +39,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 HOOK_INPUT=""
 
+read_project_scripts_json() {
+    # This JSON is injected from the hook plan for this specific event.
+    # Put reusable behavior here when the same script should also work from
+    # Claude Code, OpenCode, Husky, GitHub Actions, or a local terminal.
+    cat <<'PROJECT_SCRIPTS_JSON'
+{{PROJECT_SCRIPTS_JSON}}
+PROJECT_SCRIPTS_JSON
+}
+
 read_project_commands_json() {
     # This JSON is injected from the hook plan for this specific event.
     # It is intentionally data, not generated shell logic, so existing project
@@ -47,6 +57,7 @@ read_project_commands_json() {
 PROJECT_COMMANDS_JSON
 }
 
+PROJECT_SCRIPTS_JSON="$(read_project_scripts_json)"
 PROJECT_COMMANDS_JSON="$(read_project_commands_json)"
 
 handle_event() {
@@ -54,11 +65,15 @@ handle_event() {
     # As the hook grows, add small helper functions above handle_event() and
     # call them from here instead of turning this function into a long script.
     #
-    # If this event is only a wrapper around existing repo commands, put those
-    # commands in the plan's commands array instead of hard-coding a toolchain
-    # here. Examples of valid commands are whatever this repo already owns:
-    # make targets, package-manager scripts, framework CLIs, shell scripts, or
-    # any other language-specific command.
+    # If this event wraps reusable project behavior, prefer the plan's scripts
+    # array and call a repo-owned script such as scripts/agent-stop-checks.sh.
+    # Use commands only for existing repo entry points that are already stable,
+    # such as make targets, package-manager scripts, or task-runner recipes.
+    if ! run_configured_scripts "$PROJECT_SCRIPTS_JSON"; then
+        handle_project_command_failure "{{EVENT_NAME}}" "$(configured_command_failure_message)"
+        return $?
+    fi
+
     if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
         handle_project_command_failure "{{EVENT_NAME}}" "$(configured_command_failure_message)"
         return $?
@@ -67,14 +82,16 @@ handle_event() {
     # Common helpers from ../lib/common.sh:
     #   hook_json FILTER [FALLBACK]
     #   emit_additional_context EVENT MESSAGE
-    #   emit_system_message MESSAGE
-    #   deny_pre_tool_use REASON
-    #   allow_permission_request
+#   emit_system_message MESSAGE
+#   deny_pre_tool_use REASON
+#   allow_pre_tool_use_with_updated_input UPDATED_INPUT_JSON
+#   allow_permission_request
     #   deny_permission_request MESSAGE
-    #   block_with_reason REASON
-    #   stop_processing REASON
-    #   exit_with_block_reason REASON
-    #   run_project_command LABEL COMMAND [CWD]
+#   block_with_reason REASON
+#   stop_processing REASON
+#   exit_with_block_reason REASON
+#   run_project_script LABEL SCRIPT_PATH ARGS_JSON [CWD]
+#   run_project_command LABEL COMMAND [CWD]
     #
     # Examples:
     #   CWD="$(hook_json '.cwd' "$PWD")"

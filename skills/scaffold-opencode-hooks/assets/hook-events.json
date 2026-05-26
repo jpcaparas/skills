@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-05-21",
+  "verified_on": "2026-05-26",
   "verified_with": {
     "official_docs": [
       "https://opencode.ai/docs/plugins/",
@@ -13,7 +13,7 @@
     ],
     "runtime_package": {
       "name": "@opencode-ai/plugin",
-      "version": "1.15.5",
+      "version": "1.15.10",
       "checked_via": "npm view @opencode-ai/plugin version"
     }
   },
@@ -21,7 +21,7 @@
   "default_deployment": "local-files",
   "default_module_format": "ts",
   "recommended_dependency_versions": {
-    "@opencode-ai/plugin": "^1.15.5"
+    "@opencode-ai/plugin": "^1.15.10"
   },
   "load_order": [
     "global-config",
@@ -290,4 +290,3 @@
     }
   ]
 }
-
