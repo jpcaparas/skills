@@ -9,6 +9,7 @@
 #   1. .github/workflows/validate-skills.yml
 #   2. .claude/hooks/generated/events/stop.sh
 #   3. .codex/hooks/generated/events/stop.sh
+#   4. .opencode/plugins/skills_repo_stop_check.ts
 #
 # If you change a step here, all callers pick it up.
 # For a containerized Ubuntu GitHub Actions preflight before pushing, use
@@ -17,9 +18,11 @@
 # Steps:
 #   1. Confirm README.md lists every installable skill and includes the
 #      expected skills.sh install commands.
-#   2. For every skills/<name>/ that has a SKILL.md, run validate.py and
+#   2. Confirm every README skill section has a constrained 16-bit art card
+#      stored in that skill's folder.
+#   3. For every skills/<name>/ that has a SKILL.md, run validate.py and
 #      test_skill.py.
-#   3. Confirm skills.sh discovery still works and does not emit Codex
+#   4. Confirm skills.sh discovery still works and does not emit Codex
 #      skills context-budget warnings.
 #
 # Usage:
@@ -39,6 +42,7 @@ cd "$REPO_ROOT"
 
 echo "Checking README skill coverage"
 python3 scripts/validate-readme-skills.py
+python3 scripts/validate-skill-art.py
 
 while IFS= read -r skill; do
     echo "Validating ${skill}"

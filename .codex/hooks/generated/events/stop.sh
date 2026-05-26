@@ -48,35 +48,14 @@ CWD="$(hook_json '.cwd' "$PWD")"
 REPO_ROOT="$(repo_root_from_cwd "$CWD")"
 cd "$REPO_ROOT"
 
-has_invisible_skill_files() {
-    while IFS= read -r file; do
-        [ -z "$file" ] && continue
-        source_line="$(git check-ignore -v -- "$file" 2>/dev/null || true)"
-        source_file="${source_line%%:*}"
-        if [[ "$source_file" == /* ]] || [[ "$source_file" == *".git/info/exclude" ]]; then
-            return 0
-        fi
-    done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
-    return 1
-}
-
-if [ -z "$(git status --porcelain 2>/dev/null)" ] \
-    && ! has_invisible_skill_files \
-    && upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" \
-    && ahead_count="$(git rev-list --count "${upstream_ref}..HEAD" 2>/dev/null)" \
-    && [ "$ahead_count" = "0" ]; then
-    jq -n '{continue: true}'
-    exit 0
-fi
-
-if VALIDATION_OUTPUT="$(bash "$REPO_ROOT/scripts/validate-all-skills.sh" 2>&1)"; then
+if VALIDATION_OUTPUT="$(bash "$REPO_ROOT/scripts/agent-stop-checks.sh" "$REPO_ROOT" 2>&1)"; then
     jq -n '{continue: true}'
     exit 0
 fi
 
 VALIDATION_OUTPUT="$(printf '%s\n' "$VALIDATION_OUTPUT" | tail -n 200)"
 REASON="$(cat <<EOF
-Validation failed. Run \`bash scripts/validate-all-skills.sh\`, fix the reported issues below, and stop again only after it passes. This includes the Codex skills context-budget guard: keep canonical SKILL.md descriptions concise and front-loaded, or disable unrelated local skills/plugins in ~/.codex/config.toml.
+Validation failed. Run \`bash scripts/agent-stop-checks.sh\`, fix the reported issues below, and stop again only after it passes. This includes README skill art cards, the Codex skills context-budget guard, and full repository validation.
 
 ${VALIDATION_OUTPUT}
 EOF

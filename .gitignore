@@ -13,3 +13,7 @@ __pycache__/
 # hides .codex/** for personal machine config.
 !.codex/
 !.codex/**
+
+# Commit the repo-local OpenCode hook scaffold for shared project stop checks.
+!.opencode/
+!.opencode/**
