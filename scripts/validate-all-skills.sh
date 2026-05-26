@@ -11,6 +11,8 @@
 #   3. .codex/hooks/generated/events/stop.sh
 #
 # If you change a step here, all callers pick it up.
+# For a containerized Ubuntu GitHub Actions preflight before pushing, use
+# scripts/validate-ci-with-act.sh, which wraps this workflow through act.
 #
 # Steps:
 #   1. Confirm README.md lists every installable skill and includes the
@@ -25,6 +27,11 @@
 #
 
 set -euo pipefail
+
+# Some local shells still export the removed GNU grep GREP_OPTIONS variable.
+# BSD grep on macOS treats values such as --color=auto as an error, which
+# creates noisy environment-specific validation output.
+unset GREP_OPTIONS
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"

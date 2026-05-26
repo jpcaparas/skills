@@ -11,6 +11,7 @@ import json
 import os
 import py_compile
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -95,14 +96,56 @@ def load_json(path: Path) -> dict:
 
 
 def run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(
-        cmd,
-        cwd=str(cwd) if cwd else None,
-        env=env,
-        check=False,
-        capture_output=True,
-        text=True,
+    try:
+        return subprocess.run(
+            cmd,
+            cwd=str(cwd) if cwd else None,
+            env=env,
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError as exc:
+        return subprocess.CompletedProcess(
+            cmd,
+            127,
+            "",
+            f"Command not found: {cmd[0]}. Original error: {exc}",
+        )
+
+
+def bun_build_check(entry_path: Path, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    with tempfile.TemporaryDirectory() as tmpdir:
+        outfile = Path(tmpdir) / "syntax-check.js"
+        return run(
+            [
+                "bun",
+                "build",
+                "--target=bun",
+                "--format=esm",
+                "--outfile",
+                str(outfile),
+                str(entry_path),
+            ],
+            cwd=cwd,
+        )
+
+
+def bun_import_check(entry_path: Path, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
+    return run(
+        [
+            "bun",
+            "--no-install",
+            "--eval",
+            f"await import({json.dumps(entry_path.as_uri())})",
+        ],
+        cwd=cwd,
     )
+
+
+def missing_runtime_commands() -> list[str]:
+    required = ["bash", "bun", "git", "jq"]
+    return [command for command in required if shutil.which(command) is None]
 
 
 def test_skill(skill_path: Path) -> dict:
@@ -199,11 +242,12 @@ def test_skill(skill_path: Path) -> dict:
 
     for rel_path in TS_SCRIPTS:
         results["syntax_checks"]["total"] += 1
-        proc = run(["node", "--experimental-strip-types", "--check", str(skill_path / rel_path)])
+        proc = bun_build_check(skill_path / rel_path)
         if proc.returncode == 0:
             results["syntax_checks"]["passed"] += 1
         else:
-            results["errors"].append(f"TypeScript syntax check failed for {rel_path}: {proc.stderr.strip()}")
+            output = proc.stderr.strip() or proc.stdout.strip()
+            results["errors"].append(f"TypeScript syntax check failed for {rel_path}: {output}")
             results["passed"] = False
 
     for rel_path in PYTHON_VALIDATION_SCRIPTS:
@@ -214,6 +258,17 @@ def test_skill(skill_path: Path) -> dict:
         except py_compile.PyCompileError as exc:
             results["errors"].append(f"Python compile failed for {rel_path}: {exc.msg}")
             results["passed"] = False
+
+    missing_runtime = missing_runtime_commands()
+    if missing_runtime:
+        results["errors"].append(
+            "Missing required runtime command(s) for scaffold-opencode-hooks integration tests: "
+            + ", ".join(missing_runtime)
+            + ". Install Bun, jq, git, and bash before running this test. "
+            + "GitHub Actions uses oven-sh/setup-bun for TypeScript execution."
+        )
+        results["passed"] = False
+        return results
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
@@ -440,20 +495,12 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         plugin_file = minimal_project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts"
-        proc = run(
-            [
-                "node",
-                "--experimental-strip-types",
-                "--input-type=module",
-                "--eval",
-                f"await import({json.dumps(plugin_file.as_uri())})",
-            ],
-            cwd=minimal_project,
-        )
+        proc = bun_import_check(plugin_file, cwd=minimal_project)
         if proc.returncode == 0:
             results["integration_checks"]["passed"] += 1
         else:
-            results["errors"].append(f"generated lifecycle plugin syntax check failed: {proc.stderr.strip()}")
+            output = proc.stderr.strip() or proc.stdout.strip()
+            results["errors"].append(f"generated lifecycle plugin syntax check failed: {output}")
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
@@ -497,7 +544,7 @@ if (logs.length === 0) throw new Error("expected diagnostic app logs")
 """.lstrip(),
             encoding="utf-8",
         )
-        simulation = run(["node", "--experimental-strip-types", str(simulator)], cwd=minimal_project)
+        simulation = run(["bun", "--no-install", str(simulator)], cwd=minimal_project)
         if simulation.returncode == 0:
             results["integration_checks"]["passed"] += 1
         else:
@@ -575,18 +622,10 @@ if (logs.length === 0) throw new Error("expected diagnostic app logs")
         ]
         parse_errors: list[str] = []
         for plugin_file in plugin_files:
-            proc = run(
-                [
-                    "node",
-                    "--experimental-strip-types",
-                    "--input-type=module",
-                    "--eval",
-                    f"await import({json.dumps(plugin_file.as_uri())})",
-                ],
-                cwd=broad_project,
-            )
+            proc = bun_import_check(plugin_file, cwd=broad_project)
             if proc.returncode != 0:
-                parse_errors.append(f"{plugin_file.name}: {proc.stderr.strip()}")
+                output = proc.stderr.strip() or proc.stdout.strip()
+                parse_errors.append(f"{plugin_file.name}: {output}")
         if parse_errors:
             results["errors"].extend(parse_errors)
             results["passed"] = False
