@@ -1,0 +1,74 @@
+{
+  "skill_name": "product-question",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "share-ready-pm-answer",
+      "prompt": "A PM asks: can users cancel their subscription from the billing page, or do they need to contact support? Please inspect the app code and give me something I can paste into Slack.",
+      "expected_output": "A concise, share-ready product answer that leads with the cancellation behavior, mentions user-visible rules and exceptions, and includes a brief checked/evidence line without code.",
+      "assertions": [
+        {
+          "text": "Final answer starts with the product answer rather than the investigation process",
+          "type": "functional"
+        },
+        {
+          "text": "Avoids code blocks and implementation-heavy language unless explicitly requested",
+          "type": "negative"
+        },
+        {
+          "text": "Includes user-visible behavior, rules or exceptions, and a compact evidence line",
+          "type": "structural"
+        }
+      ],
+      "tags": ["smoke", "product", "share-ready"]
+    },
+    {
+      "id": 2,
+      "name": "incomplete-evidence",
+      "prompt": "Does the mobile app use the same account-verification rule as the web app? I only have this web repo checked out, but I need a PM-friendly answer.",
+      "expected_output": "A product-facing answer that clearly separates verified web behavior from unknown mobile behavior and uses a confidence note instead of guessing.",
+      "assertions": [
+        {
+          "text": "States what could and could not be verified",
+          "type": "functional"
+        },
+        {
+          "text": "Does not claim mobile behavior is confirmed without mobile evidence",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "uncertainty"]
+    },
+    {
+      "id": 3,
+      "name": "not-a-code-fix",
+      "prompt": "The refund button is broken. Please patch the bug and add tests.",
+      "expected_output": "The skill should not route this as a product-question response; it should switch to implementation/debugging mode, using product-friendly explanation only as a secondary deliverable if requested.",
+      "assertions": [
+        {
+          "text": "Does not replace bug fixing with a stakeholder summary",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "loads-answer-contract",
+      "prompt": "I already found the relevant files. Turn this behavior into a forwardable PM answer with a clear short answer, rules, and confidence note.",
+      "expected_output": "The agent should load references/answer-contract.md or templates/product-answer.md and produce a polished share-ready response.",
+      "assertions": [
+        {
+          "text": "Agent reads references/answer-contract.md or templates/product-answer.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Output is structured for direct sharing",
+          "type": "structural"
+        }
+      ],
+      "tags": ["disclosure", "answer-contract"]
+    }
+  ]
+}

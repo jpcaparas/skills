@@ -172,6 +172,16 @@ Production skill for Nano Banana 2 infographic prompting and verification coveri
 
 Production skill for generating semi-deterministic catalogs of parallel one-shot single-file website variants, with a full style repertoire, route-level `PROMPT.md` files, a fairness-aware directory index, and validation scripts.
 
+### `product-question`
+
+`npx skills add jpcaparas/skills --skill product-question`
+
+<p align="center">
+  <img src="skills/product-question/skill-card.png" alt="16-bit side-scrolling pixel art badge for product-question" width="480">
+</p>
+
+Production skill for answering product, PM, and stakeholder questions about app behavior by inspecting the codebase and returning concise share-ready plain-English responses for email, Teams, Slack, or product docs.
+
 ### `reading-notes`
 
 `npx skills add jpcaparas/skills --skill reading-notes`

@@ -51,6 +51,7 @@ SKILL_SCENES = {
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
+    "product-question": "a side-scrolling path of user-flow tiles and glowing inquiry gems leading toward a code city skyline, with simple unlabeled connectors and no screens or papers",
     "reading-notes": "a reading desk collecting bookmarks, highlight bars, and task gems around a glowing source",
     "repo-intent-documenter": "a compass room connecting repository clue gems into a clear route line",
     "repository-readme-writer": "a project book shrine assembled from setup tools, blank blocks, and guide rails",

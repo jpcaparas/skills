@@ -1,0 +1,4 @@
+display_name: "Product Question"
+short_description: "Answer product and PM questions from code in share-ready plain English"
+default_prompt: "Inspect the app code and answer this product question in a way I can paste into Slack or email"
+icon: "message-circle-question"

@@ -1,0 +1,7 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "June 2026",
+  "abstract": "Installable skill for answering product and PM questions about app behavior by inspecting the product codebase, translating technical evidence into plain-English user-visible behavior, and producing share-ready responses for email, Teams, Slack, or product docs.",
+  "references": []
+}
