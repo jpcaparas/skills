@@ -1,0 +1,107 @@
+#!/usr/bin/env bash
+#
+# {{SCRIPT_NAME}}
+#
+# Event:
+#   {{EVENT_NAME}}
+#
+# What this event is for:
+#   {{EVENT_DESCRIPTION}}
+#
+# Why this stub exists:
+#   This scaffold creates one script per documented Devin lifecycle event so
+#   the target project has a stable place to add logic later. Leaving the stub
+#   in place makes future additive refreshes and event-set updates predictable.
+#
+# Blocking guidance:
+#   {{BLOCKING_GUIDANCE}}
+#
+# How this script is organized:
+#   1. main() reads Devin's JSON payload from stdin exactly once.
+#   2. handle_event() contains the project-specific logic for this event.
+#   3. run_configured_scripts() delegates to reusable repo-owned scripts.
+#   4. run_configured_commands() runs any repo commands listed in the plan.
+#   5. Shared JSON/output helpers live in ../lib/common.sh.
+#
+# Safe editing rule:
+#   Start by editing handle_event(). Leave main() and the bootstrap section
+#   boring unless you need to change how hook input is read.
+#
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/../lib/common.sh"
+
+HOOK_INPUT=""
+BLOCK_ON_FAILURE="{{BLOCK_ON_FAILURE}}"
+
+read_project_scripts_json() {
+    # This JSON is injected from the hook plan for this specific event.
+    # Put reusable behavior here when the same script should also work from
+    # Codex, OpenCode, Husky, GitHub Actions, or a local terminal.
+    cat <<'PROJECT_SCRIPTS_JSON'
+{{PROJECT_SCRIPTS_JSON}}
+PROJECT_SCRIPTS_JSON
+}
+
+read_project_commands_json() {
+    # This JSON is injected from the hook plan for this specific event.
+    # It is intentionally data, not generated shell logic, so existing project
+    # commands stay easy to inspect and change.
+    cat <<'PROJECT_COMMANDS_JSON'
+{{PROJECT_COMMANDS_JSON}}
+PROJECT_COMMANDS_JSON
+}
+
+PROJECT_SCRIPTS_JSON="$(read_project_scripts_json)"
+PROJECT_COMMANDS_JSON="$(read_project_commands_json)"
+
+handle_event() {
+    # Project-specific logic belongs here.
+    # As the hook grows, add small helper functions above handle_event() and
+    # call them from here instead of turning this function into a long script.
+    #
+    # If this event wraps reusable project behavior, prefer the plan's scripts
+    # array and call a repo-owned script such as scripts/agent-stop-checks.sh.
+    # Use commands only for existing repo entry points that are already stable,
+    # such as make targets, package-manager scripts, or task-runner recipes.
+    if ! run_configured_scripts "$PROJECT_SCRIPTS_JSON"; then
+        handle_configured_failure "{{EVENT_NAME}}" "$BLOCK_ON_FAILURE" "$(configured_command_failure_message)"
+        return $?
+    fi
+
+    if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
+        handle_configured_failure "{{EVENT_NAME}}" "$BLOCK_ON_FAILURE" "$(configured_command_failure_message)"
+        return $?
+    fi
+    #
+    # Useful helpers from ../lib/common.sh:
+#   hook_json FILTER [FALLBACK]
+#   block_action MESSAGE
+#   approve_action [MESSAGE]
+#   deny_action MESSAGE
+#   run_project_script LABEL SCRIPT_PATH ARGS_JSON [CWD]
+#   run_project_command LABEL COMMAND [CWD]
+    #
+    # Examples:
+    #   TOOL_NAME="$(hook_json '.tool_name' '')"
+    #   if [ "$TOOL_NAME" = "exec" ]; then block_action "Policy reason"; fi
+    #
+    # Keep stdout empty unless this hook intentionally sends JSON back to
+    # Devin. Plain logging should go to stderr.
+    return 0
+}
+
+main() {
+    # Devin sends one JSON payload to this script on stdin.
+    # Store it globally so helper functions can read it without passing it
+    # through every project-specific function.
+    HOOK_INPUT="$(read_hook_input)"
+    readonly HOOK_INPUT
+
+    handle_event "$@"
+}
+
+main "$@"

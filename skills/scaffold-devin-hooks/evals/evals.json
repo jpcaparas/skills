@@ -1,0 +1,156 @@
+{
+  "skill_name": "scaffold-devin-hooks",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-project-devin-hooks-scaffold",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Devin hook setup yet. Audit the repo first, verify the live Devin hook docs, then scaffold project hooks in .devin/hooks.v1.json with a generated hooks README and bash stubs for every documented Devin lifecycle event.",
+      "expected_output": "The response verifies the live official Devin hook docs first, audits the repo in detail, creates a deterministic managed hook scaffold, and wires only the chosen events into .devin/hooks.v1.json.",
+      "files": ["templates/hook-plan.example.json"],
+      "assertions": [
+        {
+          "text": "Response verifies the live official Devin hooks docs before scaffolding",
+          "type": "verification"
+        },
+        {
+          "text": "Response audits the project before deciding which events to enable",
+          "type": "functional"
+        },
+        {
+          "text": "Response creates one managed bash stub per documented Devin lifecycle event",
+          "type": "functional"
+        },
+        {
+          "text": "Generated hook stubs are modular, commented, and expose a clear handle_event edit point",
+          "type": "functional"
+        },
+        {
+          "text": "Generated hooks are merged into .devin/hooks.v1.json without a top-level hooks wrapper",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "hooks", "scaffold"]
+    },
+    {
+      "id": 2,
+      "name": "blocking-policy-exit-code-2",
+      "prompt": "Set up a Devin PreToolUse hook that blocks dangerous shell commands. I want blocking to use the Devin-documented exit code 2 and not just exit 1.",
+      "expected_output": "The response uses command hooks that return exit code 2 for intentional blocking and explains that other non-zero codes are logged without blocking.",
+      "files": ["assets/hook-events.json"],
+      "assertions": [
+        {
+          "text": "Response uses exit code 2 for intentional blocking",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not use exit code 1 as the blocking mechanism",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "exit-code", "blocking"]
+    },
+    {
+      "id": 3,
+      "name": "existing-hooks-additive-refresh",
+      "prompt": "This project already has .devin/hooks.v1.json with a few custom hooks. Add a managed scaffold for Devin lifecycle hooks, but keep the custom hooks unless they are inside the managed generated folder.",
+      "expected_output": "The response chooses additive mode, preserves non-managed hooks, and refreshes the managed layer only.",
+      "assertions": [
+        {
+          "text": "Response distinguishes managed hooks from non-managed hooks",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses additive mode for a partial refresh",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "merge", "repeat-run"]
+    },
+    {
+      "id": 4,
+      "name": "avoid-claude-config",
+      "prompt": "Scaffold Devin CLI hooks, but please do not write Claude Code settings or .claude files. I want the recommended .devin/hooks.v1.json path.",
+      "expected_output": "The response writes generated hooks to .devin/hooks.v1.json and avoids Claude config paths.",
+      "assertions": [
+        {
+          "text": "Response uses .devin/hooks.v1.json as the generated hook target",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not scaffold .claude/settings.json or .claude/settings.local.json",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "config-target"]
+    },
+    {
+      "id": 5,
+      "name": "matcher-regex-mcp-tools",
+      "prompt": "I need a Devin hook that applies only to GitHub MCP tools. Use the correct matcher for mcp__github__create_issue and related tools.",
+      "expected_output": "The response explains that hook matchers are regexes over tool_name and uses a pattern such as ^mcp__github__.*.",
+      "assertions": [
+        {
+          "text": "Response uses regex matcher syntax for MCP tools",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not use permission-glob syntax like mcp__github__*",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "matcher"]
+    },
+    {
+      "id": 6,
+      "name": "shared-script-adapter-layout",
+      "prompt": "Scaffold Devin hooks that run the same validation logic I may later use from Codex, OpenCode, Husky, and GitHub Actions. Keep the scripts DRY and path-agnostic.",
+      "expected_output": "The response places reusable behavior in repo-owned scripts and keeps generated Devin hook files as thin adapters that call those scripts with a harness/mode argument.",
+      "assertions": [
+        {
+          "text": "Response uses references/reusable-scripts.md for placement guidance",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response keeps generated hook stubs thin and puts reusable behavior under repo-owned scripts",
+          "type": "functional"
+        }
+      ],
+      "tags": ["scripts", "cross-harness", "adapter"]
+    },
+    {
+      "id": 7,
+      "name": "docs-drift-detected",
+      "prompt": "Before scaffolding Devin hooks, confirm whether the live official docs added or removed lifecycle events since the baked-in manifest was written. If they did, update the scaffold inputs first.",
+      "expected_output": "The response treats the live official Devin docs as the source of truth and refreshes the event manifest before scaffolding if the docs changed.",
+      "assertions": [
+        {
+          "text": "Response re-verifies the official docs on every real scaffold run",
+          "type": "verification"
+        },
+        {
+          "text": "Response does not trust the static manifest without live confirmation",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "docs-drift", "verification"]
+    },
+    {
+      "id": 8,
+      "name": "hooks-explanation-only",
+      "prompt": "Explain how I should structure Devin CLI hooks in this project, but do not scaffold or edit anything yet.",
+      "expected_output": "The response explains the recommended structure and event strategy without generating or editing files.",
+      "assertions": [
+        {
+          "text": "Response can answer in design mode without scaffolding",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not force file creation when the user asked for explanation only",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "design-only"]
+    }
+  ]
+}

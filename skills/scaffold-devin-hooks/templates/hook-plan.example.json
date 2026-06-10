@@ -1,0 +1,51 @@
+{
+  "hooks_target": ".devin/hooks.v1.json",
+  "managed_root": ".devin/hooks/generated",
+  "mode": "additive",
+  "enabled_events": [
+    {
+      "name": "PreToolUse",
+      "matcher": "^exec$",
+      "timeout": 30,
+      "block_on_failure": true,
+      "scripts": [],
+      "commands": [],
+      "notes": "Use this for hard policy and safety gates before shell commands run."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "^(edit|exec)$",
+      "timeout": 120,
+      "block_on_failure": false,
+      "scripts": [],
+      "commands": [],
+      "notes": "Use this for logging, formatting, metrics, or lightweight validation after a tool finishes."
+    },
+    {
+      "name": "Stop",
+      "matcher": "",
+      "timeout": 30,
+      "block_on_failure": true,
+      "scripts": [
+        {
+          "label": "shared stop checks",
+          "path": "scripts/agent-stop-checks.sh",
+          "args": ["devin"],
+          "cwd": ".",
+          "notes": "Repo-owned script that can also run from CI or another agent harness."
+        }
+      ],
+      "commands": [],
+      "notes": "Use this when the project needs an end-of-turn quality gate."
+    },
+    {
+      "name": "SessionStart",
+      "matcher": "",
+      "timeout": 10,
+      "block_on_failure": false,
+      "scripts": [],
+      "commands": [],
+      "notes": "Use this for session logging, lightweight setup, or context reminders."
+    }
+  ]
+}

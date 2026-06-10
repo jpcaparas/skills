@@ -58,6 +58,7 @@ SKILL_SCENES = {
     "ripgrep": "a magnifying beam racing through file shelves and lighting up matching pixels",
     "scaffold-cc-hooks": "a Claude hook switchboard with event levers connected to reusable script cartridges",
     "scaffold-codex-hooks": "a Codex hook switchboard with event levers connected to reusable script cartridges",
+    "scaffold-devin-hooks": "a Devin lifecycle hook switchboard with event levers, blocking gates, and reusable script cartridges",
     "scaffold-github-cloud-agent-environment": "a cloud runner factory wiring setup pipes into a safe agent workspace",
     "scaffold-opencode-hooks": "an OpenCode plugin switchboard with lifecycle levers connected to reusable script cartridges",
     "secure-ai-agent-coding": "a guarded agent workbench behind shields, permission gates, and safe tool lanes",

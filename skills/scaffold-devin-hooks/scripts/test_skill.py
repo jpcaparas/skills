@@ -2,7 +2,7 @@
 """
 test_skill.py
 
-Lightweight checks for scaffold-cc-hooks.
+Lightweight checks for scaffold-devin-hooks.
 
 Usage:
     python3 test_skill.py <skill-path>
@@ -24,47 +24,25 @@ from pathlib import Path
 
 
 EXPECTED_EVENT_NAMES = {
-    "SessionStart",
-    "Setup",
-    "InstructionsLoaded",
-    "UserPromptSubmit",
-    "UserPromptExpansion",
     "PreToolUse",
-    "PermissionRequest",
-    "PermissionDenied",
     "PostToolUse",
-    "PostToolUseFailure",
-    "PostToolBatch",
-    "Notification",
-    "SubagentStart",
-    "SubagentStop",
-    "TaskCreated",
-    "TaskCompleted",
+    "PermissionRequest",
+    "UserPromptSubmit",
     "Stop",
-    "StopFailure",
-    "TeammateIdle",
-    "ConfigChange",
-    "CwdChanged",
-    "FileChanged",
-    "WorktreeCreate",
-    "WorktreeRemove",
-    "PreCompact",
-    "PostCompact",
+    "PostCompaction",
+    "SessionStart",
     "SessionEnd",
-    "Elicitation",
-    "ElicitationResult",
 }
 REQUIRED_EXECUTABLES = [
     "scripts/audit_project.sh",
-    "scripts/check_workspace_trust.sh",
-    "scripts/merge_settings.sh",
+    "scripts/merge_hooks_file.sh",
     "scripts/render_hooks_readme.sh",
     "scripts/scaffold_hooks.sh",
+    "scripts/verify_docs.py",
 ]
 
 
 def extract_file_references(content: str) -> list[str]:
-    """Extract local file references from markdown while ignoring fenced code."""
     stripped = re.sub(r"```[\s\S]*?```", "", content)
     placeholder_re = re.compile(r"[{}<>]|/X\.md$|\s")
     refs: list[str] = []
@@ -88,7 +66,6 @@ def extract_file_references(content: str) -> list[str]:
 
 
 def load_json(path: Path) -> dict:
-    """Load JSON from disk and raise a useful error if parsing fails."""
     return json.loads(path.read_text(encoding="utf-8"))
 
 
@@ -96,8 +73,11 @@ def run(
     cmd: list[str],
     cwd: Path | None = None,
     input_text: str | None = None,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
-    """Run a command and capture output for test assertions."""
+    merged_env = os.environ.copy()
+    if env:
+        merged_env.update(env)
     return subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -105,11 +85,11 @@ def run(
         check=False,
         capture_output=True,
         text=True,
+        env=merged_env,
     )
 
 
 def readable_stub_errors(script_path: Path) -> list[str]:
-    """Assert generated event scripts expose a clear edit point."""
     content = script_path.read_text(encoding="utf-8")
     required_snippets = [
         "How this script is organized:",
@@ -118,6 +98,7 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "Project-specific logic belongs here.",
         "run_configured_scripts",
         "run_configured_commands",
+        "BLOCK_ON_FAILURE",
         "PROJECT_SCRIPTS_JSON",
         "PROJECT_COMMANDS_JSON",
         'HOOK_INPUT="$(read_hook_input)"',
@@ -131,18 +112,18 @@ def readable_stub_errors(script_path: Path) -> list[str]:
 
 
 def readable_common_errors(common_path: Path) -> list[str]:
-    """Assert generated common.sh documents the helper layer."""
     content = common_path.read_text(encoding="utf-8")
     required_snippets = [
         "require_jq()",
         "Read one value from HOOK_INPUT with jq.",
         "Hook output helpers build JSON with jq",
+        "block_action()",
+        "Devin documents exit code 2",
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
-        "handle_project_command_failure()",
+        "handle_configured_failure()",
         "This is deliberately language-agnostic.",
-        "Emit additionalContext text for the next Claude turn.",
     ]
     return [
         f"common.sh is missing helper documentation: {snippet}"
@@ -152,7 +133,6 @@ def readable_common_errors(common_path: Path) -> list[str]:
 
 
 def test_skill(skill_path: Path) -> dict:
-    """Run lightweight behavioral checks on the skill contents."""
     results = {
         "skill_name": skill_path.name,
         "tests_found": 0,
@@ -192,6 +172,9 @@ def test_skill(skill_path: Path) -> dict:
         results["passed"] = False
 
     plan_template = load_json(skill_path / "templates" / "hook-plan.example.json")
+    if plan_template.get("hooks_target") != ".devin/hooks.v1.json":
+        results["errors"].append("Plan template must target .devin/hooks.v1.json")
+        results["passed"] = False
     for enabled_event in plan_template.get("enabled_events", []):
         if enabled_event.get("name") not in EXPECTED_EVENT_NAMES:
             results["errors"].append(
@@ -202,9 +185,9 @@ def test_skill(skill_path: Path) -> dict:
     skill_md = (skill_path / "SKILL.md").read_text(encoding="utf-8")
     for snippet in [
         "## Progressive Maintainer Drift Check",
-        "Live-fetch the official Claude Code docs",
-        "assets/hook-events.json",
-        "validators, tests, evals",
+        "Live-fetch both official Devin docs",
+        ".devin/hooks.v1.json",
+        "exit code `2`",
         "Do not update this skill from memory",
     ]:
         if snippet not in skill_md:
@@ -252,18 +235,10 @@ def test_skill(skill_path: Path) -> dict:
         plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
         for enabled_event in plan_data.get("enabled_events", []):
             if enabled_event.get("name") == "Stop":
-                enabled_event["scripts"] = [
-                    {
-                        "label": "shared stop checks",
-                        "path": "scripts/agent-stop-checks.sh",
-                        "args": ["claude"],
-                        "cwd": ".",
-                    }
-                ]
                 enabled_event["commands"] = [
                     {
-                        "label": "portable hook command",
-                        "command": "printf 'portable hook command\\n' >&2",
+                        "label": "intentional blocking command",
+                        "command": "printf 'must block\\n' >&2; exit 7",
                         "cwd": ".",
                     }
                 ]
@@ -286,18 +261,26 @@ def test_skill(skill_path: Path) -> dict:
                 event["script_name"] for event in load_json(skill_path / "assets" / "hook-events.json")["events"]
             ]
             expected_files = [
-                project / ".claude" / "settings.json",
-                project / ".claude" / "hooks" / "README.md",
-                project / ".claude" / "hooks" / "generated" / "manifest.json",
-                project / ".claude" / "hooks" / "generated" / "settings.generated.json",
-                project / ".claude" / "hooks" / "generated" / "lib" / "common.sh",
+                project / ".devin" / "hooks.v1.json",
+                project / ".devin" / "hooks" / "README.md",
+                project / ".devin" / "hooks" / "generated" / "manifest.json",
+                project / ".devin" / "hooks" / "generated" / "hooks.generated.json",
+                project / ".devin" / "hooks" / "generated" / "lib" / "common.sh",
             ]
             expected_files.extend(
-                project / ".claude" / "hooks" / "generated" / "events" / script_name
+                project / ".devin" / "hooks" / "generated" / "events" / script_name
                 for script_name in manifest_script_names
             )
             if all(path.exists() for path in expected_files):
-                results["integration_checks"]["passed"] += 1
+                hooks_file = load_json(project / ".devin" / "hooks.v1.json")
+                if "hooks" in hooks_file:
+                    results["errors"].append(".devin/hooks.v1.json must not contain a top-level hooks wrapper")
+                    results["passed"] = False
+                elif (project / ".claude").exists():
+                    results["errors"].append("scaffold created .claude config even though Devin target should be .devin")
+                    results["passed"] = False
+                else:
+                    results["integration_checks"]["passed"] += 1
             else:
                 missing = [str(path.relative_to(project)) for path in expected_files if not path.exists()]
                 results["errors"].append(f"scaffold_hooks.sh missed files: {', '.join(missing)}")
@@ -308,11 +291,11 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         readability_errors: list[str] = []
-        generated_root = project / ".claude" / "hooks" / "generated"
+        generated_root = project / ".devin" / "hooks" / "generated"
         for rel_path in [
-            "events/session-start.sh",
             "events/pre-tool-use.sh",
             "events/stop.sh",
+            "events/session-start.sh",
         ]:
             script_path = generated_root / rel_path
             if script_path.exists():
@@ -336,24 +319,29 @@ def test_skill(skill_path: Path) -> dict:
             stop_payload = json.dumps(
                 {
                     "hook_event_name": "Stop",
-                    "cwd": str(project),
                     "stop_hook_active": False,
                 }
             )
-            stop_proc = run(["bash", str(stop_script)], cwd=project, input_text=stop_payload)
+            stop_proc = run(
+                ["bash", str(stop_script)],
+                cwd=project,
+                input_text=stop_payload,
+                env={"DEVIN_PROJECT_DIR": str(project)},
+            )
             if (
-                stop_proc.returncode == 0
-                and "portable shared script claude" in stop_proc.stderr
-                and "portable hook command" in stop_proc.stderr
+                stop_proc.returncode == 2
+                and "portable shared script devin" in stop_proc.stderr
+                and "must block" in stop_proc.stderr
+                and '"decision": "block"' in stop_proc.stdout
             ):
                 results["integration_checks"]["passed"] += 1
             else:
                 results["errors"].append(
-                    "generated Stop hook did not run the configured reusable script and language-agnostic command"
+                    "generated Stop hook did not translate configured failure into exit code 2 with a block decision"
                 )
                 results["passed"] = False
         else:
-            results["errors"].append("generated Stop hook missing before command execution check")
+            results["errors"].append("generated Stop hook missing before exit-code-2 check")
             results["passed"] = False
 
     return results

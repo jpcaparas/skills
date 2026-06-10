@@ -252,6 +252,16 @@ Production scaffold skill for Claude Code hooks that audits the target project, 
 
 Production scaffold skill for Codex hooks that audits the repo, verifies the live docs and schemas, checks the effective feature flag state, and generates repo-local lifecycle hook scaffolding.
 
+### `scaffold-devin-hooks`
+
+`npx skills add jpcaparas/skills --skill scaffold-devin-hooks`
+
+<p align="center">
+  <img src="skills/scaffold-devin-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-devin-hooks" width="480">
+</p>
+
+Project-aware Devin CLI hook scaffolder that verifies the live Devin docs, audits a repo, and generates a deterministic `.devin/hooks.v1.json` scaffold with exit-code-2 blocking gates, reusable script adapters, merge behavior, and validation helpers.
+
 ### `scaffold-github-cloud-agent-environment`
 
 `npx skills add jpcaparas/skills --skill scaffold-github-cloud-agent-environment`

@@ -46,8 +46,8 @@ python3 scripts/validate-skill-art.py
 
 while IFS= read -r skill; do
     echo "Validating ${skill}"
-    python3 "${skill}/scripts/validate.py" "${skill}"
-    python3 "${skill}/scripts/test_skill.py" "${skill}"
+    python3 "${skill}/scripts/validate.py" "${skill}" < /dev/null
+    python3 "${skill}/scripts/test_skill.py" "${skill}" < /dev/null
 done < <(find skills -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/SKILL.md" ';' -print | LC_ALL=C sort)
 
 echo "Checking for leaked builder-only placement metadata"

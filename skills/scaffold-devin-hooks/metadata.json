@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "June 2026",
+  "abstract": "Project-aware Devin CLI hook scaffolder that verifies the live official Devin hook docs, audits a target repository in detail, and then generates a deterministic bash-first .devin/hooks.v1.json scaffold with one managed script per documented lifecycle event, exit-code-2 blocking gates, repeatable merges, reusable repo-owned script delegation, and a generated hooks README for the target project.",
+  "references": [
+    "https://docs.devin.ai/cli/extensibility/hooks/overview",
+    "https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks"
+  ]
+}

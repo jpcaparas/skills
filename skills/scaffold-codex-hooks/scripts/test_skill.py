@@ -237,7 +237,7 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(f"Python compile failed for {rel_path}: {exc.msg}")
             results["passed"] = False
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=skill_path) as tmpdir:
         tmp = Path(tmpdir)
         home = tmp / "home"
         project = tmp / "project"

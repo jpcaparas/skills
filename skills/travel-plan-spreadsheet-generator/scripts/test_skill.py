@@ -89,7 +89,7 @@ def main() -> None:
         report["errors"].append(output)
         report["passed"] = False
 
-    with tempfile.TemporaryDirectory(prefix="travel-plan-skill-") as temp_dir:
+    with tempfile.TemporaryDirectory(prefix="travel-plan-skill-", dir=skill_path) as temp_dir:
         temp_dir_path = Path(temp_dir)
         runtime_python = find_python_with_openpyxl()
         if not runtime_python:
