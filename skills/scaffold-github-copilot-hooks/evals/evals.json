@@ -1,0 +1,148 @@
+{
+  "skill_name": "scaffold-github-copilot-hooks",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-project-repo-copilot-hooks",
+      "prompt": "I have a pnpm TypeScript monorepo with no Copilot hooks yet. Audit the repo first, verify the live GitHub Copilot hooks docs, then scaffold repository hooks that work for Copilot cloud agent and Copilot CLI.",
+      "expected_output": "The response verifies official GitHub docs, audits the repo, creates .github/hooks/copilot-hooks.json, generates adapter scripts under .github/copilot/hooks/generated, and wires only chosen events.",
+      "files": ["templates/hook-plan.example.json"],
+      "assertions": [
+        {
+          "text": "Response verifies official GitHub Copilot hook docs before scaffolding",
+          "type": "verification"
+        },
+        {
+          "text": "Response creates repository hook config under .github/hooks/*.json",
+          "type": "functional"
+        },
+        {
+          "text": "Response creates one managed bash stub per documented Copilot event",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "hooks", "scaffold"]
+    },
+    {
+      "id": 2,
+      "name": "pretooluse-denies-through-json",
+      "prompt": "Set up a Copilot preToolUse hook that blocks dangerous bash commands. Please do not cargo-cult Devin's exit code 2 behavior.",
+      "expected_output": "The response uses preToolUse stdout JSON with permissionDecision deny and does not treat exit code 2 as a generic Copilot blocking signal.",
+      "files": ["assets/hook-events.json"],
+      "assertions": [
+        {
+          "text": "Response uses permissionDecision deny JSON for preToolUse",
+          "type": "functional"
+        },
+        {
+          "text": "Response explains that exit code 2 is not a generic Copilot block signal",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "blocking", "exit-code"]
+    },
+    {
+      "id": 3,
+      "name": "copilot-cli-user-hooks",
+      "prompt": "I want a personal Copilot CLI notification hook on my machine, not something committed to the repo. Where should it go?",
+      "expected_output": "The response routes to CLI user-level hooks under ~/.copilot/hooks or $COPILOT_HOME/hooks and notes that cloud agent will not load them.",
+      "assertions": [
+        {
+          "text": "Response mentions ~/.copilot/hooks and COPILOT_HOME",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not claim user-level hooks work in cloud agent",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "cli", "user-hooks"]
+    },
+    {
+      "id": 4,
+      "name": "existing-hooks-additive-refresh",
+      "prompt": "This repository already has .github/hooks/security.json with custom hooks. Add a managed Copilot hooks scaffold but preserve existing custom hooks.",
+      "expected_output": "The response chooses additive mode, preserves non-managed hooks, and refreshes only entries whose command path points inside the managed generated folder.",
+      "assertions": [
+        {
+          "text": "Response distinguishes managed hooks from unrelated custom hooks",
+          "type": "functional"
+        },
+        {
+          "text": "Response uses additive mode for a partial refresh",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "merge", "repeat-run"]
+    },
+    {
+      "id": 5,
+      "name": "avoid-wrong-hook-systems",
+      "prompt": "Scaffold GitHub Copilot hooks, but do not create .claude settings, .codex hooks, Devin config, Husky hooks, or a copilot-setup-steps workflow.",
+      "expected_output": "The response writes generated Copilot hooks to .github/hooks/copilot-hooks.json and does not scaffold unrelated hook systems or cloud agent environment workflows.",
+      "assertions": [
+        {
+          "text": "Response uses .github/hooks/copilot-hooks.json as the generated hook target",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not scaffold .claude, .codex, .devin, Husky, or copilot-setup-steps.yml",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "config-target"]
+    },
+    {
+      "id": 6,
+      "name": "shared-script-adapter-layout",
+      "prompt": "Scaffold Copilot hooks that reuse the same validation logic I may later run from Devin, Codex, OpenCode, GitHub Actions, and a terminal.",
+      "expected_output": "The response places reusable behavior in repo-owned scripts and keeps generated Copilot hook files as thin adapters that call those scripts with a harness or mode argument.",
+      "assertions": [
+        {
+          "text": "Response uses references/reusable-scripts.md for placement guidance",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response keeps generated hook stubs thin and puts reusable behavior under repo-owned scripts",
+          "type": "functional"
+        }
+      ],
+      "tags": ["scripts", "cross-harness", "adapter"]
+    },
+    {
+      "id": 7,
+      "name": "docs-drift-detected",
+      "prompt": "Before scaffolding Copilot hooks, confirm whether GitHub added or removed hook events since the baked-in manifest was written. If they did, update the scaffold inputs first.",
+      "expected_output": "The response treats the live official GitHub docs as the source of truth and refreshes the event manifest before scaffolding if the docs changed.",
+      "assertions": [
+        {
+          "text": "Response re-verifies the official docs on every real scaffold run",
+          "type": "verification"
+        },
+        {
+          "text": "Response does not trust the static manifest without live confirmation",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "docs-drift", "verification"]
+    },
+    {
+      "id": 8,
+      "name": "hooks-explanation-only",
+      "prompt": "Explain how I should structure GitHub Copilot hooks in this project, but do not scaffold or edit anything yet.",
+      "expected_output": "The response explains the recommended structure and event strategy without generating or editing files.",
+      "assertions": [
+        {
+          "text": "Response can answer in design mode without scaffolding",
+          "type": "functional"
+        },
+        {
+          "text": "Response does not force file creation when the user asked for explanation only",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "design-only"]
+    }
+  ]
+}

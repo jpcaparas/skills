@@ -59,6 +59,7 @@ SKILL_SCENES = {
     "scaffold-cc-hooks": "a Claude hook switchboard with event levers connected to reusable script cartridges",
     "scaffold-codex-hooks": "a Codex hook switchboard with event levers connected to reusable script cartridges",
     "scaffold-devin-hooks": "a Devin lifecycle hook switchboard with event levers, blocking gates, and reusable script cartridges",
+    "scaffold-github-copilot-hooks": "a GitHub Copilot hook control room wiring repository hooks to shared script adapters",
     "scaffold-github-cloud-agent-environment": "a cloud runner factory wiring setup pipes into a safe agent workspace",
     "scaffold-opencode-hooks": "an OpenCode plugin switchboard with lifecycle levers connected to reusable script cartridges",
     "secure-ai-agent-coding": "a guarded agent workbench behind shields, permission gates, and safe tool lanes",

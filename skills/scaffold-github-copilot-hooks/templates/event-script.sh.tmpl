@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+#
+# {{SCRIPT_NAME}}
+#
+# Generated adapter for the GitHub Copilot {{EVENT_NAME}} hook.
+#
+# Event purpose:
+#   {{EVENT_DESCRIPTION}}
+#
+# How this script is organized:
+#   1. read Copilot's JSON payload from stdin into HOOK_INPUT
+#   2. run reusable project scripts from PROJECT_SCRIPTS_JSON
+#   3. run existing project commands from PROJECT_COMMANDS_JSON
+#   4. call handle_event() for project-specific logic
+#
+# Safe editing rule:
+#   Keep reusable behavior in repo-owned scripts. Put only protocol glue or
+#   tiny event-specific checks here.
+#
+
+set -euo pipefail
+
+EVENT_NAME="{{EVENT_NAME}}"
+BLOCK_ON_FAILURE="{{BLOCK_ON_FAILURE}}"
+PROJECT_SCRIPTS_JSON='{{PROJECT_SCRIPTS_JSON}}'
+PROJECT_COMMANDS_JSON='{{PROJECT_COMMANDS_JSON}}'
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+. "$SCRIPT_DIR/../lib/common.sh"
+
+handle_event() {
+    # Project-specific logic belongs here.
+    #
+    # Return stdout JSON only when this event intentionally controls Copilot.
+    # Logs belong on stderr so stdout remains valid hook-output JSON.
+    return 0
+}
+
+main() {
+    HOOK_INPUT="$(read_hook_input)"
+    export HOOK_INPUT
+
+    if ! run_configured_scripts "$PROJECT_SCRIPTS_JSON"; then
+        handle_configured_failure "$EVENT_NAME" "$BLOCK_ON_FAILURE" "$(configured_command_failure_message)"
+        return "$?"
+    fi
+
+    if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
+        handle_configured_failure "$EVENT_NAME" "$BLOCK_ON_FAILURE" "$(configured_command_failure_message)"
+        return "$?"
+    fi
+
+    handle_event
+}
+
+main "$@"

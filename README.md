@@ -262,6 +262,16 @@ Production scaffold skill for Codex hooks that audits the repo, verifies the liv
 
 Project-aware Devin CLI hook scaffolder that verifies the live Devin docs, audits a repo, and generates a deterministic `.devin/hooks.v1.json` scaffold with exit-code-2 blocking gates, reusable script adapters, merge behavior, and validation helpers.
 
+### `scaffold-github-copilot-hooks`
+
+`npx skills add jpcaparas/skills --skill scaffold-github-copilot-hooks`
+
+<p align="center">
+  <img src="skills/scaffold-github-copilot-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-github-copilot-hooks" width="480">
+</p>
+
+Project-aware GitHub Copilot hook scaffolder that verifies the live GitHub docs, audits a repo, and generates a deterministic `.github/hooks/copilot-hooks.json` scaffold with reusable script adapters, repeatable merges, and correct Copilot CLI/cloud-agent behavior.
+
 ### `scaffold-github-cloud-agent-environment`
 
 `npx skills add jpcaparas/skills --skill scaffold-github-cloud-agent-environment`
