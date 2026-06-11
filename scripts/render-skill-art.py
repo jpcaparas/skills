@@ -48,6 +48,7 @@ SKILL_SCENES = {
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
     "linkedin-speak": "a megaphone transforming a small plain block into an overbright beam of geometric confetti",
+    "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",

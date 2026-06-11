@@ -1,0 +1,16 @@
+{
+  "name": "maintainable-code",
+  "display_name": "Maintainable Code",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Passive always-on coding skill for generating, refactoring, reviewing, and planning maintainable, properly decomposed, human-understandable code.",
+  "tags": [
+    "maintainability",
+    "code-review",
+    "refactoring",
+    "decomposition",
+    "clean-code",
+    "agent-workflows"
+  ]
+}

@@ -152,6 +152,16 @@ Fun production skill for deterministically translating plain English into exagge
 
 Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
 
+### `maintainable-code`
+
+`npx skills add jpcaparas/skills --skill maintainable-code`
+
+<p align="center">
+  <img src="skills/maintainable-code/skill-card.png" alt="16-bit side-scrolling pixel art badge for maintainable-code" width="480">
+</p>
+
+Passive production skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, and understandable to human maintainers.
+
 ### `nanobanana-infographic`
 
 `npx skills add jpcaparas/skills --skill nanobanana-infographic`

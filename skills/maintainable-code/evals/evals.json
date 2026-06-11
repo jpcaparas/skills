@@ -1,0 +1,103 @@
+{
+  "skill_name": "maintainable-code",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "passive-feature-implementation",
+      "prompt": "Add a retry option to src/api/client.ts. The client already has requestJson<T>() and a typed ApiError. Keep the behavior easy to follow and add whatever tests make sense.",
+      "expected_output": "The agent loads maintainable-code passively, reads nearby code and tests before editing, keeps retry logic typed and localized, avoids broad abstraction, adds focused tests, and reports verification.",
+      "assertions": [
+        {
+          "text": "Uses existing local patterns before introducing new helpers",
+          "type": "functional"
+        },
+        {
+          "text": "Keeps retry policy decomposed from HTTP transport only if the local codebase supports that boundary",
+          "type": "functional"
+        },
+        {
+          "text": "Runs or identifies focused tests/typechecks",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "passive", "implementation"]
+    },
+    {
+      "id": 2,
+      "name": "decomposition-edge-case",
+      "prompt": "This 220-line function is hard to read. Split it up, but don't create a maze of tiny helpers. It mixes validation, database reads, pricing rules, and response formatting.",
+      "expected_output": "The agent reads references/decomposition.md, identifies stable responsibilities, preserves behavior with characterization tests where needed, and extracts helpers around validation, I/O, policy, and formatting only where boundaries improve readability.",
+      "assertions": [
+        {
+          "text": "Agent reads references/decomposition.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Does not split solely by line count",
+          "type": "negative"
+        },
+        {
+          "text": "Adds or recommends characterization coverage before risky refactoring",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "disclosure", "refactoring"]
+    },
+    {
+      "id": 3,
+      "name": "review-finding-priority",
+      "prompt": "Review this PR for maintainability. The diff adds a generic RuleEngine class, removes three explicit functions, and has no tests for the new configuration format.",
+      "expected_output": "The agent reads references/review-rubric.md, leads with concrete findings ordered by severity, calls out abstraction and test risks with file/line evidence, and avoids nit-only review output.",
+      "assertions": [
+        {
+          "text": "Agent reads references/review-rubric.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Findings are ordered by maintainer impact rather than style preference",
+          "type": "functional"
+        },
+        {
+          "text": "Review cites concrete evidence instead of vague clean-code advice",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "review", "disclosure"]
+    },
+    {
+      "id": 4,
+      "name": "handoff-plan",
+      "prompt": "Write a plan another agent can execute to untangle billing calculation from the React checkout page. The executor will not have this conversation.",
+      "expected_output": "The agent reads references/implementation-plans.md and produces a self-contained plan with exact files, current-state evidence, local conventions, ordered steps, verification commands, done criteria, and stop conditions.",
+      "assertions": [
+        {
+          "text": "Agent reads references/implementation-plans.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Plan is self-contained and does not refer to conversation context",
+          "type": "functional"
+        },
+        {
+          "text": "Plan includes verification commands and stop conditions",
+          "type": "functional"
+        }
+      ],
+      "tags": ["disclosure", "planning"]
+    },
+    {
+      "id": 5,
+      "name": "negative-non-code",
+      "prompt": "Rewrite this launch announcement so it sounds more polished and concise.",
+      "expected_output": "The skill should not trigger because the task is non-code writing with no maintainability or software design surface.",
+      "assertions": [
+        {
+          "text": "Does not load maintainable-code or produce code maintainability guidance",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    }
+  ]
+}
