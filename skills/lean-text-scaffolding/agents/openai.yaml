@@ -1,0 +1,4 @@
+display_name: "Lean Text Scaffolding"
+short_description: "Keep web page scaffolds concise and free of filler UI copy."
+default_prompt: "Help me scaffold this page with lean, necessary UI text only."
+icon: "text-cursor-input"

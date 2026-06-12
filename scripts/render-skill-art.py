@@ -47,6 +47,7 @@ SKILL_SCENES = {
     "instagram-replicate": "a camera portal rebuilding a scene into film reels, snapshot tiles, and local asset crates",
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
+    "lean-text-scaffolding": "a compact layout workbench trimming bulky placeholder ribbons and blank tag blocks into a clean sparse interface panel",
     "linkedin-speak": "a megaphone transforming a small plain block into an overbright beam of geometric confetti",
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",

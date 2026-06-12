@@ -132,6 +132,16 @@ Production skill for auditing a live repository against Cloudflare's agent-readi
 
 Production skill for shaping web, app, and desktop interfaces with stronger hierarchy, cleaner typography, tighter color and surface systems, platform-aware interaction design, and redesign-first critique workflows that avoid generic AI UI defaults.
 
+### `lean-text-scaffolding`
+
+`npx skills add jpcaparas/skills --skill lean-text-scaffolding`
+
+<p align="center">
+  <img src="skills/lean-text-scaffolding/skill-card.png" alt="16-bit side-scrolling pixel art badge for lean-text-scaffolding" width="480">
+</p>
+
+Production skill for preventing bloated web-page scaffolds by enforcing lean copy defaults, removing generic labels and placeholder text unless requested, and preserving accessible form labels and operational UI text.
+
 ### `linkedin-speak`
 
 `npx skills add jpcaparas/skills --skill linkedin-speak`

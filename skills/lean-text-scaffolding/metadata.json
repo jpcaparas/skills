@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "June 2026",
+  "abstract": "Production skill for preventing bloated web-page scaffolds by enforcing lean copy defaults, removing generic labels and placeholder text, and preserving accessible form labels and operational UI text.",
+  "references": [
+    "https://www.nngroup.com/articles/how-users-read-on-the-web/",
+    "https://www.nngroup.com/articles/concise-scannable-and-objective-how-to-write-for-the-web/",
+    "https://www.gov.uk/service-manual/design/writing-for-user-interfaces",
+    "https://www.w3.org/WAI/WCAG21/Understanding/labels-or-instructions.html",
+    "https://www.w3.org/WAI/tutorials/forms/instructions/",
+    "https://www.nngroup.com/articles/form-design-placeholders/"
+  ]
+}

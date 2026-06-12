@@ -1,0 +1,74 @@
+{
+  "skill_name": "lean-text-scaffolding",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "new-saas-page-lean-copy",
+      "prompt": "Create a new React landing page for a contract renewal tracker. I only gave you the product idea; do not ask for marketing copy first.",
+      "expected_output": "The agent builds a page with concise, domain-specific headings and one support sentence, omits generic eyebrows such as Features or Trusted by, avoids invented stats/testimonials/logos, and keeps CTAs short.",
+      "assertions": [
+        {
+          "text": "Output avoids generic filler phrases and unsupported social proof.",
+          "type": "functional"
+        },
+        {
+          "text": "Output uses concise section headings without repeated decorative labels.",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "frontend", "copy"]
+    },
+    {
+      "id": 2,
+      "name": "preserve-form-labels",
+      "prompt": "Tighten the copy in this settings page, but it has search filters, a date range, and an email input. Keep it accessible.",
+      "expected_output": "The agent removes decorative copy but preserves or improves visible labels, legends, helper text, aria names, and validation/error instructions for controls.",
+      "assertions": [
+        {
+          "text": "Output does not remove form labels or accessible names.",
+          "type": "functional"
+        },
+        {
+          "text": "Output does not replace labels with placeholder-only inputs.",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "accessibility"]
+    },
+    {
+      "id": 3,
+      "name": "explicit-full-copy-request",
+      "prompt": "Build a full long-form product marketing page with labelled sections, testimonials, FAQ, detailed feature descriptions, and placeholder copy I can replace later.",
+      "expected_output": "The agent recognizes that the user explicitly requested fuller labelled copy and does not over-apply the lean default, while still keeping structure clear.",
+      "assertions": [
+        {
+          "text": "Output honors the explicit request for detailed labelled sections.",
+          "type": "negative"
+        },
+        {
+          "text": "Output still avoids inaccessible placeholder-only form controls if forms are present.",
+          "type": "functional"
+        }
+      ],
+      "tags": ["negative", "explicit-user-intent"]
+    },
+    {
+      "id": 4,
+      "name": "loads-research-for-rationale",
+      "prompt": "Why are you removing all these placeholder labels and extra subtitles from my scaffold? I want the reasoning, especially for forms.",
+      "expected_output": "The agent reads references/research.md, explains concise scannable copy and the accessibility boundary, and distinguishes decorative labels from required form labels.",
+      "assertions": [
+        {
+          "text": "Agent reads references/research.md.",
+          "type": "disclosure"
+        },
+        {
+          "text": "Response distinguishes decorative labels from required form labels and helper text.",
+          "type": "functional"
+        }
+      ],
+      "tags": ["disclosure", "research"]
+    }
+  ]
+}
