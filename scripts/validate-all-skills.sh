@@ -88,10 +88,16 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
     done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
 
     # (2) On-disk files that are simply untracked (user forgot to git add).
-    while IFS= read -r file; do
-        [ -z "$file" ] && continue
-        invisible_hits+=("${file} (untracked — run 'git add')")
-    done < <(git ls-files --others --exclude-standard skills 2>/dev/null)
+    # Agent stop hooks validate an in-progress working tree before the agent's
+    # final answer, so new skill files may be intentionally untracked at that
+    # point. Keep manual/CI validation strict, but let hook-mode validation
+    # validate the files on disk without forcing the agent to stage them.
+    if [ "${SKILLS_VALIDATE_ALLOW_UNTRACKED_SKILL_WORKTREE:-0}" != "1" ]; then
+        while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            invisible_hits+=("${file} (untracked — run 'git add')")
+        done < <(git ls-files --others --exclude-standard skills 2>/dev/null)
+    fi
 
     if [ "${#invisible_hits[@]}" -gt 0 ]; then
         {

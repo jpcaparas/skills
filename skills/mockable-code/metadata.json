@@ -1,0 +1,16 @@
+{
+  "name": "mockable-code",
+  "display_name": "Mockable Code",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Passive always-on coding skill for generating, refactoring, reviewing, and planning code that can be mocked, stubbed, faked, or otherwise tested without real external dependencies.",
+  "tags": [
+    "mockability",
+    "testability",
+    "test-doubles",
+    "dependency-injection",
+    "code-review",
+    "agent-workflows"
+  ]
+}

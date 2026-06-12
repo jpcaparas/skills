@@ -50,6 +50,7 @@ SKILL_SCENES = {
     "linkedin-speak": "a megaphone transforming a small plain block into an overbright beam of geometric confetti",
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
+    "mockable-code": "a testing workbench with interchangeable dependency cartridges, stub blocks, fake service gems, and clean adapter rails",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
     "product-question": "a side-scrolling path of user-flow tiles and glowing inquiry gems leading toward a code city skyline, with simple unlabeled connectors and no screens or papers",

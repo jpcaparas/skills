@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export AGENT_HOOK_HARNESS="${AGENT_HOOK_HARNESS:-opencode}"
+export AGENT_HOOK_EVENT="${AGENT_HOOK_EVENT:-Stop}"
+
 PROJECT_ROOT="${OPENCODE_PROJECT_DIR:-}"
 if [ -z "$PROJECT_ROOT" ]; then
     if git rev-parse --show-toplevel >/dev/null 2>&1; then

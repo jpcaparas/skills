@@ -162,6 +162,16 @@ Production skill for markdown.new covering URL-to-Markdown conversion, file conv
 
 Passive production skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, and understandable to human maintainers.
 
+### `mockable-code`
+
+`npx skills add jpcaparas/skills --skill mockable-code`
+
+<p align="center">
+  <img src="skills/mockable-code/skill-card.png" alt="16-bit side-scrolling pixel art badge for mockable-code" width="480">
+</p>
+
+Passive production skill for keeping generated and edited code mockable, stubbable, fake-friendly, and testable without real external dependencies.
+
 ### `nanobanana-infographic`
 
 `npx skills add jpcaparas/skills --skill nanobanana-infographic`

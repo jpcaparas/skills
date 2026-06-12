@@ -98,7 +98,8 @@ fi
 
 set +e
 if [ -n "${AGENT_HOOK_HARNESS:-}" ]; then
-    bash "$REPO_ROOT/scripts/validate-all-skills.sh" >&2
+    SKILLS_VALIDATE_ALLOW_UNTRACKED_SKILL_WORKTREE=1 \
+        bash "$REPO_ROOT/scripts/validate-all-skills.sh" >&2
 else
     bash "$REPO_ROOT/scripts/validate-all-skills.sh"
 fi

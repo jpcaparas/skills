@@ -1,0 +1,103 @@
+{
+  "skill_name": "mockable-code",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "passive-feature-implementation",
+      "prompt": "Add retry handling to src/payments/charge.ts. It currently constructs a PaymentClient inside chargeCustomer(), reads PAYMENT_TIMEOUT_MS from the environment, and uses Date.now() for audit metadata. Keep the change easy to test and add whatever tests make sense.",
+      "expected_output": "The agent loads mockable-code passively, reads nearby construction and test patterns, makes the payment client, config, and clock replaceable through local idioms, adds focused tests with stubs/fakes for success and retry failure paths, and keeps production wiring straightforward.",
+      "assertions": [
+        {
+          "text": "Makes hard dependencies explicit without a broad dependency injection rewrite",
+          "type": "functional"
+        },
+        {
+          "text": "Tests can simulate payment success, retryable failure, and non-retryable failure without a real payment service",
+          "type": "functional"
+        },
+        {
+          "text": "Runs or identifies focused tests/typechecks",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "passive", "implementation"]
+    },
+    {
+      "id": 2,
+      "name": "boundary-refactor-edge-case",
+      "prompt": "This order fulfillment function is impossible to unit test. It validates inventory, calls our warehouse SDK, writes to Postgres, publishes an event, and formats the HTTP response. Refactor it without turning the code into interface soup.",
+      "expected_output": "The agent reads references/boundaries.md, preserves behavior, separates framework response formatting from policy, introduces narrow replacement points for warehouse, database, and event publishing, avoids unnecessary interfaces, and adds tests with suitable fakes or stubs.",
+      "assertions": [
+        {
+          "text": "Agent reads references/boundaries.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Does not add interfaces for every class or helper",
+          "type": "negative"
+        },
+        {
+          "text": "Includes a strategy for contract or integration coverage around external adapters",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "disclosure", "refactoring"]
+    },
+    {
+      "id": 3,
+      "name": "test-double-choice",
+      "prompt": "I need tests for a notification workflow. It sends one email, writes an audit record, and enqueues a follow-up job. Should I mock all three dependencies or use fakes?",
+      "expected_output": "The agent reads references/test-doubles.md and recommends the least powerful doubles that prove behavior: a capturing email sender or spy for the email interaction, an in-memory audit repository fake, and a fake or captured job queue, with contract coverage for risky adapters.",
+      "assertions": [
+        {
+          "text": "Agent reads references/test-doubles.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Chooses doubles based on behavior and interaction risk, not a blanket mocking rule",
+          "type": "functional"
+        },
+        {
+          "text": "Mentions adapter or contract coverage where mocks/fakes could drift",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "disclosure", "testing"]
+    },
+    {
+      "id": 4,
+      "name": "review-finding-priority",
+      "prompt": "Review this PR for testability. The diff adds a static FraudService.getInstance(), calls fetch() inside the pricing rules, reads System.getenv() in three methods, and replaces a behavior test with strict mock call ordering.",
+      "expected_output": "The agent reads references/review-rubric.md, leads with high-impact findings about hidden globals and side effects in policy code, explains how the strict mock ordering makes tests brittle, and proposes narrow repair directions with verification notes.",
+      "assertions": [
+        {
+          "text": "Agent reads references/review-rubric.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Findings are ordered by testability and safety impact rather than style preference",
+          "type": "functional"
+        },
+        {
+          "text": "Review cites concrete hidden dependency and brittle test risks",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "review", "disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "negative-non-code",
+      "prompt": "Rewrite this release note so it sounds more polished and concise.",
+      "expected_output": "The skill should not trigger because the task is non-code writing with no mockability, dependency, or test-double surface.",
+      "assertions": [
+        {
+          "text": "Does not load mockable-code or produce mockability guidance",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    }
+  ]
+}
