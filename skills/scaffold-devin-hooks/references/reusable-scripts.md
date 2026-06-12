@@ -15,13 +15,13 @@ scripts/
 └── opencode-stop-checks.sh    # optional thin OpenCode adapter
 ```
 
-Generated `.devin/hooks/generated/events/*.sh` files should stay thin. They read Devin's hook payload, call shared scripts from the plan's `scripts` array, and translate failures into Devin's documented output and exit-code contract.
+Shared `hooks/<event>/script.sh` files should stay thin. They read the active harness payload, load plan data from `hooks/<event>/devin.json`, call shared scripts from the plan's `scripts` array, and delegate Devin-specific output and exit-code handling to `hooks/lib/devin.sh`.
 
 ## Script Rules
 
 - Resolve the repo root inside shared scripts, usually with `git rev-parse --show-toplevel`.
 - Accept a harness or mode argument when output protocols differ, for example `agent-stop-checks.sh devin`.
-- Keep toolchain commands in shared scripts or existing repo task runners, not inside generated hook stubs.
+- Keep toolchain commands in shared scripts or existing repo task runners, not inside managed hook stubs.
 - Make shared scripts callable by humans and CI: `bash <project>/scripts/agent-stop-checks.sh devin`.
 - Use adapter scripts only when the protocol output differs enough to justify them.
 - Send logs to stderr. Reserve stdout for hook decision JSON when the script intentionally controls Devin.
@@ -45,4 +45,4 @@ Generated `.devin/hooks/generated/events/*.sh` files should stay thin. They read
 }
 ```
 
-Read `references/scaffold-layout.md` for how the generated bash stubs execute these entries.
+Read `references/scaffold-layout.md` for how the managed bash stubs execute these entries.

@@ -14,7 +14,7 @@ Repository-agnostic skill for auditing a project and scaffolding OpenCode hooks 
 - optional broad hook-surface stub coverage only when the user asks for a broad scaffold
 - repeatable merges for `opencode.json` plugin arrays and config-dir dependencies when the plan actually needs them
 - additive and overhaul refresh modes for projects that already use OpenCode plugins
-- a generated `.opencode/plugins/README.md` so the target project has a concise map of active behavior
+- a managed `.opencode/plugins/README.md` so the target project has a concise map of active behavior
 
 ## Key Files
 
@@ -23,7 +23,7 @@ Repository-agnostic skill for auditing a project and scaffolding OpenCode hooks 
 - `references/config-layering.md` for scope, precedence, and directory guidance
 - `references/hook-events.md` for the current surface catalog and lifecycle semantics
 - `references/plugin-patterns.md` for lifecycle/action, repair, toast, guardrail, post-turn, shell env, and custom-tool patterns
-- `references/scaffold-layout.md` for the generated target structure
+- `references/scaffold-layout.md` for the managed target structure
 - `references/reusable-scripts.md` for cross-agent and CI-friendly script placement
 - `references/merge-strategy.md` for repeat-run behavior
 - `references/gotchas.md` for runtime limits, path drift, and cache traps

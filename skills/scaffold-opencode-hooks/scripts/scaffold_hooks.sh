@@ -43,6 +43,54 @@ normalize_filename() {
     esac
 }
 
+write_opencode_event_scripts() {
+    local hooks_root_abs="$1"
+    local event_dir="$2"
+    local delegate_script="$3"
+    local mode="$4"
+    local event_root="$hooks_root_abs/$event_dir"
+    local script_path="$event_root/script.sh"
+    local adapter_path="$event_root/opencode.sh"
+
+    mkdir -p "$event_root"
+
+    if [ "$mode" != "additive" ] || [ ! -f "$script_path" ]; then
+        cat > "$script_path" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_ROOT="\${OPENCODE_PROJECT_DIR:-}"
+if [ -z "\$PROJECT_ROOT" ]; then
+    if git rev-parse --show-toplevel >/dev/null 2>&1; then
+        PROJECT_ROOT="\$(git rev-parse --show-toplevel)"
+    else
+        PROJECT_ROOT="\$(pwd -P)"
+    fi
+fi
+
+DELEGATE="\$PROJECT_ROOT/$delegate_script"
+if [ ! -f "\$DELEGATE" ]; then
+    printf '[opencode-hook] missing delegate: %s\n' "\$DELEGATE" >&2
+    exit 127
+fi
+
+exec /usr/bin/env bash "\$DELEGATE" "\$@"
+EOF
+        chmod +x "$script_path"
+    fi
+
+    cat > "$adapter_path" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+export OPENCODE_HOOK_EVENT="$event_dir"
+
+exec "\$SCRIPT_DIR/script.sh" "\$@"
+EOF
+    chmod +x "$adapter_path"
+}
+
 render_handler_block() {
     local surface="$1"
     case "$surface" in
@@ -300,6 +348,7 @@ PLUGIN_ROOT_VALUE="$(jq -r '.plugin_root // empty' "$PLAN_FILE")"
 MANAGED_STATE_VALUE="$(jq -r '.managed_state_dir // empty' "$PLAN_FILE")"
 CONFIG_TARGET_VALUE="$(jq -r '.config_target // empty' "$PLAN_FILE")"
 PACKAGE_TARGET_VALUE="$(jq -r '.package_target // empty' "$PLAN_FILE")"
+HOOKS_ROOT_VALUE="$(jq -r '.hooks_root // "hooks"' "$PLAN_FILE")"
 
 if [ -z "$PLUGIN_ROOT_VALUE" ]; then
     if [ "$SCOPE" = "global" ]; then
@@ -334,6 +383,7 @@ PLUGIN_ROOT_ABS="$(resolve_target_path "$PLUGIN_ROOT_VALUE" "$PROJECT_ROOT" "$HO
 MANAGED_STATE_ABS="$(resolve_target_path "$MANAGED_STATE_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
 CONFIG_TARGET_ABS="$(resolve_target_path "$CONFIG_TARGET_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
 PACKAGE_TARGET_ABS="$(resolve_target_path "$PACKAGE_TARGET_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
+HOOKS_ROOT_ABS="$(resolve_target_path "$HOOKS_ROOT_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
 SURFACES_DIR="$MANAGED_STATE_ABS/surfaces"
 MANIFEST_TARGET_FILE="$MANAGED_STATE_ABS/manifest.json"
 PLAN_SNAPSHOT_FILE="$MANAGED_STATE_ABS/plan.snapshot.json"
@@ -419,6 +469,7 @@ scaffold_hooks.sh dry run
   mode:            $MODE
   module format:   $MODULE_FORMAT
   plugin root:     $PLUGIN_ROOT_VALUE
+  hook root:       $HOOKS_ROOT_VALUE
   managed state:   $MANAGED_STATE_VALUE
   config target:   $CONFIG_TARGET_VALUE
   package target:  $PACKAGE_TARGET_VALUE
@@ -429,7 +480,7 @@ EOF
     exit 0
 fi
 
-mkdir -p "$PLUGIN_ROOT_ABS"
+mkdir -p "$PLUGIN_ROOT_ABS" "$HOOKS_ROOT_ABS"
 
 if [ "$MODE" = "overhaul" ] && [ -f "$MANIFEST_TARGET_FILE" ]; then
     BACKUP_PATH="${MANAGED_STATE_ABS}.bak.$(date +%Y%m%d%H%M%S)"
@@ -482,10 +533,19 @@ while IFS= read -r row; do
     filename="$(normalize_filename "$filename_raw")"
     target_path="$PLUGIN_ROOT_ABS/$filename"
     surfaces_json="$(printf '%s' "$row" | jq -c '.surfaces // []')"
+    context_script="$(printf '%s' "$row" | jq -r --arg root "$HOOKS_ROOT_VALUE" '.context_script // ($root + "/opencode-session-created/opencode.sh")')"
+    action_script="$(printf '%s' "$row" | jq -r --arg root "$HOOKS_ROOT_VALUE" '.action_script // ($root + "/opencode-session-idle/opencode.sh")')"
 
     if [ "$(printf '%s' "$surfaces_json" | jq 'length')" -eq 0 ]; then
         echo "Enabled plugin '$name' has no surfaces." >&2
         exit 1
+    fi
+
+    if [ "$pattern" = "lifecycle-action" ]; then
+        context_delegate="$(printf '%s' "$row" | jq -r '.context_delegate_script // "scripts/agent-session-context.sh"')"
+        action_delegate="$(printf '%s' "$row" | jq -r '.action_delegate_script // "scripts/validate-project.sh"')"
+        write_opencode_event_scripts "$HOOKS_ROOT_ABS" "opencode-session-created" "$context_delegate" "$MODE"
+        write_opencode_event_scripts "$HOOKS_ROOT_ABS" "opencode-session-idle" "$action_delegate" "$MODE"
     fi
 
     if [ "$MODE" = "additive" ] && [ -f "$target_path" ]; then
@@ -525,8 +585,8 @@ while IFS= read -r row; do
         --name "$name" \
         --notes "$notes" \
         --surfaces "$(printf '%s' "$surfaces_json" | jq -r 'join(", ")')" \
-        --context-script "$(printf '%s' "$row" | jq -r '.context_script // "scripts/agent-session-context.sh"')" \
-        --action-script "$(printf '%s' "$row" | jq -r '.action_script // "scripts/validate-project.sh"')" \
+        --context-script "$context_script" \
+        --action-script "$action_script" \
         --action-label "$(printf '%s' "$row" | jq -r '.action_label // "Project validation"')" \
         --service-name "$(printf '%s' "$row" | jq -r '.service // "opencode-lifecycle-hooks"')"
 
@@ -559,6 +619,7 @@ jq -n \
     --arg module_format "$MODULE_FORMAT" \
     --argjson surface_catalog "$SURFACE_CATALOG" \
     --arg plugin_root "$PLUGIN_ROOT_VALUE" \
+    --arg hooks_root "$HOOKS_ROOT_VALUE" \
     --arg managed_state_dir "$MANAGED_STATE_VALUE" \
     --arg config_target "$CONFIG_TARGET_VALUE" \
     --arg package_target "$PACKAGE_TARGET_VALUE" \
@@ -575,6 +636,7 @@ jq -n \
         module_format: $module_format,
         surface_catalog: $surface_catalog,
         plugin_root: $plugin_root,
+        hooks_root: $hooks_root,
         managed_state_dir: $managed_state_dir,
         config_target: $config_target,
         package_target: $package_target,
@@ -596,6 +658,7 @@ scaffold_hooks.sh complete
   scope:           $SCOPE
   deployment:      $DEPLOYMENT
   plugin root:     $PLUGIN_ROOT_VALUE
+  hook root:       $HOOKS_ROOT_VALUE
   managed state:   $MANAGED_STATE_VALUE
   mode:            $MODE
 EOF

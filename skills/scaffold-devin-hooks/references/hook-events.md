@@ -107,7 +107,7 @@ Devin sets `DEVIN_PROJECT_DIR` to the project root directory for hooks. Generate
 ```json
 {
   "type": "command",
-  "command": "bash \"$DEVIN_PROJECT_DIR/.devin/hooks/generated/events/pre-tool-use.sh\""
+  "command": "bash \"$DEVIN_PROJECT_DIR/hooks/pre-tool-use/devin.sh\""
 }
 ```
 

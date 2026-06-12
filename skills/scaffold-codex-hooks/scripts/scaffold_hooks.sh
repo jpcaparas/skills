@@ -31,22 +31,317 @@ assert_live_git_root_substitution() {
 
     case "$command" in
         *'\$(git rev-parse --show-toplevel)'*)
-            echo "Generated hook command escaped \$(git rev-parse --show-toplevel): $command" >&2
+            echo "Managed hook command escaped \$(git rev-parse --show-toplevel): $command" >&2
             exit 1
             ;;
     esac
 }
 
 build_hook_command() {
-    local script_name="$1"
+    local event_dir="$1"
     if [ "$IS_GIT_REPO" = "true" ]; then
         # Keep the command substitution live for hook execution time.
-        printf "/usr/bin/env bash -lc 'exec \"\$(git rev-parse --show-toplevel)/%s/events/%s\"'\n" \
-            "$MANAGED_ROOT_REL" "$script_name"
+        printf "/usr/bin/env bash -lc 'exec \"\$(git rev-parse --show-toplevel)/%s/%s/codex.sh\"'\n" \
+            "$MANAGED_ROOT_REL" "$event_dir"
     else
-        printf "/usr/bin/env bash -lc 'exec \"%s/events/%s\"'\n" \
-            "$MANAGED_ROOT_ABS" "$script_name"
+        printf "/usr/bin/env bash -lc 'exec \"%s/%s/codex.sh\"'\n" \
+            "$MANAGED_ROOT_ABS" "$event_dir"
     fi
+}
+
+event_dir_name() {
+    local script_name="$1"
+    script_name="${script_name%.sh}"
+    printf '%s\n' "$script_name" | tr '_' '-'
+}
+
+write_adapter_script() {
+    local harness="$1"
+    local event_name="$2"
+    local target="$3"
+
+    cat > "$target" <<EOF
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="\$(cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+export AGENT_HOOK_HARNESS="$harness"
+export AGENT_HOOK_EVENT="$event_name"
+
+exec "\$SCRIPT_DIR/script.sh" "\$@"
+EOF
+    chmod +x "$target"
+}
+
+write_runtime_lib() {
+    cat > "$LIB_DIR/agent-hook-runtime.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+require_jq() {
+    if ! command -v jq >/dev/null 2>&1; then
+        echo "jq is required by agent hook helpers." >&2
+        return 1
+    fi
+}
+
+read_hook_input() { cat; }
+
+read_adapter_config() {
+    local config_file="$1"
+    require_jq
+    if [ -f "$config_file" ]; then
+        jq -c '.' "$config_file"
+    else
+        printf '{}\n'
+    fi
+}
+
+hook_json() {
+    local filter="$1"
+    require_jq
+    if [ "$#" -ge 2 ]; then
+        local fallback="$2"
+        printf '%s' "$HOOK_INPUT" | jq -er "$filter" 2>/dev/null || printf '%s\n' "$fallback"
+    else
+        printf '%s' "$HOOK_INPUT" | jq -er "$filter"
+    fi
+}
+
+config_value() {
+    local filter="$1"
+    require_jq
+    if [ "$#" -ge 2 ]; then
+        local fallback="$2"
+        printf '%s' "$ADAPTER_CONFIG_JSON" | jq -er "$filter" 2>/dev/null || printf '%s\n' "$fallback"
+    else
+        printf '%s' "$ADAPTER_CONFIG_JSON" | jq -er "$filter"
+    fi
+}
+
+config_scripts_json() { config_value '.scripts // []' '[]'; }
+config_commands_json() { config_value '.commands // []' '[]'; }
+config_block_on_failure() { config_value '(.block_on_failure // false | tostring)' 'false'; }
+
+hook_project_root() {
+    case "${AGENT_HOOK_HARNESS:-}" in
+        claude)
+            if [ -n "${CLAUDE_PROJECT_DIR:-}" ]; then printf '%s\n' "$CLAUDE_PROJECT_DIR"; return 0; fi
+            ;;
+        devin)
+            if [ -n "${DEVIN_PROJECT_DIR:-}" ]; then printf '%s\n' "$DEVIN_PROJECT_DIR"; return 0; fi
+            ;;
+    esac
+
+    local payload_cwd
+    payload_cwd="$(printf '%s' "$HOOK_INPUT" | jq -er '.cwd // empty' 2>/dev/null || true)"
+    if [ -n "$payload_cwd" ]; then
+        printf '%s\n' "$payload_cwd"
+        return 0
+    fi
+
+    if git rev-parse --show-toplevel >/dev/null 2>&1; then
+        git rev-parse --show-toplevel
+        return 0
+    fi
+
+    pwd -P
+}
+
+resolve_command_cwd() {
+    local requested_cwd="${1:-.}"
+    case "$requested_cwd" in
+        ""|".") hook_project_root ;;
+        /*) printf '%s\n' "$requested_cwd" ;;
+        *) printf '%s/%s\n' "$(hook_project_root)" "$requested_cwd" ;;
+    esac
+}
+
+COMMAND_FAILURE_SUMMARY=""
+
+append_command_failure() {
+    local label="$1"
+    local command="$2"
+    local status="$3"
+    COMMAND_FAILURE_SUMMARY="${COMMAND_FAILURE_SUMMARY}- ${label}: exited with ${status} while running \`${command}\`
+"
+}
+
+configured_command_failure_message() {
+    printf 'One or more project hook commands failed.\n\n%s\nFix the failing command output, then retry the agent action.' "$COMMAND_FAILURE_SUMMARY"
+}
+
+run_project_command() {
+    local label="$1"
+    local command="$2"
+    local cwd
+    cwd="$(resolve_command_cwd "${3:-.}")"
+    printf '[%s-hook] %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$label" >&2
+    printf '[%s-hook] cwd: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$cwd" >&2
+    printf '[%s-hook] command: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$command" >&2
+    (cd "$cwd" && /usr/bin/env bash -lc "$command")
+}
+
+run_project_script() {
+    local label="$1"
+    local script_path="$2"
+    local args_json="${3:-[]}"
+    local cwd
+    local resolved_script
+    local -a script_args=()
+
+    cwd="$(resolve_command_cwd "${4:-.}")"
+    case "$script_path" in
+        /*) resolved_script="$script_path" ;;
+        *) resolved_script="$(hook_project_root)/$script_path" ;;
+    esac
+
+    require_jq
+    while IFS= read -r script_arg; do
+        script_args+=("$script_arg")
+    done < <(printf '%s' "$args_json" | jq -r '.[]?')
+
+    if [ ! -f "$resolved_script" ]; then
+        printf '[%s-hook] missing script: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$resolved_script" >&2
+        return 127
+    fi
+
+    printf '[%s-hook] %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$label" >&2
+    printf '[%s-hook] cwd: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$cwd" >&2
+    printf '[%s-hook] script: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$resolved_script" >&2
+    (cd "$cwd" && /usr/bin/env bash "$resolved_script" "${script_args[@]}")
+}
+
+run_configured_scripts() {
+    local scripts_json="$1"
+    local failed="false"
+    require_jq
+    if [ "$(printf '%s' "$scripts_json" | jq 'length')" -eq 0 ]; then return 0; fi
+    while IFS= read -r script_item; do
+        local label script_path script_args_json cwd status
+        script_path="$(printf '%s' "$script_item" | jq -r '.path // .script // empty')"
+        label="$(printf '%s' "$script_item" | jq -r '.label // .name // .path // .script')"
+        script_args_json="$(printf '%s' "$script_item" | jq -c '.args // []')"
+        cwd="$(printf '%s' "$script_item" | jq -r '.cwd // "."')"
+        if [ -z "$script_path" ]; then
+            append_command_failure "$label" "<missing script path>" 64
+            failed="true"
+            continue
+        fi
+        if run_project_script "$label" "$script_path" "$script_args_json" "$cwd"; then
+            :
+        else
+            status="$?"
+            append_command_failure "$label" "$script_path" "$status"
+            failed="true"
+        fi
+    done < <(printf '%s' "$scripts_json" | jq -c '.[]')
+    [ "$failed" = "false" ]
+}
+
+run_configured_commands() {
+    local commands_json="$1"
+    local failed="false"
+    require_jq
+    if [ "$(printf '%s' "$commands_json" | jq 'length')" -eq 0 ]; then return 0; fi
+    while IFS= read -r command_item; do
+        local label command cwd status
+        label="$(printf '%s' "$command_item" | jq -r '.label // .name // .command')"
+        command="$(printf '%s' "$command_item" | jq -r '.command')"
+        cwd="$(printf '%s' "$command_item" | jq -r '.cwd // "."')"
+        if run_project_command "$label" "$command" "$cwd"; then
+            :
+        else
+            status="$?"
+            append_command_failure "$label" "$command" "$status"
+            failed="true"
+        fi
+    done < <(printf '%s' "$commands_json" | jq -c '.[]')
+    [ "$failed" = "false" ]
+}
+EOF
+    chmod +x "$LIB_DIR/agent-hook-runtime.sh"
+}
+
+write_codex_lib() {
+    cat > "$LIB_DIR/codex.sh" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+
+emit_additional_context() {
+    local event_name="$1"
+    local message="$2"
+    require_jq
+    jq -n --arg event_name "$event_name" --arg message "$message" \
+        '{hookSpecificOutput: {hookEventName: $event_name, additionalContext: $message}}'
+}
+
+emit_system_message() {
+    local message="$1"
+    require_jq
+    jq -n --arg message "$message" '{systemMessage: $message}'
+}
+
+deny_pre_tool_use() {
+    local reason="$1"
+    require_jq
+    jq -n --arg reason "$reason" \
+        '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
+}
+
+deny_permission_request() {
+    local message="$1"
+    require_jq
+    jq -n --arg message "$message" \
+        '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "deny", message: $message}}}'
+}
+
+block_with_reason() {
+    local reason="$1"
+    require_jq
+    jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
+}
+
+stop_processing() {
+    local reason="$1"
+    require_jq
+    jq -n --arg reason "$reason" '{continue: false, stopReason: $reason}'
+}
+
+exit_with_block_reason() {
+    local reason="$1"
+    printf '%s\n' "$reason" >&2
+    exit 2
+}
+
+handle_project_command_failure() {
+    local event_name="$1"
+    local message="$2"
+
+    case "$event_name" in
+        PreToolUse)
+            deny_pre_tool_use "$message"
+            ;;
+        PermissionRequest)
+            deny_permission_request "$message"
+            ;;
+        PreCompact|PostCompact)
+            stop_processing "$message"
+            ;;
+        Stop|SubagentStop|UserPromptSubmit|PostToolUse)
+            block_with_reason "$message"
+            ;;
+        SessionStart|SubagentStart)
+            emit_additional_context "$event_name" "$message"
+            ;;
+        *)
+            printf '%s\n' "$message" >&2
+            return 1
+            ;;
+    esac
+}
+EOF
+    chmod +x "$LIB_DIR/codex.sh"
 }
 
 PROJECT_ROOT=""
@@ -146,13 +441,13 @@ case "$ENSURE_FEATURE" in
 esac
 
 HOOKS_TARGET_REL="$(jq -r '.hooks_target // ".codex/hooks.json"' "$PLAN_FILE")"
-MANAGED_ROOT_REL="$(jq -r '.managed_root // ".codex/hooks/generated"' "$PLAN_FILE")"
+MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
 MANAGED_ROOT_ABS="$PROJECT_ROOT/$MANAGED_ROOT_REL"
 HOOKS_TARGET_ABS="$PROJECT_ROOT/$HOOKS_TARGET_REL"
-EVENTS_DIR="$MANAGED_ROOT_ABS/events"
 LIB_DIR="$MANAGED_ROOT_ABS/lib"
-FRAGMENT_FILE="$MANAGED_ROOT_ABS/hooks.generated.json"
-MANIFEST_TARGET_FILE="$MANAGED_ROOT_ABS/manifest.json"
+STATE_DIR="$MANAGED_ROOT_ABS/.state/codex"
+FRAGMENT_FILE="$STATE_DIR/hooks.json"
+MANIFEST_TARGET_FILE="$STATE_DIR/manifest.json"
 
 IS_GIT_REPO="false"
 if git -C "$PROJECT_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
@@ -251,7 +546,7 @@ scaffold_hooks.sh dry run
   plan file:       $PLAN_FILE
   mode:            $MODE
   hooks target:    $HOOKS_TARGET_REL
-  managed root:    $MANAGED_ROOT_REL
+  hook root:       $MANAGED_ROOT_REL
   ensure feature:  $ENSURE_FEATURE
   feature active:  $FEATURE_EFFECTIVE
 EOF
@@ -272,363 +567,38 @@ if [ "$ENSURE_FEATURE" != "off" ] && [ "$FEATURE_EFFECTIVE" != "true" ]; then
     printf '%s\n' "$FEATURE_STATUS_JSON" > "$TEMP_FEATURE_STATUS"
 fi
 
-mkdir -p "$PROJECT_ROOT/.codex/hooks"
+mkdir -p "$PROJECT_ROOT/.codex" "$MANAGED_ROOT_ABS" "$LIB_DIR" "$STATE_DIR"
 
-if [ "$MODE" = "overhaul" ] && [ -d "$MANAGED_ROOT_ABS" ]; then
-    BACKUP_PATH="${MANAGED_ROOT_ABS}.bak.$(date +%Y%m%d%H%M%S)"
-    mv "$MANAGED_ROOT_ABS" "$BACKUP_PATH"
+if [ "$MODE" = "overhaul" ]; then
+    rm -rf "$STATE_DIR"
+    find "$MANAGED_ROOT_ABS" -mindepth 2 -maxdepth 2 \( -name 'codex.sh' -o -name 'codex.json' \) -delete 2>/dev/null || true
+    mkdir -p "$STATE_DIR"
 fi
 
-mkdir -p "$EVENTS_DIR" "$LIB_DIR"
-
-cat > "$LIB_DIR/common.sh" <<'EOF'
-#!/usr/bin/env bash
-#
-# common.sh
-#
-# Shared helper functions for generated Codex hook scripts.
-# Event scripts should stay readable on their own; this file only holds
-# repeated input, JSON, and output helpers.
-#
-
-set -euo pipefail
-
-require_jq() {
-    # Hook output helpers build JSON with jq so quoting stays correct.
-    # Fail with a clear message instead of returning malformed JSON.
-    if ! command -v jq >/dev/null 2>&1; then
-        echo "jq is required by generated Codex hook helpers." >&2
-        return 1
-    fi
-}
-
-read_hook_input() {
-    # Codex passes one JSON object to command hooks on stdin.
-    # Read the whole payload once; event scripts store it in HOOK_INPUT.
-    cat
-}
-
-hook_json() {
-    # Read one value from HOOK_INPUT with jq.
-    #
-    # Arguments:
-    #   $1 - jq filter, for example '.cwd'
-    #   $2 - optional fallback printed when the filter is missing or null
-    #
-    # Examples:
-    #   hook_json '.cwd' "$PWD"
-    #   hook_json '.tool_name' ''
-    local filter="$1"
-    require_jq
-
-    if [ "$#" -ge 2 ]; then
-        local fallback="$2"
-        printf '%s' "$HOOK_INPUT" | jq -er "$filter" 2>/dev/null || printf '%s\n' "$fallback"
-    else
-        printf '%s' "$HOOK_INPUT" | jq -er "$filter"
-    fi
-}
-
-emit_additional_context() {
-    # Send event-specific context back to Codex.
-    # This is useful when a hook wants to annotate what Codex should consider
-    # next without failing the event.
-    local event_name="$1"
-    local message="$2"
-    require_jq
-    jq -n --arg event_name "$event_name" --arg message "$message" \
-        '{hookSpecificOutput: {hookEventName: $event_name, additionalContext: $message}}'
-}
-
-emit_system_message() {
-    # Send a general system message back to Codex.
-    local message="$1"
-    require_jq
-    jq -n --arg message "$message" '{systemMessage: $message}'
-}
-
-deny_pre_tool_use() {
-    # Deny a PreToolUse event before the tool runs.
-    # The reason is returned to Codex as structured hook output.
-    local reason="$1"
-    require_jq
-    jq -n --arg reason "$reason" \
-        '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "deny", permissionDecisionReason: $reason}}'
-}
-
-allow_pre_tool_use_with_updated_input() {
-    # Allow a supported PreToolUse call while rewriting its input.
-    # Pass a JSON object shaped for the target tool. Bash and apply_patch expect
-    # a string `command` field; MCP tools expect the replacement argument object.
-    local updated_input_json="$1"
-    require_jq
-    jq -n --argjson updated_input "$updated_input_json" \
-        '{hookSpecificOutput: {hookEventName: "PreToolUse", permissionDecision: "allow", updatedInput: $updated_input}}'
-}
-
-allow_permission_request() {
-    # Approve a PermissionRequest event before the normal approval flow.
-    require_jq
-    jq -n \
-        '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "allow"}}}'
-}
-
-deny_permission_request() {
-    # Deny a PermissionRequest event with a message Codex can show/use.
-    local message="$1"
-    require_jq
-    jq -n --arg message "$message" \
-        '{hookSpecificOutput: {hookEventName: "PermissionRequest", decision: {behavior: "deny", message: $message}}}'
-}
-
-block_with_reason() {
-    # Block events that support the generic decision/reason contract.
-    local reason="$1"
-    require_jq
-    jq -n --arg reason "$reason" '{decision: "block", reason: $reason}'
-}
-
-stop_processing() {
-    # Tell Codex to stop processing when the event supports continue=false.
-    local reason="$1"
-    require_jq
-    jq -n --arg reason "$reason" '{continue: false, stopReason: $reason}'
-}
-
-exit_with_block_reason() {
-    # Some hook contracts treat exit code 2 plus stderr as a block signal.
-    # Use this helper only when the event documentation says that is supported.
-    local reason="$1"
-    printf '%s\n' "$reason" >&2
-    exit 2
-}
-
-hook_project_root() {
-    # Prefer Codex's hook payload cwd, then the process cwd. The generated hook
-    # command starts from the project root when possible, but this fallback keeps
-    # the command runner understandable in non-git fixtures too.
-    local payload_cwd
-    payload_cwd="$(printf '%s' "$HOOK_INPUT" | jq -er '.cwd // empty' 2>/dev/null || true)"
-    if [ -n "$payload_cwd" ]; then
-        printf '%s\n' "$payload_cwd"
-        return 0
-    fi
-
-    pwd -P
-}
-
-resolve_command_cwd() {
-    # Command cwd can be absolute or relative to the project root.
-    local requested_cwd="${1:-.}"
-    case "$requested_cwd" in
-        ""|".")
-            hook_project_root
-            ;;
-        /*)
-            printf '%s\n' "$requested_cwd"
-            ;;
-        *)
-            printf '%s/%s\n' "$(hook_project_root)" "$requested_cwd"
-            ;;
-    esac
-}
-
-COMMAND_FAILURE_SUMMARY=""
-
-append_command_failure() {
-    local label="$1"
-    local command="$2"
-    local status="$3"
-
-    COMMAND_FAILURE_SUMMARY="${COMMAND_FAILURE_SUMMARY}- ${label}: exited with ${status} while running \`${command}\`
-"
-}
-
-configured_command_failure_message() {
-    printf 'One or more project hook commands failed.\n\n%s\nFix the failing command output, then retry the agent action.' "$COMMAND_FAILURE_SUMMARY"
-}
-
-run_project_command() {
-    # Run an existing repo command exactly as configured in the hook plan.
-    # The command string is trusted project configuration, not user input from
-    # the hook payload. Keep toolchain-specific details in the plan.
-    local label="$1"
-    local command="$2"
-    local cwd
-    cwd="$(resolve_command_cwd "${3:-.}")"
-
-    printf '[hook] %s\n' "$label" >&2
-    printf '[hook] cwd: %s\n' "$cwd" >&2
-    printf '[hook] command: %s\n' "$command" >&2
-
-    (
-        cd "$cwd"
-        /usr/bin/env bash -lc "$command"
-    )
-}
-
-run_project_script() {
-    # Run a reusable repo-owned script by path, with optional args from the plan.
-    # Prefer this over embedding toolchain commands directly in agent hook stubs
-    # when the same behavior may also be called by Claude Code, OpenCode, Husky,
-    # CI, or a human in a terminal.
-    local label="$1"
-    local script_path="$2"
-    local args_json="${3:-[]}"
-    local cwd
-    local resolved_script
-    local -a script_args=()
-
-    cwd="$(resolve_command_cwd "${4:-.}")"
-    case "$script_path" in
-        /*)
-            resolved_script="$script_path"
-            ;;
-        *)
-            resolved_script="$(hook_project_root)/$script_path"
-            ;;
-    esac
-
-    require_jq
-    while IFS= read -r script_arg; do
-        script_args+=("$script_arg")
-    done < <(printf '%s' "$args_json" | jq -r '.[]?')
-
-    if [ ! -f "$resolved_script" ]; then
-        printf '[hook] missing script: %s\n' "$resolved_script" >&2
-        return 127
-    fi
-
-    printf '[hook] %s\n' "$label" >&2
-    printf '[hook] cwd: %s\n' "$cwd" >&2
-    printf '[hook] script: %s\n' "$resolved_script" >&2
-
-    (
-        cd "$cwd"
-        /usr/bin/env bash "$resolved_script" "${script_args[@]}"
-    )
-}
-
-run_configured_scripts() {
-    # Execute reusable script entries from an event plan:
-    #   [{"label":"stop checks","path":"scripts/agent-stop-checks.sh","args":["codex"],"cwd":"."}]
-    #
-    # Keep project behavior in these repo-owned scripts when it needs to be
-    # shared with other agent harnesses, Git hooks, GitHub Actions, or humans.
-    local scripts_json="$1"
-    local failed="false"
-
-    require_jq
-
-    if [ "$(printf '%s' "$scripts_json" | jq 'length')" -eq 0 ]; then
-        return 0
-    fi
-
-    while IFS= read -r script_item; do
-        local label
-        local script_path
-        local script_args_json
-        local cwd
-        local status
-
-        script_path="$(printf '%s' "$script_item" | jq -r '.path // .script // empty')"
-        label="$(printf '%s' "$script_item" | jq -r '.label // .name // .path // .script')"
-        script_args_json="$(printf '%s' "$script_item" | jq -c '.args // []')"
-        cwd="$(printf '%s' "$script_item" | jq -r '.cwd // "."')"
-
-        if [ -z "$script_path" ]; then
-            append_command_failure "$label" "<missing script path>" 64
-            failed="true"
-            continue
-        fi
-
-        if run_project_script "$label" "$script_path" "$script_args_json" "$cwd"; then
-            :
-        else
-            status="$?"
-            append_command_failure "$label" "$script_path" "$status"
-            failed="true"
-        fi
-    done < <(printf '%s' "$scripts_json" | jq -c '.[]')
-
-    [ "$failed" = "false" ]
-}
-
-run_configured_commands() {
-    # Execute command entries from an event plan:
-    #   [{"label":"quality gate","command":"your repo command","cwd":"."}]
-    #
-    # This is deliberately language-agnostic. It can run package-manager,
-    # framework, Make, Just, Taskfile, shell, or custom repo commands.
-    local commands_json="$1"
-    local failed="false"
-
-    require_jq
-
-    if [ "$(printf '%s' "$commands_json" | jq 'length')" -eq 0 ]; then
-        return 0
-    fi
-
-    while IFS= read -r command_item; do
-        local label
-        local command
-        local cwd
-        local status
-
-        label="$(printf '%s' "$command_item" | jq -r '.label // .name // .command')"
-        command="$(printf '%s' "$command_item" | jq -r '.command')"
-        cwd="$(printf '%s' "$command_item" | jq -r '.cwd // "."')"
-
-        if run_project_command "$label" "$command" "$cwd"; then
-            :
-        else
-            status="$?"
-            append_command_failure "$label" "$command" "$status"
-            failed="true"
-        fi
-    done < <(printf '%s' "$commands_json" | jq -c '.[]')
-
-    [ "$failed" = "false" ]
-}
-
-handle_project_command_failure() {
-    # Convert failed project commands into the safest output shape for each
-    # event. Stop failures continue Codex with a new prompt; they do not reject
-    # the turn.
-    local event_name="$1"
-    local message="$2"
-
-    case "$event_name" in
-        PreToolUse)
-            deny_pre_tool_use "$message"
-            ;;
-        PermissionRequest)
-            deny_permission_request "$message"
-            ;;
-        PreCompact|PostCompact)
-            stop_processing "$message"
-            ;;
-        Stop|SubagentStop|UserPromptSubmit|PostToolUse)
-            block_with_reason "$message"
-            ;;
-        SessionStart|SubagentStart)
-            emit_additional_context "$event_name" "$message"
-            ;;
-        *)
-            printf '%s\n' "$message" >&2
-            return 1
-            ;;
-    esac
-}
-EOF
-chmod +x "$LIB_DIR/common.sh"
+write_runtime_lib
+write_codex_lib
 
 while IFS=$'\t' read -r event_name script_name description matcher_guidance output_guidance blocking_guidance; do
-    target_script="$EVENTS_DIR/$script_name"
+    event_dir="$(event_dir_name "$script_name")"
+    event_dir_abs="$MANAGED_ROOT_ABS/$event_dir"
+    target_script="$event_dir_abs/script.sh"
+    adapter_script="$event_dir_abs/codex.sh"
+    adapter_config="$event_dir_abs/codex.json"
+    mkdir -p "$event_dir_abs"
 
     if [ "$MODE" = "additive" ] && [ -f "$target_script" ]; then
         chmod +x "$target_script"
-        continue
+    else
+        sed \
+            -e "s|{{SCRIPT_NAME}}|script.sh|g" \
+            -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
+            -e "s|{{EVENT_DESCRIPTION}}|$(escape_for_sed "$description")|g" \
+            -e "s|{{MATCHER_GUIDANCE}}|$(escape_for_sed "$matcher_guidance")|g" \
+            -e "s|{{OUTPUT_GUIDANCE}}|$(escape_for_sed "$output_guidance")|g" \
+            -e "s|{{BLOCKING_GUIDANCE}}|$(escape_for_sed "$blocking_guidance")|g" \
+            "$EVENT_TEMPLATE" > "$target_script"
+
+        chmod +x "$target_script"
     fi
 
     event_commands_json="$(
@@ -662,19 +632,18 @@ while IFS=$'\t' read -r event_name script_name description matcher_guidance outp
             ]
         ' "$PLAN_FILE"
     )"
-
-    sed \
-        -e "s|{{SCRIPT_NAME}}|$(escape_for_sed "$script_name")|g" \
-        -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
-        -e "s|{{EVENT_DESCRIPTION}}|$(escape_for_sed "$description")|g" \
-        -e "s|{{MATCHER_GUIDANCE}}|$(escape_for_sed "$matcher_guidance")|g" \
-        -e "s|{{OUTPUT_GUIDANCE}}|$(escape_for_sed "$output_guidance")|g" \
-        -e "s|{{BLOCKING_GUIDANCE}}|$(escape_for_sed "$blocking_guidance")|g" \
-        -e "s|{{PROJECT_SCRIPTS_JSON}}|$(escape_for_sed "$event_scripts_json")|g" \
-        -e "s|{{PROJECT_COMMANDS_JSON}}|$(escape_for_sed "$event_commands_json")|g" \
-        "$EVENT_TEMPLATE" > "$target_script"
-
-    chmod +x "$target_script"
+    write_adapter_script "codex" "$event_name" "$adapter_script"
+    jq -n \
+        --arg harness "codex" \
+        --arg event "$event_name" \
+        --argjson scripts "$event_scripts_json" \
+        --argjson commands "$event_commands_json" \
+        '{
+            harness: $harness,
+            event: $event,
+            scripts: $scripts,
+            commands: $commands
+        }' > "$adapter_config"
 done < <(
     jq -r '.events[] | [.name, .script_name, .description, .matcher_guidance, .output_guidance, .blocking_guidance] | @tsv' \
         "$MANIFEST_SOURCE"
@@ -691,7 +660,7 @@ jq \
     '
     . + {
         generated_at: $generated_at,
-        managed_root: $managed_root,
+        hook_root: $managed_root,
         hooks_target: $hooks_target,
         mode: $mode,
         feature_scope: $feature_scope,
@@ -705,11 +674,12 @@ TEMP_GROUPS_DIR="$(mktemp -d)"
 while IFS= read -r row; do
     event_name="$(printf '%s' "$row" | jq -r '.name')"
     script_name="$(printf '%s' "$row" | jq -r '.script_name')"
+    event_dir="$(event_dir_name "$script_name")"
     matcher_supported="$(printf '%s' "$row" | jq -r '.matcher_supported')"
     matcher="$(printf '%s' "$row" | jq -r '.matcher')"
     timeout="$(printf '%s' "$row" | jq -r '.timeout')"
     status_message="$(printf '%s' "$row" | jq -r '.status_message')"
-    command="$(build_hook_command "$script_name")"
+    command="$(build_hook_command "$event_dir")"
     assert_live_git_root_substitution "$command"
     effective_matcher="$matcher"
     if [ "$matcher_supported" != "true" ]; then
@@ -774,7 +744,8 @@ fi
 bash "$SCRIPT_DIR/merge_hooks_json.sh" \
     --hooks-file "$HOOKS_TARGET_ABS" \
     --fragment-file "$FRAGMENT_FILE" \
-    --managed-root "$MANAGED_ROOT_REL"
+    --managed-root "$MANAGED_ROOT_REL/" \
+    --managed-suffix "/codex.sh"
 
 bash "$SCRIPT_DIR/render_hooks_readme.sh" \
     --project "$PROJECT_ROOT" \
@@ -784,7 +755,7 @@ cat <<EOF
 scaffold_hooks.sh complete
   project root:    $PROJECT_ROOT
   hooks target:    $HOOKS_TARGET_REL
-  managed root:    $MANAGED_ROOT_REL
+  hook root:       $MANAGED_ROOT_REL
   mode:            $MODE
   ensure feature:  $ENSURE_FEATURE
 EOF

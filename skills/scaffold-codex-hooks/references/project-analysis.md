@@ -40,7 +40,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script reports repo f
 |--------|----------------------------------|
 | Existing `.codex/config.toml` | Strong signal that project-scoped feature config is already acceptable |
 | Existing `.codex/hooks.json` | Determines whether the refresh should be additive or a managed-overhaul |
-| Existing `.codex/hooks/README.md` or managed manifest | Tells you whether the repo already has a convention worth preserving |
+| Existing `hooks/README.md`, `hooks/.state/codex/`, or `hooks/<event>/codex.*` | Tells you whether the repo already has a convention worth preserving |
 | Existing repo command sources | Good candidates for `PostToolUse` or `Stop` hooks when the project already owns the check |
 | Monorepo markers like `pnpm-workspace.yaml`, `turbo.json`, or `nx.json` | Hooks may need workspace-aware commands and narrow checks |
 | `.envrc`, `.env`, or toolchain files | Good candidates for lightweight `SessionStart` reminders or environment checks |
@@ -66,6 +66,6 @@ A project-specific plan JSON should answer at least:
 - `feature_scope`
 - `mode`
 - `enabled_events`
-- optional per-event `commands` arrays for existing repo commands the generated hook should run before custom logic
+- optional per-event `commands` arrays for existing repo commands the managed hook should run before custom logic
 
 Keep the plan narrow and explicit. The scaffold script should not guess repo policy on its own.

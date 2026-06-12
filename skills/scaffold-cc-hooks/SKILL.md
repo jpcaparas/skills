@@ -49,7 +49,7 @@ What is the user asking for?
 | Design reusable repo-owned scripts | Read `references/reusable-scripts.md` |
 | Decide additive vs overhaul | Read `references/merge-strategy.md` |
 | Generate or refresh the managed hook scaffold | Run `scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
-| Merge generated hooks into settings | Let `scripts/scaffold_hooks.sh` call `scripts/merge_settings.sh`, or run the merge script directly |
+| Merge managed hooks into settings | Let `scripts/scaffold_hooks.sh` call `scripts/merge_settings.sh`, or run the merge script directly |
 | Regenerate the hooks README in a target project | Run `scripts/render_hooks_readme.sh --project /path/to/project --plan /path/to/plan.json` |
 
 ## Non-Negotiable Workflow
@@ -59,10 +59,10 @@ What is the user asking for?
 3. Audit the target project in detail before deciding which events to enable.
 4. Inspect any existing `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/`, `CLAUDE.md`, `.claude/rules/`, and related automation files before choosing a merge mode.
 5. Produce or update a concrete hook plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
-6. Prefer repo-owned shared scripts for behavior that may move to Codex, OpenCode, Git hooks, GitHub Actions, or local shell usage. Keep generated Claude hook files as thin adapters around those scripts.
-7. Scaffold every current hook event as a commented bash stub under the managed hook root, even if the event stays disabled in settings.
+6. Prefer a repo-owned shared `hooks/` tree for behavior that may move to Codex, OpenCode, Devin, Git hooks, GitHub Actions, or local shell usage. Keep Claude-specific files as thin adapters around shared event scripts.
+7. Scaffold every current hook event as `hooks/<event>/script.sh` plus `hooks/<event>/claude.{sh,json}`, even if the event stays disabled in settings.
 8. Wire only the enabled events into the chosen settings file so the project does not pay runtime cost for inactive stubs.
-9. Regenerate `.claude/hooks/README.md` so the project always has a readable event map.
+9. Regenerate `hooks/README.md` so the project always has a readable event and adapter map.
 10. If the user reports that hooks are registered but not firing, or you just completed a real scaffold and need to verify the setup, check or explicitly offer to check workspace trust for the exact project path before debugging hook logic.
 11. If trust is disabled, explain that `hasTrustDialogAccepted` is false for that project. Offer the user two recovery paths: accept the dialog in a fresh Claude Code session, or flip the flag directly. Only mutate `~/.claude.json` when the user asks you to do so or explicitly asks you to ensure trust is enabled.
 
@@ -128,9 +128,9 @@ Run `scripts/audit_project.sh` first, then read `references/project-analysis.md`
 
 Keep these parts deterministic:
 
-- managed hook root path
+- shared hook root path
 - event stub filenames
-- generated settings fragment shape
+- managed settings fragment shape
 - merge behavior for previously managed hooks
 - hooks README generation
 - event manifest coverage for every current official hook event
@@ -153,23 +153,23 @@ When the skill is invoked again against a project:
 
 - Re-run live docs verification before assuming the event set is unchanged.
 - Re-audit the project before assuming the current hook plan still fits.
-- If the user says hooks never fire, or the scaffold needs verification, re-check workspace trust for the exact project path before assuming the generated settings are wrong.
+- If the user says hooks never fire, or the scaffold needs verification, re-check workspace trust for the exact project path before assuming the managed settings are wrong.
 - Preserve non-managed hooks by default.
-- Treat previously generated hooks under the managed root as replaceable in `overhaul` mode.
-- Treat previously generated hooks as append-only in `additive` mode unless a missing event or stale README requires a refresh.
+- Treat previously managed Claude adapters and `hooks/.state/claude` as replaceable in `overhaul` mode. Do not wipe the whole shared `hooks/` tree because other harnesses may own adapters there.
+- Treat previously managed hooks as append-only in `additive` mode unless a missing event or stale README requires a refresh.
 - If new official hook events exist, add new stubs and README entries even if the project keeps them disabled.
 
 ## Scaffold Rules
 
 - Generate bash scripts, not Python, for the project hook runtime.
-- Comment the generated bash stubs in plain language.
-- Structure generated event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
-- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into generated scripts.
-- Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `claude` when output protocols differ. Generated event stubs should stay thin.
-- Use `$CLAUDE_PROJECT_DIR` in generated command paths.
-- Default to a managed root of `.claude/hooks/generated` unless the project already has a stronger convention.
+- Comment the managed bash stubs in plain language.
+- Structure managed event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
+- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into managed scripts.
+- Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `claude` when output protocols differ. Managed event stubs should stay thin.
+- Use `$CLAUDE_PROJECT_DIR` in managed command paths.
+- Default to a shared hook root of `hooks`.
 - Default to `.claude/settings.json` when the hook setup should be shared. Use `.claude/settings.local.json` only when the project needs machine-local behavior or already uses that pattern.
-- Keep one managed script per event so the event map stays obvious.
+- Keep one shared `script.sh` per event and one Claude adapter/config pair per event so the event map stays obvious without duplicating event logic.
 - Keep the merged settings deterministic: remove only previously managed handlers, never unrelated custom hooks.
 
 ## Reading Guide
@@ -189,7 +189,7 @@ When the skill is invoked again against a project:
 - `scripts/check_workspace_trust.sh` checks or enables Claude Code workspace trust for an exact project path.
 - `scripts/scaffold_hooks.sh` renders the managed hook tree, manifest, README, and settings fragment.
 - `scripts/merge_settings.sh` preserves non-managed hooks while replacing previously managed handlers.
-- `scripts/render_hooks_readme.sh` rebuilds `.claude/hooks/README.md` from the manifest and the current plan.
+- `scripts/render_hooks_readme.sh` rebuilds `hooks/README.md` from the manifest and the current plan.
 
 ## Gotchas
 
@@ -199,4 +199,4 @@ When the skill is invoked again against a project:
 4. Hook shells are non-interactive. Shell profile noise can break JSON output.
 5. `PermissionRequest` does not fire in non-interactive `-p` mode.
 6. Hooks do not fire in untrusted workspaces. Claude Code gates execution on `hasTrustDialogAccepted` in `~/.claude.json` under `.projects["/absolute/path/to/project"]`. When hooks look installed but never run, or after a real scaffold, check trust first with `scripts/check_workspace_trust.sh` before blaming the hook config. See `references/gotchas.md` gotcha 9 for the exact recovery flow.
-7. Do not bury reusable validation or context logic inside generated `.claude/hooks/generated/events/*.sh` files. Put it in repo-owned scripts and let Claude hooks call those scripts as adapters.
+7. Do not bury reusable validation or context logic inside harness-specific adapters. Put shared logic in `hooks/<event>/script.sh` or repo-owned scripts, and let `hooks/<event>/claude.sh` handle only Claude Code protocol adaptation.

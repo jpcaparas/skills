@@ -5,7 +5,7 @@
     {
       "id": 1,
       "name": "new-project-devin-hooks-scaffold",
-      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Devin hook setup yet. Audit the repo first, verify the live Devin hook docs, then scaffold project hooks in .devin/hooks.v1.json with a generated hooks README and bash stubs for every documented Devin lifecycle event.",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Devin hook setup yet. Audit the repo first, verify the live Devin hook docs, then scaffold project hooks in .devin/hooks.v1.json with a shared hooks README and bash stubs for every documented Devin lifecycle event.",
       "expected_output": "The response verifies the live official Devin hook docs first, audits the repo in detail, creates a deterministic managed hook scaffold, and wires only the chosen events into .devin/hooks.v1.json.",
       "files": ["templates/hook-plan.example.json"],
       "assertions": [
@@ -22,11 +22,11 @@
           "type": "functional"
         },
         {
-          "text": "Generated hook stubs are modular, commented, and expose a clear handle_event edit point",
+          "text": "Managed hook stubs are modular, commented, and expose a clear handle_event edit point",
           "type": "functional"
         },
         {
-          "text": "Generated hooks are merged into .devin/hooks.v1.json without a top-level hooks wrapper",
+          "text": "Managed hooks are merged into .devin/hooks.v1.json without a top-level hooks wrapper",
           "type": "functional"
         }
       ],
@@ -53,7 +53,7 @@
     {
       "id": 3,
       "name": "existing-hooks-additive-refresh",
-      "prompt": "This project already has .devin/hooks.v1.json with a few custom hooks. Add a managed scaffold for Devin lifecycle hooks, but keep the custom hooks unless they are inside the managed generated folder.",
+      "prompt": "This project already has .devin/hooks.v1.json with a few custom hooks. Add a managed scaffold for Devin lifecycle hooks, but keep the custom hooks unless they are Devin adapters managed under hooks/<event>/devin.sh.",
       "expected_output": "The response chooses additive mode, preserves non-managed hooks, and refreshes the managed layer only.",
       "assertions": [
         {
@@ -71,10 +71,10 @@
       "id": 4,
       "name": "avoid-claude-config",
       "prompt": "Scaffold Devin CLI hooks, but please do not write Claude Code settings or .claude files. I want the recommended .devin/hooks.v1.json path.",
-      "expected_output": "The response writes generated hooks to .devin/hooks.v1.json and avoids Claude config paths.",
+      "expected_output": "The response writes managed hooks to .devin/hooks.v1.json and avoids Claude config paths.",
       "assertions": [
         {
-          "text": "Response uses .devin/hooks.v1.json as the generated hook target",
+          "text": "Response uses .devin/hooks.v1.json as the managed hook target",
           "type": "functional"
         },
         {
@@ -112,7 +112,7 @@
           "type": "disclosure"
         },
         {
-          "text": "Response keeps generated hook stubs thin and puts reusable behavior under repo-owned scripts",
+          "text": "Response keeps managed hook stubs thin and puts reusable behavior under repo-owned scripts",
           "type": "functional"
         }
       ],

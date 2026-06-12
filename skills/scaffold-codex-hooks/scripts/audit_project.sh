@@ -211,7 +211,9 @@ if [ "$PACKAGE_JSON_COUNT" -gt 1 ] || [ "$(printf '%s' "$workspace_kinds_json" |
 fi
 
 MANAGED_ROOT=""
-if [ -f "$REPO_ROOT/.codex/hooks/generated/manifest.json" ]; then
+if [ -f "$REPO_ROOT/hooks/.state/codex/manifest.json" ]; then
+    MANAGED_ROOT="hooks"
+elif [ -f "$REPO_ROOT/.codex/hooks/generated/manifest.json" ]; then
     MANAGED_ROOT=".codex/hooks/generated"
 fi
 
@@ -232,7 +234,7 @@ RESULT_JSON="$(
         --arg project_root "$PROJECT_ROOT" \
         --arg repo_root "$REPO_ROOT" \
         --arg recommended_hooks_target ".codex/hooks.json" \
-        --arg recommended_managed_root ".codex/hooks/generated" \
+        --arg recommended_managed_root "hooks" \
         --arg existing_managed_root "$MANAGED_ROOT" \
         --arg recommended_feature_scope "$RECOMMENDED_FEATURE_SCOPE" \
         --argjson is_git_repo "$IS_GIT_REPO" \

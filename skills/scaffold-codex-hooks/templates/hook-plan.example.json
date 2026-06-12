@@ -1,6 +1,6 @@
 {
   "hooks_target": ".codex/hooks.json",
-  "managed_root": ".codex/hooks/generated",
+  "managed_root": "hooks",
   "feature_scope": "project",
   "mode": "additive",
   "enabled_events": [

@@ -2,7 +2,7 @@
 #
 # render_hooks_readme.sh
 #
-# Build a readable README for a target project's .devin/hooks directory.
+# Build a readable README for a target project's shared hooks directory.
 #
 # The README is generated from:
 # - the current event manifest
@@ -83,16 +83,16 @@ PLAN_FILE="$(
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 
-MANAGED_ROOT_REL="$(jq -r '.managed_root // ".devin/hooks/generated"' "$PLAN_FILE")"
+MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
 HOOKS_TARGET_REL="$(jq -r '.hooks_target // ".devin/hooks.v1.json"' "$PLAN_FILE")"
-MANIFEST_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/manifest.json"
+MANIFEST_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/.state/devin/manifest.json"
 
 if [ ! -f "$MANIFEST_FILE" ]; then
     MANIFEST_FILE="$SKILL_ROOT/assets/hook-events.json"
 fi
 
 if [ -z "$OUTPUT_FILE" ]; then
-    OUTPUT_FILE="$PROJECT_ROOT/.devin/hooks/README.md"
+    OUTPUT_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/README.md"
 fi
 
 mkdir -p "$(dirname "$OUTPUT_FILE")"
@@ -100,21 +100,23 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
 {
     echo "# Devin CLI Hooks"
     echo
-    echo "This folder contains the Devin CLI hook scaffold for this project."
+    echo "This folder contains shared repo-owned hook logic plus Devin CLI adapters for this project."
     echo
     echo "## Managed Layer"
     echo
     echo "- Hooks target: \`$HOOKS_TARGET_REL\`"
-    echo "- Managed hook root: \`$MANAGED_ROOT_REL\`"
-    echo "- Every documented Devin lifecycle event has a bash stub in the managed event folder."
+    echo "- Hook root: \`$MANAGED_ROOT_REL\`"
+    echo "- Harness state: \`$MANAGED_ROOT_REL/.state/devin\`"
+    echo "- Every documented Devin lifecycle event has a shared \`script.sh\` under \`$MANAGED_ROOT_REL/<event>/\`."
+    echo "- Devin invokes \`$MANAGED_ROOT_REL/<event>/devin.sh\`, which loads \`devin.json\` for plan data."
     echo "- Only events listed in the current plan are wired into \`$HOOKS_TARGET_REL\`."
     echo "- Blocking gates must exit with code \`2\`."
     echo "- Re-run the scaffold after re-checking the live official Devin hook docs."
     echo
     echo "## Event Map"
     echo
-    echo "| Event | Enabled | Matcher | Blocks On Failure | Plan Scripts | Plan Commands | Managed Script | Purpose |"
-    echo "|------|---------|---------|-------------------|--------------|---------------|----------------|---------|"
+    echo "| Event | Enabled | Matcher | Blocks On Failure | Plan Scripts | Plan Commands | Shared Script | Devin Adapter | Purpose |"
+    echo "|------|---------|---------|-------------------|--------------|---------------|---------------|---------------|---------|"
 
     while IFS=$'\t' read -r event_name script_name description; do
         enabled="No"
@@ -164,7 +166,10 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
             )"
         fi
 
-        printf '| `%s` | %s | `%s` | %s | %s | %s | `%s/events/%s` | %s |\n' \
+        event_dir="${script_name%.sh}"
+        event_dir="$(printf '%s' "$event_dir" | tr '_' '-')"
+
+        printf '| `%s` | %s | `%s` | %s | %s | %s | `%s/%s/script.sh` | `%s/%s/devin.sh` | %s |\n' \
             "$event_name" \
             "$enabled" \
             "$matcher_value" \
@@ -172,7 +177,9 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
             "$script_labels" \
             "$command_labels" \
             "$MANAGED_ROOT_REL" \
-            "$script_name" \
+            "$event_dir" \
+            "$MANAGED_ROOT_REL" \
+            "$event_dir" \
             "$description"
     done < <(jq -r '.events[] | [.name, .script_name, .description] | @tsv' "$MANIFEST_FILE")
 
@@ -183,6 +190,7 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
     echo "- Use exit code \`0\` for success, and reserve other non-zero exits for errors that Devin should log without blocking."
     echo "- Put reusable project behavior in repo-owned scripts and reference it through the plan's \`scripts\` array."
     echo "- Put existing repo commands in the plan's \`commands\` array instead of hard-coding a language or package manager into generated bash."
-    echo "- Keep unrelated custom hooks outside the managed command path if you do not want future scaffold refreshes to replace them."
+    echo "- Keep shared behavior in \`script.sh\`; keep Devin-specific output and exit-code handling in \`hooks/lib/devin.sh\`."
+    echo "- Keep unrelated custom hooks outside this adapter path if you do not want future scaffold refreshes to replace them."
     echo "- Run Devin's \`/hooks\` slash command in the target project to confirm what Devin loaded."
 } > "$OUTPUT_FILE"

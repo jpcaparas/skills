@@ -13,8 +13,9 @@
 # Usage:
 #   ./merge_settings.sh \
 #     --settings-file /repo/.claude/settings.json \
-#     --fragment-file /repo/.claude/hooks/generated/settings.generated.json \
-#     --managed-root .claude/hooks/generated
+#     --fragment-file /repo/hooks/.state/claude/settings.json \
+#     --managed-root hooks/ \
+#     --managed-suffix /claude.sh
 #
 
 set -euo pipefail
@@ -22,12 +23,13 @@ set -euo pipefail
 usage() {
     cat <<'EOF'
 Usage:
-  merge_settings.sh --settings-file FILE --fragment-file FILE --managed-root PATH
+  merge_settings.sh --settings-file FILE --fragment-file FILE --managed-root PATH [--managed-suffix NAME]
 
 Options:
   --settings-file FILE  Claude Code settings file to update.
   --fragment-file FILE  Generated settings fragment to merge in.
   --managed-root PATH   Managed hook root path relative to the project root.
+  --managed-suffix NAME Optional suffix that must also appear in managed commands.
   -h, --help            Show this help text.
 EOF
 }
@@ -43,6 +45,7 @@ require_command() {
 SETTINGS_FILE=""
 FRAGMENT_FILE=""
 MANAGED_ROOT=""
+MANAGED_SUFFIX=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -56,6 +59,10 @@ while [ $# -gt 0 ]; do
             ;;
         --managed-root)
             MANAGED_ROOT="$2"
+            shift 2
+            ;;
+        --managed-suffix)
+            MANAGED_SUFFIX="$2"
             shift 2
             ;;
         -h|--help)
@@ -95,16 +102,21 @@ fi
 
 jq \
     --arg managed_root "$MANAGED_ROOT" \
+    --arg managed_suffix "$MANAGED_SUFFIX" \
     --slurpfile fragment "$FRAGMENT_FILE" \
     '
-    def strip_managed_groups($managed_root):
+    def is_managed_command($managed_root; $managed_suffix):
+        ((.command // "") | contains($managed_root))
+        and (($managed_suffix | length) == 0 or ((.command // "") | contains($managed_suffix)));
+
+    def strip_managed_groups($managed_root; $managed_suffix):
         ((.hooks // {}) | with_entries(
             .value |= (
                 map(
                     .hooks |= map(
                         select(
                             (.type != "command")
-                            or (((.command // "") | contains($managed_root)) | not)
+                            or (is_managed_command($managed_root; $managed_suffix) | not)
                         )
                     )
                 )
@@ -120,9 +132,8 @@ jq \
     . as $settings
     | ($fragment[0] // {}) as $generated
     | $settings
-    | .hooks = strip_managed_groups($managed_root)
+    | .hooks = strip_managed_groups($managed_root; $managed_suffix)
     | .hooks = append_generated_groups($generated)
     ' "$TEMP_INPUT" > "$TEMP_OUTPUT"
 
 mv "$TEMP_OUTPUT" "$SETTINGS_FILE"
-

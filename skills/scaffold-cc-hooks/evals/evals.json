@@ -5,7 +5,7 @@
     {
       "id": 1,
       "name": "new-project-hooks-scaffold",
-      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Claude Code hook setup yet. Audit the repo first, then scaffold project hooks with a generated hooks README and bash stubs for every current Claude Code hook event.",
+      "prompt": "I have a TypeScript monorepo with pnpm, Turborepo, .envrc, and no Claude Code hook setup yet. Audit the repo first, then scaffold project hooks with a shared hooks README and bash stubs for every current Claude Code hook event.",
       "expected_output": "The response verifies the live official Claude Code hook docs first, audits the repo in detail, creates a deterministic managed hook scaffold, and wires only the chosen events into project settings.",
       "files": ["templates/hook-plan.example.json"],
       "assertions": [
@@ -22,15 +22,15 @@
           "type": "functional"
         },
         {
-          "text": "Generated hook stubs are modular, commented, and expose a clear handle_event edit point",
+          "text": "Managed hook stubs are modular, commented, and expose a clear handle_event edit point",
           "type": "functional"
         },
         {
-          "text": "Generated hook stubs can run language-agnostic repo commands from the plan without hard-coded toolchain assumptions",
+          "text": "Managed hook stubs can run language-agnostic repo commands from the plan without hard-coded toolchain assumptions",
           "type": "functional"
         },
         {
-          "text": "Generated hook stubs can delegate to reusable repo-owned scripts that are path-agnostic and portable across agent harnesses",
+          "text": "Managed hook stubs can delegate to reusable repo-owned scripts that are path-agnostic and portable across agent harnesses",
           "type": "functional"
         }
       ],
@@ -39,7 +39,7 @@
     {
       "id": 2,
       "name": "existing-hooks-additive-refresh",
-      "prompt": "This project already has .claude/settings.json and a few custom hook scripts. Add a managed scaffold for the missing official hook events, but keep the custom hooks unless they are inside the managed generated folder.",
+      "prompt": "This project already has .claude/settings.json and a few custom hook scripts. Add a managed scaffold for the missing official hook events, but keep the custom hooks unless they are Claude adapters managed under hooks/<event>/claude.sh.",
       "expected_output": "The response chooses additive mode, preserves non-managed hooks, and refreshes the managed layer only.",
       "assertions": [
         {
@@ -115,7 +115,7 @@
           "type": "disclosure"
         },
         {
-          "text": "Response keeps generated hook stubs thin and puts reusable behavior under repo-owned scripts",
+          "text": "Response keeps managed hook stubs thin and puts reusable behavior under repo-owned scripts",
           "type": "functional"
         }
       ],

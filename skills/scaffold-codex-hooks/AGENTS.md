@@ -8,7 +8,7 @@ Use this skill when a user wants Codex hooks scaffolded or refreshed in a real p
 - deterministic inspection or enablement of the canonical `hooks` feature flag
 - review/trust guidance for non-managed command hooks
 - a managed `.codex/hooks.json` merge that preserves unrelated custom hooks
-- one generated bash stub per current source-backed Codex hook event
+- one shared `hooks/<event>/script.sh` plus Codex adapter/config files per current source-backed Codex hook event
 - reusable repo-owned scripts that can also be called by other agent harnesses, Git hooks, or CI
 
 Read `SKILL.md` for the canonical workflow.

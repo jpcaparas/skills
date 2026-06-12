@@ -4,6 +4,7 @@
   "mode": "additive",
   "module_format": "ts",
   "surface_catalog": false,
+  "hooks_root": "hooks",
   "plugin_root": ".opencode/plugins",
   "managed_state_dir": ".opencode/plugins/.managed",
   "config_target": "opencode.json",
@@ -18,8 +19,10 @@
       "surfaces": [
         "event"
       ],
-      "context_script": "scripts/agent-session-context.sh",
-      "action_script": "scripts/validate-project.sh",
+      "context_script": "hooks/opencode-session-created/opencode.sh",
+      "action_script": "hooks/opencode-session-idle/opencode.sh",
+      "context_delegate_script": "scripts/agent-session-context.sh",
+      "action_delegate_script": "scripts/validate-project.sh",
       "action_label": "Project validation",
       "service": "project-opencode-hooks",
       "notes": "Inject reusable session context on session.created, then run the shared project validation script on session.idle with visible TUI feedback and one controlled repair prompt."

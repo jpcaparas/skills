@@ -1,125 +1,62 @@
 # Scaffold Layout
 
-## Managed Target Layout
+## Default Target Layout
+
+Codex config stays in `.codex/hooks.json`, but executable hook behavior lives in a shared repo-owned `hooks/` tree:
 
 ```text
 .codex/
-├── config.toml                 # Optional, when feature_scope = project
-├── hooks.json                  # Shared hook config for this project
-└── hooks/
-    ├── README.md               # Generated event map and management notes
-    └── generated/
-        ├── manifest.json       # Snapshot of the scaffold inputs used
-        ├── hooks.generated.json # Managed fragment merged into hooks.json
-        ├── lib/
-        │   └── common.sh       # Helper functions for generated stubs
-        └── events/
-            ├── session_start.sh
-            ├── subagent_start.sh
-            ├── pre_tool_use.sh
-            ├── permission_request.sh
-            ├── post_tool_use.sh
-            ├── pre_compact.sh
-            ├── post_compact.sh
-            ├── user_prompt_submit.sh
-            ├── subagent_stop.sh
-            └── stop.sh
+└── hooks.json                 # Codex hook config; points at hooks/<event>/codex.sh
+
+hooks/
+├── README.md                  # Generated event and adapter map
+├── lib/
+│   ├── agent-hook-runtime.sh  # Harness-neutral input/config/command helpers
+│   └── codex.sh               # Codex output and decision helpers
+├── .state/
+│   └── codex/
+│       ├── manifest.json      # Snapshot of manifest, feature state, and enabled plan entries
+│       └── hooks.json         # Fragment merged into .codex/hooks.json
+└── session-start/
+    ├── script.sh              # Shared editable event behavior
+    ├── codex.sh               # Thin Codex adapter invoked by hooks.json
+    └── codex.json             # Codex-specific plan data for this event
 ```
 
-Every current official event gets a script stub. Only enabled events are wired into `.codex/hooks.json`.
+Every official Codex event gets the same `hooks/<event>/script.sh`, `codex.sh`, and `codex.json` shape. Only enabled events are wired into `.codex/hooks.json`.
 
-## Event Script Anatomy
+## Ports And Adapters
 
-Generated event scripts are intentionally plain bash with one obvious edit point:
+- `hooks/<event>/script.sh` is the port: shared project behavior that can be reused by Codex, Claude Code, Devin, OpenCode, CI, or a human shell.
+- `hooks/<event>/codex.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=codex`, sets `AGENT_HOOK_EVENT`, and executes `script.sh`.
+- `hooks/<event>/codex.json` is adapter data: scripts, commands, and other plan details for Codex.
+- `hooks/lib/codex.sh` translates shared failures into Codex's JSON output contract.
 
-```text
-bootstrap imports ../lib/common.sh
-main() reads the hook JSON payload from stdin into HOOK_INPUT
-run_configured_scripts() delegates to repo-owned scripts listed for the event
-run_configured_commands() runs any repo commands listed for the event
-handle_event() contains the project-specific hook logic
-```
+## Plan File Shape
 
-Keep `main()` boring. Add project checks, policy gates, logging, or structured hook output inside `handle_event()`. Shared helpers such as `hook_json`, `run_configured_scripts`, `run_configured_commands`, `emit_additional_context`, `deny_pre_tool_use`, and `block_with_reason` live in `lib/common.sh` and are commented where they are defined.
-
-## Reusable Project Scripts
-
-Prefer repo-owned scripts for behavior that may need to move between Codex, Claude Code, OpenCode, Git hooks, GitHub Actions, or a local shell. Keep generated Codex hook files as adapters that read hook input and translate failures into Codex's output contract.
-
-Plan shape:
+Use `templates/hook-plan.example.json` as the starting point:
 
 ```json
 {
-  "name": "Stop",
-  "timeout": 120,
-  "status_message": "Running shared stop checks",
-  "scripts": [
+  "hooks_target": ".codex/hooks.json",
+  "managed_root": "hooks",
+  "feature_scope": "project",
+  "mode": "additive",
+  "enabled_events": [
     {
-      "label": "shared stop checks",
-      "path": "scripts/agent-stop-checks.sh",
-      "args": ["codex"],
-      "cwd": ".",
-      "notes": "Script is repo-owned and can also be called by CI or other agent adapters."
-    }
-  ],
-  "commands": []
-}
-```
-
-Resolve `path` relative to the target project root. Keep shared scripts path-agnostic by discovering the repo root at runtime, for example with `git rev-parse --show-toplevel`, and by accepting a harness/mode argument when output protocols differ.
-
-## Existing Project Commands
-
-Use `commands` for existing command entry points that are already stable and reusable, such as a documented quality gate, formatter, test target, task-runner recipe, or package script. Use `scripts` when you need a small repo-owned adapter or a shared shell script that other harnesses can call directly.
-
-```json
-{
-  "name": "Stop",
-  "timeout": 120,
-  "status_message": "Running project quality gate",
-  "scripts": [],
-  "commands": [
-    {
-      "label": "repo quality gate",
-      "command": "<existing repo command>",
-      "cwd": ".",
-      "notes": "Use the command already documented by this repository."
+      "name": "SessionStart",
+      "matcher": "startup",
+      "scripts": [
+        {
+          "label": "session context",
+          "path": "scripts/agent-session-context.sh",
+          "args": ["codex"],
+          "cwd": "."
+        }
+      ]
     }
   ]
 }
 ```
 
-The scaffold copies those command entries into the event script as JSON. The script runs them before any custom `handle_event()` logic and converts failures into the safest output shape for the event. Keep command discovery language-agnostic: audit actual repo files, docs, CI, task runners, and existing scripts, then put the real command in the plan.
-
-## Why This Layout
-
-- The event coverage is complete and obvious.
-- The managed folder is easy to replace without deleting unrelated custom hooks.
-- The top-level `hooks.json` stays human-readable.
-- The generated fragment can be rebuilt deterministically.
-- The README gives the target project a stable event map.
-- The generated scripts are modular enough for future humans and agents to extend without reverse-engineering hook I/O or language-specific command wrappers first.
-
-## Plan File Shape
-
-Use `templates/hook-plan.example.json` as the starting point.
-
-Top-level fields:
-
-- `hooks_target`
-- `managed_root`
-- `feature_scope`
-- `mode`
-- `enabled_events`
-
-Each enabled event entry can carry:
-
-- `name`
-- `matcher`
-- `timeout`
-- `status_message`
-- `scripts`
-- `commands`
-- `notes`
-
-Keep one managed matcher group per enabled event entry. If you need multiple matcher groups for the same event, extend the plan format first instead of improvising inside the scaffold script.
+Keep project-specific judgment in the plan. The scaffold remains deterministic by rendering adapter data from the plan and leaving shared behavior in `script.sh`.

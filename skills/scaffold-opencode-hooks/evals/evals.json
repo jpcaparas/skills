@@ -85,8 +85,8 @@
     {
       "id": 3,
       "name": "existing-project-additive-refresh",
-      "prompt": "This repo already has `.opencode/plugins/` with a couple of hand-written plugins plus a stale generated layer. Add the missing current hook surfaces, preserve the custom plugins, refresh only the managed layer, and keep the generated README current.",
-      "expected_output": "The response chooses additive mode, preserves non-managed plugin files, refreshes the managed layer, and updates the generated README.",
+      "prompt": "This repo already has `.opencode/plugins/` with a couple of hand-written plugins plus stale managed plugin state. Add the missing current hook surfaces, preserve the custom plugins, refresh only the managed plugin state and `hooks/opencode-*` adapters, and keep the managed README current.",
+      "expected_output": "The response chooses additive mode, preserves non-managed plugin files, refreshes the managed layer, and updates the managed README.",
       "assertions": [
         {
           "text": "Response distinguishes managed plugin files from unrelated custom plugins",

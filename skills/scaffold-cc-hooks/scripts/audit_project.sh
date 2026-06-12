@@ -292,7 +292,9 @@ elif printf '%s' "$claude_settings_json" | jq -e '. | index(".claude/settings.lo
 fi
 
 MANAGED_ROOT=""
-if [ -f "$REPO_ROOT/.claude/hooks/generated/manifest.json" ]; then
+if [ -f "$REPO_ROOT/hooks/.state/claude/manifest.json" ]; then
+    MANAGED_ROOT="hooks"
+elif [ -f "$REPO_ROOT/.claude/hooks/generated/manifest.json" ]; then
     MANAGED_ROOT=".claude/hooks/generated"
 fi
 

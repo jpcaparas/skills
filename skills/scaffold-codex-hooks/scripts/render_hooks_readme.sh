@@ -2,7 +2,7 @@
 #
 # render_hooks_readme.sh
 #
-# Rebuild .codex/hooks/README.md from the managed manifest and current plan.
+# Rebuild the shared hooks README from the managed Codex manifest and current plan.
 #
 
 set -euo pipefail
@@ -62,11 +62,11 @@ PLAN_FILE="$(
     printf '%s/%s\n' "$(pwd -P)" "$(basename "$PLAN_FILE")"
 )"
 
-MANAGED_ROOT_REL="$(jq -r '.managed_root // ".codex/hooks/generated"' "$PLAN_FILE")"
+MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
 HOOKS_TARGET_REL="$(jq -r '.hooks_target // ".codex/hooks.json"' "$PLAN_FILE")"
 FEATURE_SCOPE="$(jq -r '.feature_scope // "project"' "$PLAN_FILE")"
-README_FILE="$PROJECT_ROOT/.codex/hooks/README.md"
-MANIFEST_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/manifest.json"
+README_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/README.md"
+MANIFEST_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/.state/codex/manifest.json"
 
 if [ ! -f "$MANIFEST_FILE" ]; then
     echo "Manifest file does not exist: $MANIFEST_FILE" >&2
@@ -77,10 +77,11 @@ mkdir -p "$(dirname "$README_FILE")"
 
 {
     printf '# Codex Hooks\n\n'
-    printf 'Managed Codex hook scaffold for this project.\n\n'
+    printf 'Shared repo-owned hook logic plus Codex adapters for this project.\n\n'
     printf '## Managed Paths\n\n'
     printf -- '- `hooks.json`: `%s`\n' "$HOOKS_TARGET_REL"
-    printf -- '- managed root: `%s`\n' "$MANAGED_ROOT_REL"
+    printf -- '- hook root: `%s`\n' "$MANAGED_ROOT_REL"
+    printf -- '- harness state: `%s/.state/codex`\n' "$MANAGED_ROOT_REL"
     if [ "$FEATURE_SCOPE" = "project" ]; then
         printf -- '- feature scope: project (`.codex/config.toml`)\n'
     elif [ "$FEATURE_SCOPE" = "user" ]; then
@@ -97,13 +98,14 @@ mkdir -p "$(dirname "$README_FILE")"
     printf -- '- `PreCompact` and `PostCompact` match compaction triggers: `manual` or `auto`.\n'
     printf -- '- Project-local hooks run alongside any active user-global `~/.codex/hooks.json` handlers.\n'
     printf -- '- Non-managed command hooks must be reviewed and trusted in `/hooks` before Codex runs them.\n'
+    printf -- '- Shared behavior belongs in `%s/<event>/script.sh`; Codex config points at `%s/<event>/codex.sh`.\n' "$MANAGED_ROOT_REL" "$MANAGED_ROOT_REL"
     printf -- '- Put reusable project behavior in repo-owned scripts and reference it through the plan'\''s `scripts` array.\n'
     printf -- '- Put existing repo commands in the plan'\''s `commands` array instead of hard-coding a language or package manager into generated bash.\n'
     printf -- '- Re-run the scaffold when the official docs or schemas change.\n\n'
 
     printf '## Event Map\n\n'
-    printf '| Event | Enabled | Matcher | Timeout | Plan Scripts | Plan Commands | Script | Notes |\n'
-    printf '|------|---------|---------|---------|--------------|---------------|--------|-------|\n'
+    printf '| Event | Enabled | Matcher | Timeout | Plan Scripts | Plan Commands | Shared Script | Codex Adapter | Notes |\n'
+    printf '|------|---------|---------|---------|--------------|---------------|---------------|---------------|-------|\n'
 
     jq -r '
         (.enabled_events // []) as $enabled
@@ -116,15 +118,15 @@ mkdir -p "$(dirname "$README_FILE")"
             (if $enabled_map[.name] then (($enabled_map[.name].timeout // 600) | tostring) else "—" end),
             (if (($enabled_map[.name].scripts // []) | length) == 0 then "none" else (($enabled_map[.name].scripts // []) | map(.label // .name // .path // .script) | join("<br>")) end),
             (if (($enabled_map[.name].commands // []) | length) == 0 then "none" else (($enabled_map[.name].commands // []) | map(.label // .name // .command) | join("<br>")) end),
-            (.script_name),
+            (.script_name | sub("\\.sh$"; "") | gsub("_"; "-")),
             ($enabled_map[.name].notes // .description)
           ]
         | @tsv
-    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r event enabled matcher timeout script_labels command_labels script_name notes; do
+    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r event enabled matcher timeout script_labels command_labels event_dir notes; do
         script_labels="$(printf '%s' "$script_labels" | sed 's/|/\\|/g')"
         command_labels="$(printf '%s' "$command_labels" | sed 's/|/\\|/g')"
-        printf '| `%s` | %s | `%s` | `%s` | %s | %s | `%s` | %s |\n' \
-            "$event" "$enabled" "$matcher" "$timeout" "$script_labels" "$command_labels" "$script_name" "$notes"
+        printf '| `%s` | %s | `%s` | `%s` | %s | %s | `%s/%s/script.sh` | `%s/%s/codex.sh` | %s |\n' \
+            "$event" "$enabled" "$matcher" "$timeout" "$script_labels" "$command_labels" "$MANAGED_ROOT_REL" "$event_dir" "$MANAGED_ROOT_REL" "$event_dir" "$notes"
     done
 
     printf '\n'

@@ -442,6 +442,10 @@ def test_skill(skill_path: Path) -> dict:
                 minimal_project / ".opencode" / "plugins" / ".managed" / "manifest.json",
                 minimal_project / ".opencode" / "plugins" / ".managed" / "plan.snapshot.json",
                 minimal_project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts",
+                minimal_project / "hooks" / "opencode-session-created" / "script.sh",
+                minimal_project / "hooks" / "opencode-session-created" / "opencode.sh",
+                minimal_project / "hooks" / "opencode-session-idle" / "script.sh",
+                minimal_project / "hooks" / "opencode-session-idle" / "opencode.sh",
             ]
             if all(path.exists() for path in expected_files):
                 results["integration_checks"]["passed"] += 1

@@ -9,6 +9,14 @@ Project-local default for lifecycle/action work:
 └── plugins/
     ├── README.md
     └── opencode_hook_project_session_lifecycle.ts
+
+hooks/
+├── opencode-session-created/
+│   ├── script.sh
+│   └── opencode.sh
+└── opencode-session-idle/
+    ├── script.sh
+    └── opencode.sh
 ```
 
 The minimal scaffold intentionally skips `opencode.json`, `.opencode/package.json`, `node_modules`, lockfiles, and broad hook-surface stubs unless the plan actually needs them.
@@ -43,6 +51,7 @@ Global scope uses the same shape under `~/.config/opencode/`.
 - live plugin files stay in the documented plugin load path
 - dormant surface stubs stay out of the runtime load path when broad mode is requested
 - the managed state directory is easy to replace or inspect
+- reusable shell behavior lives in `hooks/` instead of being buried inside the plugin module
 - config and dependency merges stay separate from plugin-file generation
 - the README gives the target project a stable event and plugin map
 - the active load path contains TypeScript plugin modules only; this scaffold rewrites any `.js` filename in a plan to `.ts`
@@ -58,6 +67,7 @@ Top-level fields:
 - `mode`
 - `module_format` (`ts` only)
 - `surface_catalog` (`false` for minimal, `true` for broad)
+- `hooks_root`
 - `plugin_root`
 - `managed_state_dir`
 - `config_target`
@@ -72,9 +82,9 @@ Each enabled plugin entry carries:
 - `pattern` (`lifecycle-action` for the minimal reusable pattern; omit for broad surface handlers)
 - `filename`
 - `surfaces`
-- optional `context_script`, `action_script`, `action_label`, and `service`
+- optional `context_script`, `action_script`, `context_delegate_script`, `action_delegate_script`, `action_label`, and `service`
 - `notes`
 
-For lifecycle/action plugins, `context_script` and `action_script` are resolved against OpenCode's active project/worktree/directory context. Do not assume `.opencode/plugins/../..` is the repo root, because global plugins and custom config directories break that assumption.
+For lifecycle/action plugins, `context_script` and `action_script` default to `hooks/opencode-session-created/opencode.sh` and `hooks/opencode-session-idle/opencode.sh`. The generated shell adapters then delegate to `context_delegate_script` and `action_delegate_script`, which default to target-project session-context and validation scripts under that project's scripts directory.
 
 Keep project-specific judgment in the plan. The scaffold should remain deterministic.

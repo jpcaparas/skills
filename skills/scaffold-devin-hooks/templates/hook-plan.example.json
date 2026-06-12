@@ -1,6 +1,6 @@
 {
   "hooks_target": ".devin/hooks.v1.json",
-  "managed_root": ".devin/hooks/generated",
+  "managed_root": "hooks",
   "mode": "additive",
   "enabled_events": [
     {

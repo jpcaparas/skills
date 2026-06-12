@@ -30,7 +30,7 @@ The official guide says multiple `PreToolUse` hooks that all rewrite input are n
 
 ## 8. Do not silently delete non-managed hooks
 
-The scaffold is only supposed to replace the managed generated layer. If the repo has custom hooks outside that layer, review them explicitly before removing anything.
+The scaffold is only supposed to replace Claude adapters and `hooks/.state/claude`. If the repo has custom hooks or other harness adapters under `hooks/`, review them explicitly before removing anything.
 
 ## 9. Hooks silently do not fire in untrusted workspaces
 

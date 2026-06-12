@@ -1,136 +1,61 @@
 # Scaffold Layout
 
-The target project scaffold is deterministic on purpose. The plan decides what is enabled, but the shape stays fixed.
+## Default Target Layout
 
-## Managed Target Layout
+Devin config stays in `.devin/hooks.v1.json`, but executable hook behavior lives in a shared repo-owned `hooks/` tree:
 
 ```text
 .devin/
-├── hooks.v1.json
-└── hooks/
-    ├── README.md
-    └── generated/
-        ├── manifest.json
-        ├── hooks.generated.json
-        ├── lib/
-        │   └── common.sh
-        └── events/
-            ├── pre-tool-use.sh
-            ├── post-tool-use.sh
-            ├── permission-request.sh
-            ├── user-prompt-submit.sh
-            ├── stop.sh
-            ├── post-compaction.sh
-            ├── session-start.sh
-            └── session-end.sh
+└── hooks.v1.json              # Devin hook config; points at hooks/<event>/devin.sh
+
+hooks/
+├── README.md                  # Generated event and adapter map
+├── lib/
+│   ├── agent-hook-runtime.sh  # Harness-neutral input/config/command helpers
+│   └── devin.sh               # Devin decision and exit-code helpers
+├── .state/
+│   └── devin/
+│       ├── manifest.json      # Snapshot of manifest and enabled plan entries
+│       └── hooks.v1.json      # Fragment merged into .devin/hooks.v1.json
+└── stop/
+    ├── script.sh              # Shared editable event behavior
+    ├── devin.sh               # Thin Devin adapter invoked by hooks.v1.json
+    └── devin.json             # Devin-specific plan data for this event
 ```
 
-Every documented Devin lifecycle event gets a script stub. Only enabled events are registered in `.devin/hooks.v1.json`.
+Every documented Devin lifecycle event gets the same `hooks/<event>/script.sh`, `devin.sh`, and `devin.json` shape. Only enabled events are wired into `.devin/hooks.v1.json`.
 
-## Event Script Anatomy
+## Ports And Adapters
 
-Generated event scripts are intentionally plain bash with one obvious edit point:
-
-```text
-bootstrap imports ../lib/common.sh
-main() reads Devin's JSON payload from stdin into HOOK_INPUT
-run_configured_scripts() delegates to repo-owned scripts listed for the event
-run_configured_commands() runs any repo commands listed in the plan
-handle_event() contains the project-specific hook logic
-```
-
-Keep `main()` boring. Add project checks, policy gates, logging, or structured hook output inside `handle_event()`.
-
-## Blocking Behavior
-
-Use `block_on_failure: true` when a configured script or command failure must deny the action. The generated hook then prints a JSON block decision and exits `2`.
-
-Use `block_on_failure: false` for observer hooks where failures should be logged but not deny the current action.
-
-## Reusable Project Scripts
-
-Prefer repo-owned scripts for behavior that may need to move between Devin, Codex, OpenCode, Git hooks, GitHub Actions, or a local shell.
-
-Plan shape:
-
-```json
-{
-  "name": "Stop",
-  "timeout": 120,
-  "block_on_failure": true,
-  "scripts": [
-    {
-      "label": "shared stop checks",
-      "path": "scripts/agent-stop-checks.sh",
-      "args": ["devin"],
-      "cwd": ".",
-      "notes": "Script is repo-owned and can also be called by CI or other agent adapters."
-    }
-  ],
-  "commands": []
-}
-```
-
-Resolve `path` relative to the target project root. Keep the shared script path-agnostic by discovering the repo root at runtime and by accepting a harness/mode argument when output protocols differ.
-
-## Existing Project Commands
-
-Use `commands` for stable existing command entry points, such as a documented quality gate, formatter, test target, task-runner recipe, or package script.
-
-```json
-{
-  "name": "PostToolUse",
-  "matcher": "^(edit|exec)$",
-  "timeout": 120,
-  "block_on_failure": false,
-  "scripts": [],
-  "commands": [
-    {
-      "label": "repo quality signal",
-      "command": "<existing repo command>",
-      "cwd": ".",
-      "notes": "Use the command already documented by this repository."
-    }
-  ]
-}
-```
-
-The scaffold copies command entries into the event script as JSON. The script runs them before custom `handle_event()` logic.
+- `hooks/<event>/script.sh` is the port: shared project behavior that can be reused by Devin, Claude Code, Codex, OpenCode, CI, or a human shell.
+- `hooks/<event>/devin.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=devin`, sets `AGENT_HOOK_EVENT`, and executes `script.sh`.
+- `hooks/<event>/devin.json` is adapter data: scripts, commands, and `block_on_failure` for Devin.
+- `hooks/lib/devin.sh` translates shared failures into Devin's JSON decision and exit-code-2 contract.
 
 ## Plan File Shape
 
-Use a small JSON file like `templates/hook-plan.example.json`:
+Use `templates/hook-plan.example.json` as the starting point:
 
 ```json
 {
   "hooks_target": ".devin/hooks.v1.json",
-  "managed_root": ".devin/hooks/generated",
+  "managed_root": "hooks",
   "mode": "additive",
   "enabled_events": [
     {
-      "name": "PreToolUse",
-      "matcher": "^exec$",
-      "timeout": 30,
+      "name": "Stop",
       "block_on_failure": true,
-      "scripts": [],
-      "commands": [],
-      "notes": "Use this for hard policy and safety gates."
+      "scripts": [
+        {
+          "label": "stop checks",
+          "path": "scripts/agent-stop-checks.sh",
+          "args": ["devin"],
+          "cwd": "."
+        }
+      ]
     }
   ]
 }
 ```
 
-The scaffold script treats every event not listed in `enabled_events` as disabled but still creates its stub script.
-
-## Hooks Target Rules
-
-- Prefer `.devin/hooks.v1.json`.
-- Do not place generated hooks under `.devin/config.json` unless the user explicitly asks.
-- Do not place generated hooks under Claude config paths.
-- If an existing `.devin/hooks.v1.json` already owns project hooks, update that file additively unless there is a strong reason to overhaul the managed layer.
-
-## See Also
-
-- `references/hook-events.md`
-- `references/merge-strategy.md`
-- `references/reusable-scripts.md`
+Keep project-specific judgment in the plan. The scaffold remains deterministic by rendering adapter data from the plan and leaving shared behavior in `script.sh`.

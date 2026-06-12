@@ -276,7 +276,9 @@ if [ "$PACKAGE_JSON_COUNT" -gt 1 ] || [ "$(printf '%s' "$workspace_kinds_json" |
 fi
 
 MANAGED_ROOT=""
-if [ -f "$REPO_ROOT/.devin/hooks/generated/manifest.json" ]; then
+if [ -f "$REPO_ROOT/hooks/.state/devin/manifest.json" ]; then
+    MANAGED_ROOT="hooks"
+elif [ -f "$REPO_ROOT/.devin/hooks/generated/manifest.json" ]; then
     MANAGED_ROOT=".devin/hooks/generated"
 fi
 

@@ -2,7 +2,7 @@
 #
 # render_hooks_readme.sh
 #
-# Build a readable README for a target project's .claude/hooks directory.
+# Build a readable README for a target project's shared hooks directory.
 #
 # The README is generated from:
 # - the current event manifest
@@ -83,16 +83,16 @@ PLAN_FILE="$(
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 
-MANAGED_ROOT_REL="$(jq -r '.managed_root // ".claude/hooks/generated"' "$PLAN_FILE")"
+MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
 SETTINGS_TARGET_REL="$(jq -r '.settings_target // ".claude/settings.json"' "$PLAN_FILE")"
-MANIFEST_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/manifest.json"
+MANIFEST_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/.state/claude/manifest.json"
 
 if [ ! -f "$MANIFEST_FILE" ]; then
     MANIFEST_FILE="$SKILL_ROOT/assets/hook-events.json"
 fi
 
 if [ -z "$OUTPUT_FILE" ]; then
-    OUTPUT_FILE="$PROJECT_ROOT/.claude/hooks/README.md"
+    OUTPUT_FILE="$PROJECT_ROOT/$MANAGED_ROOT_REL/README.md"
 fi
 
 mkdir -p "$(dirname "$OUTPUT_FILE")"
@@ -100,20 +100,22 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
 {
     echo "# Claude Code Hooks"
     echo
-    echo "This folder contains the Claude Code hook scaffold for this project."
+    echo "This folder contains shared repo-owned hook logic plus Claude Code adapters for this project."
     echo
     echo "## Managed Layer"
     echo
     echo "- Settings target: \`$SETTINGS_TARGET_REL\`"
-    echo "- Managed hook root: \`$MANAGED_ROOT_REL\`"
-    echo "- Every current official Claude Code hook event has a bash stub in the managed event folder."
+    echo "- Hook root: \`$MANAGED_ROOT_REL\`"
+    echo "- Harness state: \`$MANAGED_ROOT_REL/.state/claude\`"
+    echo "- Every current official Claude Code hook event has a shared \`script.sh\` under \`$MANAGED_ROOT_REL/<event>/\`."
+    echo "- Claude Code invokes \`$MANAGED_ROOT_REL/<event>/claude.sh\`, which loads \`claude.json\` for plan data."
     echo "- Only events listed in the current plan are wired into the settings file."
     echo "- Re-run the scaffold after re-checking the live official Claude Code hook docs."
     echo
     echo "## Event Map"
     echo
-    echo "| Event | Enabled | Async When Enabled | Plan Scripts | Plan Commands | Managed Script | Purpose |"
-    echo "|------|---------|--------------------|--------------|---------------|----------------|---------|"
+    echo "| Event | Enabled | Async When Enabled | Plan Scripts | Plan Commands | Shared Script | Claude Adapter | Purpose |"
+    echo "|------|---------|--------------------|--------------|---------------|---------------|----------------|---------|"
 
     while IFS=$'\t' read -r event_name script_name description; do
         enabled="No"
@@ -154,14 +156,19 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
             )"
         fi
 
-        printf '| `%s` | %s | %s | %s | %s | `%s/events/%s` | %s |\n' \
+        event_dir="${script_name%.sh}"
+        event_dir="$(printf '%s' "$event_dir" | tr '_' '-')"
+
+        printf '| `%s` | %s | %s | %s | %s | `%s/%s/script.sh` | `%s/%s/claude.sh` | %s |\n' \
             "$event_name" \
             "$enabled" \
             "$async_value" \
             "$script_labels" \
             "$command_labels" \
             "$MANAGED_ROOT_REL" \
-            "$script_name" \
+            "$event_dir" \
+            "$MANAGED_ROOT_REL" \
+            "$event_dir" \
             "$description"
     done < <(jq -r '.events[] | [.name, .script_name, .description] | @tsv' "$MANIFEST_FILE")
 
@@ -172,5 +179,6 @@ mkdir -p "$(dirname "$OUTPUT_FILE")"
     echo "- Use async hooks for logging, notifications, metrics, and background test or formatting work that should not slow Claude down."
     echo "- Put reusable project behavior in repo-owned scripts and reference it through the plan's \`scripts\` array."
     echo "- Put existing repo commands in the plan's \`commands\` array instead of hard-coding a language or package manager into generated bash."
-    echo "- Keep unrelated custom hooks outside the managed folder if you do not want future scaffold refreshes to replace them."
+    echo "- Keep shared behavior in \`script.sh\`; keep Claude-specific output handling in \`hooks/lib/claude.sh\`."
+    echo "- Keep unrelated custom hooks outside this adapter path if you do not want future scaffold refreshes to replace them."
 } > "$OUTPUT_FILE"

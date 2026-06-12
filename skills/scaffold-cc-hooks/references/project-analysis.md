@@ -6,7 +6,7 @@ Audit the target repository before deciding which Claude Code hooks to enable.
 
 1. Find the repo root and determine whether the project is single-package or a workspace. Record the canonical absolute path with `pwd -P`, because Claude Code workspace trust is keyed by exact path.
 2. Inspect existing Claude Code files:
-   `CLAUDE.md`, `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/`, `.claude/rules/`, plugin hooks, and generated hook folders.
+   `CLAUDE.md`, `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/`, `.claude/rules/`, plugin hooks, shared `hooks/`, and legacy hook folders.
 3. Inspect automation entry points:
    `package.json` scripts, `Makefile`, `justfile`, `Taskfile.yml`, CI workflows, and any custom runner scripts.
 4. Inspect safety boundaries:
@@ -27,7 +27,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script is intentional
 | Monorepo markers like `pnpm-workspace.yaml`, `turbo.json`, or `nx.json` | Hooks may need package-aware matching, targeted tests, or workspace-relative commands |
 | `.envrc`, `.env`, or toolchain files | Strong candidate for `CwdChanged` or `FileChanged` hooks |
 | Existing `.claude/settings*.json` | Determines whether the refresh should be additive or managed-overhaul |
-| Existing `.claude/hooks/README.md` or generated hook folders | Tells you whether the repo already has a convention worth preserving |
+| Existing `hooks/README.md`, `hooks/.state/claude/`, or `hooks/<event>/claude.*` | Tells you whether the repo already has a convention worth preserving |
 | Git hook managers like Husky or Lefthook | Claude Code hooks should complement, not silently duplicate, human Git hooks |
 | Sensitive files like `.env`, lockfiles, migrations, or infra code | Strong candidate for `PreToolUse` file guards |
 | Existing notification or audit tooling | Good candidates for async `Notification`, `PostToolUse`, `ConfigChange`, or `SessionEnd` hooks |
@@ -52,6 +52,6 @@ After the audit, create a small plan JSON with:
 - `managed_root`
 - `mode`
 - `enabled_events`
-- optional per-event `commands` arrays for existing repo commands the generated hook should run before custom logic
+- optional per-event `commands` arrays for existing repo commands the managed hook should run before custom logic
 
 Keep the plan narrow and explicit. The scaffold script should not guess project policy on its own.

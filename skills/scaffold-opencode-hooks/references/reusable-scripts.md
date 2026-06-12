@@ -1,6 +1,6 @@
 # Reusable Scripts
 
-Use this when OpenCode plugin behavior should share project logic with Codex, Claude Code, Git hooks, GitHub Actions, or a local terminal.
+Use this when OpenCode plugin behavior should share project logic with Codex, Claude Code, Devin, Git hooks, GitHub Actions, or a local terminal.
 
 ## Placement Pattern
 
@@ -15,7 +15,7 @@ scripts/
 └── claude-stop-checks.sh      # optional thin Claude adapter
 ```
 
-Generated OpenCode plugins should orchestrate lifecycle, TUI feedback, logging, and one controlled repair prompt. Project logic belongs in the repo-owned scripts referenced by `context_script` and `action_script`.
+Generated OpenCode plugins should orchestrate lifecycle, TUI feedback, logging, and one controlled repair prompt. Project logic belongs in `hooks/opencode-session-created/script.sh`, `hooks/opencode-session-idle/script.sh`, or repo-owned delegate scripts those adapters call.
 
 ## Script Rules
 
@@ -33,8 +33,10 @@ Generated OpenCode plugins should orchestrate lifecycle, TUI feedback, logging, 
   "pattern": "lifecycle-action",
   "filename": "opencode_hook_project_session_lifecycle.ts",
   "surfaces": ["event"],
-  "context_script": "scripts/agent-session-context.sh",
-  "action_script": "scripts/opencode-stop-checks.sh",
+  "context_script": "hooks/opencode-session-created/opencode.sh",
+  "action_script": "hooks/opencode-session-idle/opencode.sh",
+  "context_delegate_script": "scripts/agent-session-context.sh",
+  "action_delegate_script": "scripts/opencode-stop-checks.sh",
   "action_label": "Project validation",
   "service": "project-opencode-hooks"
 }

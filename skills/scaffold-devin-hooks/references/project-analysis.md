@@ -29,7 +29,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The script reports repo f
 | `.envrc`, `.env`, or toolchain files | Strong candidate for `SessionStart` or `PreToolUse` context and safety behavior |
 | `.devin/hooks.v1.json` | Determines whether the refresh should be additive or managed-overhaul |
 | `.devin/config*.json` with hooks | May already contain hook policy; prefer migrating generated project hooks to `.devin/hooks.v1.json` unless the user asks otherwise |
-| Claude hook config | Possible inherited behavior; useful to warn about duplicate hooks, but not a generated target |
+| Claude hook config | Possible inherited behavior; useful to warn about duplicate hooks, but not a managed target |
 | Git hook managers like Husky or Lefthook | Devin hooks should complement, not silently duplicate, human Git hooks |
 | Sensitive files like `.env`, lockfiles, migrations, or infra code | Strong candidate for `PreToolUse` file or command guards |
 | Existing notification or audit tooling | Good candidates for `PostToolUse`, `SessionStart`, `SessionEnd`, or `PostCompaction` hooks |

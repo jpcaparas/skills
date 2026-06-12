@@ -1,103 +1,83 @@
 #!/usr/bin/env bash
 #
-# {{SCRIPT_NAME}}
+# script.sh
 #
-# Event:
-#   {{EVENT_NAME}}
+# Canonical event script for {{EVENT_NAME}}.
 #
 # What this event is for:
 #   {{EVENT_DESCRIPTION}}
 #
-# Why this stub exists:
-#   This scaffold creates one script per official Claude Code hook event so the
-#   target project has a stable place to add logic later. Leaving the stub in
-#   place makes future additive refreshes and event-set updates predictable.
-#
 # Recommended starting style:
 #   {{ASYNC_GUIDANCE}}
 #
+# Ports/adapters layout:
+#   - script.sh is the shared, editable project behavior for this lifecycle event.
+#   - <harness>.sh files are thin protocol adapters invoked by harness config.
+#   - <harness>.json files carry harness-specific plan data such as commands,
+#     reusable scripts, matchers, and blocking preferences.
+#
 # How this script is organized:
-#   1. main() reads Claude Code's JSON payload from stdin exactly once.
-#   2. handle_event() contains the project-specific logic for this event.
-#   3. run_configured_scripts() delegates to reusable repo-owned scripts.
-#   4. run_configured_commands() runs any repo commands listed in the plan.
-#   5. Shared JSON/output helpers live in ../lib/common.sh.
+#   1. main() reads the active harness JSON payload from stdin exactly once.
+#   2. read_adapter_config() loads the active <harness>.json plan data.
+#   3. handle_event() contains the shared project-specific logic.
+#   4. run_configured_scripts() and run_configured_commands() execute plan data.
+#   5. Protocol-specific output helpers live in hooks/lib/<harness>.sh.
 #
 # Safe editing rule:
-#   Start by editing handle_event(). Leave main() and the bootstrap section
-#   boring unless you need to change how hook input is read.
+#   Start by editing handle_event(). Keep protocol-specific stdout/stderr logic
+#   in hooks/lib/<harness>.sh so this script can serve every harness that maps
+#   to this event.
 #
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+HOOKS_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+: "${AGENT_HOOK_HARNESS:?AGENT_HOOK_HARNESS must be set by the harness adapter}"
+: "${AGENT_HOOK_EVENT:={{EVENT_NAME}}}"
+
 # shellcheck source=/dev/null
-source "$SCRIPT_DIR/../lib/common.sh"
+source "$HOOKS_ROOT/lib/agent-hook-runtime.sh"
+# shellcheck source=/dev/null
+source "$HOOKS_ROOT/lib/${AGENT_HOOK_HARNESS}.sh"
 
 HOOK_INPUT=""
-
-read_project_scripts_json() {
-    # This JSON is injected from the hook plan for this specific event.
-    # Put reusable behavior here when the same script should also work from
-    # Codex, OpenCode, Husky, GitHub Actions, or a local terminal.
-    cat <<'PROJECT_SCRIPTS_JSON'
-{{PROJECT_SCRIPTS_JSON}}
-PROJECT_SCRIPTS_JSON
-}
-
-read_project_commands_json() {
-    # This JSON is injected from the hook plan for this specific event.
-    # It is intentionally data, not generated shell logic, so existing project
-    # commands stay easy to inspect and change.
-    cat <<'PROJECT_COMMANDS_JSON'
-{{PROJECT_COMMANDS_JSON}}
-PROJECT_COMMANDS_JSON
-}
-
-PROJECT_SCRIPTS_JSON="$(read_project_scripts_json)"
-PROJECT_COMMANDS_JSON="$(read_project_commands_json)"
+ADAPTER_CONFIG_JSON="{}"
 
 handle_event() {
     # Project-specific logic belongs here.
-    # As the hook grows, add small helper functions above handle_event() and
-    # call them from here instead of turning this function into a long script.
-    #
-    # If this event wraps reusable project behavior, prefer the plan's scripts
-    # array and call a repo-owned script such as scripts/agent-stop-checks.sh.
-    # Use commands only for existing repo entry points that are already stable,
-    # such as make targets, package-manager scripts, or task-runner recipes.
-    if ! run_configured_scripts "$PROJECT_SCRIPTS_JSON"; then
-        handle_project_command_failure "{{EVENT_NAME}}" "$(configured_command_failure_message)"
+    # Use config_scripts_json and config_commands_json for plan-managed
+    # reusable behavior, then add any local event logic below those calls.
+    if ! run_configured_scripts "$(config_scripts_json)"; then
+        handle_project_command_failure "$AGENT_HOOK_EVENT" "$(configured_command_failure_message)"
         return $?
     fi
 
-    if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
-        handle_project_command_failure "{{EVENT_NAME}}" "$(configured_command_failure_message)"
+    if ! run_configured_commands "$(config_commands_json)"; then
+        handle_project_command_failure "$AGENT_HOOK_EVENT" "$(configured_command_failure_message)"
         return $?
     fi
+
+    # Useful helpers from hooks/lib/agent-hook-runtime.sh:
+    #   hook_json FILTER [FALLBACK]
+    #   config_value FILTER [FALLBACK]
+    #   run_project_script LABEL SCRIPT_PATH ARGS_JSON [CWD]
+    #   run_project_command LABEL COMMAND [CWD]
     #
-    # Useful helpers from ../lib/common.sh:
-#   hook_json FILTER [FALLBACK]
-#   write_system_message MESSAGE
-#   write_additional_context MESSAGE
-#   run_project_script LABEL SCRIPT_PATH ARGS_JSON [CWD]
-#   run_project_command LABEL COMMAND [CWD]
+    # Useful protocol helpers come from hooks/lib/${AGENT_HOOK_HARNESS}.sh.
     #
-    # Examples:
-    #   CWD="$(hook_json '.cwd' "$CLAUDE_PROJECT_DIR")"
-    #   write_additional_context "Remember to run the targeted test."
-    #
-    # Keep stdout empty unless this hook intentionally sends JSON back to
-    # Claude Code. Plain logging should go to stderr.
+    # Keep stdout empty unless this hook intentionally sends JSON back to the
+    # active harness. Plain logging should go to stderr.
     return 0
 }
 
 main() {
-    # Claude Code sends one JSON payload to this script on stdin.
-    # Store it globally so helper functions can read it without passing it
-    # through every project-specific function.
     HOOK_INPUT="$(read_hook_input)"
     readonly HOOK_INPUT
+
+    ADAPTER_CONFIG_JSON="$(read_adapter_config "$SCRIPT_DIR/${AGENT_HOOK_HARNESS}.json")"
+    readonly ADAPTER_CONFIG_JSON
 
     handle_event "$@"
 }

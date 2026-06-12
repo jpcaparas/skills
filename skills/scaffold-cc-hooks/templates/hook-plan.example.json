@@ -1,6 +1,6 @@
 {
   "settings_target": ".claude/settings.json",
-  "managed_root": ".claude/hooks/generated",
+  "managed_root": "hooks",
   "mode": "additive",
   "enabled_events": [
     {

@@ -114,8 +114,9 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "Project-specific logic belongs here.",
         "run_configured_scripts",
         "run_configured_commands",
-        "PROJECT_SCRIPTS_JSON",
-        "PROJECT_COMMANDS_JSON",
+        "read_adapter_config",
+        "config_scripts_json",
+        "config_commands_json",
         'HOOK_INPUT="$(read_hook_input)"',
         'main "$@"',
     ]
@@ -130,18 +131,15 @@ def readable_common_errors(common_path: Path) -> list[str]:
     content = common_path.read_text(encoding="utf-8")
     required_snippets = [
         "require_jq()",
-        "Read one value from HOOK_INPUT with jq.",
-        "Hook output helpers build JSON with jq",
-        "allow_pre_tool_use_with_updated_input()",
+        "read_adapter_config()",
+        "config_scripts_json()",
+        "config_commands_json()",
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
-        "handle_project_command_failure()",
-        "This is deliberately language-agnostic.",
-        "Some hook contracts treat exit code 2 plus stderr as a block signal.",
     ]
     return [
-        f"common.sh is missing helper documentation: {snippet}"
+        f"agent-hook-runtime.sh is missing helper marker: {snippet}"
         for snippet in required_snippets
         if snippet not in content
     ]
@@ -400,24 +398,30 @@ def test_skill(skill_path: Path) -> dict:
         if scaffold.returncode == 0:
             expected_files = [
                 project / ".codex" / "hooks.json",
-                project / ".codex" / "hooks" / "README.md",
-                project / ".codex" / "hooks" / "generated" / "manifest.json",
-                project / ".codex" / "hooks" / "generated" / "hooks.generated.json",
-                project / ".codex" / "hooks" / "generated" / "lib" / "common.sh",
+                project / "hooks" / "README.md",
+                project / "hooks" / ".state" / "codex" / "manifest.json",
+                project / "hooks" / ".state" / "codex" / "hooks.json",
+                project / "hooks" / "lib" / "agent-hook-runtime.sh",
+                project / "hooks" / "lib" / "codex.sh",
             ]
             expected_files.extend(
-                project / ".codex" / "hooks" / "generated" / "events" / name
+                path
                 for name in [
-                    "session_start.sh",
-                    "subagent_start.sh",
-                    "pre_tool_use.sh",
-                    "permission_request.sh",
-                    "post_tool_use.sh",
-                    "pre_compact.sh",
-                    "post_compact.sh",
-                    "user_prompt_submit.sh",
-                    "subagent_stop.sh",
-                    "stop.sh",
+                    "session-start",
+                    "subagent-start",
+                    "pre-tool-use",
+                    "permission-request",
+                    "post-tool-use",
+                    "pre-compact",
+                    "post-compact",
+                    "user-prompt-submit",
+                    "subagent-stop",
+                    "stop",
+                ]
+                for path in [
+                    project / "hooks" / name / "script.sh",
+                    project / "hooks" / name / "codex.sh",
+                    project / "hooks" / name / "codex.json",
                 ]
             )
             if all(path.exists() for path in expected_files):
@@ -432,22 +436,22 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         readability_errors: list[str] = []
-        generated_root = project / ".codex" / "hooks" / "generated"
+        generated_root = project / "hooks"
         for rel_path in [
-            "events/session_start.sh",
-            "events/pre_tool_use.sh",
-            "events/stop.sh",
+            "session-start/script.sh",
+            "pre-tool-use/script.sh",
+            "stop/script.sh",
         ]:
             script_path = generated_root / rel_path
             if script_path.exists():
                 readability_errors.extend(readable_stub_errors(script_path))
             else:
                 readability_errors.append(f"generated script missing before readability check: {rel_path}")
-        common_path = generated_root / "lib" / "common.sh"
+        common_path = generated_root / "lib" / "agent-hook-runtime.sh"
         if common_path.exists():
             readability_errors.extend(readable_common_errors(common_path))
         else:
-            readability_errors.append("generated common.sh missing before readability check")
+            readability_errors.append("generated agent-hook-runtime.sh missing before readability check")
         if readability_errors:
             results["errors"].extend(readability_errors)
             results["passed"] = False
@@ -456,7 +460,7 @@ def test_skill(skill_path: Path) -> dict:
 
         results["integration_checks"]["total"] += 1
         hooks_json_path = project / ".codex" / "hooks.json"
-        generated_fragment_path = project / ".codex" / "hooks" / "generated" / "hooks.generated.json"
+        generated_fragment_path = project / "hooks" / ".state" / "codex" / "hooks.json"
         generated_config_errors: list[str] = []
         for config_path in [hooks_json_path, generated_fragment_path]:
             if not config_path.exists():

@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "verified_on": "2026-06-10",
+  "verified_on": "2026-06-12",
   "verified_from": [
     "https://docs.devin.ai/cli/extensibility/hooks/overview",
     "https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks"

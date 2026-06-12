@@ -1,60 +1,34 @@
 # Merge Strategy
 
-This skill treats the generated hook layer as managed and everything else as user-owned.
+This skill treats Codex adapters and `hooks/.state/codex` as managed. The shared `hooks/<event>/script.sh` files and any non-Codex adapters are user-owned unless the current Codex scaffold created them and they are missing.
 
 ## Additive Mode
 
 Use `additive` when the project already has useful hook handlers or settings that should stay in place.
 
-Additive mode:
+Behavior:
 
-- creates missing managed event stubs
-- refreshes `manifest.json`, `hooks.generated.json`, and `.codex/hooks/README.md`
-- removes only previously managed handlers from `.codex/hooks.json`, then adds the new managed handlers back
-- leaves unrelated custom handlers alone
-- leaves existing managed event script bodies alone if they already exist
-
-Choose additive when:
-
-- the repo already has custom hooks worth preserving
-- the user mainly wants missing event coverage or a managed README
-- the managed root is mostly correct and only needs extension
+- Create missing `hooks/<event>/script.sh` files and Codex adapter/config files.
+- Refresh `hooks/.state/codex/manifest.json`, `hooks/.state/codex/hooks.json`, and `hooks/README.md`.
+- Remove only Codex managed handlers whose commands point at `hooks/<event>/codex.sh`, then add the new Codex handlers back.
+- Leave unrelated custom hooks and non-Codex adapters alone.
+- Leave existing shared event script bodies alone if they already exist.
 
 ## Overhaul Mode
 
-Use `overhaul` when the managed layer is stale, inconsistent, or based on an outdated event set.
+Use `overhaul` when the Codex adapter layer is stale, inconsistent, or based on an outdated event set.
 
-Overhaul mode:
+Behavior:
 
-- backs up the old managed root before replacing it
-- re-renders every managed event stub from the current template
-- rebuilds `manifest.json`, `hooks.generated.json`, and `.codex/hooks/README.md`
-- removes only previously managed handlers from `.codex/hooks.json`, then adds the new managed handlers back
-- keeps unrelated non-managed hooks unless the user explicitly asks to remove them
-
-Choose overhaul when:
-
-- the official event set changed
-- the runtime semantics changed enough that old stubs are misleading
-- the repo wants a clean reset of the managed hook scaffold
+- Replace `hooks/.state/codex` and `hooks/<event>/codex.{sh,json}`.
+- Re-render missing or reset shared `script.sh` files only where the scaffold owns the event script.
+- Rebuild `hooks/README.md`.
+- Do not move or delete the whole `hooks/` tree.
 
 ## Cross-File Layering Rule
 
-Codex loads `hooks.json` next to every active config layer. That means:
-
-- project-local hooks do not replace user-global hooks
-- higher-precedence config layers do not wipe lower-precedence hook files
-- the managed merge only controls one `hooks.json` file at a time
-
-Do not pretend a project scaffold owns `~/.codex/hooks.json` unless the plan explicitly targets user scope.
+Codex loads `hooks.json` next to every active config layer. Project-local hooks do not replace user-global hooks, and the managed merge only controls one `hooks.json` file at a time.
 
 ## Docs Drift Rule
 
-Before every real scaffold:
-
-1. Verify the live official hook docs.
-2. Compare them with `assets/hook-events.json`.
-3. Re-check the generated schemas, feature registry, and runtime source for parser changes.
-4. If the event set or support matrix changed, update the manifest inputs first.
-
-Do not trust early blog posts or stale local assumptions over the official docs and schemas.
+Before every real scaffold, verify the live official hook docs, compare them with `assets/hook-events.json`, re-check schemas and runtime source for parser changes, and update manifest inputs first if anything changed.

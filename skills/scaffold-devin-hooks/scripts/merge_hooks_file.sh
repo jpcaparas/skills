@@ -13,8 +13,9 @@
 # Usage:
 #   ./merge_hooks_file.sh \
 #     --hooks-file /repo/.devin/hooks.v1.json \
-#     --fragment-file /repo/.devin/hooks/generated/hooks.generated.json \
-#     --managed-root .devin/hooks/generated
+#     --fragment-file /repo/hooks/.state/devin/hooks.v1.json \
+#     --managed-root hooks/ \
+#     --managed-suffix /devin.sh
 #
 
 set -euo pipefail
@@ -22,12 +23,13 @@ set -euo pipefail
 usage() {
     cat <<'EOF'
 Usage:
-  merge_hooks_file.sh --hooks-file FILE --fragment-file FILE --managed-root PATH
+  merge_hooks_file.sh --hooks-file FILE --fragment-file FILE --managed-root PATH [--managed-suffix NAME]
 
 Options:
   --hooks-file FILE     Devin .devin/hooks.v1.json file to update.
-  --fragment-file FILE  Generated hooks fragment to merge in.
+  --fragment-file FILE  Managed hooks fragment to merge in.
   --managed-root PATH   Managed hook root path relative to the project root.
+  --managed-suffix NAME Optional suffix that must also appear in managed commands.
   -h, --help            Show this help text.
 EOF
 }
@@ -43,6 +45,7 @@ require_command() {
 HOOKS_FILE=""
 FRAGMENT_FILE=""
 MANAGED_ROOT=""
+MANAGED_SUFFIX=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -56,6 +59,10 @@ while [ $# -gt 0 ]; do
             ;;
         --managed-root)
             MANAGED_ROOT="$2"
+            shift 2
+            ;;
+        --managed-suffix)
+            MANAGED_SUFFIX="$2"
             shift 2
             ;;
         -h|--help)
@@ -95,9 +102,14 @@ fi
 
 jq \
     --arg managed_root "$MANAGED_ROOT" \
+    --arg managed_suffix "$MANAGED_SUFFIX" \
     --slurpfile fragment "$FRAGMENT_FILE" \
     '
-    def strip_managed_groups($managed_root):
+    def is_managed_command($managed_root; $managed_suffix):
+        ((.command // "") | contains($managed_root))
+        and (($managed_suffix | length) == 0 or ((.command // "") | contains($managed_suffix)));
+
+    def strip_managed_groups($managed_root; $managed_suffix):
         with_entries(
             .value |= (
                 map(
@@ -106,7 +118,7 @@ jq \
                         | map(
                             select(
                                 (.type != "command")
-                                or (((.command // "") | contains($managed_root)) | not)
+                                or (is_managed_command($managed_root; $managed_suffix) | not)
                             )
                         )
                     )
@@ -124,7 +136,7 @@ jq \
     . as $hooks_file
     | ($fragment[0] // {}) as $generated
     | $hooks_file
-    | strip_managed_groups($managed_root)
+    | strip_managed_groups($managed_root; $managed_suffix)
     | append_generated_groups($generated)
     ' "$TEMP_INPUT" > "$TEMP_OUTPUT"
 

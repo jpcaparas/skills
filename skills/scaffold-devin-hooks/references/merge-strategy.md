@@ -1,6 +1,6 @@
 # Merge Strategy
 
-This skill treats the generated hook layer as managed and everything else as user-owned.
+This skill treats Devin adapters and `hooks/.state/devin` as managed. The shared `hooks/<event>/script.sh` files and any non-Devin adapters are user-owned unless the current Devin scaffold created them and they are missing.
 
 ## Additive Mode
 
@@ -8,42 +8,23 @@ Use `additive` when the project already has useful hook scripts or hook config t
 
 Behavior:
 
-- Create missing managed event stubs.
-- Refresh `manifest.json`, `hooks.generated.json`, and `.devin/hooks/README.md`.
-- Remove only previously managed hook commands from `.devin/hooks.v1.json`, then add the new managed handlers back.
-- Leave unrelated custom hooks alone.
-- Leave existing managed event script bodies alone if they already exist.
-
-Use additive mode when:
-
-- the project already has a stable managed generated tree
-- the user mainly wants new event coverage
-- the user wants current custom logic preserved
+- Create missing `hooks/<event>/script.sh` files and Devin adapter/config files.
+- Refresh `hooks/.state/devin/manifest.json`, `hooks/.state/devin/hooks.v1.json`, and `hooks/README.md`.
+- Remove only Devin managed handlers whose commands point at `hooks/<event>/devin.sh`, then add the new Devin handlers back.
+- Leave unrelated custom hooks and non-Devin adapters alone.
+- Leave existing shared event script bodies alone if they already exist.
 
 ## Overhaul Mode
 
-Use `overhaul` when the managed generated layer is stale, inconsistent, or based on an outdated event set.
+Use `overhaul` when the Devin adapter layer is stale, inconsistent, or based on an outdated event set.
 
 Behavior:
 
-- Re-render every managed event stub from the current template.
-- Rebuild `manifest.json`, `hooks.generated.json`, and `.devin/hooks/README.md`.
-- Remove only previously managed hook commands from `.devin/hooks.v1.json`, then add the new managed handlers back.
-- Keep unrelated non-managed hooks unless the user explicitly asks you to remove them.
-
-Use overhaul mode when:
-
-- the official event set changed
-- the generated layer drifted away from the current structure
-- the repo wants a clean reset of the managed hook scaffold
+- Replace `hooks/.state/devin` and `hooks/<event>/devin.{sh,json}`.
+- Re-render missing or reset shared `script.sh` files only where the scaffold owns the event script.
+- Rebuild `hooks/README.md`.
+- Do not move or delete the whole `hooks/` tree.
 
 ## Docs Drift Rule
 
-Before every real scaffold or refresh:
-
-1. Verify the live official hook docs.
-2. Compare them with `assets/hook-events.json`.
-3. If the event set or support matrix changed, update the manifest inputs first.
-4. Then re-run the scaffold in the target project.
-
-Do not assume the baked-in event list is still current.
+Before every real scaffold or refresh, verify the live official hook docs, compare them with `assets/hook-events.json`, update manifest inputs if needed, then re-run the scaffold.
