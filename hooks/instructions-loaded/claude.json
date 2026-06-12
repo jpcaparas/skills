@@ -1,0 +1,6 @@
+{
+  "harness": "claude",
+  "event": "InstructionsLoaded",
+  "scripts": [],
+  "commands": []
+}

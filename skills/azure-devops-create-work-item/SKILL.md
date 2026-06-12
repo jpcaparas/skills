@@ -1,6 +1,6 @@
 ---
 name: azure-devops-create-work-item
-description: "Draft a local Azure DevOps work item packet from loose context, defaulting to a Scrum Product Backlog Item unless the user specifies Bug, Feature, User Story, Task, Issue, or Epic. When run inside a repo, inspect the codebase and include relevant snippets. Save `work-item.md`, `context.md`, `sources.md`, and `metadata.json`. Do NOT use for live Azure DevOps REST/CLI creation, bulk migration, wiki authoring, or status reporting."
+description: "Draft local Azure DevOps work item packets from loose context, defaulting to Scrum PBI unless Bug, Feature, User Story, Task, Issue, or Epic is specified. Inspect repo context when present. Do NOT use for live REST/CLI creation, migration, wiki, or status reporting."
 compatibility: "Requires: python3. Optional network access only when re-checking Microsoft Learn documentation."
 metadata:
   version: "1.0.3"

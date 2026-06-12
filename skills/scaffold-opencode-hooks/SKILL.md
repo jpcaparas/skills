@@ -1,6 +1,6 @@
 ---
 name: scaffold-opencode-hooks
-description: "Scaffold OpenCode hooks by generating TypeScript-only OpenCode plugins into a real project after auditing the repo, verifying the live official plugin docs, and inspecting config precedence. Defaults to a minimal lifecycle/action plugin with visible TUI toasts, repo-owned scripts, and one controlled automatic follow-up; generates broad hook-surface catalogs only when requested. Trigger on OpenCode hooks, OpenCode plugins, `.opencode/plugins`, TypeScript lifecycle plugins, `opencode.json`, `tool.execute.before`, `tool.execute.after`, `session.idle`, `shell.env`, custom tools, or post-turn checks. Do NOT use for Codex hooks, Claude Code hooks, JavaScript-only plugin scaffolds, or generic npm package publishing with no OpenCode runtime."
+description: "Scaffold OpenCode hooks as TypeScript plugins after auditing repo structure, live plugin docs, and config precedence. Use for `.opencode/plugins`, lifecycle plugins, custom tools, `session.idle`, or post-turn checks. Do NOT use for Codex, Claude, JavaScript-only, or npm publishing."
 compatibility: "Requires: bash, jq, git, rg, bun"
 metadata:
   version: "1.1.0"

@@ -1,6 +1,6 @@
 ---
 name: google-search-ai-optimization
-description: "Google-grounded SEO/GEO web development skill for optimizing sites for Google Search, AI Overviews, AI Mode, and agentic browsing without unsupported hacks. Use when building or fixing websites for Search visibility, generative AI search readiness, technical SEO, crawlability, indexability, snippets, structured data, ecommerce/local details, or browser-agent usability. Triggers on: Google AI search, AI Overviews, AI Mode, GEO, AEO, SEO implementation, crawlable content, snippets, llms.txt myths, structured data, Merchant Center, Business Profile, agent-friendly website. Do NOT use for paid ads, generic rank tracking, non-Google LLM directory tactics, or off-page link schemes."
+description: "Google-grounded SEO/GEO implementation for Search, AI Overviews, AI Mode, crawlability, indexability, snippets, structured data, ecommerce/local details, and agent browsing. Do NOT use for paid ads, rank tracking, non-Google directory tactics, or link schemes."
 compatibility: "Requires: python3 for local static page checks. Optional: access to rendered HTML, Search Console, Rich Results Test, and PageSpeed Insights."
 ---
 

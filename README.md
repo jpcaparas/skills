@@ -292,6 +292,16 @@ Project-aware GitHub Copilot hook scaffolder that verifies the live GitHub docs,
 
 Production scaffold-and-doctor skill for GitHub Copilot cloud agent environments that audits the repo, verifies the live GitHub Docs contract, and scaffolds or repairs `.github/workflows/copilot-setup-steps.yml` while separating repo-local fixes from GitHub settings changes.
 
+### `scaffold-hooks`
+
+`npx skills add jpcaparas/skills --skill scaffold-hooks`
+
+<p align="center">
+  <img src="skills/scaffold-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-hooks" width="480">
+</p>
+
+Universal `/scaffold-hooks` skill that composes Claude Code, Codex, Devin CLI, and OpenCode hook scaffolds into one shared `hooks/` ports-and-adapters layout while migrating legacy generated hook roots without colliding with custom hooks.
+
 ### `scaffold-opencode-hooks`
 
 `npx skills add jpcaparas/skills --skill scaffold-opencode-hooks`

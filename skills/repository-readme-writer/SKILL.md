@@ -1,6 +1,6 @@
 ---
 name: repository-readme-writer
-description: "Create or improve repository READMEs that are concise, useful, and agent-safe. Use when drafting a new README, rewriting an existing README, adding a quickstart, simplifying overgrown project docs, documenting local setup, or reviewing README quality for any code repository. Triggers on: README, repo README, project README, quickstart, getting started, local development docs, setup docs, contributor docs. Do NOT trigger for API reference docs, full product documentation, changelogs, marketing landing pages, or code comments unless the README itself is the deliverable."
+description: "Create or improve concise, useful, agent-safe repository READMEs. Use for new README drafts, rewrites, quickstarts, local setup, getting started, contributor docs, or README reviews. Do NOT use for API reference, full product docs, changelogs, or landing pages."
 compatibility: "Requires: python3 for `scripts/repo_readme_probe.py`, `scripts/validate.py`, and `scripts/test_skill.py`."
 metadata:
   version: "1.0.0"

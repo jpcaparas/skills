@@ -1,6 +1,6 @@
 ---
 name: oneshot-websites
-description: "Generate semi-deterministic catalogs of parallel one-shot single-file website variants. Use when the user asks for a repertoire, benchmark directory, model showcase, many website styles, one-shot websites, PROMPT.md-per-route catalogs, or harness-parallel site generation. Do NOT use for a normal single landing page unless the user wants a one-shot benchmark artifact."
+description: "Generate semi-deterministic catalogs of parallel one-shot single-file website variants for repertoire, benchmark, model showcase, many-style, PROMPT.md route, or harness-parallel workflows. Do NOT use for a normal single landing page."
 ---
 
 # Oneshot Websites

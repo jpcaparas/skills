@@ -1,0 +1,206 @@
+{
+  "generated_at": "2026-06-12T01:58:10Z",
+  "mode": "overhaul",
+  "hooks_root": "hooks",
+  "harnesses": [
+    "claude",
+    "codex",
+    "devin",
+    "opencode"
+  ],
+  "cleanup_legacy": true,
+  "legacy_roots": [
+    ".claude/hooks/generated",
+    ".codex/hooks/generated",
+    ".devin/hooks/generated"
+  ],
+  "plan": {
+    "mode": "overhaul",
+    "hooks_root": "hooks",
+    "cleanup_legacy": true,
+    "harnesses": [
+      "claude",
+      "codex",
+      "devin",
+      "opencode"
+    ],
+    "plans": {
+      "claude": {
+        "settings_target": ".claude/settings.json",
+        "enabled_events": [
+          {
+            "name": "PreToolUse",
+            "matcher": "Edit|Write|MultiEdit",
+            "async": false,
+            "timeout": 30,
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for hard safety gates around skill files and repository metadata."
+          },
+          {
+            "name": "PostToolUse",
+            "matcher": "Edit|Write|MultiEdit",
+            "async": true,
+            "timeout": 180,
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for auto-validation and metadata cleanup after edits."
+          },
+          {
+            "name": "Notification",
+            "matcher": "",
+            "async": true,
+            "timeout": 15,
+            "scripts": [],
+            "commands": [],
+            "notes": "Optional notification hook."
+          },
+          {
+            "name": "Stop",
+            "async": false,
+            "timeout": 300,
+            "scripts": [
+              {
+                "label": "skills repository stop checks",
+                "path": "scripts/agent-stop-checks.sh",
+                "args": [],
+                "cwd": ".",
+                "notes": "Shared validation used by local agent hooks and manual runs."
+              }
+            ],
+            "commands": [],
+            "notes": "End-of-turn validation gate."
+          }
+        ]
+      },
+      "codex": {
+        "hooks_target": ".codex/hooks.json",
+        "feature_scope": "project",
+        "enabled_events": [
+          {
+            "name": "SessionStart",
+            "matcher": "startup|resume",
+            "timeout": 20,
+            "status_message": "Loading skills repo hook context",
+            "scripts": [],
+            "commands": [],
+            "notes": "Inject repository skill layout and validation reminders."
+          },
+          {
+            "name": "PreToolUse",
+            "matcher": "Bash",
+            "timeout": 20,
+            "status_message": "Checking destructive Bash commands",
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for destructive shell guardrails."
+          },
+          {
+            "name": "PostToolUse",
+            "matcher": "Bash",
+            "timeout": 20,
+            "status_message": "Reviewing Bash command impact",
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for post-Bash repository reminders."
+          },
+          {
+            "name": "Stop",
+            "timeout": 300,
+            "status_message": "Checking skills budget and repository validation",
+            "scripts": [
+              {
+                "label": "skills repository stop checks",
+                "path": "scripts/agent-stop-checks.sh",
+                "args": [],
+                "cwd": ".",
+                "notes": "Shared validation used by local agent hooks and manual runs."
+              }
+            ],
+            "commands": [],
+            "notes": "Run shared validation before Codex stops."
+          }
+        ]
+      },
+      "devin": {
+        "hooks_target": ".devin/hooks.v1.json",
+        "enabled_events": [
+          {
+            "name": "PreToolUse",
+            "matcher": "^exec$",
+            "timeout": 30,
+            "block_on_failure": true,
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for shell safety gates."
+          },
+          {
+            "name": "PostToolUse",
+            "matcher": "^(edit|exec)$",
+            "timeout": 120,
+            "block_on_failure": false,
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for post-tool validation and logging."
+          },
+          {
+            "name": "Stop",
+            "matcher": "",
+            "timeout": 300,
+            "block_on_failure": true,
+            "scripts": [
+              {
+                "label": "skills repository stop checks",
+                "path": "scripts/agent-stop-checks.sh",
+                "args": [],
+                "cwd": ".",
+                "notes": "Shared validation used by local agent hooks and manual runs."
+              }
+            ],
+            "commands": [],
+            "notes": "Run shared validation before Devin stops."
+          },
+          {
+            "name": "SessionStart",
+            "matcher": "",
+            "timeout": 10,
+            "block_on_failure": false,
+            "scripts": [],
+            "commands": [],
+            "notes": "Starter slot for lightweight session setup."
+          }
+        ]
+      },
+      "opencode": {
+        "scope": "project",
+        "deployment": "local-files",
+        "module_format": "ts",
+        "surface_catalog": false,
+        "hooks_root": "hooks",
+        "plugin_root": ".opencode/plugins",
+        "managed_state_dir": ".opencode/plugins/.managed",
+        "config_target": "opencode.json",
+        "package_target": ".opencode/package.json",
+        "package_dependencies": {},
+        "npm_plugins": [],
+        "enabled_plugins": [
+          {
+            "name": "skills-repo-stop-check",
+            "pattern": "lifecycle-action",
+            "filename": "skills_repo_stop_check.ts",
+            "surfaces": [
+              "event"
+            ],
+            "context_script": "hooks/opencode-session-created/opencode.sh",
+            "action_script": "hooks/opencode-session-idle/opencode.sh",
+            "context_delegate_script": "scripts/agent-session-context.sh",
+            "action_delegate_script": "scripts/agent-stop-checks.sh",
+            "action_label": "Skills repository stop checks",
+            "service": "skills-repo-stop-check",
+            "notes": "OpenCode lifecycle adapter into shared repository stop checks."
+          }
+        ]
+      }
+    }
+  }
+}

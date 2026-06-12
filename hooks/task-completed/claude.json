@@ -1,0 +1,6 @@
+{
+  "harness": "claude",
+  "event": "TaskCompleted",
+  "scripts": [],
+  "commands": []
+}

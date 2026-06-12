@@ -1,6 +1,6 @@
 ---
 name: repo-intent-documenter
-description: "Create and maintain evidence-backed repository intent docs for AI coding agents. Use when a user says 'read this repo and document the intent', 'make the project intent obvious', 'write REPO_INTENT.md', 'explain what this repo is for', 'ask me questions about unclear repo goals', or references Nathan Baschez's coding-agent intent prompt. Produces a markdown doc with certainty levels, evidence anchors, open questions, and review/update workflow. Do NOT trigger for ordinary README polishing, code-only reviews, or architecture docs that do not need intent discovery."
+description: "Create evidence-backed repository intent docs for AI coding agents, including certainty levels, evidence anchors, open questions, and review workflow. Trigger on document repo intent, REPO_INTENT.md, or what this repo is for. Do NOT use for ordinary README polishing."
 compatibility: "Requires: python3 for scripts/repo_intent_inventory.py, scripts/validate.py, and scripts/test_skill.py."
 metadata:
   version: "1.0.0"

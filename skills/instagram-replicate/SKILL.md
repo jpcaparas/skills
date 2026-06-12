@@ -1,6 +1,6 @@
 ---
 name: instagram-replicate
-description: "Rebuild one public Instagram video post or reel into a deterministic local replica with a frozen snapshot, local HTML/CSS, Playwright capture, MP4 export, and a companion GIF capped under 24 MB. Use when asked to replicate an Instagram post, freeze an Instagram reel into video, make an Instagram video look like the desktop post page offline, or create rerenderable Instagram assets with a saved build folder. Trigger on: 'replicate this Instagram post', 'turn this reel into MP4', 'make this Instagram post into a GIF too', 'freeze this Instagram video locally'. Do NOT use for plain caption extraction, raw media download only, live Instagram browser capture, authenticated pages, carousels, Stories, DMs, or promises of a pixel-perfect private Instagram renderer."
+description: "Rebuild one public Instagram video post or reel into a deterministic local replica with frozen assets, HTML/CSS, Playwright capture, MP4, and GIF. Trigger on replicate Instagram, reel to MP4, or freeze video locally. Do NOT use for captions, private/auth pages, carousels, Stories, or DMs."
 compatibility: "Requires: python3, ffmpeg, ffprobe, yt-dlp, Playwright with Chromium, and outbound HTTPS for snapshotting public Instagram metadata and media."
 metadata:
   version: "1.0.0"

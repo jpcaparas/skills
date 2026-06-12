@@ -1,6 +1,6 @@
 ---
 name: ripgrep
-description: "Prefer ripgrep (`rg`) for text search, recursive codebase search, ignore-aware grep replacement, filename discovery via `rg --files`, and machine-readable search output. Use when the user asks to search for text, find occurrences, inspect a large tree, locate files by name or pattern, or when `grep`, `grep -R`, `find | grep`, or manual file reads would be slower. Triggers on: 'search for', 'find occurrences', 'grep', 'grep -R', 'ripgrep', 'rg', 'find files', 'look for pattern'. Do NOT trigger for reading entire files, structured JSON queries better handled by `jq`, or filesystem metadata tasks that need `find` or `fd`."
+description: "Prefer ripgrep (`rg`) for text search, recursive codebase search, filename discovery with `rg --files`, and machine-readable search output. Trigger on search, grep, ripgrep, rg, find files, or look for pattern. Do NOT use for full-file reads or JSON queries better handled by jq."
 compatibility: "Requires: rg. Optional: python3 for probe and validation scripts. PCRE2-specific patterns require an rg build compiled with PCRE2."
 metadata:
   version: "1.0.0"
@@ -113,4 +113,3 @@ What kind of search do you need?
 - `scripts/probe_ripgrep.py` builds a temporary corpus and verifies real `rg` behavior such as ignore precedence, JSON output, multiline matching, and PCRE2 support.
 - `scripts/validate.py` checks structure, frontmatter, references, required files, and Python syntax.
 - `scripts/test_skill.py` runs validation, checks eval coverage, verifies cross-references, and executes the ripgrep probe suite.
-

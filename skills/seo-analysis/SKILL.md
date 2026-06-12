@@ -1,6 +1,6 @@
 ---
 name: seo-analysis
-description: "Framework- and language-agnostic SEO analysis skill for auditing real codebases, metadata, rendering, crawlability, canonicals, structured data, OG/social previews, internationalization, sitemaps, robots directives, internal linking, and AI-era search surface readiness. Use when a user wants a thorough SEO audit, a technical/content SEO review, metadata or schema debugging, indexability analysis, or a handoff prompt for another session to implement fixes. Triggers on: SEO audit, technical SEO, schema, canonical, hreflang, robots, sitemap, OG tags, social cards, title/meta, AI Overviews, search visibility. Do NOT trigger for paid ads, off-page link building, or rank-tracking reports without codebase analysis."
+description: "Audit real codebases for SEO: metadata, rendering, crawlability, canonicals, schema, OG/social previews, i18n, sitemaps, robots, internal links, and AI-era search readiness. Trigger on SEO audit, schema, canonical, hreflang, sitemap, title/meta, or AI Overviews. Do NOT use for ads or link building."
 compatibility: "Requires: python3. Optional: command-line access to the target repo, local build/test tooling, and browser or HTTP tooling for rendered-page verification."
 ---
 

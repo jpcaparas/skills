@@ -241,10 +241,17 @@ run_project_script() {
     printf '[%s-hook] cwd: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$cwd" >&2
     printf '[%s-hook] script: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$resolved_script" >&2
 
-    (
-        cd "$cwd"
-        /usr/bin/env bash "$resolved_script" "${script_args[@]}"
-    )
+    if [ "${#script_args[@]}" -gt 0 ]; then
+        (
+            cd "$cwd"
+            /usr/bin/env bash "$resolved_script" "${script_args[@]}"
+        )
+    else
+        (
+            cd "$cwd"
+            /usr/bin/env bash "$resolved_script"
+        )
+    fi
 }
 
 run_configured_scripts() {
@@ -383,7 +390,7 @@ handle_project_command_failure() {
         PreCompact)
             stop_processing "$message"
             ;;
-        PostToolUse|PostToolUseFailure|SessionStart|Setup|Notification|SubagentStart|PostCompact|SessionEnd|CwdChanged|FileChanged|InstructionsLoaded|StopFailure|PermissionDenied|WorktreeRemove)
+        PostToolUse|PostToolUseFailure|SessionStart|Setup|Notification|MessageDisplay|SubagentStart|PostCompact|SessionEnd|CwdChanged|FileChanged|InstructionsLoaded|StopFailure|PermissionDenied|WorktreeRemove)
             write_system_message "$message"
             ;;
         *)

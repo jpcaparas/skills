@@ -1,6 +1,6 @@
 ---
 name: tweet-replicate
-description: "Rebuild a public X/Twitter status into a deterministic local replica with a frozen snapshot, local HTML/CSS, Playwright capture, X-like media-frame fill behavior, a high-quality MP4 master, and a companion GIF capped under 24 MB. Use when asked to replicate a tweet/X post, freeze a status into video, make a tweet look like X offline, or create rerenderable tweet assets with a saved build folder. Trigger on: 'replicate this tweet', 'turn this X post into MP4', 'make this tweet into a GIF too', 'freeze this status locally'. Do NOT use for plain tweet text extraction, raw media download only, live X browser capture, authenticated pages, DMs, or promises of a pixel-perfect private X renderer."
+description: "Rebuild a public X/Twitter status into a deterministic local replica with frozen assets, HTML/CSS, Playwright capture, MP4, and GIF. Trigger on replicate tweet, X post to MP4, make tweet GIF, or freeze status locally. Do NOT use for text extraction, auth pages, or DMs."
 compatibility: "Requires: python3, ffmpeg, ffprobe, yt-dlp, Playwright with Chromium, and outbound HTTPS for snapshotting and media downloads."
 metadata:
   version: "1.0.1"

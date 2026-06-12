@@ -1,6 +1,6 @@
 ---
 name: reading-notes
-description: "Turn any supplied resource into practical reading notes: high-level topics, interesting ideas, research leads, open questions, and concrete homework todos. Use for conference notes, messy live notes, articles, PDFs, docs, webpages, YouTube videos, transcripts, slide screenshots, podcasts, meeting recordings, books, RFCs, talks, and 'give me stuff to research later' requests. Triggers on: reading notes, study notes, homework, todos from this, summarize for later research, extract topics, interesting ideas, conference notes, talk notes, video notes. Do NOT trigger for code review, exhaustive transcripts, citation-grade literature reviews, legal/medical advice, or pure task management when no source/resource analysis is needed."
+description: "Turn supplied resources into practical reading notes: topics, interesting ideas, research leads, open questions, and homework todos. Use for articles, PDFs, docs, webpages, videos, transcripts, slides, meetings, books, RFCs, or talks. Do NOT use for code review or exhaustive transcripts."
 compatibility: "Requires resource access through the active harness. Optional: python3 for scripts/probe_reading_notes.py, scripts/validate.py, and scripts/test_skill.py."
 metadata:
   version: "1.0.0"

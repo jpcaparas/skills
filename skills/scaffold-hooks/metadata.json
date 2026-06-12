@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "June 2026",
+  "abstract": "Universal /scaffold-hooks skill that composes the Claude Code, Codex, Devin CLI, and OpenCode hook scaffolders into a shared repo-owned hooks/ ports-and-adapters layout, migrates old generated hook roots out of harness-specific directories, preserves custom hooks, and verifies that final harness configs no longer collide.",
+  "references": [
+    "https://code.claude.com/docs/en/hooks",
+    "https://developers.openai.com/codex/hooks",
+    "https://docs.devin.ai/cli/extensibility/hooks/overview",
+    "https://opencode.ai/docs/plugins/"
+  ]
+}
+

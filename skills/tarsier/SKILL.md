@@ -1,6 +1,6 @@
 ---
 name: tarsier
-description: "Generate a tarsier riding a bicycle as an SVG, rasterize it to a padded 500x500 PNG, and write a markdown transcript. One-shot creative generator triggered by /tarsier, 'draw a tarsier on a bike', 'tarsier bicycle', 'tarsier SVG', or any request for a tarsier illustration on a bicycle. No arguments required — the harness model name and reasoning level are inferred and baked into the output folder name. Produces three files (SVG + PNG + MD) in a timestamped folder inside the caller's current working directory. Do not use for other animals, other vehicles, or arbitrary SVG generation."
+description: "Generate a tarsier riding a bicycle as SVG, rasterize a padded 500x500 PNG, and write a markdown transcript. Trigger on /tarsier, tarsier bicycle, tarsier SVG, or draw a tarsier on a bike. Do not use for other subjects or arbitrary SVG generation."
 ---
 
 # Tarsier

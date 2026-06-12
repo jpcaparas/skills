@@ -1,0 +1,14 @@
+{
+  "harness": "codex",
+  "event": "SessionStart",
+  "scripts": [
+    {
+      "label": "skills repository session baseline",
+      "path": "scripts/agent-session-context.sh",
+      "args": [],
+      "cwd": ".",
+      "notes": "Records the initial git snapshot so Stop only validates sessions that changed the repo."
+    }
+  ],
+  "commands": []
+}

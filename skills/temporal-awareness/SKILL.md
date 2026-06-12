@@ -1,6 +1,6 @@
 ---
 name: temporal-awareness
-description: "Use this skill when the user asks for the latest, current, recent, today, yesterday, tomorrow, this week, current events, new models, versions, prices, schedules, executives, laws, or anything else that may have changed after pretraining. It grounds the session in the real system clock and timezone, triages whether live verification is mandatory, converts relative dates into absolute dates, and prevents stale-memory answers such as repeating retired model families. Triggers on: latest, current, today, yesterday, tomorrow, recent, as of now, current model, release, version, price, schedule, CEO, president, weather, score. Do NOT trigger for stable historical facts with explicit dates, timeless explanations, or pure writing tasks with no time sensitivity."
+description: "Use for latest/current/recent/today/yesterday/tomorrow questions, changing models, versions, prices, schedules, executives, laws, weather, scores, or other time-sensitive facts. Ground answers in clock and timezone, verify live when needed, and convert relative dates. Do NOT use for stable history."
 compatibility: "Requires: python3. Optional: web/search tooling for live verification of volatile claims."
 ---
 

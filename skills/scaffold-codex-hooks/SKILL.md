@@ -1,6 +1,6 @@
 ---
 name: scaffold-codex-hooks
-description: "Scaffold Codex hooks into a real project after auditing the repo, verifying the live official docs, schemas, and runtime source, inspecting the effective `hooks` feature flag, and enabling it in project or user config if needed. Use when a user wants Codex hooks, `.codex/hooks.json`, managed Codex hook refreshes, repo-local lifecycle hooks, reusable agent scripts, or help with `SessionStart`, `SubagentStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `SubagentStop`, or `Stop`. Trigger on: Codex hooks, hooks.json, hooks feature flag, codex_hooks legacy alias, .codex/config.toml, managed hook scaffold. Do NOT use for Claude Code hooks, `.claude/settings.json`, Husky-only setups, or non-Codex agents."
+description: "Scaffold or refresh Codex hooks for a real project after auditing docs, schemas, runtime source, and the hooks feature flag. Generates `.codex/hooks.json` lifecycle adapters for Codex events. Do NOT use for Claude hooks, Husky, or non-Codex agents."
 compatibility: "Requires: codex CLI with the stable `hooks` feature available, plus bash, jq, git, rg, and python3."
 metadata:
   version: "1.1.0"

@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "verified_on": "2026-06-12",
+  "harnesses": [
+    {
+      "name": "claude",
+      "skill": "scaffold-cc-hooks",
+      "config": ".claude/settings.json",
+      "adapter_suffix": "claude.sh",
+      "state_dir": "hooks/.state/claude",
+      "official_docs": [
+        "https://code.claude.com/docs/en/hooks",
+        "https://code.claude.com/docs/en/hooks-guide"
+      ]
+    },
+    {
+      "name": "codex",
+      "skill": "scaffold-codex-hooks",
+      "config": ".codex/hooks.json",
+      "adapter_suffix": "codex.sh",
+      "state_dir": "hooks/.state/codex",
+      "official_docs": [
+        "https://developers.openai.com/codex/hooks",
+        "https://developers.openai.com/codex/config-reference"
+      ]
+    },
+    {
+      "name": "devin",
+      "skill": "scaffold-devin-hooks",
+      "config": ".devin/hooks.v1.json",
+      "adapter_suffix": "devin.sh",
+      "state_dir": "hooks/.state/devin",
+      "official_docs": [
+        "https://docs.devin.ai/cli/extensibility/hooks/overview",
+        "https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks"
+      ]
+    },
+    {
+      "name": "opencode",
+      "skill": "scaffold-opencode-hooks",
+      "config": ".opencode/plugins/*.ts",
+      "adapter_suffix": "opencode.sh",
+      "state_dir": ".opencode/plugins/.managed",
+      "official_docs": [
+        "https://opencode.ai/docs/plugins/",
+        "https://opencode.ai/docs/config/"
+      ]
+    }
+  ],
+  "legacy_managed_roots": [
+    ".claude/hooks/generated",
+    ".codex/hooks/generated",
+    ".devin/hooks/generated"
+  ]
+}
+

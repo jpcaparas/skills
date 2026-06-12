@@ -1,6 +1,6 @@
 ---
 name: audify
-description: "Turn a readable resource into cleaned Gemini TTS audio. Use when the user wants to audify a URL, markdown note, HTML page, DOCX, or raw text into an MP3 while stripping markup, HTML, code fences, and bare URLs before synthesis. Triggers on: '/audify', 'read this aloud', 'turn this page into audio', 'make an mp3 narration', 'text to speech this resource', or when Gemini 3.1 Flash TTS with `GEMINI_API_KEY` is the right path. Do NOT trigger for music generation, live voice chat, or binary/media sources that are not meant to be narrated."
+description: "Audify readable URLs, Markdown, HTML, DOCX, or raw text into cleaned Gemini TTS MP3 narration. Trigger on /audify, read aloud, MP3 narration, or text-to-speech resource requests. Do NOT use for music, live voice chat, or non-narration media."
 compatibility: "Requires: `python3`, `ffmpeg`, and `GEMINI_API_KEY`; optional `jq` for raw REST debugging"
 ---
 

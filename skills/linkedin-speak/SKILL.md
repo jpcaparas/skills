@@ -1,6 +1,6 @@
 ---
 name: linkedin-speak
-description: "Turn plain English into comically polished LinkedIn-speak and reverse bloated thought-leadership posts back into blunt English. Use when the user wants to sound like a corporate influencer, parody announcement culture, translate into or out of LinkedIn voice, add hashtags and gratitude without improvising, or generate deterministic meme text that stays reproducible across runs. Trigger on: 'linkedin speak', 'translate this into linkedin', 'make this sound like a thought leader', 'reverse this linkedin post into normal english', 'turn my update into corporate cringe'. Do NOT use for real translation between human languages, serious executive communications that must stay tasteful, or cases where the user wants subtle editing instead of full parody."
+description: "Translate plain English into parody LinkedIn-speak or reverse bloated thought-leadership into blunt English. Trigger on linkedin speak, corporate influencer voice, thought leader, or corporate cringe. Do NOT use for real language translation or serious subtle editing."
 compatibility: "Requires: python3. Optional side-by-side comparison link for Kagi Translate's LinkedIn Speak web UI."
 metadata:
   version: "1.0.0"

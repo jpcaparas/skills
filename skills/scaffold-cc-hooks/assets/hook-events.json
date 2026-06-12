@@ -13,6 +13,7 @@
     "Async is documented in the official hooks reference as of 2026-05-26.",
     "Only command hooks support async execution.",
     "Claude Code now documents five handler types: command, http, mcp_tool, prompt, and agent.",
+    "MessageDisplay is documented in the official hooks reference as of 2026-06-12.",
     "SessionStart and Setup support command and mcp_tool only."
   ],
   "hook_type_support": {
@@ -38,6 +39,7 @@
       "ElicitationResult",
       "FileChanged",
       "InstructionsLoaded",
+      "MessageDisplay",
       "Notification",
       "PostCompact",
       "PreCompact",
@@ -289,6 +291,21 @@
         "mcp_tool"
       ],
       "async_guidance": "Usually async because this event is mostly about side effects."
+    },
+    {
+      "name": "MessageDisplay",
+      "script_name": "message-display.sh",
+      "description": "Runs while assistant message text is displayed and can transform display content.",
+      "matcher_kind": "none",
+      "matcher_examples": [],
+      "supports_matcher": false,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
+      "async_guidance": "Keep sync and fast; failures should fall back to the original displayed text."
     },
     {
       "name": "SubagentStart",

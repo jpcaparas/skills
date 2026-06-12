@@ -1,6 +1,6 @@
 ---
 name: travel-plan-spreadsheet-generator
-description: "Generate a polished `.xlsx` travel itinerary workbook when the user wants a travel itinerary spreadsheet, trip planner workbook, travel planner xlsx, trip spreadsheet, itinerary workbook, travel prep spreadsheet, travel shopping tracker, holiday itinerary spreadsheet, conference travel spreadsheet, or messy travel docs turned into a workbook. Use when the output must be an editable Excel workbook with bookings, daily plans, prep/compliance, packing, buying, and sources. Triggers on: 'travel-plan-generator', 'travel itinerary spreadsheet', 'travel planner xlsx', 'trip spreadsheet', 'itinerary workbook', 'travel prep spreadsheet', 'travel shopping tracker', 'holiday itinerary spreadsheet', 'conference travel spreadsheet'. Do NOT trigger for plain prose itineraries, simple travel recommendations, casual things-to-do chat, or calendar scheduling without workbook generation."
+description: "Generate editable `.xlsx` travel workbooks: travel-plan-generator, travel itinerary spreadsheet, travel planner xlsx, trip spreadsheet, itinerary workbook, travel prep spreadsheet, travel shopping tracker, holiday itinerary spreadsheet, conference travel spreadsheet. Do NOT use for plain prose itineraries, simple travel recommendations, casual things-to-do chat, or calendar scheduling without workbook generation."
 compatibility: "Requires: python3 with openpyxl. Optional: @oai/artifact-tool or an equivalent spreadsheet renderer for visual verification."
 references:
   - workbook-spec

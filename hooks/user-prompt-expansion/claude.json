@@ -1,0 +1,6 @@
+{
+  "harness": "claude",
+  "event": "UserPromptExpansion",
+  "scripts": [],
+  "commands": []
+}

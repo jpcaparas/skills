@@ -1,6 +1,6 @@
 ---
 name: scaffold-devin-hooks
-description: "Scaffold Devin CLI hooks into a real project after auditing the repository and verifying the live official Devin hook docs. Use when a user asks for Devin hooks, .devin/hooks.v1.json, lifecycle hook setup, exit-code-2 blocking gates, hook refactors, or managed updates to existing Devin hook config. This skill generates a bash-first .devin/hooks.v1.json scaffold, not Claude config. Trigger on: Devin hooks, lifecycle hooks, hook events, block with exit code 2, .devin/hooks.v1.json. Do NOT use for generic Git hooks, Husky-only setup, Claude-only hook scaffolds, or non-Devin agents."
+description: "Scaffold or refactor Devin CLI hooks for a real project after auditing repo structure and live docs. Generates bash-first `.devin/hooks.v1.json` lifecycle adapters with exit-code-2 blocking support. Do NOT use for Git hooks, Husky, Claude-only hooks, or non-Devin agents."
 compatibility: "Requires: bash, jq, git, rg, python3"
 metadata:
   version: "1.0.0"

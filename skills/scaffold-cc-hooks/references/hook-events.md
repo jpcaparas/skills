@@ -1,6 +1,6 @@
 # Hook Events
 
-Current official Claude Code hook event catalog, verified against the official docs on 2026-05-26 with local Claude Code `2.1.121`.
+Current official Claude Code hook event catalog, verified against the official docs on 2026-06-12.
 
 Official sources:
 
@@ -35,6 +35,7 @@ Events that support `command`, `http`, and `mcp_tool`, but not `prompt` or `agen
 - `ElicitationResult`
 - `FileChanged`
 - `InstructionsLoaded`
+- `MessageDisplay`
 - `Notification`
 - `PostCompact`
 - `PreCompact`
@@ -67,6 +68,7 @@ Events that support `command` and `mcp_tool` only
 | `PostToolUseFailure` | failure logging, alerts, retries, follow-up hints | tool name | all five | Async for alerts, sync for retry logic |
 | `PostToolBatch` | batch-level context after parallel tool calls resolve | none | all five | Sync when context must reach Claude before the next model call |
 | `Notification` | desktop alerts or external notifications | notification type | command + http + mcp_tool | Usually async |
+| `MessageDisplay` | transform assistant display content while text is displayed | none | command + http + mcp_tool | Keep sync and fast |
 | `SubagentStart` | observe subagent startup or inject subagent context | agent type | command + http + mcp_tool | Often async unless startup context must finish first |
 | `SubagentStop` | review or log subagent results | agent type | all five | Sync for quality gates, async for logging |
 | `TaskCreated` | validate or annotate task creation | none | all five | Depends on whether you gate |

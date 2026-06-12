@@ -203,7 +203,11 @@ run_project_script() {
     printf '[%s-hook] %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$label" >&2
     printf '[%s-hook] cwd: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$cwd" >&2
     printf '[%s-hook] script: %s\n' "${AGENT_HOOK_HARNESS:-agent}" "$resolved_script" >&2
-    (cd "$cwd" && /usr/bin/env bash "$resolved_script" "${script_args[@]}")
+    if [ "${#script_args[@]}" -gt 0 ]; then
+        (cd "$cwd" && /usr/bin/env bash "$resolved_script" "${script_args[@]}")
+    else
+        (cd "$cwd" && /usr/bin/env bash "$resolved_script")
+    fi
 }
 
 run_configured_scripts() {

@@ -1,0 +1,6 @@
+{
+  "harness": "codex",
+  "event": "PreToolUse",
+  "scripts": [],
+  "commands": []
+}

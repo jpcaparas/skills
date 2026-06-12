@@ -1,0 +1,15 @@
+{
+  "harness": "devin",
+  "event": "Stop",
+  "scripts": [
+    {
+      "label": "skills repository stop checks",
+      "path": "scripts/agent-stop-checks.sh",
+      "args": [],
+      "cwd": ".",
+      "notes": "Shared validation used by local agent hooks and manual runs."
+    }
+  ],
+  "commands": [],
+  "block_on_failure": true
+}

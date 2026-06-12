@@ -1,6 +1,6 @@
 ---
 name: nanobanana-infographic
-description: "Create sleek, low-noise infographics with Nano Banana 2 for blog posts, executive decks, reports, and editorial explainers. Use when the user wants infographic prompt variants, Nano Banana 2 image-generation guidance, or render workflows that avoid clutter, poster energy, and filler. Triggers on: 'infographic', 'Nano Banana 2', 'Gemini image', 'executive visual', 'blog diagram', 'presentation visual'. Do NOT trigger for photorealistic art, mascot illustrations, logo design, meme cards, or raw dashboard screenshots."
+description: "Create sleek, low-noise infographic prompts and render workflows with Nano Banana 2 for posts, decks, reports, and explainers. Trigger on infographic, Nano Banana 2, Gemini image, executive visual, blog diagram, or presentation visual. Do NOT use for logos, memes, or raw dashboards."
 compatibility: "Requires: python3. Optional: GEMINI_API_KEY for live render verification."
 metadata:
   version: "1.0.0"

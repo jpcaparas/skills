@@ -1,0 +1,6 @@
+{
+  "harness": "codex",
+  "event": "SubagentStop",
+  "scripts": [],
+  "commands": []
+}

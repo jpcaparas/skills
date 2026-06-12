@@ -36,6 +36,7 @@ EXPECTED_EVENT_NAMES = {
     "PostToolUseFailure",
     "PostToolBatch",
     "Notification",
+    "MessageDisplay",
     "SubagentStart",
     "SubagentStop",
     "TaskCreated",

@@ -1,6 +1,6 @@
 ---
 name: maintainable-code
-description: "Passive always-on coding quality skill for producing maintainable, properly decomposed, human-understandable code. Use whenever writing, editing, refactoring, reviewing, or planning code changes, especially when complexity, abstractions, naming, tests, module boundaries, or agent-generated code quality matter. Triggers on: maintainable code, clean code, understandable code, readable code, decomposition, refactor safely, reduce complexity, avoid clever code, code health, tech debt, code review, implementation plan. Do NOT use for purely non-code writing, UI visual taste decisions without code, one-off terminal commands, or requests where the user explicitly asks for obfuscated, golfed, throwaway, or intentionally experimental code."
+description: "Passive coding-quality skill for maintainable, decomposed, readable code. Use when writing, editing, refactoring, reviewing, or planning code involving complexity, naming, tests, boundaries, or tech debt. Do NOT use for non-code writing, one-off shell commands, or intentionally throwaway code."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
   version: "1.0.0"

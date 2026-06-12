@@ -1,29 +1,33 @@
 /**
- * Skills repository stop checks for OpenCode.
+ * skills-repo-stop-check
  *
- * This is a thin project-local adapter around scripts/agent-stop-checks.sh.
- * Keep validation policy in repo-owned shell/Python scripts so Codex,
- * OpenCode, Git hooks, GitHub Actions, and humans can share it.
+ * Managed by scaffold-opencode-hooks.
+ * Notes: OpenCode lifecycle adapter into shared repository stop checks.
+ * Surfaces: event
  */
 
 import { execFile } from "node:child_process"
+import { access } from "node:fs/promises"
+import { dirname, resolve } from "node:path"
+import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 
+type LogLevel = "debug" | "info" | "warn" | "error"
 type ToastVariant = "info" | "success" | "warning" | "error"
 type TextPart = { type: "text"; text: string }
 
 type OpenCodeClient = {
-  app?: {
+  app: {
     log(input: {
       body: {
         service: string
-        level: "debug" | "info" | "warn" | "error"
+        level: LogLevel
         message: string
-        extra?: Record<string, unknown>
+        extra: Record<string, unknown>
       }
     }): Promise<unknown>
   }
-  session?: {
+  session: {
     prompt(input: {
       path: { id: string }
       body: {
@@ -42,24 +46,31 @@ type OpenCodeClient = {
   }
 }
 
+type OpenCodeProject = {
+  root?: string
+  directory?: string
+  path?: string
+  worktree?: string
+}
 type PluginInput = {
   client: OpenCodeClient
+  project?: OpenCodeProject
   directory?: string
   worktree?: string
-  project?: {
-    root?: string
-    directory?: string
-    path?: string
-    worktree?: string
-  }
 }
-
 type OpenCodeEvent = {
   type: string
   properties?: {
-    sessionID?: string
     info?: { id?: string }
+    sessionID?: string
   }
+}
+
+type SessionState = {
+  contextInjected: boolean
+  inFlight: boolean
+  persistentFailureReported: boolean
+  repairPromptSent: boolean
 }
 
 type ScriptResult = {
@@ -70,10 +81,40 @@ type ScriptResult = {
 }
 
 const execFileAsync = promisify(execFile)
+const pluginDir = dirname(fileURLToPath(import.meta.url))
+const fallbackRepoRoot = resolve(pluginDir, "..", "..")
 const serviceName = "skills-repo-stop-check"
-const outputTailLines = 180
+const actionLabel = "Skills repository stop checks"
 const timeoutMs = 10 * 60 * 1000
-const sessionState = new Map<string, { inFlight: boolean; repairPromptSent: boolean }>()
+const outputTailLines = 160
+const sessionState = new Map<string, SessionState>()
+
+function resolveRepoRoot(input: PluginInput): string {
+  const candidates = [
+    input.worktree,
+    input.directory,
+    input.project?.worktree,
+    input.project?.root,
+    input.project?.directory,
+    input.project?.path,
+  ]
+  const candidate = candidates.find((value): value is string => typeof value === "string" && value.length > 0)
+  return candidate ? resolve(candidate) : fallbackRepoRoot
+}
+
+function stateFor(sessionID: string): SessionState {
+  const existingState = sessionState.get(sessionID)
+  if (existingState) return existingState
+
+  const nextState: SessionState = {
+    contextInjected: false,
+    inFlight: false,
+    persistentFailureReported: false,
+    repairPromptSent: false,
+  }
+  sessionState.set(sessionID, nextState)
+  return nextState
+}
 
 function textTail(text: string, lineCount: number): string {
   const trimmed = text.trimEnd()
@@ -81,61 +122,53 @@ function textTail(text: string, lineCount: number): string {
   return trimmed.split(/\r?\n/).slice(-lineCount).join("\n")
 }
 
-function stateFor(sessionID: string) {
-  const existing = sessionState.get(sessionID)
-  if (existing) return existing
-
-  const next = { inFlight: false, repairPromptSent: false }
-  sessionState.set(sessionID, next)
-  return next
+async function log(client: OpenCodeClient, level: LogLevel, message: string, extra: Record<string, unknown> = {}) {
+  try {
+    await client.app.log({
+      body: {
+        service: serviceName,
+        level,
+        message,
+        extra,
+      },
+    })
+  } catch {
+    // Logging is diagnostic only; it must never break hook behavior.
+  }
 }
 
 async function showToast(client: OpenCodeClient, variant: ToastVariant, message: string) {
   try {
-    await client.tui?.showToast({ body: { message, variant } })
-  } catch {
-    // TUI feedback is best-effort only.
-  }
-}
-
-async function log(client: OpenCodeClient, level: "info" | "warn" | "error", message: string, extra = {}) {
-  try {
-    await client.app?.log({ body: { service: serviceName, level, message, extra } })
-  } catch {
-    // Diagnostics must not break hook behavior.
-  }
-}
-
-async function repoRootFrom(candidate: string): Promise<string> {
-  try {
-    const result = await execFileAsync("git", ["-C", candidate, "rev-parse", "--show-toplevel"], {
-      maxBuffer: 1024 * 1024,
-      timeout: 10_000,
+    await client.tui?.showToast({
+      body: {
+        message,
+        variant,
+      },
     })
-    return String(result.stdout || "").trim() || candidate
   } catch {
-    return candidate
+    // Toasts are best-effort TUI feedback; action work must keep running if unavailable.
   }
 }
 
-function candidateDirectory(input: PluginInput): string {
-  return (
-    input.worktree ||
-    input.directory ||
-    input.project?.worktree ||
-    input.project?.root ||
-    input.project?.directory ||
-    input.project?.path ||
-    process.cwd()
-  )
-}
+async function runScript(repoRoot: string, script: string, args: string[], timeout: number): Promise<ScriptResult> {
+  const scriptPath = resolve(repoRoot, script)
 
-async function runStopChecks(repoRoot: string): Promise<ScriptResult> {
   try {
-    const result = await execFileAsync("bash", ["scripts/agent-stop-checks.sh", repoRoot], {
+    await access(scriptPath)
+  } catch {
+    return {
+      ok: false,
+      status: "missing",
+      stdout: "",
+      stderr: `Missing project hook script: ${scriptPath}`,
+    }
+  }
+
+  try {
+    const result = await execFileAsync("bash", [scriptPath, ...args], {
       cwd: repoRoot,
-      maxBuffer: 20 * 1024 * 1024,
-      timeout: timeoutMs,
+      maxBuffer: 10 * 1024 * 1024,
+      timeout,
     })
     return {
       ok: true,
@@ -160,64 +193,128 @@ async function runStopChecks(repoRoot: string): Promise<ScriptResult> {
   }
 }
 
-async function promptFailure(client: OpenCodeClient, sessionID: string, result: ScriptResult, noReply: boolean) {
-  const output = textTail(`${result.stdout}\n${result.stderr}`, outputTailLines)
-  await client.session?.prompt({
+async function injectSessionContext(client: OpenCodeClient, sessionID: string, state: SessionState, repoRoot: string) {
+  if (state.contextInjected) return
+
+  const result = await runScript(repoRoot, "hooks/opencode-session-created/opencode.sh", ["opencode-session-created"], 20_000)
+  if (!result.ok) {
+    await log(client, "warn", "Session context script failed", {
+      sessionID,
+      status: result.status,
+      output: textTail(`${result.stdout}\n${result.stderr}`, outputTailLines),
+    })
+    await showToast(client, "warning", "Session context script failed")
+    return
+  }
+
+  const context = result.stdout.trim()
+  if (!context) return
+
+  state.contextInjected = true
+  await client.session.prompt({
     path: { id: sessionID },
     body: {
-      noReply,
+      noReply: true,
+      parts: [{ type: "text", text: context }],
+    },
+  })
+  await log(client, "info", "Injected session context", { sessionID })
+}
+
+async function promptActionFailure(client: OpenCodeClient, sessionID: string, state: SessionState, result: ScriptResult) {
+  const outputTail = textTail(`${result.stdout}\n${result.stderr}`, outputTailLines)
+
+  if (!state.repairPromptSent) {
+    state.repairPromptSent = true
+    await client.session.prompt({
+      path: { id: sessionID },
+      body: {
+        parts: [
+          {
+            type: "text",
+            text: `${actionLabel} failed.
+
+Fix the reported issue, then rerun the relevant project-owned script before finishing.
+
+Output tail:
+${outputTail}`,
+          },
+        ],
+      },
+    })
+    return
+  }
+
+  state.persistentFailureReported = true
+  await client.session.prompt({
+    path: { id: sessionID },
+    body: {
+      noReply: true,
       parts: [
         {
           type: "text",
-          text: `Stop checks failed with exit code ${result.status}.
-
-Fix the reported issue, then run \`bash scripts/agent-stop-checks.sh\` before finishing.
+          text: `${actionLabel} is still failing after one automatic repair pass. OpenCode will not loop another repair turn automatically.
 
 Output tail:
-${output}`,
+${outputTail}`,
         },
       ],
     },
   })
 }
 
-export default async function skillsRepoStopCheck(input: PluginInput) {
+async function runAction(client: OpenCodeClient, sessionID: string, state: SessionState, repoRoot: string) {
+  if (state.inFlight) return
+
+  state.inFlight = true
+  try {
+    await showToast(client, "info", `${actionLabel} started`)
+    await log(client, "info", `${actionLabel} started`, { sessionID })
+
+    const result = await runScript(repoRoot, "hooks/opencode-session-idle/opencode.sh", [], timeoutMs)
+    if (result.ok) {
+      state.persistentFailureReported = false
+      state.repairPromptSent = false
+      await log(client, "info", `${actionLabel} passed`, { sessionID })
+      await showToast(client, "success", `${actionLabel} passed`)
+      return
+    }
+
+    await log(client, "warn", `${actionLabel} failed`, { sessionID, status: result.status })
+    if (state.repairPromptSent && state.persistentFailureReported) {
+      await showToast(client, "error", `${actionLabel} still failing`)
+      return
+    }
+
+    await showToast(client, "error", `${actionLabel} failed`)
+    await promptActionFailure(client, sessionID, state, result)
+  } finally {
+    state.inFlight = false
+  }
+}
+
+export const ProjectLifecycleAction = async (input: PluginInput) => {
   const { client } = input
-  const repoRoot = await repoRootFrom(candidateDirectory(input))
+  const repoRoot = resolveRepoRoot(input)
 
   return {
-    async event({ event }: { event: OpenCodeEvent }) {
-      if (event?.type !== "session.idle") return
+    event: async ({ event }: { event: OpenCodeEvent }) => {
+      if (event.type === "session.created") {
+        const sessionID = event.properties?.info?.id
+        if (!sessionID) return
 
-      const sessionID = event.properties?.sessionID || event.properties?.info?.id || "default"
-      const state = stateFor(sessionID)
-      if (state.inFlight) return
+        await injectSessionContext(client, sessionID, stateFor(sessionID), repoRoot)
+        return
+      }
 
-      state.inFlight = true
-      try {
-        const result = await runStopChecks(repoRoot)
-        if (result.ok) {
-          await log(client, "info", "Stop checks passed", { sessionID })
-          return
-        }
+      if (event.type === "session.idle") {
+        const sessionID = event.properties?.sessionID
+        if (!sessionID) return
 
-        await showToast(client, "error", "Skills stop checks failed")
-        await log(client, "error", "Stop checks failed", {
-          sessionID,
-          status: result.status,
-          output: textTail(`${result.stdout}\n${result.stderr}`, outputTailLines),
-        })
-
-        if (state.repairPromptSent) {
-          await promptFailure(client, sessionID, result, true)
-          return
-        }
-
-        state.repairPromptSent = true
-        await promptFailure(client, sessionID, result, false)
-      } finally {
-        state.inFlight = false
+        await runAction(client, sessionID, stateFor(sessionID), repoRoot)
       }
     },
   }
 }
+
+export default ProjectLifecycleAction

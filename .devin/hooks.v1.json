@@ -1,0 +1,50 @@
+{
+  "PreToolUse": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"$DEVIN_PROJECT_DIR/hooks/pre-tool-use/devin.sh\"",
+          "timeout": 30
+        }
+      ],
+      "matcher": "^exec$"
+    }
+  ],
+  "PostToolUse": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"$DEVIN_PROJECT_DIR/hooks/post-tool-use/devin.sh\"",
+          "timeout": 120
+        }
+      ],
+      "matcher": "^(edit|exec)$"
+    }
+  ],
+  "Stop": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"$DEVIN_PROJECT_DIR/hooks/stop/devin.sh\"",
+          "timeout": 300
+        }
+      ],
+      "matcher": ""
+    }
+  ],
+  "SessionStart": [
+    {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"$DEVIN_PROJECT_DIR/hooks/session-start/devin.sh\"",
+          "timeout": 10
+        }
+      ],
+      "matcher": ""
+    }
+  ]
+}

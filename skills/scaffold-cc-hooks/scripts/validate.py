@@ -21,7 +21,7 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_EVENT_COUNT = 29
+EXPECTED_EVENT_COUNT = 30
 REQUIRED_OPERATIONAL_SCRIPTS = [
     "scripts/audit_project.sh",
     "scripts/check_workspace_trust.sh",

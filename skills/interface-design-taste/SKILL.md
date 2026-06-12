@@ -1,6 +1,6 @@
 ---
 name: interface-design-taste
-description: "Design high-quality digital interfaces across product apps, marketing sites, dashboards, and desktop software. Use when a user wants art direction, UI critique, redesign strategy, layout, typography, color, motion, or a lightweight design system that avoids generic defaults while fitting the product. Triggers on: design taste, redesign this UI, improve hierarchy, polish this app, dashboard UI, desktop UI, landing page direction, spacing, type scale, visual language. Do NOT trigger for logo design, illustration-only work, photoreal image prompting, or backend-only tasks with no interface decisions."
+description: "Design high-quality product apps, marketing sites, dashboards, and desktop UI. Use for art direction, critique, redesign, hierarchy, layout, typography, color, motion, or lightweight design systems. Do NOT use for logos, illustration-only work, image prompts, or backend-only tasks."
 compatibility: "Requires: markdown-reading support. Optional: access to the target repo, screenshots, and local build tooling."
 metadata:
   version: "1.0.0"
@@ -161,4 +161,3 @@ Before you finalize a direction, answer these:
 - `templates/critique-scorecard.md` — audit and redesign worksheet
 - `scripts/validate.py` — structural validator for this skill
 - `scripts/test_skill.py` — packaging and content coverage checks
-

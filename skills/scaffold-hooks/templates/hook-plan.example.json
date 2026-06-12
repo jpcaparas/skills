@@ -1,0 +1,219 @@
+{
+  "mode": "additive",
+  "hooks_root": "hooks",
+  "cleanup_legacy": true,
+  "harnesses": ["claude", "codex", "devin", "opencode"],
+  "plans": {
+    "claude": {
+      "settings_target": ".claude/settings.json",
+      "enabled_events": [
+        {
+          "name": "SessionStart",
+          "matcher": "startup|resume|clear|compact",
+          "async": false,
+          "timeout": 20,
+          "scripts": [],
+          "commands": [],
+          "notes": "Bootstrap lightweight shared context for Claude sessions."
+        },
+        {
+          "name": "PreToolUse",
+          "matcher": "Bash|Edit|Write|MultiEdit",
+          "async": false,
+          "timeout": 30,
+          "scripts": [],
+          "commands": [],
+          "notes": "Hard policy and safety gate."
+        },
+        {
+          "name": "PostToolUse",
+          "matcher": "Bash|Edit|Write|MultiEdit",
+          "async": true,
+          "timeout": 180,
+          "scripts": [],
+          "commands": [],
+          "notes": "Formatting, logging, and lightweight post-tool validation."
+        },
+        {
+          "name": "UserPromptSubmit",
+          "async": false,
+          "timeout": 20,
+          "scripts": [],
+          "commands": [],
+          "notes": "Prompt policy or context injection before Claude processes a user prompt."
+        },
+        {
+          "name": "PermissionRequest",
+          "matcher": "Bash|Edit|Write|MultiEdit",
+          "async": false,
+          "timeout": 20,
+          "scripts": [],
+          "commands": [],
+          "notes": "Permission decision hook for commands and file edits."
+        },
+        {
+          "name": "Notification",
+          "matcher": "",
+          "async": true,
+          "timeout": 15,
+          "scripts": [],
+          "commands": [],
+          "notes": "Optional desktop or remote notification hook."
+        },
+        {
+          "name": "Stop",
+          "async": false,
+          "timeout": 45,
+          "scripts": [],
+          "commands": [],
+          "notes": "End-of-turn quality gate."
+        }
+      ]
+    },
+    "codex": {
+      "hooks_target": ".codex/hooks.json",
+      "feature_scope": "project",
+      "enabled_events": [
+        {
+          "name": "SessionStart",
+          "matcher": "startup|resume|clear",
+          "timeout": 20,
+          "status_message": "Loading shared agent hook context",
+          "scripts": [],
+          "commands": [],
+          "notes": "Bootstrap lightweight shared context for Codex sessions."
+        },
+        {
+          "name": "PreToolUse",
+          "matcher": "Bash|apply_patch",
+          "timeout": 20,
+          "status_message": "Checking shared tool policy",
+          "scripts": [],
+          "commands": [],
+          "notes": "Hard policy and safety gate."
+        },
+        {
+          "name": "PostToolUse",
+          "matcher": "Bash|apply_patch",
+          "timeout": 90,
+          "status_message": "Running shared post-tool hook",
+          "scripts": [],
+          "commands": [],
+          "notes": "Post-tool validation or context."
+        },
+        {
+          "name": "UserPromptSubmit",
+          "timeout": 15,
+          "status_message": "Reviewing prompt context",
+          "scripts": [],
+          "commands": [],
+          "notes": "Prompt policy or context injection."
+        },
+        {
+          "name": "PermissionRequest",
+          "matcher": "Bash|apply_patch",
+          "timeout": 20,
+          "status_message": "Checking approval request",
+          "scripts": [],
+          "commands": [],
+          "notes": "Permission decision hook."
+        },
+        {
+          "name": "Stop",
+          "timeout": 45,
+          "status_message": "Running shared end-of-turn hook",
+          "scripts": [],
+          "commands": [],
+          "notes": "End-of-turn quality gate."
+        }
+      ]
+    },
+    "devin": {
+      "hooks_target": ".devin/hooks.v1.json",
+      "enabled_events": [
+        {
+          "name": "SessionStart",
+          "matcher": "",
+          "timeout": 10,
+          "block_on_failure": false,
+          "scripts": [],
+          "commands": [],
+          "notes": "Bootstrap lightweight shared context for Devin sessions."
+        },
+        {
+          "name": "PreToolUse",
+          "matcher": "^exec$",
+          "timeout": 30,
+          "block_on_failure": true,
+          "scripts": [],
+          "commands": [],
+          "notes": "Hard policy and safety gate before shell commands."
+        },
+        {
+          "name": "PostToolUse",
+          "matcher": "^(edit|exec)$",
+          "timeout": 120,
+          "block_on_failure": false,
+          "scripts": [],
+          "commands": [],
+          "notes": "Post-tool validation or logging."
+        },
+        {
+          "name": "UserPromptSubmit",
+          "matcher": "",
+          "timeout": 15,
+          "block_on_failure": false,
+          "scripts": [],
+          "commands": [],
+          "notes": "Prompt policy or context injection."
+        },
+        {
+          "name": "PermissionRequest",
+          "matcher": "^exec$",
+          "timeout": 20,
+          "block_on_failure": true,
+          "scripts": [],
+          "commands": [],
+          "notes": "Permission decision hook."
+        },
+        {
+          "name": "Stop",
+          "matcher": "",
+          "timeout": 45,
+          "block_on_failure": true,
+          "scripts": [],
+          "commands": [],
+          "notes": "End-of-turn quality gate."
+        }
+      ]
+    },
+    "opencode": {
+      "scope": "project",
+      "deployment": "local-files",
+      "module_format": "ts",
+      "surface_catalog": false,
+      "plugin_root": ".opencode/plugins",
+      "managed_state_dir": ".opencode/plugins/.managed",
+      "config_target": "opencode.json",
+      "package_target": ".opencode/package.json",
+      "package_dependencies": {},
+      "npm_plugins": [],
+      "enabled_plugins": [
+        {
+          "name": "project-session-lifecycle",
+          "pattern": "lifecycle-action",
+          "filename": "opencode_hook_project_session_lifecycle.ts",
+          "surfaces": ["event"],
+          "context_script": "hooks/opencode-session-created/opencode.sh",
+          "action_script": "hooks/opencode-session-idle/opencode.sh",
+          "context_delegate_script": "scripts/agent-session-context.sh",
+          "action_delegate_script": "scripts/validate-project.sh",
+          "action_label": "Project validation",
+          "service": "project-opencode-hooks",
+          "notes": "Thin OpenCode adapter into shared repo-owned hook scripts."
+        }
+      ]
+    }
+  }
+}
+

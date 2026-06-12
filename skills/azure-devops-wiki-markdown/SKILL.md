@@ -1,6 +1,6 @@
 ---
 name: azure-devops-wiki-markdown
-description: "Use when writing, fixing, or reviewing Azure DevOps wiki Markdown, Mermaid diagrams, `_TOC_` and `_TOSP_`, collapsible `<details>` blocks, query-table embeds, `@` mentions, work-item links, KaTeX math, HTML video embeds, code fences, or Azure DevOps surface-specific support differences across Wiki, PR, README, Widget, and Done fields. Triggers on Azure DevOps wiki, markdown guidance, Mermaid sequence/graph/timeline/ER diagrams, proposal decision trees, table-of-subpages, query-table, code fence aliases, line-break bugs, and wiki page formatting. Do NOT use for GitHub-only Markdown, generic Mermaid authoring outside Azure DevOps, or non-Azure documentation platforms."
+description: "Write, fix, or review Azure DevOps wiki Markdown, Mermaid, _TOC_, _TOSP_, details blocks, query tables, mentions, work-item links, KaTeX, videos, and code fences. Use for Azure DevOps surface quirks. Do NOT use for GitHub-only or non-Azure docs."
 compatibility: "Requires: python3. Optional network access for scripts/find_code_language.py refresh and live Highlight.js lookups."
 license: MIT
 ---
@@ -78,4 +78,3 @@ What do you need to do?
 - Run `python3 scripts/find_code_language.py <query>` when a user asks whether a language alias exists or whether an alias is ambiguous.
 - Run `python3 scripts/validate.py .` from this skill directory after edits.
 - Run `python3 scripts/test_skill.py .` to verify eval structure and cross-references locally.
-

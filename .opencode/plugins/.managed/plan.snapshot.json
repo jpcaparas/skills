@@ -1,0 +1,31 @@
+{
+  "scope": "project",
+  "deployment": "local-files",
+  "module_format": "ts",
+  "surface_catalog": false,
+  "hooks_root": "hooks",
+  "plugin_root": ".opencode/plugins",
+  "managed_state_dir": ".opencode/plugins/.managed",
+  "config_target": "opencode.json",
+  "package_target": ".opencode/package.json",
+  "package_dependencies": {},
+  "npm_plugins": [],
+  "enabled_plugins": [
+    {
+      "name": "skills-repo-stop-check",
+      "pattern": "lifecycle-action",
+      "filename": "skills_repo_stop_check.ts",
+      "surfaces": [
+        "event"
+      ],
+      "context_script": "hooks/opencode-session-created/opencode.sh",
+      "action_script": "hooks/opencode-session-idle/opencode.sh",
+      "context_delegate_script": "scripts/agent-session-context.sh",
+      "action_delegate_script": "scripts/agent-stop-checks.sh",
+      "action_label": "Skills repository stop checks",
+      "service": "skills-repo-stop-check",
+      "notes": "OpenCode lifecycle adapter into shared repository stop checks."
+    }
+  ],
+  "mode": "overhaul"
+}

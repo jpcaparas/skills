@@ -1,6 +1,6 @@
 ---
 name: scaffold-github-copilot-hooks
-description: "Scaffold GitHub Copilot hooks for repository-level Copilot cloud agent and Copilot CLI usage after auditing the project and verifying the live official GitHub docs. Use when a user asks for Copilot hooks, .github/hooks/*.json, Copilot CLI user hooks, preToolUse policy gates, permissionRequest automation, agentStop checks, hook refactors, or shared agent scripts. Generates a bash-first .github/hooks/copilot-hooks.json scaffold with adapter scripts under .github/copilot/hooks/generated and reusable project-script delegation. Do NOT use for generic Git hooks, Husky-only setup, Copilot cloud agent environment setup, Claude hooks, Codex hooks, or Devin hooks."
+description: "Scaffold GitHub Copilot hooks for repository Copilot cloud agent and Copilot CLI usage after project audit and live docs verification. Generates `.github/hooks/copilot-hooks.json` with bash adapters and shared scripts. Do NOT use for generic Git hooks, Husky, or non-Copilot hooks."
 compatibility: "Requires: bash, jq, git, rg, python3"
 metadata:
   version: "1.0.0"

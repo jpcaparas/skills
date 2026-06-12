@@ -1,0 +1,296 @@
+{
+  "verified_on": "2026-06-12",
+  "verified_with": {
+    "codex_cli_version": "codex-cli 0.133.0",
+    "codex_source_commit": "8a94430bb273623be42b68f144f1ab1df343bb53",
+    "official_docs": [
+      "https://developers.openai.com/codex/hooks",
+      "https://developers.openai.com/codex/config-basic",
+      "https://developers.openai.com/codex/config-reference"
+    ],
+    "schemas": [
+      "https://github.com/openai/codex/tree/main/codex-rs/hooks/schema/generated",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/pre-tool-use.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/pre-tool-use.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/permission-request.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/permission-request.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/post-tool-use.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/post-tool-use.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/pre-compact.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/pre-compact.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/post-compact.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/post-compact.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/session-start.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/session-start.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/user-prompt-submit.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/user-prompt-submit.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/stop.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/stop.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-start.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-start.command.output.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-stop.command.input.schema.json",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/schema/generated/subagent-stop.command.output.schema.json"
+    ],
+    "runtime_source": [
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/lib.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/legacy.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/lib.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/config/src/hook_config.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/common.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/compact.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/permission_request.rs",
+      "https://raw.githubusercontent.com/openai/codex/main/codex-rs/core/src/tools/hook_names.rs"
+    ],
+    "secondary_sources": [
+      "https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b"
+    ]
+  },
+  "feature_flag": {
+    "canonical_name": "hooks",
+    "legacy_aliases": [
+      "codex_hooks"
+    ],
+    "maturity": "stable",
+    "default_enabled": true
+  },
+  "supported_handler_types": [
+    "command"
+  ],
+  "unsupported_handler_types": [
+    "prompt",
+    "agent"
+  ],
+  "async_supported": false,
+  "default_timeout_seconds": 600,
+  "timeout_aliases": [
+    "timeoutSec"
+  ],
+  "merge_behavior": [
+    "Matching hooks from multiple files all run.",
+    "Multiple matching command hooks for the same event are launched concurrently, so one hook cannot prevent another matching hook from starting.",
+    "Non-managed command hooks must be reviewed and trusted before they run.",
+    "Project-local hooks load only when the project .codex/ layer is trusted."
+  ],
+  "events": [
+    {
+      "name": "SessionStart",
+      "script_name": "session_start.sh",
+      "description": "Bootstrap session context or run lightweight environment checks when a Codex session starts, resumes, or clears.",
+      "matcher_supported": true,
+      "matcher_target": "source",
+      "current_matcher_values": [
+        "startup",
+        "resume",
+        "clear"
+      ],
+      "matcher_guidance": "Match the `source` field. Current values are `startup`, `resume`, and `clear`. `*` and an empty matcher both mean match all.",
+      "output_guidance": "Plain text stdout is added as extra developer context. JSON can return common output fields and `hookSpecificOutput.additionalContext`.",
+      "blocking_guidance": "There is no dedicated block shape for this event. Keep it lightweight and context-oriented."
+    },
+    {
+      "name": "SubagentStart",
+      "script_name": "subagent_start.sh",
+      "description": "Bootstrap subagent-specific context when Codex starts a subagent.",
+      "matcher_supported": true,
+      "matcher_target": "agent_type",
+      "current_matcher_values": [
+        "general-purpose",
+        "review",
+        "custom-agent"
+      ],
+      "matcher_guidance": "Match the `agent_type` field. Use this for subagent profile-specific bootstrap context.",
+      "output_guidance": "Plain text stdout is added as extra developer context for the subagent. JSON can return `hookSpecificOutput.additionalContext` with `hookEventName: \"SubagentStart\"`.",
+      "blocking_guidance": "`continue: false` is parsed for compatibility but does not stop the subagent from starting. Use this as context, not a hard gate."
+    },
+    {
+      "name": "PreToolUse",
+      "script_name": "pre_tool_use.sh",
+      "description": "Gate or deny supported tool calls before they run.",
+      "matcher_supported": true,
+      "matcher_target": "tool_name",
+      "current_matcher_values": [
+        "Bash",
+        "apply_patch",
+        "Edit",
+        "Write",
+        "mcp__server__tool"
+      ],
+      "matcher_guidance": "Match the canonical `tool_name` or matcher aliases. Bash uses `Bash`; file edits use canonical `apply_patch` and aliases `Edit` and `Write`; MCP tools use namespaced tool names.",
+      "output_guidance": "Plain text stdout is ignored. JSON can add context with `hookSpecificOutput.additionalContext`, deny with `hookSpecificOutput.permissionDecision = \"deny\"` plus `permissionDecisionReason`, or rewrite supported input with `permissionDecision = \"allow\"` plus `updatedInput`; the legacy `decision: \"block\"` shape still works.",
+      "blocking_guidance": "Use `deny_pre_tool_use` or exit code `2` with a reason on stderr to block before the tool runs. `permissionDecision: \"ask\"`, legacy `decision: \"approve\"`, `continue: false`, `stopReason`, and `suppressOutput` are not supported."
+    },
+    {
+      "name": "PermissionRequest",
+      "script_name": "permission_request.sh",
+      "description": "Answer or deny approval requests before Codex asks the user or guardian approval path.",
+      "matcher_supported": true,
+      "matcher_target": "tool_name",
+      "current_matcher_values": [
+        "Bash",
+        "apply_patch",
+        "Edit",
+        "Write",
+        "mcp__server__tool"
+      ],
+      "matcher_guidance": "Match the tool that is requesting approval. Bash uses `Bash`; file edits use canonical `apply_patch` and aliases `Edit` and `Write`; MCP tools use namespaced tool names when they expose approval payloads.",
+      "output_guidance": "Plain text stdout is ignored. JSON can return `hookSpecificOutput.decision.behavior` as `allow` or `deny`; `deny` may include `message`.",
+      "blocking_guidance": "Any `deny` wins over matching `allow` decisions. Exit code `2` with stderr also denies. Reserved fields such as `updatedInput`, `updatedPermissions`, and `interrupt` are not supported."
+    },
+    {
+      "name": "PostToolUse",
+      "script_name": "post_tool_use.sh",
+      "description": "React to supported tool results after the tool has already run.",
+      "matcher_supported": true,
+      "matcher_target": "tool_name",
+      "current_matcher_values": [
+        "Bash",
+        "apply_patch",
+        "Edit",
+        "Write",
+        "mcp__server__tool"
+      ],
+      "matcher_guidance": "Match the canonical `tool_name` or matcher aliases. Bash uses `Bash`; file edits use canonical `apply_patch` and aliases `Edit` and `Write`; MCP tools use namespaced tool names.",
+      "output_guidance": "Plain text stdout is ignored. JSON can add context with `hookSpecificOutput.additionalContext`, return feedback with `decision: \"block\"` plus `reason`, or stop normal processing with `continue: false` and optional `stopReason`.",
+      "blocking_guidance": "This event cannot undo side effects. Treat `decision: \"block\"` or exit code `2` as feedback control, not prevention. `updatedMCPToolOutput` and `suppressOutput` are not supported."
+    },
+    {
+      "name": "PreCompact",
+      "script_name": "pre_compact.sh",
+      "description": "Run before manual or automatic conversation compaction and optionally stop the compaction.",
+      "matcher_supported": true,
+      "matcher_target": "trigger",
+      "current_matcher_values": [
+        "manual",
+        "auto"
+      ],
+      "matcher_guidance": "Match the compaction `trigger`. Current values are `manual` and `auto`. `*` and an empty matcher both mean match all.",
+      "output_guidance": "Plain text stdout is ignored. JSON supports common output fields; `continue: false` stops the compaction and `stopReason` supplies the reason.",
+      "blocking_guidance": "`decision: \"block\"` is not supported for this event. Use `continue: false` when the compaction should not proceed."
+    },
+    {
+      "name": "PostCompact",
+      "script_name": "post_compact.sh",
+      "description": "Run after manual or automatic conversation compaction and optionally stop follow-on processing.",
+      "matcher_supported": true,
+      "matcher_target": "trigger",
+      "current_matcher_values": [
+        "manual",
+        "auto"
+      ],
+      "matcher_guidance": "Match the compaction `trigger`. Current values are `manual` and `auto`. `*` and an empty matcher both mean match all.",
+      "output_guidance": "Plain text stdout is ignored. JSON supports common output fields; `continue: false` stops follow-on processing and `stopReason` supplies the reason.",
+      "blocking_guidance": "`decision: \"block\"` is not supported for this event. Use `continue: false` if Codex should stop after compaction."
+    },
+    {
+      "name": "UserPromptSubmit",
+      "script_name": "user_prompt_submit.sh",
+      "description": "Inject context into user prompts or block a prompt before it is sent.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Current runtime ignores `matcher` for this event.",
+      "output_guidance": "Plain text stdout is added as extra developer context. JSON can add context with `hookSpecificOutput.additionalContext` or block with `decision: \"block\"` and `reason`.",
+      "blocking_guidance": "Use `block_with_reason` or exit code `2` with stderr when Codex should stop and ask for a clearer prompt."
+    },
+    {
+      "name": "SubagentStop",
+      "script_name": "subagent_stop.sh",
+      "description": "Run subagent completion review or request one more focused subagent pass.",
+      "matcher_supported": true,
+      "matcher_target": "agent_type",
+      "current_matcher_values": [
+        "general-purpose",
+        "review",
+        "custom-agent"
+      ],
+      "matcher_guidance": "Match the `agent_type` field. The event also exposes `agent_id`, `agent_transcript_path`, `stop_hook_active`, and `last_assistant_message`.",
+      "output_guidance": "When exiting `0`, stdout must be JSON. JSON supports common output fields and `decision: \"block\"` plus `reason` to continue the subagent.",
+      "blocking_guidance": "Treat `decision: \"block\"` as \"continue this subagent with the reason as its next prompt\". `continue: false` takes precedence over continuation decisions from other matching SubagentStop hooks."
+    },
+    {
+      "name": "Stop",
+      "script_name": "stop.sh",
+      "description": "Run end-of-turn review or request one more Codex pass before the turn fully stops.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Current runtime ignores `matcher` for this event.",
+      "output_guidance": "When exiting `0`, stdout must be JSON. JSON supports common output fields. `decision: \"block\"` continues Codex with your `reason` as a new continuation prompt.",
+      "blocking_guidance": "Treat `block` on `Stop` as 'continue and do one more pass', not as a normal reject decision. `continue: false` takes precedence over continuation decisions from other matching Stop hooks."
+    }
+  ],
+  "generated_at": "2026-06-12T01:58:08Z",
+  "hook_root": "hooks",
+  "hooks_target": ".codex/hooks.json",
+  "mode": "additive",
+  "feature_scope": "project",
+  "feature_status": {
+    "project_path": "/Users/jp/Repos/jpcaparas/skills",
+    "home_path": "/Users/jp",
+    "feature_name": "hooks",
+    "legacy_feature_names": [
+      "codex_hooks"
+    ],
+    "codex_bin": "codex",
+    "codex_version": "codex-cli 0.139.0",
+    "effective": true,
+    "status": "enabled",
+    "recommended_enable_scope": "project",
+    "user_config_path": "/Users/jp/.codex/config.toml",
+    "user_config_exists": true,
+    "user_explicit": true,
+    "user_legacy_explicit": null,
+    "project_config_path": "/Users/jp/Repos/jpcaparas/skills/.codex/config.toml",
+    "project_config_exists": true,
+    "project_explicit": true,
+    "project_legacy_explicit": null,
+    "warnings": [],
+    "changed": false,
+    "enabled_scope": null
+  },
+  "enabled_events": [
+    {
+      "name": "SessionStart",
+      "matcher": "startup|resume",
+      "timeout": 20,
+      "status_message": "Loading skills repo hook context",
+      "scripts": [],
+      "commands": [],
+      "notes": "Inject repository skill layout and validation reminders."
+    },
+    {
+      "name": "PreToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Checking destructive Bash commands",
+      "scripts": [],
+      "commands": [],
+      "notes": "Starter slot for destructive shell guardrails."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "Bash",
+      "timeout": 20,
+      "status_message": "Reviewing Bash command impact",
+      "scripts": [],
+      "commands": [],
+      "notes": "Starter slot for post-Bash repository reminders."
+    },
+    {
+      "name": "Stop",
+      "timeout": 300,
+      "status_message": "Checking skills budget and repository validation",
+      "scripts": [
+        {
+          "label": "skills repository stop checks",
+          "path": "scripts/agent-stop-checks.sh",
+          "args": [],
+          "cwd": ".",
+          "notes": "Shared validation used by local agent hooks and manual runs."
+        }
+      ],
+      "commands": [],
+      "notes": "Run shared validation before Codex stops."
+    }
+  ]
+}

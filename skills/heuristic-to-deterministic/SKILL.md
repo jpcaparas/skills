@@ -1,6 +1,6 @@
 ---
 name: heuristic-to-deterministic
-description: "Convert repeated heuristics, session discoveries, manual review habits, prompt guidance, and flaky one-off fixes into deterministic behavior: validators, normalizers, generators, fixtures, manifests, CI jobs, and hook-ready checks. Use when asked to codify learnings, make behavior reproducible, prevent future agents from guessing, harden a pipeline, convert prompt advice into scripts, or stabilize cross-environment workflows. Triggers on: heuristic to deterministic, codify what we learned, make this deterministic, stop agents second-guessing, turn guidelines into checks, deterministic validator. Do NOT use for pure brainstorming, one-off edits with no repeatable failure mode, subjective taste decisions without measurable signals, or live research where the underlying spec must first be discovered."
+description: "Convert repeated heuristics into deterministic behavior: validator scripts, normalizer tools, generators, fixtures, manifests, CI jobs, and hook-ready checks. Use to codify learnings and prevent future guessing. Do NOT use for pure brainstorming or one-off edits."
 compatibility: "Requires: python3 for validation scripts. Generated checks may require the target repository's existing toolchain."
 metadata:
   version: "1.0.0"

@@ -1,6 +1,6 @@
 ---
 name: secure-ai-agent-coding
-description: "Build, review, and harden AI agents, LLM applications, RAG systems, model tool-calling flows, AI coding agents, and agentic production workflows using secure-by-default engineering controls. Trigger for: secure AI agent coding, prompt injection defenses, LLM app security review, agent tool permissions, human approval gates, AI data handling, RAG poisoning, model update risk, AI observability, AI safety CI, and dangerous AI coding patterns. Do NOT use for generic application security with no AI/LLM/agent surface, prompt wording optimization, or legal-only compliance advice."
+description: "Build, review, or harden AI agents, LLM apps, RAG, tool-calling, coding agents, and agentic workflows with secure-by-default controls. Trigger on prompt injection, tool permissions, approvals, AI data handling, RAG poisoning, observability, or safety CI. Do NOT use for non-AI appsec."
 compatibility: "Requires: python3 for optional local pattern scanning. No external packages required."
 metadata:
   version: "1.0.0"

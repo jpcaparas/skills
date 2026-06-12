@@ -1,6 +1,6 @@
 ---
 name: synthetic-search
-description: "Use this skill when the user explicitly wants Synthetic Search, the Synthetic API, `api.synthetic.new`, `SYNTHETIC_API_KEY`, or zero-data-retention web search with raw `curl`/`jq` examples. It covers live-verified search requests, quota checks, and a zero-dependency Node helper for readable output. Triggers on: 'Synthetic Search', 'Synthetic API', 'api.synthetic.new', 'SYNTHETIC_API_KEY', 'Synthetic quotas'. Do NOT trigger for general browser automation, full-site crawling, or unrelated search providers."
+description: "Use Synthetic Search or the Synthetic API (`api.synthetic.new`, `SYNTHETIC_API_KEY`) for zero-data-retention web search, curl/jq examples, quota checks, and a small Node helper. Do NOT use for browser automation, crawling, or unrelated search providers."
 compatibility: "Requires: `SYNTHETIC_API_KEY`; optional `jq`; Node.js 18+ for `scripts/search.js`"
 ---
 

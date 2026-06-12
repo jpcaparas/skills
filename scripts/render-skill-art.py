@@ -57,6 +57,7 @@ SKILL_SCENES = {
     "repo-intent-documenter": "a compass room connecting repository clue gems into a clear route line",
     "repository-readme-writer": "a project book shrine assembled from setup tools, blank blocks, and guide rails",
     "ripgrep": "a magnifying beam racing through file shelves and lighting up matching pixels",
+    "scaffold-hooks": "a universal agent hook switchboard routing four harness cables into one shared script rail",
     "scaffold-cc-hooks": "a Claude hook switchboard with event levers connected to reusable script cartridges",
     "scaffold-codex-hooks": "a Codex hook switchboard with event levers connected to reusable script cartridges",
     "scaffold-devin-hooks": "a Devin lifecycle hook switchboard with event levers, blocking gates, and reusable script cartridges",

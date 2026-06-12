@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "verified_on": "2026-06-12",
+  "verified_from": [
+    "https://docs.devin.ai/cli/extensibility/hooks/overview",
+    "https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks"
+  ],
+  "notes": [
+    "Official Devin CLI docs are the source of truth.",
+    ".devin/hooks.v1.json is the recommended project-level standalone hooks file.",
+    "In .devin/hooks.v1.json, the hooks object is the entire file and is not nested under a hooks key.",
+    "Command hooks receive JSON on stdin and may return JSON decisions on stdout.",
+    "DEVIN_PROJECT_DIR is automatically set to the project root directory.",
+    "Exit code 2 blocks or denies the action. Other non-zero exits are logged but do not block.",
+    "Matchers are regexes over tool_name and are meaningful for PreToolUse, PostToolUse, and PermissionRequest.",
+    "The lifecycle page documents PostCompaction even though the overview event table omits it."
+  ],
+  "events": [
+    {
+      "name": "PreToolUse",
+      "script_name": "pre-tool-use.sh",
+      "description": "Runs before a tool executes and can block, modify, or add context to tool calls.",
+      "stdin_fields": [
+        "tool_name",
+        "tool_input"
+      ],
+      "matcher_kind": "tool_name regex",
+      "supports_tool_matcher": true,
+      "blocking_guidance": "Use exit code 2 for hard safety and policy gates before the tool runs."
+    },
+    {
+      "name": "PostToolUse",
+      "script_name": "post-tool-use.sh",
+      "description": "Runs after a tool finishes for logging, validation, or follow-up actions.",
+      "stdin_fields": [
+        "tool_name",
+        "tool_input",
+        "tool_response"
+      ],
+      "matcher_kind": "tool_name regex",
+      "supports_tool_matcher": true,
+      "blocking_guidance": "Usually keep observer behavior non-blocking unless the plan explicitly sets block_on_failure."
+    },
+    {
+      "name": "PermissionRequest",
+      "script_name": "permission-request.sh",
+      "description": "Runs when the agent needs a permission decision.",
+      "stdin_fields": [
+        "tool_name",
+        "tool_input"
+      ],
+      "matcher_kind": "tool_name regex",
+      "supports_tool_matcher": true,
+      "blocking_guidance": "Use stdout decisions for approvals or denials and exit code 2 for intentional denials."
+    },
+    {
+      "name": "UserPromptSubmit",
+      "script_name": "user-prompt-submit.sh",
+      "description": "Runs when the user submits a message.",
+      "stdin_fields": [
+        "prompt"
+      ],
+      "matcher_kind": "none",
+      "supports_tool_matcher": false,
+      "blocking_guidance": "Use cautiously for prompt policy or context injection; non-tool event matchers should be empty or omitted."
+    },
+    {
+      "name": "Stop",
+      "script_name": "stop.sh",
+      "description": "Runs when the agent decides to stop its turn.",
+      "stdin_fields": [
+        "stop_hook_active"
+      ],
+      "matcher_kind": "none",
+      "supports_tool_matcher": false,
+      "blocking_guidance": "Use exit code 2 to prevent premature stopping, but check stop_hook_active to avoid loops."
+    },
+    {
+      "name": "PostCompaction",
+      "script_name": "post-compaction.sh",
+      "description": "Runs after context compaction completes successfully.",
+      "stdin_fields": [
+        "summary"
+      ],
+      "matcher_kind": "none",
+      "supports_tool_matcher": false,
+      "blocking_guidance": "Prefer non-blocking logging or context repair after compaction."
+    },
+    {
+      "name": "SessionStart",
+      "script_name": "session-start.sh",
+      "description": "Runs when a new session begins.",
+      "stdin_fields": [
+        "source"
+      ],
+      "matcher_kind": "none",
+      "supports_tool_matcher": false,
+      "blocking_guidance": "Use for initialization, logging, or environment setup; block only if setup is mandatory."
+    },
+    {
+      "name": "SessionEnd",
+      "script_name": "session-end.sh",
+      "description": "Runs when a session ends.",
+      "stdin_fields": [
+        "reason"
+      ],
+      "matcher_kind": "none",
+      "supports_tool_matcher": false,
+      "blocking_guidance": "Prefer cleanup or final logging."
+    }
+  ],
+  "generated_at": "2026-06-12T01:58:09Z",
+  "hook_root": "hooks",
+  "hooks_target": ".devin/hooks.v1.json",
+  "mode": "additive",
+  "enabled_events": [
+    {
+      "name": "PreToolUse",
+      "matcher": "^exec$",
+      "timeout": 30,
+      "block_on_failure": true,
+      "scripts": [],
+      "commands": [],
+      "notes": "Starter slot for shell safety gates."
+    },
+    {
+      "name": "PostToolUse",
+      "matcher": "^(edit|exec)$",
+      "timeout": 120,
+      "block_on_failure": false,
+      "scripts": [],
+      "commands": [],
+      "notes": "Starter slot for post-tool validation and logging."
+    },
+    {
+      "name": "Stop",
+      "matcher": "",
+      "timeout": 300,
+      "block_on_failure": true,
+      "scripts": [
+        {
+          "label": "skills repository stop checks",
+          "path": "scripts/agent-stop-checks.sh",
+          "args": [],
+          "cwd": ".",
+          "notes": "Shared validation used by local agent hooks and manual runs."
+        }
+      ],
+      "commands": [],
+      "notes": "Run shared validation before Devin stops."
+    },
+    {
+      "name": "SessionStart",
+      "matcher": "",
+      "timeout": 10,
+      "block_on_failure": false,
+      "scripts": [],
+      "commands": [],
+      "notes": "Starter slot for lightweight session setup."
+    }
+  ]
+}

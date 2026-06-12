@@ -1,0 +1,7 @@
+{
+  "harness": "devin",
+  "event": "PermissionRequest",
+  "scripts": [],
+  "commands": [],
+  "block_on_failure": false
+}

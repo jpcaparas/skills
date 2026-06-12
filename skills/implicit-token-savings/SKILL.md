@@ -1,6 +1,6 @@
 ---
 name: implicit-token-savings
-description: "Force compact, low-noise tool selection for coding sessions by preferring terse filesystem, git, test, and container commands that surface only the needed signal. Use when an agent is exploring a repo, reading files, checking status, diffing changes, scanning history, running tests, or probing containers and wants to minimize context and token burn. Triggers on: token savings, compact commands, terse shell workflow, repo exploration, git status, git diff, git log, rg, tree, npm test, cargo test, pytest, go test, docker ps. Do NOT trigger for binary inspection, workflows where full human-facing output is the goal, or cases where the user explicitly wants whole-file dumps."
+description: "Use compact, low-noise shell commands for repo exploration, git status/diff/log, tests, containers, and file search. Trigger on token savings, terse shell workflow, rg, tree, pytest, npm test, cargo test, go test, or docker ps. Do NOT use when full output is requested."
 compatibility: "Requires: python3 and a Unix-like shell. Best with rg, tree, git, npm, docker, and jq; degrades cleanly when some tools are absent."
 metadata:
   version: "1.0.0"

@@ -1,6 +1,6 @@
 ---
 name: client-report-from-commits
-description: "Turn git commits and diffs since an exact start date into a copy-pastable, non-technical client report grouped by feature. Use when the user wants a client update, accomplishment summary, weekly progress note, stakeholder recap, or high-level status report based on git history. Trigger on: client report from commits, summarize git diff since a date, weekly update from git log, non-technical accomplishments, stakeholder-ready changelog. Do NOT trigger for technical release notes, code review, or any request where the date is still ambiguous."
+description: "Turn git commits and diffs since an exact date into a copy-pastable, non-technical client report grouped by feature. Use for client updates, weekly progress, stakeholder recaps, or high-level git-history summaries. Do NOT use when the date is ambiguous."
 ---
 
 # client-report-from-commits

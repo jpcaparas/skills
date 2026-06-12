@@ -7,9 +7,10 @@
 #
 # This script is the shared source of truth between:
 #   1. .github/workflows/validate-skills.yml
-#   2. .claude/hooks/generated/events/stop.sh
-#   3. .codex/hooks/generated/events/stop.sh
-#   4. .opencode/plugins/skills_repo_stop_check.ts
+#   2. hooks/stop/claude.sh
+#   3. hooks/stop/codex.sh
+#   4. hooks/stop/devin.sh
+#   5. hooks/opencode-session-idle/opencode.sh
 #
 # If you change a step here, all callers pick it up.
 # For a containerized Ubuntu GitHub Actions preflight before pushing, use
@@ -43,6 +44,7 @@ cd "$REPO_ROOT"
 echo "Checking README skill coverage"
 python3 scripts/validate-readme-skills.py
 python3 scripts/validate-skill-art.py
+python3 scripts/check-skill-description-budget.py
 
 while IFS= read -r skill; do
     echo "Validating ${skill}"

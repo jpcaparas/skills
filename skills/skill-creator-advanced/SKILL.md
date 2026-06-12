@@ -1,6 +1,6 @@
 ---
 name: skill-creator-advanced
-description: "Advanced skill creator for mission-critical, installable skills — API wrappers, progressively-disclosed technical documentation, CLI tool integrations, and complex multi-reference skills. Use when creating or improving skills that demand rigorous progressive disclosure, verified examples, tested operations, cross-harness compatibility, smart placement into the right repo-local or global skills directory, and self-improvement feedback loops. Triggers on: 'advanced skill', 'create API skill', 'create wrapper skill', 'production skill', 'installable skill', 'improve this skill for progressive disclosure', 'rigorous skill', 'mission-critical skill', or when skill-creator's output needs to be more thorough. Also use when upgrading an existing skill to production quality."
+description: "Create or improve production-quality installable skills: API wrappers, progressive docs, CLI integrations, complex references, cross-harness behavior, placement, tests, and self-improvement loops. Trigger on advanced skill, production skill, installable skill, API skill, or rigorous skill."
 ---
 
 # Advanced Skill Creator

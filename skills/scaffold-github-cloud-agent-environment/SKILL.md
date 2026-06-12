@@ -1,6 +1,6 @@
 ---
 name: scaffold-github-cloud-agent-environment
-description: "Audit a real repository, verify the live GitHub Copilot cloud agent docs, and scaffold or repair `.github/workflows/copilot-setup-steps.yml` for GitHub Copilot cloud agent. Use when a project has no cloud agent environment yet, when an existing Copilot setup workflow needs enrichment or cleanup, or when agent runs fail because of runner, firewall, dependency, LFS, proxy, or workflow-shape issues. Trigger on: GitHub Copilot cloud agent environment, `copilot-setup-steps.yml`, customize agent environment, cloud agent runner, self-hosted runner, larger runner, Copilot setup doctor, fix Copilot agent environment. Do NOT use for generic GitHub Actions work unrelated to Copilot cloud agent, MCP-only setup, or non-GitHub agent platforms."
+description: "Audit and scaffold `.github/workflows/copilot-setup-steps.yml` for GitHub Copilot cloud agent environments. Use for missing or broken setup workflows, runner/firewall/dependency/LFS/proxy issues, or Copilot setup repair. Do NOT use for generic GitHub Actions."
 compatibility: "Requires: bash, jq, git, rg, and python3. Some fixes live in GitHub repository or organization settings and cannot be applied from the repository alone."
 metadata:
   version: "1.0.0"

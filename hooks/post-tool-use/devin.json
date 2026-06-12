@@ -1,0 +1,7 @@
+{
+  "harness": "devin",
+  "event": "PostToolUse",
+  "scripts": [],
+  "commands": [],
+  "block_on_failure": false
+}

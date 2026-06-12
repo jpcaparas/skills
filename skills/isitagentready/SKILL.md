@@ -1,6 +1,6 @@
 ---
 name: isitagentready
-description: "Audit a repository against Cloudflare's agent-readiness signals from isitagentready.com and the April 17, 2026 Cloudflare launch post, then write a detailed markdown report packet. Use when the user asks for /isitagentready, an agent-readiness audit, AI agent readiness, robots.txt/llms.txt/markdown negotiation readiness, MCP or API catalog discovery readiness, OAuth discovery readiness, WebMCP readiness, or a repo-level review of whether a deployed site works well for AI agents. If a production URL exists and a headless browser skill is available, ask for the URL, run the browser pass first, then inspect source. Do NOT trigger for generic SEO audits, direct implementation-only requests, or single-standard questions that do not require a repository audit."
+description: "Audit a repo against Cloudflare/isitagentready signals for AI agent readiness: robots.txt, llms.txt, Markdown negotiation, MCP/API catalogs, OAuth discovery, WebMCP, and browser-agent usability. Do NOT use for generic SEO or single-standard questions."
 compatibility: "Requires: python3. Optional: network access for `scripts/scan_site.py`, and `{{ skill:agent-browser }}` for rendered production-site verification."
 ---
 

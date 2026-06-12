@@ -1,6 +1,6 @@
 ---
 name: better-writing
-description: "Modern writing system for any prose humans read: docs, essays, explainers, PRs, memos, reports, newsletters, UI copy, and landing pages. Starts with Strunk's durable clarity rules, then routes into revision passes for structure, cadence, voice, genericity cleanup, and style-family calibration across technical, analytical, editorial, reflective, and conversion writing. Triggers on: 'rewrite this', 'make this clearer', 'tighten this', 'this sounds stiff', 'fix the voice', 'improve this memo', 'improve this doc', 'sharpen this essay', 'improve this landing page copy'. Do NOT trigger for code-only work, raw research without prose, or factual verification tasks that do not need writing help."
+description: "Improve human-facing prose: docs, essays, explainers, PRs, memos, reports, newsletters, UI copy, and landing pages. Trigger on rewrite, make clearer, tighten, fix voice, or sharpen writing. Do NOT use for code-only work or factual verification without prose revision."
 compatibility: "Requires: python3 for `scripts/probe_better_writing.py`, `scripts/validate.py`, and `scripts/test_skill.py`."
 metadata:
   version: "1.0.0"

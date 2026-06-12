@@ -1,6 +1,6 @@
 ---
 name: eli12
-description: "Surgically explain how a codebase, subsystem, feature flow, or cluster of files works in clear, accessible language. Use when the user asks 'how does this work?', wants a code walkthrough, needs architecture explained simply, or wants a digestible mental model with grounded real-world analogies. Trigger on: 'explain this codebase', 'walk me through the flow', 'how does X work', 'what happens when', 'eli12', 'explain it simply', 'make this architecture easier to understand'. Do NOT use for bug triage, code review, literal children's storytelling, or requests that primarily need code changes instead of explanation."
+description: "Explain a codebase, subsystem, feature flow, or file cluster in clear accessible language. Trigger on how does this work, walkthrough, architecture explained simply, eli12, or mental model requests. Do NOT use for bug triage, code review, or code-change tasks."
 compatibility: "Works best in repositories where you can inspect files, search symbols, trace call paths, and optionally fan out read-only subagents for broad questions."
 metadata:
   version: "1.0.0"

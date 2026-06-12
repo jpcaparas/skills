@@ -1,6 +1,6 @@
 ---
 name: markdown-new
-description: "Use markdown.new when the user explicitly wants markdown.new, Cloudflare Markdown for Agents, URL-to-Markdown conversion, file-to-Markdown conversion, crawl-to-Markdown, or the hosted markdown.new editor. Trigger on: 'markdown.new', 'convert this URL to markdown', 'crawl this docs site into markdown', 'file to markdown', 'upload this PDF to markdown', 'markdown.new API', or 'markdown editor'. Do NOT trigger for generic web search/scraping when another tool is enough, or for editing local Markdown without using the markdown.new service."
+description: "Use markdown.new for Cloudflare Markdown for Agents, URL/file/PDF-to-Markdown, crawl-to-Markdown, the markdown.new API, or hosted editor workflows. Do NOT use for generic scraping/search or local Markdown editing that does not need markdown.new."
 compatibility: "Requires: public URLs reachable by markdown.new; optional curl for API examples"
 ---
 

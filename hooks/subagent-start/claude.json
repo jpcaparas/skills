@@ -1,0 +1,6 @@
+{
+  "harness": "claude",
+  "event": "SubagentStart",
+  "scripts": [],
+  "commands": []
+}

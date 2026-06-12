@@ -1,6 +1,6 @@
 ---
 name: zoom-out
-description: "Map unfamiliar code one layer up: relevant modules, callers, callees, entrypoints, ownership boundaries, dependencies, and data flow before editing or explaining details. Use when the user says 'zoom out', 'go up a layer of abstraction', 'I do not know this area of code', 'map all relevant modules and callers', 'who calls this', 'call graph', 'module map', 'architecture map', or asks for orientation around a symbol, file, feature, route, job, or subsystem. Do NOT use for line-by-line explanation, generic programming questions, pure bug fixing with an already-known edit target, or broad repo documentation that needs intent discovery instead."
+description: "Map unfamiliar code one layer up: modules, callers, callees, entrypoints, boundaries, dependencies, and data flow. Trigger on zoom out, call graph, module map, architecture map, who calls this, or orientation before edits. Do NOT use for line-by-line explanation or already-scoped bug fixes."
 compatibility: "Requires repository/file access. Optional: python3 for scripts/zoom_out_inventory.py and local validators; rg and git improve discovery when available."
 metadata:
   version: "1.0.0"

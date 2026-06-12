@@ -1,6 +1,6 @@
 ---
 name: product-question
-description: "Answer product, PM, stakeholder, or non-engineer questions about how an app behaves by inspecting the product codebase and returning a share-ready plain-English answer. Use when the user asks what the app does, why a behavior happens, how a feature is wired from a product perspective, what users see, what rules or exceptions apply, or needs an answer that can be pasted into email, Teams, or Slack. Trigger on: product question, PM question, stakeholder answer, how does this feature work, what happens when, why does the app do this, explain app behavior. Do NOT use for code changes, bug fixes, code review, implementation plans, or deep technical architecture maps unless the final output must be non-technical and shareable."
+description: "Answer product, PM, stakeholder, or non-engineer questions about app behavior by inspecting code and returning a share-ready plain-English answer. Trigger on product question, PM question, stakeholder answer, how a feature works, or why the app behaves that way. Do NOT use for code changes."
 compatibility: "Requires repository/file access. rg and git improve discovery; python3 is required for scripts/validate.py and scripts/test_skill.py."
 metadata:
   version: "1.0.0"

@@ -1,0 +1,299 @@
+#!/usr/bin/env python3
+"""Integration checks for scaffold-hooks."""
+
+from __future__ import annotations
+
+import json
+import os
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+
+EXPECTED_HARNESSES = {"claude", "codex", "devin", "opencode"}
+
+
+def run(cmd: list[str], cwd: Path | None = None, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        cmd,
+        cwd=str(cwd) if cwd else None,
+        input=input_text,
+        check=False,
+        capture_output=True,
+        text=True,
+        env=os.environ.copy(),
+    )
+
+
+def load_json(path: Path) -> dict:
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def write(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
+def seed_legacy_project(project: Path) -> None:
+    run(["git", "init", "-q"], cwd=project)
+    write(
+        project / ".claude" / "settings.json",
+        json.dumps(
+            {
+                "hooks": {
+                    "UserPromptSubmit": [
+                        {"hooks": [{"type": "prompt", "prompt": "custom prompt hook", "timeout": 5}]}
+                    ],
+                    "Stop": [
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": '"$CLAUDE_PROJECT_DIR"/.claude/hooks/generated/events/stop.sh',
+                                    "timeout": 30,
+                                }
+                            ]
+                        }
+                    ],
+                }
+            },
+            indent=2,
+        )
+        + "\n",
+    )
+    write(
+        project / ".codex" / "hooks.json",
+        json.dumps(
+            {
+                "hooks": {
+                    "Stop": [
+                        {
+                            "hooks": [
+                                {
+                                    "type": "command",
+                                    "command": "/usr/bin/env bash -lc 'exec \"$(git rev-parse --show-toplevel)/.codex/hooks/generated/events/stop.sh\"'",
+                                    "timeout": 30,
+                                }
+                            ]
+                        }
+                    ]
+                }
+            },
+            indent=2,
+        )
+        + "\n",
+    )
+    write(
+        project / ".devin" / "hooks.v1.json",
+        json.dumps(
+            {
+                "Stop": [
+                    {
+                        "hooks": [
+                            {
+                                "type": "command",
+                                "command": "/workspace/.devin/hooks/generated/events/stop.sh",
+                                "timeout": 30,
+                            }
+                        ]
+                    }
+                ]
+            },
+            indent=2,
+        )
+        + "\n",
+    )
+    for legacy_root in [
+        project / ".claude" / "hooks" / "generated",
+        project / ".codex" / "hooks" / "generated",
+        project / ".devin" / "hooks" / "generated",
+    ]:
+        write(legacy_root / "manifest.json", "{}\n")
+        write(legacy_root / "events" / "stop.sh", "#!/usr/bin/env bash\nexit 0\n")
+        os.chmod(legacy_root / "events" / "stop.sh", 0o755)
+    write(project / ".claude" / "hooks" / "plan.json", '{"enabled_events":[{"name":"Stop","timeout":30}]}\n')
+    write(project / ".codex" / "hooks" / "plan.json", '{"enabled_events":[{"name":"Stop","timeout":30}]}\n')
+    write(project / "scripts" / "agent-session-context.sh", "#!/usr/bin/env bash\nexit 0\n")
+    write(project / "scripts" / "validate-project.sh", "#!/usr/bin/env bash\nexit 0\n")
+    os.chmod(project / "scripts" / "agent-session-context.sh", 0o755)
+    os.chmod(project / "scripts" / "validate-project.sh", 0o755)
+
+
+def text_contains_legacy(project: Path) -> bool:
+    needles = [".claude/hooks/generated", ".codex/hooks/generated", ".devin/hooks/generated"]
+    for rel_path in [".claude/settings.json", ".codex/hooks.json", ".devin/hooks.v1.json"]:
+        path = project / rel_path
+        if path.exists() and any(needle in path.read_text(encoding="utf-8") for needle in needles):
+            return True
+    return False
+
+
+def test_skill(skill_path: Path) -> dict:
+    results = {
+        "skill": skill_path.name,
+        "passed": True,
+        "tests_found": 0,
+        "files_verified": {"passed": 0, "total": 0},
+        "integration_checks": {"passed": 0, "total": 0},
+        "errors": [],
+    }
+
+    evals_path = skill_path / "evals" / "evals.json"
+    if not evals_path.is_file():
+        results["errors"].append("evals/evals.json is missing")
+        results["passed"] = False
+    else:
+        evals = load_json(evals_path).get("evals", [])
+        results["tests_found"] = len(evals)
+        for item in evals:
+            for rel_path in item.get("files", []):
+                results["files_verified"]["total"] += 1
+                if (skill_path / rel_path).exists():
+                    results["files_verified"]["passed"] += 1
+                else:
+                    results["errors"].append(f"Eval references missing file: {rel_path}")
+                    results["passed"] = False
+
+    plan = load_json(skill_path / "templates" / "hook-plan.example.json")
+    if set(plan.get("harnesses", [])) != EXPECTED_HARNESSES:
+        results["errors"].append("Plan must enable all four harnesses by default")
+        results["passed"] = False
+    for harness in EXPECTED_HARNESSES:
+        if harness not in plan.get("plans", {}):
+            results["errors"].append(f"Plan missing nested {harness} config")
+            results["passed"] = False
+
+    scaffold_script = skill_path / "scripts" / "scaffold_all_hooks.sh"
+    if not os.access(scaffold_script, os.X_OK):
+        results["errors"].append("scripts/scaffold_all_hooks.sh must be executable")
+        results["passed"] = False
+
+    with tempfile.TemporaryDirectory(prefix="scaffold-hooks-test-") as tmp:
+        project = Path(tmp) / "project"
+        project.mkdir()
+        seed_legacy_project(project)
+
+        dry_run = run([str(scaffold_script), "--project", str(project), "--dry-run"])
+        results["integration_checks"]["total"] += 1
+        if dry_run.returncode == 0 and "scaffold_all_hooks.sh dry run complete" in dry_run.stdout:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(f"dry-run failed: {dry_run.stdout}\n{dry_run.stderr}")
+            results["passed"] = False
+
+        completed = run([str(scaffold_script), "--project", str(project)])
+        results["integration_checks"]["total"] += 1
+        if completed.returncode == 0:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(f"scaffold_all_hooks.sh failed: {completed.stdout}\n{completed.stderr}")
+            results["passed"] = False
+
+        expected_paths = [
+            "hooks/README.md",
+            "hooks/.state/scaffold-hooks/manifest.json",
+            "hooks/stop/script.sh",
+            "hooks/stop/claude.sh",
+            "hooks/stop/claude.json",
+            "hooks/stop/codex.sh",
+            "hooks/stop/codex.json",
+            "hooks/stop/devin.sh",
+            "hooks/stop/devin.json",
+            ".claude/settings.json",
+            ".codex/hooks.json",
+            ".devin/hooks.v1.json",
+            ".opencode/plugins/opencode_hook_project_session_lifecycle.ts",
+            "hooks/opencode-session-created/opencode.sh",
+            "hooks/opencode-session-idle/opencode.sh",
+        ]
+        results["integration_checks"]["total"] += 1
+        missing = [rel_path for rel_path in expected_paths if not (project / rel_path).exists()]
+        if not missing:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Scaffold missing expected paths: " + ", ".join(missing))
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        if not text_contains_legacy(project):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Final configs still contain legacy generated hook roots")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        if not any((project / rel).exists() for rel in [
+            ".claude/hooks/generated",
+            ".codex/hooks/generated",
+            ".devin/hooks/generated",
+        ]):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Legacy managed generated folders were not cleaned up")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        claude_settings = load_json(project / ".claude" / "settings.json")
+        user_prompt = claude_settings.get("hooks", {}).get("UserPromptSubmit", [])
+        if any("custom prompt hook" in json.dumps(group) for group in user_prompt):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Custom Claude prompt hook was not preserved")
+            results["passed"] = False
+
+        write(project / "scripts" / "empty-args-ok.sh", "#!/usr/bin/env bash\nexit 0\n")
+        os.chmod(project / "scripts" / "empty-args-ok.sh", 0o755)
+        codex_stop_config_path = project / "hooks" / "stop" / "codex.json"
+        codex_stop_config = load_json(codex_stop_config_path)
+        codex_stop_config["scripts"] = [
+            {
+                "label": "empty args regression",
+                "path": "scripts/empty-args-ok.sh",
+                "args": [],
+                "cwd": ".",
+            }
+        ]
+        codex_stop_config_path.write_text(json.dumps(codex_stop_config, indent=2) + "\n", encoding="utf-8")
+
+        results["integration_checks"]["total"] += 1
+        empty_args = run(
+            ["bash", str(project / "hooks" / "stop" / "codex.sh")],
+            cwd=project,
+            input_text='{"session_id":"empty-args-regression"}',
+        )
+        if empty_args.returncode == 0 and empty_args.stdout == "":
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "Generated Codex Stop hook failed empty args regression: "
+                f"status={empty_args.returncode}\nstdout={empty_args.stdout}\nstderr={empty_args.stderr}"
+            )
+            results["passed"] = False
+
+    return results
+
+
+def main() -> int:
+    if len(sys.argv) != 2:
+        print("Usage: test_skill.py /path/to/skill", file=sys.stderr)
+        return 2
+    results = test_skill(Path(sys.argv[1]).resolve())
+    print(f"Skill: {results['skill']}")
+    print(f"Tests found: {results['tests_found']}")
+    print(f"Files verified: {results['files_verified']['passed']}/{results['files_verified']['total']}")
+    print(
+        "Integration checks: "
+        f"{results['integration_checks']['passed']}/{results['integration_checks']['total']}"
+    )
+    if not results["passed"]:
+        print("\nFAIL:")
+        for error in results["errors"]:
+            print(f"- {error}")
+        return 1
+    print("\nPASS: all checks passed")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

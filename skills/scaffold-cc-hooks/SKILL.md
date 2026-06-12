@@ -1,6 +1,6 @@
 ---
 name: scaffold-cc-hooks
-description: "Scaffold Claude Code hooks into a real project after auditing the project structure in detail. Use when a user wants Claude Code hook setup, hook refactors, full hook-event scaffolding, or managed updates to existing .claude hooks. This skill verifies the live official Claude Code hook docs first, audits the target repo, then generates a bash-first hook scaffold with a hooks README, repeatable merge behavior, and coverage for every current hook event. Trigger on: Claude Code hooks, scaffold hooks, hook events, update hooks, hook architecture, .claude/settings.json. Do NOT use for generic Git hooks, Husky-only setup, or non-Claude agents."
+description: "Scaffold or refactor Claude Code hooks for a real project after auditing structure and live docs. Generates bash-first `.claude/settings.json` adapters with repeatable merge behavior and current hook-event coverage. Do NOT use for Git hooks, Husky, or non-Claude agents."
 compatibility: "Requires: bash, jq, git, rg"
 metadata:
   version: "1.2.0"
