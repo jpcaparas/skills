@@ -2,8 +2,9 @@
 #
 # scaffold_all_hooks.sh
 #
-# Compose the Claude Code, Codex, Devin CLI, and OpenCode hook scaffolders into
-# one shared repo-owned hooks/ tree.
+# Compose the bundled Claude Code, Codex, GitHub Copilot, Devin CLI, and
+# OpenCode harness scaffolders (harnesses/<name>/) into one shared repo-owned
+# hooks/ tree (Copilot and OpenCode keep their own documented config surfaces).
 
 set -euo pipefail
 
@@ -16,7 +17,7 @@ Options:
   --project DIR                  Target project root.
   --plan FILE                    Universal scaffold-hooks plan. Defaults to templates/hook-plan.example.json.
   --mode MODE                    additive or overhaul. Overrides plan mode.
-  --harnesses LIST               Comma-separated subset: claude,codex,devin,opencode.
+  --harnesses LIST               Comma-separated subset: claude,codex,copilot,devin,opencode.
   --ensure-codex-feature SCOPE   Override Codex feature enablement scope.
   --home DIR                     Home directory override for Codex/OpenCode helper scripts.
   --cleanup-legacy true|false    Remove legacy managed generated folders after migration. Default from plan, then true.
@@ -52,7 +53,7 @@ validate_harnesses() {
     local unknown
     unknown="$(
         printf '%s' "$HARNESS_LIST_JSON" \
-            | jq -r '.[] | select(. != "claude" and . != "codex" and . != "devin" and . != "opencode")'
+            | jq -r '.[] | select(. != "claude" and . != "codex" and . != "copilot" and . != "devin" and . != "opencode")'
     )"
     if [ -n "$unknown" ]; then
         echo "Unknown harness name(s):" >&2
@@ -166,8 +167,9 @@ cleanup_harness_state() {
                     -delete 2>/dev/null || true
             fi
             ;;
-        opencode)
-            # OpenCode's dedicated scaffolder owns managed plugin cleanup.
+        opencode|copilot)
+            # OpenCode and Copilot harness scaffolders own their managed cleanup
+            # (.opencode/plugins/.managed and .github/copilot/hooks/generated).
             ;;
     esac
 }
@@ -179,25 +181,28 @@ fallback_plan_for_harness() {
             if [ -f "$PROJECT_ROOT/.claude/hooks/plan.json" ]; then
                 printf '%s\n' "$PROJECT_ROOT/.claude/hooks/plan.json"
             else
-                printf '%s\n' "$SKILLS_ROOT/scaffold-cc-hooks/templates/hook-plan.example.json"
+                printf '%s\n' "$HARNESSES_ROOT/claude/templates/hook-plan.example.json"
             fi
             ;;
         codex)
             if [ -f "$PROJECT_ROOT/.codex/hooks/plan.json" ]; then
                 printf '%s\n' "$PROJECT_ROOT/.codex/hooks/plan.json"
             else
-                printf '%s\n' "$SKILLS_ROOT/scaffold-codex-hooks/templates/hook-plan.example.json"
+                printf '%s\n' "$HARNESSES_ROOT/codex/templates/hook-plan.example.json"
             fi
             ;;
         devin)
             if [ -f "$PROJECT_ROOT/.devin/hooks/plan.json" ]; then
                 printf '%s\n' "$PROJECT_ROOT/.devin/hooks/plan.json"
             else
-                printf '%s\n' "$SKILLS_ROOT/scaffold-devin-hooks/templates/hook-plan.example.json"
+                printf '%s\n' "$HARNESSES_ROOT/devin/templates/hook-plan.example.json"
             fi
             ;;
         opencode)
-            printf '%s\n' "$SKILLS_ROOT/scaffold-opencode-hooks/templates/hook-plan.example.json"
+            printf '%s\n' "$HARNESSES_ROOT/opencode/templates/hook-plan.example.json"
+            ;;
+        copilot)
+            printf '%s\n' "$HARNESSES_ROOT/copilot/templates/hook-plan.example.json"
             ;;
     esac
 }
@@ -209,7 +214,7 @@ build_child_plan() {
     local child_mode="additive"
 
     fallback="$(fallback_plan_for_harness "$harness")"
-    if [ "$harness" = "opencode" ]; then
+    if [ "$harness" = "opencode" ] || [ "$harness" = "copilot" ]; then
         child_mode="$MODE"
     fi
 
@@ -224,6 +229,8 @@ build_child_plan() {
         | .mode = $mode
         | if $harness == "opencode" then
             .hooks_root = $hooks_root
+          elif $harness == "copilot" then
+            .
           else
             .managed_root = $hooks_root
           end
@@ -233,6 +240,8 @@ build_child_plan() {
             .hooks_target = (.hooks_target // ".codex/hooks.json")
           elif $harness == "devin" then
             .hooks_target = (.hooks_target // ".devin/hooks.v1.json")
+          elif $harness == "copilot" then
+            .hooks_target = (.hooks_target // ".github/hooks/copilot-hooks.json")
           else
             .
           end
@@ -249,7 +258,7 @@ run_child_scaffold() {
             if [ "$DRY_RUN" = "true" ]; then
                 args+=(--dry-run)
             fi
-            bash "$SKILLS_ROOT/scaffold-cc-hooks/scripts/scaffold_hooks.sh" "${args[@]}"
+            bash "$HARNESSES_ROOT/claude/scripts/scaffold_hooks.sh" "${args[@]}"
             ;;
         codex)
             local args=(--project "$PROJECT_ROOT" --plan "$plan")
@@ -262,14 +271,21 @@ run_child_scaffold() {
             if [ "$DRY_RUN" = "true" ]; then
                 args+=(--dry-run)
             fi
-            bash "$SKILLS_ROOT/scaffold-codex-hooks/scripts/scaffold_hooks.sh" "${args[@]}"
+            bash "$HARNESSES_ROOT/codex/scripts/scaffold_hooks.sh" "${args[@]}"
             ;;
         devin)
             local args=(--project "$PROJECT_ROOT" --plan "$plan")
             if [ "$DRY_RUN" = "true" ]; then
                 args+=(--dry-run)
             fi
-            bash "$SKILLS_ROOT/scaffold-devin-hooks/scripts/scaffold_hooks.sh" "${args[@]}"
+            bash "$HARNESSES_ROOT/devin/scripts/scaffold_hooks.sh" "${args[@]}"
+            ;;
+        copilot)
+            local args=(--project "$PROJECT_ROOT" --plan "$plan")
+            if [ "$DRY_RUN" = "true" ]; then
+                args+=(--dry-run)
+            fi
+            bash "$HARNESSES_ROOT/copilot/scripts/scaffold_hooks.sh" "${args[@]}"
             ;;
         opencode)
             local args=(--project "$PROJECT_ROOT" --plan "$plan")
@@ -279,7 +295,7 @@ run_child_scaffold() {
             if [ "$DRY_RUN" = "true" ]; then
                 args+=(--dry-run)
             fi
-            bash "$SKILLS_ROOT/scaffold-opencode-hooks/scripts/scaffold_hooks.sh" "${args[@]}"
+            bash "$HARNESSES_ROOT/opencode/scripts/scaffold_hooks.sh" "${args[@]}"
             ;;
     esac
 }
@@ -291,7 +307,7 @@ write_universal_readme() {
 
     {
         printf '# Agent Hooks\n\n'
-        printf 'Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, and OpenCode.\n\n'
+        printf 'Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, OpenCode, and GitHub Copilot.\n\n'
         printf '## Layout\n\n'
         printf -- '- `hooks/<event>/script.sh` is the shared editable behavior for an event.\n'
         printf -- '- `hooks/<event>/<harness>.sh` is a thin adapter invoked by that harness config.\n'
@@ -310,6 +326,9 @@ write_universal_readme() {
         fi
         if contains_harness opencode; then
             printf -- '- OpenCode: `.opencode/plugins/*.ts`, delegating to `hooks/opencode-session-*`\n'
+        fi
+        if contains_harness copilot; then
+            printf -- '- GitHub Copilot: `.github/hooks/copilot-hooks.json`, generated events under `.github/copilot/hooks/generated/`\n'
         fi
         printf '\n## Event Adapters\n\n'
         if find "$hooks_root_abs" -mindepth 2 -maxdepth 2 -type f \( -name '*.sh' -o -name '*.json' \) >/dev/null 2>&1; then
@@ -436,7 +455,7 @@ require_command bash
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
-SKILLS_ROOT="$(cd "$SKILL_ROOT/.." && pwd -P)"
+HARNESSES_ROOT="$SKILL_ROOT/harnesses"
 DEFAULT_PLAN="$SKILL_ROOT/templates/hook-plan.example.json"
 
 PROJECT_ROOT="$(resolve_project "$PROJECT_ROOT")"
@@ -463,7 +482,7 @@ fi
 if [ -n "$HARNESSES_OVERRIDE" ]; then
     HARNESS_LIST_JSON="$(json_string_array_from_csv "$HARNESSES_OVERRIDE")"
 else
-    HARNESS_LIST_JSON="$(jq -c '.harnesses // ["claude", "codex", "devin", "opencode"]' "$PLAN_FILE")"
+    HARNESS_LIST_JSON="$(jq -c '.harnesses // ["claude", "codex", "copilot", "devin", "opencode"]' "$PLAN_FILE")"
 fi
 validate_harnesses
 
@@ -499,7 +518,7 @@ if [ "$DRY_RUN" != "true" ]; then
     strip_legacy_config_entries
 fi
 
-for harness in claude codex devin opencode; do
+for harness in claude codex devin opencode copilot; do
     if ! contains_harness "$harness"; then
         continue
     fi

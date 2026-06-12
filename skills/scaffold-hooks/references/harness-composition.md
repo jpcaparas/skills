@@ -1,6 +1,6 @@
 # Harness Composition
 
-`scaffold-hooks` is a composition skill. It does not own the hook event contracts for Claude Code, Codex, Devin CLI, or OpenCode.
+`scaffold-hooks` is a composition skill. It does not own the hook event contracts for Claude Code, Codex, GitHub Copilot, Devin CLI, or OpenCode; each `harnesses/<name>/` component does.
 
 ## Delegation Order
 
@@ -10,6 +10,7 @@ Default order is:
 2. Codex
 3. Devin
 4. OpenCode
+5. Copilot
 
 Claude runs first because it has the broadest lifecycle surface and its shared `script.sh` template is harness-neutral. Shell harness scaffolders skip existing `hooks/<event>/script.sh` files in additive mode, so later harnesses add adapters without rewriting shared behavior.
 
@@ -46,14 +47,19 @@ A safe default fall-through is plain text, but never let `devin` reach it.
 
 Codex CLI renders hook execution and context inline. Devin CLI runs hooks silently and renders nothing, even on success; verify via `/hooks`, the CLI logs, or the transcript JSON under `~/.local/share/devin/cli/transcripts/`. Mention this during scaffolding so users do not interpret silence as a broken scaffold.
 
+## GitHub Copilot
+
+Copilot stays self-contained like OpenCode. Its scaffolder enforces a managed root under `.github/copilot/hooks/generated/` and merges `.github/hooks/copilot-hooks.json`, because the Copilot cloud agent only reads hook configuration and scripts committed to the repository. The universal plan passes the Copilot nested plan through unchanged (no `managed_root` rewrite) and forwards `mode` directly. Shared project policy still lives in repo-owned scripts (for example `scripts/agent-stop-checks.sh copilot`) that Copilot's generated event scripts call.
+
 ## Updating Component Behavior
 
-When an event name, matcher, output contract, or feature flag changes, update the dedicated skill first:
+When an event name, matcher, output contract, or feature flag changes, update the harness component first:
 
-- `{{ skill:scaffold-cc-hooks }}`
-- `{{ skill:scaffold-codex-hooks }}`
-- `{{ skill:scaffold-devin-hooks }}`
-- `{{ skill:scaffold-opencode-hooks }}`
+- `harnesses/claude/`
+- `harnesses/codex/`
+- `harnesses/copilot/`
+- `harnesses/devin/`
+- `harnesses/opencode/`
 
-Only update this skill after the component skill validates.
+Only update the universal orchestration after the harness component validates (`python3 harnesses/<name>/scripts/validate.py harnesses/<name>` and `python3 harnesses/<name>/scripts/test_skill.py harnesses/<name>`).
 

@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 
-EXPECTED_HARNESSES = {"claude", "codex", "devin", "opencode"}
+EXPECTED_HARNESSES = {"claude", "codex", "copilot", "devin", "opencode"}
 
 
 def run(cmd: list[str], cwd: Path | None = None, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
@@ -157,7 +157,7 @@ def test_skill(skill_path: Path) -> dict:
 
     plan = load_json(skill_path / "templates" / "hook-plan.example.json")
     if set(plan.get("harnesses", [])) != EXPECTED_HARNESSES:
-        results["errors"].append("Plan must enable all four harnesses by default")
+        results["errors"].append("Plan must enable all supported harnesses by default")
         results["passed"] = False
     for harness in EXPECTED_HARNESSES:
         if harness not in plan.get("plans", {}):
@@ -268,6 +268,20 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(
                 "Generated Codex Stop hook failed empty args regression: "
                 f"status={empty_args.returncode}\nstdout={empty_args.stdout}\nstderr={empty_args.stderr}"
+            )
+            results["passed"] = False
+
+    for harness in sorted(EXPECTED_HARNESSES):
+        harness_dir = skill_path / "harnesses" / harness
+        results["integration_checks"]["total"] += 1
+        suite = run(
+            [sys.executable, str(harness_dir / "scripts" / "test_skill.py"), str(harness_dir)],
+        )
+        if suite.returncode == 0:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                f"Harness suite failed: harnesses/{harness}\n{suite.stdout}\n{suite.stderr}"
             )
             results["passed"] = False
 

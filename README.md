@@ -262,46 +262,6 @@ Production skill for making `rg` the default search tool instead of `grep`, cove
 
 Production skill for framework-agnostic SEO analysis of real codebases, covering crawlability, rendering, canonicals, robots directives, sitemaps, metadata, OG and social previews, structured data, information architecture, and AI-era search readiness, with a deterministic handoff prompt for another session to implement fixes.
 
-### `scaffold-cc-hooks`
-
-`npx skills add jpcaparas/skills --skill scaffold-cc-hooks`
-
-<p align="center">
-  <img src="skills/scaffold-cc-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-cc-hooks" width="480">
-</p>
-
-Production scaffold skill for Claude Code hooks that audits the target project, verifies the live hook docs, and generates a bash-first hook setup with repeatable merge behavior and event coverage.
-
-### `scaffold-codex-hooks`
-
-`npx skills add jpcaparas/skills --skill scaffold-codex-hooks`
-
-<p align="center">
-  <img src="skills/scaffold-codex-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-codex-hooks" width="480">
-</p>
-
-Production scaffold skill for Codex hooks that audits the repo, verifies the live docs and schemas, checks the effective feature flag state, and generates repo-local lifecycle hook scaffolding.
-
-### `scaffold-devin-hooks`
-
-`npx skills add jpcaparas/skills --skill scaffold-devin-hooks`
-
-<p align="center">
-  <img src="skills/scaffold-devin-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-devin-hooks" width="480">
-</p>
-
-Project-aware Devin CLI hook scaffolder that verifies the live Devin docs, audits a repo, and generates a deterministic `.devin/hooks.v1.json` scaffold with exit-code-2 blocking gates, reusable script adapters, merge behavior, and validation helpers.
-
-### `scaffold-github-copilot-hooks`
-
-`npx skills add jpcaparas/skills --skill scaffold-github-copilot-hooks`
-
-<p align="center">
-  <img src="skills/scaffold-github-copilot-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-github-copilot-hooks" width="480">
-</p>
-
-Project-aware GitHub Copilot hook scaffolder that verifies the live GitHub docs, audits a repo, and generates a deterministic `.github/hooks/copilot-hooks.json` scaffold with reusable script adapters, repeatable merges, and correct Copilot CLI/cloud-agent behavior.
-
 ### `scaffold-github-cloud-agent-environment`
 
 `npx skills add jpcaparas/skills --skill scaffold-github-cloud-agent-environment`
@@ -320,17 +280,7 @@ Production scaffold-and-doctor skill for GitHub Copilot cloud agent environments
   <img src="skills/scaffold-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-hooks" width="480">
 </p>
 
-Universal `/scaffold-hooks` skill that composes Claude Code, Codex, Devin CLI, and OpenCode hook scaffolds into one shared `hooks/` ports-and-adapters layout while migrating legacy generated hook roots without colliding with custom hooks.
-
-### `scaffold-opencode-hooks`
-
-`npx skills add jpcaparas/skills --skill scaffold-opencode-hooks`
-
-<p align="center">
-  <img src="skills/scaffold-opencode-hooks/skill-card.png" alt="16-bit side-scrolling pixel art badge for scaffold-opencode-hooks" width="480">
-</p>
-
-Production scaffold skill for OpenCode hooks that audits the repo, verifies the live plugin and config docs, inspects existing project-vs-global OpenCode state, and generates a TypeScript-only managed `.opencode/plugins/` scaffold with repeatable config and package merges.
+Universal `/scaffold-hooks` skill — the single hooks scaffolder for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode. Bundles each harness as a self-contained component, asks which harnesses to target (default all), writes one shared `hooks/` ports-and-adapters layout, and migrates legacy generated hook roots without colliding with custom hooks.
 
 ### `secure-ai-agent-coding`
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -28,7 +29,19 @@ REQUIRED_FILES = [
     "scripts/validate.py",
     "evals/evals.json",
 ]
-EXPECTED_HARNESSES = {"claude", "codex", "devin", "opencode"}
+HARNESS_NAMES = ["claude", "codex", "copilot", "devin", "opencode"]
+REQUIRED_HARNESS_FILES = [
+    "PLAYBOOK.md",
+    "assets/hook-events.json",
+    "templates/hook-plan.example.json",
+    "scripts/scaffold_hooks.sh",
+    "scripts/audit_project.sh",
+    "scripts/render_hooks_readme.sh",
+    "scripts/validate.py",
+    "scripts/test_skill.py",
+    "references/gotchas.md",
+]
+EXPECTED_HARNESSES = {"claude", "codex", "copilot", "devin", "opencode"}
 LEGACY_ROOTS = {
     ".claude/hooks/generated",
     ".codex/hooks/generated",
@@ -140,16 +153,47 @@ def validate(skill_path: Path) -> dict:
             if nested.get("managed_root"):
                 errors.append(f"Nested {harness} plan must not hard-code managed_root")
 
+    for harness in HARNESS_NAMES:
+        harness_dir = skill_path / "harnesses" / harness
+        if not harness_dir.is_dir():
+            errors.append(f"Missing harness component: harnesses/{harness}/")
+            continue
+        for rel_path in REQUIRED_HARNESS_FILES:
+            if not (harness_dir / rel_path).exists():
+                errors.append(f"Missing harness file: harnesses/{harness}/{rel_path}")
+        nested = run_harness_validator(harness_dir)
+        for err in nested.get("errors", []):
+            errors.append(f"[harnesses/{harness}] {err}")
+        for warn in nested.get("warnings", []):
+            warnings.append(f"[harnesses/{harness}] {warn}")
+
     harness_manifest = load_json(skill_path / "assets" / "harnesses.json", errors)
     if harness_manifest:
         names = {item.get("name") for item in harness_manifest.get("harnesses", [])}
         if names != EXPECTED_HARNESSES:
-            errors.append("assets/harnesses.json must list all four harnesses")
+            errors.append("assets/harnesses.json must list all supported harnesses")
         roots = set(harness_manifest.get("legacy_managed_roots", []))
         if roots != LEGACY_ROOTS:
             errors.append("assets/harnesses.json legacy roots are incomplete")
 
     return {"valid": not errors, "errors": errors, "warnings": warnings, "metrics": metrics}
+
+
+def run_harness_validator(harness_dir: Path) -> dict:
+    validator = harness_dir / "scripts" / "validate.py"
+    if not validator.is_file():
+        return {"errors": [f"missing validator: {validator.name}"], "warnings": []}
+    proc = subprocess.run(
+        [sys.executable, str(validator), str(harness_dir)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    try:
+        payload = json.loads(proc.stdout)
+    except json.JSONDecodeError:
+        return {"errors": [f"validator produced non-JSON output (exit {proc.returncode})"], "warnings": []}
+    return payload
 
 
 def main() -> int:

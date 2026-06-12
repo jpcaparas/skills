@@ -2,7 +2,13 @@
   "mode": "additive",
   "hooks_root": "hooks",
   "cleanup_legacy": true,
-  "harnesses": ["claude", "codex", "devin", "opencode"],
+  "harnesses": [
+    "claude",
+    "codex",
+    "copilot",
+    "devin",
+    "opencode"
+  ],
   "plans": {
     "claude": {
       "settings_target": ".claude/settings.json",
@@ -203,7 +209,9 @@
           "name": "project-session-lifecycle",
           "pattern": "lifecycle-action",
           "filename": "opencode_hook_project_session_lifecycle.ts",
-          "surfaces": ["event"],
+          "surfaces": [
+            "event"
+          ],
           "context_script": "hooks/opencode-session-created/opencode.sh",
           "action_script": "hooks/opencode-session-idle/opencode.sh",
           "context_delegate_script": "scripts/agent-session-context.sh",
@@ -213,7 +221,47 @@
           "notes": "Thin OpenCode adapter into shared repo-owned hook scripts."
         }
       ]
+    },
+    "copilot": {
+      "hooks_target": ".github/hooks/copilot-hooks.json",
+      "managed_root": ".github/copilot/hooks/generated",
+      "enabled_events": [
+        {
+          "name": "preToolUse",
+          "matcher": "bash|edit|create",
+          "timeoutSec": 15,
+          "block_on_failure": true,
+          "scripts": [],
+          "commands": [],
+          "notes": "Use this for hard policy and safety gates. Deny through stdout JSON, not a Devin-style exit-code-2 block."
+        },
+        {
+          "name": "postToolUseFailure",
+          "timeoutSec": 30,
+          "block_on_failure": false,
+          "scripts": [],
+          "commands": [],
+          "notes": "Use this for recovery guidance after failed tools."
+        },
+        {
+          "name": "agentStop",
+          "timeoutSec": 30,
+          "block_on_failure": true,
+          "scripts": [
+            {
+              "label": "shared stop checks",
+              "path": "scripts/agent-stop-checks.sh",
+              "args": [
+                "copilot"
+              ],
+              "cwd": ".",
+              "notes": "Reusable repo-owned script that can also be called by CI or other agent adapters."
+            }
+          ],
+          "commands": [],
+          "notes": "Use this to keep the agent from stopping before required repo checks are complete."
+        }
+      ]
     }
   }
 }
-

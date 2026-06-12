@@ -1,9 +1,9 @@
 /**
- * skills-repo-stop-check
+ * {{PLUGIN_NAME}}
  *
  * Managed by scaffold-hooks (opencode harness component).
- * Notes: OpenCode lifecycle adapter into shared repository stop checks.
- * Surfaces: event
+ * Notes: {{NOTES}}
+ * Surfaces: {{SURFACES}}
  */
 
 import { execFile } from "node:child_process"
@@ -83,8 +83,8 @@ type ScriptResult = {
 const execFileAsync = promisify(execFile)
 const pluginDir = dirname(fileURLToPath(import.meta.url))
 const fallbackRepoRoot = resolve(pluginDir, "..", "..")
-const serviceName = "skills-repo-stop-check"
-const actionLabel = "Skills repository stop checks"
+const serviceName = "{{SERVICE_NAME}}"
+const actionLabel = "{{ACTION_LABEL}}"
 const timeoutMs = 10 * 60 * 1000
 const outputTailLines = 160
 const sessionState = new Map<string, SessionState>()
@@ -196,7 +196,7 @@ async function runScript(repoRoot: string, script: string, args: string[], timeo
 async function injectSessionContext(client: OpenCodeClient, sessionID: string, state: SessionState, repoRoot: string) {
   if (state.contextInjected) return
 
-  const result = await runScript(repoRoot, "hooks/opencode-session-created/opencode.sh", ["opencode-session-created"], 20_000)
+  const result = await runScript(repoRoot, "{{CONTEXT_SCRIPT}}", ["opencode-session-created"], 20_000)
   if (!result.ok) {
     await log(client, "warn", "Session context script failed", {
       sessionID,
@@ -271,7 +271,7 @@ async function runAction(client: OpenCodeClient, sessionID: string, state: Sessi
     await showToast(client, "info", `${actionLabel} started`)
     await log(client, "info", `${actionLabel} started`, { sessionID })
 
-    const result = await runScript(repoRoot, "hooks/opencode-session-idle/opencode.sh", [], timeoutMs)
+    const result = await runScript(repoRoot, "{{ACTION_SCRIPT}}", [], timeoutMs)
     if (result.ok) {
       state.persistentFailureReported = false
       state.repairPromptSent = false

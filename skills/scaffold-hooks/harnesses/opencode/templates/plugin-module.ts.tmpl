@@ -1,0 +1,29 @@
+/**
+ * {{PLUGIN_NAME}}
+ *
+ * Managed by scaffold-hooks (opencode harness component).
+ * Notes: {{NOTES}}
+ * Surfaces: {{SURFACES}}
+ */
+
+{{IMPORTS}}
+async function showToast(client, variant, message) {
+  try {
+    await client.tui?.showToast({ body: { message, variant } })
+  } catch {
+    // Toasts are user feedback only; they must never break hook behavior.
+  }
+}
+
+const plugin = async ({ project, client, $, directory, worktree }) => {
+  void project
+  void $
+  void directory
+  void worktree
+
+  return {
+{{HANDLERS}}
+  }
+}
+
+export default plugin

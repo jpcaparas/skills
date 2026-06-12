@@ -46,15 +46,18 @@
       ]
     },
     {
-      "name": "single_harness_negative",
+      "name": "single_harness_subset",
       "prompt": "Only scaffold Codex hooks for this repo. Do not touch Claude, Devin, or OpenCode.",
-      "expected_output": "The response routes to the dedicated scaffold-codex-hooks skill rather than the universal scaffold-hooks skill, because the request is explicitly one-harness-only.",
+      "expected_output": "The response uses this skill with --harnesses codex so only the Codex adapter and config are written, leaving Claude, Devin, and OpenCode files untouched.",
       "files": [
         "SKILL.md"
       ],
       "assertions": [
         {
-          "text": "Universal skill is not used for an explicit one-harness-only request"
+          "text": "Only the requested harness is scaffolded via --harnesses"
+        },
+        {
+          "text": "Other harness config files are not created or modified"
         }
       ]
     },
@@ -78,4 +81,3 @@
     }
   ]
 }
-
