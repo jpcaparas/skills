@@ -121,6 +121,18 @@ Read `references/harness-composition.md` when changing the composition order or 
 3. Legacy generated folders should be deleted only when they contain a managed manifest. Otherwise they may be user-owned files with an unfortunate path name.
 4. A clean-looking config can still collide if old generated commands remain. Always scan final configs for `.claude/hooks/generated`, `.codex/hooks/generated`, and `.devin/hooks/generated`.
 5. Keep project policy in repo-owned scripts such as `./scripts/agent-stop-checks.sh`; hook adapters should translate protocol, not duplicate validation logic.
+6. Shared scripts that emit context must branch per harness for the stdout protocol. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops plain text; Claude Code accepts plain text on `SessionStart`. See `references/harness-composition.md` for the hook visibility matrix.
+
+## Hook Visibility Matrix
+
+Harness TUIs differ in whether hook activity is visible. Set expectations during scaffolding so users do not mistake silence for failure:
+
+| Harness | Renders hook runs in TUI | Verify hooks via |
+|---------|--------------------------|------------------|
+| Claude Code | Partially (errors, verbose mode) | `/hooks`, transcript |
+| Codex CLI | Yes ("Running SessionStart hook", hook context inline) | visible inline |
+| Devin CLI | No (silent even on success; `systemMessage` not rendered as of v2026.5.26-8) | `/hooks`, CLI logs, transcript JSON, ask the agent |
+| OpenCode | Plugin-defined | plugin logs |
 
 ## Progressive Maintainer Drift Check
 

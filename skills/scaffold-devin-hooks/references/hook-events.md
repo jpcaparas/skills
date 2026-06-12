@@ -45,6 +45,21 @@ Command hooks receive a single JSON object on stdin. They may print a JSON decis
 
 Documented decisions are `approve`, `block`, and `deny`. Plain logs belong on stderr so stdout stays valid JSON when the hook needs to control the outcome.
 
+Field-verified stricter contract (2026-06-12, v2026.5.26-8): Devin parses non-empty stdout strictly as Claude-format JSON. Plain text fails the effects evaluator and the output is silently dropped, with only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`. Generated scripts must emit empty stdout or one valid JSON object.
+
+To inject context from `SessionStart`, emit the Claude `hookSpecificOutput` shape:
+
+```json
+{
+  "hookSpecificOutput": {
+    "hookEventName": "SessionStart",
+    "additionalContext": "context text here"
+  }
+}
+```
+
+Devin injects `additionalContext` as a system message before the user's first prompt. Note that Devin renders no hook activity in its TUI; verify injection via `/hooks`, the CLI logs, or the transcript JSON under `~/.local/share/devin/cli/transcripts/`. See `references/gotchas.md` items 6a and 6b.
+
 ## Exit Codes
 
 | Code | Meaning |

@@ -68,6 +68,8 @@ handle_event() {
     # Devin-specific helpers come from hooks/lib/devin.sh.
     #
     # Keep stdout empty unless this hook intentionally sends JSON back to Devin.
+    # Devin strictly parses non-empty stdout as Claude-format JSON; plain text
+    # fails its effects evaluator and is silently dropped.
     # Plain logging should go to stderr.
     return 0
 }

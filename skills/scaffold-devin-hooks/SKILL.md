@@ -164,3 +164,5 @@ Allow these parts to stay project-specific:
 5. `Stop` hooks that block can loop unless they check `stop_hook_active`.
 6. Devin can read Claude hook config by default, but this scaffold intentionally writes only `.devin/hooks.v1.json`.
 7. Hook shells are non-interactive. Keep profile noise out of stdout because stdout is reserved for optional JSON decisions.
+8. Devin strictly parses non-empty stdout as Claude-format JSON. Plain text fails its effects evaluator and is silently dropped; emit empty stdout or one valid JSON object. `SessionStart` context injection must use `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`. See `references/gotchas.md` 6a.
+9. Devin renders no hook activity in its TUI, unlike Codex CLI. Silence is not failure: verify via `/hooks`, the CLI logs, or the session transcript. See `references/gotchas.md` 6b.

@@ -32,6 +32,20 @@ OpenCode remains different because its extension point is a TypeScript or JavaSc
 
 Those shell adapters then call repo-owned delegate scripts from the universal plan.
 
+## Per-Harness Stdout Protocols for Shared Context Scripts
+
+Shared scripts that emit session context (for example a repo-owned agent-session-context script) must branch on `AGENT_HOOK_HARNESS` because stdout contracts differ:
+
+- `claude`: plain text or Claude JSON is accepted on `SessionStart`.
+- `codex`: emit `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`.
+- `devin`: same `hookSpecificOutput` shape as codex. Devin strictly parses non-empty stdout as Claude-format JSON; plain text fails its effects evaluator and is silently dropped (only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`). Field-verified 2026-06-12 on v2026.5.26-8.
+
+A safe default fall-through is plain text, but never let `devin` reach it.
+
+## Hook Visibility Expectations
+
+Codex CLI renders hook execution and context inline. Devin CLI runs hooks silently and renders nothing, even on success; verify via `/hooks`, the CLI logs, or the transcript JSON under `~/.local/share/devin/cli/transcripts/`. Mention this during scaffolding so users do not interpret silence as a broken scaffold.
+
 ## Updating Component Behavior
 
 When an event name, matcher, output contract, or feature flag changes, update the dedicated skill first:

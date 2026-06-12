@@ -10,6 +10,9 @@
     ".devin/hooks.v1.json is the recommended project-level standalone hooks file.",
     "In .devin/hooks.v1.json, the hooks object is the entire file and is not nested under a hooks key.",
     "Command hooks receive JSON on stdin and may return JSON decisions on stdout.",
+    "Field-verified 2026-06-12 (v2026.5.26-8): Devin parses non-empty stdout strictly as Claude-format JSON. Plain text fails the effects evaluator and is silently dropped, with only a 'Failed to parse Claude hook output' warning in the CLI logs. Scripts must emit empty stdout or one valid JSON object.",
+    "SessionStart context injection uses the Claude shape: {\"hookSpecificOutput\": {\"hookEventName\": \"SessionStart\", \"additionalContext\": \"...\"}}.",
+    "Devin renders no hook activity in its TUI and does not display systemMessage as of v2026.5.26-8. Verify hooks via /hooks, the CLI logs, or the session transcript JSON.",
     "DEVIN_PROJECT_DIR is automatically set to the project root directory.",
     "Exit code 2 blocks or denies the action. Other non-zero exits are logged but do not block.",
     "Matchers are regexes over tool_name and are meaningful for PreToolUse, PostToolUse, and PermissionRequest.",
@@ -77,7 +80,7 @@
       "stdin_fields": ["source"],
       "matcher_kind": "none",
       "supports_tool_matcher": false,
-      "blocking_guidance": "Use for initialization, logging, or environment setup; block only if setup is mandatory."
+      "blocking_guidance": "Use for initialization, logging, or environment setup; block only if setup is mandatory. To inject context, emit hookSpecificOutput.additionalContext JSON; plain-text stdout is silently dropped."
     },
     {
       "name": "SessionEnd",

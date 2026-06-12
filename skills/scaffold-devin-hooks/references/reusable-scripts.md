@@ -25,6 +25,7 @@ Shared `hooks/<event>/script.sh` files should stay thin. They read the active ha
 - Make shared scripts callable by humans and CI: `bash <project>/scripts/agent-stop-checks.sh devin`.
 - Use adapter scripts only when the protocol output differs enough to justify them.
 - Send logs to stderr. Reserve stdout for hook decision JSON when the script intentionally controls Devin.
+- Never print plain text on stdout. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops anything else. Emit context with `{"hookSpecificOutput": {"hookEventName": "<Event>", "additionalContext": "..."}}` (the generated `hooks/lib/devin.sh` ships a `write_additional_context` helper).
 
 ## Plan Example
 

@@ -29,6 +29,17 @@ approve_action() {
     write_decision "approve" "$reason"
 }
 
+# Devin strictly parses non-empty hook stdout as Claude-format JSON; plain
+# text fails its effects evaluator and is silently dropped. Use this helper
+# to inject context (for example from SessionStart) instead of printing text.
+write_additional_context() {
+    local event_name="$1"
+    local message="$2"
+    require_jq
+    jq -n --arg event "$event_name" --arg message "$message" \
+        '{hookSpecificOutput: {hookEventName: $event, additionalContext: $message}}'
+}
+
 handle_project_command_failure() {
     local event_name="$1"
     local message="$2"

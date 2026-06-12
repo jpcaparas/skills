@@ -79,6 +79,12 @@ emit_session_context() {
             jq -n --arg message "$message" \
                 '{hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $message}}'
             ;;
+        devin)
+            # Devin CLI strictly parses hook stdout as Claude-format JSON;
+            # plain text fails its effects evaluator and the context is dropped.
+            jq -n --arg message "$message" \
+                '{systemMessage: "Loaded skills repository session context.", hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $message}}'
+            ;;
         claude)
             jq -n --arg message "$message" '{additionalContext: $message}'
             ;;
