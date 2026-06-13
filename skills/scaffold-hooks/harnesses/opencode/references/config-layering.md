@@ -1,6 +1,6 @@
 # Config Layering
 
-Verified against the official OpenCode config and plugin docs on 2026-05-21.
+Verified against the official OpenCode config and plugin docs on 2026-06-13.
 
 ## Config Precedence
 

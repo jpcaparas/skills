@@ -61,7 +61,7 @@ type PluginInput = {
 type OpenCodeEvent = {
   type: string
   properties?: {
-    info?: { id?: string }
+    info?: { id?: string; parentID?: string | null }
     sessionID?: string
   }
 }
@@ -88,6 +88,7 @@ const actionLabel = "{{ACTION_LABEL}}"
 const timeoutMs = 10 * 60 * 1000
 const outputTailLines = 160
 const sessionState = new Map<string, SessionState>()
+const childSessionIDs = new Set<string>()
 
 function resolveRepoRoot(input: PluginInput): string {
   const candidates = [
@@ -114,6 +115,36 @@ function stateFor(sessionID: string): SessionState {
   }
   sessionState.set(sessionID, nextState)
   return nextState
+}
+
+function sessionIDFromEvent(event: OpenCodeEvent): string | undefined {
+  return event.properties?.info?.id ?? event.properties?.sessionID
+}
+
+function rememberSessionCreation(event: OpenCodeEvent): string | undefined {
+  const sessionID = sessionIDFromEvent(event)
+  if (!sessionID) return undefined
+
+  const parentID = event.properties?.info?.parentID
+  if (typeof parentID === "string" && parentID.length > 0) {
+    childSessionIDs.add(sessionID)
+  } else {
+    childSessionIDs.delete(sessionID)
+  }
+
+  return sessionID
+}
+
+function forgetSession(event: OpenCodeEvent) {
+  const sessionID = sessionIDFromEvent(event)
+  if (!sessionID) return
+
+  childSessionIDs.delete(sessionID)
+  sessionState.delete(sessionID)
+}
+
+function isChildSession(sessionID: string): boolean {
+  return childSessionIDs.has(sessionID)
 }
 
 function textTail(text: string, lineCount: number): string {
@@ -300,16 +331,21 @@ export const ProjectLifecycleAction = async (input: PluginInput) => {
   return {
     event: async ({ event }: { event: OpenCodeEvent }) => {
       if (event.type === "session.created") {
-        const sessionID = event.properties?.info?.id
-        if (!sessionID) return
+        const sessionID = rememberSessionCreation(event)
+        if (!sessionID || isChildSession(sessionID)) return
 
         await injectSessionContext(client, sessionID, stateFor(sessionID), repoRoot)
         return
       }
 
+      if (event.type === "session.deleted") {
+        forgetSession(event)
+        return
+      }
+
       if (event.type === "session.idle") {
-        const sessionID = event.properties?.sessionID
-        if (!sessionID) return
+        const sessionID = sessionIDFromEvent(event)
+        if (!sessionID || isChildSession(sessionID)) return
 
         await runAction(client, sessionID, stateFor(sessionID), repoRoot)
       }

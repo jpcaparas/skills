@@ -33,7 +33,7 @@ What is the user asking for?
 | Audit a target repo | Run `scripts/audit_project.sh /path/to/project` |
 | Inspect project-vs-global OpenCode setup | Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json` |
 | Merge npm plugin names into an OpenCode config file | Run `bun scripts/merge_opencode_config.ts --config-file /path/to/opencode.json --plugins plugin-a plugin-b` |
-| Merge config-dir dependencies for local plugins | Run `bun scripts/merge_package_json.ts --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.15.10"}'` |
+| Merge config-dir dependencies for local plugins | Run `bun scripts/merge_package_json.ts --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.17.4"}'` |
 | Design reusable repo-owned scripts | Read `references/reusable-scripts.md` |
 | Generate the minimal lifecycle/action scaffold | Start from `templates/hook-plan.example.json`, then run `bash scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
 | Generate a broad hook-surface scaffold | Start from `templates/hook-plan.broad.example.json` and set `surface_catalog: true` |
@@ -51,10 +51,11 @@ What is the user asking for?
 6. Produce or update a concrete plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
 7. Prefer the minimal lifecycle/action plugin for lifecycle mirroring, post-action automation, validation, formatter repair, generated-file drift, dependency setup, or policy checks.
 8. Keep project behavior in the shared repo-owned `hooks/` tree or reusable scripts when it may move to Codex, Claude Code, Devin, Git hooks, GitHub Actions, or local shell usage. The plugin should remain the OpenCode adapter that orchestrates lifecycle, feedback, and repair prompts around those scripts.
-9. Scaffold reference stubs for every current official OpenCode hook surface only when the user asks for a broad scaffold or the plan sets `surface_catalog: true`.
-10. Generate only the enabled managed plugin modules into the active plugin load path so dormant stubs do not become runtime plugins by accident.
-11. Merge config plugin arrays and config-dir package dependencies deterministically, without deleting unrelated user-owned entries. Do not create config-dir package files when no runtime dependency is needed.
-12. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
+9. Lifecycle/action plugins must run only for root sessions. Cache child session IDs from `session.created` events with `info.parentID`, then skip their `session.created` context injection and `session.idle` action work.
+10. Scaffold reference stubs for every current official OpenCode hook surface only when the user asks for a broad scaffold or the plan sets `surface_catalog: true`.
+11. Generate only the enabled managed plugin modules into the active plugin load path so dormant stubs do not become runtime plugins by accident.
+12. Merge config plugin arrays and config-dir package dependencies deterministically, without deleting unrelated user-owned entries. Do not create config-dir package files when no runtime dependency is needed.
+13. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
 
 ## Config Layer First Heuristic
 
@@ -169,6 +170,7 @@ When the skill is invoked again against a project:
 - Show an `info` toast when meaningful background work starts, a `success` toast when it completes, and a `warning` or `error` toast when intervention is needed. Apply this to `session.idle`, `tool.execute.after`, `command.executed`, `file.edited`, `installation.updated`, `session.error`, and custom cross-event workflows when they do real work.
 - For automatic repair or follow-up, allow one `client.session.prompt()` without `noReply` on the first failure. Track `inFlight`, `repairPromptSent`, and `persistentFailureReported`; use `noReply: true` for persistent failure notices so the plugin cannot loop indefinitely.
 - Call `hooks/opencode-session-created/opencode.sh` and `hooks/opencode-session-idle/opencode.sh` by default instead of hard-coding build, test, lint, or policy commands in plugin bodies. Those shell adapters delegate to repo-owned scripts such as session-context and validation scripts.
+- Treat OpenCode child/subagent sessions as internal implementation detail for lifecycle mirroring. `session.created` exposes `info.parentID`; `session.idle` does not, so the generated lifecycle plugin must remember child IDs and skip both context and validation for them.
 - Resolve project script paths from OpenCode's active project/worktree/directory context. Do not assume a fixed path depth from `.opencode/plugins/`, especially for global plugin scopes or custom config directories.
 - Use `tool.execute.before` for prevention, `tool.execute.after` for observation, and `event` for cross-event coordination like `session.idle`.
 - Treat `experimental.session.compacting` as opt-in and experimental. Do not make core safety logic depend on it.
@@ -211,3 +213,4 @@ When the skill is invoked again against a project:
 7. `experimental.session.compacting` is real in the docs examples, but it is explicitly experimental.
 8. OpenCode startup issues often trace back to bad plugins or stale cache, so troubleshooting sometimes matters more than rewriting logic.
 9. Do not bury reusable validation or context logic inside managed `.opencode/plugins/*.ts` files. Put it in repo-owned scripts and let OpenCode plugins call those scripts as lifecycle adapters.
+10. OpenCode publishes normal session lifecycle events for child/subagent sessions. Root lifecycle hooks need an explicit `info.parentID` filter instead of assuming `session.created` and `session.idle` only describe the main thread.

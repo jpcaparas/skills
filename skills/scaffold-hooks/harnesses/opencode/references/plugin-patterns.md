@@ -10,8 +10,9 @@ Generate one live plugin file. Do not generate the full hook-surface catalog unl
 
 Reusable shape:
 
-- `session.created` injects no-reply context from a repo-owned session-context script.
-- `session.idle` or another meaningful event runs a repo-owned validation, formatter, dependency, generated-file, or policy script.
+- root `session.created` injects no-reply context from a repo-owned session-context script.
+- root `session.idle` or another meaningful event runs a repo-owned validation, formatter, dependency, generated-file, or policy script.
+- child or subagent sessions are skipped. Record child IDs when `session.created` includes `info.parentID`, because later `session.idle` events expose only the session ID.
 - background work shows TUI toasts for start, success, warning, and error states.
 - first failure sends one repair prompt without `noReply`.
 - persistent failure sends a final no-reply notice and stops prompting.
@@ -21,6 +22,10 @@ Keep these state flags:
 - `inFlight`
 - `repairPromptSent`
 - `persistentFailureReported`
+
+Keep this cross-event state:
+
+- `childSessionIDs`
 
 Use repo-owned scripts for project-specific behavior. The plugin should orchestrate lifecycle, visibility, and follow-up; the script should own validation, formatting, dependency checks, generated-file checks, or policy details.
 

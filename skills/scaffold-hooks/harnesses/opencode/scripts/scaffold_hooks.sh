@@ -96,13 +96,27 @@ render_handler_block() {
     case "$surface" in
         event)
             cat <<'EOF'
-    event: async ({ event }) => {
-      if (event.type === "session.idle") {
+    event: (() => {
+      const childSessionIDs = new Set()
+
+      return async ({ event }) => {
+        const sessionID = event.properties?.info?.id ?? event.properties?.sessionID
+        if (event.type === "session.created") {
+          const parentID = event.properties?.info?.parentID
+          if (sessionID && typeof parentID === "string" && parentID.length > 0) childSessionIDs.add(sessionID)
+          return
+        }
+        if (event.type === "session.deleted") {
+          if (sessionID) childSessionIDs.delete(sessionID)
+          return
+        }
+        if (event.type !== "session.idle" || !sessionID || childSessionIDs.has(sessionID)) return
+
         await showToast(client, "info", "Background hook work started")
         // TODO: coordinate post-turn validation, notifications, or idle-triggered follow-up here.
         await showToast(client, "success", "Background hook work completed")
       }
-    },
+    })(),
 EOF
             ;;
         tool)
@@ -176,13 +190,27 @@ stub_snippet_for_surface() {
     case "$surface" in
         event)
             cat <<'EOF'
-event: async ({ event }) => {
-  if (event.type === "session.idle") {
+event: (() => {
+  const childSessionIDs = new Set()
+
+  return async ({ event }) => {
+    const sessionID = event.properties?.info?.id ?? event.properties?.sessionID
+    if (event.type === "session.created") {
+      const parentID = event.properties?.info?.parentID
+      if (sessionID && typeof parentID === "string" && parentID.length > 0) childSessionIDs.add(sessionID)
+      return
+    }
+    if (event.type === "session.deleted") {
+      if (sessionID) childSessionIDs.delete(sessionID)
+      return
+    }
+    if (event.type !== "session.idle" || !sessionID || childSessionIDs.has(sessionID)) return
+
     await showToast(client, "info", "Background hook work started")
     // TODO: run post-turn validation or notifications here.
     await showToast(client, "success", "Background hook work completed")
   }
-},
+})(),
 EOF
             ;;
         tool)

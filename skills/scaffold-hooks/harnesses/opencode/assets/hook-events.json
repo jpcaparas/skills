@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-06-12",
+  "verified_on": "2026-06-13",
   "verified_with": {
     "official_docs": [
       "https://opencode.ai/docs/plugins/",
@@ -13,15 +13,30 @@
     ],
     "runtime_package": {
       "name": "@opencode-ai/plugin",
-      "version": "1.15.10",
+      "version": "1.17.4",
       "checked_via": "npm view @opencode-ai/plugin version"
+    },
+    "local_cli": {
+      "name": "opencode",
+      "version": "1.15.10",
+      "checked_via": "opencode --version"
+    },
+    "source_code": {
+      "repository": "https://github.com/sst/opencode",
+      "commit": "9ae4a5139fa4aa5c638c7903b486ad419ec4cce3",
+      "checked_paths": [
+        "packages/opencode/src/plugin/index.ts",
+        "packages/opencode/src/session/session.ts",
+        "packages/opencode/src/session/status.ts",
+        "packages/opencode/src/tool/task.ts"
+      ]
     }
   },
   "default_scope": "project",
   "default_deployment": "local-files",
   "default_module_format": "ts",
   "recommended_dependency_versions": {
-    "@opencode-ai/plugin": "^1.15.10"
+    "@opencode-ai/plugin": "^1.17.4"
   },
   "load_order": [
     "global-config",
@@ -44,7 +59,7 @@
       "category": "special",
       "kind": "catch-all",
       "description": "Observe all OpenCode events through one handler.",
-      "guidance": "Use this for session.idle or any workflow that coordinates multiple event types."
+      "guidance": "Use this for session.idle or any workflow that coordinates multiple event types. For lifecycle mirroring, cache child sessions from session.created info.parentID and skip them."
     },
     {
       "name": "tool",
@@ -166,7 +181,7 @@
       "category": "session",
       "kind": "named-event",
       "description": "React when a session is created.",
-      "guidance": "Use for bootstrap context or welcome-state logic."
+      "guidance": "Use for bootstrap context or welcome-state logic on root sessions. Child/subagent sessions include info.parentID and should be skipped for main-thread lifecycle adapters."
     },
     {
       "name": "session.compacted",
@@ -206,7 +221,7 @@
       "category": "session",
       "kind": "named-event",
       "description": "React when a session goes idle.",
-      "guidance": "The key post-turn validation trigger; usually coordinated through the catch-all event handler."
+      "guidance": "The key post-turn validation trigger; usually coordinated through the catch-all event handler. session.idle only carries sessionID, so reuse cached child-session state from session.created before running root lifecycle work."
     },
     {
       "name": "session.status",

@@ -141,6 +141,7 @@ When an event name, matcher, output contract, or feature flag changes, update th
 5. Keep project policy in repo-owned scripts such as `./scripts/agent-stop-checks.sh`; hook adapters should translate protocol, not duplicate validation logic.
 6. Copilot does not write adapters into the shared `hooks/` tree. Its generated events stay under `.github/copilot/hooks/generated/` because the Copilot cloud agent only reads files committed to the repository; keep shared policy in repo-owned `scripts/` that both layers call.
 7. Shared scripts that emit context must branch per harness for the stdout protocol. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops plain text; Claude Code accepts plain text on `SessionStart`. See `references/harness-composition.md` for details.
+8. OpenCode publishes normal session lifecycle events for child/subagent sessions. The OpenCode lifecycle plugin must cache child IDs from `session.created` events with `info.parentID` and skip context or stop-style work for those IDs.
 
 ## Hook Visibility Matrix
 

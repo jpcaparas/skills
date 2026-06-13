@@ -168,11 +168,12 @@ if ! jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
         ' "$MANIFEST_FILE" | while IFS=$'\t' read -r pattern file surfaces context_script action_script action_label notes; do
             if [ "$pattern" = "lifecycle-action" ]; then
                 if [ -n "$context_script" ]; then
-                    printf -- '- `session.created` injects no-reply context from `%s`.\n' "$context_script"
+                    printf -- '- Root `session.created` injects no-reply context from `%s`.\n' "$context_script"
                 fi
                 if [ -n "$action_script" ]; then
-                    printf -- '- `session.idle` runs `%s` for %s.\n' "$action_script" "$action_label"
+                    printf -- '- Root `session.idle` runs `%s` for %s.\n' "$action_script" "$action_label"
                 fi
+                printf -- '- Child/subagent sessions are skipped by tracking `session.created` events with `info.parentID`.\n'
                 printf -- '- Meaningful background work uses TUI toasts for start, success, warning, and error states.\n'
                 printf -- '- First failure gets one automatic repair prompt; persistent failure is reported with `noReply: true`.\n'
             else

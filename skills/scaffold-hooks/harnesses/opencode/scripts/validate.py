@@ -213,6 +213,19 @@ def validate_skill(skill_path: Path) -> dict:
     if (skill_path / "templates" / "plugin-module.js.tmpl").exists():
         errors.append("Do not ship a JavaScript plugin template; managed plugins must be TypeScript-only")
 
+    lifecycle_template = skill_path / "templates" / "lifecycle-action-plugin.ts.tmpl"
+    if lifecycle_template.exists():
+        lifecycle_content = lifecycle_template.read_text(encoding="utf-8")
+        for snippet in [
+            "parentID?: string | null",
+            "const childSessionIDs = new Set<string>()",
+            "rememberSessionCreation",
+            "isChildSession(sessionID)",
+            'event.type === "session.deleted"',
+        ]:
+            if snippet not in lifecycle_content:
+                errors.append(f"Lifecycle plugin template missing root-session guard snippet: {snippet}")
+
     validate_manifest(skill_path, errors, warnings)
 
     refs_dir = skill_path / "references"

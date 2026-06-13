@@ -1,6 +1,6 @@
 # Hook Surfaces
 
-Current OpenCode hook surface catalog, verified on 2026-05-21 against the official plugin, config, SDK, custom-tools, and troubleshooting docs.
+Current OpenCode hook surface catalog, verified on 2026-06-13 against the official plugin, config, SDK, custom-tools, troubleshooting docs, and upstream event source.
 
 Primary sources:
 
@@ -9,6 +9,7 @@ Primary sources:
 - `https://opencode.ai/docs/sdk`
 - `https://opencode.ai/docs/custom-tools`
 - `https://opencode.ai/docs/troubleshooting`
+- `https://github.com/sst/opencode` source at `9ae4a5139fa4aa5c638c7903b486ad419ec4cce3`
 
 Secondary source:
 
@@ -24,6 +25,8 @@ Use `assets/hook-events.json` as the deterministic scaffold input. Re-verify the
 - Local plugin files load from `.opencode/plugins/` or `~/.config/opencode/plugins/`.
 - npm plugin packages load through the `plugin` array in config.
 - All plugins from all sources run in sequence using the documented load order.
+- Child or subagent sessions are represented as sessions with `info.parentID` on `session.created`. Root-session lifecycle adapters should record those child IDs and skip their `session.created` and `session.idle` work.
+- `session.idle` carries the session ID but not the full session info, so the main-thread filter must learn child sessions from `session.created` before idle fires.
 
 ## Special Plugin Surfaces
 
@@ -117,6 +120,7 @@ These are not just named event strings, but they materially change how you scaff
 - Use `tool.execute.before` when the plugin needs to deny or rewrite a tool call.
 - Use `tool.execute.after` when the plugin only needs to observe what just happened.
 - Use `event` when the logic needs cross-event state, especially idle detection after edits.
+- When using `event` for lifecycle mirroring, run context injection and post-turn validation only for root sessions. Skip events whose session was created with `info.parentID`.
 - Use `client.session.prompt()` when the plugin needs to feed results back into a session.
 - Use `client.app.log()` for structured logs instead of `console.log()`.
 - Use `client.tui.showToast()` for visible start/pass/fail feedback when a hook performs meaningful background work.

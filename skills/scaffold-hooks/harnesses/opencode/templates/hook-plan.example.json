@@ -25,7 +25,7 @@
       "action_delegate_script": "scripts/validate-project.sh",
       "action_label": "Project validation",
       "service": "project-opencode-hooks",
-      "notes": "Inject reusable session context on session.created, then run the shared project validation script on session.idle with visible TUI feedback and one controlled repair prompt."
+      "notes": "Inject reusable session context on root session.created, then run the shared project validation script on root session.idle with visible TUI feedback and one controlled repair prompt. Child/subagent sessions are skipped."
     }
   ]
 }

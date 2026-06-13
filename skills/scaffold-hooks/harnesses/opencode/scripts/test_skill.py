@@ -509,6 +509,10 @@ const client = {{
 }}
 
 const plugin = await pluginFactory({{ client, directory: {json.dumps(minimal_project.as_posix())} }})
+await plugin.event({{ event: {{ type: "session.created", properties: {{ info: {{ id: "child-1", parentID: "s1" }} }} }} }})
+await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "child-1" }} }} }})
+if (prompts.length !== 0) throw new Error("child session must not receive lifecycle prompts")
+if (toasts.length !== 0) throw new Error("child session must not run idle lifecycle action")
 await plugin.event({{ event: {{ type: "session.created", properties: {{ info: {{ id: "s1" }} }} }} }})
 await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
 await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})

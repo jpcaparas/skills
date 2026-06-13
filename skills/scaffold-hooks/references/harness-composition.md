@@ -33,6 +33,8 @@ OpenCode remains different because its extension point is a TypeScript or JavaSc
 
 Those shell adapters then call repo-owned delegate scripts from the universal plan.
 
+OpenCode also emits normal session lifecycle events for child/subagent sessions. The generated lifecycle plugin treats `session.created` with `info.parentID` as a child session marker, caches that session ID, and skips both context injection and idle validation for those child IDs so stop-style behavior remains main-thread only.
+
 ## Per-Harness Stdout Protocols for Shared Context Scripts
 
 Shared scripts that emit session context (for example a repo-owned agent-session-context script) must branch on `AGENT_HOOK_HARNESS` because stdout contracts differ:
@@ -62,4 +64,3 @@ When an event name, matcher, output contract, or feature flag changes, update th
 - `harnesses/opencode/`
 
 Only update the universal orchestration after the harness component validates (`python3 harnesses/<name>/scripts/validate.py harnesses/<name>` and `python3 harnesses/<name>/scripts/test_skill.py harnesses/<name>`).
-

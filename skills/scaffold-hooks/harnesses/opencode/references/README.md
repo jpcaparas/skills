@@ -18,7 +18,8 @@ Use these reference files on demand. `SKILL.md` is the entry point and should st
 ## Source Priority
 
 1. Official OpenCode docs
-2. `assets/hook-events.json`
-3. Secondary article material
+2. Upstream OpenCode source for event payload shape
+3. `assets/hook-events.json`
+4. Secondary article material
 
 When the official docs and the article disagree, follow the official docs and update the local references.

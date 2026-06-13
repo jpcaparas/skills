@@ -47,3 +47,7 @@ Use `client.app.log()` for diagnostics and captured details. When background wor
 ## 12. Repair prompts need an exit condition
 
 If a hook asks OpenCode to repair a failure, send only one automatic repair prompt. Persistent failure should be reported with `noReply: true` so the plugin does not create an infinite follow-up loop.
+
+## 13. Subagent sessions look like normal session events
+
+OpenCode publishes `session.created` and `session.idle` for child/subagent sessions too. `session.created` includes `info.parentID`, but `session.idle` only includes the session ID. Lifecycle adapters that mirror SessionStart or Stop behavior should cache child session IDs from `session.created` and skip later idle work for those IDs.

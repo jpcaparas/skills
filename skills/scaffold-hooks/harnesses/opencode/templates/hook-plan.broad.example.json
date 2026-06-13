@@ -26,7 +26,7 @@
         "tool.execute.after",
         "event"
       ],
-      "notes": "Track edit tools, wait for session.idle, then run a repo-owned validation script and feed results back with visible TUI feedback."
+      "notes": "Track edit tools, wait for root session.idle, then run a repo-owned validation script and feed results back with visible TUI feedback. Child/subagent sessions should be skipped."
     },
     {
       "name": "shell-env",

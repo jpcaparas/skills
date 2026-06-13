@@ -1,6 +1,7 @@
 {
   "evals": [
     {
+      "id": 1,
       "name": "universal_four_harness_scaffold",
       "prompt": "Run /scaffold-hooks in this repo. Scaffold Claude Code, Codex, Devin CLI, and OpenCode hook configuration into one shared hooks/ directory without duplicating event behavior.",
       "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh behavior with claude/codex/devin adapters, keeps OpenCode as a thin .opencode/plugins adapter into hooks/opencode-* scripts, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
@@ -26,6 +27,7 @@
       ]
     },
     {
+      "id": 2,
       "name": "legacy_migration_no_collision",
       "prompt": "This repo already has .claude/hooks/generated and .codex/hooks/generated entries. Run /scaffold-hooks and make the configs follow the shared hooks/ pattern without collisions.",
       "expected_output": "The response treats the work as a migration, removes only managed legacy generated-root command entries, scaffolds replacement adapters under hooks/, leaves custom hooks alone, and reports verification that old generated-root commands no longer remain.",
@@ -46,6 +48,7 @@
       ]
     },
     {
+      "id": 3,
       "name": "single_harness_subset",
       "prompt": "Only scaffold Codex hooks for this repo. Do not touch Claude, Devin, or OpenCode.",
       "expected_output": "The response uses this skill with --harnesses codex so only the Codex adapter and config are written, leaving Claude, Devin, and OpenCode files untouched.",
@@ -62,6 +65,7 @@
       ]
     },
     {
+      "id": 4,
       "name": "project_specific_stop_check",
       "prompt": "Use /scaffold-hooks and make every harness call scripts/agent-stop-checks.sh at Stop without copying that validation logic into four hook files.",
       "expected_output": "The response writes a universal plan with Stop scripts entries for Claude, Codex, and Devin, keeps OpenCode as a lifecycle adapter to a repo-owned validation script, and leaves validation policy in scripts/agent-stop-checks.sh.",
