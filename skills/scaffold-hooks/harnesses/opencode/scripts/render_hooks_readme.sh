@@ -186,6 +186,8 @@ if ! jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
         printf -- '- OpenCode hooks are plugins loaded from the configured plugin directory.\n'
         printf -- '- This setup keeps only active plugin behavior and does not generate a full hook-surface catalog.\n'
         printf -- '- Lifecycle/action plugins resolve repo scripts from the active OpenCode project/worktree/directory context before falling back to the plugin path.\n'
+        printf -- '- The managed manifest records scaffold skill provenance, plan/template hashes, and managed file hashes for incremental refreshes.\n'
+        printf -- '- Re-running in additive mode refreshes unchanged managed plugin files and preserves files whose hash differs from the last scaffold.\n'
         printf -- '- `client.app.log()` is for diagnostics; `client.tui.showToast()` is the user-visible feedback path.\n'
         printf -- '- Config-dir dependencies and lockfiles are only needed when plugin code imports external packages.\n\n'
 
@@ -211,6 +213,8 @@ fi
     printf -- '- OpenCode hooks are implemented as plugins, not a separate hook config file.\n'
     printf -- '- Only the enabled managed plugin modules live in the active plugin directory.\n'
     printf -- '- Lifecycle/action plugins resolve repo scripts from the active OpenCode project/worktree/directory context before falling back to the plugin path.\n'
+    printf -- '- The managed manifest records scaffold skill provenance, plan/template hashes, and managed file hashes for incremental refreshes.\n'
+    printf -- '- Re-running in additive mode refreshes unchanged managed plugin files and preserves files whose hash differs from the last scaffold.\n'
     if jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
         printf -- '- The managed state directory keeps the full surface catalog as `.txt` stubs so dormant handlers do not load at runtime.\n'
     else

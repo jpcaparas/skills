@@ -52,7 +52,7 @@ Pass the answer as `--harnesses claude,codex,copilot,devin,opencode` (or a subse
 3. Verify the live official harness docs before making event-surface changes. Each harness component records its verified contract in `harnesses/<name>/assets/hook-events.json` and its workflow in `harnesses/<name>/PLAYBOOK.md`.
 4. Start from `templates/hook-plan.example.json` unless the project already has a clearer plan.
 5. Run `scripts/scaffold_all_hooks.sh` with `--dry-run`, then without `--dry-run`.
-6. Review `hooks/README.md`, the harness config files, and the selected adapters.
+6. Review `hooks/README.md`, `hooks/.state/scaffold-hooks/manifest.json`, the harness config files, and the selected adapters.
 7. Run the project's normal validation.
 
 ## Output Shape
@@ -69,6 +69,7 @@ hooks/
     devin.sh
   .state/
     scaffold-hooks/
+      manifest.json
     claude/
     codex/
     devin/
@@ -142,6 +143,7 @@ When an event name, matcher, output contract, or feature flag changes, update th
 6. Copilot does not write adapters into the shared `hooks/` tree. Its generated events stay under `.github/copilot/hooks/generated/` because the Copilot cloud agent only reads files committed to the repository; keep shared policy in repo-owned `scripts/` that both layers call.
 7. Shared scripts that emit context must branch per harness for the stdout protocol. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops plain text; Claude Code accepts plain text on `SessionStart`. See `references/harness-composition.md` for details.
 8. OpenCode publishes normal session lifecycle events for child/subagent sessions. The OpenCode lifecycle plugin must cache child IDs from `session.created` events with `info.parentID` and skip context or stop-style work for those IDs.
+9. Managed manifests record scaffold skill provenance, plan/template hashes, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
 
 ## Hook Visibility Matrix
 

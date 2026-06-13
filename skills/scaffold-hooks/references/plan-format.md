@@ -9,8 +9,21 @@ Start from `templates/hook-plan.example.json`.
 | `mode` | `additive` or `overhaul`; defaults to `additive` |
 | `hooks_root` | Shared root for shell event scripts and adapters; defaults to `hooks` |
 | `cleanup_legacy` | Remove old managed generated folders after config migration; defaults to `true` |
-| `harnesses` | Harnesses to scaffold: `claude`, `codex`, `devin`, `opencode` |
+| `harnesses` | Harnesses to scaffold: `claude`, `codex`, `copilot`, `devin`, `opencode` |
 | `plans` | Per-harness plan objects passed to the dedicated scaffolders |
+
+## Managed Manifest Provenance
+
+Every universal run writes `hooks/.state/scaffold-hooks/manifest.json`. It records:
+
+- `scaffold_hooks.skill_version`
+- `scaffold_hooks.source`
+- `scaffold_hooks.generator.sha256`
+- `scaffold_hooks.harness_manifest_sha256`
+- `scaffold_hooks.plan_sha256`
+- selected `mode`, `hooks_root`, `harnesses`, and `cleanup_legacy`
+
+Harnesses can add more granular provenance. OpenCode records `managed_file_hashes` and `preserved_file_hashes` so additive re-runs can apply template improvements to unchanged managed plugin files while preserving local edits.
 
 ## Per-Harness Plans
 
@@ -56,4 +69,3 @@ If a nested plan is missing, `scripts/scaffold_all_hooks.sh` falls back in this 
 2. The dedicated harness skill template
 
 This makes migrations practical without copying old generated files.
-

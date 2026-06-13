@@ -547,6 +547,87 @@ if (logs.length === 0) throw new Error("expected diagnostic app logs")
             )
             results["passed"] = False
 
+        results["integration_checks"]["total"] += 1
+        minimal_manifest_path = minimal_project / ".opencode" / "plugins" / ".managed" / "manifest.json"
+        minimal_manifest = load_json(minimal_manifest_path)
+        minimal_provenance = minimal_manifest.get("scaffold_hooks", {})
+        if (
+            minimal_provenance.get("schema_version") == 1
+            and minimal_provenance.get("harness") == "opencode"
+            and minimal_provenance.get("generator", {}).get("sha256")
+            and minimal_provenance.get("plan_sha256")
+            and minimal_manifest.get("managed_file_hashes", {}).get("opencode_hook_project_session_lifecycle.ts")
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("OpenCode manifest did not record provenance and managed file hashes")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        plugin_text = plugin_file.read_text(encoding="utf-8")
+        legacy_text = plugin_text.replace(
+            "const childSessionIDs = new Set<string>()",
+            "const legacyManagedLifecycle = true",
+        )
+        plugin_file.write_text(legacy_text, encoding="utf-8")
+        legacy_manifest = minimal_manifest
+        legacy_manifest.pop("managed_file_hashes", None)
+        legacy_manifest.pop("preserved_file_hashes", None)
+        minimal_manifest_path.write_text(json.dumps(legacy_manifest, indent=2) + "\n", encoding="utf-8")
+        legacy_refresh = run(
+            [
+                "bash",
+                str(skill_path / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(minimal_project),
+                "--plan",
+                str(temp_plan),
+                "--home",
+                str(home),
+            ],
+            cwd=skill_path,
+        )
+        refreshed_text = plugin_file.read_text(encoding="utf-8")
+        backup_files = list((minimal_project / ".opencode" / "plugins" / ".managed" / "backups").rglob(plugin_file.name))
+        if legacy_refresh.returncode == 0 and "childSessionIDs" in refreshed_text and backup_files:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "additive scaffold did not refresh legacy managed OpenCode plugin with backup: "
+                + (legacy_refresh.stderr.strip() or legacy_refresh.stdout.strip())
+            )
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        plugin_file.write_text(refreshed_text + "\n// local customization\n", encoding="utf-8")
+        preserve_rerun = run(
+            [
+                "bash",
+                str(skill_path / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(minimal_project),
+                "--plan",
+                str(temp_plan),
+                "--home",
+                str(home),
+            ],
+            cwd=skill_path,
+        )
+        preserved_manifest = load_json(minimal_manifest_path)
+        preserved_text = plugin_file.read_text(encoding="utf-8")
+        if (
+            preserve_rerun.returncode == 0
+            and "// local customization" in preserved_text
+            and preserved_manifest.get("preserved_file_hashes", {}).get(plugin_file.name)
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "additive scaffold did not preserve user-modified managed OpenCode plugin: "
+                + (preserve_rerun.stderr.strip() or preserve_rerun.stdout.strip())
+            )
+            results["passed"] = False
+
         broad_project = tmp / "broad-project"
         broad_project.mkdir()
         (broad_project / "package.json").write_text(

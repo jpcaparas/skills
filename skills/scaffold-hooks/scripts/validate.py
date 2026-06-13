@@ -167,6 +167,19 @@ def validate(skill_path: Path) -> dict:
         for warn in nested.get("warnings", []):
             warnings.append(f"[harnesses/{harness}] {warn}")
 
+    scaffold_script = skill_path / "scripts" / "scaffold_all_hooks.sh"
+    if scaffold_script.exists():
+        scaffold_content = scaffold_script.read_text(encoding="utf-8")
+        for snippet in [
+            "scaffold_hooks",
+            "skill_version",
+            "generator_sha256",
+            "plan_sha256",
+            "harness_manifest_sha256",
+        ]:
+            if snippet not in scaffold_content:
+                errors.append(f"scripts/scaffold_all_hooks.sh missing provenance snippet: {snippet}")
+
     harness_manifest = load_json(skill_path / "assets" / "harnesses.json", errors)
     if harness_manifest:
         names = {item.get("name") for item in harness_manifest.get("harnesses", [])}
@@ -207,4 +220,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

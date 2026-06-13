@@ -51,3 +51,7 @@ If a hook asks OpenCode to repair a failure, send only one automatic repair prom
 ## 13. Subagent sessions look like normal session events
 
 OpenCode publishes `session.created` and `session.idle` for child/subagent sessions too. `session.created` includes `info.parentID`, but `session.idle` only includes the session ID. Lifecycle adapters that mirror SessionStart or Stop behavior should cache child session IDs from `session.created` and skip later idle work for those IDs.
+
+## 14. Additive refresh needs provenance
+
+If a managed plugin file exists, additive mode should not blindly leave it stale or blindly overwrite it. Use `managed_file_hashes` to refresh unchanged generated files and `preserved_file_hashes` to avoid overwriting user-modified files. Legacy manifests without hashes can only be upgraded safely when the target file is listed as managed and still has the scaffold-managed header.

@@ -34,6 +34,46 @@ require_command() {
     fi
 }
 
+sha256_file() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        printf ''
+        return 0
+    fi
+    if command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$file" | awk '{print $1}'
+    elif command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$file" | awk '{print $1}'
+    elif command -v openssl >/dev/null 2>&1; then
+        openssl dgst -sha256 "$file" | awk '{print $NF}'
+    else
+        printf ''
+    fi
+}
+
+git_source_field() {
+    local field="$1"
+    case "$field" in
+        repository)
+            git -C "$SKILL_ROOT" config --get remote.origin.url 2>/dev/null || true
+            ;;
+        commit)
+            git -C "$SKILL_ROOT" rev-parse HEAD 2>/dev/null || true
+            ;;
+        dirty)
+            if git -C "$SKILL_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
+                if [ -n "$(git -C "$SKILL_ROOT" status --short -- . 2>/dev/null)" ]; then
+                    printf 'true'
+                else
+                    printf 'false'
+                fi
+            else
+                printf 'null'
+            fi
+            ;;
+    esac
+}
+
 json_string_array_from_csv() {
     local csv="$1"
     jq -nc --arg csv "$csv" '
@@ -343,23 +383,63 @@ write_universal_readme() {
                 done
         fi
         printf '\n## Maintenance\n\n'
+        printf 'The managed manifest at `hooks/.state/scaffold-hooks/manifest.json` records scaffold skill provenance, generator hashes, the selected plan hash, mode, and harness set.\n\n'
         printf 'Re-run `/scaffold-hooks` or `scripts/scaffold_all_hooks.sh` from the installed skill to refresh harness adapters. Keep project-specific policy in repo-owned scripts and call those scripts from the plan.\n'
     } > "$readme"
 }
 
 write_universal_manifest() {
     local state_dir="$PROJECT_ROOT/$HOOKS_ROOT/.state/scaffold-hooks"
+    local skill_version
+    local source_repository
+    local source_commit
+    local source_dirty
+    local generator_sha256
+    local harness_manifest_sha256
+    local plan_sha256
+
     mkdir -p "$state_dir"
+    skill_version="$(jq -r '.version // "unknown"' "$SKILL_ROOT/metadata.json" 2>/dev/null || printf 'unknown')"
+    source_repository="$(git_source_field repository)"
+    source_commit="$(git_source_field commit)"
+    source_dirty="$(git_source_field dirty)"
+    generator_sha256="$(sha256_file "$SCRIPT_DIR/scaffold_all_hooks.sh")"
+    harness_manifest_sha256="$(sha256_file "$SKILL_ROOT/assets/harnesses.json")"
+    plan_sha256="$(sha256_file "$PLAN_FILE")"
+
     jq -n \
         --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
         --arg mode "$MODE" \
         --arg hooks_root "$HOOKS_ROOT" \
+        --arg skill_version "$skill_version" \
+        --arg source_repository "$source_repository" \
+        --arg source_commit "$source_commit" \
+        --argjson source_dirty "$source_dirty" \
+        --arg generator_sha256 "$generator_sha256" \
+        --arg harness_manifest_sha256 "$harness_manifest_sha256" \
+        --arg plan_sha256 "$plan_sha256" \
         --argjson harnesses "$HARNESS_LIST_JSON" \
         --argjson cleanup_legacy "$CLEANUP_LEGACY" \
         --argjson legacy_roots "$LEGACY_ROOTS_JSON" \
         --slurpfile plan "$PLAN_FILE" \
         '{
             generated_at: $generated_at,
+            scaffold_hooks: {
+                schema_version: 1,
+                skill_name: "scaffold-hooks",
+                skill_version: $skill_version,
+                source: {
+                    repository: (if $source_repository == "" then null else $source_repository end),
+                    commit: (if $source_commit == "" then null else $source_commit end),
+                    dirty: $source_dirty
+                },
+                generator: {
+                    path: "scripts/scaffold_all_hooks.sh",
+                    sha256: (if $generator_sha256 == "" then null else $generator_sha256 end)
+                },
+                harness_manifest_sha256: (if $harness_manifest_sha256 == "" then null else $harness_manifest_sha256 end),
+                plan_sha256: (if $plan_sha256 == "" then null else $plan_sha256 end)
+            },
             mode: $mode,
             hooks_root: $hooks_root,
             harnesses: $harnesses,

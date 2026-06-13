@@ -226,6 +226,19 @@ def validate_skill(skill_path: Path) -> dict:
             if snippet not in lifecycle_content:
                 errors.append(f"Lifecycle plugin template missing root-session guard snippet: {snippet}")
 
+    scaffold_script = skill_path / "scripts" / "scaffold_hooks.sh"
+    if scaffold_script.exists():
+        scaffold_content = scaffold_script.read_text(encoding="utf-8")
+        for snippet in [
+            "managed_file_hashes",
+            "preserved_file_hashes",
+            "scaffold_hooks",
+            "previous_managed_hash",
+            "backup_existing_plugin",
+        ]:
+            if snippet not in scaffold_content:
+                errors.append(f"scaffold_hooks.sh missing incremental provenance snippet: {snippet}")
+
     validate_manifest(skill_path, errors, warnings)
 
     refs_dir = skill_path / "references"

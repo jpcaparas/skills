@@ -9,10 +9,11 @@ Use `additive` when the project already has useful OpenCode plugins or config th
 Additive mode:
 
 - creates missing managed plugin files
+- refreshes managed plugin files whose current hash still matches the prior manifest hash
+- preserves existing managed plugin files whose current hash differs from the prior manifest hash
 - refreshes `manifest.json`, `plan.snapshot.json`, optional hook-surface stubs, and `.opencode/plugins/README.md`
 - merges npm plugin entries into config without deleting unrelated entries
 - merges config-dir dependencies without deleting unrelated dependencies when dependencies are needed
-- leaves existing managed plugin file bodies alone if they already exist
 - leaves unrelated user plugins alone
 
 Choose additive when:
@@ -20,6 +21,13 @@ Choose additive when:
 - the repo already has custom plugins worth preserving
 - the user mainly wants a managed baseline plus missing patterns
 - the current managed layer is mostly correct and only needs extension
+
+For legacy manifests created before `managed_file_hashes`, additive mode can still refresh a file when both are true:
+
+- the previous manifest lists it in `managed_files`
+- the file still contains the scaffold-managed header
+
+The old file is copied under `.opencode/plugins/.managed/backups/` before refresh.
 
 ## Overhaul Mode
 
@@ -49,3 +57,17 @@ OpenCode loads plugins from all configured sources in sequence. That means:
 - a project-local scaffold does not own `~/.config/opencode/plugins/`
 
 Do not pretend one managed scaffold owns every OpenCode source layer unless the plan explicitly targets that scope.
+
+## Provenance Fields
+
+The managed manifest records:
+
+- `scaffold_hooks.skill_version`
+- `scaffold_hooks.source`
+- `scaffold_hooks.generator.sha256`
+- `scaffold_hooks.plan_sha256`
+- `scaffold_hooks.templates`
+- `managed_file_hashes`
+- `preserved_file_hashes`
+
+Use these fields to decide whether a re-run can apply template improvements incrementally. If a file is preserved because its hash changed, use `overhaul` only after reviewing the local edits.

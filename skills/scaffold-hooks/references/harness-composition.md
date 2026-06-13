@@ -35,6 +35,8 @@ Those shell adapters then call repo-owned delegate scripts from the universal pl
 
 OpenCode also emits normal session lifecycle events for child/subagent sessions. The generated lifecycle plugin treats `session.created` with `info.parentID` as a child session marker, caches that session ID, and skips both context injection and idle validation for those child IDs so stop-style behavior remains main-thread only.
 
+The OpenCode managed manifest stores scaffold provenance, plan/template hashes, and file hashes. Additive re-runs refresh unchanged managed plugin files and preserve files whose hash no longer matches the last scaffold, which allows template improvements to land without removing project-owned scripts or unrelated plugins.
+
 ## Per-Harness Stdout Protocols for Shared Context Scripts
 
 Shared scripts that emit session context (for example a repo-owned agent-session-context script) must branch on `AGENT_HOOK_HARNESS` because stdout contracts differ:

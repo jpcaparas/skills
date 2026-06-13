@@ -8,7 +8,10 @@ Project-local default for lifecycle/action work:
 .opencode/
 └── plugins/
     ├── README.md
-    └── opencode_hook_project_session_lifecycle.ts
+    ├── opencode_hook_project_session_lifecycle.ts
+    └── .managed/
+        ├── manifest.json         # Provenance, plan/template hashes, and file hashes
+        └── plan.snapshot.json    # Normalized plan used for generation
 
 hooks/
 ├── opencode-session-created/
@@ -37,11 +40,12 @@ opencode.json                     # Optional, only when npm plugin entries are p
     └── .managed/
         ├── manifest.json         # Snapshot of the scaffold inputs used
         ├── plan.snapshot.json    # Normalized plan used for generation
-        └── surfaces/
+        ├── surfaces/
             ├── command.executed.ts.txt
             ├── file.edited.ts.txt
             ├── ...
             └── experimental.session.compacting.ts.txt
+        └── backups/              # Created only when refreshing legacy managed files
 ```
 
 Global scope uses the same shape under `~/.config/opencode/`.
@@ -55,6 +59,7 @@ Global scope uses the same shape under `~/.config/opencode/`.
 - config and dependency merges stay separate from plugin-file generation
 - the README gives the target project a stable event and plugin map
 - the active load path contains TypeScript plugin modules only; this scaffold rewrites any `.js` filename in a plan to `.ts`
+- the managed manifest records scaffold provenance, plan/template hashes, and managed file hashes so later additive re-runs can refresh unchanged generated files without overwriting user edits
 
 ## Plan File Shape
 

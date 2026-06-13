@@ -55,7 +55,8 @@ What is the user asking for?
 10. Scaffold reference stubs for every current official OpenCode hook surface only when the user asks for a broad scaffold or the plan sets `surface_catalog: true`.
 11. Generate only the enabled managed plugin modules into the active plugin load path so dormant stubs do not become runtime plugins by accident.
 12. Merge config plugin arrays and config-dir package dependencies deterministically, without deleting unrelated user-owned entries. Do not create config-dir package files when no runtime dependency is needed.
-13. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
+13. Snapshot scaffold provenance and managed file hashes in `.opencode/plugins/.managed/manifest.json` so later additive runs can refresh unchanged managed plugins and preserve user-modified files.
+14. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
 
 ## Config Layer First Heuristic
 
@@ -153,7 +154,8 @@ When the skill is invoked again against a project:
 - Preserve unrelated `plugin` array entries in `opencode.json` or `opencode.jsonc`.
 - Preserve unrelated config-dir dependencies in `.opencode/package.json`.
 - Treat previously managed plugin files listed in the managed manifest as replaceable in `overhaul` mode.
-- Treat previously managed files as append-only in `additive` mode unless the user explicitly asks for a reset.
+- In `additive` mode, refresh previously managed plugin files when their current hash matches the prior `managed_file_hashes` entry. Preserve files whose hash differs and record them under `preserved_file_hashes`.
+- For legacy managed manifests that predate file hashes, refresh files that are listed as managed and still contain the scaffold-managed header, backing up the previous file under `.opencode/plugins/.managed/backups/`.
 - If the official docs add or remove hook surfaces, update the manifest inputs first.
 
 ## Scaffold Rules
@@ -175,6 +177,7 @@ When the skill is invoked again against a project:
 - Use `tool.execute.before` for prevention, `tool.execute.after` for observation, and `event` for cross-event coordination like `session.idle`.
 - Treat `experimental.session.compacting` as opt-in and experimental. Do not make core safety logic depend on it.
 - Never assume local helper `.js` or `.ts` files under the plugin directory are inert. Anything with a runtime module extension may load as a plugin, so this scaffold writes only enabled `.ts` plugin modules into the active plugin directory.
+- Record `scaffold_hooks` provenance and file hashes in the managed manifest. This is the contract for incremental upgrades when the generated templates improve.
 
 ## Reading Guide
 
@@ -214,3 +217,4 @@ When the skill is invoked again against a project:
 8. OpenCode startup issues often trace back to bad plugins or stale cache, so troubleshooting sometimes matters more than rewriting logic.
 9. Do not bury reusable validation or context logic inside managed `.opencode/plugins/*.ts` files. Put it in repo-owned scripts and let OpenCode plugins call those scripts as lifecycle adapters.
 10. OpenCode publishes normal session lifecycle events for child/subagent sessions. Root lifecycle hooks need an explicit `info.parentID` filter instead of assuming `session.created` and `session.idle` only describe the main thread.
+11. Additive re-runs need hashes. Without `managed_file_hashes`, the scaffold can only safely upgrade legacy files that are both listed in the manifest and still carry the managed header.

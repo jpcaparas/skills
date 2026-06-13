@@ -216,6 +216,21 @@ def test_skill(skill_path: Path) -> dict:
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
+        universal_manifest = load_json(project / "hooks" / ".state" / "scaffold-hooks" / "manifest.json")
+        provenance = universal_manifest.get("scaffold_hooks", {})
+        if (
+            provenance.get("schema_version") == 1
+            and provenance.get("skill_name") == "scaffold-hooks"
+            and provenance.get("skill_version")
+            and provenance.get("generator", {}).get("sha256")
+            and provenance.get("plan_sha256")
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Universal manifest did not record scaffold provenance and plan/generator hashes")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
         if not text_contains_legacy(project):
             results["integration_checks"]["passed"] += 1
         else:

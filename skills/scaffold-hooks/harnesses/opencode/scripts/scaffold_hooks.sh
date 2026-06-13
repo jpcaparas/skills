@@ -22,6 +22,60 @@ require_command() {
     fi
 }
 
+sha256_file() {
+    local file="$1"
+    if [ ! -f "$file" ]; then
+        printf ''
+        return 0
+    fi
+    if command -v shasum >/dev/null 2>&1; then
+        shasum -a 256 "$file" | awk '{print $1}'
+    elif command -v sha256sum >/dev/null 2>&1; then
+        sha256sum "$file" | awk '{print $1}'
+    elif command -v openssl >/dev/null 2>&1; then
+        openssl dgst -sha256 "$file" | awk '{print $NF}'
+    else
+        printf ''
+    fi
+}
+
+git_source_field() {
+    local root="$1"
+    local field="$2"
+    case "$field" in
+        repository)
+            git -C "$root" config --get remote.origin.url 2>/dev/null || true
+            ;;
+        commit)
+            git -C "$root" rev-parse HEAD 2>/dev/null || true
+            ;;
+        dirty)
+            if git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
+                if [ -n "$(git -C "$root" status --short -- . 2>/dev/null)" ]; then
+                    printf 'true'
+                else
+                    printf 'false'
+                fi
+            else
+                printf 'null'
+            fi
+            ;;
+    esac
+}
+
+json_object_from_hash_lines() {
+    local file="$1"
+    if [ ! -s "$file" ]; then
+        printf '{}'
+        return 0
+    fi
+    jq -s '
+        map(select((.filename // "") != "" and (.sha256 // "") != ""))
+        | map({key: .filename, value: .sha256})
+        | from_entries
+    ' "$file"
+}
+
 resolve_target_path() {
     local value="$1"
     local project_root="$2"
@@ -41,6 +95,34 @@ normalize_filename() {
         *.js|*.mjs|*.cjs|*.jsx|*.tsx) printf '%s.ts\n' "${filename%.*}" ;;
         *) printf '%s.ts\n' "$filename" ;;
     esac
+}
+
+previous_manifest_has_file() {
+    local filename="$1"
+    [ -f "$MANIFEST_TARGET_FILE" ] || return 1
+    jq -e --arg filename "$filename" '(.managed_files // []) | index($filename) != null' "$MANIFEST_TARGET_FILE" >/dev/null 2>&1
+}
+
+previous_manifest_hash() {
+    local filename="$1"
+    local field="$2"
+    [ -f "$MANIFEST_TARGET_FILE" ] || return 0
+    jq -r --arg filename "$filename" --arg field "$field" '.[$field][$filename] // empty' "$MANIFEST_TARGET_FILE" 2>/dev/null || true
+}
+
+has_managed_header() {
+    local file="$1"
+    [ -f "$file" ] || return 1
+    grep -q "Managed by scaffold-hooks" "$file"
+}
+
+backup_existing_plugin() {
+    local filename="$1"
+    local target_path="$2"
+    [ -f "$target_path" ] || return 0
+    local backup_dir="$MANAGED_STATE_ABS/backups/$(date -u +%Y%m%d%H%M%S)"
+    mkdir -p "$backup_dir"
+    cp "$target_path" "$backup_dir/$filename"
 }
 
 write_opencode_event_scripts() {
@@ -305,6 +387,7 @@ require_command bun
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
+UNIVERSAL_SKILL_ROOT="$(cd "$SKILL_ROOT/../.." && pwd -P)"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
 TS_TEMPLATE="$SKILL_ROOT/templates/plugin-module.ts.tmpl"
 LIFECYCLE_TEMPLATE="$SKILL_ROOT/templates/lifecycle-action-plugin.ts.tmpl"
@@ -548,8 +631,10 @@ fi
 
 TEMP_MANAGED_FILES="$(mktemp)"
 TEMP_ENABLED_PLUGINS="$(mktemp)"
+TEMP_MANAGED_HASHES="$(mktemp)"
+TEMP_PRESERVED_HASHES="$(mktemp)"
 cleanup() {
-    rm -f "$TEMP_MANAGED_FILES" "$TEMP_ENABLED_PLUGINS"
+    rm -f "$TEMP_MANAGED_FILES" "$TEMP_ENABLED_PLUGINS" "$TEMP_MANAGED_HASHES" "$TEMP_PRESERVED_HASHES"
 }
 trap cleanup EXIT
 
@@ -577,9 +662,37 @@ while IFS= read -r row; do
     fi
 
     if [ "$MODE" = "additive" ] && [ -f "$target_path" ]; then
-        printf '%s\n' "$filename" >> "$TEMP_MANAGED_FILES"
-        printf '%s\n' "$(printf '%s' "$row" | jq -c --arg filename "$filename" '. + {filename: $filename}')" >> "$TEMP_ENABLED_PLUGINS"
-        continue
+        current_hash="$(sha256_file "$target_path")"
+        previous_managed_hash="$(previous_manifest_hash "$filename" "managed_file_hashes")"
+        previous_preserved_hash="$(previous_manifest_hash "$filename" "preserved_file_hashes")"
+
+        if [ -n "$previous_preserved_hash" ]; then
+            printf '%s\n' "$filename" >> "$TEMP_MANAGED_FILES"
+            jq -nc --arg filename "$filename" --arg sha256 "$current_hash" \
+                '{filename: $filename, sha256: $sha256}' >> "$TEMP_PRESERVED_HASHES"
+            printf '%s\n' "$(printf '%s' "$row" | jq -c --arg filename "$filename" '. + {filename: $filename, preserved: true}')" >> "$TEMP_ENABLED_PLUGINS"
+            continue
+        fi
+
+        if [ -n "$previous_managed_hash" ] && [ "$current_hash" != "$previous_managed_hash" ]; then
+            printf '%s\n' "$filename" >> "$TEMP_MANAGED_FILES"
+            jq -nc --arg filename "$filename" --arg sha256 "$current_hash" \
+                '{filename: $filename, sha256: $sha256}' >> "$TEMP_PRESERVED_HASHES"
+            printf '%s\n' "$(printf '%s' "$row" | jq -c --arg filename "$filename" '. + {filename: $filename, preserved: true}')" >> "$TEMP_ENABLED_PLUGINS"
+            continue
+        fi
+
+        if [ -z "$previous_managed_hash" ]; then
+            if previous_manifest_has_file "$filename" && has_managed_header "$target_path"; then
+                backup_existing_plugin "$filename" "$target_path"
+            else
+                printf '%s\n' "$filename" >> "$TEMP_MANAGED_FILES"
+                jq -nc --arg filename "$filename" --arg sha256 "$current_hash" \
+                    '{filename: $filename, sha256: $sha256}' >> "$TEMP_PRESERVED_HASHES"
+                printf '%s\n' "$(printf '%s' "$row" | jq -c --arg filename "$filename" '. + {filename: $filename, preserved: true}')" >> "$TEMP_ENABLED_PLUGINS"
+                continue
+            fi
+        fi
     fi
 
     handlers_file="$(mktemp)"
@@ -621,6 +734,8 @@ while IFS= read -r row; do
     rm -f "$handlers_file" "$imports_file"
 
     printf '%s\n' "$filename" >> "$TEMP_MANAGED_FILES"
+    jq -nc --arg filename "$filename" --arg sha256 "$(sha256_file "$target_path")" \
+        '{filename: $filename, sha256: $sha256}' >> "$TEMP_MANAGED_HASHES"
     printf '%s\n' "$(printf '%s' "$row" | jq -c --arg filename "$filename" '. + {filename: $filename}')" >> "$TEMP_ENABLED_PLUGINS"
 done < <(jq -c '.enabled_plugins[]? // empty' "$PLAN_FILE")
 
@@ -639,12 +754,33 @@ fi
 
 jq '.' "$PLAN_FILE" > "$PLAN_SNAPSHOT_FILE"
 
+SKILL_VERSION="$(jq -r '.version // "unknown"' "$UNIVERSAL_SKILL_ROOT/metadata.json" 2>/dev/null || printf 'unknown')"
+SOURCE_REPOSITORY="$(git_source_field "$UNIVERSAL_SKILL_ROOT" repository)"
+SOURCE_COMMIT="$(git_source_field "$UNIVERSAL_SKILL_ROOT" commit)"
+SOURCE_DIRTY="$(git_source_field "$UNIVERSAL_SKILL_ROOT" dirty)"
+PLAN_SHA256="$(sha256_file "$PLAN_FILE")"
+GENERATOR_SHA256="$(sha256_file "$SCRIPT_DIR/scaffold_hooks.sh")"
+TEMPLATE_SHA256="$(sha256_file "$LIFECYCLE_TEMPLATE")"
+PLUGIN_TEMPLATE_SHA256="$(sha256_file "$TS_TEMPLATE")"
+EVENT_MANIFEST_SHA256="$(sha256_file "$MANIFEST_SOURCE")"
+MANAGED_FILE_HASHES_JSON="$(json_object_from_hash_lines "$TEMP_MANAGED_HASHES")"
+PRESERVED_FILE_HASHES_JSON="$(json_object_from_hash_lines "$TEMP_PRESERVED_HASHES")"
+
 jq -n \
     --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg scope "$SCOPE" \
     --arg deployment "$DEPLOYMENT" \
     --arg mode "$MODE" \
     --arg module_format "$MODULE_FORMAT" \
+    --arg skill_version "$SKILL_VERSION" \
+    --arg source_repository "$SOURCE_REPOSITORY" \
+    --arg source_commit "$SOURCE_COMMIT" \
+    --argjson source_dirty "$SOURCE_DIRTY" \
+    --arg plan_sha256 "$PLAN_SHA256" \
+    --arg generator_sha256 "$GENERATOR_SHA256" \
+    --arg lifecycle_template_sha256 "$TEMPLATE_SHA256" \
+    --arg plugin_template_sha256 "$PLUGIN_TEMPLATE_SHA256" \
+    --arg event_manifest_sha256 "$EVENT_MANIFEST_SHA256" \
     --argjson surface_catalog "$SURFACE_CATALOG" \
     --arg plugin_root "$PLUGIN_ROOT_VALUE" \
     --arg hooks_root "$HOOKS_ROOT_VALUE" \
@@ -655,9 +791,32 @@ jq -n \
     --argjson setup_status "$SETUP_STATUS_JSON" \
     --argjson enabled_plugins "$(jq -s '.' "$TEMP_ENABLED_PLUGINS")" \
     --argjson managed_files "$(jq -R . < "$TEMP_MANAGED_FILES" | jq -s '.')" \
+    --argjson managed_file_hashes "$MANAGED_FILE_HASHES_JSON" \
+    --argjson preserved_file_hashes "$PRESERVED_FILE_HASHES_JSON" \
     --slurpfile source "$MANIFEST_SOURCE" '
     $source[0] + {
         generated_at: $generated_at,
+        scaffold_hooks: {
+            schema_version: 1,
+            skill_name: "scaffold-hooks",
+            harness: "opencode",
+            skill_version: $skill_version,
+            source: {
+                repository: (if $source_repository == "" then null else $source_repository end),
+                commit: (if $source_commit == "" then null else $source_commit end),
+                dirty: $source_dirty
+            },
+            generator: {
+                path: "harnesses/opencode/scripts/scaffold_hooks.sh",
+                sha256: (if $generator_sha256 == "" then null else $generator_sha256 end)
+            },
+            plan_sha256: (if $plan_sha256 == "" then null else $plan_sha256 end),
+            event_manifest_sha256: (if $event_manifest_sha256 == "" then null else $event_manifest_sha256 end),
+            templates: {
+                "lifecycle-action-plugin.ts.tmpl": (if $lifecycle_template_sha256 == "" then null else $lifecycle_template_sha256 end),
+                "plugin-module.ts.tmpl": (if $plugin_template_sha256 == "" then null else $plugin_template_sha256 end)
+            }
+        },
         scope: $scope,
         deployment: $deployment,
         mode: $mode,
@@ -671,6 +830,8 @@ jq -n \
         package_dependencies: $package_dependencies,
         enabled_plugins: $enabled_plugins,
         managed_files: $managed_files,
+        managed_file_hashes: $managed_file_hashes,
+        preserved_file_hashes: $preserved_file_hashes,
         setup_status: $setup_status
     }
     ' > "$MANIFEST_TARGET_FILE"
