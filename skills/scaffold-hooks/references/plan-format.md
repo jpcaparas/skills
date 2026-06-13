@@ -12,6 +12,16 @@ Start from `templates/hook-plan.example.json`.
 | `harnesses` | Harnesses to scaffold: `claude`, `codex`, `copilot`, `devin`, `opencode` |
 | `plans` | Per-harness plan objects passed to the dedicated scaffolders |
 
+## Harness Selection
+
+When `scripts/scaffold_all_hooks.sh` runs without `--harnesses`, selection is conservative:
+
+1. A custom universal plan's `harnesses` list wins when present.
+2. With the default plan, existing hook surfaces or managed scaffold state in the target repo define the refresh set.
+3. The default all-supported set is used only when no supported hook surface is detected.
+
+Use `--harnesses` when intentionally adding harnesses. A bare re-run on a repo with existing hooks must not expand to new harnesses.
+
 ## Managed Manifest Provenance
 
 Every universal run writes `hooks/.state/scaffold-hooks/manifest.json`. It records:
@@ -21,7 +31,7 @@ Every universal run writes `hooks/.state/scaffold-hooks/manifest.json`. It recor
 - `scaffold_hooks.generator.sha256`
 - `scaffold_hooks.harness_manifest_sha256`
 - `scaffold_hooks.plan_sha256`
-- selected `mode`, `hooks_root`, `harnesses`, and `cleanup_legacy`
+- selected `mode`, `hooks_root`, `harnesses`, detected harnesses, harness selection source, and `cleanup_legacy`
 
 Harnesses can add more granular provenance. OpenCode records `managed_file_hashes` and `preserved_file_hashes` so additive re-runs can apply template improvements to unchanged managed plugin files while preserving local edits.
 

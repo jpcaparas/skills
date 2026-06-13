@@ -1,6 +1,6 @@
 ---
 name: scaffold-hooks
-description: "Universal /scaffold-hooks scaffolder for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode hooks — together or individually. Audits a project, asks which harnesses to target (default all), and wires `.claude`, `.codex`, `.github`, `.devin`, and `.opencode` hook configs into repo-owned scaffolding around one shared `hooks/` ports-and-adapters tree. Do NOT use for Git hooks or Husky."
+description: "Universal /scaffold-hooks scaffolder for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode hooks — together or individually. Audits a project, detects existing hook surfaces, refreshes only those harnesses by default, and wires selected `.claude`, `.codex`, `.github`, `.devin`, and `.opencode` configs into repo-owned `hooks/` scaffolding. Do NOT use for Git hooks or Husky."
 ---
 
 # Universal Agent Hook Scaffold
@@ -10,13 +10,23 @@ Scaffold or migrate agent lifecycle hooks so every selected harness points at re
 ## Decision Tree
 
 1. If the user says `/scaffold-hooks`, hooks, lifecycle hooks, hook migration, or names any of Claude Code, Codex, GitHub Copilot, Devin CLI, or OpenCode hooks, use this skill.
-2. Ask which harnesses to scaffold unless the user already said so. Default to **all supported harnesses** (`claude`, `codex`, `copilot`, `devin`, `opencode`). A single-harness request is just `--harnesses <name>`.
-3. If existing configs point at `.claude/hooks/generated`, `.codex/hooks/generated`, or `.devin/hooks/generated`, treat the work as a migration: strip those managed command entries, scaffold `hooks/`, and remove only legacy managed folders that contain a manifest.
-4. If the project has custom hooks outside managed roots, preserve them unless the user explicitly asks for removal.
+2. If the user names harnesses, pass exactly those harnesses with `--harnesses <list>`. A single-harness request is just `--harnesses <name>`.
+3. If the user gives no target path, use the current workspace or repository root as the target project.
+4. If the user gives no harness preference, inspect the target project. When any supported hook surface or managed scaffold state exists, run the universal script without `--harnesses` so it refreshes exactly the detected harnesses. Do not add new harnesses unless the user explicitly asks.
+5. If no supported hook surface exists, ask which harnesses to scaffold. Default to all supported harnesses (`claude`, `codex`, `copilot`, `devin`, `opencode`) for a new scaffold.
+6. If existing configs point at `.claude/hooks/generated`, `.codex/hooks/generated`, or `.devin/hooks/generated`, treat the work as a migration: strip those managed command entries, scaffold `hooks/`, and remove only legacy managed folders that contain a manifest.
+7. If the project has custom hooks outside managed roots, preserve them unless the user explicitly asks for removal.
 
 ## Harness Selection
 
-Before scaffolding, confirm the harness set with the user (multi-select, default all):
+Selection order is deterministic:
+
+1. Explicit `--harnesses` from the user.
+2. A custom universal plan's `harnesses` list, when present.
+3. Detected existing hook surfaces or managed scaffold state in the target repo.
+4. The default all-supported set only when none of the above exists.
+
+Detected surfaces include current managed manifests, legacy generated manifests, shared adapters under `hooks/`, and harness config files that already contain hook entries. If any harness is detected, do not expand to other harnesses without explicit user direction.
 
 - `claude` — Claude Code, `.claude/settings.json`
 - `codex` — Codex CLI, `.codex/hooks.json` (requires the hooks feature flag; see `harnesses/codex/references/feature-flag.md`)
@@ -24,13 +34,13 @@ Before scaffolding, confirm the harness set with the user (multi-select, default
 - `devin` — Devin CLI, `.devin/hooks.v1.json`
 - `opencode` — OpenCode, `.opencode/plugins/*.ts`
 
-Pass the answer as `--harnesses claude,codex,copilot,devin,opencode` (or a subset). When the user gives no preference, scaffold all supported harnesses.
+Pass explicit additions as `--harnesses claude,codex,copilot,devin,opencode` (or a subset). A bare run on a repo that already has hooks is a refresh, not an expansion.
 
 ## Quick Reference
 
 | Task | Command |
 | --- | --- |
-| Scaffold all harnesses with the default shared plan | `scripts/scaffold_all_hooks.sh --project /path/to/project` |
+| Refresh detected existing harnesses, or scaffold all in a clean repo | `scripts/scaffold_all_hooks.sh --project /path/to/project` |
 | Preview without writes | `scripts/scaffold_all_hooks.sh --project /path/to/project --dry-run` |
 | Use a project-specific universal plan | `scripts/scaffold_all_hooks.sh --project /path/to/project --plan /path/to/scaffold-hooks.json` |
 | Scaffold only selected harnesses | `scripts/scaffold_all_hooks.sh --project /path/to/project --harnesses claude,codex` |
@@ -41,14 +51,14 @@ Pass the answer as `--harnesses claude,codex,copilot,devin,opencode` (or a subse
 
 ## Standard Workflow
 
-1. Confirm the harness set with the user (default all supported harnesses).
-2. Inspect the target project first:
+1. Inspect the target project first:
    - existing `.claude/settings*.json`
    - `.codex/hooks.json` and `.codex/config.toml`
    - `.devin/hooks.v1.json` and `.devin/config*.json`
    - `.opencode/plugins/`, `opencode.json`, and `.opencode/package.json`
    - `.github/hooks/copilot-hooks.json` and `.github/copilot/hooks/generated/`
    - existing `hooks/` tree and repo-owned validation scripts under `scripts/`
+2. Confirm the harness set only when creating a new scaffold or adding harnesses. For a bare invocation on a repo with existing hook surfaces, refresh the detected set only.
 3. Verify the live official harness docs before making event-surface changes. Each harness component records its verified contract in `harnesses/<name>/assets/hook-events.json` and its workflow in `harnesses/<name>/PLAYBOOK.md`.
 4. Start from `templates/hook-plan.example.json` unless the project already has a clearer plan.
 5. Run `scripts/scaffold_all_hooks.sh` with `--dry-run`, then without `--dry-run`.
@@ -104,7 +114,7 @@ Use `templates/hook-plan.example.json` as the source of truth for the universal 
 - `mode`: `additive` or `overhaul`
 - `hooks_root`: normally `hooks`
 - `cleanup_legacy`: remove old managed generated folders only when they contain a manifest
-- `harnesses`: subset of `claude`, `codex`, `copilot`, `devin`, `opencode`
+- `harnesses`: subset of `claude`, `codex`, `copilot`, `devin`, `opencode`; use this only when intentionally choosing or expanding the harness set
 - `plans`: per-harness plan objects passed to the harness components
 
 Read `references/plan-format.md` before adding project-specific scripts or commands.
@@ -143,7 +153,8 @@ When an event name, matcher, output contract, or feature flag changes, update th
 6. Copilot does not write adapters into the shared `hooks/` tree. Its generated events stay under `.github/copilot/hooks/generated/` because the Copilot cloud agent only reads files committed to the repository; keep shared policy in repo-owned `scripts/` that both layers call.
 7. Shared scripts that emit context must branch per harness for the stdout protocol. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops plain text; Claude Code accepts plain text on `SessionStart`. See `references/harness-composition.md` for details.
 8. OpenCode publishes normal session lifecycle events for child/subagent sessions. The OpenCode lifecycle plugin must cache child IDs from `session.created` events with `info.parentID` and skip context or stop-style work for those IDs.
-9. Managed manifests record scaffold skill provenance, plan/template hashes, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
+9. Managed manifests record scaffold skill provenance, plan/template hashes, selected harnesses, detected harnesses, selection source, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
+10. A bare `/scaffold-hooks` invocation is conservative. If any supported hook surface is detected, refresh only that detected set; do not expand to other harnesses unless the user explicitly asks.
 
 ## Hook Visibility Matrix
 

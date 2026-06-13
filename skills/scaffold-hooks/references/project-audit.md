@@ -15,6 +15,8 @@ Before running `/scaffold-hooks`, inspect the project for existing hook surfaces
 - `.opencode/plugins/`
 - `opencode.json`
 - `.opencode/package.json`
+- `.github/hooks/copilot-hooks.json`
+- `.github/copilot/hooks/generated/`
 - `hooks/`
 - `./scripts/agent-stop-checks.sh`
 - `./scripts/agent-session-context.sh`
@@ -23,6 +25,7 @@ Before running `/scaffold-hooks`, inspect the project for existing hook surfaces
 ## Questions to Answer
 
 - Which harnesses are actually used by the team?
+- Which supported hook surfaces already exist? A bare run refreshes only this detected set.
 - Which old generated roots are present?
 - Which hooks are custom and must be preserved?
 - Which project validation scripts already exist?
@@ -37,3 +40,4 @@ The universal run should leave config files readable and boring:
 - shared behavior lives in `hooks/<event>/script.sh`
 - harness-specific config lives in `hooks/<event>/<harness>.json`
 - generated-root legacy commands are absent from selected shell harness configs
+- `hooks/.state/scaffold-hooks/manifest.json` records detected harnesses and the selection source

@@ -173,8 +173,70 @@ def test_skill(skill_path: Path) -> dict:
         project = Path(tmp) / "project"
         project.mkdir()
         seed_legacy_project(project)
+        all_harnesses = "claude,codex,copilot,devin,opencode"
 
-        dry_run = run([str(scaffold_script), "--project", str(project), "--dry-run"])
+        detected_project = Path(tmp) / "detected-project"
+        detected_project.mkdir()
+        write(
+            detected_project / ".claude" / "settings.json",
+            json.dumps(
+                {
+                    "hooks": {
+                        "Stop": [
+                            {
+                                "hooks": [
+                                    {
+                                        "type": "command",
+                                        "command": "npm run agent:stop",
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                indent=2,
+            )
+            + "\n",
+        )
+        detected_dry_run = run([str(scaffold_script), "--project", str(detected_project), "--dry-run"])
+        results["integration_checks"]["total"] += 1
+        if (
+            detected_dry_run.returncode == 0
+            and "harnesses:       claude" in detected_dry_run.stdout
+            and "selection source: detected-hooks" in detected_dry_run.stdout
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "bare hook refresh did not use the detected harness set: "
+                f"{detected_dry_run.stdout}\n{detected_dry_run.stderr}"
+            )
+            results["passed"] = False
+
+        custom_plan = Path(tmp) / "custom-plan-without-harnesses.json"
+        custom_plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
+        custom_plan_data.pop("harnesses", None)
+        custom_plan.write_text(json.dumps(custom_plan_data, indent=2) + "\n", encoding="utf-8")
+        detected_custom_plan_dry_run = run(
+            [str(scaffold_script), "--project", str(detected_project), "--plan", str(custom_plan), "--dry-run"]
+        )
+        results["integration_checks"]["total"] += 1
+        if (
+            detected_custom_plan_dry_run.returncode == 0
+            and "harnesses:       claude" in detected_custom_plan_dry_run.stdout
+            and "selection source: detected-hooks" in detected_custom_plan_dry_run.stdout
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "custom plan without harnesses expanded beyond detected hooks: "
+                f"{detected_custom_plan_dry_run.stdout}\n{detected_custom_plan_dry_run.stderr}"
+            )
+            results["passed"] = False
+
+        dry_run = run(
+            [str(scaffold_script), "--project", str(project), "--harnesses", all_harnesses, "--dry-run"]
+        )
         results["integration_checks"]["total"] += 1
         if dry_run.returncode == 0 and "scaffold_all_hooks.sh dry run complete" in dry_run.stdout:
             results["integration_checks"]["passed"] += 1
@@ -182,7 +244,7 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(f"dry-run failed: {dry_run.stdout}\n{dry_run.stderr}")
             results["passed"] = False
 
-        completed = run([str(scaffold_script), "--project", str(project)])
+        completed = run([str(scaffold_script), "--project", str(project), "--harnesses", all_harnesses])
         results["integration_checks"]["total"] += 1
         if completed.returncode == 0:
             results["integration_checks"]["passed"] += 1
@@ -224,6 +286,7 @@ def test_skill(skill_path: Path) -> dict:
             and provenance.get("skill_version")
             and provenance.get("generator", {}).get("sha256")
             and provenance.get("plan_sha256")
+            and universal_manifest.get("harness_selection_source") == "cli"
         ):
             results["integration_checks"]["passed"] += 1
         else:

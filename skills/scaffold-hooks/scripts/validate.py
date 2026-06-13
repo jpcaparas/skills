@@ -171,11 +171,14 @@ def validate(skill_path: Path) -> dict:
     if scaffold_script.exists():
         scaffold_content = scaffold_script.read_text(encoding="utf-8")
         for snippet in [
+            "detect_existing_harnesses",
             "scaffold_hooks",
             "skill_version",
             "generator_sha256",
             "plan_sha256",
             "harness_manifest_sha256",
+            "detected_harnesses",
+            "harness_selection_source",
         ]:
             if snippet not in scaffold_content:
                 errors.append(f"scripts/scaffold_all_hooks.sh missing provenance snippet: {snippet}")

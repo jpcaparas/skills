@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "organization": "JP Caparas",
   "date": "June 2026",
-  "abstract": "Universal /scaffold-hooks skill: the single hooks scaffolder for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode. Bundles each harness as a self-contained component under harnesses/<name>/, asks which harnesses to target (default all), writes a shared repo-owned hooks/ ports-and-adapters layout, migrates old generated hook roots, preserves custom hooks, and verifies that final harness configs no longer collide.",
+  "abstract": "Universal /scaffold-hooks skill: the single hooks scaffolder for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode. Bundles each harness as a self-contained component under harnesses/<name>/, detects existing hook surfaces for conservative bare refreshes, writes a shared repo-owned hooks/ ports-and-adapters layout, migrates old generated hook roots, preserves custom hooks, and verifies that final harness configs no longer collide.",
   "references": [
     "https://code.claude.com/docs/en/hooks",
     "https://developers.openai.com/codex/hooks",

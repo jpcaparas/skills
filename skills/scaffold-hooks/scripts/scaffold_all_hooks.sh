@@ -18,6 +18,7 @@ Options:
   --plan FILE                    Universal scaffold-hooks plan. Defaults to templates/hook-plan.example.json.
   --mode MODE                    additive or overhaul. Overrides plan mode.
   --harnesses LIST               Comma-separated subset: claude,codex,copilot,devin,opencode.
+                                  Omit to refresh detected hook surfaces, or all supported harnesses in a clean repo.
   --ensure-codex-feature SCOPE   Override Codex feature enablement scope.
   --home DIR                     Home directory override for Codex/OpenCode helper scripts.
   --cleanup-legacy true|false    Remove legacy managed generated folders after migration. Default from plan, then true.
@@ -100,6 +101,79 @@ validate_harnesses() {
         printf '  - %s\n' $unknown >&2
         exit 1
     fi
+}
+
+json_file_matches() {
+    local file="$1"
+    local filter="$2"
+    [ -f "$file" ] && jq -e "$filter" "$file" >/dev/null 2>&1
+}
+
+detect_existing_harnesses() {
+    local universal_manifest="$PROJECT_ROOT/$HOOKS_ROOT/.state/scaffold-hooks/manifest.json"
+    local universal_harnesses="[]"
+    local has_claude=false
+    local has_codex=false
+    local has_copilot=false
+    local has_devin=false
+    local has_opencode=false
+
+    if [ -f "$universal_manifest" ]; then
+        universal_harnesses="$(
+            jq -c '[.harnesses[]? | select(type == "string")]' "$universal_manifest" 2>/dev/null \
+                || printf '[]'
+        )"
+    fi
+    if [ -f "$PROJECT_ROOT/$HOOKS_ROOT/.state/claude/manifest.json" ] \
+        || [ -f "$PROJECT_ROOT/.claude/hooks/generated/manifest.json" ] \
+        || [ -n "$(find "$PROJECT_ROOT/$HOOKS_ROOT" -mindepth 2 -maxdepth 2 -type f -name 'claude.sh' -print -quit 2>/dev/null)" ] \
+        || json_file_matches "$PROJECT_ROOT/.claude/settings.json" '(.hooks? | type == "object" and length > 0)' \
+        || json_file_matches "$PROJECT_ROOT/.claude/settings.local.json" '(.hooks? | type == "object" and length > 0)'; then
+        has_claude=true
+    fi
+    if [ -f "$PROJECT_ROOT/$HOOKS_ROOT/.state/codex/manifest.json" ] \
+        || [ -f "$PROJECT_ROOT/.codex/hooks/generated/manifest.json" ] \
+        || [ -n "$(find "$PROJECT_ROOT/$HOOKS_ROOT" -mindepth 2 -maxdepth 2 -type f -name 'codex.sh' -print -quit 2>/dev/null)" ] \
+        || json_file_matches "$PROJECT_ROOT/.codex/hooks.json" '(.hooks? | type == "object" and length > 0)'; then
+        has_codex=true
+    fi
+    if [ -f "$PROJECT_ROOT/.github/copilot/hooks/generated/manifest.json" ] \
+        || json_file_matches "$PROJECT_ROOT/.github/hooks/copilot-hooks.json" '(.hooks? | type == "object" and length > 0)'; then
+        has_copilot=true
+    fi
+    if [ -f "$PROJECT_ROOT/$HOOKS_ROOT/.state/devin/manifest.json" ] \
+        || [ -f "$PROJECT_ROOT/.devin/hooks/generated/manifest.json" ] \
+        || [ -n "$(find "$PROJECT_ROOT/$HOOKS_ROOT" -mindepth 2 -maxdepth 2 -type f -name 'devin.sh' -print -quit 2>/dev/null)" ] \
+        || json_file_matches "$PROJECT_ROOT/.devin/hooks.v1.json" '(type == "object" and length > 0)'; then
+        has_devin=true
+    fi
+    if [ -f "$PROJECT_ROOT/.opencode/plugins/.managed/manifest.json" ] \
+        || [ -f "$PROJECT_ROOT/$HOOKS_ROOT/opencode-session-created/opencode.sh" ] \
+        || [ -f "$PROJECT_ROOT/$HOOKS_ROOT/opencode-session-idle/opencode.sh" ] \
+        || [ -n "$(find "$PROJECT_ROOT/.opencode/plugins" -maxdepth 1 -type f \( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) -print -quit 2>/dev/null)" ]; then
+        has_opencode=true
+    fi
+
+    jq -nc \
+        --argjson universal "$universal_harnesses" \
+        --argjson has_claude "$has_claude" \
+        --argjson has_codex "$has_codex" \
+        --argjson has_copilot "$has_copilot" \
+        --argjson has_devin "$has_devin" \
+        --argjson has_opencode "$has_opencode" '
+        ["claude", "codex", "copilot", "devin", "opencode"] as $order
+        | (
+            ($universal // [])
+            + (if $has_claude then ["claude"] else [] end)
+            + (if $has_codex then ["codex"] else [] end)
+            + (if $has_copilot then ["copilot"] else [] end)
+            + (if $has_devin then ["devin"] else [] end)
+            + (if $has_opencode then ["opencode"] else [] end)
+        )
+        | map(select(type == "string"))
+        | unique as $found
+        | $order | map(select(. as $name | $found | index($name)))
+    '
 }
 
 resolve_project() {
@@ -419,6 +493,8 @@ write_universal_manifest() {
         --arg harness_manifest_sha256 "$harness_manifest_sha256" \
         --arg plan_sha256 "$plan_sha256" \
         --argjson harnesses "$HARNESS_LIST_JSON" \
+        --argjson detected_harnesses "$DETECTED_HARNESSES_JSON" \
+        --arg harness_selection_source "$HARNESS_SELECTION_SOURCE" \
         --argjson cleanup_legacy "$CLEANUP_LEGACY" \
         --argjson legacy_roots "$LEGACY_ROOTS_JSON" \
         --slurpfile plan "$PLAN_FILE" \
@@ -443,6 +519,8 @@ write_universal_manifest() {
             mode: $mode,
             hooks_root: $hooks_root,
             harnesses: $harnesses,
+            detected_harnesses: $detected_harnesses,
+            harness_selection_source: $harness_selection_source,
             cleanup_legacy: $cleanup_legacy,
             legacy_roots: $legacy_roots,
             plan: $plan[0]
@@ -537,6 +615,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 HARNESSES_ROOT="$SKILL_ROOT/harnesses"
 DEFAULT_PLAN="$SKILL_ROOT/templates/hook-plan.example.json"
+DEFAULT_HARNESSES_JSON='["claude", "codex", "copilot", "devin", "opencode"]'
 
 PROJECT_ROOT="$(resolve_project "$PROJECT_ROOT")"
 PLAN_FILE="$(normalize_plan_path "${PLAN_FILE:-$DEFAULT_PLAN}")"
@@ -559,10 +638,24 @@ if [ -z "$HOOKS_ROOT" ] || [ "$HOOKS_ROOT" = "." ] || [[ "$HOOKS_ROOT" = /* ]] |
     exit 1
 fi
 
+DETECTED_HARNESSES_JSON="$(detect_existing_harnesses)"
+DETECTED_HARNESS_COUNT="$(printf '%s' "$DETECTED_HARNESSES_JSON" | jq 'length')"
+PLAN_HAS_EXPLICIT_HARNESSES="false"
+if [ "$PLAN_FILE" != "$DEFAULT_PLAN" ] && jq -e 'has("harnesses")' "$PLAN_FILE" >/dev/null 2>&1; then
+    PLAN_HAS_EXPLICIT_HARNESSES="true"
+fi
 if [ -n "$HARNESSES_OVERRIDE" ]; then
     HARNESS_LIST_JSON="$(json_string_array_from_csv "$HARNESSES_OVERRIDE")"
+    HARNESS_SELECTION_SOURCE="cli"
+elif [ "$PLAN_HAS_EXPLICIT_HARNESSES" = "true" ]; then
+    HARNESS_LIST_JSON="$(jq -c '.harnesses' "$PLAN_FILE")"
+    HARNESS_SELECTION_SOURCE="plan"
+elif [ "$DETECTED_HARNESS_COUNT" -gt 0 ]; then
+    HARNESS_LIST_JSON="$DETECTED_HARNESSES_JSON"
+    HARNESS_SELECTION_SOURCE="detected-hooks"
 else
-    HARNESS_LIST_JSON="$(jq -c '.harnesses // ["claude", "codex", "copilot", "devin", "opencode"]' "$PLAN_FILE")"
+    HARNESS_LIST_JSON="$(jq -c --argjson default "$DEFAULT_HARNESSES_JSON" '.harnesses // $default' "$PLAN_FILE")"
+    HARNESS_SELECTION_SOURCE="default-plan"
 fi
 validate_harnesses
 
@@ -621,6 +714,7 @@ scaffold_all_hooks.sh dry run complete
   mode:            $MODE
   hooks root:      $HOOKS_ROOT
   harnesses:       $(printf '%s' "$HARNESS_LIST_JSON" | jq -r 'join(",")')
+  selection source: $HARNESS_SELECTION_SOURCE
   cleanup legacy:  $CLEANUP_LEGACY
 EOF
     exit 0
@@ -641,5 +735,6 @@ scaffold_all_hooks.sh complete
   mode:            $MODE
   hooks root:      $HOOKS_ROOT
   harnesses:       $(printf '%s' "$HARNESS_LIST_JSON" | jq -r 'join(",")')
+  selection source: $HARNESS_SELECTION_SOURCE
   cleanup legacy:  $CLEANUP_LEGACY
 EOF

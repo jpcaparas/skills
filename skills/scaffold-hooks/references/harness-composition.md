@@ -14,6 +14,18 @@ Default order is:
 
 Claude runs first because it has the broadest lifecycle surface and its shared `script.sh` template is harness-neutral. Shell harness scaffolders skip existing `hooks/<event>/script.sh` files in additive mode, so later harnesses add adapters without rewriting shared behavior.
 
+## Bare Refresh Selection
+
+A universal run without `--harnesses` is conservative. With the default plan, the orchestrator detects existing supported hook surfaces and managed scaffold state before choosing harnesses:
+
+- universal and per-harness managed manifests
+- legacy generated manifests
+- shared adapters under `hooks/`
+- harness config files that already contain hook entries
+- OpenCode plugin files under `.opencode/plugins/`
+
+If any harness is detected, only that detected set is refreshed. New harnesses are added only through explicit `--harnesses` or a custom universal plan.
+
 ## Why Shell Harnesses Run Additively
 
 Universal `overhaul` mode means "refresh selected harness adapters and state," not "rewrite shared project behavior." The universal script performs targeted cleanup first:
