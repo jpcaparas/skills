@@ -1,220 +1,183 @@
 # OpenCode Harness Playbook
 
-Internal component of the `scaffold-hooks` skill. This playbook owns the OpenCode hook event contract, scaffolding scripts, and merge behavior. Paths are relative to `harnesses/opencode/` unless noted.
-
-
-
-Audit the target project first, then scaffold OpenCode hooks as managed OpenCode plugins with deterministic file generation and repeatable config merges.
+Internal component of the `scaffold-hooks` skill. This playbook owns the OpenCode integration, which now installs `opencode-froggy` and renders Froggy's hook configuration instead of generating local TypeScript lifecycle plugins.
 
 ## Decision Tree
 
 What is the user asking for?
 
-- New OpenCode hooks in a repo with no existing plugin setup:
-  Verify the live docs, audit the repo, inspect existing OpenCode config state, choose project-local or global scope, then scaffold the minimal lifecycle/action plugin unless the user asks for a broad hook catalog.
-- Mirroring existing agent lifecycle hooks or running post-action automation:
-  Generate one live TypeScript plugin that calls repo-owned scripts, shows TUI toasts for meaningful background work, and allows one controlled automatic repair/follow-up prompt.
-- Existing `.opencode/plugins/`, `.opencode/package.json`, or `opencode.json` / `opencode.jsonc` files:
-  Audit what already exists, choose `additive` or `overhaul`, then refresh only the managed plugin layer.
-- Existing plugins that should be shareable in the repo:
-  Default to project-local `.opencode/plugins/` and only touch `opencode.json` when npm plugin entries are part of the plan.
-- Personal or machine-local hooks across many repos:
-  Target `~/.config/opencode/plugins/` and `~/.config/opencode/opencode.json` instead of the project tree.
-- OpenCode plugin troubleshooting:
-  Inspect config precedence, plugin directories, config-dir dependencies, and cache or disable flows before rewriting plugin logic.
-- Explanation only, not implementation:
-  Read `references/hook-events.md`, `references/config-layering.md`, `references/plugin-patterns.md`, and `references/scaffold-layout.md`, then answer without scaffolding.
+- New OpenCode hooks in a repo:
+  Verify the current OpenCode plugin docs and `opencode-froggy` package, audit the repo, then scaffold `opencode.json` plus `.opencode/hook/hooks.md`.
+- Existing old scaffold under `.opencode/plugins/.managed/`:
+  Treat it as a migration. Raze scaffold-owned `.opencode/plugins/*.ts`, `.opencode/package.json` dependency artifacts, and `hooks/opencode-session-*` adapters, then install Froggy and render `hooks.md`.
+- Existing custom `.opencode/hook/hooks.md`:
+  Preserve it. Append the managed Froggy block only when the file has an appendable `hooks:` frontmatter list; otherwise stop with a clear manual-merge error.
+- Existing custom `.opencode/plugins/*.ts`:
+  Preserve unmanaged plugin files. Froggy does not replace all OpenCode plugins; it replaces only the old scaffold-owned hook adapter.
+- Personal cross-repo OpenCode hooks:
+  Use global scope so config lands under `~/.config/opencode/opencode.json` and `~/.config/opencode/hook/hooks.md`.
+- Explanation only:
+  Read `references/hook-events.md`, `references/config-layering.md`, `references/scaffold-layout.md`, and `references/merge-strategy.md`, then answer without scaffolding.
 
 ## Quick Reference
 
 | Task | Action |
 |------|--------|
-| Verify the current official OpenCode plugin model | Read `https://opencode.ai/docs/plugins/`, `https://opencode.ai/docs/config/`, `https://opencode.ai/docs/sdk`, `https://opencode.ai/docs/custom-tools`, and compare them with `assets/hook-events.json` |
+| Verify official OpenCode plugin/config docs | Read `https://opencode.ai/docs/plugins/` and `https://opencode.ai/docs/config/` |
+| Verify Froggy hook semantics | Inspect `https://github.com/smartfrog/opencode-froggy`, especially `src/index.ts`, `src/loaders.ts`, `src/bash-executor.ts`, and `README.md` |
 | Audit a target repo | Run `scripts/audit_project.sh /path/to/project` |
-| Inspect project-vs-global OpenCode setup | Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json` |
-| Merge npm plugin names into an OpenCode config file | Run `bun scripts/merge_opencode_config.ts --config-file /path/to/opencode.json --plugins plugin-a plugin-b` |
-| Merge config-dir dependencies for local plugins | Run `bun scripts/merge_package_json.ts --package-file /path/to/.opencode/package.json --dependencies-json '{"@opencode-ai/plugin":"^1.17.4"}'` |
-| Design reusable repo-owned scripts | Read `references/reusable-scripts.md` |
-| Generate the minimal lifecycle/action scaffold | Start from `templates/hook-plan.example.json`, then run `bash scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
-| Generate a broad hook-surface scaffold | Start from `templates/hook-plan.broad.example.json` and set `surface_catalog: true` |
-| Regenerate the plugin README in a target project | Run `bash scripts/render_hooks_readme.sh --project /path/to/project --plan /path/to/plan.json` |
+| Inspect OpenCode setup | Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json` |
+| Merge `opencode-froggy` into OpenCode config | Run `bun scripts/merge_opencode_config.ts --config-file /path/to/opencode.json --plugins opencode-froggy` |
+| Render Froggy `hooks.md` | Run `bun scripts/render_froggy_hooks.ts --hooks-file /path/to/.opencode/hook/hooks.md --hooks-json '[...]'` |
+| Scaffold OpenCode | Run `bash scripts/scaffold_hooks.sh --project /path/to/project --plan /path/to/plan.json --mode additive|overhaul` |
+| Regenerate hook README | Run `bash scripts/render_hooks_readme.sh --project /path/to/project --plan /path/to/plan.json` |
 
 ## Non-Negotiable Workflow
 
-1. Verify the live official OpenCode plugin docs before planning any scaffold.
-2. Compare the live docs, config guidance, and SDK examples with `assets/hook-events.json` before assuming the surface catalog is unchanged.
-3. Audit the target project in detail before deciding scope, deployment style, module format, or which plugin patterns to enable.
-4. Inspect any existing `opencode.json`, `opencode.jsonc`, `.opencode/plugins/`, `.opencode/package.json`, `AGENTS.md`, and other automation files before choosing a merge mode.
-5. Choose scope deliberately:
-   - default to project-local when the hooks should travel with the repo
-   - default to global only when the behavior should stay personal or cross-project
-6. Produce or update a concrete plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
-7. Prefer the minimal lifecycle/action plugin for lifecycle mirroring, post-action automation, validation, formatter repair, generated-file drift, dependency setup, or policy checks.
-8. Keep project behavior in the shared repo-owned `hooks/` tree or reusable scripts when it may move to Codex, Claude Code, Devin, Git hooks, GitHub Actions, or local shell usage. The plugin should remain the OpenCode adapter that orchestrates lifecycle, feedback, and repair prompts around those scripts.
-9. Lifecycle/action plugins must run only for root sessions. Cache child session IDs from `session.created` events with `info.parentID`, then skip their `session.created` context injection and `session.idle` action work.
-10. Scaffold reference stubs for every current official OpenCode hook surface only when the user asks for a broad scaffold or the plan sets `surface_catalog: true`.
-11. Generate only the enabled managed plugin modules into the active plugin load path so dormant stubs do not become runtime plugins by accident.
-12. Merge config plugin arrays and config-dir package dependencies deterministically, without deleting unrelated user-owned entries. Do not create config-dir package files when no runtime dependency is needed.
-13. Snapshot scaffold provenance and managed file hashes in `.opencode/plugins/.managed/manifest.json` so later additive runs can refresh unchanged managed plugins and preserve user-modified files.
-14. Regenerate the plugin README so the target project has a concise map of active behavior. For minimal scaffolds, do not print a full hook-surface catalog.
+1. Verify live OpenCode plugin/config docs and current `opencode-froggy` source before changing event semantics.
+2. Compare that ground truth with `assets/hook-events.json`.
+3. Audit the target repo before choosing project or global scope.
+4. Inspect `opencode.json`, `opencode.jsonc`, `.opencode/hook/hooks.md`, `.opencode/plugins/`, `.opencode/package.json`, AGENTS files, and repo-owned scripts.
+5. Start from `templates/hook-plan.example.json`; use `templates/hook-plan.broad.example.json` only when the user wants examples for tool hooks too.
+6. Run a dry run first through the universal skill when possible.
+7. Scaffold. The resulting active OpenCode files should be `opencode.json` and `.opencode/hook/hooks.md`.
+8. Confirm old managed plugin scaffolding was removed when `.opencode/plugins/.managed/manifest.json` proved scaffold ownership.
+9. Confirm no `.opencode/package.json`, lockfile, or `node_modules` was created by the default Froggy scaffold.
+10. Run this component's validator and test suite.
 
-## Config Layer First Heuristic
+## Froggy Contract
 
-Inspect OpenCode setup early whenever any of these signals appear:
+`opencode-froggy` is loaded as an npm plugin by OpenCode:
 
-- the user wants OpenCode hooks scaffolded into a repo
-- `.opencode/plugins/` already exists
-- `opencode.json` or `opencode.jsonc` already contains a `plugin` array
-- the user wants personal hooks that should apply across multiple repos
-- plugins exist on disk but OpenCode behaves strangely, crashes, or ignores the intended workflow
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "plugin": ["opencode-froggy"]
+}
+```
 
-Use this flow:
+Froggy loads hooks from:
 
-1. Canonicalize the target project path first.
-2. Run `bun scripts/check_plugin_setup.ts --project /path/to/project --json`.
-3. Decide scope from the existing OpenCode footprint:
-   - existing repo-local `.opencode/` setup or a shared repo use case -> project
-   - personal or cross-repo behavior -> global
-4. Decide deployment style:
-   - custom logic you own -> local plugin files
-   - shared third-party packages plus local custom logic -> hybrid
-5. Only then edit plugin files, config arrays, or config-dir dependencies.
+- project: `.opencode/hook/hooks.md`
+- global: `~/.config/opencode/hook/hooks.md`
+- Windows fallback for global hooks: `%APPDATA%/opencode/hook/hooks.md`
 
-## Live Docs First
+The hook file is Markdown with YAML frontmatter:
 
-The official OpenCode docs are the source of truth:
+```markdown
+---
+hooks:
+  - event: session.idle
+    conditions: [isMainSession]
+    actions:
+      - bash: "npm run lint"
+---
+```
 
-- `https://opencode.ai/docs/plugins/`
-- `https://opencode.ai/docs/config/`
-- `https://opencode.ai/docs/sdk`
-- `https://opencode.ai/docs/custom-tools`
-- `https://opencode.ai/docs/troubleshooting`
+Supported Froggy events:
 
-Use the article at `https://blog.devgenius.io/opencode-auto-lint-your-ai-agents-code-with-a-post-turn-biome-hook-7158d75c63db?postPublishedType=repub` as secondary practical guidance for post-turn validation patterns, not as the source of truth for paths, load order, or lifecycle semantics.
+- `session.created`
+- `session.deleted`
+- `session.idle`
+- `tool.before.*`
+- `tool.before.<name>`
+- `tool.after.*`
+- `tool.after.<name>`
 
-If the official docs and the article disagree, follow the official docs and update the local references.
+Supported conditions:
 
-## Progressive Maintainer Drift Check
+- `isMainSession`
+- `hasCodeChange`
 
-When updating this skill itself, make docs drift the first maintenance step:
+Supported actions:
 
-1. Live-fetch the official OpenCode plugin, config, SDK, and custom-tool docs on the day of the edit, then compare plugin loading rules, hook/event surfaces, config precedence, TypeScript guidance, and package expectations with `assets/hook-events.json`.
-2. Check local version evidence when available, such as `opencode --version` and `npm view @opencode-ai/plugin version`, and record the version that explains the update.
-3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/plugin-patterns.md`, scaffold layout docs, scaffold generators, templates, package/config helpers, validators, tests, evals, and thin wrappers.
-4. If no drift exists, still mention that the live docs and package version were checked. Do not update this skill from memory or by copying assumptions from Claude Code or Codex.
+- `bash`
+- `command`
+- `tool`
 
-## Project Analysis Rules
+## Migration Rules
 
-Before choosing any OpenCode hook structure, inspect:
+When an old scaffold-owned OpenCode setup exists:
 
-- repo root and workspace shape
-- whether the project already has `.opencode/plugins/`, `.opencode/package.json`, `opencode.json`, or `opencode.jsonc`
-- languages and package managers
-- build, test, lint, format, and validation entry points
-- monorepo tools like Turborepo, Nx, pnpm workspaces, Bun workspaces, Cargo workspaces, or custom task runners
-- existing AI instructions such as `AGENTS.md`, repo rules, or automation docs
-- sensitive paths like `.env`, secrets, lockfiles, generated code, migrations, and infra directories
-- whether the hook setup should be shareable in-repo or remain machine-local
-- whether local plugin logic needs config-dir dependencies, Bun shell calls, or SDK-driven feedback loops
-- reusable agent or automation scripts such as `<project>/scripts/agent-session-context.sh`, `<project>/scripts/agent-stop-checks.sh`, adapter scripts, Husky hooks, and GitHub Actions jobs that should share logic
+- read `.opencode/plugins/.managed/manifest.json`
+- delete only managed plugin files listed in `managed_files`
+- delete `.opencode/plugins/README.md` when it is the generated scaffold README
+- remove `.opencode/plugins/.managed/`
+- remove generated `hooks/opencode-session-created` and `hooks/opencode-session-idle` adapters only when they still match the old generated shape
+- remove `.opencode/package.json`, lockfiles, and `node_modules` only when the package file contains only the old `@opencode-ai/plugin` dependency
+- leave unrelated custom OpenCode plugins alone
 
-Run `scripts/audit_project.sh` first, then read `references/project-analysis.md` when you need the full checklist.
+This cleanup is intentionally part of additive runs too. If a repo was scaffolded the previous way, a normal rerun should migrate it to Froggy without requiring a separate cleanup command.
 
-## Deterministic vs Project-Specific Work
+## Plan Shape
 
-Keep these parts deterministic:
+Use `templates/hook-plan.example.json` as the source of truth. Important fields:
 
-- the managed plugin filename prefix
-- the managed state directory layout
-- optional broad stub coverage for every current official hook surface
-- config plugin-array merges
-- config-dir package dependency merges only when dependencies are actually needed
-- README generation
-- additive vs overhaul semantics for previously managed plugin files
+- `scope`: `project` or `global`
+- `mode`: `additive` or `overhaul`
+- `plugin_name`: must be `opencode-froggy`
+- `config_target`: normally `opencode.json`
+- `hook_config_target`: normally `.opencode/hook/hooks.md`
+- `managed_state_dir`: normally `.opencode/hook/.managed`
+- `hooks`: Froggy hook entries with `event`, optional `conditions`, `actions`, and `notes`
 
-Allow these parts to stay project-specific:
+Keep project-specific validation in repo-owned scripts. The default plan calls scripts only if they exist:
 
-- which live plugin modules are enabled
-- whether the scaffold targets project or global scope
-- whether the managed modules are TypeScript
-- whether npm plugin entries should be merged into config
-- the actual plugin logic inside enabled modules
-- cooldowns, tool lists, validation commands, and feedback prompts
-- which repo-owned scripts implement session context, validation, formatting, dependency setup, or policy checks
-- which meaningful background actions deserve visible TUI feedback
-- whether the refresh is `additive` or `overhaul`
+- `./scripts/agent-session-context.sh` from `session.created`
+- `./scripts/validate-project.sh` from `session.idle`
+
+Project plans can swap `./scripts/validate-project.sh` for `./scripts/agent-stop-checks.sh` or another repo-owned command.
 
 ## Repeat-Run Rules
 
-When the skill is invoked again against a project:
+- Replace the managed block between `BEGIN scaffold-hooks managed opencode-froggy` and `END scaffold-hooks managed opencode-froggy`.
+- Append the managed block to an existing custom `hooks:` list only when it is structurally safe.
+- Refuse to overwrite unrecognized custom `hooks.md` structures.
+- Preserve unrelated entries in `opencode.json` while adding `opencode-froggy`.
+- Preserve unmanaged local plugin files in `.opencode/plugins/`.
+- Remove old scaffold-owned plugin files when the old manifest proves ownership.
 
-- Re-verify the live docs before assuming the surface set is unchanged.
-- Re-audit the project before assuming the current plugin plan still fits.
-- Preserve unrelated user plugins by default.
-- Preserve unrelated `plugin` array entries in `opencode.json` or `opencode.jsonc`.
-- Preserve unrelated config-dir dependencies in `.opencode/package.json`.
-- Treat previously managed plugin files listed in the managed manifest as replaceable in `overhaul` mode.
-- In `additive` mode, refresh previously managed plugin files when their current hash matches the prior `managed_file_hashes` entry. Preserve files whose hash differs and record them under `preserved_file_hashes`.
-- For legacy managed manifests that predate file hashes, refresh files that are listed as managed and still contain the scaffold-managed header, backing up the previous file under `.opencode/plugins/.managed/backups/`.
-- If the official docs add or remove hook surfaces, update the manifest inputs first.
+## Progressive Maintainer Drift Check
 
-## Scaffold Rules
+When updating this skill itself:
 
-- Generate TypeScript plugin modules only. Do not create `.js`, `.mjs`, `.cjs`, `.jsx`, or `.tsx` plugin files from this managed scaffold.
-- Keep live managed plugin modules directly in the active plugin directory so OpenCode definitely loads them.
-- Generate one live lifecycle/action plugin for minimal lifecycle mirroring or post-action automation. Keep full hook-surface stubs under a non-loading managed state directory only for broad scaffolds.
-- Default to project-local `.opencode/plugins/` for the required OpenCode plugin adapter, and default reusable hook behavior to `hooks/`.
-- Default to global `~/.config/opencode/plugins/` only when the behavior should remain personal or cross-project.
-- Create or normalize the config-dir `package.json` only when live TypeScript plugin modules import external runtime dependencies.
-- Only add `@opencode-ai/plugin` when the managed scaffold actually needs the `tool()` helper or typed imports.
-- Keep logging and user-visible feedback separate: use `client.app.log()` for structured diagnostics and `client.tui.showToast()` for what the user should see.
-- Add a best-effort `showToast(client, variant, message)` helper to managed plugins. Wrap it in `try/catch`; toast failures must never break hook behavior. Use `info`, `success`, `warning`, and `error`.
-- Show an `info` toast when meaningful background work starts, a `success` toast when it completes, and a `warning` or `error` toast when intervention is needed. Apply this to `session.idle`, `tool.execute.after`, `command.executed`, `file.edited`, `installation.updated`, `session.error`, and custom cross-event workflows when they do real work.
-- For automatic repair or follow-up, allow one `client.session.prompt()` without `noReply` on the first failure. Track `inFlight`, `repairPromptSent`, and `persistentFailureReported`; use `noReply: true` for persistent failure notices so the plugin cannot loop indefinitely.
-- Call `hooks/opencode-session-created/opencode.sh` and `hooks/opencode-session-idle/opencode.sh` by default instead of hard-coding build, test, lint, or policy commands in plugin bodies. Those shell adapters delegate to repo-owned scripts such as session-context and validation scripts.
-- Treat OpenCode child/subagent sessions as internal implementation detail for lifecycle mirroring. `session.created` exposes `info.parentID`; `session.idle` does not, so the generated lifecycle plugin must remember child IDs and skip both context and validation for them.
-- Resolve project script paths from OpenCode's active project/worktree/directory context. Do not assume a fixed path depth from `.opencode/plugins/`, especially for global plugin scopes or custom config directories.
-- Use `tool.execute.before` for prevention, `tool.execute.after` for observation, and `event` for cross-event coordination like `session.idle`.
-- Treat `experimental.session.compacting` as opt-in and experimental. Do not make core safety logic depend on it.
-- Never assume local helper `.js` or `.ts` files under the plugin directory are inert. Anything with a runtime module extension may load as a plugin, so this scaffold writes only enabled `.ts` plugin modules into the active plugin directory.
-- Record `scaffold_hooks` provenance and file hashes in the managed manifest. This is the contract for incremental upgrades when the generated templates improve.
+1. Live-fetch the official OpenCode plugin and config docs on the day of the edit.
+2. Check `npm view opencode-froggy --json`, `npm view @opencode-ai/plugin version`, and local `opencode --version` when available.
+3. Read the current Froggy source for hook loading, event handling, bash execution, and config paths.
+4. Update `assets/hook-events.json` first if the contract changed.
+5. Then update scaffold scripts, templates, references, validators, tests, evals, and wrappers.
+6. Do not update this skill from memory.
 
 ## Reading Guide
 
 | Need | Read |
 |------|------|
-| Full audit checklist and planning questions | `references/project-analysis.md` |
-| Config precedence, scope selection, and plugin directories | `references/config-layering.md` |
-| Current official hook surfaces, event groups, and special plugin capabilities | `references/hook-events.md` |
-| Common plugin archetypes like guardrails, post-turn checks, shell env, and custom tools | `references/plugin-patterns.md` |
-| Managed folder layout and plan file shape | `references/scaffold-layout.md` |
-| Reusable script placement across OpenCode, Codex, Claude Code, Git hooks, and CI | `references/reusable-scripts.md` |
-| Additive versus overhaul behavior | `references/merge-strategy.md` |
-| Runtime traps, path drift, cache issues, and JSONC caveats | `references/gotchas.md` |
+| Full audit checklist | `references/project-analysis.md` |
+| Config precedence and scope | `references/config-layering.md` |
+| Froggy events/actions/conditions | `references/hook-events.md` |
+| Common Froggy hook patterns | `references/plugin-patterns.md` |
+| Managed layout and plan fields | `references/scaffold-layout.md` |
+| Reusable repo-owned script placement | `references/reusable-scripts.md` |
+| Additive vs overhaul behavior | `references/merge-strategy.md` |
+| Runtime traps and migration gotchas | `references/gotchas.md` |
 
 ## Operational Scripts
 
 - `scripts/audit_project.sh` builds a project profile from real repo signals.
-- `scripts/check_plugin_setup.ts` inspects project and global OpenCode config, plugin directories, and config-dir package files.
-- `scripts/merge_opencode_config.ts` preserves unrelated config keys while merging plugin-array entries into `opencode.json` or `opencode.jsonc`.
-- `scripts/merge_package_json.ts` preserves unrelated package fields while merging config-dir dependencies needed by local plugins.
-- `scripts/scaffold_hooks.sh` renders live managed plugin modules, hook-surface stubs, the manifest, and the plugin README.
-- `scripts/render_hooks_readme.sh` rebuilds `.opencode/plugins/README.md` from the manifest and the current plan.
-- `templates/hook-plan.example.json` is the minimal lifecycle/action scaffold.
-- `templates/hook-plan.broad.example.json` is the broad surface-catalog scaffold.
-- `scripts/validate.py` checks structure, frontmatter, manifest integrity, and cross-references.
-- `scripts/test_skill.py` runs lightweight validation plus temp-project integration checks.
+- `scripts/check_plugin_setup.ts` inspects OpenCode config, Froggy hook files, and legacy plugin scaffolds.
+- `scripts/merge_opencode_config.ts` preserves unrelated config keys while adding `opencode-froggy`.
+- `scripts/render_froggy_hooks.ts` renders or refreshes the managed block in `hooks.md`.
+- `scripts/scaffold_hooks.sh` orchestrates Froggy install, managed hook rendering, legacy cleanup, manifest writing, and README generation.
+- `scripts/render_hooks_readme.sh` rebuilds `.opencode/hook/README.md`.
+- `scripts/validate.py` checks structure, manifest integrity, and cross-references.
+- `scripts/test_skill.py` runs temp-project integration checks.
 
 ## Gotchas
 
-1. OpenCode hooks are plugins, not a separate hook-config file.
-2. All plugins from all sources load in sequence, so a project-local scaffold does not replace global plugins.
-3. Use the documented plugin directories: project-local `.opencode/plugins/` and global `~/.config/opencode/plugins/`.
-4. `tool.execute.after` is reactive, not preventative. Use `tool.execute.before` for guardrails.
-5. `event` plus named event handlers can double-handle the same workflow if you do not keep ownership clear.
-6. Local plugin dependencies belong in the config directory package file, not in the repo root package by default.
-7. `experimental.session.compacting` is real in the docs examples, but it is explicitly experimental.
-8. OpenCode startup issues often trace back to bad plugins or stale cache, so troubleshooting sometimes matters more than rewriting logic.
-9. Do not bury reusable validation or context logic inside managed `.opencode/plugins/*.ts` files. Put it in repo-owned scripts and let OpenCode plugins call those scripts as lifecycle adapters.
-10. OpenCode publishes normal session lifecycle events for child/subagent sessions. Root lifecycle hooks need an explicit `info.parentID` filter instead of assuming `session.created` and `session.idle` only describe the main thread.
-11. Additive re-runs need hashes. Without `managed_file_hashes`, the scaffold can only safely upgrade legacy files that are both listed in the manifest and still carry the managed header.
+1. Froggy hooks still require an OpenCode plugin. `opencode.json` must include `opencode-froggy`.
+2. Froggy hook config lives under `.opencode/hook/`, singular, while OpenCode local plugins live under `.opencode/plugins/`, plural.
+3. Froggy global hooks run before project hooks; a project scaffold does not disable personal global hooks.
+4. `hasCodeChange` follows Froggy's code-extension list and does not include Markdown. Do not use it for skills repositories unless Markdown-only changes may skip validation.
+5. Bash actions always send a hook result back to the session. Redirect noisy stdout when a script is only recording baseline state.
+6. `tool.before.*` and `tool.before.<name>` can block by exiting `2`; other nonzero bash exits are reported but non-blocking in Froggy.
+7. Do not recreate the old toast/repair TypeScript adapter unless the user explicitly asks for custom OpenCode plugin code.

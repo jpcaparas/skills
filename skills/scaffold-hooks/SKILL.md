@@ -32,7 +32,7 @@ Detected surfaces include current managed manifests, legacy generated manifests,
 - `codex` — Codex CLI, `.codex/hooks.json` (requires the hooks feature flag; see `harnesses/codex/references/feature-flag.md`)
 - `copilot` — GitHub Copilot (cloud agent + CLI), `.github/hooks/copilot-hooks.json` with generated events under `.github/copilot/hooks/generated/`
 - `devin` — Devin CLI, `.devin/hooks.v1.json`
-- `opencode` — OpenCode, `.opencode/plugins/*.ts`
+- `opencode` — OpenCode, `opencode.json` plus `.opencode/hook/hooks.md` through `opencode-froggy`
 
 Pass explicit additions as `--harnesses claude,codex,copilot,devin,opencode` (or a subset). A bare run on a repo that already has hooks is a refresh, not an expansion.
 
@@ -55,7 +55,7 @@ Pass explicit additions as `--harnesses claude,codex,copilot,devin,opencode` (or
    - existing `.claude/settings*.json`
    - `.codex/hooks.json` and `.codex/config.toml`
    - `.devin/hooks.v1.json` and `.devin/config*.json`
-   - `.opencode/plugins/`, `opencode.json`, and `.opencode/package.json`
+   - `opencode.json`, `.opencode/hook/hooks.md`, old `.opencode/plugins/.managed/`, and any custom `.opencode/plugins/`
    - `.github/hooks/copilot-hooks.json` and `.github/copilot/hooks/generated/`
    - existing `hooks/` tree and repo-owned validation scripts under `scripts/`
 2. Confirm the harness set only when creating a new scaffold or adding harnesses. For a bare invocation on a repo with existing hook surfaces, refresh the detected set only.
@@ -91,12 +91,14 @@ hooks/
     codex.json
     devin.sh
     devin.json
-  opencode-session-created/
-    script.sh
-    opencode.sh
-  opencode-session-idle/
-    script.sh
-    opencode.sh
+.opencode/
+  hook/
+    hooks.md
+    README.md
+    .managed/
+      manifest.json
+      plan.snapshot.json
+opencode.json
 ```
 
 Harness config files stay in their documented locations:
@@ -104,7 +106,7 @@ Harness config files stay in their documented locations:
 - Claude: `.claude/settings.json`
 - Codex: `.codex/hooks.json`
 - Devin: `.devin/hooks.v1.json`
-- OpenCode: `.opencode/plugins/*.ts` plus optional `opencode.json` entries for npm plugins
+- OpenCode: `opencode.json` loads `opencode-froggy`; Froggy reads `.opencode/hook/hooks.md`
 - GitHub Copilot: `.github/hooks/copilot-hooks.json` with generated events under `.github/copilot/hooks/generated/` (self-contained because the Copilot cloud agent reads everything from the repo)
 
 ## Plan Shape
@@ -127,7 +129,7 @@ This skill is conservative:
 - Preserve non-managed custom hooks in the same config files.
 - Preserve existing `hooks/<event>/script.sh` files so shared project behavior is not rewritten by another harness.
 - In `overhaul` mode, delete only selected harness adapters/state under `hooks/`, then call the harness components in additive mode for shell harnesses.
-- Keep OpenCode's `.opencode/plugins/` layer because OpenCode loads plugins from there; make those plugins thin adapters into `hooks/opencode-*`.
+- For OpenCode, preserve unmanaged `.opencode/plugins/` files but migrate scaffold-owned plugin output to `opencode-froggy` and `.opencode/hook/hooks.md`.
 
 Read `references/collision-policy.md` before changing merge behavior.
 
@@ -138,7 +140,7 @@ Each supported harness is a self-contained component under `harnesses/<name>/` w
 - `harnesses/claude/` owns Claude Code event semantics and `.claude/settings.json` merging.
 - `harnesses/codex/` owns Codex event semantics, feature-flag handling, and `.codex/hooks.json` merging.
 - `harnesses/devin/` owns Devin event semantics and `.devin/hooks.v1.json` merging.
-- `harnesses/opencode/` owns OpenCode plugin generation and config/package merging.
+- `harnesses/opencode/` owns OpenCode Froggy configuration, `opencode.json` plugin merging, and cleanup of prior scaffold-owned local plugin artifacts.
 - `harnesses/copilot/` owns GitHub Copilot event semantics and `.github/hooks/copilot-hooks.json` merging for the cloud agent and Copilot CLI.
 
 When an event name, matcher, output contract, or feature flag changes, update the harness component first (manifest, references, scripts, tests), then the universal orchestration. Read `references/harness-composition.md` when changing the composition order or adding a harness.
@@ -146,15 +148,16 @@ When an event name, matcher, output contract, or feature flag changes, update th
 ## Gotchas
 
 1. Do not pass `overhaul` directly to the shell harness scaffolders from a universal run. They would rewrite shared `script.sh` files. The universal script performs harness cleanup first, then calls them additively.
-2. OpenCode cannot be represented only by JSON config. Its documented extension point is plugin files, so `.opencode/plugins/*.ts` remains a required adapter layer.
+2. OpenCode now uses `opencode-froggy` as the plugin layer. Do not recreate the old generated `.opencode/plugins/*.ts` lifecycle adapter unless the user explicitly asks for custom plugin code.
 3. Legacy generated folders should be deleted only when they contain a managed manifest. Otherwise they may be user-owned files with an unfortunate path name.
 4. A clean-looking config can still collide if old generated commands remain. Always scan final configs for `.claude/hooks/generated`, `.codex/hooks/generated`, and `.devin/hooks/generated`.
 5. Keep project policy in repo-owned scripts such as `./scripts/agent-stop-checks.sh`; hook adapters should translate protocol, not duplicate validation logic.
 6. Copilot does not write adapters into the shared `hooks/` tree. Its generated events stay under `.github/copilot/hooks/generated/` because the Copilot cloud agent only reads files committed to the repository; keep shared policy in repo-owned `scripts/` that both layers call.
 7. Shared scripts that emit context must branch per harness for the stdout protocol. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops plain text; Claude Code accepts plain text on `SessionStart`. See `references/harness-composition.md` for details.
-8. OpenCode publishes normal session lifecycle events for child/subagent sessions. The OpenCode lifecycle plugin must cache child IDs from `session.created` events with `info.parentID` and skip context or stop-style work for those IDs.
-9. Managed manifests record scaffold skill provenance, plan/template hashes, selected harnesses, detected harnesses, selection source, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
-10. A bare `/scaffold-hooks` invocation is conservative. If any supported hook surface is detected, refresh only that detected set; do not expand to other harnesses unless the user explicitly asks.
+8. Treat exit codes and output streams as separate contracts. Exit code controls success, failure, or blocking; stderr is for diagnostics and failure reasons, not successful status messages. Successful routine skips should write to stdout only when the harness protocol allows it, or stay quiet.
+9. Froggy's `isMainSession` condition handles main-session filtering for OpenCode hooks; use it on session lifecycle hooks that should skip child/subagent sessions.
+10. Managed manifests record scaffold skill provenance, plan/template hashes, selected harnesses, detected harnesses, selection source, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
+11. A bare `/scaffold-hooks` invocation is conservative. If any supported hook surface is detected, refresh only that detected set; do not expand to other harnesses unless the user explicitly asks.
 
 ## Hook Visibility Matrix
 

@@ -1,40 +1,56 @@
 {
   "scope": "project",
-  "deployment": "local-files",
   "mode": "additive",
-  "module_format": "ts",
-  "surface_catalog": true,
-  "plugin_root": ".opencode/plugins",
-  "managed_state_dir": ".opencode/plugins/.managed",
+  "plugin_name": "opencode-froggy",
+  "hooks_root": "hooks",
   "config_target": "opencode.json",
-  "package_target": ".opencode/package.json",
-  "package_dependencies": {},
-  "npm_plugins": [],
-  "enabled_plugins": [
+  "hook_config_target": ".opencode/hook/hooks.md",
+  "managed_state_dir": ".opencode/hook/.managed",
+  "hooks": [
     {
-      "name": "guard-sensitive-files",
-      "filename": "opencode_hook_guard_sensitive_files.ts",
-      "surfaces": [
-        "tool.execute.before"
+      "event": "session.created",
+      "conditions": [
+        "isMainSession"
       ],
-      "notes": "Block reads and edits against secrets, lockfiles, and other protected paths."
+      "actions": [
+        {
+          "bash": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" >/dev/null; fi"
+        }
+      ],
+      "notes": "Root-session bootstrap."
     },
     {
-      "name": "post-turn-check",
-      "filename": "opencode_hook_post_turn_check.ts",
-      "surfaces": [
-        "tool.execute.after",
-        "event"
+      "event": "session.idle",
+      "conditions": [
+        "isMainSession"
       ],
-      "notes": "Track edit tools, wait for root session.idle, then run a repo-owned validation script and feed results back with visible TUI feedback. Child/subagent sessions should be skipped."
+      "actions": [
+        {
+          "bash": {
+            "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/validate-project.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/validate-project.sh\" \"$OPENCODE_PROJECT_DIR\"; fi",
+            "timeout": 600000
+          }
+        }
+      ],
+      "notes": "Post-turn project validation."
     },
     {
-      "name": "shell-env",
-      "filename": "opencode_hook_shell_env.ts",
-      "surfaces": [
-        "shell.env"
+      "event": "tool.before.write",
+      "actions": [
+        {
+          "bash": "file=$(cat | jq -r '.tool_args.filePath // .tool_args.file_path // .tool_args.path // \"\"'); case \"$file\" in *.env|*.pem|*.key) echo \"Blocked sensitive file write: $file\" >&2; exit 2 ;; esac"
+        }
       ],
-      "notes": "Inject project-specific environment variables into shell execution."
+      "notes": "Example guardrail for sensitive file writes."
+    },
+    {
+      "event": "tool.after.edit",
+      "actions": [
+        {
+          "bash": "printf 'edited %s\\n' \"$(cat | jq -r '.tool_args.filePath // .tool_args.file_path // .tool_args.path // \"unknown\"')\" >&2"
+        }
+      ],
+      "notes": "Example post-tool observer."
     }
   ]
 }

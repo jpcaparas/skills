@@ -22,7 +22,7 @@ A universal run without `--harnesses` is conservative. With the default plan, th
 - legacy generated manifests
 - shared adapters under `hooks/`
 - harness config files that already contain hook entries
-- OpenCode plugin files under `.opencode/plugins/`
+- OpenCode Froggy config under `opencode.json` and `.opencode/hook/hooks.md`
 
 If any harness is detected, only that detected set is refreshed. New harnesses are added only through explicit `--harnesses` or a custom universal plan.
 
@@ -38,16 +38,11 @@ Then it calls each shell harness scaffolder in additive mode so existing `script
 
 ## OpenCode
 
-OpenCode remains different because its extension point is a TypeScript or JavaScript plugin file. The universal scaffold keeps `.opencode/plugins/*.ts` as the OpenCode adapter layer and makes that plugin call:
+OpenCode remains different because the universal scaffold delegates the plugin layer to `opencode-froggy`. The component merges `opencode.json` so `plugin` includes `opencode-froggy`, then renders Froggy YAML frontmatter into `.opencode/hook/hooks.md`.
 
-- `hooks/opencode-session-created/opencode.sh`
-- `hooks/opencode-session-idle/opencode.sh`
+Froggy bash actions call repo-owned delegate scripts from the universal plan. Use Froggy's `isMainSession` condition on session lifecycle hooks that should skip child/subagent sessions.
 
-Those shell adapters then call repo-owned delegate scripts from the universal plan.
-
-OpenCode also emits normal session lifecycle events for child/subagent sessions. The generated lifecycle plugin treats `session.created` with `info.parentID` as a child session marker, caches that session ID, and skips both context injection and idle validation for those child IDs so stop-style behavior remains main-thread only.
-
-The OpenCode managed manifest stores scaffold provenance, plan/template hashes, and file hashes. Additive re-runs refresh unchanged managed plugin files and preserve files whose hash no longer matches the last scaffold, which allows template improvements to land without removing project-owned scripts or unrelated plugins.
+The OpenCode managed manifest stores scaffold provenance, plan/template hashes, and managed file hashes under `.opencode/hook/.managed/`. Additive re-runs replace the managed Froggy block in `hooks.md`, preserve custom hooks outside that block, and remove prior scaffold-owned local plugin artifacts when `.opencode/plugins/.managed/manifest.json` proves ownership.
 
 ## Per-Harness Stdout Protocols for Shared Context Scripts
 
@@ -58,6 +53,18 @@ Shared scripts that emit session context (for example a repo-owned agent-session
 - `devin`: same `hookSpecificOutput` shape as codex. Devin strictly parses non-empty stdout as Claude-format JSON; plain text fails its effects evaluator and is silently dropped (only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`). Field-verified 2026-06-12 on v2026.5.26-8.
 
 A safe default fall-through is plain text, but never let `devin` reach it.
+
+## Exit Codes vs Output Streams
+
+Keep the control plane separate from the text streams:
+
+- Exit code `0` means success.
+- Exit code `2` means "block" only for harnesses/events that define that behavior.
+- Other nonzero exits mean failure or warning according to the harness.
+- `stderr` is for diagnostics, failure detail, and block reasons. Do not write successful status or routine skip messages to stderr just to make them visible.
+- Successful informational messages may go to stdout only when the harness stdout protocol allows free text. Otherwise keep successful no-op hooks quiet.
+
+This matters for OpenCode Froggy because it displays stdout and stderr separately in its bash-result message. A successful skip on stderr looks like a warning even though the exit code is `0`.
 
 ## Hook Visibility Expectations
 

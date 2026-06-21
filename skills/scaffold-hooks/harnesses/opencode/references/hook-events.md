@@ -1,127 +1,63 @@
-# Hook Surfaces
+# Froggy Hook Events
 
-Current OpenCode hook surface catalog, verified on 2026-06-13 against the official plugin, config, SDK, custom-tools, troubleshooting docs, and upstream event source.
+`opencode-froggy` exposes a smaller hook DSL on top of OpenCode's plugin API.
 
-Primary sources:
+## Hook File Shape
 
-- `https://opencode.ai/docs/plugins/`
-- `https://opencode.ai/docs/config/`
-- `https://opencode.ai/docs/sdk`
-- `https://opencode.ai/docs/custom-tools`
-- `https://opencode.ai/docs/troubleshooting`
-- `https://github.com/sst/opencode` source at `9ae4a5139fa4aa5c638c7903b486ad419ec4cce3`
+```markdown
+---
+hooks:
+  - event: session.idle
+    conditions: [isMainSession]
+    actions:
+      - bash: "npm run lint"
+---
+```
 
-Secondary source:
+## Events
 
-- `https://blog.devgenius.io/opencode-auto-lint-your-ai-agents-code-with-a-post-turn-biome-hook-7158d75c63db?postPublishedType=repub`
+| Event | Use |
+|-------|-----|
+| `session.created` | Run root-session bootstrap or baseline scripts |
+| `session.deleted` | Cleanup session state |
+| `session.idle` | Run post-turn checks after OpenCode edits files |
+| `tool.before.*` | Run before every tool; bash exit `2` blocks |
+| `tool.before.<name>` | Run before a specific tool, such as `tool.before.write` |
+| `tool.after.*` | Observe every tool after execution |
+| `tool.after.<name>` | Observe a specific tool after execution |
 
-Use `assets/hook-events.json` as the deterministic scaffold input. Re-verify the official docs before every real scaffold or refresh.
+## Conditions
 
-## Current Runtime Model
+| Condition | Meaning |
+|-----------|---------|
+| `isMainSession` | Skip child/subagent sessions |
+| `hasCodeChange` | Run only when Froggy tracked edited files with known code extensions |
 
-- OpenCode hooks are plugin modules, not a separate hook config file.
-- OpenCode supports local JavaScript or TypeScript plugin files, but this managed scaffold generates TypeScript only.
-- Plugins can load from local files or npm packages.
-- Local plugin files load from `.opencode/plugins/` or `~/.config/opencode/plugins/`.
-- npm plugin packages load through the `plugin` array in config.
-- All plugins from all sources run in sequence using the documented load order.
-- Child or subagent sessions are represented as sessions with `info.parentID` on `session.created`. Root-session lifecycle adapters should record those child IDs and skip their `session.created` and `session.idle` work.
-- `session.idle` carries the session ID but not the full session info, so the main-thread filter must learn child sessions from `session.created` before idle fires.
+Do not use `hasCodeChange` for Markdown-heavy skills repositories unless skipping Markdown-only changes is acceptable.
 
-## Special Plugin Surfaces
+## Actions
 
-These are not just named event strings, but they materially change how you scaffold plugins:
+| Action | Meaning |
+|--------|---------|
+| `bash` | Run a shell command through `bash -c` |
+| `command` | Invoke a Froggy/OpenCode command |
+| `tool` | Ask the session to use a tool with fixed arguments |
 
-| Surface | What it does | Notes |
-|--------|---------------|-------|
-| `event` | Catch-all event observer | Use this when a plugin needs to react to many event types or watch for `session.idle` |
-| `tool` | Register custom tools | Requires `@opencode-ai/plugin` for the `tool()` helper in the official examples |
-| `experimental.session.compacting` | Modify compaction context or prompt | Experimental; opt in carefully |
+## Bash Context
 
-## High-Value Hook Surfaces
+Froggy injects:
 
-| Surface | Best use | Why it matters |
-|--------|----------|----------------|
-| `tool.execute.before` | guardrails and rewrites | Runs before the tool executes |
-| `tool.execute.after` | edit tracking and post-action observation | Good for marking state, not prevention |
-| `event` + `session.idle` | post-turn validation | Lets a plugin wait for the agent to go idle before running checks |
-| `shell.env` | environment injection | Safely adds env vars to shell execution |
-| `tool` | custom tools | Extends OpenCode beyond built-in tools |
-| `experimental.session.compacting` | custom continuation context | Helps preserve domain state across compaction |
+- `OPENCODE_PROJECT_DIR`
+- `OPENCODE_SESSION_ID`
 
-## Official Event Groups
+It also writes JSON to stdin. Common fields are `session_id`, `event`, `cwd`, `files`, `tool_name`, and `tool_args`.
 
-### Command Events
+For `tool.before.*` and `tool.before.<name>`, bash exit code `2` blocks the tool and stderr becomes the block reason. Other nonzero exits are reported but do not block later OpenCode work.
 
-- `command.executed`
+Keep exit codes and output streams separate:
 
-### File Events
+- Exit code controls success, failure, or blocking.
+- Stderr is for diagnostics, failure detail, and block reasons.
+- Successful routine skips should write to stdout, or stay quiet if stdout would conflict with the hook protocol.
 
-- `file.edited`
-- `file.watcher.updated`
-
-### Installation Events
-
-- `installation.updated`
-
-### LSP Events
-
-- `lsp.client.diagnostics`
-- `lsp.updated`
-
-### Message Events
-
-- `message.part.removed`
-- `message.part.updated`
-- `message.removed`
-- `message.updated`
-
-### Permission Events
-
-- `permission.asked`
-- `permission.replied`
-
-### Server Events
-
-- `server.connected`
-
-### Session Events
-
-- `session.created`
-- `session.compacted`
-- `session.deleted`
-- `session.diff`
-- `session.error`
-- `session.idle`
-- `session.status`
-- `session.updated`
-
-### Todo Events
-
-- `todo.updated`
-
-### Shell Events
-
-- `shell.env`
-
-### Tool Events
-
-- `tool.execute.after`
-- `tool.execute.before`
-
-### TUI Events
-
-- `tui.prompt.append`
-- `tui.command.execute`
-- `tui.toast.show`
-
-## Practical Semantics
-
-- Use `tool.execute.before` when the plugin needs to deny or rewrite a tool call.
-- Use `tool.execute.after` when the plugin only needs to observe what just happened.
-- Use `event` when the logic needs cross-event state, especially idle detection after edits.
-- When using `event` for lifecycle mirroring, run context injection and post-turn validation only for root sessions. Skip events whose session was created with `info.parentID`.
-- Use `client.session.prompt()` when the plugin needs to feed results back into a session.
-- Use `client.app.log()` for structured logs instead of `console.log()`.
-- Use `client.tui.showToast()` for visible start/pass/fail feedback when a hook performs meaningful background work.
-- Use config-dir dependencies only when the plugin imports external packages.
+Froggy displays stdout and stderr separately in the bash-result message, so a successful skip written to stderr looks like a warning even with exit `0`.

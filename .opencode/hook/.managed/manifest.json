@@ -1,0 +1,232 @@
+{
+  "verified_on": "2026-06-21",
+  "verified_with": {
+    "official_docs": [
+      "https://opencode.ai/docs/plugins/",
+      "https://opencode.ai/docs/config/"
+    ],
+    "froggy_sources": [
+      "https://github.com/smartfrog/opencode-froggy",
+      "https://www.npmjs.com/package/opencode-froggy"
+    ],
+    "runtime_package": {
+      "name": "@opencode-ai/plugin",
+      "latest_version": "1.17.9",
+      "checked_via": "npm view @opencode-ai/plugin version"
+    },
+    "opencode_cli": {
+      "name": "opencode",
+      "local_version": "1.15.10",
+      "checked_via": "opencode --version"
+    },
+    "froggy_package": {
+      "name": "opencode-froggy",
+      "latest_version": "0.12.0",
+      "checked_via": "npm view opencode-froggy --json",
+      "source_commit": "ca3e228d53b62be2cd882c91a0eb091d94909371"
+    },
+    "checked_paths": [
+      "src/index.ts",
+      "src/loaders.ts",
+      "src/bash-executor.ts",
+      "src/config-paths.ts",
+      "README.md"
+    ]
+  },
+  "plugin_name": "opencode-froggy",
+  "config_files": {
+    "project": "opencode.json or opencode.jsonc",
+    "global": "~/.config/opencode/opencode.json or opencode.jsonc"
+  },
+  "hook_config_files": {
+    "project": ".opencode/hook/hooks.md",
+    "global": "~/.config/opencode/hook/hooks.md",
+    "windows_global_fallback": "%APPDATA%/opencode/hook/hooks.md"
+  },
+  "load_order": [
+    "global Froggy hooks",
+    "project Froggy hooks"
+  ],
+  "supported_events": [
+    "session.created",
+    "session.deleted",
+    "session.idle",
+    "tool.before.*",
+    "tool.before.<name>",
+    "tool.after.*",
+    "tool.after.<name>"
+  ],
+  "conditions": [
+    "isMainSession",
+    "hasCodeChange"
+  ],
+  "actions": [
+    "bash",
+    "command",
+    "tool"
+  ],
+  "bash_context": {
+    "environment": [
+      "OPENCODE_PROJECT_DIR",
+      "OPENCODE_SESSION_ID"
+    ],
+    "stdin_fields": [
+      "session_id",
+      "event",
+      "cwd",
+      "files",
+      "tool_name",
+      "tool_args"
+    ],
+    "blocking_exit_code": 2
+  },
+  "generated_at": "2026-06-21T02:54:10Z",
+  "scaffold_hooks": {
+    "schema_version": 2,
+    "skill_name": "scaffold-hooks",
+    "harness": "opencode",
+    "integration": "opencode-froggy",
+    "skill_version": "1.0.0",
+    "source": {
+      "repository": "git@github.com:jpcaparas/skills.git",
+      "commit": "3b86e101c3d46a6dd1657d2884cd9216331fb556",
+      "dirty": true
+    },
+    "generator": {
+      "path": "harnesses/opencode/scripts/scaffold_hooks.sh",
+      "sha256": "50b718cf6b93fb9be4ae5790c89d28e273936cecba1bb413c075ed697eae223d"
+    },
+    "renderer": {
+      "path": "harnesses/opencode/scripts/render_froggy_hooks.ts",
+      "sha256": "aecb8543a70c8b10d5ca0c7c8eae4f4233f38942b7971ffadb5e8022867c274b"
+    },
+    "plan_sha256": "9dfb0ca05fd2398c2dbf1d8b468175f379e60b46651ff4dc2afbcc18767b8cda",
+    "event_manifest_sha256": "8d651fc978022bf6424ad21f3d199d2be5b704bf22c8d4616499b3604c6d2756"
+  },
+  "scope": "project",
+  "mode": "additive",
+  "config_target": "opencode.json",
+  "hook_config_target": ".opencode/hook/hooks.md",
+  "managed_state_dir": ".opencode/hook/.managed",
+  "hooks": [
+    {
+      "event": "session.created",
+      "conditions": [
+        "isMainSession"
+      ],
+      "actions": [
+        {
+          "bash": {
+            "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" >/dev/null; fi",
+            "timeout": 20000
+          }
+        }
+      ],
+      "notes": "Record the skills repo session baseline quietly."
+    },
+    {
+      "event": "session.idle",
+      "conditions": [
+        "isMainSession"
+      ],
+      "actions": [
+        {
+          "bash": {
+            "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" \"$OPENCODE_PROJECT_DIR\"; fi",
+            "timeout": 600000
+          }
+        }
+      ],
+      "notes": "Run the repository stop checks after the main OpenCode session goes idle."
+    }
+  ],
+  "managed_files": [
+    ".opencode/hook/hooks.md"
+  ],
+  "managed_file_hashes": {
+    ".opencode/hook/hooks.md": "7eb50be1003b9d11e9a0bd02b83e8f7880aab626e5f24de707267c596bc90951"
+  },
+  "merged_config_hashes": {
+    "opencode.json": "4aed67c7b494ed55407e07f6963d438b9f43f69178247767d77eee4da4bcf7a6"
+  },
+  "setup_status": {
+    "project_root": "/Users/jp/Repos/jpcaparas/skills",
+    "home": "/Users/jp",
+    "scope_recommendation": "project",
+    "deployment_recommendation": "opencode-froggy",
+    "recommended_hook_config": ".opencode/hook/hooks.md",
+    "recommended_config_target": "opencode.json",
+    "project": {
+      "config_file": "/Users/jp/Repos/jpcaparas/skills/opencode.json",
+      "config_exists": true,
+      "config_format": "json",
+      "plugin_entries": [
+        "opencode-froggy"
+      ],
+      "has_froggy_plugin": true,
+      "hook_file": "/Users/jp/Repos/jpcaparas/skills/.opencode/hook/hooks.md",
+      "hook_exists": true,
+      "managed_state": "/Users/jp/Repos/jpcaparas/skills/.opencode/hook/.managed",
+      "managed_state_exists": true,
+      "legacy_plugin_state": "/Users/jp/Repos/jpcaparas/skills/.opencode/plugins/.managed",
+      "legacy_plugin_state_exists": false,
+      "local_plugin_files": []
+    },
+    "global": {
+      "config_file": "/Users/jp/.config/opencode/opencode.json",
+      "config_exists": true,
+      "config_format": "json",
+      "plugin_entries": [],
+      "has_froggy_plugin": false,
+      "hook_file": "/Users/jp/.config/opencode/hook/hooks.md",
+      "hook_exists": false,
+      "managed_state": "/Users/jp/.config/opencode/hook/.managed",
+      "managed_state_exists": false,
+      "legacy_plugin_state": "/Users/jp/.config/opencode/plugins/.managed",
+      "legacy_plugin_state_exists": false,
+      "local_plugin_files": []
+    },
+    "warnings": []
+  },
+  "plan": {
+    "scope": "project",
+    "mode": "additive",
+    "plugin_name": "opencode-froggy",
+    "config_target": "opencode.json",
+    "hook_config_target": ".opencode/hook/hooks.md",
+    "managed_state_dir": ".opencode/hook/.managed",
+    "hooks_root": "hooks",
+    "hooks": [
+      {
+        "event": "session.created",
+        "conditions": [
+          "isMainSession"
+        ],
+        "actions": [
+          {
+            "bash": {
+              "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" >/dev/null; fi",
+              "timeout": 20000
+            }
+          }
+        ],
+        "notes": "Record the skills repo session baseline quietly."
+      },
+      {
+        "event": "session.idle",
+        "conditions": [
+          "isMainSession"
+        ],
+        "actions": [
+          {
+            "bash": {
+              "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" \"$OPENCODE_PROJECT_DIR\"; fi",
+              "timeout": 600000
+            }
+          }
+        ],
+        "notes": "Run the repository stop checks after the main OpenCode session goes idle."
+      }
+    ]
+  }
+}

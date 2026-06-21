@@ -1,45 +1,36 @@
 # Reusable Scripts
 
-Use this when OpenCode plugin behavior should share project logic with Codex, Claude Code, Devin, Git hooks, GitHub Actions, or a local terminal.
+Froggy should call repo-owned scripts instead of embedding validation policy in `hooks.md`.
 
-## Placement Pattern
+Recommended scripts:
 
-Keep project behavior in repo-owned scripts under a stable project directory:
+- `./scripts/agent-session-context.sh` for session baselines and optional context
+- `./scripts/validate-project.sh` for generic post-turn validation
+- `./scripts/agent-stop-checks.sh` for repository-wide stop checks
 
-```text
-scripts/
-├── agent-session-context.sh   # shared context producer
-├── agent-stop-checks.sh       # shared checks with a harness mode argument
-├── opencode-stop-checks.sh    # optional thin OpenCode adapter
-├── codex-stop-checks.sh       # optional thin Codex adapter
-└── claude-stop-checks.sh      # optional thin Claude adapter
+Set these environment variables in Froggy bash commands when calling shared scripts:
+
+```bash
+AGENT_HOOK_HARNESS=opencode
+AGENT_HOOK_PROJECT_ROOT="$OPENCODE_PROJECT_DIR"
+AGENT_HOOK_SESSION_ID="$OPENCODE_SESSION_ID"
 ```
 
-Generated OpenCode plugins should orchestrate lifecycle, TUI feedback, logging, and one controlled repair prompt. Project logic belongs in `hooks/opencode-session-created/script.sh`, `hooks/opencode-session-idle/script.sh`, or repo-owned delegate scripts those adapters call.
+Use the project path argument when the script accepts one:
 
-## Script Rules
-
-- Resolve the repo root inside shared scripts, usually with `git rev-parse --show-toplevel`.
-- Accept a harness or mode argument when output protocols differ, for example `agent-stop-checks.sh opencode`.
-- Keep toolchain commands in shared scripts or existing repo task runners, not inside generated plugin bodies.
-- Make shared scripts callable by humans and CI: `bash <project>/scripts/agent-stop-checks.sh opencode`.
-- Use adapter scripts only when OpenCode's prompt/repair flow needs output that differs from Codex or Claude Code.
-
-## Plan Example
-
-```json
-{
-  "name": "project-session-lifecycle",
-  "pattern": "lifecycle-action",
-  "filename": "opencode_hook_project_session_lifecycle.ts",
-  "surfaces": ["event"],
-  "context_script": "hooks/opencode-session-created/opencode.sh",
-  "action_script": "hooks/opencode-session-idle/opencode.sh",
-  "context_delegate_script": "scripts/agent-session-context.sh",
-  "action_delegate_script": "scripts/opencode-stop-checks.sh",
-  "action_label": "Project validation",
-  "service": "project-opencode-hooks"
-}
+```bash
+bash "$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh" "$OPENCODE_PROJECT_DIR"
 ```
 
-The lifecycle template resolves the active repo from OpenCode's plugin context (`worktree`, `directory`, or project fields) before falling back to the plugin directory, so the same plugin shape works for project-local and global scopes.
+Froggy already provides JSON context on stdin. If a script needs tool arguments or modified file lists, read stdin with `jq`.
+
+## Exit Codes and Streams
+
+Design reusable scripts so exit code carries control flow and streams carry text:
+
+- Exit `0` for success, including "nothing to do" skips.
+- Exit `2` only when the target hook event treats it as a block signal.
+- Write diagnostics, failure details, and block reasons to stderr.
+- Write successful informational text to stdout only when the harness protocol allows it; otherwise keep successful no-op paths quiet.
+
+For Froggy bash actions, stdout and stderr are both displayed in the session. Do not put successful skip messages on stderr.

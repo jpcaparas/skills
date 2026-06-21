@@ -1,307 +1,83 @@
 {
-  "verified_on": "2026-06-13",
+  "verified_on": "2026-06-21",
   "verified_with": {
     "official_docs": [
       "https://opencode.ai/docs/plugins/",
-      "https://opencode.ai/docs/config/",
-      "https://opencode.ai/docs/sdk",
-      "https://opencode.ai/docs/custom-tools",
-      "https://opencode.ai/docs/troubleshooting"
+      "https://opencode.ai/docs/config/"
     ],
-    "secondary_sources": [
-      "https://blog.devgenius.io/opencode-auto-lint-your-ai-agents-code-with-a-post-turn-biome-hook-7158d75c63db?postPublishedType=repub"
+    "froggy_sources": [
+      "https://github.com/smartfrog/opencode-froggy",
+      "https://www.npmjs.com/package/opencode-froggy"
     ],
     "runtime_package": {
       "name": "@opencode-ai/plugin",
-      "version": "1.17.4",
+      "latest_version": "1.17.9",
       "checked_via": "npm view @opencode-ai/plugin version"
     },
-    "local_cli": {
+    "opencode_cli": {
       "name": "opencode",
-      "version": "1.15.10",
+      "local_version": "1.15.10",
       "checked_via": "opencode --version"
     },
-    "source_code": {
-      "repository": "https://github.com/sst/opencode",
-      "commit": "9ae4a5139fa4aa5c638c7903b486ad419ec4cce3",
-      "checked_paths": [
-        "packages/opencode/src/plugin/index.ts",
-        "packages/opencode/src/session/session.ts",
-        "packages/opencode/src/session/status.ts",
-        "packages/opencode/src/tool/task.ts"
-      ]
-    }
+    "froggy_package": {
+      "name": "opencode-froggy",
+      "latest_version": "0.12.0",
+      "checked_via": "npm view opencode-froggy --json",
+      "source_commit": "ca3e228d53b62be2cd882c91a0eb091d94909371"
+    },
+    "checked_paths": [
+      "src/index.ts",
+      "src/loaders.ts",
+      "src/bash-executor.ts",
+      "src/config-paths.ts",
+      "README.md"
+    ]
   },
-  "default_scope": "project",
-  "default_deployment": "local-files",
-  "default_module_format": "ts",
-  "recommended_dependency_versions": {
-    "@opencode-ai/plugin": "^1.17.4"
-  },
-  "load_order": [
-    "global-config",
-    "project-config",
-    "global-plugin-directory",
-    "project-plugin-directory"
-  ],
-  "plugin_directories": {
-    "project": ".opencode/plugins",
-    "global": "~/.config/opencode/plugins"
-  },
+  "plugin_name": "opencode-froggy",
   "config_files": {
     "project": "opencode.json or opencode.jsonc",
     "global": "~/.config/opencode/opencode.json or opencode.jsonc"
   },
-  "special_surfaces": [
-    {
-      "name": "event",
-      "stub_file": "event.catch-all.ts.txt",
-      "category": "special",
-      "kind": "catch-all",
-      "description": "Observe all OpenCode events through one handler.",
-      "guidance": "Use this for session.idle or any workflow that coordinates multiple event types. For lifecycle mirroring, cache child sessions from session.created info.parentID and skip them."
-    },
-    {
-      "name": "tool",
-      "stub_file": "tool.registry.ts.txt",
-      "category": "special",
-      "kind": "custom-tool",
-      "description": "Register custom tools from a plugin.",
-      "guidance": "Requires the official @opencode-ai/plugin helper in the documented examples."
-    }
+  "hook_config_files": {
+    "project": ".opencode/hook/hooks.md",
+    "global": "~/.config/opencode/hook/hooks.md",
+    "windows_global_fallback": "%APPDATA%/opencode/hook/hooks.md"
+  },
+  "load_order": [
+    "global Froggy hooks",
+    "project Froggy hooks"
   ],
-  "events": [
-    {
-      "name": "command.executed",
-      "stub_file": "command.executed.ts.txt",
-      "category": "command",
-      "kind": "named-event",
-      "description": "React after an OpenCode command executes.",
-      "guidance": "Prefer lightweight bookkeeping, logging, or follow-up context."
-    },
-    {
-      "name": "file.edited",
-      "stub_file": "file.edited.ts.txt",
-      "category": "file",
-      "kind": "named-event",
-      "description": "Observe file edits.",
-      "guidance": "Use this when the plugin needs file-level bookkeeping beyond tool-name checks."
-    },
-    {
-      "name": "file.watcher.updated",
-      "stub_file": "file.watcher.updated.ts.txt",
-      "category": "file",
-      "kind": "named-event",
-      "description": "React to file watcher updates.",
-      "guidance": "Good for syncing state from watcher-driven changes."
-    },
-    {
-      "name": "installation.updated",
-      "stub_file": "installation.updated.ts.txt",
-      "category": "installation",
-      "kind": "named-event",
-      "description": "React when installation state changes.",
-      "guidance": "Use this for setup reminders or dependency-related follow-up."
-    },
-    {
-      "name": "lsp.client.diagnostics",
-      "stub_file": "lsp.client.diagnostics.ts.txt",
-      "category": "lsp",
-      "kind": "named-event",
-      "description": "Observe LSP diagnostics from the client.",
-      "guidance": "Useful for editor-driven validation or error aggregation."
-    },
-    {
-      "name": "lsp.updated",
-      "stub_file": "lsp.updated.ts.txt",
-      "category": "lsp",
-      "kind": "named-event",
-      "description": "React when LSP state updates.",
-      "guidance": "Keep this lightweight unless the repo depends heavily on LSP status."
-    },
-    {
-      "name": "message.part.removed",
-      "stub_file": "message.part.removed.ts.txt",
-      "category": "message",
-      "kind": "named-event",
-      "description": "Observe message part removals.",
-      "guidance": "Rarely the first scaffold choice; use only for message lifecycle workflows."
-    },
-    {
-      "name": "message.part.updated",
-      "stub_file": "message.part.updated.ts.txt",
-      "category": "message",
-      "kind": "named-event",
-      "description": "Observe message part updates.",
-      "guidance": "Use when the plugin needs fine-grained message stream awareness."
-    },
-    {
-      "name": "message.removed",
-      "stub_file": "message.removed.ts.txt",
-      "category": "message",
-      "kind": "named-event",
-      "description": "Observe message removals.",
-      "guidance": "Keep ownership clear if you also subscribe to catch-all event hooks."
-    },
-    {
-      "name": "message.updated",
-      "stub_file": "message.updated.ts.txt",
-      "category": "message",
-      "kind": "named-event",
-      "description": "Observe message updates.",
-      "guidance": "Use for logging or synchronization, not heavy computation."
-    },
-    {
-      "name": "permission.asked",
-      "stub_file": "permission.asked.ts.txt",
-      "category": "permission",
-      "kind": "named-event",
-      "description": "React when OpenCode asks for permission.",
-      "guidance": "Use this for notifications or state tracking, not as the primary guardrail."
-    },
-    {
-      "name": "permission.replied",
-      "stub_file": "permission.replied.ts.txt",
-      "category": "permission",
-      "kind": "named-event",
-      "description": "React after a permission reply.",
-      "guidance": "Useful for analytics or workflow bookkeeping."
-    },
-    {
-      "name": "server.connected",
-      "stub_file": "server.connected.ts.txt",
-      "category": "server",
-      "kind": "named-event",
-      "description": "React when a server connection is established.",
-      "guidance": "Good for startup notifications or environment checks."
-    },
-    {
-      "name": "session.created",
-      "stub_file": "session.created.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "React when a session is created.",
-      "guidance": "Use for bootstrap context or welcome-state logic on root sessions. Child/subagent sessions include info.parentID and should be skipped for main-thread lifecycle adapters."
-    },
-    {
-      "name": "session.compacted",
-      "stub_file": "session.compacted.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "React after a session compacts.",
-      "guidance": "Pair carefully with experimental compaction hooks to avoid duplicate logic."
-    },
-    {
-      "name": "session.deleted",
-      "stub_file": "session.deleted.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "React when a session is deleted.",
-      "guidance": "Good for cleanup or archival bookkeeping."
-    },
-    {
-      "name": "session.diff",
-      "stub_file": "session.diff.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "Observe session diff updates.",
-      "guidance": "Use when the workflow depends on diff-level tracking."
-    },
-    {
-      "name": "session.error",
-      "stub_file": "session.error.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "React to session errors.",
-      "guidance": "Good for notifications, logging, or recovery prompts."
-    },
-    {
-      "name": "session.idle",
-      "stub_file": "session.idle.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "React when a session goes idle.",
-      "guidance": "The key post-turn validation trigger; usually coordinated through the catch-all event handler. session.idle only carries sessionID, so reuse cached child-session state from session.created before running root lifecycle work."
-    },
-    {
-      "name": "session.status",
-      "stub_file": "session.status.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "React to session status changes.",
-      "guidance": "Use for progress reporting or state transitions."
-    },
-    {
-      "name": "session.updated",
-      "stub_file": "session.updated.ts.txt",
-      "category": "session",
-      "kind": "named-event",
-      "description": "Observe session updates.",
-      "guidance": "Useful for session metadata sync or instrumentation."
-    },
-    {
-      "name": "todo.updated",
-      "stub_file": "todo.updated.ts.txt",
-      "category": "todo",
-      "kind": "named-event",
-      "description": "React to todo state updates.",
-      "guidance": "Use for todo-aware workflow nudges or analytics."
-    },
-    {
-      "name": "shell.env",
-      "stub_file": "shell.env.ts.txt",
-      "category": "shell",
-      "kind": "named-event",
-      "description": "Inject environment variables into shell execution.",
-      "guidance": "Mutate output.env to add variables for shell commands."
-    },
-    {
-      "name": "tool.execute.after",
-      "stub_file": "tool.execute.after.ts.txt",
-      "category": "tool",
-      "kind": "named-event",
-      "description": "Observe tool execution after it completes.",
-      "guidance": "Use this to track edits, stash output, or trigger post-turn checks after the fact."
-    },
-    {
-      "name": "tool.execute.before",
-      "stub_file": "tool.execute.before.ts.txt",
-      "category": "tool",
-      "kind": "named-event",
-      "description": "Inspect or rewrite a tool call before it runs.",
-      "guidance": "Use this for guardrails, rewrites, or policy enforcement."
-    },
-    {
-      "name": "tui.prompt.append",
-      "stub_file": "tui.prompt.append.ts.txt",
-      "category": "tui",
-      "kind": "named-event",
-      "description": "React when prompt text is appended in the TUI.",
-      "guidance": "Use when the TUI prompt needs augmentation or observation."
-    },
-    {
-      "name": "tui.command.execute",
-      "stub_file": "tui.command.execute.ts.txt",
-      "category": "tui",
-      "kind": "named-event",
-      "description": "React when a TUI command executes.",
-      "guidance": "Useful for lightweight command analytics or assistance."
-    },
-    {
-      "name": "tui.toast.show",
-      "stub_file": "tui.toast.show.ts.txt",
-      "category": "tui",
-      "kind": "named-event",
-      "description": "React when a TUI toast is shown.",
-      "guidance": "Best for UX instrumentation or notification coordination."
-    },
-    {
-      "name": "experimental.session.compacting",
-      "stub_file": "experimental.session.compacting.ts.txt",
-      "category": "experimental",
-      "kind": "experimental",
-      "description": "Inject or replace compaction context before OpenCode summarizes a session.",
-      "guidance": "Use for context carry-over only. Do not build critical guardrails on this."
-    }
-  ]
+  "supported_events": [
+    "session.created",
+    "session.deleted",
+    "session.idle",
+    "tool.before.*",
+    "tool.before.<name>",
+    "tool.after.*",
+    "tool.after.<name>"
+  ],
+  "conditions": [
+    "isMainSession",
+    "hasCodeChange"
+  ],
+  "actions": [
+    "bash",
+    "command",
+    "tool"
+  ],
+  "bash_context": {
+    "environment": [
+      "OPENCODE_PROJECT_DIR",
+      "OPENCODE_SESSION_ID"
+    ],
+    "stdin_fields": [
+      "session_id",
+      "event",
+      "cwd",
+      "files",
+      "tool_name",
+      "tool_args"
+    ],
+    "blocking_exit_code": 2
+  }
 }

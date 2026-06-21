@@ -1,25 +1,14 @@
-# References
+# OpenCode References
 
-Use these reference files on demand. `SKILL.md` is the entry point and should stay concise; the files here hold the deeper OpenCode-specific material.
+Read these files only when the task needs the corresponding detail.
 
-## Reference Map
-
-| File | Use it when you need |
-|------|----------------------|
-| `project-analysis.md` | the repo audit checklist and planning questions |
-| `config-layering.md` | project-vs-global scope, config precedence, plugin directories, JSON vs JSONC, or cache disable flows |
-| `hook-events.md` | the current OpenCode hook surface catalog and plugin lifecycle model |
-| `plugin-patterns.md` | ready-made lifecycle/action, toast, repair, guardrail, post-turn, shell env, custom-tool, or compaction patterns |
-| `scaffold-layout.md` | the managed target structure and plan file shape |
-| `reusable-scripts.md` | reusable script placement for cross-agent, Git hook, or CI use |
-| `merge-strategy.md` | additive vs overhaul rules and repeat-run behavior |
-| `gotchas.md` | runtime traps, stale path examples, and failure modes that are easy to miss |
-
-## Source Priority
-
-1. Official OpenCode docs
-2. Upstream OpenCode source for event payload shape
-3. `assets/hook-events.json`
-4. Secondary article material
-
-When the official docs and the article disagree, follow the official docs and update the local references.
+| File | Use when |
+|------|----------|
+| `project-analysis.md` | Auditing a repo before choosing project/global scope |
+| `config-layering.md` | Understanding `opencode.json`, Froggy hook locations, and load order |
+| `hook-events.md` | Checking supported Froggy events, conditions, actions, and bash context |
+| `plugin-patterns.md` | Designing common `hooks.md` entries |
+| `scaffold-layout.md` | Reviewing target files and plan fields |
+| `reusable-scripts.md` | Keeping project behavior in repo-owned scripts |
+| `merge-strategy.md` | Understanding additive, overhaul, and legacy cleanup behavior |
+| `gotchas.md` | Avoiding migration and runtime traps |

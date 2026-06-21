@@ -1,57 +1,33 @@
 # Gotchas
 
-## 1. OpenCode hooks are plugins, not a standalone hook config
+## 1. Froggy is a plugin plus a hook file
 
-If you scaffold as though OpenCode had a `hooks.json` equivalent, you will create the wrong file structure. The real runtime unit is a plugin module.
+`hooks.md` is inert unless `opencode.json` loads `opencode-froggy`.
 
-## 2. Use the documented plugin directories
+## 2. `hook` and `plugins` are different directories
 
-Use project-local `.opencode/plugins/` and global `~/.config/opencode/plugins/` when scaffolding or troubleshooting plugin loading.
+Froggy config lives in `.opencode/hook/hooks.md`. OpenCode local plugin modules live in `.opencode/plugins/`. The new scaffold writes the former and cleans up only old scaffold-owned files in the latter.
 
-## 3. Local and npm plugins can both load
+## 3. Bash output is visible
 
-OpenCode loads plugins from config files and local directories. A local plugin and an npm plugin with a similar name can both run.
+Froggy sends bash action results back to the session. Redirect stdout for scripts that only set up state, such as baseline capture.
 
-## 4. `tool.execute.after` cannot prevent side effects
+## 4. Exit code and stderr are different signals
 
-Use `tool.execute.before` when the plugin must stop or rewrite an action. Use `tool.execute.after` only for observation, bookkeeping, or feedback after the fact.
+Exit code controls success, failure, or blocking. Stderr is only for diagnostics, failure detail, and block reasons. Do not write successful status or routine skip messages to stderr; Froggy will show them as `Stderr:` even when the hook exits `0`.
 
-## 5. `event` plus named handlers can overlap
+## 5. Markdown is not a Froggy code-change extension
 
-If a plugin uses `event` and also subscribes to a specific named surface, you can easily double-handle the same workflow unless one of them owns the coordination.
+The `hasCodeChange` condition follows Froggy's extension list. It skips Markdown-only edits, which is wrong for many skill repositories.
 
-## 6. Config-dir dependencies live under `.opencode/` or `~/.config/opencode/`
+## 6. Exit code 2 only blocks before-tool hooks
 
-Do not default to the repo root `package.json` when the plugin runtime dependency only exists for OpenCode local plugins. The docs explicitly point the dependency install to the config directory.
+Use exit `2` for `tool.before.*` and `tool.before.<name>` guardrails. For `session.idle`, a nonzero exit is feedback, not a hard stop in the same way Claude/Codex stop hooks behave.
 
-## 7. `experimental.session.compacting` is not a baseline safety primitive
+## 7. Preserve custom hooks
 
-It is shown in the official docs, but it is explicitly experimental. Use it for enrichment, not for critical policy.
+If `.opencode/hook/hooks.md` has an unfamiliar frontmatter shape, stop and ask for manual merge rather than rewriting it.
 
-## 8. Bad plugins can break startup
+## 8. Old dependency artifacts are removable only when proven managed
 
-The troubleshooting docs explicitly recommend disabling plugins and clearing `~/.cache/opencode` when OpenCode hangs, crashes, or behaves strangely.
-
-## 9. JSONC comments will not survive deterministic merges
-
-This skill can read JSONC config, but the managed merge scripts write normalized JSON output. Warn the user before you rewrite a hand-commented config file.
-
-## 10. Post-turn checks need both state and cooldown
-
-Without edit tracking and a cooldown, a `session.idle`-driven validator can thrash the agent with repeated lint or test prompts.
-
-## 11. Logs are not user-visible TUI feedback
-
-Use `client.app.log()` for diagnostics and captured details. When background work matters to the user, also call `client.tui.showToast()` through a best-effort helper.
-
-## 12. Repair prompts need an exit condition
-
-If a hook asks OpenCode to repair a failure, send only one automatic repair prompt. Persistent failure should be reported with `noReply: true` so the plugin does not create an infinite follow-up loop.
-
-## 13. Subagent sessions look like normal session events
-
-OpenCode publishes `session.created` and `session.idle` for child/subagent sessions too. `session.created` includes `info.parentID`, but `session.idle` only includes the session ID. Lifecycle adapters that mirror SessionStart or Stop behavior should cache child session IDs from `session.created` and skip later idle work for those IDs.
-
-## 14. Additive refresh needs provenance
-
-If a managed plugin file exists, additive mode should not blindly leave it stale or blindly overwrite it. Use `managed_file_hashes` to refresh unchanged generated files and `preserved_file_hashes` to avoid overwriting user-modified files. Legacy manifests without hashes can only be upgraded safely when the target file is listed as managed and still has the scaffold-managed header.
+Remove `.opencode/package.json`, lockfiles, and `node_modules` only when the package file contains only the old scaffold's `@opencode-ai/plugin` dependency or the user explicitly asks.

@@ -61,7 +61,7 @@ session_baseline_file() {
 if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] && [ -n "${AGENT_HOOK_HARNESS:-}" ]; then
     baseline_file="$(session_baseline_file)"
     if [ ! -f "$baseline_file" ]; then
-        echo "No agent session baseline found; skipping stop validation for unchanged first turn." >&2
+        echo "No agent session baseline found; skipping stop validation for unchanged first turn."
         exit 0
     fi
 
@@ -69,7 +69,7 @@ if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] && [ -n "${AGENT_HOOK_HARNESS:-}" 
     source "$baseline_file"
     current_snapshot="$(repo_snapshot_hash)"
     if [ "${snapshot:-}" = "$current_snapshot" ]; then
-        echo "No repository changes detected since this agent session started; skipping stop validation." >&2
+        echo "No repository changes detected since this agent session started; skipping stop validation."
         exit 0
     fi
 fi
@@ -92,7 +92,7 @@ if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] \
     && upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" \
     && ahead_count="$(git rev-list --count "${upstream_ref}..HEAD" 2>/dev/null)" \
     && [ "$ahead_count" = "0" ]; then
-    echo "No local or unpushed repository changes detected; skipping stop validation." >&2
+    echo "No local or unpushed repository changes detected; skipping stop validation."
     exit 0
 fi
 

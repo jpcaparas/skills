@@ -1,68 +1,25 @@
 # Project Analysis
 
-Audit the target project before you decide anything about OpenCode hooks.
+Before scaffolding OpenCode:
 
-## Inspect First
+1. Check whether the target is a git repo.
+2. Read `opencode.json` or `opencode.jsonc` if present.
+3. Inspect `.opencode/hook/hooks.md`.
+4. Inspect `.opencode/hook/.managed/manifest.json`.
+5. Inspect `.opencode/plugins/` for unmanaged custom plugins and old `.managed` state.
+6. Inspect `.opencode/package.json` for old local-plugin dependency artifacts.
+7. Identify repo-owned scripts that hooks should call:
+   - `./scripts/agent-session-context.sh`
+   - `./scripts/validate-project.sh`
+   - `./scripts/agent-stop-checks.sh`
+8. Check package scripts and validation commands.
+9. Check AGENTS/README instructions that affect validation or generated files.
 
-- repo root and whether the target path lives inside a Git repo
-- languages, package managers, and task runners
-- lint, test, typecheck, format, and validation entry points
-- existing OpenCode files:
-  - `opencode.json`
-  - `opencode.jsonc`
-  - `.opencode/plugins/`
-  - `.opencode/package.json`
-  - `.opencode/tools/`
-  - `.opencode/agents/`
-- existing user instructions:
-  - `AGENTS.md`
-  - `README*`
-  - project-specific automation docs
-- existing Git hooks or repo automation:
-  - `.husky/`
-  - `lefthook.yml`
-  - `.githooks/`
-  - `.github/workflows/`
-  - `<project>/scripts/agent-*.sh` or other reusable automation scripts
-- sensitive paths:
-  - `.env`
-  - `.env.*`
-  - lockfiles
-  - migrations
-  - infra directories
-  - generated output
+Scope decision:
 
-## Questions To Answer
+- Use project scope for repo-owned scripts and team-shared behavior.
+- Use global scope for personal behavior that should not be committed.
 
-1. Should the hooks travel with the repo?
-   - yes -> project-local `.opencode/plugins/`
-   - no -> global `~/.config/opencode/plugins/`
+Migration signal:
 
-2. Does the plugin logic need external dependencies?
-   - no -> plain local TypeScript module is enough
-   - yes -> merge dependencies into the config-dir `package.json`
-
-3. Does the repo already have OpenCode plugins?
-   - yes -> default to `additive`
-   - no -> start with a clean managed layer
-
-4. Does the repo already rely on npm plugin packages?
-   - yes -> preserve those config entries and decide whether the new scaffold is `hybrid`
-   - no -> keep config untouched unless the plan explicitly needs npm packages
-
-5. Which plugin pattern fits the repo?
-   - lifecycle mirroring, validation, generated-file drift, dependency setup, or policy checks -> one minimal lifecycle/action plugin that calls repo-owned scripts
-   - secret guardrails -> `tool.execute.before`
-   - post-turn lint or test -> `tool.execute.after` plus `event` for `session.idle`
-   - runtime env injection -> `shell.env`
-   - extra project tools -> `tool`
-   - context carry-over -> `experimental.session.compacting`
-
-## Recommended Defaults
-
-- Use project-local scope for real repos unless the user explicitly wants a personal global hook.
-- Use TypeScript for every managed plugin module. OpenCode supports JavaScript too, but this skill intentionally keeps the scaffold TS-only so lifecycle plugins stay typed and consistent.
-- Only add config-dir dependencies when the generated plugin code actually imports external packages.
-- Use repo-owned scripts for project-specific checks instead of hard-coding command lists into plugin bodies.
-- Prefer visible TUI toasts for meaningful background work, and keep `client.app.log()` for diagnostics.
-- Prefer local plugin files over npm plugin publishing for the first iteration. Promote to npm only after the behavior stabilizes.
+- `.opencode/plugins/.managed/manifest.json` with `scaffold_hooks.harness == "opencode"` means the previous scaffold can be cleaned up.

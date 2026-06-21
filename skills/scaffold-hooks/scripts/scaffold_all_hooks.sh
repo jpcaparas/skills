@@ -90,6 +90,11 @@ contains_harness() {
     printf '%s' "$HARNESS_LIST_JSON" | jq -e --arg harness "$harness" 'index($harness) != null' >/dev/null
 }
 
+contains_documented_harness() {
+    local harness="$1"
+    printf '%s' "$DOCUMENTED_HARNESSES_JSON" | jq -e --arg harness "$harness" 'index($harness) != null' >/dev/null
+}
+
 validate_harnesses() {
     local unknown
     unknown="$(
@@ -147,7 +152,9 @@ detect_existing_harnesses() {
         || json_file_matches "$PROJECT_ROOT/.devin/hooks.v1.json" '(type == "object" and length > 0)'; then
         has_devin=true
     fi
-    if [ -f "$PROJECT_ROOT/.opencode/plugins/.managed/manifest.json" ] \
+    if [ -f "$PROJECT_ROOT/.opencode/hook/.managed/manifest.json" ] \
+        || [ -f "$PROJECT_ROOT/.opencode/hook/hooks.md" ] \
+        || [ -f "$PROJECT_ROOT/.opencode/plugins/.managed/manifest.json" ] \
         || [ -f "$PROJECT_ROOT/$HOOKS_ROOT/opencode-session-created/opencode.sh" ] \
         || [ -f "$PROJECT_ROOT/$HOOKS_ROOT/opencode-session-idle/opencode.sh" ] \
         || [ -n "$(find "$PROJECT_ROOT/.opencode/plugins" -maxdepth 1 -type f \( -name '*.ts' -o -name '*.js' -o -name '*.mjs' \) -print -quit 2>/dev/null)" ]; then
@@ -203,7 +210,7 @@ strip_legacy_nested_hooks_file() {
     jq --argjson roots "$LEGACY_ROOTS_JSON" '
         def legacy_command:
             (.type == "command")
-            and ((.command // "") as $command | any($roots[]; $command | contains(.)));
+            and ((.command // "") as $command | any($roots[]; . as $root | $command | contains($root)));
 
         (.hooks // {}) as $hooks
         | .hooks = (
@@ -231,7 +238,7 @@ strip_legacy_devin_hooks_file() {
     jq --argjson roots "$LEGACY_ROOTS_JSON" '
         def legacy_command:
             (.type == "command")
-            and ((.command // "") as $command | any($roots[]; $command | contains(.)));
+            and ((.command // "") as $command | any($roots[]; . as $root | $command | contains($root)));
 
         if type == "object" then
             with_entries(
@@ -251,9 +258,15 @@ strip_legacy_devin_hooks_file() {
 }
 
 strip_legacy_config_entries() {
-    strip_legacy_nested_hooks_file "$PROJECT_ROOT/.claude/settings.json"
-    strip_legacy_nested_hooks_file "$PROJECT_ROOT/.codex/hooks.json"
-    strip_legacy_devin_hooks_file "$PROJECT_ROOT/.devin/hooks.v1.json"
+    if contains_harness claude; then
+        strip_legacy_nested_hooks_file "$PROJECT_ROOT/.claude/settings.json"
+    fi
+    if contains_harness codex; then
+        strip_legacy_nested_hooks_file "$PROJECT_ROOT/.codex/hooks.json"
+    fi
+    if contains_harness devin; then
+        strip_legacy_devin_hooks_file "$PROJECT_ROOT/.devin/hooks.v1.json"
+    fi
 }
 
 cleanup_legacy_managed_roots() {
@@ -283,7 +296,8 @@ cleanup_harness_state() {
             ;;
         opencode|copilot)
             # OpenCode and Copilot harness scaffolders own their managed cleanup
-            # (.opencode/plugins/.managed and .github/copilot/hooks/generated).
+            # (.opencode/hook/.managed plus legacy .opencode/plugins/.managed,
+            # and .github/copilot/hooks/generated).
             ;;
     esac
 }
@@ -429,19 +443,19 @@ write_universal_readme() {
         printf -- '- `hooks/lib/` stores shared runtime helpers and harness output helpers.\n'
         printf -- '- `hooks/.state/<harness>/` stores generated config fragments and manifests.\n\n'
         printf '## Harness Config\n\n'
-        if contains_harness claude; then
+        if contains_documented_harness claude; then
             printf -- '- Claude Code: `.claude/settings.json`\n'
         fi
-        if contains_harness codex; then
+        if contains_documented_harness codex; then
             printf -- '- Codex: `.codex/hooks.json`\n'
         fi
-        if contains_harness devin; then
+        if contains_documented_harness devin; then
             printf -- '- Devin CLI: `.devin/hooks.v1.json`\n'
         fi
-        if contains_harness opencode; then
-            printf -- '- OpenCode: `.opencode/plugins/*.ts`, delegating to `hooks/opencode-session-*`\n'
+        if contains_documented_harness opencode; then
+            printf -- '- OpenCode: `opencode.json` loads `opencode-froggy`, with hooks in `.opencode/hook/hooks.md`\n'
         fi
-        if contains_harness copilot; then
+        if contains_documented_harness copilot; then
             printf -- '- GitHub Copilot: `.github/hooks/copilot-hooks.json`, generated events under `.github/copilot/hooks/generated/`\n'
         fi
         printf '\n## Event Adapters\n\n'
@@ -658,6 +672,17 @@ else
     HARNESS_SELECTION_SOURCE="default-plan"
 fi
 validate_harnesses
+DOCUMENTED_HARNESSES_JSON="$(
+    jq -nc \
+        --argjson selected "$HARNESS_LIST_JSON" \
+        --argjson detected "$DETECTED_HARNESSES_JSON" '
+        ["claude", "codex", "copilot", "devin", "opencode"] as $order
+        | (($selected // []) + ($detected // []))
+        | map(select(type == "string"))
+        | unique as $found
+        | $order | map(select(. as $name | $found | index($name)))
+    '
+)"
 
 CLEANUP_LEGACY="$(jq -r '.cleanup_legacy // true' "$PLAN_FILE")"
 if [ -n "$CLEANUP_LEGACY_OVERRIDE" ]; then

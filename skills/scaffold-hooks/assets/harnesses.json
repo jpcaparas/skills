@@ -49,9 +49,9 @@
     },
     {
       "name": "opencode",
-      "config": ".opencode/plugins/*.ts",
-      "adapter_suffix": "opencode.sh",
-      "state_dir": ".opencode/plugins/.managed",
+      "config": "opencode.json + .opencode/hook/hooks.md",
+      "adapter_suffix": "froggy bash action",
+      "state_dir": ".opencode/hook/.managed",
       "official_docs": [
         "https://opencode.ai/docs/plugins/",
         "https://opencode.ai/docs/config/"

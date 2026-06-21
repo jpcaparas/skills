@@ -31,9 +31,8 @@ The script removes old generated folders only when they contain `manifest.json`.
 
 ## OpenCode
 
-OpenCode plugin files auto-load from `.opencode/plugins/`. The universal skill does not delete unmanaged plugin files because it cannot prove their intent. If an existing custom plugin duplicates the new managed lifecycle plugin, handle it explicitly in the project plan or delete it after reviewing the code.
+OpenCode is configured through `opencode-froggy`: `opencode.json` loads the npm plugin and `.opencode/hook/hooks.md` stores the hook definitions. The universal skill removes old scaffold-owned `.opencode/plugins/` output only when `.opencode/plugins/.managed/manifest.json` proves ownership. It preserves unmanaged custom plugin files because it cannot prove their intent.
 
 ## Final Verification
 
 After scaffolding, the script scans final harness configs and fails if any selected shell harness still references a legacy generated root.
-

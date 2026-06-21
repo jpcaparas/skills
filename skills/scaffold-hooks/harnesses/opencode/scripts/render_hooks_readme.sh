@@ -2,7 +2,7 @@
 #
 # render_hooks_readme.sh
 #
-# Rebuild .opencode/plugins/README.md from the managed manifest and current plan.
+# Rebuild .opencode/hook/README.md from the managed manifest and current plan.
 #
 
 set -euo pipefail
@@ -81,23 +81,22 @@ PLAN_FILE="$(
 
 HOME_ROOT="${HOME_OVERRIDE:-$HOME}"
 SCOPE="$(jq -r '.scope // "project"' "$PLAN_FILE")"
-PLUGIN_ROOT_VALUE="$(jq -r '.plugin_root // empty' "$PLAN_FILE")"
+HOOK_CONFIG_VALUE="$(jq -r '.hook_config_target // empty' "$PLAN_FILE")"
 MANAGED_STATE_VALUE="$(jq -r '.managed_state_dir // empty' "$PLAN_FILE")"
 CONFIG_TARGET_VALUE="$(jq -r '.config_target // empty' "$PLAN_FILE")"
-PACKAGE_TARGET_VALUE="$(jq -r '.package_target // empty' "$PLAN_FILE")"
 
-if [ -z "$PLUGIN_ROOT_VALUE" ]; then
+if [ -z "$HOOK_CONFIG_VALUE" ]; then
     if [ "$SCOPE" = "global" ]; then
-        PLUGIN_ROOT_VALUE="~/.config/opencode/plugins"
+        HOOK_CONFIG_VALUE="~/.config/opencode/hook/hooks.md"
     else
-        PLUGIN_ROOT_VALUE=".opencode/plugins"
+        HOOK_CONFIG_VALUE=".opencode/hook/hooks.md"
     fi
 fi
 if [ -z "$MANAGED_STATE_VALUE" ]; then
     if [ "$SCOPE" = "global" ]; then
-        MANAGED_STATE_VALUE="~/.config/opencode/plugins/.managed"
+        MANAGED_STATE_VALUE="~/.config/opencode/hook/.managed"
     else
-        MANAGED_STATE_VALUE=".opencode/plugins/.managed"
+        MANAGED_STATE_VALUE=".opencode/hook/.managed"
     fi
 fi
 if [ -z "$CONFIG_TARGET_VALUE" ]; then
@@ -107,17 +106,10 @@ if [ -z "$CONFIG_TARGET_VALUE" ]; then
         CONFIG_TARGET_VALUE="opencode.json"
     fi
 fi
-if [ -z "$PACKAGE_TARGET_VALUE" ]; then
-    if [ "$SCOPE" = "global" ]; then
-        PACKAGE_TARGET_VALUE="~/.config/opencode/package.json"
-    else
-        PACKAGE_TARGET_VALUE=".opencode/package.json"
-    fi
-fi
 
-PLUGIN_ROOT_ABS="$(resolve_target_path "$PLUGIN_ROOT_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
+HOOK_CONFIG_ABS="$(resolve_target_path "$HOOK_CONFIG_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
 MANAGED_STATE_ABS="$(resolve_target_path "$MANAGED_STATE_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
-README_FILE="$PLUGIN_ROOT_ABS/README.md"
+README_FILE="$(dirname "$HOOK_CONFIG_ABS")/README.md"
 MANIFEST_FILE="$MANAGED_STATE_ABS/manifest.json"
 
 if [ ! -f "$MANIFEST_FILE" ]; then
@@ -127,147 +119,50 @@ fi
 
 mkdir -p "$(dirname "$README_FILE")"
 
-if ! jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
-    {
-        printf '# OpenCode Hooks\n\n'
-        if [ "$SCOPE" = "global" ]; then
-            printf 'Global OpenCode hook plugin scaffold for this target.\n\n'
-        else
-            printf 'Project-local OpenCode hook plugin scaffold for this repo.\n\n'
-        fi
-
-        printf '## Active Plugins\n\n'
-        jq -r '
-            (.enabled_plugins // [])
-            | .[]
-            | [.filename, (.notes // "")]
-            | @tsv
-        ' "$MANIFEST_FILE" | while IFS=$'\t' read -r file notes; do
-            if [ -n "$notes" ]; then
-                printf -- '- `%s` - %s\n' "$file" "$notes"
-            else
-                printf -- '- `%s`\n' "$file"
-            fi
-        done
-        printf '\n'
-
-        printf '## Behavior\n\n'
-        jq -r '
-            (.enabled_plugins // [])
-            | .[]
-            | [
-                (.pattern // "surface-handlers"),
-                .filename,
-                ((.surfaces // []) | join(", ")),
-                (.context_script // ""),
-                (.action_script // ""),
-                (.action_label // "background work"),
-                (.notes // "")
-              ]
-            | @tsv
-        ' "$MANIFEST_FILE" | while IFS=$'\t' read -r pattern file surfaces context_script action_script action_label notes; do
-            if [ "$pattern" = "lifecycle-action" ]; then
-                if [ -n "$context_script" ]; then
-                    printf -- '- Root `session.created` injects no-reply context from `%s`.\n' "$context_script"
-                fi
-                if [ -n "$action_script" ]; then
-                    printf -- '- Root `session.idle` runs `%s` for %s.\n' "$action_script" "$action_label"
-                fi
-                printf -- '- Child/subagent sessions are skipped by tracking `session.created` events with `info.parentID`.\n'
-                printf -- '- Meaningful background work uses TUI toasts for start, success, warning, and error states.\n'
-                printf -- '- First failure gets one automatic repair prompt; persistent failure is reported with `noReply: true`.\n'
-            else
-                printf -- '- `%s` handles `%s`: %s\n' "$file" "$surfaces" "$notes"
-            fi
-        done
-        printf '\n'
-
-        printf '## Notes\n\n'
-        printf -- '- OpenCode hooks are plugins loaded from the configured plugin directory.\n'
-        printf -- '- This setup keeps only active plugin behavior and does not generate a full hook-surface catalog.\n'
-        printf -- '- Lifecycle/action plugins resolve repo scripts from the active OpenCode project/worktree/directory context before falling back to the plugin path.\n'
-        printf -- '- The managed manifest records scaffold skill provenance, plan/template hashes, and managed file hashes for incremental refreshes.\n'
-        printf -- '- Re-running in additive mode refreshes unchanged managed plugin files and preserves files whose hash differs from the last scaffold.\n'
-        printf -- '- `client.app.log()` is for diagnostics; `client.tui.showToast()` is the user-visible feedback path.\n'
-        printf -- '- Config-dir dependencies and lockfiles are only needed when plugin code imports external packages.\n\n'
-
-        printf '## Sources\n\n'
-        jq -r '.verified_with.official_docs[]' "$MANIFEST_FILE" | while IFS= read -r url; do
-            printf -- '- %s\n' "$url"
-        done
-    } > "$README_FILE"
-    exit 0
-fi
-
 {
-    printf '# OpenCode Hooks\n\n'
-    printf 'Managed OpenCode plugin scaffold for this target.\n\n'
-    printf '## Managed Paths\n\n'
-    printf -- '- plugin root: `%s`\n' "$PLUGIN_ROOT_VALUE"
-    printf -- '- managed state: `%s`\n' "$MANAGED_STATE_VALUE"
-    printf -- '- config target: `%s`\n' "$CONFIG_TARGET_VALUE"
-    printf -- '- package target: `%s`\n' "$PACKAGE_TARGET_VALUE"
-    printf '\n'
-
-    printf '## Notes\n\n'
-    printf -- '- OpenCode hooks are implemented as plugins, not a separate hook config file.\n'
-    printf -- '- Only the enabled managed plugin modules live in the active plugin directory.\n'
-    printf -- '- Lifecycle/action plugins resolve repo scripts from the active OpenCode project/worktree/directory context before falling back to the plugin path.\n'
-    printf -- '- The managed manifest records scaffold skill provenance, plan/template hashes, and managed file hashes for incremental refreshes.\n'
-    printf -- '- Re-running in additive mode refreshes unchanged managed plugin files and preserves files whose hash differs from the last scaffold.\n'
-    if jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
-        printf -- '- The managed state directory keeps the full surface catalog as `.txt` stubs so dormant handlers do not load at runtime.\n'
+    printf '# OpenCode Froggy Hooks\n\n'
+    if [ "$SCOPE" = "global" ]; then
+        printf 'Global OpenCode hook configuration managed by `scaffold-hooks` through `opencode-froggy`.\n\n'
     else
-        printf -- '- This is a minimal scaffold: it keeps only active plugin behavior and does not generate a full hook-surface catalog.\n'
+        printf 'Project-local OpenCode hook configuration managed by `scaffold-hooks` through `opencode-froggy`.\n\n'
     fi
-    printf -- '- Project-local plugins do not replace global plugins; OpenCode loads all configured sources in sequence.\n\n'
 
-    printf '## Active Managed Plugins\n\n'
-    printf '| Plugin | File | Surfaces | Notes |\n'
-    printf '|--------|------|----------|-------|\n'
+    printf '## Managed Paths\n\n'
+    printf -- '- OpenCode config: `%s`\n' "$CONFIG_TARGET_VALUE"
+    printf -- '- Froggy hook config: `%s`\n' "$HOOK_CONFIG_VALUE"
+    printf -- '- Managed state: `%s`\n\n' "$MANAGED_STATE_VALUE"
+
+    printf '## Active Hooks\n\n'
+    printf '| Event | Conditions | Actions | Notes |\n'
+    printf '|-------|------------|---------|-------|\n'
     jq -r '
-        (.enabled_plugins // [])
+        (.hooks // [])
         | .[]
         | [
-            .name,
-            .filename,
-            ((.surfaces // []) | join(", ")),
+            .event,
+            ((.conditions // []) | join(", ")),
+            ((.actions // []) | map(keys[0]) | join(", ")),
             (.notes // "")
           ]
         | @tsv
-    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r name file surfaces notes; do
-        printf '| `%s` | `%s` | `%s` | %s |\n' "$name" "$file" "$surfaces" "$notes"
+    ' "$MANIFEST_FILE" | while IFS=$'\t' read -r event conditions actions notes; do
+        printf '| `%s` | %s | `%s` | %s |\n' "$event" "${conditions:-none}" "$actions" "$notes"
     done
     printf '\n'
 
-    if jq -e '.surface_catalog == true' "$MANIFEST_FILE" >/dev/null; then
-        printf '## Hook Surface Map\n\n'
-        printf '| Surface | Active | Kind | Stub | Guidance |\n'
-        printf '|---------|--------|------|------|----------|\n'
-        jq -r '
-            ((.enabled_plugins // []) | map(.surfaces // []) | add // []) as $active
-            | ((.special_surfaces // []) + (.events // []))[]
-            as $surface
-            | [
-                $surface.name,
-                (if ($active | index($surface.name)) then "yes" else "no" end),
-                $surface.kind,
-                $surface.stub_file,
-                $surface.guidance
-              ]
-            | @tsv
-        ' "$MANIFEST_FILE" | while IFS=$'\t' read -r name active kind stub guidance; do
-            printf '| `%s` | %s | `%s` | `%s` | %s |\n' \
-                "$name" "$active" "$kind" "$stub" "$guidance"
-        done
-        printf '\n'
-    fi
+    printf '## Notes\n\n'
+    printf -- '- `opencode.json` loads `opencode-froggy`; hook behavior lives in `hooks.md`.\n'
+    printf -- '- Froggy merges global hooks first, then project hooks.\n'
+    printf -- '- Bash actions receive `OPENCODE_PROJECT_DIR`, `OPENCODE_SESSION_ID`, and JSON context on stdin.\n'
+    printf -- '- `tool.before.*` and `tool.before.<name>` bash actions can block by exiting `2` and writing the reason to stderr.\n'
+    printf -- '- Exit code controls success, failure, or blocking; stderr is for diagnostics and block reasons, not successful status messages.\n'
+    printf -- '- The old scaffold-owned `.opencode/plugins/*.ts` lifecycle adapter is intentionally removed during migration.\n\n'
 
     printf '## Sources\n\n'
     jq -r '.verified_with.official_docs[]' "$MANIFEST_FILE" | while IFS= read -r url; do
         printf -- '- %s\n' "$url"
     done
-    jq -r '.verified_with.secondary_sources[]' "$MANIFEST_FILE" | while IFS= read -r url; do
+    jq -r '.verified_with.froggy_sources[]' "$MANIFEST_FILE" | while IFS= read -r url; do
         printf -- '- %s\n' "$url"
     done
 } > "$README_FILE"

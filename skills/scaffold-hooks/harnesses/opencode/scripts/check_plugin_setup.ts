@@ -32,18 +32,7 @@ function listPluginFiles(pluginDir: string, root = pluginDir): string[] {
   return hits.sort()
 }
 
-function packageDependencies(path: string): Record<string, unknown> {
-  if (!existsSync(path)) return {}
-  try {
-    const data = readJsonObject(path)
-    const deps = data.dependencies
-    return deps && typeof deps === "object" && !Array.isArray(deps) ? deps as Record<string, unknown> : {}
-  } catch {
-    return {}
-  }
-}
-
-function inspectScope(configRoot: string): [Record<string, unknown>, string[]] {
+function inspectConfig(configRoot: string): [Record<string, unknown>, string[]] {
   const warnings: string[] = []
   const configFile = chooseConfigPath(configRoot, "opencode")
   let configData: Record<string, unknown> = {}
@@ -64,22 +53,31 @@ function inspectScope(configRoot: string): [Record<string, unknown>, string[]] {
     pluginEntries = []
   }
 
-  const pluginDir = resolve(configRoot, "plugins")
-  const packageFile = resolve(configRoot, "package.json")
   return [
     {
       config_file: configFile,
       config_exists: existsSync(configFile),
       config_format: existsSync(configFile) ? configFile.split(".").pop() : "json",
       plugin_entries: pluginEntries,
-      plugin_dir: pluginDir,
-      local_plugin_files: listPluginFiles(pluginDir),
-      package_file: packageFile,
-      package_exists: existsSync(packageFile),
-      package_dependencies: packageDependencies(packageFile),
+      has_froggy_plugin: pluginEntries.includes("opencode-froggy"),
     },
     warnings,
   ]
+}
+
+function inspectScope(configRoot: string): Record<string, unknown> {
+  const hookFile = resolve(configRoot, "hook", "hooks.md")
+  const managedState = resolve(configRoot, "hook", ".managed", "manifest.json")
+  const legacyPluginState = resolve(configRoot, "plugins", ".managed", "manifest.json")
+  return {
+    hook_file: hookFile,
+    hook_exists: existsSync(hookFile),
+    managed_state: resolve(configRoot, "hook", ".managed"),
+    managed_state_exists: existsSync(managedState),
+    legacy_plugin_state: resolve(configRoot, "plugins", ".managed"),
+    legacy_plugin_state_exists: existsSync(legacyPluginState),
+    local_plugin_files: listPluginFiles(resolve(configRoot, "plugins")),
+  }
 }
 
 function isGitRepo(projectRoot: string): boolean {
@@ -104,37 +102,35 @@ const home = resolve(flagValue(args, "--home") ?? homedir())
 const globalRoot = resolve(home, ".config/opencode")
 const projectRuntimeRoot = resolve(projectRoot, ".opencode")
 
-const [projectState, projectWarnings] = inspectScope(projectRoot)
-const runtimePluginFiles = listPluginFiles(resolve(projectRuntimeRoot, "plugins"))
-if (runtimePluginFiles.length > 0) {
-  projectState.local_plugin_files = runtimePluginFiles
-  projectState.plugin_dir = resolve(projectRuntimeRoot, "plugins")
-}
-projectState.package_file = resolve(projectRuntimeRoot, "package.json")
-projectState.package_exists = existsSync(resolve(projectRuntimeRoot, "package.json"))
-projectState.package_dependencies = packageDependencies(resolve(projectRuntimeRoot, "package.json"))
+const [projectConfig, projectWarnings] = inspectConfig(projectRoot)
+const [globalConfig, globalWarnings] = inspectConfig(globalRoot)
+const projectState = inspectScope(projectRuntimeRoot)
+const globalState = inspectScope(globalRoot)
 
-const [globalState, globalWarnings] = inspectScope(globalRoot)
+const projectHasOpenCode =
+  Boolean(projectConfig.config_exists) ||
+  Boolean(projectState.hook_exists) ||
+  Boolean(projectState.managed_state_exists) ||
+  Boolean(projectState.legacy_plugin_state_exists) ||
+  (Array.isArray(projectState.local_plugin_files) && projectState.local_plugin_files.length > 0)
 
-const projectHasPlugins = Array.isArray(projectState.local_plugin_files) && projectState.local_plugin_files.length > 0
-const scopeRecommendation =
-  isGitRepo(projectRoot) || Boolean(projectState.config_exists) || projectHasPlugins || Boolean(projectState.package_exists)
-    ? "project"
-    : "global"
-const deploymentRecommendation =
-  (Array.isArray(projectState.plugin_entries) && projectState.plugin_entries.length > 0) ||
-  (Array.isArray(globalState.plugin_entries) && globalState.plugin_entries.length > 0)
-    ? "hybrid"
-    : "local-files"
+const scopeRecommendation = isGitRepo(projectRoot) || projectHasOpenCode ? "project" : "global"
 
 const result = {
   project_root: projectRoot,
   home,
   scope_recommendation: scopeRecommendation,
-  deployment_recommendation: deploymentRecommendation,
-  recommended_module_format: "ts",
-  project: projectState,
-  global: globalState,
+  deployment_recommendation: "opencode-froggy",
+  recommended_hook_config: ".opencode/hook/hooks.md",
+  recommended_config_target: "opencode.json",
+  project: {
+    ...projectConfig,
+    ...projectState,
+  },
+  global: {
+    ...globalConfig,
+    ...globalState,
+  },
   warnings: [...projectWarnings, ...globalWarnings],
 }
 

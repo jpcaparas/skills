@@ -13,45 +13,21 @@ import sys
 from pathlib import Path
 
 
-EXPECTED_SPECIAL_SURFACES = {"event", "tool"}
-EXPECTED_EVENT_NAMES = {
-    "command.executed",
-    "file.edited",
-    "file.watcher.updated",
-    "installation.updated",
-    "lsp.client.diagnostics",
-    "lsp.updated",
-    "message.part.removed",
-    "message.part.updated",
-    "message.removed",
-    "message.updated",
-    "permission.asked",
-    "permission.replied",
-    "server.connected",
+EXPECTED_SUPPORTED_EVENTS = {
     "session.created",
-    "session.compacted",
     "session.deleted",
-    "session.diff",
-    "session.error",
     "session.idle",
-    "session.status",
-    "session.updated",
-    "todo.updated",
-    "shell.env",
-    "tool.execute.after",
-    "tool.execute.before",
-    "tui.prompt.append",
-    "tui.command.execute",
-    "tui.toast.show",
-    "experimental.session.compacting",
+    "tool.before.*",
+    "tool.before.<name>",
+    "tool.after.*",
+    "tool.after.<name>",
 }
 REQUIRED_OPERATIONAL_SCRIPTS = [
     "scripts/audit_project.sh",
     "scripts/check_plugin_setup.ts",
     "scripts/merge_opencode_config.ts",
-    "scripts/merge_package_json.ts",
     "scripts/opencode_json_utils.ts",
-    "scripts/render_plugin_module.ts",
+    "scripts/render_froggy_hooks.ts",
     "scripts/render_hooks_readme.sh",
     "scripts/scaffold_hooks.sh",
     "scripts/validate.py",
@@ -61,8 +37,6 @@ REQUIRED_SUPPORT_FILES = [
     "assets/hook-events.json",
     "templates/hook-plan.example.json",
     "templates/hook-plan.broad.example.json",
-    "templates/lifecycle-action-plugin.ts.tmpl",
-    "templates/plugin-module.ts.tmpl",
     "references/project-analysis.md",
     "references/config-layering.md",
     "references/hook-events.md",
@@ -137,51 +111,26 @@ def validate_manifest(skill_path: Path, errors: list[str], warnings: list[str]) 
         errors.append(f"assets/hook-events.json is not valid JSON: {exc}")
         return
 
-    events = manifest.get("events", [])
-    special_surfaces = manifest.get("special_surfaces", [])
-    if not isinstance(events, list):
-        errors.append("assets/hook-events.json: 'events' must be an array")
+    supported_events = manifest.get("supported_events", [])
+    conditions = manifest.get("conditions", [])
+    actions = manifest.get("actions", [])
+    if not isinstance(supported_events, list):
+        errors.append("assets/hook-events.json: 'supported_events' must be an array")
         return
-    if not isinstance(special_surfaces, list):
-        errors.append("assets/hook-events.json: 'special_surfaces' must be an array")
-        return
-
-    event_names = {event.get("name") for event in events}
-    special_names = {surface.get("name") for surface in special_surfaces}
-    if event_names != EXPECTED_EVENT_NAMES:
-        missing = sorted(EXPECTED_EVENT_NAMES - event_names)
-        unexpected = sorted(event_names - EXPECTED_EVENT_NAMES)
+    event_names = set(supported_events)
+    if event_names != EXPECTED_SUPPORTED_EVENTS:
+        missing = sorted(EXPECTED_SUPPORTED_EVENTS - event_names)
+        unexpected = sorted(event_names - EXPECTED_SUPPORTED_EVENTS)
         if missing:
-            errors.append(f"assets/hook-events.json is missing events: {', '.join(missing)}")
+            errors.append(f"assets/hook-events.json is missing supported events: {', '.join(missing)}")
         if unexpected:
-            errors.append(f"assets/hook-events.json has unexpected events: {', '.join(unexpected)}")
-    if special_names != EXPECTED_SPECIAL_SURFACES:
-        missing = sorted(EXPECTED_SPECIAL_SURFACES - special_names)
-        unexpected = sorted(special_names - EXPECTED_SPECIAL_SURFACES)
-        if missing:
-            errors.append(
-                f"assets/hook-events.json is missing special surfaces: {', '.join(missing)}"
-            )
-        if unexpected:
-            errors.append(
-                f"assets/hook-events.json has unexpected special surfaces: {', '.join(unexpected)}"
-            )
-
-    stub_files = [item.get("stub_file", "") for item in special_surfaces + events]
-    if "" in stub_files:
-        errors.append("assets/hook-events.json contains an item without a stub_file")
-    if len(set(stub_files)) != len(stub_files):
-        errors.append("assets/hook-events.json contains duplicate stub_file values")
-
-    if manifest.get("default_module_format") != "ts":
-        errors.append("assets/hook-events.json must default module format to ts")
-
-    non_ts_stubs = [stub for stub in stub_files if not stub.endswith(".ts.txt")]
-    if non_ts_stubs:
-        errors.append(
-            "assets/hook-events.json contains non-TypeScript stub filenames: "
-            + ", ".join(sorted(non_ts_stubs))
-        )
+            errors.append(f"assets/hook-events.json has unexpected supported events: {', '.join(unexpected)}")
+    if set(conditions) != {"isMainSession", "hasCodeChange"}:
+        errors.append("assets/hook-events.json must list Froggy conditions isMainSession and hasCodeChange")
+    if set(actions) != {"bash", "command", "tool"}:
+        errors.append("assets/hook-events.json must list Froggy actions bash, command, and tool")
+    if manifest.get("plugin_name") != "opencode-froggy":
+        errors.append("assets/hook-events.json must identify plugin_name as opencode-froggy")
 
 
 def validate_skill(skill_path: Path) -> dict:
@@ -210,34 +159,29 @@ def validate_skill(skill_path: Path) -> dict:
         if not (skill_path / rel_path).exists():
             errors.append(f"Missing required file: {rel_path}")
 
-    if (skill_path / "templates" / "plugin-module.js.tmpl").exists():
-        errors.append("Do not ship a JavaScript plugin template; managed plugins must be TypeScript-only")
-
-    lifecycle_template = skill_path / "templates" / "lifecycle-action-plugin.ts.tmpl"
-    if lifecycle_template.exists():
-        lifecycle_content = lifecycle_template.read_text(encoding="utf-8")
-        for snippet in [
-            "parentID?: string | null",
-            "const childSessionIDs = new Set<string>()",
-            "rememberSessionCreation",
-            "isChildSession(sessionID)",
-            'event.type === "session.deleted"',
-        ]:
-            if snippet not in lifecycle_content:
-                errors.append(f"Lifecycle plugin template missing root-session guard snippet: {snippet}")
+    obsolete_files = [
+        "templates/plugin-module.js.tmpl",
+        "templates/plugin-module.ts.tmpl",
+        "templates/lifecycle-action-plugin.ts.tmpl",
+        "scripts/render_plugin_module.ts",
+        "scripts/merge_package_json.ts",
+    ]
+    for rel_path in obsolete_files:
+        if (skill_path / rel_path).exists():
+            errors.append(f"Obsolete local-plugin generator file must not ship: {rel_path}")
 
     scaffold_script = skill_path / "scripts" / "scaffold_hooks.sh"
     if scaffold_script.exists():
         scaffold_content = scaffold_script.read_text(encoding="utf-8")
         for snippet in [
-            "managed_file_hashes",
-            "preserved_file_hashes",
+            "cleanup_legacy_plugin_scaffold",
+            "opencode-froggy",
+            "render_froggy_hooks.ts",
+            ".opencode/hook/hooks.md",
             "scaffold_hooks",
-            "previous_managed_hash",
-            "backup_existing_plugin",
         ]:
             if snippet not in scaffold_content:
-                errors.append(f"scaffold_hooks.sh missing incremental provenance snippet: {snippet}")
+                errors.append(f"scaffold_hooks.sh missing Froggy migration snippet: {snippet}")
 
     validate_manifest(skill_path, errors, warnings)
 

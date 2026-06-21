@@ -4,7 +4,7 @@
       "id": 1,
       "name": "universal_four_harness_scaffold",
       "prompt": "Run /scaffold-hooks in this repo. Scaffold Claude Code, Codex, Devin CLI, and OpenCode hook configuration into one shared hooks/ directory without duplicating event behavior.",
-      "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh behavior with claude/codex/devin adapters, keeps OpenCode as a thin .opencode/plugins adapter into hooks/opencode-* scripts, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
+      "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh behavior with claude/codex/devin adapters, enables opencode-froggy in opencode.json with hooks in .opencode/hook/hooks.md, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
       "files": [
         "SKILL.md",
         "scripts/scaffold_all_hooks.sh",
@@ -22,7 +22,7 @@
           "text": "Preserves non-managed custom hook entries"
         },
         {
-          "text": "Keeps OpenCode plugin files as a required thin adapter layer"
+          "text": "Uses opencode-froggy for OpenCode hook scaffolding"
         }
       ]
     },
@@ -68,7 +68,7 @@
       "id": 4,
       "name": "project_specific_stop_check",
       "prompt": "Use /scaffold-hooks and make every harness call scripts/agent-stop-checks.sh at Stop without copying that validation logic into four hook files.",
-      "expected_output": "The response writes a universal plan with Stop scripts entries for Claude, Codex, and Devin, keeps OpenCode as a lifecycle adapter to a repo-owned validation script, and leaves validation policy in scripts/agent-stop-checks.sh.",
+      "expected_output": "The response writes a universal plan with Stop scripts entries for Claude, Codex, and Devin, renders OpenCode Froggy bash actions that call a repo-owned validation script, and leaves validation policy in scripts/agent-stop-checks.sh.",
       "files": [
         "templates/hook-plan.example.json",
         "references/plan-format.md",

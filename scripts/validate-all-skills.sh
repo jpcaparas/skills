@@ -10,7 +10,7 @@
 #   2. hooks/stop/claude.sh
 #   3. hooks/stop/codex.sh
 #   4. hooks/stop/devin.sh
-#   5. hooks/opencode-session-idle/opencode.sh
+#   5. OpenCode Froggy hooks in .opencode/hook/hooks.md
 #
 # If you change a step here, all callers pick it up.
 # For a containerized Ubuntu GitHub Actions preflight before pushing, use

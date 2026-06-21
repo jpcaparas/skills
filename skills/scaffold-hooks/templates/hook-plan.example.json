@@ -195,30 +195,40 @@
     },
     "opencode": {
       "scope": "project",
-      "deployment": "local-files",
-      "module_format": "ts",
-      "surface_catalog": false,
-      "plugin_root": ".opencode/plugins",
-      "managed_state_dir": ".opencode/plugins/.managed",
+      "plugin_name": "opencode-froggy",
       "config_target": "opencode.json",
-      "package_target": ".opencode/package.json",
-      "package_dependencies": {},
-      "npm_plugins": [],
-      "enabled_plugins": [
+      "hook_config_target": ".opencode/hook/hooks.md",
+      "managed_state_dir": ".opencode/hook/.managed",
+      "hooks": [
         {
-          "name": "project-session-lifecycle",
-          "pattern": "lifecycle-action",
-          "filename": "opencode_hook_project_session_lifecycle.ts",
-          "surfaces": [
-            "event"
+          "event": "session.created",
+          "conditions": [
+            "isMainSession"
           ],
-          "context_script": "hooks/opencode-session-created/opencode.sh",
-          "action_script": "hooks/opencode-session-idle/opencode.sh",
-          "context_delegate_script": "scripts/agent-session-context.sh",
-          "action_delegate_script": "scripts/validate-project.sh",
-          "action_label": "Project validation",
-          "service": "project-opencode-hooks",
-          "notes": "Thin OpenCode adapter into shared repo-owned hook scripts."
+          "actions": [
+            {
+              "bash": {
+                "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" >/dev/null; fi",
+                "timeout": 20000
+              }
+            }
+          ],
+          "notes": "Record a repo-owned session baseline when scripts/agent-session-context.sh exists."
+        },
+        {
+          "event": "session.idle",
+          "conditions": [
+            "isMainSession"
+          ],
+          "actions": [
+            {
+              "bash": {
+                "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/validate-project.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/validate-project.sh\" \"$OPENCODE_PROJECT_DIR\"; fi",
+                "timeout": 600000
+              }
+            }
+          ],
+          "notes": "Run repo-owned validation after OpenCode makes file changes."
         }
       ]
     },

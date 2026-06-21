@@ -2,10 +2,10 @@
   "scope": "project",
   "mode": "additive",
   "plugin_name": "opencode-froggy",
-  "hooks_root": "hooks",
   "config_target": "opencode.json",
   "hook_config_target": ".opencode/hook/hooks.md",
   "managed_state_dir": ".opencode/hook/.managed",
+  "hooks_root": "hooks",
   "hooks": [
     {
       "event": "session.created",
@@ -20,7 +20,7 @@
           }
         }
       ],
-      "notes": "Record a repo-owned session baseline when scripts/agent-session-context.sh exists."
+      "notes": "Record the skills repo session baseline quietly."
     },
     {
       "event": "session.idle",
@@ -30,12 +30,12 @@
       "actions": [
         {
           "bash": {
-            "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/validate-project.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/validate-project.sh\" \"$OPENCODE_PROJECT_DIR\"; fi",
+            "command": "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" \"$OPENCODE_PROJECT_DIR\"; fi",
             "timeout": 600000
           }
         }
       ],
-      "notes": "Run repo-owned validation after OpenCode makes file changes."
+      "notes": "Run the repository stop checks after the main OpenCode session goes idle."
     }
   ]
 }

@@ -1,95 +1,57 @@
 # Scaffold Layout
 
-## Minimal Managed Target Layout
+## Target Layout
 
-Project-local default for lifecycle/action work:
+Project-local default:
 
 ```text
+opencode.json
 .opencode/
-└── plugins/
+└── hook/
+    ├── hooks.md
     ├── README.md
-    ├── opencode_hook_project_session_lifecycle.ts
     └── .managed/
-        ├── manifest.json         # Provenance, plan/template hashes, and file hashes
-        └── plan.snapshot.json    # Normalized plan used for generation
-
-hooks/
-├── opencode-session-created/
-│   ├── script.sh
-│   └── opencode.sh
-└── opencode-session-idle/
-    ├── script.sh
-    └── opencode.sh
+        ├── manifest.json
+        └── plan.snapshot.json
 ```
 
-The minimal scaffold intentionally skips `opencode.json`, `.opencode/package.json`, `node_modules`, lockfiles, and broad hook-surface stubs unless the plan actually needs them.
-
-## Broad Managed Target Layout
-
-Use this only when the user asks for a broad surface catalog:
+Global scope uses:
 
 ```text
-opencode.json                     # Optional, only when npm plugin entries are part of the plan
-.opencode/
-├── package.json                  # Created only when generated plugins import external packages
-└── plugins/
-    ├── README.md                 # Generated plugin and hook-surface map
-    ├── opencode_hook_guard.ts    # Managed live plugin module
-    ├── opencode_hook_post_turn.ts
-    ├── opencode_hook_shell_env.ts
-    └── .managed/
-        ├── manifest.json         # Snapshot of the scaffold inputs used
-        ├── plan.snapshot.json    # Normalized plan used for generation
-        ├── surfaces/
-            ├── command.executed.ts.txt
-            ├── file.edited.ts.txt
-            ├── ...
-            └── experimental.session.compacting.ts.txt
-        └── backups/              # Created only when refreshing legacy managed files
+~/.config/opencode/opencode.json
+~/.config/opencode/hook/hooks.md
+~/.config/opencode/hook/.managed/
 ```
 
-Global scope uses the same shape under `~/.config/opencode/`.
+The default Froggy scaffold must not create:
 
-## Why This Layout
+- `.opencode/plugins/*.ts`
+- `.opencode/package.json`
+- `.opencode/package-lock.json`
+- `.opencode/node_modules`
+- `hooks/opencode-session-created/`
+- `hooks/opencode-session-idle/`
 
-- live plugin files stay in the documented plugin load path
-- dormant surface stubs stay out of the runtime load path when broad mode is requested
-- the managed state directory is easy to replace or inspect
-- reusable shell behavior lives in `hooks/` instead of being buried inside the plugin module
-- config and dependency merges stay separate from plugin-file generation
-- the README gives the target project a stable event and plugin map
-- the active load path contains TypeScript plugin modules only; this scaffold rewrites any `.js` filename in a plan to `.ts`
-- the managed manifest records scaffold provenance, plan/template hashes, and managed file hashes so later additive re-runs can refresh unchanged generated files without overwriting user edits
+Those are old local-plugin scaffold artifacts.
 
-## Plan File Shape
+## Plan Fields
 
-Use `templates/hook-plan.example.json` as the starting point.
+Use `templates/hook-plan.example.json`.
 
-Top-level fields:
+- `scope`: `project` or `global`
+- `mode`: `additive` or `overhaul`
+- `plugin_name`: `opencode-froggy`
+- `hooks_root`: used only for old-adapter cleanup coordination
+- `config_target`: OpenCode config file
+- `hook_config_target`: Froggy hook file
+- `managed_state_dir`: manifest and plan snapshot directory
+- `hooks`: Froggy hook entries
 
-- `scope`
-- `deployment`
-- `mode`
-- `module_format` (`ts` only)
-- `surface_catalog` (`false` for minimal, `true` for broad)
-- `hooks_root`
-- `plugin_root`
-- `managed_state_dir`
-- `config_target`
-- `package_target`
-- `package_dependencies`
-- `npm_plugins`
-- `enabled_plugins`
+Each hook entry:
 
-Each enabled plugin entry carries:
+- `event`
+- optional `conditions`
+- `actions`
+- optional `notes`
 
-- `name`
-- `pattern` (`lifecycle-action` for the minimal reusable pattern; omit for broad surface handlers)
-- `filename`
-- `surfaces`
-- optional `context_script`, `action_script`, `context_delegate_script`, `action_delegate_script`, `action_label`, and `service`
-- `notes`
-
-For lifecycle/action plugins, `context_script` and `action_script` default to `hooks/opencode-session-created/opencode.sh` and `hooks/opencode-session-idle/opencode.sh`. The generated shell adapters then delegate to `context_delegate_script` and `action_delegate_script`, which default to target-project session-context and validation scripts under that project's scripts directory.
-
-Keep project-specific judgment in the plan. The scaffold should remain deterministic.
+Keep project-specific decisions in the plan and repo-owned scripts, not in the scaffolder.

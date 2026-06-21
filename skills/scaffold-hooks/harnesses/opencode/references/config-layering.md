@@ -1,73 +1,42 @@
 # Config Layering
 
-Verified against the official OpenCode config and plugin docs on 2026-06-13.
+Verified on 2026-06-21 against the OpenCode plugin/config docs and `opencode-froggy@0.12.0`.
 
-## Config Precedence
+## OpenCode Plugin Loading
 
-OpenCode merges config sources instead of replacing them. The documented order is:
+This scaffold enables Froggy by merging `opencode-froggy` into the OpenCode config `plugin` array. Project scope defaults to `opencode.json`; global scope defaults to `~/.config/opencode/opencode.json`.
 
-1. remote config from `.well-known/opencode`
-2. global config `~/.config/opencode/opencode.json`
-3. custom config from `OPENCODE_CONFIG`
-4. project config `opencode.json`
-5. `.opencode` directories for agents, commands, plugins, and related files
-6. inline config from `OPENCODE_CONFIG_CONTENT`
-7. managed config files
-8. macOS managed preferences
+The merge is additive:
 
-That means a project-local scaffold never fully replaces global config, and a project-local plugin directory never removes global plugin behavior.
+- keep unrelated config keys
+- keep unrelated plugin entries
+- add `opencode-froggy` only if missing
+- normalize JSON/JSONC output to JSON
 
-## Plugin Locations
+## Froggy Hook Loading
 
-Official plugin directories:
+Froggy reads hook files from:
 
-- project local: `.opencode/plugins/`
-- global: `~/.config/opencode/plugins/`
+- global: `~/.config/opencode/hook/hooks.md`
+- project: `.opencode/hook/hooks.md`
+- Windows global fallback: `%APPDATA%/opencode/hook/hooks.md` when that file exists and the `~/.config` hook file does not
 
-Official config file locations:
-
-- project local: `opencode.json` or `opencode.jsonc`
-- global: `~/.config/opencode/opencode.json` or `~/.config/opencode/opencode.jsonc`
-
-## Local Plugin Dependencies
-
-If local plugins need external npm packages, add a `package.json` to the matching config directory:
-
-- project local -> `.opencode/package.json`
-- global -> `~/.config/opencode/package.json`
-
-OpenCode runs `bun install` at startup for those config-dir dependencies.
-
-The managed scaffold creates that config-dir `package.json` only when generated plugin code imports external runtime packages. Simple lifecycle/action plugins that call repo-owned scripts should not create `.opencode/package.json`, `node_modules`, or lockfiles.
+Froggy merges global hooks first, then project hooks. A project scaffold cannot disable global Froggy hooks.
 
 ## Scope Guidance
 
-Use project-local scope when:
+Use project scope when:
 
-- the behavior should travel with the repo
-- teammates should see the same hooks
-- the plugin logic depends on repo-local paths or workflows
+- the hook behavior should travel with the repo
+- hooks call repo-owned scripts
+- teammates should share the same baseline
 
 Use global scope when:
 
-- the behavior is personal or machine-local
-- the repo should not contain OpenCode plugin files
-- the same hook should apply across many repos
+- the hook behavior is personal
+- the repo should not contain OpenCode config
+- the same hooks should apply across many repos
 
-## Config Format Guidance
+## Legacy Plugin Layer
 
-The official docs support both JSON and JSONC. This skill’s deterministic merge scripts can read JSON or JSONC, but they write normalized JSON output. If a user’s config file currently contains comments, warn them that comments will not be preserved by the managed merge.
-
-## Troubleshooting Hooks vs Config
-
-When OpenCode behaves strangely, inspect this order before rewriting plugin logic:
-
-1. global config file
-2. project config file
-3. global plugin directory
-4. project plugin directory
-5. config-dir `package.json`
-6. cache at `~/.cache/opencode`
-7. logs at `~/.local/share/opencode/log/`
-
-The troubleshooting docs explicitly recommend disabling plugins and clearing cache before assuming the runtime itself is broken.
+The previous scaffold generated local TypeScript plugins under `.opencode/plugins/`. That path can still contain user-owned OpenCode plugins, but this Froggy-backed scaffold does not create files there. Remove only files proven managed by `.opencode/plugins/.managed/manifest.json`.

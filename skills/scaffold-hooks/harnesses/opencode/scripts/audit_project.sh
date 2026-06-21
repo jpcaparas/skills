@@ -109,6 +109,7 @@ opencode_files_json="$(
         'opencode.jsonc' \
         '.opencode/package.json' \
         '.opencode/plugins/**' \
+        '.opencode/hook/**' \
         '.opencode/tools/**' \
         '.opencode/agents/**'
 )"
@@ -207,8 +208,12 @@ if printf '%s' "$opencode_files_json" | jq -e '. | index("opencode.json") or ind
 fi
 
 EXISTING_MANAGED_STATE=""
+LEGACY_MANAGED_STATE=""
+if [ -f "$REPO_ROOT/.opencode/hook/.managed/manifest.json" ]; then
+    EXISTING_MANAGED_STATE=".opencode/hook/.managed"
+fi
 if [ -f "$REPO_ROOT/.opencode/plugins/.managed/manifest.json" ]; then
-    EXISTING_MANAGED_STATE=".opencode/plugins/.managed"
+    LEGACY_MANAGED_STATE=".opencode/plugins/.managed"
 fi
 
 RESULT_JSON="$(
@@ -216,12 +221,12 @@ RESULT_JSON="$(
         --arg project_root "$PROJECT_ROOT" \
         --arg repo_root "$REPO_ROOT" \
         --arg recommended_scope "$RECOMMENDED_SCOPE" \
-        --arg recommended_deployment "$RECOMMENDED_DEPLOYMENT" \
-        --arg recommended_plugin_root ".opencode/plugins" \
-        --arg recommended_managed_state_dir ".opencode/plugins/.managed" \
+        --arg recommended_deployment "opencode-froggy" \
+        --arg recommended_hook_config ".opencode/hook/hooks.md" \
+        --arg recommended_managed_state_dir ".opencode/hook/.managed" \
         --arg recommended_config_target "opencode.json" \
-        --arg recommended_package_target ".opencode/package.json" \
         --arg existing_managed_state_dir "$EXISTING_MANAGED_STATE" \
+        --arg legacy_managed_state_dir "$LEGACY_MANAGED_STATE" \
         --argjson is_git_repo "$IS_GIT_REPO" \
         --argjson marker_files "$marker_files_json" \
         --argjson opencode_files "$opencode_files_json" \
@@ -245,11 +250,11 @@ RESULT_JSON="$(
                 files: $opencode_files,
                 recommended_scope: $recommended_scope,
                 recommended_deployment: $recommended_deployment,
-                recommended_plugin_root: $recommended_plugin_root,
+                recommended_hook_config: $recommended_hook_config,
                 recommended_managed_state_dir: $recommended_managed_state_dir,
                 recommended_config_target: $recommended_config_target,
-                recommended_package_target: $recommended_package_target,
-                existing_managed_state_dir: (if $existing_managed_state_dir == "" then null else $existing_managed_state_dir end)
+                existing_managed_state_dir: (if $existing_managed_state_dir == "" then null else $existing_managed_state_dir end),
+                legacy_managed_state_dir: (if $legacy_managed_state_dir == "" then null else $legacy_managed_state_dir end)
             },
             instructions: $instruction_files,
             git_hooks: $git_hook_files,
@@ -263,4 +268,3 @@ if [ -n "$OUTPUT_FILE" ]; then
 fi
 
 printf '%s\n' "$RESULT_JSON"
-

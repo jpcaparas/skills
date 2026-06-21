@@ -1,6 +1,6 @@
 # Agent Hooks
 
-Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, and OpenCode.
+Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, OpenCode, and GitHub Copilot.
 
 ## Layout
 
@@ -15,7 +15,7 @@ Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, and OpenCode.
 - Claude Code: `.claude/settings.json`
 - Codex: `.codex/hooks.json`
 - Devin CLI: `.devin/hooks.v1.json`
-- OpenCode: `.opencode/plugins/*.ts`, delegating to `hooks/opencode-session-*`
+- OpenCode: `opencode.json` loads `opencode-froggy`, with hooks in `.opencode/hook/hooks.md`
 
 ## Event Adapters
 
@@ -43,10 +43,6 @@ Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, and OpenCode.
 - `hooks/notification/claude.json`
 - `hooks/notification/claude.sh`
 - `hooks/notification/script.sh`
-- `hooks/opencode-session-created/opencode.sh`
-- `hooks/opencode-session-created/script.sh`
-- `hooks/opencode-session-idle/opencode.sh`
-- `hooks/opencode-session-idle/script.sh`
 - `hooks/permission-denied/claude.json`
 - `hooks/permission-denied/claude.sh`
 - `hooks/permission-denied/script.sh`
@@ -152,5 +148,7 @@ Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, and OpenCode.
 - `hooks/worktree-remove/script.sh`
 
 ## Maintenance
+
+The managed manifest at `hooks/.state/scaffold-hooks/manifest.json` records scaffold skill provenance, generator hashes, the selected plan hash, mode, and harness set.
 
 Re-run `/scaffold-hooks` or `scripts/scaffold_all_hooks.sh` from the installed skill to refresh harness adapters. Keep project-specific policy in repo-owned scripts and call those scripts from the plan.

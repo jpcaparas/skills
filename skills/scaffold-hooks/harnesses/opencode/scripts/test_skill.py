@@ -2,7 +2,8 @@
 """
 test_skill.py
 
-Lightweight checks plus temp-project integration tests for the opencode harness component of scaffold-hooks.
+Lightweight checks plus temp-project integration tests for the Froggy-backed
+OpenCode harness component of scaffold-hooks.
 """
 
 from __future__ import annotations
@@ -18,37 +19,14 @@ import tempfile
 from pathlib import Path
 
 
-EXPECTED_SPECIAL_SURFACES = {"event", "tool"}
-EXPECTED_EVENT_NAMES = {
-    "command.executed",
-    "file.edited",
-    "file.watcher.updated",
-    "installation.updated",
-    "lsp.client.diagnostics",
-    "lsp.updated",
-    "message.part.removed",
-    "message.part.updated",
-    "message.removed",
-    "message.updated",
-    "permission.asked",
-    "permission.replied",
-    "server.connected",
+EXPECTED_SUPPORTED_EVENTS = {
     "session.created",
-    "session.compacted",
     "session.deleted",
-    "session.diff",
-    "session.error",
     "session.idle",
-    "session.status",
-    "session.updated",
-    "todo.updated",
-    "shell.env",
-    "tool.execute.after",
-    "tool.execute.before",
-    "tui.prompt.append",
-    "tui.command.execute",
-    "tui.toast.show",
-    "experimental.session.compacting",
+    "tool.before.*",
+    "tool.before.<name>",
+    "tool.after.*",
+    "tool.after.<name>",
 }
 BASH_SCRIPTS = [
     "scripts/audit_project.sh",
@@ -58,9 +36,8 @@ BASH_SCRIPTS = [
 TS_SCRIPTS = [
     "scripts/check_plugin_setup.ts",
     "scripts/merge_opencode_config.ts",
-    "scripts/merge_package_json.ts",
     "scripts/opencode_json_utils.ts",
-    "scripts/render_plugin_module.ts",
+    "scripts/render_froggy_hooks.ts",
 ]
 PYTHON_VALIDATION_SCRIPTS = [
     "scripts/validate.py",
@@ -131,21 +108,75 @@ def bun_build_check(entry_path: Path, cwd: Path | None = None) -> subprocess.Com
         )
 
 
-def bun_import_check(entry_path: Path, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    return run(
-        [
-            "bun",
-            "--no-install",
-            "--eval",
-            f"await import({json.dumps(entry_path.as_uri())})",
-        ],
-        cwd=cwd,
-    )
-
-
 def missing_runtime_commands() -> list[str]:
     required = ["bash", "bun", "git", "jq"]
     return [command for command in required if shutil.which(command) is None]
+
+
+def write(path: Path, text: str, executable: bool = False) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    if executable:
+        path.chmod(0o755)
+
+
+def seed_project(project: Path) -> None:
+    project.mkdir()
+    run(["git", "init", "-q"], cwd=project)
+    write(project / "scripts" / "agent-session-context.sh", "#!/usr/bin/env bash\nexit 0\n", True)
+    write(project / "scripts" / "validate-project.sh", "#!/usr/bin/env bash\necho validate\nexit 0\n", True)
+
+
+def seed_legacy_opencode_scaffold(project: Path) -> None:
+    plugin_root = project / ".opencode" / "plugins"
+    write(
+        plugin_root / ".managed" / "manifest.json",
+        json.dumps(
+            {
+                "deployment": "local-files",
+                "mode": "overhaul",
+                "module_format": "ts",
+                "plugin_root": ".opencode/plugins",
+                "managed_files": ["old_lifecycle.ts"],
+                "enabled_plugins": [
+                    {
+                        "name": "old-lifecycle",
+                        "pattern": "lifecycle-action",
+                        "filename": "old_lifecycle.ts",
+                        "context_script": "hooks/opencode-session-created/opencode.sh",
+                        "action_script": "hooks/opencode-session-idle/opencode.sh",
+                    }
+                ],
+            },
+            indent=2,
+        )
+        + "\n",
+    )
+    write(plugin_root / "old_lifecycle.ts", "/* Managed by scaffold-hooks */\nexport default async () => ({})\n")
+    write(plugin_root / "README.md", "# OpenCode Hooks\n\nGenerated old README.\n")
+    write(project / ".opencode" / "package.json", '{"dependencies":{"@opencode-ai/plugin":"1.15.10"}}\n')
+    write(project / ".opencode" / "package-lock.json", "{}\n")
+    write(project / ".opencode" / ".gitignore", "node_modules\npackage.json\npackage-lock.json\nbun.lock\n.gitignore\n")
+    write(
+        project / "hooks" / "opencode-session-created" / "script.sh",
+        "#!/usr/bin/env bash\nprintf '[opencode-hook] missing delegate: %s\\n' foo >&2\n",
+        True,
+    )
+    write(
+        project / "hooks" / "opencode-session-created" / "opencode.sh",
+        "#!/usr/bin/env bash\nexport OPENCODE_HOOK_EVENT=opencode-session-created\n",
+        True,
+    )
+    write(
+        project / "hooks" / "opencode-session-idle" / "script.sh",
+        "#!/usr/bin/env bash\nprintf '[opencode-hook] missing delegate: %s\\n' foo >&2\n",
+        True,
+    )
+    write(
+        project / "hooks" / "opencode-session-idle" / "opencode.sh",
+        "#!/usr/bin/env bash\nexport OPENCODE_HOOK_EVENT=opencode-session-idle\n",
+        True,
+    )
 
 
 def test_skill(skill_path: Path) -> dict:
@@ -160,43 +191,26 @@ def test_skill(skill_path: Path) -> dict:
         "passed": True,
     }
 
-    # Evals live at the scaffold-hooks skill level; no per-harness evals.
-
     manifest = load_json(skill_path / "assets" / "hook-events.json")
-    manifest_names = {event.get("name") for event in manifest.get("events", [])}
-    special_names = {item.get("name") for item in manifest.get("special_surfaces", [])}
-    if manifest_names != EXPECTED_EVENT_NAMES:
-        missing = sorted(EXPECTED_EVENT_NAMES - manifest_names)
-        unexpected = sorted(manifest_names - EXPECTED_EVENT_NAMES)
-        if missing:
-            results["errors"].append(f"Manifest is missing events: {', '.join(missing)}")
-        if unexpected:
-            results["errors"].append(f"Manifest contains unexpected events: {', '.join(unexpected)}")
+    if set(manifest.get("supported_events", [])) != EXPECTED_SUPPORTED_EVENTS:
+        results["errors"].append("Froggy supported event manifest drifted unexpectedly")
         results["passed"] = False
-    if special_names != EXPECTED_SPECIAL_SURFACES:
-        missing = sorted(EXPECTED_SPECIAL_SURFACES - special_names)
-        unexpected = sorted(special_names - EXPECTED_SPECIAL_SURFACES)
-        if missing:
-            results["errors"].append(f"Manifest is missing special surfaces: {', '.join(missing)}")
-        if unexpected:
-            results["errors"].append(
-                f"Manifest contains unexpected special surfaces: {', '.join(unexpected)}"
-            )
+    if manifest.get("plugin_name") != "opencode-froggy":
+        results["errors"].append("Manifest must identify opencode-froggy")
         results["passed"] = False
 
-    skill_md = (skill_path / "PLAYBOOK.md").read_text(encoding="utf-8")
+    playbook = (skill_path / "PLAYBOOK.md").read_text(encoding="utf-8")
     for snippet in [
-        "## Progressive Maintainer Drift Check",
-        "Live-fetch the official OpenCode plugin",
-        "npm view @opencode-ai/plugin version",
-        "validators, tests, evals",
+        "opencode-froggy",
+        ".opencode/hook/hooks.md",
+        "cleanup",
         "Do not update this skill from memory",
     ]:
-        if snippet not in skill_md:
-            results["errors"].append(f"PLAYBOOK.md is missing maintainer drift guidance: {snippet}")
+        if snippet not in playbook:
+            results["errors"].append(f"PLAYBOOK.md is missing Froggy guidance: {snippet}")
             results["passed"] = False
 
-    for ref in extract_file_references(skill_md):
+    for ref in extract_file_references(playbook):
         results["cross_references"]["total"] += 1
         if (skill_path / ref).exists():
             results["cross_references"]["passed"] += 1
@@ -249,8 +263,6 @@ def test_skill(skill_path: Path) -> dict:
         results["errors"].append(
             "Missing required runtime command(s) for opencode harness integration tests: "
             + ", ".join(missing_runtime)
-            + ". Install Bun, jq, git, and bash before running this test. "
-            + "GitHub Actions uses oven-sh/setup-bun for TypeScript execution."
         )
         results["passed"] = False
         return results
@@ -258,26 +270,10 @@ def test_skill(skill_path: Path) -> dict:
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)
         home = tmp / "home"
-        project = tmp / "project"
         home.mkdir()
-        project.mkdir()
-        (project / ".opencode").mkdir()
-        (project / "package.json").write_text(
-            json.dumps(
-                {
-                    "name": "fixture-project",
-                    "scripts": {
-                        "lint": "echo lint",
-                        "test": "echo test"
-                    }
-                },
-                indent=2,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-        (project / ".envrc").write_text("layout node\n", encoding="utf-8")
-        run(["git", "init"], cwd=project)
+
+        project = tmp / "project"
+        seed_project(project)
 
         results["integration_checks"]["total"] += 1
         audit = run(["bash", str(skill_path / "scripts" / "audit_project.sh"), str(project)], cwd=skill_path)
@@ -285,127 +281,18 @@ def test_skill(skill_path: Path) -> dict:
             audit_data = json.loads(audit.stdout)
             if (
                 audit_data["opencode"]["recommended_scope"] == "project"
-                and audit_data["opencode"]["recommended_plugin_root"] == ".opencode/plugins"
+                and audit_data["opencode"]["recommended_hook_config"] == ".opencode/hook/hooks.md"
             ):
                 results["integration_checks"]["passed"] += 1
             else:
-                results["errors"].append("audit_project.sh did not recommend project-local OpenCode scaffold")
+                results["errors"].append("audit_project.sh did not recommend Froggy project-local hook config")
                 results["passed"] = False
         else:
             results["errors"].append(f"audit_project.sh failed: {audit.stderr.strip()}")
             results["passed"] = False
 
-        results["integration_checks"]["total"] += 1
-        inspect_before = run(
-            [
-                "bun",
-                str(skill_path / "scripts" / "check_plugin_setup.ts"),
-                "--project",
-                str(project),
-                "--home",
-                str(home),
-                "--json",
-            ],
-            cwd=skill_path,
-        )
-        if inspect_before.returncode == 0:
-            data = json.loads(inspect_before.stdout)
-            if (
-                data["scope_recommendation"] == "project"
-                and data["recommended_module_format"] == "ts"
-                and not data["project"]["local_plugin_files"]
-            ):
-                results["integration_checks"]["passed"] += 1
-            else:
-                results["errors"].append("check_plugin_setup.ts returned unexpected initial state")
-                results["passed"] = False
-        else:
-            results["errors"].append(f"check_plugin_setup.ts failed before scaffold: {inspect_before.stderr.strip()}")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        config_jsonc = project / "opencode.jsonc"
-        config_jsonc.write_text(
-            '{\n  // existing plugin config\n  "plugin": ["existing-plugin"]\n}\n',
-            encoding="utf-8",
-        )
-        merge_config = run(
-            [
-                "bun",
-                str(skill_path / "scripts" / "merge_opencode_config.ts"),
-                "--config-file",
-                str(config_jsonc),
-                "--plugins",
-                "existing-plugin",
-                "opencode-wakatime",
-            ],
-            cwd=skill_path,
-        )
-        if merge_config.returncode == 0:
-            merged = json.loads(config_jsonc.read_text(encoding="utf-8"))
-            if merged.get("plugin") == ["existing-plugin", "opencode-wakatime"]:
-                results["integration_checks"]["passed"] += 1
-            else:
-                results["errors"].append("merge_opencode_config.ts did not merge plugin entries correctly")
-                results["passed"] = False
-        else:
-            results["errors"].append(f"merge_opencode_config.ts failed: {merge_config.stderr.strip()}")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        package_target = project / ".opencode" / "package.json"
-        merge_package = run(
-            [
-                "bun",
-                str(skill_path / "scripts" / "merge_package_json.ts"),
-                "--package-file",
-                str(package_target),
-                "--dependencies-json",
-                '{"zod":"^3.25.0"}',
-            ],
-            cwd=skill_path,
-        )
-        if merge_package.returncode == 0:
-            package_data = json.loads(package_target.read_text(encoding="utf-8"))
-            if package_data.get("type") == "module" and package_data.get("dependencies", {}).get("zod") == "^3.25.0":
-                results["integration_checks"]["passed"] += 1
-            else:
-                results["errors"].append("merge_package_json.ts did not create module package.json correctly")
-                results["passed"] = False
-        else:
-            results["errors"].append(f"merge_package_json.ts failed: {merge_package.stderr.strip()}")
-            results["passed"] = False
-
-        minimal_project = tmp / "minimal-project"
-        minimal_project.mkdir()
-        (minimal_project / "package.json").write_text(
-            json.dumps({"name": "minimal-project", "scripts": {"validate": "bash scripts/validate-project.sh"}}, indent=2)
-            + "\n",
-            encoding="utf-8",
-        )
-        (minimal_project / "scripts").mkdir()
-        (minimal_project / "scripts" / "agent-session-context.sh").write_text(
-            "#!/usr/bin/env bash\n"
-            "set -euo pipefail\n"
-            "printf '## Project Session Context\\nUse repo-owned scripts for validation.\\n'\n",
-            encoding="utf-8",
-        )
-        (minimal_project / "scripts" / "validate-project.sh").write_text(
-            "#!/usr/bin/env bash\n"
-            "set -euo pipefail\n"
-            "if [ -f .pass-validation ]; then\n"
-            "  printf 'validation passed\\n'\n"
-            "  exit 0\n"
-            "fi\n"
-            "printf 'validation failed\\n' >&2\n"
-            "exit 1\n",
-            encoding="utf-8",
-        )
-        run(["git", "init"], cwd=minimal_project)
-
-        temp_plan = tmp / "minimal-plan.json"
-        plan_data = load_json(skill_path / "templates" / "hook-plan.example.json")
-        temp_plan.write_text(json.dumps(plan_data, indent=2) + "\n", encoding="utf-8")
+        plan = tmp / "plan.json"
+        plan.write_text((skill_path / "templates" / "hook-plan.example.json").read_text(encoding="utf-8"), encoding="utf-8")
 
         results["integration_checks"]["total"] += 1
         scaffold = run(
@@ -413,9 +300,9 @@ def test_skill(skill_path: Path) -> dict:
                 "bash",
                 str(skill_path / "scripts" / "scaffold_hooks.sh"),
                 "--project",
-                str(minimal_project),
+                str(project),
                 "--plan",
-                str(temp_plan),
+                str(plan),
                 "--home",
                 str(home),
             ],
@@ -423,19 +310,16 @@ def test_skill(skill_path: Path) -> dict:
         )
         if scaffold.returncode == 0:
             expected_files = [
-                minimal_project / ".opencode" / "plugins" / "README.md",
-                minimal_project / ".opencode" / "plugins" / ".managed" / "manifest.json",
-                minimal_project / ".opencode" / "plugins" / ".managed" / "plan.snapshot.json",
-                minimal_project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts",
-                minimal_project / "hooks" / "opencode-session-created" / "script.sh",
-                minimal_project / "hooks" / "opencode-session-created" / "opencode.sh",
-                minimal_project / "hooks" / "opencode-session-idle" / "script.sh",
-                minimal_project / "hooks" / "opencode-session-idle" / "opencode.sh",
+                project / "opencode.json",
+                project / ".opencode" / "hook" / "hooks.md",
+                project / ".opencode" / "hook" / "README.md",
+                project / ".opencode" / "hook" / ".managed" / "manifest.json",
+                project / ".opencode" / "hook" / ".managed" / "plan.snapshot.json",
             ]
             if all(path.exists() for path in expected_files):
                 results["integration_checks"]["passed"] += 1
             else:
-                missing = [str(path.relative_to(minimal_project)) for path in expected_files if not path.exists()]
+                missing = [str(path.relative_to(project)) for path in expected_files if not path.exists()]
                 results["errors"].append(f"scaffold_hooks.sh missed files: {', '.join(missing)}")
                 results["passed"] = False
         else:
@@ -443,296 +327,110 @@ def test_skill(skill_path: Path) -> dict:
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
-        generated_js = sorted(
-            path.relative_to(minimal_project).as_posix()
-            for path in (minimal_project / ".opencode" / "plugins").rglob("*.js")
-        ) if (minimal_project / ".opencode" / "plugins").is_dir() else []
-        if not generated_js:
-            results["integration_checks"]["passed"] += 1
-        else:
-            results["errors"].append(f"scaffold generated JavaScript files: {', '.join(generated_js)}")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        dependency_churn = [
-            rel_path
-            for rel_path in [
-                ".opencode/package.json",
-                ".opencode/node_modules",
-                ".opencode/package-lock.json",
-                ".opencode/bun.lock",
-                ".opencode/bun.lockb",
-            ]
-            if (minimal_project / rel_path).exists()
-        ]
-        if not dependency_churn:
-            results["integration_checks"]["passed"] += 1
-        else:
-            results["errors"].append(
-                "minimal scaffold created config-dir dependency artifacts: "
-                + ", ".join(dependency_churn)
-            )
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        surfaces_dir = minimal_project / ".opencode" / "plugins" / ".managed" / "surfaces"
-        if not surfaces_dir.exists():
-            results["integration_checks"]["passed"] += 1
-        else:
-            results["errors"].append("minimal scaffold unexpectedly created a broad surface catalog")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        plugin_file = minimal_project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts"
-        proc = bun_import_check(plugin_file, cwd=minimal_project)
-        if proc.returncode == 0:
-            results["integration_checks"]["passed"] += 1
-        else:
-            output = proc.stderr.strip() or proc.stdout.strip()
-            results["errors"].append(f"generated lifecycle plugin syntax check failed: {output}")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        simulator = tmp / "simulate-lifecycle-plugin.mjs"
-        simulator.write_text(
-            f"""
-import {{ writeFileSync }} from "node:fs"
-import pluginFactory from {json.dumps(plugin_file.as_uri())}
-
-const toasts = []
-const prompts = []
-const logs = []
-const client = {{
-  tui: {{ showToast: async (input) => toasts.push(input.body) }},
-  app: {{ log: async (input) => logs.push(input.body) }},
-  session: {{ prompt: async (input) => prompts.push(input.body) }},
-}}
-
-const plugin = await pluginFactory({{ client, directory: {json.dumps(minimal_project.as_posix())} }})
-await plugin.event({{ event: {{ type: "session.created", properties: {{ info: {{ id: "child-1", parentID: "s1" }} }} }} }})
-await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "child-1" }} }} }})
-if (prompts.length !== 0) throw new Error("child session must not receive lifecycle prompts")
-if (toasts.length !== 0) throw new Error("child session must not run idle lifecycle action")
-await plugin.event({{ event: {{ type: "session.created", properties: {{ info: {{ id: "s1" }} }} }} }})
-await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
-await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
-await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
-writeFileSync({json.dumps((minimal_project / ".pass-validation").as_posix())}, "ok\\n", "utf8")
-await plugin.event({{ event: {{ type: "session.idle", properties: {{ sessionID: "s1" }} }} }})
-
-const variants = toasts.map((toast) => toast.variant)
-const messages = toasts.map((toast) => toast.message)
-if (!variants.includes("info")) throw new Error("missing info toast")
-if (!variants.includes("success")) throw new Error("missing success toast")
-if (!variants.includes("error")) throw new Error("missing error toast")
-if (!messages.some((message) => message.includes("Project validation started"))) throw new Error("missing start toast")
-if (!messages.some((message) => message.includes("Project validation passed"))) throw new Error("missing pass toast")
-if (!messages.some((message) => message.includes("Project validation failed"))) throw new Error("missing fail toast")
-if (!messages.some((message) => message.includes("still failing"))) throw new Error("missing persistent failure toast")
-if (prompts.length !== 3) throw new Error(`expected 3 prompts, got ${{prompts.length}}`)
-if (prompts[0].noReply !== true) throw new Error("session context prompt must be noReply")
-if (prompts[1].noReply === true) throw new Error("first repair prompt must allow a reply")
-if (prompts[2].noReply !== true) throw new Error("persistent failure prompt must be noReply")
-if (logs.length === 0) throw new Error("expected diagnostic app logs")
-""".lstrip(),
-            encoding="utf-8",
-        )
-        simulation = run(["bun", "--no-install", str(simulator)], cwd=minimal_project)
-        if simulation.returncode == 0:
-            results["integration_checks"]["passed"] += 1
-        else:
-            results["errors"].append(
-                "generated lifecycle plugin did not satisfy toast/repair simulation: "
-                + (simulation.stderr.strip() or simulation.stdout.strip())
-            )
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        minimal_manifest_path = minimal_project / ".opencode" / "plugins" / ".managed" / "manifest.json"
-        minimal_manifest = load_json(minimal_manifest_path)
-        minimal_provenance = minimal_manifest.get("scaffold_hooks", {})
+        config = load_json(project / "opencode.json")
+        hooks_md = (project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
         if (
-            minimal_provenance.get("schema_version") == 1
-            and minimal_provenance.get("harness") == "opencode"
-            and minimal_provenance.get("generator", {}).get("sha256")
-            and minimal_provenance.get("plan_sha256")
-            and minimal_manifest.get("managed_file_hashes", {}).get("opencode_hook_project_session_lifecycle.ts")
+            "opencode-froggy" in config.get("plugin", [])
+            and "BEGIN scaffold-hooks managed opencode-froggy" in hooks_md
+            and "session.idle" in hooks_md
         ):
             results["integration_checks"]["passed"] += 1
         else:
-            results["errors"].append("OpenCode manifest did not record provenance and managed file hashes")
+            results["errors"].append("scaffold did not enable opencode-froggy and managed hooks.md")
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
-        plugin_text = plugin_file.read_text(encoding="utf-8")
-        legacy_text = plugin_text.replace(
-            "const childSessionIDs = new Set<string>()",
-            "const legacyManagedLifecycle = true",
-        )
-        plugin_file.write_text(legacy_text, encoding="utf-8")
-        legacy_manifest = minimal_manifest
-        legacy_manifest.pop("managed_file_hashes", None)
-        legacy_manifest.pop("preserved_file_hashes", None)
-        minimal_manifest_path.write_text(json.dumps(legacy_manifest, indent=2) + "\n", encoding="utf-8")
-        legacy_refresh = run(
-            [
-                "bash",
-                str(skill_path / "scripts" / "scaffold_hooks.sh"),
-                "--project",
-                str(minimal_project),
-                "--plan",
-                str(temp_plan),
-                "--home",
-                str(home),
-            ],
-            cwd=skill_path,
-        )
-        refreshed_text = plugin_file.read_text(encoding="utf-8")
-        backup_files = list((minimal_project / ".opencode" / "plugins" / ".managed" / "backups").rglob(plugin_file.name))
-        if legacy_refresh.returncode == 0 and "childSessionIDs" in refreshed_text and backup_files:
-            results["integration_checks"]["passed"] += 1
-        else:
-            results["errors"].append(
-                "additive scaffold did not refresh legacy managed OpenCode plugin with backup: "
-                + (legacy_refresh.stderr.strip() or legacy_refresh.stdout.strip())
-            )
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        plugin_file.write_text(refreshed_text + "\n// local customization\n", encoding="utf-8")
-        preserve_rerun = run(
-            [
-                "bash",
-                str(skill_path / "scripts" / "scaffold_hooks.sh"),
-                "--project",
-                str(minimal_project),
-                "--plan",
-                str(temp_plan),
-                "--home",
-                str(home),
-            ],
-            cwd=skill_path,
-        )
-        preserved_manifest = load_json(minimal_manifest_path)
-        preserved_text = plugin_file.read_text(encoding="utf-8")
-        if (
-            preserve_rerun.returncode == 0
-            and "// local customization" in preserved_text
-            and preserved_manifest.get("preserved_file_hashes", {}).get(plugin_file.name)
-        ):
-            results["integration_checks"]["passed"] += 1
-        else:
-            results["errors"].append(
-                "additive scaffold did not preserve user-modified managed OpenCode plugin: "
-                + (preserve_rerun.stderr.strip() or preserve_rerun.stdout.strip())
-            )
-            results["passed"] = False
-
-        broad_project = tmp / "broad-project"
-        broad_project.mkdir()
-        (broad_project / "package.json").write_text(
-            json.dumps({"name": "broad-project"}, indent=2) + "\n",
-            encoding="utf-8",
-        )
-        run(["git", "init"], cwd=broad_project)
-        broad_plan = tmp / "broad-plan.json"
-        broad_plan.write_text(
-            (skill_path / "templates" / "hook-plan.broad.example.json").read_text(encoding="utf-8"),
-            encoding="utf-8",
-        )
-
-        results["integration_checks"]["total"] += 1
-        broad_scaffold = run(
-            [
-                "bash",
-                str(skill_path / "scripts" / "scaffold_hooks.sh"),
-                "--project",
-                str(broad_project),
-                "--plan",
-                str(broad_plan),
-                "--home",
-                str(home),
-            ],
-            cwd=skill_path,
-        )
-        if broad_scaffold.returncode == 0:
-            broad_expected = [
-                broad_project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.ts",
-                broad_project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.ts",
-                broad_project / ".opencode" / "plugins" / "opencode_hook_shell_env.ts",
-                broad_project / ".opencode" / "plugins" / ".managed" / "surfaces",
-            ]
-            if all(path.exists() for path in broad_expected):
-                results["integration_checks"]["passed"] += 1
-            else:
-                missing = [str(path.relative_to(broad_project)) for path in broad_expected if not path.exists()]
-                results["errors"].append(f"broad scaffold missed files: {', '.join(missing)}")
-                results["passed"] = False
-        else:
-            results["errors"].append(f"broad scaffold failed: {broad_scaffold.stderr.strip()}")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        manifest_path = broad_project / ".opencode" / "plugins" / ".managed" / "manifest.json"
-        if manifest_path.exists():
-            manifest_data = load_json(manifest_path)
-            stub_dir = broad_project / ".opencode" / "plugins" / ".managed" / "surfaces"
-            expected_stub_count = len(manifest_data["special_surfaces"]) + len(manifest_data["events"])
-            actual_stub_count = len(list(stub_dir.glob("*.txt")))
-            if expected_stub_count == actual_stub_count:
-                results["integration_checks"]["passed"] += 1
-            else:
-                results["errors"].append("Managed surface stub count did not match manifest")
-                results["passed"] = False
-        else:
-            results["errors"].append("manifest.json was not created before stub-count check")
-            results["passed"] = False
-
-        results["integration_checks"]["total"] += 1
-        plugin_files = [
-            broad_project / ".opencode" / "plugins" / "opencode_hook_guard_sensitive_files.ts",
-            broad_project / ".opencode" / "plugins" / "opencode_hook_post_turn_check.ts",
-            broad_project / ".opencode" / "plugins" / "opencode_hook_shell_env.ts",
+        forbidden = [
+            project / ".opencode" / "plugins" / "opencode_hook_project_session_lifecycle.ts",
+            project / ".opencode" / "package.json",
+            project / ".opencode" / "package-lock.json",
+            project / ".opencode" / "node_modules",
         ]
-        parse_errors: list[str] = []
-        for plugin_file in plugin_files:
-            proc = bun_import_check(plugin_file, cwd=broad_project)
-            if proc.returncode != 0:
-                output = proc.stderr.strip() or proc.stdout.strip()
-                parse_errors.append(f"{plugin_file.name}: {output}")
-        if parse_errors:
-            results["errors"].extend(parse_errors)
-            results["passed"] = False
-        else:
+        if not any(path.exists() for path in forbidden):
             results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Froggy scaffold created old local-plugin dependency artifacts")
+            results["passed"] = False
 
         results["integration_checks"]["total"] += 1
-        custom_plugin = minimal_project / ".opencode" / "plugins" / "custom_local_plugin.ts"
-        custom_plugin.write_text("const plugin = async () => ({})\nexport default plugin\n", encoding="utf-8")
-        config_path = minimal_project / "opencode.json"
-        config_path.write_text(json.dumps({"plugin": ["custom-third-party"]}, indent=2) + "\n", encoding="utf-8")
         rerun = run(
             [
                 "bash",
                 str(skill_path / "scripts" / "scaffold_hooks.sh"),
                 "--project",
-                str(minimal_project),
+                str(project),
                 "--plan",
-                str(temp_plan),
+                str(plan),
                 "--home",
                 str(home),
             ],
             cwd=skill_path,
         )
-        if rerun.returncode == 0:
-            config_after = json.loads(config_path.read_text(encoding="utf-8"))
-            if custom_plugin.exists() and "custom-third-party" in config_after.get("plugin", []):
-                results["integration_checks"]["passed"] += 1
-            else:
-                results["errors"].append("additive scaffold removed a custom plugin file or config entry")
-                results["passed"] = False
+        hooks_after_rerun = (project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
+        if rerun.returncode == 0 and hooks_after_rerun.count("BEGIN scaffold-hooks managed opencode-froggy") == 1:
+            results["integration_checks"]["passed"] += 1
         else:
-            results["errors"].append(f"second scaffold run failed: {rerun.stderr.strip()}")
+            results["errors"].append("additive rerun duplicated or failed to refresh the managed Froggy block")
+            results["passed"] = False
+
+        legacy_project = tmp / "legacy-project"
+        seed_project(legacy_project)
+        seed_legacy_opencode_scaffold(legacy_project)
+        results["integration_checks"]["total"] += 1
+        legacy_scaffold = run(
+            [
+                "bash",
+                str(skill_path / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(legacy_project),
+                "--plan",
+                str(plan),
+                "--home",
+                str(home),
+            ],
+            cwd=skill_path,
+        )
+        if (
+            legacy_scaffold.returncode == 0
+            and not (legacy_project / ".opencode" / "plugins" / "old_lifecycle.ts").exists()
+            and not (legacy_project / ".opencode" / "plugins" / ".managed").exists()
+            and not (legacy_project / ".opencode" / "package.json").exists()
+            and not (legacy_project / "hooks" / "opencode-session-idle" / "opencode.sh").exists()
+            and (legacy_project / ".opencode" / "hook" / "hooks.md").exists()
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "legacy plugin scaffold was not razed during Froggy migration: "
+                + (legacy_scaffold.stderr.strip() or legacy_scaffold.stdout.strip())
+            )
+            results["passed"] = False
+
+        custom_project = tmp / "custom-project"
+        seed_project(custom_project)
+        write(
+            custom_project / ".opencode" / "hook" / "hooks.md",
+            "---\nhooks:\n  - event: tool.after.write\n    actions:\n      - bash: \"echo custom\"\n---\n# Custom hooks\n",
+        )
+        results["integration_checks"]["total"] += 1
+        custom_scaffold = run(
+            [
+                "bash",
+                str(skill_path / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(custom_project),
+                "--plan",
+                str(plan),
+                "--home",
+                str(home),
+            ],
+            cwd=skill_path,
+        )
+        custom_hooks = (custom_project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
+        if custom_scaffold.returncode == 0 and "echo custom" in custom_hooks and "session.idle" in custom_hooks:
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("scaffold did not preserve appendable custom Froggy hooks")
             results["passed"] = False
 
     return results
