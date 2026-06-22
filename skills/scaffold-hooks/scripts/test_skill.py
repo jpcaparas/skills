@@ -401,14 +401,19 @@ def test_skill(skill_path: Path) -> dict:
         results["integration_checks"]["total"] += 1
         runtime_content = (project / "hooks" / "lib" / "agent-hook-runtime.sh").read_text(encoding="utf-8")
         stop_config = load_json(project / "hooks" / "stop" / "codex.json")
+        quiet_code_change_probe = any(
+            token in runtime_content for token in ["grep -Eiq", "grep -Eq", "grep -q", ">/dev/null"]
+        )
         if (
             "hook_has_code_changes()" in runtime_content
+            and quiet_code_change_probe
+            and "head -1" not in runtime_content
             and stop_config.get("run_on_code_changes") is True
             and "ts" in stop_config.get("code_change_extensions", [])
         ):
             results["integration_checks"]["passed"] += 1
         else:
-            results["errors"].append("Universal scaffold did not preserve the shared code-change Stop gate")
+            results["errors"].append("Universal scaffold did not preserve the quiet shared code-change Stop gate")
             results["passed"] = False
 
         write(project / "scripts" / "empty-args-ok.sh", "#!/usr/bin/env bash\nexit 0\n")
@@ -437,6 +442,57 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(
                 "Generated Codex Stop hook failed empty args regression: "
                 f"status={empty_args.returncode}\nstdout={empty_args.stdout}\nstderr={empty_args.stderr}"
+            )
+            results["passed"] = False
+
+        pollution_filename = "src/stdout-pollution-regression.ts"
+        write(project / pollution_filename, "export const stdoutPollutionRegression = true;\n")
+        git_add = run(["git", "add", pollution_filename], cwd=project)
+        if git_add.returncode != 0:
+            results["errors"].append(f"git add failed for stdout pollution regression: {git_add.stderr}")
+            results["passed"] = False
+
+        write(
+            project / "scripts" / "fail-stop-check.sh",
+            "#!/usr/bin/env bash\nprintf 'stop check failed\\n' >&2\nexit 1\n",
+        )
+        os.chmod(project / "scripts" / "fail-stop-check.sh", 0o755)
+        codex_stop_config = load_json(codex_stop_config_path)
+        codex_stop_config["scripts"] = [
+            {
+                "label": "stdout pollution regression",
+                "path": "scripts/fail-stop-check.sh",
+                "args": [],
+                "cwd": ".",
+            }
+        ]
+        codex_stop_config_path.write_text(json.dumps(codex_stop_config, indent=2) + "\n", encoding="utf-8")
+
+        results["integration_checks"]["total"] += 1
+        polluted_stop = run(
+            ["bash", str(project / "hooks" / "stop" / "codex.sh")],
+            cwd=project,
+            input_text='{"session_id":"stdout-pollution-regression"}',
+        )
+        polluted_stop_json = None
+        polluted_stop_json_error = ""
+        try:
+            polluted_stop_json = json.loads(polluted_stop.stdout)
+        except json.JSONDecodeError as exc:
+            polluted_stop_json_error = f"json error={exc}\n"
+
+        if (
+            polluted_stop.returncode == 0
+            and polluted_stop_json is not None
+            and polluted_stop_json.get("decision") == "block"
+            and pollution_filename not in polluted_stop.stdout
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append(
+                "Generated Codex Stop hook leaked helper output or failed to block cleanly: "
+                f"status={polluted_stop.returncode}\n{polluted_stop_json_error}"
+                f"stdout={polluted_stop.stdout}\nstderr={polluted_stop.stderr}"
             )
             results["passed"] = False
 

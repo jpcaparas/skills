@@ -145,6 +145,14 @@ Each supported harness is a self-contained component under `harnesses/<name>/` w
 
 When an event name, matcher, output contract, or feature flag changes, update the harness component first (manifest, references, scripts, tests), then the universal orchestration. Read `references/harness-composition.md` when changing the composition order or adding a harness.
 
+## Protocol Output Hygiene
+
+Treat stdout as part of the harness protocol, not a scratch log. For JSON-output hooks, stdout is reserved for the final protocol JSON payload; successful no-op paths should stay quiet unless the event contract explicitly allows stdout. Send diagnostics, debug text, filenames, and human-readable failure details to stderr unless the harness requires them on stdout.
+
+Helper and predicate functions must be silent by default and return exit status only. Use quiet checks such as `grep -q` / `grep -Eq`, or redirect stdout to `/dev/null`; do not use filename probes like `grep ... | head -1` unless the output is captured and cannot leak to hook stdout. Known regression: `hook_has_code_changes` must remain an exit-status-only predicate.
+
+Validate generated JSON-output hooks for zero stdout on success/no-op paths, parseable JSON with no prefix or suffix on blocking paths, and no filenames/debug/status lines leaking from shared helpers.
+
 ## Gotchas
 
 1. Do not pass `overhaul` directly to the shell harness scaffolders from a universal run. They would rewrite shared `script.sh` files. The universal script performs harness cleanup first, then calls them additively.
