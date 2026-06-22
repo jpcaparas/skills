@@ -11,6 +11,7 @@ Start from `templates/hook-plan.example.json`.
 | `cleanup_legacy` | Remove old managed generated folders after config migration; defaults to `true` |
 | `harnesses` | Harnesses to scaffold: `claude`, `codex`, `copilot`, `devin`, `opencode` |
 | `plans` | Per-harness plan objects passed to the dedicated scaffolders |
+| `code_change_extensions` | Optional top-level extension override for shell Stop code-change gates; defaults to project detection |
 
 ## Harness Selection
 
@@ -70,6 +71,29 @@ Use `commands` only for existing task-runner commands that are already safe to r
 ```
 
 Keep package-manager assumptions out of the universal template. Put them in project-specific plans.
+
+## Stop Code-Change Gates
+
+Claude, Codex, and Devin Stop adapters default to `run_on_code_changes: true`. During scaffolding, the generator scans the target project and stores detected source/config extensions in each Stop adapter config:
+
+```json
+{
+  "name": "Stop",
+  "timeout": 300,
+  "run_on_code_changes": true,
+  "code_change_extensions": ["php", "ts", "tsx"],
+  "scripts": [
+    {
+      "label": "shared stop checks",
+      "path": "scripts/agent-stop-checks.sh",
+      "args": ["claude"],
+      "cwd": "."
+    }
+  ]
+}
+```
+
+Use `run_on_code_changes: false` when a Stop hook must run on every turn. Use `code_change_extensions` when the detector misses project-specific source files or includes file types that should not trigger expensive checks.
 
 ## Missing Nested Plan
 

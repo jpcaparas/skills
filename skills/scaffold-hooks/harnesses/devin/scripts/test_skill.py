@@ -121,6 +121,8 @@ def readable_common_errors(common_path: Path) -> list[str]:
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
+        "hook_has_code_changes()",
+        "hook_should_skip_event()",
     ]
     return [
         f"agent-hook-runtime.sh is missing helper marker: {snippet}"
@@ -206,6 +208,9 @@ def test_skill(skill_path: Path) -> dict:
         tmp = Path(tmpdir)
         project = tmp / "project"
         project.mkdir()
+        run(["git", "init", "-q"], cwd=project)
+        (project / "src").mkdir()
+        (project / "src" / "example.ts").write_text("export const example = true;\n", encoding="utf-8")
         (project / "scripts").mkdir()
         (project / "scripts" / "agent-stop-checks.sh").write_text(
             "#!/usr/bin/env bash\n"
@@ -331,6 +336,104 @@ def test_skill(skill_path: Path) -> dict:
                 results["passed"] = False
         else:
             results["errors"].append("generated Stop hook missing before exit-code-2 check")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        if stop_script.exists():
+            active_payload = json.dumps(
+                {
+                    "hook_event_name": "Stop",
+                    "stop_hook_active": True,
+                }
+            )
+            active_proc = run(
+                ["bash", str(stop_script)],
+                cwd=project,
+                input_text=active_payload,
+                env={"DEVIN_PROJECT_DIR": str(project)},
+            )
+            if (
+                active_proc.returncode == 0
+                and "portable shared script devin" not in active_proc.stderr
+                and "must block" not in active_proc.stderr
+                and active_proc.stdout == ""
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("generated Stop hook did not skip when stop_hook_active=true")
+                results["passed"] = False
+        else:
+            results["errors"].append("generated Stop hook missing before active-stop skip check")
+            results["passed"] = False
+
+        run(["git", "add", "."], cwd=project)
+        run(
+            [
+                "git",
+                "-c",
+                "user.name=scaffold-hooks-test",
+                "-c",
+                "user.email=scaffold-hooks-test@example.com",
+                "commit",
+                "-qm",
+                "fixture",
+            ],
+            cwd=project,
+        )
+
+        results["integration_checks"]["total"] += 1
+        if stop_script.exists():
+            clean_payload = json.dumps(
+                {
+                    "hook_event_name": "Stop",
+                    "stop_hook_active": False,
+                }
+            )
+            clean_proc = run(
+                ["bash", str(stop_script)],
+                cwd=project,
+                input_text=clean_payload,
+                env={"DEVIN_PROJECT_DIR": str(project)},
+            )
+            if (
+                clean_proc.returncode == 0
+                and "portable shared script devin" not in clean_proc.stderr
+                and "must block" not in clean_proc.stderr
+                and clean_proc.stdout == ""
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("generated Stop hook did not skip when no code changes are present")
+                results["passed"] = False
+        else:
+            results["errors"].append("generated Stop hook missing before no-change skip check")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        devin_lib = generated_root / "lib" / "devin.sh"
+        runtime_lib = generated_root / "lib" / "agent-hook-runtime.sh"
+        context_proc = run(
+            [
+                "bash",
+                "-c",
+                f"source {runtime_lib}; source {devin_lib}; AGENT_HOOK_EVENT=SessionStart; write_additional_context 'shared context'",
+            ],
+            cwd=project,
+            env={"DEVIN_PROJECT_DIR": str(project)},
+        )
+        if context_proc.returncode == 0:
+            context_json = json.loads(context_proc.stdout)
+            output = context_json.get("hookSpecificOutput", {})
+            if (
+                output.get("hookEventName") == "SessionStart"
+                and output.get("additionalContext") == "shared context"
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("Devin write_additional_context did not emit hookSpecificOutput")
+                results["passed"] = False
+        else:
+            results["errors"].append(f"Devin write_additional_context failed: {context_proc.stderr.strip()}")
             results["passed"] = False
 
     return results

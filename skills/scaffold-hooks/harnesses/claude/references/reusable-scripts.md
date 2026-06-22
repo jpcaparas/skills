@@ -21,6 +21,7 @@ Shared `hooks/<event>/script.sh` files should stay thin. They read the active ha
 
 - Resolve the repo root inside shared scripts, usually with `git rev-parse --show-toplevel`.
 - Accept a harness or mode argument when output protocols differ, for example `agent-stop-checks.sh claude`.
+- For `SessionStart` context, use `{"hookSpecificOutput":{"hookEventName":"SessionStart","additionalContext":"..."}}` for Claude, Codex, and Devin. Claude Code accepts this shared shape, so there is no need for a Claude-only top-level `additionalContext` branch.
 - Keep toolchain commands in shared scripts or existing repo task runners, not inside managed hook stubs.
 - Make shared scripts callable by humans and CI: `bash <project>/scripts/agent-stop-checks.sh claude`.
 - Use adapter scripts only when the protocol output differs enough to justify them.

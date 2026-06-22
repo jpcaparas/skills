@@ -20,6 +20,8 @@ Hooks run in non-interactive shells. Aliases, shell prompts, and unconditional `
 
 The official docs recommend command paths rooted at `$CLAUDE_PROJECT_DIR`. Do not rely on relative paths or the current shell directory.
 
+Do not wrap `$CLAUDE_PROJECT_DIR` in embedded shell quotes inside `.claude/settings.json`. Use the documented shape such as `${CLAUDE_PROJECT_DIR}/hooks/stop/claude.sh`; the settings file should not contain a command string like `\"$CLAUDE_PROJECT_DIR\"/hooks/stop/claude.sh`.
+
 ## 6. Headless mode skips `PermissionRequest`
 
 The official guide says `PermissionRequest` does not fire in non-interactive `-p` mode. Use `PreToolUse` when you need a deterministic policy gate that also works there.

@@ -25,6 +25,7 @@ REQUIRED_FILES = [
     "references/migration.md",
     "references/project-audit.md",
     "scripts/scaffold_all_hooks.sh",
+    "scripts/detect_code_extensions.py",
     "scripts/test_skill.py",
     "scripts/validate.py",
     "evals/evals.json",

@@ -137,6 +137,8 @@ def readable_common_errors(common_path: Path) -> list[str]:
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
+        "hook_has_code_changes()",
+        "hook_should_skip_event()",
     ]
     return [
         f"agent-hook-runtime.sh is missing helper marker: {snippet}"
@@ -255,6 +257,8 @@ def test_skill(skill_path: Path) -> dict:
         env["HOME"] = str(home)
 
         run(["git", "init"], cwd=project, env=env)
+        (project / "src").mkdir()
+        (project / "src" / "example.ts").write_text("export const example = true;\n", encoding="utf-8")
 
         results["integration_checks"]["total"] += 1
         audit = run(["bash", str(skill_path / "scripts" / "audit_project.sh"), str(project)], cwd=skill_path, env=env)
@@ -526,6 +530,33 @@ def test_skill(skill_path: Path) -> dict:
                     results["passed"] = False
                 else:
                     results["integration_checks"]["passed"] += 1
+
+        results["integration_checks"]["total"] += 1
+        codex_lib = project / "hooks" / "lib" / "codex.sh"
+        runtime_lib = project / "hooks" / "lib" / "agent-hook-runtime.sh"
+        context_proc = run(
+            [
+                "bash",
+                "-c",
+                f"source {runtime_lib}; source {codex_lib}; AGENT_HOOK_EVENT=SessionStart; write_additional_context 'shared context'",
+            ],
+            cwd=project,
+            env=env,
+        )
+        if context_proc.returncode == 0:
+            context_json = json.loads(context_proc.stdout)
+            output = context_json.get("hookSpecificOutput", {})
+            if (
+                output.get("hookEventName") == "SessionStart"
+                and output.get("additionalContext") == "shared context"
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("Codex write_additional_context did not emit hookSpecificOutput")
+                results["passed"] = False
+        else:
+            results["errors"].append(f"Codex write_additional_context failed: {context_proc.stderr.strip()}")
+            results["passed"] = False
 
         results["integration_checks"]["total"] += 1
         if hooks_json_path.exists():

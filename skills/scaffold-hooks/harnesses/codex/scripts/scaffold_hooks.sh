@@ -122,6 +122,42 @@ config_value() {
 config_scripts_json() { config_value '.scripts // []' '[]'; }
 config_commands_json() { config_value '.commands // []' '[]'; }
 config_block_on_failure() { config_value '(.block_on_failure // false | tostring)' 'false'; }
+config_run_on_code_changes() { config_value '(.run_on_code_changes // false | tostring)' 'false'; }
+config_code_change_extensions_json() { config_value '.code_change_extensions // []' '[]'; }
+
+hook_stop_is_active() {
+    [ "$(hook_json '(.stop_hook_active // false | tostring)' 'false')" = "true" ]
+}
+
+hook_has_code_changes() {
+    local project_dir="$1"
+    local extensions_json="${2:-[]}"
+    local pattern
+    require_jq
+    pattern="$(printf '%s' "$extensions_json" | jq -r 'map(ltrimstr(".")) | map(select(length > 0)) | join("|")' 2>/dev/null || true)"
+    [ -n "$pattern" ] || return 1
+    git -C "$project_dir" rev-parse --show-toplevel >/dev/null 2>&1 || return 1
+    {
+        git -C "$project_dir" diff --cached --name-only 2>/dev/null || true
+        git -C "$project_dir" diff --name-only 2>/dev/null || true
+        git -C "$project_dir" ls-files --others --exclude-standard 2>/dev/null || true
+    } | grep -Eiq "\\.($pattern)$"
+}
+
+hook_should_skip_event() {
+    case "${AGENT_HOOK_EVENT:-}" in
+        Stop|SubagentStop)
+            if hook_stop_is_active; then
+                return 0
+            fi
+            if [ "$(config_run_on_code_changes)" = "true" ] \
+                && ! hook_has_code_changes "$(hook_project_root)" "$(config_code_change_extensions_json)"; then
+                return 0
+            fi
+            ;;
+    esac
+    return 1
+}
 
 hook_project_root() {
     case "${AGENT_HOOK_HARNESS:-}" in
@@ -273,11 +309,23 @@ write_codex_lib() {
 set -euo pipefail
 
 emit_additional_context() {
-    local event_name="$1"
-    local message="$2"
+    local event_name
+    local message
+    if [ "$#" -eq 1 ]; then
+        event_name="${AGENT_HOOK_EVENT:-SessionStart}"
+        message="$1"
+    else
+        event_name="$1"
+        message="$2"
+    fi
+
     require_jq
     jq -n --arg event_name "$event_name" --arg message "$message" \
         '{hookSpecificOutput: {hookEventName: $event_name, additionalContext: $message}}'
+}
+
+write_additional_context() {
+    emit_additional_context "$@"
 }
 
 emit_system_message() {
@@ -403,6 +451,7 @@ require_command python3
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
+SCAFFOLD_ROOT="$(cd "$SKILL_ROOT/../.." && pwd -P)"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
 EVENT_TEMPLATE="$SKILL_ROOT/templates/event-script.sh.tmpl"
 
@@ -457,6 +506,19 @@ IS_GIT_REPO="false"
 if git -C "$PROJECT_ROOT" rev-parse --show-toplevel >/dev/null 2>&1; then
     IS_GIT_REPO="true"
 fi
+
+detect_code_change_extensions() {
+    if command -v python3 >/dev/null 2>&1 && [ -f "$SCAFFOLD_ROOT/scripts/detect_code_extensions.py" ]; then
+        python3 "$SCAFFOLD_ROOT/scripts/detect_code_extensions.py" \
+            --project "$PROJECT_ROOT" \
+            --hooks-root "$MANAGED_ROOT_REL" 2>/dev/null \
+            || printf '["js","jsx","ts","tsx","py","go","rs","java","php","rb","cs","sh"]\n'
+    else
+        printf '["js","jsx","ts","tsx","py","go","rs","java","php","rb","cs","sh"]\n'
+    fi
+}
+
+CODE_CHANGE_EXTENSIONS_JSON="$(detect_code_change_extensions)"
 
 UNKNOWN_EVENTS="$(
     jq -n \
@@ -636,17 +698,33 @@ while IFS=$'\t' read -r event_name script_name description matcher_guidance outp
             ]
         ' "$PLAN_FILE"
     )"
+    run_on_code_changes="$(
+        jq -r --arg name "$event_name" '
+            ([.enabled_events[]? | select(.name == $name)][0] // {}) as $event
+            | ($event.run_on_code_changes // (if $name == "Stop" then true else false end) | tostring)
+        ' "$PLAN_FILE"
+    )"
+    code_change_extensions_json="$(
+        jq -c --arg name "$event_name" --argjson detected "$CODE_CHANGE_EXTENSIONS_JSON" '
+            ([.enabled_events[]? | select(.name == $name)][0] // {}) as $event
+            | ($event.code_change_extensions // .code_change_extensions // $detected)
+        ' "$PLAN_FILE"
+    )"
     write_adapter_script "codex" "$event_name" "$adapter_script"
     jq -n \
         --arg harness "codex" \
         --arg event "$event_name" \
         --argjson scripts "$event_scripts_json" \
         --argjson commands "$event_commands_json" \
+        --argjson run_on_code_changes "$run_on_code_changes" \
+        --argjson code_change_extensions "$code_change_extensions_json" \
         '{
             harness: $harness,
             event: $event,
             scripts: $scripts,
-            commands: $commands
+            commands: $commands,
+            run_on_code_changes: $run_on_code_changes,
+            code_change_extensions: $code_change_extensions
         }' > "$adapter_config"
 done < <(
     jq -r '.events[] | [.name, .script_name, .description, .matcher_guidance, .output_guidance, .blocking_guidance] | @tsv' \

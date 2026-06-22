@@ -49,6 +49,10 @@ handle_event() {
     # Project-specific logic belongs here.
     # Use config_scripts_json and config_commands_json for plan-managed
     # reusable behavior, then add any local event logic below those calls.
+    if hook_should_skip_event; then
+        return 0
+    fi
+
     if ! run_configured_scripts "$(config_scripts_json)"; then
         handle_project_command_failure "$AGENT_HOOK_EVENT" "$(configured_command_failure_message)"
         return $?

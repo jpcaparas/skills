@@ -80,6 +80,9 @@
         },
         {
           "text": "The plan can pass harness arguments to the same shared script"
+        },
+        {
+          "text": "Generated Stop adapters can skip expensive checks when no configured source extensions changed"
         }
       ]
     }

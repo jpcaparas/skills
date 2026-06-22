@@ -155,6 +155,7 @@ def seed_legacy_project(project: Path) -> None:
     )
     write(project / "scripts" / "agent-session-context.sh", "#!/usr/bin/env bash\nexit 0\n")
     write(project / "scripts" / "validate-project.sh", "#!/usr/bin/env bash\nexit 0\n")
+    write(project / "src" / "fixture.ts", "export const fixture = true;\n")
     os.chmod(project / "scripts" / "agent-session-context.sh", 0o755)
     os.chmod(project / "scripts" / "validate-project.sh", 0o755)
 
@@ -378,6 +379,36 @@ def test_skill(skill_path: Path) -> dict:
             results["integration_checks"]["passed"] += 1
         else:
             results["errors"].append("Custom Claude prompt hook was not preserved")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        claude_commands = [
+            hook.get("command", "")
+            for groups in claude_settings.get("hooks", {}).values()
+            for group in groups
+            for hook in group.get("hooks", [])
+            if hook.get("type") == "command"
+        ]
+        if (
+            "${CLAUDE_PROJECT_DIR}/hooks/stop/claude.sh" in claude_commands
+            and not any('"$CLAUDE_PROJECT_DIR"' in command for command in claude_commands)
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Claude settings reintroduced embedded quotes around CLAUDE_PROJECT_DIR")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        runtime_content = (project / "hooks" / "lib" / "agent-hook-runtime.sh").read_text(encoding="utf-8")
+        stop_config = load_json(project / "hooks" / "stop" / "codex.json")
+        if (
+            "hook_has_code_changes()" in runtime_content
+            and stop_config.get("run_on_code_changes") is True
+            and "ts" in stop_config.get("code_change_extensions", [])
+        ):
+            results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("Universal scaffold did not preserve the shared code-change Stop gate")
             results["passed"] = False
 
         write(project / "scripts" / "empty-args-ok.sh", "#!/usr/bin/env bash\nexit 0\n")

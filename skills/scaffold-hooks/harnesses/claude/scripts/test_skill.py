@@ -143,6 +143,8 @@ def readable_common_errors(common_path: Path) -> list[str]:
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
+        "hook_has_code_changes()",
+        "hook_should_skip_event()",
     ]
     return [
         f"agent-hook-runtime.sh is missing helper marker: {snippet}"
@@ -226,6 +228,9 @@ def test_skill(skill_path: Path) -> dict:
         tmp = Path(tmpdir)
         project = tmp / "project"
         project.mkdir()
+        run(["git", "init", "-q"], cwd=project)
+        (project / "src").mkdir()
+        (project / "src" / "example.ts").write_text("export const example = true;\n", encoding="utf-8")
         (project / "scripts").mkdir()
         (project / "scripts" / "agent-stop-checks.sh").write_text(
             "#!/usr/bin/env bash\n"
@@ -289,7 +294,25 @@ def test_skill(skill_path: Path) -> dict:
                 ]
             )
             if all(path.exists() for path in expected_files):
-                results["integration_checks"]["passed"] += 1
+                settings = load_json(project / ".claude" / "settings.json")
+                commands = [
+                    hook.get("command", "")
+                    for groups in settings.get("hooks", {}).values()
+                    for group in groups
+                    for hook in group.get("hooks", [])
+                    if hook.get("type") == "command"
+                ]
+                quoted_commands = [
+                    command for command in commands if '"$CLAUDE_PROJECT_DIR"' in command
+                ]
+                if quoted_commands:
+                    results["errors"].append("Claude settings command path still contains embedded shell quotes")
+                    results["passed"] = False
+                elif "${CLAUDE_PROJECT_DIR}/hooks/stop/claude.sh" not in commands:
+                    results["errors"].append("Claude Stop command did not use the unquoted project-dir form")
+                    results["passed"] = False
+                else:
+                    results["integration_checks"]["passed"] += 1
             else:
                 missing = [str(path.relative_to(project)) for path in expected_files if not path.exists()]
                 results["errors"].append(f"scaffold_hooks.sh missed files: {', '.join(missing)}")
@@ -346,6 +369,93 @@ def test_skill(skill_path: Path) -> dict:
                 results["passed"] = False
         else:
             results["errors"].append("generated Stop hook missing before command execution check")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        if stop_script.exists():
+            active_payload = json.dumps(
+                {
+                    "hook_event_name": "Stop",
+                    "cwd": str(project),
+                    "stop_hook_active": True,
+                }
+            )
+            active_proc = run(["bash", str(stop_script)], cwd=project, input_text=active_payload)
+            if (
+                active_proc.returncode == 0
+                and "portable shared script claude" not in active_proc.stderr
+                and "portable hook command" not in active_proc.stderr
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("generated Stop hook did not skip when stop_hook_active=true")
+                results["passed"] = False
+        else:
+            results["errors"].append("generated Stop hook missing before active-stop skip check")
+            results["passed"] = False
+
+        run(["git", "add", "."], cwd=project)
+        run(
+            [
+                "git",
+                "-c",
+                "user.name=scaffold-hooks-test",
+                "-c",
+                "user.email=scaffold-hooks-test@example.com",
+                "commit",
+                "-qm",
+                "fixture",
+            ],
+            cwd=project,
+        )
+
+        results["integration_checks"]["total"] += 1
+        if stop_script.exists():
+            clean_payload = json.dumps(
+                {
+                    "hook_event_name": "Stop",
+                    "cwd": str(project),
+                    "stop_hook_active": False,
+                }
+            )
+            clean_proc = run(["bash", str(stop_script)], cwd=project, input_text=clean_payload)
+            if (
+                clean_proc.returncode == 0
+                and "portable shared script claude" not in clean_proc.stderr
+                and "portable hook command" not in clean_proc.stderr
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("generated Stop hook did not skip when no code changes are present")
+                results["passed"] = False
+        else:
+            results["errors"].append("generated Stop hook missing before no-change skip check")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        claude_lib = generated_root / "lib" / "claude.sh"
+        runtime_lib = generated_root / "lib" / "agent-hook-runtime.sh"
+        context_proc = run(
+            [
+                "bash",
+                "-c",
+                f"source {runtime_lib}; source {claude_lib}; AGENT_HOOK_EVENT=SessionStart; write_additional_context 'shared context'",
+            ],
+            cwd=project,
+        )
+        if context_proc.returncode == 0:
+            context_json = json.loads(context_proc.stdout)
+            output = context_json.get("hookSpecificOutput", {})
+            if (
+                output.get("hookEventName") == "SessionStart"
+                and output.get("additionalContext") == "shared context"
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("Claude write_additional_context did not emit hookSpecificOutput")
+                results["passed"] = False
+        else:
+            results["errors"].append(f"Claude write_additional_context failed: {context_proc.stderr.strip()}")
             results["passed"] = False
 
     return results

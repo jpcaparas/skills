@@ -46,13 +46,25 @@ The OpenCode managed manifest stores scaffold provenance, plan/template hashes, 
 
 ## Per-Harness Stdout Protocols for Shared Context Scripts
 
-Shared scripts that emit session context (for example a repo-owned agent-session-context script) must branch on `AGENT_HOOK_HARNESS` because stdout contracts differ:
+Shared scripts that emit session context (for example a repo-owned agent-session-context script) should prefer the shared Claude-format JSON shape for Claude Code, Codex, and Devin:
 
-- `claude`: plain text or Claude JSON is accepted on `SessionStart`.
-- `codex`: emit `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`.
-- `devin`: same `hookSpecificOutput` shape as codex. Devin strictly parses non-empty stdout as Claude-format JSON; plain text fails its effects evaluator and is silently dropped (only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`). Field-verified 2026-06-12 on v2026.5.26-8.
+- `claude`: emit `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`. Plain text is tolerated by Claude Code, but using the shared JSON shape avoids a Claude-only branch.
+- `codex`: emit the same `hookSpecificOutput.additionalContext` shape.
+- `devin`: emit the same `hookSpecificOutput.additionalContext` shape. Devin strictly parses non-empty stdout as Claude-format JSON; plain text fails its effects evaluator and is silently dropped (only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`). Field-verified 2026-06-12 on v2026.5.26-8.
 
-A safe default fall-through is plain text, but never let `devin` reach it.
+Use harness branches only for harnesses that need different routing, such as OpenCode actions that intentionally suppress stdout.
+
+## Stop Hook Change Gates
+
+Generated shell Stop adapters default to `run_on_code_changes: true`. The scaffold detects common source/config extensions in the target project and stores them in each Stop adapter config as `code_change_extensions`.
+
+`hooks/lib/agent-hook-runtime.sh` provides:
+
+- `hook_stop_is_active` to avoid Stop continuation loops.
+- `hook_has_code_changes PROJECT_DIR EXTENSIONS_JSON` to check staged, unstaged, and untracked files quietly.
+- `hook_should_skip_event`, which skips `Stop` and `SubagentStop` when `stop_hook_active=true`, and skips Stop when `run_on_code_changes=true` but no matching file changed.
+
+Override `run_on_code_changes` or `code_change_extensions` in the per-harness plan only when a project has a deliberate reason to run expensive stop checks on clean turns or non-standard file types.
 
 ## Exit Codes vs Output Streams
 
