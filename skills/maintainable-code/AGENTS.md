@@ -8,6 +8,7 @@ Core references:
 
 - `references/principles.md`
 - `references/decomposition.md`
+- `references/commenting.md`
 - `references/review-rubric.md`
 - `references/implementation-plans.md`
 - `references/gotchas.md`

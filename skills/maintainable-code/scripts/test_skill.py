@@ -10,7 +10,7 @@ import tempfile
 from pathlib import Path
 
 
-REQUIRED_TAGS = {"smoke", "edge", "negative", "disclosure"}
+REQUIRED_TAGS = {"smoke", "edge", "negative", "disclosure", "comments", "markup"}
 
 
 def load_json(path: Path) -> dict:
@@ -44,6 +44,30 @@ export function process(data: any) {
   // TODO: explain ownership of this fallback
   return "ok";
 }
+""".lstrip(),
+        encoding="utf-8",
+    )
+    workflow = root / ".github" / "workflows"
+    workflow.mkdir(parents=True)
+    (workflow / "artifacts.yml").write_text(
+        """
+name: artifacts
+on: workflow_dispatch
+jobs:
+  download:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        run: |
+          artifacts="$(gh api "/repos/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}/artifacts?per_page=100")"
+          for prefix in "${prefixes[@]}"; do
+            jq -r --arg prefix "$prefix" '.artifacts[] | select(.name | startswith($prefix)) | "\\(.id)\\t\\(.name)"' <<< "$artifacts"
+          done | sort -u | while IFS=$'\\t' read -r artifact_id artifact_name; do
+            if [ -z "$artifact_id" ]; then
+              continue
+            fi
+            gh run download "$GITHUB_RUN_ID" --name "$artifact_name"
+          done
 """.lstrip(),
         encoding="utf-8",
     )
@@ -95,7 +119,14 @@ def main(argv: list[str]) -> int:
         else:
             payload = json.loads(scan.stdout)
             kinds = {item["kind"] for item in payload.get("findings", [])}
-            for expected in {"vague-file-name", "vague-function-name", "todo", "deep-nesting", "weak-type-signal"}:
+            for expected in {
+                "comment-debt",
+                "vague-file-name",
+                "vague-function-name",
+                "todo",
+                "deep-nesting",
+                "weak-type-signal",
+            }:
                 if expected not in kinds:
                     errors.append(f"scanner did not report expected finding: {expected}")
 

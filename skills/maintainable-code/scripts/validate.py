@@ -17,6 +17,7 @@ REQUIRED_FILES = [
     "metadata.json",
     "references/principles.md",
     "references/decomposition.md",
+    "references/commenting.md",
     "references/review-rubric.md",
     "references/implementation-plans.md",
     "references/gotchas.md",
@@ -27,6 +28,18 @@ REQUIRED_FILES = [
     "templates/maintainability-review.md",
     "evals/evals.json",
 ]
+
+COMMENTING_REQUIRED_TERMS = {
+    "GitHub Actions/YAML/Shell": ["GitHub Actions", "YAML", "shell", "gh api", "jq"],
+    "TypeScript/JavaScript": ["TypeScript", "JavaScript", "```ts"],
+    "Python": ["Python", "```py"],
+    "Go": ["Go", "```go"],
+    "Rust": ["Rust", "```rust"],
+    "Java/Kotlin/C#": ["Java", "Kotlin", "C#", "```java", "```kotlin", "```csharp"],
+    "SQL": ["SQL", "```sql"],
+    "HTML/CSS": ["HTML", "CSS", "```html", "```css"],
+    "Infrastructure config": ["Terraform", "Kubernetes", "```hcl"],
+}
 
 
 def read_text(path: Path) -> str:
@@ -102,6 +115,18 @@ def validate(root: Path) -> dict[str, object]:
             errors.append("frontmatter description exceeds 1024 characters")
         if "Passive Trigger" not in content:
             errors.append("SKILL.md must document passive trigger behavior")
+        if "references/commenting.md" not in content:
+            errors.append("SKILL.md must route dense or operational code to references/commenting.md")
+        review_section = re.search(r"- Reviewing code:[\s\S]*?(?=\n- |\n## )", content)
+        if not review_section or "references/commenting.md" not in review_section.group(0):
+            errors.append("SKILL.md reviewing route must mention references/commenting.md for operational code")
+        plan_section = re.search(r"- Writing a plan[\s\S]*?(?=\n- |\n## )", content)
+        if not plan_section or "references/commenting.md" not in plan_section.group(0):
+            errors.append("SKILL.md planning route must mention references/commenting.md for operational code")
+        maintainer_context = re.search(r"future maintainer|junior maintainer|next maintainer", content, re.IGNORECASE)
+        system_context = re.search(r"fundamentals|system history|system context|session context", content, re.IGNORECASE)
+        if not maintainer_context or not system_context:
+            errors.append("SKILL.md must state the future maintainer assumption")
         if metrics["skill_md_lines"] > 500:
             warnings.append("SKILL.md exceeds 500 lines")
         for ref in extract_references(content):
@@ -117,6 +142,20 @@ def validate(root: Path) -> dict[str, object]:
             if line_count > 1000 and "## Table of Contents" not in read_text(path):
                 warnings.append(f"large reference without TOC: {path.relative_to(root)}")
 
+    commenting_path = root / "references" / "commenting.md"
+    if commenting_path.is_file():
+        commenting = read_text(commenting_path)
+        if "## Table of Contents" not in commenting:
+            errors.append("references/commenting.md must include a table of contents")
+        if "line count" not in commenting:
+            errors.append("references/commenting.md must say maintainability beats line-count reduction")
+        if commenting.count("Weak:") < 5 or commenting.count("Better:") < 5:
+            errors.append("references/commenting.md must include multiple weak/better examples")
+        for label, terms in COMMENTING_REQUIRED_TERMS.items():
+            missing = [term for term in terms if term not in commenting]
+            if missing:
+                errors.append(f"references/commenting.md missing {label} coverage: {', '.join(missing)}")
+
     evals_path = root / "evals" / "evals.json"
     if evals_path.is_file():
         try:
@@ -128,6 +167,15 @@ def validate(root: Path) -> dict[str, object]:
                 errors.append("evals skill_name must match directory name")
             if not evals.get("evals"):
                 errors.append("evals/evals.json must contain at least one eval")
+            all_tags = {
+                tag
+                for item in evals.get("evals", [])
+                for tag in item.get("tags", [])
+            }
+            if "comments" not in all_tags:
+                errors.append("evals/evals.json must cover developer-comment guidance")
+            if "markup" not in all_tags:
+                errors.append("evals/evals.json must cover markup/config comment guidance")
 
     metadata_path = root / "metadata.json"
     if metadata_path.is_file():

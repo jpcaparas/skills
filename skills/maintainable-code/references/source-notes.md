@@ -9,10 +9,11 @@ This skill adapts stable maintainability ideas into agent behavior. It does not 
 - Google Engineering Practices: Optimize code review for improving code health over time, not for perfection or personal taste.
 - Cognitive complexity work from SonarSource: Understandability is distinct from testability; deeply nested or mentally expensive code deserves refactoring even when branch coverage looks adequate.
 - Clean Code ideas associated with Robert C. Martin: Names, functions, comments, and boundaries matter, but apply them pragmatically rather than as slogans.
+- Operational engineering practice from CI/CD, shell, infrastructure, and migration work: dense glue code needs context comments because syntax alone rarely exposes external contracts, failure modes, or artifact/data-shape assumptions.
 
 ## Adaptation Choices
 
-This skill intentionally avoids absolute rules like "never comment" or "every function must be tiny." Those rules are easy for agents to over-apply and often make code worse.
+This skill intentionally avoids absolute rules like "never comment" or "every function must be tiny." Those rules are easy for agents to over-apply and often make code worse. It treats comments as maintainability tools when names, types, and structure cannot carry system context by themselves.
 
 Instead, it uses maintainability gates:
 

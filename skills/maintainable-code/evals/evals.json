@@ -88,6 +88,48 @@
     },
     {
       "id": 5,
+      "name": "operational-code-comments",
+      "prompt": "Improve a GitHub Actions workflow step that fetches artifacts with gh api, filters them with jq, de-duplicates with sort -u, then downloads each artifact. Keep the script maintainable for a junior maintainer with good fundamentals.",
+      "expected_output": "The agent reads references/commenting.md, keeps the shell/YAML idiomatic, and adds useful phase comments explaining the artifact list fetch, prefix matching contract, de-duplication, empty-match guard, and GitHub API assumptions instead of narrating syntax.",
+      "assertions": [
+        {
+          "text": "Agent reads references/commenting.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Adds developer comments for phase, data shape, external API contract, and failure handling",
+          "type": "functional"
+        },
+        {
+          "text": "Does not add comments that merely restate shell syntax",
+          "type": "negative"
+        }
+      ],
+      "tags": ["comments", "ci", "disclosure"]
+    },
+    {
+      "id": 6,
+      "name": "language-and-markup-comment-guidance",
+      "prompt": "Review comments in a TypeScript retry helper, a SQL migration CTE, and a CSS sticky command bar. Distinguish helpful maintainer comments from comments that just narrate syntax.",
+      "expected_output": "The agent reads references/commenting.md, evaluates comments across application code, database code, and UI markup, preserves comments that explain contracts or invariants, and recommends removing or replacing comments that merely restate syntax.",
+      "assertions": [
+        {
+          "text": "Agent reads references/commenting.md for non-CI code comment guidance",
+          "type": "disclosure"
+        },
+        {
+          "text": "Differentiates syntax narration from invariant, tradeoff, data-shape, or layout-context comments",
+          "type": "functional"
+        },
+        {
+          "text": "Covers at least one programming language and one markup or configuration language",
+          "type": "functional"
+        }
+      ],
+      "tags": ["comments", "markup", "review", "disclosure"]
+    },
+    {
+      "id": 7,
       "name": "negative-non-code",
       "prompt": "Rewrite this launch announcement so it sounds more polished and concise.",
       "expected_output": "The skill should not trigger because the task is non-code writing with no maintainability or software design surface.",

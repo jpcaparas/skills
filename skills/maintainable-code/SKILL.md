@@ -1,6 +1,6 @@
 ---
 name: maintainable-code
-description: "Passive coding-quality skill for maintainable, decomposed, readable code. Use when writing, editing, refactoring, reviewing, or planning code involving complexity, naming, tests, boundaries, or tech debt. Do NOT use for non-code writing, one-off shell commands, or intentionally throwaway code."
+description: "Passive coding-quality skill for maintainable, decomposed, readable code with useful developer comments. Use when writing, editing, refactoring, reviewing, or planning code involving complexity, naming, tests, boundaries, CI/shell/config, comments, or tech debt. Do NOT use for non-code writing, one-off shell commands, or intentionally throwaway code."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
   version: "1.0.0"
@@ -12,6 +12,7 @@ metadata:
 references:
   - principles
   - decomposition
+  - commenting
   - review-rubric
   - implementation-plans
   - gotchas
@@ -31,16 +32,19 @@ Load this skill in the background whenever the task involves source code, even i
 What are you doing?
 
 - Implementing a new feature or fixing a bug:
-  Match the local architecture first. Keep the change small, typed, named plainly, and covered by the narrowest meaningful verification.
+  Match the local architecture first. Keep the change small, typed, named plainly, and covered by the narrowest meaningful verification. Write for a future maintainer with solid fundamentals but incomplete context about this system.
 
 - Refactoring existing code:
   Preserve behavior in small steps. Read `references/decomposition.md` before splitting modules, extracting helpers, or changing boundaries.
 
 - Reviewing code:
-  Use the severity-first rubric in `references/review-rubric.md`. Findings must cite concrete code and explain maintainer impact.
+  Use the severity-first rubric in `references/review-rubric.md`. Findings must cite concrete code and explain maintainer impact. If the diff includes CI, shell, config, migrations, generated glue, or dense cross-boundary code, also read `references/commenting.md`.
 
 - Writing a plan for another agent or teammate:
-  Read `references/implementation-plans.md`. Make the plan self-contained enough for a weaker executor with no session context.
+  Read `references/implementation-plans.md`. Make the plan self-contained enough for a weaker executor with no session context. If the plan touches operational or dense code, call out where developer comments are required and read `references/commenting.md`.
+
+- Writing operational code, CI workflows, migrations, generated glue, or dense command pipelines:
+  Read `references/commenting.md`. Add comments that teach intent, invariants, external constraints, and the shape of multi-step logic.
 
 - Unsure whether a design is maintainable:
   Read `references/principles.md`, then choose the option that reduces future reader effort without hiding important domain behavior.
@@ -55,23 +59,25 @@ What are you doing?
 | New code | Use existing local patterns, precise names, strong types, and direct control flow |
 | Repeated logic | Extract only after the duplication has the same reason to change |
 | Complex branch | Normalize inputs early, guard invalid cases, then keep the happy path visible |
+| Operational script or CI YAML | Name each phase and comment non-obvious command groups, external API quirks, artifact contracts, and failure handling |
 | Large function | Split by stable responsibilities, not by arbitrary line count |
 | New abstraction | Require at least two real call sites or a clear boundary being protected |
-| Comments | Explain why, tradeoffs, invariants, and surprising constraints; do not narrate syntax |
+| Comments | Explain why, tradeoffs, invariants, surprising constraints, and learning context; do not narrate obvious syntax |
 | Tests | Add characterization before risky refactors and focused regression tests after fixes |
 | Plans | Include exact files, local conventions, verification commands, and stop conditions |
 | Review | Prioritize defects, confusing boundaries, missing tests, and future-change hazards |
 
 ## Core Rules
 
-1. Optimize for the next competent maintainer, not for demonstrating sophistication.
+1. Optimize for the next competent maintainer, not for demonstrating sophistication. Assume they have good fundamentals, but not the system history in your head.
 2. Read the surrounding code before naming, extracting, or introducing patterns.
 3. Keep behavior close to the data and policy that explain it.
 4. Prefer boring typed data shapes over strings, bags of options, or hidden conventions.
 5. Keep functions at one stable level of abstraction: orchestration, policy, transformation, or I/O.
 6. Make invalid states hard to represent when the language and codebase support it.
-7. Refactor with tests or characterization when behavior is non-trivial.
-8. State tradeoffs in the final answer when you intentionally leave complexity in place.
+7. Leave useful developer comments where names and structure cannot carry the whole story, especially in CI, shell, config, migrations, concurrency, retries, security, generated glue, and external-service boundaries. Do not remove context just to reduce line count.
+8. Refactor with tests or characterization when behavior is non-trivial.
+9. State tradeoffs in the final answer when you intentionally leave complexity in place.
 
 ## Maintainability Gate
 
@@ -83,6 +89,7 @@ Before finishing code changes, run this gate mentally and with local tooling whe
 | Scope | The change touches the smallest responsible surface and avoids unrelated cleanup |
 | Boundaries | I/O, orchestration, domain policy, and presentation are not tangled without reason |
 | Types | Data contracts are explicit enough for editor, compiler, or tests to catch misuse |
+| Comments | Dense or surprising code has comments that explain phase, invariant, tradeoff, or external contract |
 | Tests | The most likely regression has a focused test or a clearly stated verification gap |
 | Errors | Failure modes are handled at the boundary that can add useful context |
 | Handoff | The final response names key files, verification run, and any remaining risk |
@@ -102,7 +109,7 @@ Before finishing code changes, run this gate mentally and with local tooling whe
    Keep the diff reviewable. Avoid drive-by formatting, unrelated migrations, and style churn.
 
 5. Verify behavior and readability.
-   Run available tests, typechecks, linters, or focused helper scripts. Re-read the diff as if you were reviewing a stranger's code.
+   Run available tests, typechecks, linters, or focused helper scripts. Re-read the diff as if you were reviewing a stranger's code, and add comments where the next reader would otherwise need session context.
 
 6. Report plainly.
    Explain what changed, why this shape is maintainable, what was verified, and what risk remains.
@@ -124,6 +131,7 @@ Treat its output as prompts for human review. A quiet script does not prove code
 |---|---|
 | Principles behind the defaults | `references/principles.md` |
 | Splitting functions, modules, and responsibilities | `references/decomposition.md` |
+| Useful developer comments and language-specific examples | `references/commenting.md` |
 | Review findings and severity ordering | `references/review-rubric.md` |
 | Plans for other agents or teammates | `references/implementation-plans.md` |
 | Common traps and anti-patterns | `references/gotchas.md` |

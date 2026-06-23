@@ -16,22 +16,80 @@ from pathlib import Path
 
 
 DEFAULT_EXTENSIONS = {
+    ".bash",
     ".c",
     ".cc",
     ".cpp",
     ".cs",
+    ".css",
     ".go",
+    ".hcl",
+    ".html",
     ".java",
     ".jsx",
     ".kt",
     ".php",
+    ".ps1",
     ".py",
     ".rb",
     ".rs",
+    ".scss",
+    ".sh",
+    ".sql",
     ".swift",
+    ".tf",
     ".ts",
     ".tsx",
+    ".yaml",
+    ".yml",
+    ".zsh",
 }
+
+COMMENT_DEBT_EXTENSIONS = {
+    ".bash",
+    ".css",
+    ".hcl",
+    ".html",
+    ".ps1",
+    ".scss",
+    ".sh",
+    ".sql",
+    ".tf",
+    ".yaml",
+    ".yml",
+    ".zsh",
+}
+
+OPERATIONAL_HINTS = (
+    "<<",
+    "<<<",
+    " aws ",
+    " az ",
+    "artifact",
+    "awk ",
+    "cache",
+    "concurrency:",
+    "curl ",
+    "docker ",
+    "gcloud ",
+    "gh ",
+    "gh api",
+    "grep ",
+    "ifs=",
+    "jq ",
+    "jq -",
+    "kubectl ",
+    "matrix:",
+    "permissions:",
+    "read -r",
+    "run:",
+    "sed ",
+    "sort -u",
+    "terraform ",
+    "uses:",
+    "while ",
+    "xargs ",
+)
 
 SKIP_DIRS = {
     ".git",
@@ -111,6 +169,69 @@ def indentation_depth(line: str) -> int:
     return (len(expanded) - len(expanded.lstrip(" "))) // 2
 
 
+def is_comment_line(line: str, suffix: str) -> bool:
+    stripped = line.strip()
+    if not stripped or stripped.startswith("#!"):
+        return False
+    if suffix in {".html"}:
+        return stripped.startswith("<!--")
+    if suffix in {".css", ".scss"}:
+        return stripped.startswith(("/*", "*", "*/"))
+    if suffix == ".sql":
+        return stripped.startswith(("--", "/*", "*", "*/"))
+    if suffix in {".bash", ".hcl", ".ps1", ".sh", ".tf", ".yaml", ".yml", ".zsh"}:
+        return stripped.startswith("#")
+    return False
+
+
+def operational_hint_count(line: str) -> int:
+    lowered = f" {line.strip().lower()} "
+    return 1 if any(hint in lowered for hint in OPERATIONAL_HINTS) else 0
+
+
+def scan_comment_debt(lines: list[str], path: Path, relative: str) -> list[Finding]:
+    if path.suffix not in COMMENT_DEBT_EXTENSIONS:
+        return []
+
+    findings: list[Finding] = []
+    chunk_start = 0
+    non_comment_lines = 0
+    hint_count = 0
+    has_comment = False
+
+    def flush_chunk() -> None:
+        nonlocal chunk_start, non_comment_lines, hint_count, has_comment
+        if non_comment_lines >= 8 and hint_count >= 3 and not has_comment:
+            findings.append(
+                Finding(
+                    relative,
+                    chunk_start,
+                    "comment-debt",
+                    "Dense operational/config block has no explanatory comments.",
+                )
+            )
+        chunk_start = 0
+        non_comment_lines = 0
+        hint_count = 0
+        has_comment = False
+
+    for index, line in enumerate(lines, start=1):
+        stripped = line.strip()
+        if not stripped:
+            flush_chunk()
+            continue
+        if chunk_start == 0:
+            chunk_start = index
+        if is_comment_line(line, path.suffix):
+            has_comment = True
+            continue
+        non_comment_lines += 1
+        hint_count += operational_hint_count(line)
+
+    flush_chunk()
+    return findings
+
+
 def function_name(match: re.Match[str]) -> str:
     for group in ("js", "py", "go", "c"):
         value = match.group(group)
@@ -123,6 +244,7 @@ def scan_file(path: Path, root: Path, max_file_lines: int, max_function_lines: i
     lines = read_lines(path)
     relative = path.relative_to(root).as_posix()
     findings: list[Finding] = []
+    findings.extend(scan_comment_debt(lines, path, relative))
 
     if len(lines) > max_file_lines:
         findings.append(

@@ -42,6 +42,26 @@ Repair:
 - Explain the maintainer risk.
 - Use tests and reviewability as the judge.
 
+## Comment Starvation
+
+Agent-generated code often starts with clear high-level steps, then drops into dense command pipelines, workflow YAML, migrations, or generated glue with no explanation. This forces future maintainers to reverse-engineer the system from syntax.
+
+Repair:
+
+- Add phase comments before multi-step operational blocks.
+- Explain external API contracts, artifact names, cache keys, and failure-mode decisions.
+- Write for a junior maintainer with good fundamentals but limited system context.
+
+## Comment Noise
+
+Comments that repeat syntax make useful comments easier to ignore.
+
+Repair:
+
+- Rename or restructure first when code can explain itself.
+- Keep comments for why, invariants, tradeoffs, and surprising constraints.
+- Remove stale comments when the code no longer matches them.
+
 ## Type Theater
 
 Types that merely rename `string`, `any`, or generic records without constraining behavior can create false confidence.

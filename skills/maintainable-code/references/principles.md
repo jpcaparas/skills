@@ -25,8 +25,8 @@ Favor code that makes domain behavior obvious over code that hides domain behavi
 5. Tests should protect behavior, not implementation trivia.
    Test observable outcomes, edge cases, and contracts. For refactors, add characterization tests before moving behavior.
 
-6. Comments explain why.
-   Good comments record constraints, invariants, tradeoffs, data provenance, security assumptions, and external quirks. They do not translate obvious code into prose.
+6. Comments transfer context.
+   Good comments record constraints, invariants, tradeoffs, data provenance, security assumptions, external quirks, and the phase structure of dense operational code. They teach the next maintainer what cannot be inferred from names and types. They do not translate obvious code into prose.
 
 ## Human Readability Checks
 
@@ -37,6 +37,7 @@ Ask these questions before finishing:
 - Are side effects visible at module boundaries?
 - Is there one obvious place to change the rule later?
 - Does the test name explain the behavior being protected?
+- Would a maintainer with good fundamentals but little system context understand the dense or surprising parts?
 - Would deleting the new abstraction make the code easier to understand?
 
 ## Balancing Forward Progress

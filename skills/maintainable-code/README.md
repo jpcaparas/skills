@@ -1,6 +1,6 @@
 # maintainable-code
 
-Installable passive skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, and understandable to human maintainers.
+Installable passive skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, commented where context matters, and understandable to human maintainers.
 
 ## Install
 
@@ -13,6 +13,7 @@ npx skills add jpcaparas/skills --skill maintainable-code
 - `SKILL.md` as the canonical workflow
 - `references/principles.md` for core maintainability defaults
 - `references/decomposition.md` for splitting functions, modules, and responsibilities
+- `references/commenting.md` for useful developer comments with language-specific examples
 - `references/review-rubric.md` for severity-first maintainability review
 - `references/implementation-plans.md` for self-contained handoff plans
 - `references/gotchas.md` for common traps

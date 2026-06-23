@@ -28,6 +28,7 @@ Use this structure unless the user requested another format:
 ## Target Shape
 - Responsibilities after the change.
 - New or changed types, modules, boundaries, and naming.
+- Where comments are needed to preserve non-obvious system context.
 - How this matches existing patterns.
 
 ## Steps
@@ -85,5 +86,6 @@ Spell out the obvious if missing it would cause damage:
 - "Use the existing `ApiError` class instead of adding a new error type."
 - "If the import cycle appears, stop and report back."
 - "Do not update snapshots until behavior is confirmed."
+- "Add a short phase comment before the artifact-download pipeline; future maintainers should not have to reverse-engineer the `gh`/`jq` data flow."
 
 Avoid prescribing trivia that the executor can safely infer from the codebase.

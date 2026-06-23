@@ -11,7 +11,8 @@ Lead with findings, ordered by maintainer impact:
 3. Confusing ownership or boundaries
 4. Over-generalized or under-named abstractions
 5. Error handling and observability gaps
-6. Local consistency, style, and nits
+6. Missing developer context in dense operational, generated, or cross-boundary code
+7. Local consistency, style, and nits
 
 Do not lead with compliments or broad summaries. If there are no findings, say that clearly and mention residual risk.
 
@@ -45,6 +46,7 @@ Treat these as leads to inspect, not automatic failures:
 - Tests assert implementation calls but not behavior.
 - The change creates a second pattern beside an existing local pattern.
 - A catch block drops context or converts all failures into the same error.
+- A CI workflow, shell script, migration, generated file, or config block has dense command logic without comments explaining phases, invariants, or external contracts.
 - A module named `utils`, `common`, or `helpers` becomes a dumping ground.
 
 ## Review Discipline
@@ -64,4 +66,5 @@ Before handing off a diff:
 - Check that failure paths preserve useful context.
 - Check that tests would fail before the fix or protect the new contract.
 - Check that generated code did not introduce a parallel style.
+- Check that comments teach non-obvious context instead of narrating syntax.
 - Check that any TODO has an owner, reason, or follow-up path.
