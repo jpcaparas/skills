@@ -62,7 +62,7 @@ What are you doing?
 | Operational script or CI YAML | Name each phase and comment non-obvious command groups, external API quirks, artifact contracts, and failure handling |
 | Large function | Split by stable responsibilities, not by arbitrary line count |
 | New abstraction | Require at least two real call sites or a clear boundary being protected |
-| Comments | Explain why, tradeoffs, invariants, surprising constraints, and learning context; do not narrate obvious syntax |
+| Comments | Explain why, tradeoffs, invariants, surprising constraints, and learning context at class, method, property, and dense block level; do not narrate obvious syntax |
 | Tests | Add characterization before risky refactors and focused regression tests after fixes |
 | Plans | Include exact files, local conventions, verification commands, and stop conditions |
 | Review | Prioritize defects, confusing boundaries, missing tests, and future-change hazards |
@@ -75,9 +75,10 @@ What are you doing?
 4. Prefer boring typed data shapes over strings, bags of options, or hidden conventions.
 5. Keep functions at one stable level of abstraction: orchestration, policy, transformation, or I/O.
 6. Make invalid states hard to represent when the language and codebase support it.
-7. Leave useful developer comments where names and structure cannot carry the whole story, especially in CI, shell, config, migrations, concurrency, retries, security, generated glue, and external-service boundaries. Do not remove context just to reduce line count.
-8. Refactor with tests or characterization when behavior is non-trivial.
-9. State tradeoffs in the final answer when you intentionally leave complexity in place.
+7. Leave useful developer comments where names and structure cannot carry the whole story, especially in CI, shell, config, migrations, concurrency, retries, security, generated glue, and external-service boundaries. Consider class, method, property, branch, and block-level comments or docblocks; the user can prune them later, but missing context is harder to recover.
+8. When a comment, docblock, review note, or final answer makes a language/framework claim and official documentation exists, verify and link the official source. Prefer current official docs for PHP, Laravel, Python, Next.js, and similar ecosystems; paraphrase the documented behavior instead of inventing or overstating it.
+9. Refactor with tests or characterization when behavior is non-trivial.
+10. State tradeoffs in the final answer when you intentionally leave complexity in place.
 
 ## Maintainability Gate
 
@@ -89,7 +90,7 @@ Before finishing code changes, run this gate mentally and with local tooling whe
 | Scope | The change touches the smallest responsible surface and avoids unrelated cleanup |
 | Boundaries | I/O, orchestration, domain policy, and presentation are not tangled without reason |
 | Types | Data contracts are explicit enough for editor, compiler, or tests to catch misuse |
-| Comments | Dense or surprising code has comments that explain phase, invariant, tradeoff, or external contract |
+| Comments | Dense or surprising code has digestible comments/docblocks at the right level: class/module, method/function, property/field, and local block where useful |
 | Tests | The most likely regression has a focused test or a clearly stated verification gap |
 | Errors | Failure modes are handled at the boundary that can add useful context |
 | Handoff | The final response names key files, verification run, and any remaining risk |

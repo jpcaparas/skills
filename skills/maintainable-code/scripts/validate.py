@@ -41,6 +41,15 @@ COMMENTING_REQUIRED_TERMS = {
     "Infrastructure config": ["Terraform", "Kubernetes", "```hcl"],
 }
 
+OFFICIAL_SOURCE_URLS = [
+    "https://www.php.net/manual/en/language.basic-syntax.comments.php",
+    "https://docs.python.org/3/tutorial/controlflow.html#documentation-strings",
+    "https://laravel.com/docs/13.x/eloquent-mutators",
+    "https://laravel.com/docs/13.x/routing",
+    "https://nextjs.org/docs/app/api-reference/file-conventions/route",
+    "https://nextjs.org/docs/app/getting-started/fetching-data",
+]
+
 
 def read_text(path: Path) -> str:
     return path.read_text(encoding="utf-8")
@@ -151,6 +160,16 @@ def validate(root: Path) -> dict[str, object]:
             errors.append("references/commenting.md must say maintainability beats line-count reduction")
         if commenting.count("Weak:") < 5 or commenting.count("Better:") < 5:
             errors.append("references/commenting.md must include multiple weak/better examples")
+        for scope_term in ["class", "method", "property", "block"]:
+            if not re.search(scope_term, commenting, re.IGNORECASE):
+                errors.append(f"references/commenting.md must cover {scope_term}-level comments")
+        if "junior" not in commenting.lower() or "bullet" not in commenting.lower() or "numbered" not in commenting.lower():
+            errors.append("references/commenting.md must include junior-friendly structured comment guidance")
+        if "official documentation" not in commenting.lower() and "official source" not in commenting.lower():
+            errors.append("references/commenting.md must require official sources for framework/language claims")
+        for url in OFFICIAL_SOURCE_URLS:
+            if url not in commenting:
+                errors.append(f"references/commenting.md missing verified official source URL: {url}")
         for label, terms in COMMENTING_REQUIRED_TERMS.items():
             missing = [term for term in terms if term not in commenting]
             if missing:
@@ -176,6 +195,8 @@ def validate(root: Path) -> dict[str, object]:
                 errors.append("evals/evals.json must cover developer-comment guidance")
             if "markup" not in all_tags:
                 errors.append("evals/evals.json must cover markup/config comment guidance")
+            if "sources" not in all_tags:
+                errors.append("evals/evals.json must cover official-source guidance")
 
     metadata_path = root / "metadata.json"
     if metadata_path.is_file():

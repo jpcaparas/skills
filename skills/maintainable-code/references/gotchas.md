@@ -44,13 +44,25 @@ Repair:
 
 ## Comment Starvation
 
-Agent-generated code often starts with clear high-level steps, then drops into dense command pipelines, workflow YAML, migrations, or generated glue with no explanation. This forces future maintainers to reverse-engineer the system from syntax.
+Agent-generated code often starts with clear high-level steps, then drops into dense command pipelines, workflow YAML, migrations, or generated glue with no explanation. It also tends to document only the class or file header while leaving method contracts, property units, and block-level invariants unexplained. This forces future maintainers to reverse-engineer the system from syntax.
 
 Repair:
 
 - Add phase comments before multi-step operational blocks.
+- Add method, property, branch, and block comments where that smaller scope carries the real maintenance risk.
 - Explain external API contracts, artifact names, cache keys, and failure-mode decisions.
 - Write for a junior maintainer with good fundamentals but limited system context.
+
+## Source-Less Claims
+
+Framework and language comments become risky when they make claims without a source. A future maintainer cannot tell whether the note came from official documentation, a stale blog post, local convention, or an agent guess.
+
+Repair:
+
+- Link official docs when they exist and the claim affects correctness, maintainability, security, or upgrades.
+- Verify the URL resolves before including it in reusable instructions or review notes.
+- Paraphrase the official behavior and keep long explanations in the source, not in the code comment.
+- If the claim comes from local evidence instead of docs, point to the file, test, or observed behavior.
 
 ## Comment Noise
 

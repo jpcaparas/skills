@@ -130,6 +130,31 @@
     },
     {
       "id": 7,
+      "name": "source-backed-method-property-comments",
+      "prompt": "Add maintainability comments to a Laravel model accessor, a typed TypeScript retry policy property, and a Next.js route handler. Include docblocks or comments wherever they help a junior maintainer, and link official sources for framework claims.",
+      "expected_output": "The agent reads references/commenting.md, places comments at method, property, and block level where useful, keeps explanations junior-friendly with bullets or numbered structure for multi-part concepts, verifies official PHP/Laravel/Python/Next.js-style documentation links before citing framework claims, and paraphrases source-backed behavior instead of inventing details.",
+      "assertions": [
+        {
+          "text": "Agent reads references/commenting.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Adds comments or docblocks at method, property, and dense block levels instead of only class-level comments",
+          "type": "functional"
+        },
+        {
+          "text": "Uses bullet or numbered structure for multi-concept comments intended for junior maintainers",
+          "type": "functional"
+        },
+        {
+          "text": "Verifies and links official documentation for framework or language claims",
+          "type": "verification"
+        }
+      ],
+      "tags": ["comments", "sources", "disclosure", "edge"]
+    },
+    {
+      "id": 8,
       "name": "negative-non-code",
       "prompt": "Rewrite this launch announcement so it sounds more polished and concise.",
       "expected_output": "The skill should not trigger because the task is non-code writing with no maintainability or software design surface.",

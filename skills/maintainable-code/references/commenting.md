@@ -6,6 +6,9 @@ Use this reference when code is operational, dense, cross-language, generated, s
 
 - [Principle](#principle)
 - [Comment Placement](#comment-placement)
+- [Comment Scope](#comment-scope)
+- [Source-Backed Claims](#source-backed-claims)
+- [Junior-Friendly Structure](#junior-friendly-structure)
 - [GitHub Actions, YAML, and Shell](#github-actions-yaml-and-shell)
 - [TypeScript and JavaScript](#typescript-and-javascript)
 - [Python](#python)
@@ -48,6 +51,92 @@ Use comments where the reader is about to pay a context cost:
 5. In generated files, explain generation source and the command to refresh when that is stable.
 
 Do not hide bad names behind comments. Rename first when a better name can carry the intent.
+
+## Comment Scope
+
+Do not concentrate all documentation at the class or module header. Put context at the smallest level that will help the next maintainer make the right change.
+
+Use this placement ladder:
+
+1. **Module or class docblock**: explain the responsibility, lifecycle, ownership boundary, or public contract.
+2. **Method or function docblock**: explain inputs, outputs, side effects, thrown errors, idempotency, retries, or framework hooks.
+3. **Property or field docblock**: explain units, nullability, persisted format, cache lifetime, serialization name, or why a weak type is safe.
+4. **Branch or block comment**: explain a local invariant, surprising condition, multi-step phase, workaround, or external contract.
+5. **Inline trailing comment**: use sparingly for short source notes such as a protocol constant, status code, or required version.
+
+Prefer adding the useful comments first and letting the user or reviewer prune them. It is easier to remove a comment that repeats obvious structure than to recover missing context about why a block exists.
+
+Example property and method docblocks:
+
+```ts
+interface RetryPolicy {
+  /** Maximum extra attempts after the first request; excludes the initial try. */
+  maxRetries: number;
+}
+
+/**
+ * Sends a request with per-call retry state so concurrent requests cannot
+ * consume each other's retry budget.
+ */
+async function requestWithRetry(policy: RetryPolicy): Promise<Response> {
+  // Retry only server-side failures; client errors usually mean the request
+  // shape is wrong and should surface immediately.
+  return send(policy);
+}
+```
+
+## Source-Backed Claims
+
+When a comment, docblock, review note, or final answer makes a claim about a language, framework, runtime, or official convention, check whether official documentation can back it. Link the official source when the claim affects maintainability, correctness, security, or future upgrades.
+
+Good source-backed comments:
+
+- Link to the official documentation for a framework convention that looks magical locally.
+- Paraphrase what the docs say; do not paste long excerpts.
+- Prefer versioned docs for frameworks when the project is pinned to a version.
+- Use a stable official page for language syntax or docstring/comment behavior.
+- If no official source exists, say the claim comes from local codebase evidence, a dependency source file, or observed behavior.
+
+Verified official source examples:
+
+| Ecosystem | Use when backing claims about | Official source |
+|---|---|---|
+| PHP | Comment syntax and parser behavior | `https://www.php.net/manual/en/language.basic-syntax.comments.php` |
+| Python | Function docstring conventions | `https://docs.python.org/3/tutorial/controlflow.html#documentation-strings` |
+| Laravel | Eloquent accessors, mutators, casts, and method docblock examples | `https://laravel.com/docs/13.x/eloquent-mutators` |
+| Laravel | Route behavior and routing conventions | `https://laravel.com/docs/13.x/routing` |
+| Next.js | App Router route handler file conventions | `https://nextjs.org/docs/app/api-reference/file-conventions/route` |
+| Next.js | App Router data fetching behavior | `https://nextjs.org/docs/app/getting-started/fetching-data` |
+
+Avoid source-shaped decoration. Do not add a link just because a source exists; add it when it helps a maintainer verify a non-obvious rule without searching from scratch.
+
+## Junior-Friendly Structure
+
+Write comments for a junior developer with solid fundamentals and limited system context. Keep the wording concrete, local, and scan-friendly.
+
+Use this shape for longer comments:
+
+1. Start with the constraint or reason.
+2. Name the moving parts in the order the code uses them.
+3. Use bullets or numbered lists when the comment explains multiple concepts.
+4. End with the invariant a future change must preserve.
+
+Example:
+
+```py
+# The export keeps database values as strings until validation finishes:
+# - Decimal avoids binary rounding drift for money.
+# - Empty strings mean "missing" in the vendor CSV, not zero.
+# - The final quantize step is the only place we round for display.
+amount = parse_export_amount(row["amount"])
+```
+
+Keep comments digestible:
+
+- Prefer two or three short sentences over one dense paragraph.
+- Use bullet points when explaining multiple reasons, phases, or failure modes.
+- Name domain concepts directly instead of using vague words like "stuff", "things", or "logic".
+- Avoid unexplained acronyms unless the surrounding code already defines them.
 
 ## GitHub Actions, YAML, and Shell
 
@@ -206,7 +295,7 @@ Use comments for:
 - Resource lifetime choices around files, sockets, subprocesses, and locks.
 - Compatibility branches for different Python or dependency versions.
 
-Prefer docstrings for public modules, classes, and functions when they explain contract, side effects, or exceptions.
+Prefer docstrings for public modules, classes, and functions when they explain contract, side effects, or exceptions. Python's official tutorial documents docstring conventions for functions; use that source when a code review or handoff needs to justify docstring shape.
 
 ## Go
 
@@ -305,6 +394,7 @@ var exportDate = DateOnly.FromDateTime(clock.UtcNow);
 Use comments for:
 
 - Public API compatibility, serialization formats, dependency injection boundaries, and framework lifecycle hooks.
+- Method/property docblocks when framework conventions make behavior implicit, such as Laravel Eloquent accessors, mutators, casts, route model binding, or serialization hooks. Link Laravel's versioned official docs when citing those conventions.
 - Threading assumptions, transaction boundaries, and idempotency.
 - Why an annotation or reflection hook is required.
 

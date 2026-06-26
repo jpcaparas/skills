@@ -32,3 +32,9 @@ Instead, it uses maintainability gates:
 - `https://google.github.io/eng-practices/review/reviewer/standard.html`
 - `https://www.sonarsource.com/resources/cognitive-complexity/`
 - `https://www.sonarsource.com/blog/cognitive-complexity-because-testability-understandability`
+- `https://www.php.net/manual/en/language.basic-syntax.comments.php`
+- `https://docs.python.org/3/tutorial/controlflow.html#documentation-strings`
+- `https://laravel.com/docs/13.x/eloquent-mutators`
+- `https://laravel.com/docs/13.x/routing`
+- `https://nextjs.org/docs/app/api-reference/file-conventions/route`
+- `https://nextjs.org/docs/app/getting-started/fetching-data`
