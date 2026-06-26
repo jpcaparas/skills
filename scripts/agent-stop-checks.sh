@@ -26,6 +26,14 @@ sanitize_hook_id() {
     printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9_.-' '_'
 }
 
+hook_log() {
+    if [ -n "${AGENT_HOOK_HARNESS:-}" ]; then
+        printf '%s\n' "$*" >&2
+    else
+        printf '%s\n' "$*"
+    fi
+}
+
 external_ignored_skill_files() {
     while IFS= read -r file; do
         [ -z "$file" ] && continue
@@ -61,7 +69,7 @@ session_baseline_file() {
 if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] && [ -n "${AGENT_HOOK_HARNESS:-}" ]; then
     baseline_file="$(session_baseline_file)"
     if [ ! -f "$baseline_file" ]; then
-        echo "No agent session baseline found; skipping stop validation for unchanged first turn."
+        hook_log "No agent session baseline found; skipping stop validation for unchanged first turn."
         exit 0
     fi
 
@@ -69,7 +77,7 @@ if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] && [ -n "${AGENT_HOOK_HARNESS:-}" 
     source "$baseline_file"
     current_snapshot="$(repo_snapshot_hash)"
     if [ "${snapshot:-}" = "$current_snapshot" ]; then
-        echo "No repository changes detected since this agent session started; skipping stop validation."
+        hook_log "No repository changes detected since this agent session started; skipping stop validation."
         exit 0
     fi
 fi
@@ -92,7 +100,7 @@ if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] \
     && upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)" \
     && ahead_count="$(git rev-list --count "${upstream_ref}..HEAD" 2>/dev/null)" \
     && [ "$ahead_count" = "0" ]; then
-    echo "No local or unpushed repository changes detected; skipping stop validation."
+    hook_log "No local or unpushed repository changes detected; skipping stop validation."
     exit 0
 fi
 
