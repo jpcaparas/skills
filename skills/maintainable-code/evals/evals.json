@@ -155,6 +155,31 @@
     },
     {
       "id": 8,
+      "name": "ascii-diagram-comment-guardrail",
+      "prompt": "Document a webhook processing function that validates payloads, enqueues accepted events, retries transient queue failures, and rejects malformed requests. Use comments or docblocks that a junior maintainer can scan quickly, including an ASCII diagram if it helps. The existing comment says malformed requests are retried, but the code now rejects them immediately.",
+      "expected_output": "The agent reads references/commenting.md, adds a compact ASCII flow diagram only if it clarifies the webhook path, makes the diagram labels match the actual validation/enqueue/retry/reject behavior, updates stale prose that conflicts with the code, and checks that arrows, branch labels, and surrounding text agree before finishing.",
+      "assertions": [
+        {
+          "text": "Agent reads references/commenting.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Uses an ASCII diagram when it clarifies a non-obvious flow",
+          "type": "functional"
+        },
+        {
+          "text": "Updates stale prose comments that conflict with the code or diagram",
+          "type": "functional"
+        },
+        {
+          "text": "Verifies the ASCII diagram, prose, and code describe the same behavior",
+          "type": "verification"
+        }
+      ],
+      "tags": ["comments", "diagrams", "disclosure", "edge"]
+    },
+    {
+      "id": 9,
       "name": "negative-non-code",
       "prompt": "Rewrite this launch announcement so it sounds more polished and concise.",
       "expected_output": "The skill should not trigger because the task is non-code writing with no maintainability or software design surface.",

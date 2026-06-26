@@ -9,6 +9,7 @@ Use this reference when code is operational, dense, cross-language, generated, s
 - [Comment Scope](#comment-scope)
 - [Source-Backed Claims](#source-backed-claims)
 - [Junior-Friendly Structure](#junior-friendly-structure)
+- [ASCII Diagrams](#ascii-diagrams)
 - [GitHub Actions, YAML, and Shell](#github-actions-yaml-and-shell)
 - [TypeScript and JavaScript](#typescript-and-javascript)
 - [Python](#python)
@@ -137,6 +138,53 @@ Keep comments digestible:
 - Use bullet points when explaining multiple reasons, phases, or failure modes.
 - Name domain concepts directly instead of using vague words like "stuff", "things", or "logic".
 - Avoid unexplained acronyms unless the surrounding code already defines them.
+
+## ASCII Diagrams
+
+Use compact ASCII diagrams inside docblocks or comments when prose alone makes a concept harder to scan. Diagrams are most useful for:
+
+- Data flow across boundaries.
+- State transitions and retry loops.
+- Queue, worker, webhook, or event lifecycles.
+- Ownership and cancellation relationships.
+- Multi-step validation or normalization pipelines.
+
+Keep diagrams small enough to survive code review and narrow editor panes. Prefer plain ASCII characters (`+`, `-`, `|`, `>`, `<`) over Unicode box drawing so comments stay portable across terminals, diffs, and generated docs.
+
+Example:
+
+```ts
+/**
+ * Retries one request without sharing attempt state across callers.
+ *
+ * Flow:
+ *   caller
+ *     |
+ *     v
+ *   validate input -> send request -> classify response
+ *                                      |
+ *                                      +--> 2xx: return response
+ *                                      +--> 4xx: throw ApiError
+ *                                      +--> 5xx: retry until maxRetries
+ *
+ * Keep the diagram and the branch comments below in sync. If the retry
+ * classifier changes, update both before handing off the diff.
+ */
+async function requestWithRetry(policy: RetryPolicy): Promise<Response> {
+  // Retry only server-side failures; client errors usually mean the request
+  // shape is wrong and should surface immediately.
+  return send(policy);
+}
+```
+
+Guardrails:
+
+- Do not add a diagram for straight-line code that already reads clearly.
+- Keep one diagram responsible for one concept; split or remove it if it starts explaining multiple flows.
+- Make the diagram labels match real function, state, or domain names when possible.
+- Check that arrows, branch labels, and surrounding prose describe the same behavior.
+- When comments become stale, update the prose and ASCII together instead of patching only one.
+- Remove a diagram if it conflicts with the code and cannot be repaired quickly.
 
 ## GitHub Actions, YAML, and Shell
 
@@ -529,6 +577,7 @@ Before handing off code, inspect comments with these questions:
 - Does each comment preserve context that names and types cannot express?
 - Did comments stay close to the code they explain?
 - Could a better name, type, or extracted function remove the need for a comment?
+- If an ASCII diagram is present, do its arrows, labels, and branch outcomes still match the prose and code?
 - Are stale or misleading comments worse than no comment?
 
 If the answer is uncertain, prefer a short comment that explains the system constraint over silent cleverness.

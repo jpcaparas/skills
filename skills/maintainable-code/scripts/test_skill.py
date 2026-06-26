@@ -10,7 +10,16 @@ import tempfile
 from pathlib import Path
 
 
-REQUIRED_TAGS = {"smoke", "edge", "negative", "disclosure", "comments", "markup", "sources"}
+REQUIRED_TAGS = {
+    "smoke",
+    "edge",
+    "negative",
+    "disclosure",
+    "comments",
+    "markup",
+    "sources",
+    "diagrams",
+}
 
 
 def load_json(path: Path) -> dict:

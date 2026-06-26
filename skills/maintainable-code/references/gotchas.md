@@ -64,6 +64,17 @@ Repair:
 - Paraphrase the official behavior and keep long explanations in the source, not in the code comment.
 - If the claim comes from local evidence instead of docs, point to the file, test, or observed behavior.
 
+## Diagram Drift
+
+ASCII diagrams help when they make state, data flow, or ownership visible. They become harmful when the code changes and the diagram still describes the old branch, queue, retry path, or data shape.
+
+Repair:
+
+- Add diagrams only for concepts that are hard to scan from prose and names alone.
+- Keep diagram labels aligned with real functions, states, events, or domain terms.
+- Review diagram arrows and surrounding prose together during edits.
+- Update stale text and stale diagrams in the same change; do not let them contradict each other.
+
 ## Comment Noise
 
 Comments that repeat syntax make useful comments easier to ignore.

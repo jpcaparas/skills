@@ -165,6 +165,15 @@ def validate(root: Path) -> dict[str, object]:
                 errors.append(f"references/commenting.md must cover {scope_term}-level comments")
         if "junior" not in commenting.lower() or "bullet" not in commenting.lower() or "numbered" not in commenting.lower():
             errors.append("references/commenting.md must include junior-friendly structured comment guidance")
+        ascii_terms = ["ASCII", "diagram", "stale", "conflict", "prose"]
+        missing_ascii_terms = [term for term in ascii_terms if term.lower() not in commenting.lower()]
+        if missing_ascii_terms:
+            errors.append(
+                "references/commenting.md missing ASCII diagram guardrail terms: "
+                + ", ".join(missing_ascii_terms)
+            )
+        if "->" not in commenting or "+-->" not in commenting:
+            errors.append("references/commenting.md must include an ASCII flow diagram example")
         if "official documentation" not in commenting.lower() and "official source" not in commenting.lower():
             errors.append("references/commenting.md must require official sources for framework/language claims")
         for url in OFFICIAL_SOURCE_URLS:
@@ -197,6 +206,8 @@ def validate(root: Path) -> dict[str, object]:
                 errors.append("evals/evals.json must cover markup/config comment guidance")
             if "sources" not in all_tags:
                 errors.append("evals/evals.json must cover official-source guidance")
+            if "diagrams" not in all_tags:
+                errors.append("evals/evals.json must cover ASCII diagram guidance")
 
     metadata_path = root / "metadata.json"
     if metadata_path.is_file():
