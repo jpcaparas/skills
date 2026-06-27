@@ -1,0 +1,18 @@
+{
+  "name": "maintainable-tests",
+  "display_name": "Maintainable Tests",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Passive always-on testing skill for generating, refactoring, reviewing, and planning tests that read as living documentation, cover meaningful edge cases, explain legacy behavior, and remain humane for future maintainers.",
+  "tags": [
+    "testing",
+    "maintainability",
+    "test-review",
+    "fixtures",
+    "test-doubles",
+    "regression-tests",
+    "characterization-tests",
+    "agent-workflows"
+  ]
+}

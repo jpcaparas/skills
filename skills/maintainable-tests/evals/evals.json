@@ -1,0 +1,111 @@
+{
+  "skill_name": "maintainable-tests",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "account-withdrawal-behavior-tests",
+      "prompt": "Add tests for Account::withdraw in tests/AccountTest.php. It should allow withdrawing the available balance, reject one dollar beyond the balance, and keep the original balance when the withdrawal is rejected. Use the existing Pest style.",
+      "expected_output": "Writes readable Pest tests with behavior-shaped names, concrete Money values, visible Arrange / Act / Assert shape, and specific assertions for result and balance state.",
+      "assertions": [
+        {
+          "text": "Names tests after withdrawal behavior and outcome",
+          "type": "functional"
+        },
+        {
+          "text": "Uses concrete boundary values for exact balance and beyond balance",
+          "type": "functional"
+        },
+        {
+          "text": "Asserts both rejection reason and unchanged balance for the failure case",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "behavior", "php", "pest"]
+    },
+    {
+      "id": 2,
+      "name": "legacy-rounding-characterization",
+      "prompt": "Before refactoring LegacyInvoiceCalculator, add a characterization test for the current pre-2025 tax rounding behavior. Nobody is sure if it is right, but old invoices must not change while we refactor.",
+      "expected_output": "Routes to legacy guidance, writes a characterization test that labels uncertainty, explains why behavior is pinned, and avoids presenting the current behavior as a permanent domain rule.",
+      "assertions": [
+        {
+          "text": "Loads or follows references/legacy-and-characterization.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Includes rationale for preserving current legacy behavior during refactor",
+          "type": "functional"
+        },
+        {
+          "text": "Does not treat unknown legacy behavior as a timeless product rule",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "legacy", "characterization", "disclosure"]
+    },
+    {
+      "id": 3,
+      "name": "hard-to-test-payment-service",
+      "prompt": "I need tests for PaymentService. It constructs StripeClient internally, reads Date.now(), and sends receipts in the same method that calculates invoice totals. Please just mock whatever is needed.",
+      "expected_output": "Recognizes the production code is hard to observe, recommends decomposing calculation, clock, gateway, and receipt boundaries before adding broad mocks, then suggests focused tests and adapter checks.",
+      "assertions": [
+        {
+          "text": "Loads or follows references/doubles-and-boundaries.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Recommends improving production boundaries instead of only adding broad mocks",
+          "type": "functional"
+        },
+        {
+          "text": "Does not expose private internals only for tests",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "boundary", "testability", "mocking"]
+    },
+    {
+      "id": 4,
+      "name": "review-vague-mock-heavy-tests",
+      "prompt": "Review this diff: tests are named 'works' and 'handles error', most assertions are assertTrue/assertNotNull, and the order repository mock expects five internal calls. Is that okay?",
+      "expected_output": "Uses severity-first review, calls out misleading tests, weak assertions, and brittle implementation coupling, then suggests behavior names, observable assertions, and narrower doubles.",
+      "assertions": [
+        {
+          "text": "Loads or follows references/review-rubric.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Prioritizes behavior gaps and brittleness before style nits",
+          "type": "functional"
+        },
+        {
+          "text": "Identifies vague names and weak assertions as maintainability problems",
+          "type": "functional"
+        }
+      ],
+      "tags": ["review", "negative", "mocking", "assertions", "disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "named-parameterized-edge-cases",
+      "prompt": "Convert these three copied validation tests into a parameterized test: empty email, malformed email, and email longer than 255 characters. Keep it readable for onboarding.",
+      "expected_output": "Creates a parameterized test with named cases that explain each boundary, keeps expected outcomes visible, and avoids an opaque anonymous data table.",
+      "assertions": [
+        {
+          "text": "Uses named dataset or case labels for each email boundary",
+          "type": "functional"
+        },
+        {
+          "text": "Keeps the expected validation result visible",
+          "type": "functional"
+        },
+        {
+          "text": "Does not hide all behavior in a generic helper",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "datasets", "fixtures"]
+    }
+  ]
+}

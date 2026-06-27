@@ -1,0 +1,4 @@
+display_name: "Maintainable Tests"
+short_description: "Write tests that document behavior and stay humane to maintain"
+default_prompt: "Help me write or review tests as living documentation for this code."
+icon: "test-tube"
