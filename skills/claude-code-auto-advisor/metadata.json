@@ -1,0 +1,17 @@
+{
+  "name": "claude-code-auto-advisor",
+  "display_name": "Claude Code Auto Advisor",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Passive Claude Code skill that consults the configured advisor for security work, code reviews, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.",
+  "tags": [
+    "claude-code",
+    "advisor",
+    "code-review",
+    "security",
+    "architecture",
+    "debugging",
+    "passive-skill"
+  ]
+}

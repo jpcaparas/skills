@@ -52,6 +52,16 @@ Production skill for drafting local Azure DevOps work item packets from loose co
 
 Production writing skill that starts from Strunk's durable rules, then extends them with progressive disclosure, staged revision passes, cadence repair, genre routing, and bundled style families for technical, analytical, editorial, reflective, and conversion writing.
 
+### `claude-code-auto-advisor`
+
+`npx skills add jpcaparas/skills --skill claude-code-auto-advisor`
+
+<p align="center">
+  <img src="skills/claude-code-auto-advisor/skill-card.png" alt="16-bit side-scrolling pixel art badge for claude-code-auto-advisor" width="480">
+</p>
+
+Claude Code specific passive skill that consults the configured advisor for security work, code reviews, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.
+
 ### `client-report-from-commits`
 
 `npx skills add jpcaparas/skills --skill client-report-from-commits`

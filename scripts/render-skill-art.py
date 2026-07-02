@@ -39,6 +39,7 @@ SKILL_SCENES = {
     "azure-devops-create-work-item": "a quest-token forge where a hammer stamps a blank glowing slab into a task gem",
     "azure-devops-wiki-markdown": "a knowledge temple linking clean geometric blocks through glowing connector paths",
     "better-writing": "a quill-shaped tool smoothing a jagged ribbon into a clean luminous ribbon",
+    "claude-code-auto-advisor": "a coding cockpit with a main agent console, a glowing advisor beacon, shield gates, review lenses, and careful decision rails",
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",

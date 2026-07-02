@@ -1,0 +1,126 @@
+{
+  "skill_name": "claude-code-auto-advisor",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "security-review-mandatory-consult",
+      "prompt": "In Claude Code, review this auth middleware change for privilege escalation risk. The advisor is configured. Give me findings only after you have done the review.",
+      "expected_output": "The agent inspects the relevant code first, then consults the configured advisor before final security findings.",
+      "assertions": [
+        {
+          "text": "Treats security review as a mandatory advisor-consult category when advisor is configured",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/advisor-policy.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "security",
+        "disclosure"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/advisor-policy.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "no-advisor-configured-negative",
+      "prompt": "In Claude Code, make this tiny typo fix. There is no advisorModel configured and no advisor tool in the session.",
+      "expected_output": "The agent does not call or simulate the advisor and completes the routine task normally.",
+      "assertions": [
+        {
+          "text": "Does not call an advisor when no advisor model or tool is configured",
+          "type": "negative"
+        },
+        {
+          "text": "Does not ask the user to configure advisor for a trivial task",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "scope"
+      ],
+      "files": [
+        "SKILL.md",
+        "scripts/detect_advisor_config.py"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "non-claude-harness-negative",
+      "prompt": "Running in Codex, perform a code review and use claude-code-auto-advisor if useful.",
+      "expected_output": "The agent exits the skill because the harness is not Claude Code and does not simulate advisor with other tools.",
+      "assertions": [
+        {
+          "text": "Does not use the advisor policy outside Claude Code",
+          "type": "negative"
+        },
+        {
+          "text": "Does not replace advisor with subagents, web search, or another model",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "harness"
+      ],
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "recurring-failure-edge",
+      "prompt": "In Claude Code with advisor configured, the same migration test has failed after two plausible fixes. What should you do before trying a third approach?",
+      "expected_output": "The agent gathers the failure evidence and consults the advisor before another speculative fix.",
+      "assertions": [
+        {
+          "text": "Treats recurring failure after two credible attempts as an advisor-consult trigger",
+          "type": "functional"
+        },
+        {
+          "text": "Consults after collecting logs/tests rather than immediately with no context",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "debugging"
+      ],
+      "files": [
+        "references/advisor-policy.md",
+        "references/claude-code-mechanics.md"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "mechanics-disclosure",
+      "prompt": "In Claude Code, how do I know whether advisorModel in settings is enough to call the advisor for this session?",
+      "expected_output": "The agent reads the mechanics reference and explains that visible settings are not sufficient if model pairing, provider, allowlist, disable flags, or actual tool attachment block advisor use.",
+      "assertions": [
+        {
+          "text": "Routes to references/claude-code-mechanics.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Mentions that the callable advisor tool is stronger evidence than local settings",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "configuration"
+      ],
+      "files": [
+        "references/claude-code-mechanics.md",
+        "scripts/detect_advisor_config.py"
+      ]
+    }
+  ]
+}
