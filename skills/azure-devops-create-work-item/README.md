@@ -8,6 +8,7 @@ Production skill for drafting local Azure DevOps work item packets from loose co
 - Repository-aware investigation that surfaces relevant code paths and short snippets when run inside a project
 - Deterministic packet creation in the caller's current directory
 - Reusable per-type Markdown templates using the standard schema, with dedicated `Reproduction Steps` for bugs
+- Targeted manual QA scenario guidance for readable, risk-based test sections
 - Mixed-audience writing guidance for work item drafts
 
 ## Key Files

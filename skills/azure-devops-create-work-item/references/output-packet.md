@@ -33,7 +33,7 @@ Each packet contains:
 
 ## Writing Contract
 
-- Do not use `#`, `##`, or `###` headings in `work-item.md`.
+- Do not use `#`, `##`, or `###` headings in `work-item.md` outside a detailed manual QA `Test Scenario` block.
 - Use bold section labels in `work-item.md`.
 - Use these exact labels for non-bug drafts, in this order:
   1. `**Title**`
@@ -52,7 +52,72 @@ Each packet contains:
 - `User Story` drafts should describe who needs what and why before implementation notes.
 - `Task` drafts should stay execution-focused and should not masquerade as user-facing value.
 - `Developer Notes` is for implementation constraints, dependencies, rollout notes, environment notes, and known unknowns. Keep it bullet-based.
-- `Test Scenario` is for QA-facing validation notes. Use bullets unless the user supplies a more structured scenario.
+- `Test Scenario` is for QA-facing validation notes. If it contains manual QA scenarios, use the Manual QA Scenario Contract below instead of generic bullets.
+
+## Manual QA Scenario Contract
+
+Use this contract whenever `**Test Scenario**` contains manual QA scenarios. The output should read like a thoughtful senior tester chose the checks, not like a generated permutation matrix.
+
+For `work-item.md`, keep the existing `**Test Scenario**` section label and start the content with `Test environment notes:`. For a standalone QA-only response, include a top heading such as `# <Ticket> - <Change summary>: Manual QA Scenarios`.
+
+Rules:
+
+1. Produce 4-6 targeted scenarios only. Include one happy path, then one scenario for each defect, guard, or regression risk the change introduces. Skip scenarios that do not verify touched behaviour.
+2. Write UI-driven steps in plain language. Say what a person does in the browser, such as "click Pay rapidly several times before the screen changes". Do not name methods, endpoints, database columns, queues, or flags unless staging genuinely needs developer support.
+3. Make scenario titles state the behaviour being protected. Use "Double-clicking Pay does not charge twice", not "Payment flow test 2".
+4. Give each scenario a short `**Steps:**` list and `**Expected:**` list. Expected outcomes must be observable: what the customer sees, what appears in an admin or third-party dashboard, what email arrives, or what a support screen shows. Bold the key observable, such as `exactly **one** charge appears in the Stripe dashboard`.
+5. Put verification aids first. Start with a short `Test environment notes:` block with concrete test data and the dashboards, admin pages, or log screens QA should keep open to confirm side effects.
+6. Be honest when the UI cannot create the required state. Put `(needs dev support)` in the scenario title, describe the staging in one sentence, and include the counter-check where relevant, such as confirming the guard still allows a fresh non-stale transaction.
+7. Call out non-obvious verification traps. If pass and fail look identical on screen, tell QA where the real signal is.
+8. Use plain Markdown that pastes cleanly into Azure DevOps: `##` scenario headings, `---` separators, numbered steps, and bulleted expectations. Do not use HTML or nested tables.
+9. Use NZ English throughout, including spellings such as behaviour, authorised, cancelled, and enrolment where those words appear.
+
+Trimmed example:
+
+```markdown
+# <Ticket> - <Change summary>: Manual QA Scenarios
+
+Test environment notes:
+- Use <system> test mode. Useful test data: <test account>, <gateway test card>, and <known failing card>.
+- Keep <dashboard/logs> open in another tab to confirm what actually happened.
+
+---
+
+## Scenario 1 - Normal <flow> still works (happy path)
+**Steps:**
+1. Log in as <persona> and open <page>.
+2. Complete the normal <flow>.
+3. Confirm the page moves to the success state.
+
+**Expected:**
+- The customer sees the normal success message.
+- Exactly **one** <side effect> appears in <dashboard>.
+
+---
+
+## Scenario 2 - <Risk the change guards against, phrased as behaviour>
+**Steps:**
+1. Start <flow>.
+2. Trigger the risky user action before the screen changes.
+
+**Expected:**
+- The customer is not blocked or charged twice.
+- Exactly **one** <side effect> appears in <dashboard>.
+
+---
+
+## Scenario 3 - <Edge case> (needs dev support)
+This simulates <failure>. Ask a developer to stage it: <one-sentence staging note>.
+
+**Steps:**
+1. Open the staged <record or page>.
+2. Try the customer action again.
+
+**Expected:**
+- The customer sees a clear recovery or retry path.
+- No duplicate <side effect> appears in <dashboard>.
+- Also verify the guard still allows a fresh, non-stale <flow>.
+```
 
 ## Codebase Investigation
 
@@ -76,7 +141,7 @@ Put these in `work-item.md`:
 - the intended outcome
 - acceptance criteria
 - developer notes that materially guide delivery, including concise code references or snippets when useful
-- QA-specific test scenario notes
+- QA-specific test scenario notes, including targeted manual QA scenarios when relevant
 
 Put these in `context.md`:
 

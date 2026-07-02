@@ -12,3 +12,6 @@
 10. When source notes mention sensitive hostnames, environments, customers, or incident details, redact or generalize them in examples and keep only the detail needed to draft the work item.
 11. Do not skip repo inspection just because the user provided a good narrative. If the skill is run inside a repository, the draft should reflect relevant code ownership, test surfaces, config, or snippets when they exist.
 12. Do not dump large code blocks into `work-item.md`. Keep main-draft snippets short and move longer excerpts to `context.md`.
+13. Do not let manual QA become an exhaustive matrix. A good `**Test Scenario**` section has 4-6 targeted scenarios: one happy path, then the meaningful guards and regressions introduced by the change.
+14. Do not pretend there is a browser path for a staged failure state. If QA needs developer help to create stale, crashed, or partially-complete state, say `(needs dev support)` in the scenario title and describe the staging in one sentence.
+15. If the screen looks the same for pass and fail, call out the real verification signal in the scenario, such as the payment dashboard, admin audit trail, email inbox, or gateway request logs.

@@ -31,4 +31,4 @@ As a [affected user or tester], I can [complete the affected workflow] without [
 
 **Test Scenario**
 
-- [QA validation note after the fix, including expected behavior and affected environment coverage.]
+[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]

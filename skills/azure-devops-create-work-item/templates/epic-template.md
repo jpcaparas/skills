@@ -23,4 +23,4 @@ As a [stakeholder or team], I can [confirm the epic-level capability or outcome]
 
 **Test Scenario**
 
-- [Epic-level validation signal, release-readiness check, or evidence expected from child work items.]
+[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]

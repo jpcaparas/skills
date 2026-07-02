@@ -23,4 +23,4 @@ As a [team member or stakeholder], I can [confirm the blocker is resolved or con
 
 **Test Scenario**
 
-- [Validation or follow-up check that proves the issue is resolved or contained.]
+[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]

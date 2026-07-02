@@ -23,4 +23,4 @@ As a [user role], I can [complete the desired behavior] so that [user, product, 
 
 **Test Scenario**
 
-- [QA-specific user path, edge case, or acceptance behavior to validate.]
+[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]

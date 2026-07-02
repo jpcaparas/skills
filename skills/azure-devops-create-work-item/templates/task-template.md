@@ -23,4 +23,4 @@ As a developer, I can [confirm the task is complete] so that [supported work can
 
 **Test Scenario**
 
-- [Validation note, smoke check, or handoff evidence expected when the task is complete.]
+[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]

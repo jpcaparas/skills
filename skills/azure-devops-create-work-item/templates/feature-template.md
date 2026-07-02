@@ -25,4 +25,4 @@ As a [role], I can [confirm or complete the expected behavior] so that [business
 
 **Test Scenario**
 
-- [QA-specific validation note, scenario, or environment coverage expectation.]
+[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]

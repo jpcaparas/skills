@@ -172,6 +172,44 @@
         "references/output-packet.md",
         "references/gotchas.md"
       ]
+    },
+    {
+      "id": 8,
+      "name": "manual-qa-targeted-payment-guard",
+      "prompt": "Add manual QA scenarios to an Azure DevOps work item for a bug fix that prevents duplicate payment submissions when a customer double-clicks Pay or retries after a decline.",
+      "expected_output": "Produces 4-6 targeted manual-qa scenarios, starts with Test environment notes, uses behaviour-focused scenario titles, keeps steps UI-driven, states observable expected outcomes, includes any needed dev-support staging honestly, and uses NZ English.",
+      "assertions": [
+        {
+          "text": "Includes Test environment notes with concrete test data and dashboards or logs QA should keep open",
+          "type": "verification"
+        },
+        {
+          "text": "Uses 4-6 targeted scenarios instead of an exhaustive permutation matrix",
+          "type": "verification"
+        },
+        {
+          "text": "Uses behaviour-focused scenario titles with ## Scenario headings, short Steps lists, and bulleted Expected lists",
+          "type": "structural"
+        },
+        {
+          "text": "Keeps steps in browser-facing language and avoids internal method names, endpoints, and database columns unless a scenario is marked needs dev support",
+          "type": "verification"
+        },
+        {
+          "text": "Calls out the real side-effect signal when the customer-visible screen does not prove the guard worked",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "manual-qa",
+        "payments",
+        "style"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/output-packet.md",
+        "references/gotchas.md"
+      ]
     }
   ]
 }

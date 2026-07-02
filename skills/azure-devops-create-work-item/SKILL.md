@@ -3,7 +3,7 @@ name: azure-devops-create-work-item
 description: "Draft local Azure DevOps work item packets from loose context, defaulting to Scrum PBI unless Bug, Feature, User Story, Task, Issue, or Epic is specified. Inspect repo context when present. Do NOT use for live REST/CLI creation, migration, wiki, or status reporting."
 compatibility: "Requires: python3. Optional network access only when re-checking Microsoft Learn documentation."
 metadata:
-  version: "1.0.3"
+  version: "1.0.4"
   repo_tags:
     - azure-devops
     - work-items
@@ -29,6 +29,7 @@ What this skill does well:
 - inspect the surrounding repo when run inside a project and surface relevant code snippets
 - keep the main draft aligned to the standard field schema, with `Reproduction Steps` added for `Bug`
 - keep the writing readable for mixed technical and non-technical audiences
+- shape manual QA sections as targeted, risk-based scenarios that read like a senior tester wrote them
 - use official Azure Boards work item primitives instead of invented ticket shapes
 
 ## Decision Tree
@@ -70,7 +71,7 @@ The generated packet layout is:
 1. Default to a Scrum `Product Backlog Item` unless the user explicitly asks for a different type or process.
 2. Extract the context first. Capture the raw source material in `context.md` even when `work-item.md` becomes more concise.
 3. Pick one primary type only: `Product Backlog Item`, `Epic`, `Feature`, `User Story`, `Task`, `Issue`, or `Bug`.
-4. Keep `work-item.md` simple. Do not use `#`, `##`, or `###` headings. Use bold section labels.
+4. Keep `work-item.md` simple. Do not use `#`, `##`, or `###` headings outside a detailed `**Test Scenario**` section. Use bold section labels for the main work item schema.
 5. Use this visible schema for non-bug drafts:
    - `**Title**`
    - `**Problem**`
@@ -80,11 +81,12 @@ The generated packet layout is:
    - `**Developer Notes**`
    - `**Test Scenario**`
 6. For `Bug`, add `**Reproduction Steps**` immediately after `**Problem**`. Keep it as simple numbered steps that QA, product, or developers can follow.
-7. Treat the type template as the content contract. The section labels stay consistent; the content inside each section changes for `Product Backlog Item`, `Feature`, `Bug`, `Task`, and other types.
-8. Put supporting detail, assumptions, raw notes, and source excerpts in `context.md`, not in the main work item draft.
-9. Write for mixed audiences. Prefer plain language, explain the business effect, and keep implementation detail only where it materially changes the request.
-10. For security, upgrade, compliance, maintenance, and dependency work, still default to `Product Backlog Item` unless the user asks for `Task`, `Feature`, or another type. Preserve direct title prefixes such as `SECURITY:`, `MAINTENANCE:`, or `COMPLIANCE:` when the source context supports them.
-11. When run inside a repository, perform a codebase pass before finalizing `work-item.md`:
+7. When producing manual QA content in `**Test Scenario**`, follow the Manual QA Scenario Contract in `references/output-packet.md`: 4-6 targeted scenarios, a `Test environment notes` block, UI-driven steps, observable expected outcomes, behaviour-focused titles, honest `(needs dev support)` staging notes, non-obvious verification traps, and NZ English.
+8. Treat the type template as the content contract. The section labels stay consistent; the content inside each section changes for `Product Backlog Item`, `Feature`, `Bug`, `Task`, and other types.
+9. Put supporting detail, assumptions, raw notes, and source excerpts in `context.md`, not in the main work item draft.
+10. Write for mixed audiences. Prefer plain language, explain the business effect, and keep implementation detail only where it materially changes the request.
+11. For security, upgrade, compliance, maintenance, and dependency work, still default to `Product Backlog Item` unless the user asks for `Task`, `Feature`, or another type. Preserve direct title prefixes such as `SECURITY:`, `MAINTENANCE:`, or `COMPLIANCE:` when the source context supports them.
+12. When run inside a repository, perform a codebase pass before finalizing `work-item.md`:
    - identify the project structure and likely owning modules with `git status --short`, `rg --files`, package manifests, routing files, service folders, tests, and nearby docs
    - search for domain terms from the work item title, symptoms, UI labels, API names, entities, errors, and likely file names
    - read the smallest relevant files needed to understand the affected path
@@ -108,7 +110,7 @@ The generated packet layout is:
 2. If the caller is inside a repository, inspect the codebase and collect relevant file paths, functions, config, tests, and short snippets.
 3. Choose the best-fit work item type with `references/official-primitives.md`.
 4. Run `python3 scripts/create_work_item_packet.py --title "<title>"` in the caller's current directory for the default PBI, or add `--type <type>` when the user explicitly names another type. Add `--context-file` when notes already exist on disk.
-5. Fill `work-item.md` using the selected template and the writing rules in `references/output-packet.md`.
+5. Fill `work-item.md` using the selected template and the writing rules in `references/output-packet.md`, including the Manual QA Scenario Contract when `**Test Scenario**` contains manual QA scenarios.
 6. Keep the final file surgical, plain, and ready to paste into Azure DevOps. Do not add extra top-level sections unless the user explicitly asks for them.
 
 ## Reading Guide
@@ -116,7 +118,7 @@ The generated packet layout is:
 | Need | Read |
 | --- | --- |
 | Official Azure Boards type semantics and cross-process notes | `references/official-primitives.md` |
-| Packet layout, section-writing rules, and current-directory behavior | `references/output-packet.md` |
+| Packet layout, section-writing rules, Manual QA Scenario Contract, and current-directory behavior | `references/output-packet.md` |
 | Failure modes and classification traps | `references/gotchas.md` |
 | Product Backlog Item template | `templates/product-backlog-item-template.md` |
 | Epic template | `templates/epic-template.md` |
@@ -137,3 +139,4 @@ The generated packet layout is:
 7. Do not bury the business impact in engineering detail. Mixed audiences should understand why the item matters after the first short section.
 8. Do not invent confidential environment names, URLs, customer names, or system identifiers. Redact or generalize details that are not in the user's supplied context.
 9. Code snippets should be evidence, not filler. Include them only when they point to a likely implementation area, defect source, test surface, config dependency, or rollout concern.
+10. Do not turn `**Test Scenario**` into an exhaustive permutation table. Manual QA should cover the happy path and the actual risks introduced by the change.

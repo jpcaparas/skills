@@ -97,6 +97,70 @@ def has_toc_heading(content: str) -> bool:
     return False
 
 
+def read_text_file(path: str) -> str:
+    with open(path, "r", encoding="utf-8") as handle:
+        return handle.read()
+
+
+def validate_manual_qa_guidance(skill_path: str, errors: list[str]) -> None:
+    required_snippets = {
+        "SKILL.md": [
+            "Manual QA Scenario Contract",
+            "4-6 targeted scenarios",
+            "Test environment notes",
+            "UI-driven steps",
+            "observable expected outcomes",
+            "NZ English",
+        ],
+        os.path.join("references", "output-packet.md"): [
+            "## Manual QA Scenario Contract",
+            "4-6 targeted scenarios",
+            "Test environment notes:",
+            "## Scenario",
+            "**Steps:**",
+            "**Expected:**",
+            "(needs dev support)",
+            "verification traps",
+            "Do not use HTML or nested tables",
+            "NZ English",
+        ],
+        os.path.join("references", "gotchas.md"): [
+            "4-6 targeted scenarios",
+            "(needs dev support)",
+            "payment dashboard",
+        ],
+        os.path.join("evals", "evals.json"): [
+            "manual-qa",
+            "4-6 targeted",
+            "Test environment notes",
+            "behaviour-focused scenario titles",
+        ],
+    }
+
+    for rel_path, snippets in required_snippets.items():
+        path = os.path.join(skill_path, rel_path)
+        if not os.path.isfile(path):
+            errors.append(f"Manual QA guidance file missing: {rel_path}")
+            continue
+        content = read_text_file(path)
+        for snippet in snippets:
+            if snippet not in content:
+                errors.append(f"Manual QA guidance missing '{snippet}' in {rel_path}")
+
+    templates_dir = os.path.join(skill_path, "templates")
+    if os.path.isdir(templates_dir):
+        for fname in os.listdir(templates_dir):
+            if not fname.endswith(".md"):
+                continue
+            rel_path = os.path.join("templates", fname)
+            content = read_text_file(os.path.join(templates_dir, fname))
+            if "**Test Scenario**" in content and "Manual QA Scenario Contract" not in content:
+                errors.append(
+                    f"Template Test Scenario placeholder must reference the Manual QA Scenario Contract: "
+                    f"{rel_path}"
+                )
+
+
 def validate_skill(skill_path: str) -> dict:
     errors = []
     warnings = []
@@ -212,6 +276,8 @@ def validate_skill(skill_path: str) -> dict:
                 warnings.append("evals/evals.json: no test cases defined (array is empty)")
         except json.JSONDecodeError as exc:
             errors.append(f"evals/evals.json is not valid JSON: {exc}")
+
+    validate_manual_qa_guidance(skill_path, errors)
 
     scripts_dir = os.path.join(skill_path, "scripts")
     if os.path.isdir(scripts_dir):

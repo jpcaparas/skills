@@ -66,10 +66,12 @@ def main() -> int:
     assert_file_contains(pbi_dir / "work-item.md", "**Acceptance Criteria**")
     assert_file_contains(pbi_dir / "work-item.md", "**Developer Notes**")
     assert_file_contains(pbi_dir / "work-item.md", "**Test Scenario**")
+    assert_file_contains(pbi_dir / "work-item.md", "Manual QA Scenario Contract")
     assert_file_contains(pbi_dir / "context.md", "**Context**")
     assert_file_contains(pbi_dir / "context.md", "**Codebase investigation**")
     assert_file_contains(pbi_dir / "metadata.json", "\"work_item_type\": \"Product Backlog Item\"")
     assert_file_contains(bug_dir / "work-item.md", "**Test Scenario**")
+    assert_file_contains(bug_dir / "work-item.md", "Manual QA Scenario Contract")
     assert_file_contains(bug_dir / "work-item.md", "**Reproduction Steps**")
     assert_file_contains(bug_dir / "sources.md", "manage-bugs")
 
