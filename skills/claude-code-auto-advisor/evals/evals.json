@@ -121,6 +121,64 @@
         "references/claude-code-mechanics.md",
         "scripts/detect_advisor_config.py"
       ]
+    },
+    {
+      "id": 6,
+      "name": "high-level-plan-validation",
+      "prompt": "In Claude Code with advisor configured, I drafted a high-level implementation plan for a broad auth/session migration across middleware, API routes, tests, and deployment config. Before I start editing files, what does this skill require?",
+      "expected_output": "The agent treats the concrete high-level plan as a mandatory advisor-consult case, gathers the plan evidence and constraints, and consults before implementation begins.",
+      "assertions": [
+        {
+          "text": "Treats high-level planning validation for substantial work as an advisor-consult trigger",
+          "type": "functional"
+        },
+        {
+          "text": "Requires several dependent steps or affected subsystems rather than generic planning",
+          "type": "functional"
+        },
+        {
+          "text": "Consults after a concrete draft plan exists and before implementation starts",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/advisor-policy.md",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "planning",
+        "smoke",
+        "disclosure"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/advisor-policy.md"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "ordinary-planning-negative",
+      "prompt": "In Claude Code with advisor configured, I need a quick plan for a one-file typo fix and then the next command to run. Should the advisor be consulted because this is planning?",
+      "expected_output": "The agent does not consult the advisor because ordinary planning, small todo lists, and one-step or two-step plans are outside the planning-validation trigger.",
+      "assertions": [
+        {
+          "text": "Does not treat ordinary planning as a high-level planning validation trigger",
+          "type": "negative"
+        },
+        {
+          "text": "Skips advisor for one-step or two-step plans without substantial blast radius",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "planning",
+        "scope"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/advisor-policy.md"
+      ]
     }
   ]
 }

@@ -46,6 +46,11 @@
   exact header format, where to get credentials, and a tested example.
 - Mixing SDK versions -- if showing SDK examples, pin the SDK version and ensure all examples
   use the same version's API surface.
+- [NEW] Over-broad planning triggers in passive escalation skills -- when a skill is meant to
+  invoke a reviewer, advisor, or second-opinion tool for risky work, include substantial
+  multi-step high-level plan validation after a concrete plan is drafted and before
+  implementation begins, but explicitly exclude ordinary planning, small todo lists, and
+  one-step or two-step plans.
 
 ## Disclosure Mistakes
 

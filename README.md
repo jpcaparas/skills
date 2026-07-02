@@ -60,7 +60,7 @@ Production writing skill that starts from Strunk's durable rules, then extends t
   <img src="skills/claude-code-auto-advisor/skill-card.png" alt="16-bit side-scrolling pixel art badge for claude-code-auto-advisor" width="480">
 </p>
 
-Claude Code specific passive skill that consults the configured advisor for security work, code reviews, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.
+Claude Code specific passive skill that consults the configured advisor for security work, code reviews, multi-step high-level plan validation for substantial work, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.
 
 ### `client-report-from-commits`
 

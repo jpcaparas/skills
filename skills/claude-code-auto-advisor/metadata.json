@@ -4,12 +4,13 @@
   "version": "1.0.0",
   "license": "MIT",
   "entrypoint": "SKILL.md",
-  "description": "Passive Claude Code skill that consults the configured advisor for security work, code reviews, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.",
+  "description": "Passive Claude Code skill that consults the configured advisor for security work, code reviews, multi-step high-level plan validation for substantial work, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.",
   "tags": [
     "claude-code",
     "advisor",
     "code-review",
     "security",
+    "planning",
     "architecture",
     "debugging",
     "passive-skill"

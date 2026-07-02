@@ -1,6 +1,6 @@
 # claude-code-auto-advisor
 
-Installable passive Claude Code skill that consults the configured advisor for security work, code reviews, high-stakes design, complex refactors, recurring failures, and risky completion checks.
+Installable passive Claude Code skill that consults the configured advisor for security work, code reviews, multi-step high-level plan validation for substantial work, high-stakes design, complex refactors, recurring failures, and risky completion checks.
 
 ## Install
 
