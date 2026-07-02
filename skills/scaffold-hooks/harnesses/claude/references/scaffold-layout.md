@@ -28,7 +28,7 @@ Every official Claude Code event gets the same `hooks/<event>/script.sh`, `claud
 ## Ports And Adapters
 
 - `hooks/<event>/script.sh` is the port: shared project behavior that can be reused by Claude Code, Codex, Devin, OpenCode, CI, or a human shell.
-- `hooks/<event>/claude.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=claude`, sets `AGENT_HOOK_EVENT`, and executes `script.sh`.
+- `hooks/<event>/claude.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=claude`, sets `AGENT_HOOK_EVENT`, and runs `script.sh` through Bash so hooks still work on `noexec` temp or workspace mounts.
 - `hooks/<event>/claude.json` is adapter data: scripts, commands, and other plan details for Claude.
 - `hooks/lib/claude.sh` translates shared failures into Claude Code's JSON output contract.
 

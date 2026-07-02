@@ -28,7 +28,7 @@ Every official Codex event gets the same `hooks/<event>/script.sh`, `codex.sh`, 
 ## Ports And Adapters
 
 - `hooks/<event>/script.sh` is the port: shared project behavior that can be reused by Codex, Claude Code, Devin, OpenCode, CI, or a human shell.
-- `hooks/<event>/codex.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=codex`, sets `AGENT_HOOK_EVENT`, and executes `script.sh`.
+- `hooks/<event>/codex.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=codex`, sets `AGENT_HOOK_EVENT`, and runs `script.sh` through Bash so hooks still work on `noexec` temp or workspace mounts.
 - `hooks/<event>/codex.json` is adapter data: scripts, commands, and other plan details for Codex.
 - `hooks/lib/codex.sh` translates shared failures into Codex's JSON output contract.
 

@@ -28,7 +28,7 @@ Every documented Devin lifecycle event gets the same `hooks/<event>/script.sh`, 
 ## Ports And Adapters
 
 - `hooks/<event>/script.sh` is the port: shared project behavior that can be reused by Devin, Claude Code, Codex, OpenCode, CI, or a human shell.
-- `hooks/<event>/devin.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=devin`, sets `AGENT_HOOK_EVENT`, and executes `script.sh`.
+- `hooks/<event>/devin.sh` is the adapter: it sets `AGENT_HOOK_HARNESS=devin`, sets `AGENT_HOOK_EVENT`, and runs `script.sh` through Bash so hooks still work on `noexec` temp or workspace mounts.
 - `hooks/<event>/devin.json` is adapter data: scripts, commands, and `block_on_failure` for Devin.
 - `hooks/lib/devin.sh` translates shared failures into Devin's JSON decision and exit-code-2 contract.
 
