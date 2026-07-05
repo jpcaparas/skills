@@ -1,0 +1,120 @@
+{
+  "skill_name": "maintainable-app",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "coalesces-expensive-report-job",
+      "prompt": "I'm adding a Next.js endpoint at app/api/reports/monthly/route.ts that starts a background job to generate an account's monthly PDF report. Ten people from the same account may click Generate at once. Design the implementation and name the database fields, queue behavior, retries, and logs.",
+      "expected_output": "The response designs one durable work key per account/month, uses atomic uniqueness or upsert, returns an existing active job instead of enqueueing duplicates, includes lease/heartbeat/stale recovery, bounded retries, and structured logs with correlation ID and job key.",
+      "assertions": [
+        {
+          "text": "Uses a stable job or idempotency key to coalesce duplicate report generation.",
+          "type": "functional"
+        },
+        {
+          "text": "Includes stale pending/running recovery and bounded retry behavior.",
+          "type": "functional"
+        },
+        {
+          "text": "Mentions structured logs with correlation ID, work key, attempt, and outcome.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "jobs",
+        "observability"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "handles-provider-timeout-after-side-effect",
+      "prompt": "Our Laravel app calls a payment provider from a queued CapturePayment job. Sometimes the provider times out after the charge may have succeeded. Explain how the job should retry, reconcile, and avoid double capture.",
+      "expected_output": "The response routes to distributed systems and job guidance, uses provider idempotency keys, classifies unknown timeout results as reconciliation before retry, aligns worker timeout below retry_after or visibility timeout, and records terminal or retryable states.",
+      "assertions": [
+        {
+          "text": "Treats timeout after side effect as unknown and requires reconciliation or same idempotency key.",
+          "type": "functional"
+        },
+        {
+          "text": "Avoids retrying payment capture with a new idempotency key.",
+          "type": "negative"
+        },
+        {
+          "text": "Mentions worker timeout and retry/visibility alignment.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "distributed-systems",
+        "jobs"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "golden-signals-observability",
+      "prompt": "I'm adding logging and metrics around our image-processing worker. I don't want random log spam. What should we instrument and alert on?",
+      "expected_output": "The response makes latency, traffic, errors, and saturation the metrics baseline, then adds queue age, retries, stale jobs, dead letters, structured logs for state transitions, traces around async handoffs/provider calls, and alerts only on user impact or exhausted automation.",
+      "assertions": [
+        {
+          "text": "Makes the four golden signals a first-class rule.",
+          "type": "functional"
+        },
+        {
+          "text": "Avoids logging/tracing for its own sake and names specific production questions.",
+          "type": "functional"
+        },
+        {
+          "text": "Includes privacy/cost caution for high-volume logs or high-cardinality labels.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "disclosure",
+        "observability"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "review-finds-stuck-job-risk",
+      "prompt": "Review this diff conceptually: it adds a jobs table with id, user_id, status default 'pending', and a worker that sets status='running' then calls an external API. It has three retries but no timeout fields or logs. What are the highest-risk issues?",
+      "expected_output": "The response uses severity-first review, flags missing work identity, stale pending/running recovery, external timeout, retry budget/backoff/jitter, observability, and tests before style concerns.",
+      "assertions": [
+        {
+          "text": "Leads with stuck states and unsafe retries as high-risk findings.",
+          "type": "functional"
+        },
+        {
+          "text": "Mentions missing timeout, lease, heartbeat, stale detection, or terminal transition.",
+          "type": "functional"
+        },
+        {
+          "text": "Does not focus primarily on formatting or naming style.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "review",
+        "jobs",
+        "edge"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "negative-pure-ui-mockup",
+      "prompt": "Make the hero section typography on this static marketing page feel more premium. There is no backend, no form, no runtime behavior, and no analytics request in scope.",
+      "expected_output": "The skill should not push queue, retry, distributed-system, or observability architecture into a purely visual static page request.",
+      "assertions": [
+        {
+          "text": "Does not introduce background jobs, idempotency tables, retries, or observability architecture.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative"
+      ]
+    }
+  ]
+}

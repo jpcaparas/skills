@@ -1,0 +1,67 @@
+{
+  "skill_name": "youtube-transcript-dossier",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "basic-dossier-from-url",
+      "prompt": "I watched this YouTube talk about systems design and want a dossier I can reference later without rewatching the whole thing. The video is at https://www.youtube.com/watch?v=dQw4w9WgXcQ. Can you turn the transcript into a structured summary with timestamps, key topics, and takeaways?",
+      "expected_output": "A structured dossier with a header (title, channel, URL, duration), executive summary, timestamped key topics, notable quotes with timestamps, key takeaways, follow-up items, and references. The fetch script should be invoked to get the transcript and metadata.",
+      "assertions": [
+        { "text": "Runs scripts/fetch_transcript.py to fetch the transcript", "type": "functional" },
+        { "text": "Output includes a header with video title and channel", "type": "structural" },
+        { "text": "Output includes timestamped key topics with MM:SS format", "type": "functional" },
+        { "text": "Output includes an executive summary of 2-3 sentences", "type": "functional" },
+        { "text": "Output includes follow-up action items with verb-first phrasing", "type": "functional" }
+      ],
+      "tags": ["smoke"]
+    },
+    {
+      "id": 2,
+      "name": "non-english-language-preference",
+      "prompt": "I need a dossier of this Spanish-language YouTube video: https://www.youtube.com/watch?v=dQw4w9WgXcQ. I want the transcript in whatever language is available, preferring Spanish. Give me the full dossier with timestamps.",
+      "expected_output": "The fetch script should be run with --lang es en to prefer Spanish with English fallback. The dossier should note the transcript language and source. If only English is available, the dossier should still be produced and note that the video was processed in English.",
+      "assertions": [
+        { "text": "Fetch command includes --lang with Spanish preference", "type": "functional" },
+        { "text": "Dossier header notes the actual transcript language used", "type": "structural" },
+        { "text": "Does not fail silently if Spanish is unavailable", "type": "negative" }
+      ],
+      "tags": ["edge"]
+    },
+    {
+      "id": 3,
+      "name": "video-with-no-captions",
+      "prompt": "Can you make a dossier from this YouTube video? It's a private family video with no subtitles. The URL is https://www.youtube.com/watch?v=thisIsNotARealVideoID. I really need the transcript.",
+      "expected_output": "The script should be run and return exit code 2 (transcript unavailable). The agent should tell the user the video has no transcript available, explain why (no captions, private video, or invalid ID), and offer alternatives like having the user provide their own transcript. The agent should NOT hallucinate content.",
+      "assertions": [
+        { "text": "Agent does not hallucinate transcript content", "type": "negative" },
+        { "text": "Agent explains that no transcript is available", "type": "functional" },
+        { "text": "Agent offers alternatives (user-provided transcript, etc.)", "type": "functional" }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 4,
+      "name": "raw-transcript-only-no-synthesis",
+      "prompt": "I don't need a fancy dossier. Just give me the raw transcript from https://www.youtube.com/watch?v=dQw4w9WgXcQ in plain text with timestamps so I can read through it myself.",
+      "expected_output": "The fetch script should be run with --format text to produce timestamped plain text. No dossier synthesis is performed. The output should be the raw transcript with [MM:SS] timestamps per snippet.",
+      "assertions": [
+        { "text": "Fetch command uses --format text", "type": "functional" },
+        { "text": "Does not produce a structured dossier with sections", "type": "negative" },
+        { "text": "Output contains [MM:SS] timestamps", "type": "structural" }
+      ],
+      "tags": ["disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "bare-video-id-input",
+      "prompt": "Make me a dossier from this video: dQw4w9WgXcQ",
+      "expected_output": "The script should accept a bare 11-character video ID without requiring a full URL. The dossier should be produced normally with all sections.",
+      "assertions": [
+        { "text": "Script accepts bare video ID as input", "type": "functional" },
+        { "text": "Dossier includes all standard sections", "type": "structural" }
+      ],
+      "tags": ["edge"]
+    }
+  ]
+}

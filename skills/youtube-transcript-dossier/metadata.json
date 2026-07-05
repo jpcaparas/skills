@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "June 2026",
+  "abstract": "Production skill for converting YouTube video transcripts into structured dossiers. Fetches video metadata via yt-dlp and transcripts via youtube-transcript-api, then synthesizes a dossier with timestamped key topics, notable quotes, takeaways, and follow-up items. Supports language preference, cookie-based auth for restricted videos, and JSON/text/VTT output formats.",
+  "references": [
+    "https://github.com/jdepoix/youtube-transcript-api",
+    "https://github.com/yt-dlp/yt-dlp"
+  ]
+}

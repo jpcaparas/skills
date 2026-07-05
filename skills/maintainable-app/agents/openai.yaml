@@ -1,0 +1,4 @@
+display_name: "Maintainable App"
+short_description: "Build self-healing apps with safer jobs, retries, and observability"
+default_prompt: "Help me make this application feature resilient and self-healing."
+icon: "activity"

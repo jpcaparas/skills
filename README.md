@@ -172,6 +172,16 @@ Fun production skill for deterministically translating plain English into exagge
 
 Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
 
+### `maintainable-app`
+
+`npx skills add jpcaparas/skills --skill maintainable-app`
+
+<p align="center">
+  <img src="skills/maintainable-app/skill-card.png" alt="16-bit side-scrolling pixel art badge for maintainable-app" width="480">
+</p>
+
+Passive production skill for building self-healing applications with safer edge-case handling, jobs, queues, distributed systems, graceful degradation, and observability grounded in the four golden signals.
+
 ### `maintainable-code`
 
 `npx skills add jpcaparas/skills --skill maintainable-code`
@@ -371,6 +381,16 @@ Production skill for turning messy travel notes, PDFs, screenshots, shopping ask
 </p>
 
 Production skill for deterministically rebuilding a public X/Twitter post into a rerenderable local build with `snapshot.json`, local assets, MP4 output, and a companion GIF capped under 24 MB.
+
+### `youtube-transcript-dossier`
+
+`npx skills add jpcaparas/skills --skill youtube-transcript-dossier`
+
+<p align="center">
+  <img src="skills/youtube-transcript-dossier/skill-card.png" alt="16-bit side-scrolling pixel art badge for youtube-transcript-dossier" width="480">
+</p>
+
+Production skill for converting YouTube video transcripts into structured dossiers with timestamped key topics, notable quotes, takeaways, and follow-up items. Fetches metadata via yt-dlp and transcripts via youtube-transcript-api, with language preference, cookie-based auth for restricted videos, and JSON/text/VTT output formats.
 
 ### `zoom-out`
 

@@ -1,0 +1,18 @@
+{
+  "name": "maintainable-app",
+  "display_name": "Maintainable App",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Passive always-on application resilience skill for building self-healing apps with thoughtful edge-case handling, failsafes, jobs, queues, distributed systems, and observability.",
+  "tags": [
+    "resilience",
+    "self-healing",
+    "observability",
+    "queues",
+    "jobs",
+    "distributed-systems",
+    "idempotency",
+    "agent-workflows"
+  ]
+}

@@ -50,6 +50,7 @@ SKILL_SCENES = {
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
     "lean-text-scaffolding": "a compact layout workbench trimming bulky placeholder ribbons and blank tag blocks into a clean sparse interface panel",
     "linkedin-speak": "a megaphone transforming a small plain block into an overbright beam of geometric confetti",
+    "maintainable-app": "a resilient app control room with queue rails, recovery beacons, heartbeat gems, observability signal towers, and shielded service paths",
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
@@ -72,6 +73,7 @@ SKILL_SCENES = {
     "travel-plan-spreadsheet-generator": "a travel desk arranging route tiles, luggage, blank tickets, and grid gems",
     "tweet-replicate": "a social portal frame being rebuilt into a local video reel, snapshot tile, and asset crate",
     "zoom-out": "a camera lifting above a code city to reveal modules, routes, and call paths",
+    "youtube-transcript-dossier": "a play portal unfolding a ribbon of caption gems into a tidy dossier with bookmark rails and topic tiles",
 }
 
 
@@ -83,6 +85,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--image-size", default=DEFAULT_IMAGE_SIZE, help="Gemini image size.")
     parser.add_argument("--max-concurrency", type=int, default=4, help="Concurrent render jobs. Default: 4.")
     parser.add_argument("--passes", type=int, default=1, help="Render attempts per skill. Default: 1.")
+    parser.add_argument("--skill", action="append", default=[], help="Render only this skill. Repeat for multiple skills.")
     parser.add_argument("--force", action="store_true", help="Regenerate existing PNG files.")
     parser.add_argument("--prompts-only", action="store_true", help="Only write prompt files and README blocks.")
     parser.add_argument(
@@ -308,8 +311,15 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     skills_root = repo_root / "skills"
-    names = skill_names(skills_root)
-    missing = sorted(set(names) - set(SKILL_SCENES))
+    all_names = skill_names(skills_root)
+    requested_names = sorted(set(args.skill))
+    unknown = sorted(set(requested_names) - set(all_names))
+    if unknown:
+        print(f"Unknown skill name(s): {', '.join(unknown)}", file=sys.stderr)
+        return 2
+
+    names = requested_names if requested_names else all_names
+    missing = sorted(set(all_names) - set(SKILL_SCENES))
     if missing:
         print(f"Missing skill-art scene descriptions: {', '.join(missing)}", file=sys.stderr)
         return 2
@@ -318,7 +328,7 @@ def main() -> int:
         skill_dir = skills_root / name
         (skill_dir / PROMPT_FILENAME).write_text(prompt_for_skill(name), encoding="utf-8")
 
-    update_readme_cards(repo_root / "README.md", names)
+    update_readme_cards(repo_root / "README.md", all_names)
 
     if args.prompts_only:
         print(f"Wrote {len(names)} skill-card prompts and updated README.md.")

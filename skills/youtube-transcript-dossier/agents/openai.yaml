@@ -1,0 +1,5 @@
+interface:
+  display_name: "YouTube Transcript Dossier"
+  short_description: "Convert YouTube transcripts into structured dossiers with timestamps"
+  default_prompt: "Turn this YouTube video into a dossier with key topics, quotes, and takeaways"
+  icon: "video"
