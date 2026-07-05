@@ -148,7 +148,7 @@ The cookie file should be in Netscape format (the same format yt-dlp uses). If t
 | 0 | Success — transcript fetched |
 | 1 | Usage error — bad URL or invalid arguments |
 | 2 | Transcript unavailable — no captions, video removed, or language not found |
-| 3 | Dependency missing — youtube-transcript-api not installed |
+| 3 | Dependency missing — `youtube-transcript-api` is not installed |
 
 ## See Also
 

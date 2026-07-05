@@ -31,7 +31,7 @@
     {
       "id": 3,
       "name": "video-with-no-captions",
-      "prompt": "Can you make a dossier from this YouTube video? It's a private family video with no subtitles. The URL is https://www.youtube.com/watch?v=thisIsNotARealVideoID. I really need the transcript.",
+      "prompt": "Can you make a dossier from this YouTube video? It's a private family video with no subtitles. The URL is https://www.youtube.com/watch?v=aaaaaaaaaaa. I really need the transcript.",
       "expected_output": "The script should be run and return exit code 2 (transcript unavailable). The agent should tell the user the video has no transcript available, explain why (no captions, private video, or invalid ID), and offer alternatives like having the user provide their own transcript. The agent should NOT hallucinate content.",
       "assertions": [
         { "text": "Agent does not hallucinate transcript content", "type": "negative" },

@@ -128,6 +128,10 @@ def validate_skill(skill_path: str) -> dict:
         errors.append("SKILL.md does not exist")
         return {"valid": False, "errors": errors, "warnings": warnings, "metrics": metrics}
 
+    for required_file in ["README.md", "AGENTS.md", "metadata.json"]:
+        if not os.path.isfile(os.path.join(skill_path, required_file)):
+            errors.append(f"{required_file} does not exist")
+
     # --- Read and parse SKILL.md ---
     with open(skill_md_path, "r", encoding="utf-8") as f:
         content = f.read()
@@ -243,6 +247,19 @@ def validate_skill(skill_path: str) -> dict:
                 warnings.append("evals/evals.json: no test cases defined (array is empty)")
         except json.JSONDecodeError as e:
             errors.append(f"evals/evals.json is not valid JSON: {e}")
+
+    # --- Check metadata.json ---
+    metadata_path = os.path.join(skill_path, "metadata.json")
+    if os.path.isfile(metadata_path):
+        try:
+            with open(metadata_path, "r", encoding="utf-8") as f:
+                metadata = json.load(f)
+            if metadata.get("name") != dir_name:
+                errors.append("metadata.json name must match directory name")
+            if metadata.get("entrypoint") != "SKILL.md":
+                warnings.append("metadata.json should declare entrypoint SKILL.md")
+        except json.JSONDecodeError as e:
+            errors.append(f"metadata.json is not valid JSON: {e}")
 
     # --- Count script lines ---
     scripts_dir = os.path.join(skill_path, "scripts")

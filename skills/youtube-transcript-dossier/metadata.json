@@ -1,8 +1,21 @@
 {
+  "name": "youtube-transcript-dossier",
+  "display_name": "YouTube Transcript Dossier",
   "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
   "organization": "JP Caparas",
   "date": "June 2026",
+  "description": "Production skill for converting YouTube video transcripts into structured dossiers with metadata, timestamped key topics, quotes, takeaways, and follow-up items.",
   "abstract": "Production skill for converting YouTube video transcripts into structured dossiers. Fetches video metadata via yt-dlp and transcripts via youtube-transcript-api, then synthesizes a dossier with timestamped key topics, notable quotes, takeaways, and follow-up items. Supports language preference, cookie-based auth for restricted videos, and JSON/text/VTT output formats.",
+  "tags": [
+    "youtube",
+    "transcript",
+    "dossier",
+    "summary",
+    "notes",
+    "video"
+  ],
   "references": [
     "https://github.com/jdepoix/youtube-transcript-api",
     "https://github.com/yt-dlp/yt-dlp"

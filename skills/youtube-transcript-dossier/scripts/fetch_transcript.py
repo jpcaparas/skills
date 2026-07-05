@@ -20,7 +20,7 @@ Exit codes:
     0 = success
     1 = usage error (bad input)
     2 = transcript unavailable (no captions, video removed, etc.)
-    3 = dependency missing (yt-dlp or youtube-transcript-api)
+    3 = dependency missing (youtube-transcript-api)
 """
 
 from __future__ import annotations
@@ -51,6 +51,7 @@ YTDLP_FIELDS = [
     "description", "tags", "categories",
     "availability", "live_status", "channel_url",
 ]
+YTT_DEPENDENCY_ERROR = "youtube-transcript-api not installed - run: pip install youtube-transcript-api"
 
 
 # ---------------------------------------------------------------------------
@@ -116,6 +117,11 @@ def format_vtt_timestamp(seconds: float) -> str:
     return f"{hours:02d}:{minutes:02d}:{secs:02d}.{millis:03d}"
 
 
+def format_plain_snippet(text: str) -> str:
+    """Collapse caption display line breaks for one-line transcript output."""
+    return re.sub(r"\s+", " ", text).strip()
+
+
 # ---------------------------------------------------------------------------
 # Metadata fetching (yt-dlp)
 # ---------------------------------------------------------------------------
@@ -171,7 +177,7 @@ def _import_ytt_api():
         from youtube_transcript_api import YouTubeTranscriptApi
         return YouTubeTranscriptApi, None
     except ImportError:
-        return None, "youtube-transcript-api not installed - run: pip install youtube-transcript-api"
+        return None, YTT_DEPENDENCY_ERROR
 
 
 def _import_errors():
@@ -331,7 +337,7 @@ def to_text(result: FetchResult) -> str:
     lines.append(f"Transcript: {result.transcript.language} ({result.transcript.source})")
     lines.append("")
     for s in result.transcript.snippets:
-        lines.append(f"[{format_timestamp(s.start)}] {s.text}")
+        lines.append(f"[{format_timestamp(s.start)}] {format_plain_snippet(s.text)}")
     return "\n".join(lines)
 
 
@@ -425,6 +431,8 @@ def main(argv: list[str] | None = None) -> int:
     elif args.format == "vtt":
         print(to_vtt(result))
 
+    if YTT_DEPENDENCY_ERROR in warnings:
+        return 3
     if transcript is None:
         return 2
     return 0

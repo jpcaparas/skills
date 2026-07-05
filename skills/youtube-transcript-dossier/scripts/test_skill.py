@@ -21,6 +21,7 @@ Exit codes:
 """
 
 import json
+import importlib.util
 import os
 import re
 import sys
@@ -53,6 +54,51 @@ def extract_file_references(content: str) -> list[str]:
             refs.append(path)
 
     return list(set(refs))
+
+
+def load_fetch_module(skill_path: str):
+    """Load fetch_transcript.py for deterministic helper probes."""
+    script_path = os.path.join(skill_path, "scripts", "fetch_transcript.py")
+    spec = importlib.util.spec_from_file_location("youtube_transcript_dossier_fetch", script_path)
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"could not load {script_path}")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+def run_fetch_helper_probes(skill_path: str, results: dict) -> None:
+    """Run parser and formatter probes without making network calls."""
+    try:
+        fetch_module = load_fetch_module(skill_path)
+    except Exception as exc:
+        results["errors"].append(f"Could not import fetch_transcript.py: {exc}")
+        results["passed"] = False
+        return
+
+    expected_id = "dQw4w9WgXcQ"
+    inputs = [
+        expected_id,
+        f"https://www.youtube.com/watch?v={expected_id}",
+        f"https://www.youtube.com/watch?v={expected_id}&t=42s&list=abc",
+        f"https://youtu.be/{expected_id}?si=abc",
+        f"https://www.youtube.com/embed/{expected_id}",
+        f"https://www.youtube.com/shorts/{expected_id}?feature=share",
+        f"https://m.youtube.com/watch?v={expected_id}",
+    ]
+    for value in inputs:
+        if fetch_module.extract_video_id(value) != expected_id:
+            results["errors"].append(f"Video ID parser failed for: {value}")
+            results["passed"] = False
+
+    if fetch_module.extract_video_id("thisIsNotARealVideoID") is not None:
+        results["errors"].append("Video ID parser accepted an invalid-length ID")
+        results["passed"] = False
+
+    if fetch_module.format_plain_snippet("hello\nworld\tagain") != "hello world again":
+        results["errors"].append("Plain-text formatter did not collapse snippet whitespace")
+        results["passed"] = False
 
 
 def test_skill(skill_path: str) -> dict:
@@ -202,6 +248,8 @@ def test_skill(skill_path: str) -> dict:
                             results["passed"] = False
                 except (OSError, UnicodeDecodeError):
                     pass
+
+    run_fetch_helper_probes(skill_path, results)
 
     return results
 
