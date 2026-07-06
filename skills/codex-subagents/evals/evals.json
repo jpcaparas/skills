@@ -1,0 +1,160 @@
+{
+  "skill_name": "codex-subagents",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "parallel-review-authorized",
+      "prompt": "In Codex CLI, review this branch with parallel subagents. Spawn one agent for security risks, one for test gaps, and one for maintainability, then summarize findings.",
+      "expected_output": "The agent applies the Codex-only gate, inspects enough local diff context, spawns bounded review subagents, waits for requested results, and synthesizes file-referenced findings.",
+      "assertions": [
+        {
+          "text": "Treats explicit parallel subagent review as authorized",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/delegation-policy.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Keeps final synthesis and verification responsibility in the main thread",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "review",
+        "disclosure"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/delegation-policy.md",
+        "references/patterns.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "no-explicit-request-negative",
+      "prompt": "In Codex CLI, be extremely thorough and research this codebase deeply before making a one-file fix.",
+      "expected_output": "The agent does not spawn subagents because the user did not explicitly request subagents or parallel delegation.",
+      "assertions": [
+        {
+          "text": "Does not treat depth or thoroughness as subagent authorization",
+          "type": "negative"
+        },
+        {
+          "text": "Continues normal local work without simulating a subagent workflow",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "authorization"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/delegation-policy.md"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "non-codex-harness-negative",
+      "prompt": "Running in Claude Code, use codex-subagents to speed up this review.",
+      "expected_output": "The agent exits the skill because the harness is not Codex CLI or Codex app and does not emulate Codex subagents with Claude tools.",
+      "assertions": [
+        {
+          "text": "Refuses to apply Codex subagent policy outside Codex CLI/App",
+          "type": "negative"
+        },
+        {
+          "text": "Does not replace Codex subagents with advisor, web search, or another harness feature",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative",
+        "harness"
+      ],
+      "files": [
+        "SKILL.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "write-heavy-disjoint-edge",
+      "prompt": "In Codex app, use subagents to implement a feature across API code, frontend code, and docs. The scopes can be separated.",
+      "expected_output": "The agent drafts a short delegation plan, assigns disjoint ownership, tells workers not to revert others, and keeps integration verification in the main thread.",
+      "assertions": [
+        {
+          "text": "Requires disjoint write ownership before parallel implementation",
+          "type": "functional"
+        },
+        {
+          "text": "Includes non-reversion and changed-file reporting instructions for workers",
+          "type": "functional"
+        },
+        {
+          "text": "Routes to references/patterns.md for implementation prompt structure",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "implementation",
+        "disclosure"
+      ],
+      "files": [
+        "references/delegation-policy.md",
+        "references/patterns.md"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "model-neutral-custom-agent",
+      "prompt": "In Codex CLI, create a reusable custom reviewer agent for deep PR reviews. Do not lock us to one model version.",
+      "expected_output": "The agent reads Codex mechanics, creates or describes a TOML custom agent with required fields, and leaves model unset unless project policy or the user explicitly requires it.",
+      "assertions": [
+        {
+          "text": "Routes setup/schema questions to references/codex-mechanics.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Keeps model choice inherited or task-based instead of pinning a model version",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "custom-agent",
+        "model-neutral",
+        "disclosure"
+      ],
+      "files": [
+        "references/codex-mechanics.md"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "recurring-failure-diagnostic",
+      "prompt": "In Codex CLI, use a subagent for an independent diagnostic pass. The same CI failure survived two credible fixes.",
+      "expected_output": "The agent spawns a bounded diagnostic subagent, asks it not to edit files, and requests evidence, rejected hypotheses, and one next verification command.",
+      "assertions": [
+        {
+          "text": "Treats recurring failure after two credible attempts as a strong subagent use case when explicitly requested",
+          "type": "functional"
+        },
+        {
+          "text": "Uses a read-only diagnostic prompt rather than speculative edits",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "debugging",
+        "smoke"
+      ],
+      "files": [
+        "references/delegation-policy.md",
+        "references/patterns.md"
+      ]
+    }
+  ]
+}

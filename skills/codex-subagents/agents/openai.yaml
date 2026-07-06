@@ -1,0 +1,4 @@
+display_name: "Codex Subagents"
+short_description: "Use Codex subagents deliberately for parallel reviews, research, triage, and bounded implementation."
+default_prompt: "Help me split this task into safe Codex subagent work and main-thread responsibilities."
+icon: "workflow"

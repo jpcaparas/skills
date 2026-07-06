@@ -62,6 +62,16 @@ Production writing skill that starts from Strunk's durable rules, then extends t
 
 Claude Code specific passive skill that consults the configured advisor for security work, code reviews, multi-step high-level plan validation for substantial work, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.
 
+### `codex-subagents`
+
+`npx skills add jpcaparas/skills --skill codex-subagents`
+
+<p align="center">
+  <img src="skills/codex-subagents/skill-card.png" alt="16-bit side-scrolling pixel art badge for codex-subagents" width="480">
+</p>
+
+Codex CLI/App skill for using Codex subagents deliberately: explicit authorization, bounded delegation, disjoint write ownership, sandbox-aware prompts, model-neutral custom-agent guidance, and main-thread synthesis.
+
 ### `client-report-from-commits`
 
 `npx skills add jpcaparas/skills --skill client-report-from-commits`

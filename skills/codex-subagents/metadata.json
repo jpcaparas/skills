@@ -1,0 +1,18 @@
+{
+  "name": "codex-subagents",
+  "display_name": "Codex Subagents",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Codex CLI/App skill for using subagents deliberately: explicit authorization, bounded parallel delegation, disjoint write ownership, sandbox-aware prompts, model-neutral custom-agent guidance, and main-thread synthesis.",
+  "tags": [
+    "codex",
+    "subagents",
+    "parallel-agents",
+    "delegation",
+    "code-review",
+    "planning",
+    "debugging",
+    "custom-agents"
+  ]
+}
