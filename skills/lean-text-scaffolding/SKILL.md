@@ -1,6 +1,6 @@
 ---
 name: lean-text-scaffolding
-description: "Prevent bloated text scaffolds in new web pages. Use when creating or refactoring landing pages, SaaS pages, dashboards, marketing sections, UI copy, placeholders, labels, eyebrow text, feature cards, or scaffold content. Enforce concise, specific, necessary text and remove generic labels unless explicitly requested. Do NOT use for prose-only articles, legal copy, or preserving exact client-provided copy."
+description: "Prevent bloated text scaffolds in new web pages. Use when creating or refactoring landing pages, SaaS pages, dashboards, marketing sections, UI copy, placeholders, labels, eyebrow text, or feature cards. Remove generic labels unless explicitly requested. Do NOT use for prose-only articles, legal copy, or exact client-provided copy."
 compatibility: "Requires: python3 for validation; optional bun for running scripts/audit_lean_text.ts directly."
 metadata:
   version: "1.0.0"

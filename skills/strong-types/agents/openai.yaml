@@ -1,0 +1,4 @@
+display_name: "Strong Types"
+short_description: "Eliminate type ambiguity with strict typing, DTOs, and enums"
+default_prompt: "Help me remove type ambiguity from this code and enforce strong typing."
+icon: "shield"

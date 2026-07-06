@@ -1,6 +1,6 @@
 ---
 name: youtube-transcript-dossier
-description: "Convert a YouTube video transcript into a structured dossier with metadata, executive summary, timestamped key topics, notable quotes, takeaways, and follow-up items. Trigger on: YouTube dossier, video to notes, transcript to summary, summarize YouTube video, video dossier, convert transcript to report. Do NOT trigger for non-YouTube video, audio transcription, or downloading video files."
+description: "Convert a YouTube video transcript into a structured dossier: metadata, executive summary, timestamped key topics, notable quotes, takeaways, follow-ups. Trigger on: YouTube dossier, video to notes, transcript to summary, summarize YouTube video. Do NOT trigger for non-YouTube video, audio transcription, or downloading video files."
 compatibility: "Requires: python3, yt-dlp, youtube-transcript-api (pip install youtube-transcript-api). Optional: cookie file for age-restricted videos."
 metadata:
   version: "1.0.0"

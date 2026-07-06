@@ -352,6 +352,16 @@ Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quo
 
 Production-grade skill creator with progressive disclosure, validation, cross-harness guidance, and path-aware destination inference.
 
+### `strong-types`
+
+`npx skills add jpcaparas/skills --skill strong-types`
+
+<p align="center">
+  <img src="skills/strong-types/skill-card.png" alt="16-bit side-scrolling pixel art badge for strong-types" width="480">
+</p>
+
+Passive always-on skill that eliminates type ambiguity — blind `??`/`||` fallback chains, `any`/`mixed` escape hatches, untyped signatures, and magic arrays — in any language with a usable type system, with per-language golden references and a heuristic ambiguity scanner, while deliberately not forcing typing onto languages that lack it.
+
 ### `tarsier`
 
 `npx skills add jpcaparas/skills --skill tarsier`
