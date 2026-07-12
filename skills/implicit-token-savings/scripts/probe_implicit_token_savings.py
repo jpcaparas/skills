@@ -117,6 +117,7 @@ def build_fixture(root: Path) -> dict[str, Path]:
 
 
 def run_suite() -> dict[str, object]:
+    offline_validation = os.environ.get("SKILLS_VALIDATE_OFFLINE") == "1"
     temp_root = Path(tempfile.mkdtemp(prefix="implicit-token-savings-"))
     checks: list[dict[str, object]] = []
 
@@ -306,7 +307,9 @@ def run_suite() -> dict[str, object]:
             else:
                 checks.append(skipped_check(f"{name}-presence", f"{name} is not installed on PATH."))
 
-        if shutil.which("docker"):
+        if offline_validation:
+            checks.append(skipped_check("docker-ps-format", "offline validation mode does not access the Docker daemon."))
+        elif shutil.which("docker"):
             docker_cmd = run_command(["docker", "ps", "--format", "{{json .}}"], allowed={0, 1})
             docker_output = str(docker_cmd["stdout"]).strip()
             passed = docker_cmd["returncode"] == 0 and (

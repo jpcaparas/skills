@@ -1,0 +1,4 @@
+On submission, return the existing result when the intent key is already known.
+For new intent, persist before dispatching externally.
+Record an acceptance receipt only after confirmed external acceptance.
+Leave failed or uncertain delivery pending for reconciliation.

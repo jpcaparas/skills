@@ -1,0 +1,4 @@
+interface:
+  display_name: "Bootstrap AGENTS.md"
+  short_description: "Create durable project agent guidance"
+  default_prompt: "Inspect this project and create durable root AGENTS.md guidance with an exact CLAUDE.md import."

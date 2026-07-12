@@ -11,6 +11,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 
@@ -113,14 +114,17 @@ def run_tests(skill_path: str) -> dict[str, object]:
                 results["errors"].append(f"Cross-reference not found: {rel_path}")
                 results["passed"] = False
 
-    suite = probe_ripgrep.run_suite()
-    summary = suite["summary"]
-    results["probe_checks"]["total"] = summary["checks_total"]
-    results["probe_checks"]["passed"] = summary["checks_passed"]
-    if not suite["passed"]:
-        failing = [item["name"] for item in suite["checks"] if not item["passed"]]
-        results["errors"].append(f"Probe suite failed: {', '.join(failing)}")
-        results["passed"] = False
+    if os.environ.get("SKILLS_VALIDATE_OFFLINE") == "1" and shutil.which("rg") is None:
+        results["warnings"].append("rg not found; skipped live ripgrep probe suite")
+    else:
+        suite = probe_ripgrep.run_suite()
+        summary = suite["summary"]
+        results["probe_checks"]["total"] = summary["checks_total"]
+        results["probe_checks"]["passed"] = summary["checks_passed"]
+        if not suite["passed"]:
+            failing = [item["name"] for item in suite["checks"] if not item["passed"]]
+            results["errors"].append(f"Probe suite failed: {', '.join(failing)}")
+            results["passed"] = False
 
     return results
 
@@ -172,4 +176,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

@@ -34,6 +34,24 @@ hook_log() {
     fi
 }
 
+validation_path() {
+    local candidate
+
+    if python3 -c 'import yaml' >/dev/null 2>&1; then
+        printf '%s' "$PATH"
+        return
+    fi
+
+    for candidate in /opt/homebrew/bin/python3 /usr/local/bin/python3; do
+        if [ -x "$candidate" ] && "$candidate" -c 'import yaml' >/dev/null 2>&1; then
+            printf '%s:%s' "$(dirname "$candidate")" "$PATH"
+            return
+        fi
+    done
+
+    printf '%s' "$PATH"
+}
+
 external_ignored_skill_files() {
     while IFS= read -r file; do
         [ -z "$file" ] && continue
@@ -106,12 +124,30 @@ fi
 
 set +e
 if [ -n "${AGENT_HOOK_HARNESS:-}" ]; then
+    hook_output="$(mktemp "${TMPDIR:-/tmp}/skills-agent-stop.XXXXXX")"
+    python_cache="$(mktemp -d "${TMPDIR:-/tmp}/skills-agent-python-cache.XXXXXX")"
+    failure_log="${TMPDIR:-/tmp}/skills-agent-stop-last-failure.log"
+    hook_validation_path="$(validation_path)"
     SKILLS_VALIDATE_ALLOW_UNTRACKED_SKILL_WORKTREE=1 \
-        bash "$REPO_ROOT/scripts/validate-all-skills.sh" >&2
+        SKILLS_VALIDATE_OFFLINE=1 \
+        PYTHONPYCACHEPREFIX="$python_cache" \
+        PATH="$hook_validation_path" \
+        bash "$REPO_ROOT/scripts/validate-all-skills.sh" >"$hook_output" 2>&1
+    status=$?
+    if [ "$status" -eq 0 ]; then
+        rm -f "$failure_log"
+        hook_log "Skills repository stop checks passed."
+    else
+        cp "$hook_output" "$failure_log"
+        hook_log "Skills repository stop checks failed; full log: $failure_log"
+        tail -n 200 "$hook_output" >&2
+    fi
+    rm -f "$hook_output"
+    rm -rf "$python_cache"
 else
     bash "$REPO_ROOT/scripts/validate-all-skills.sh"
+    status=$?
 fi
-status=$?
 set -e
 
 if [ "$status" -eq 0 ]; then

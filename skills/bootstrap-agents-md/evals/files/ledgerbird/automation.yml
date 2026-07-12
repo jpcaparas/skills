@@ -1,0 +1,3 @@
+steps:
+  - run: uv run pytest
+  - run: ruff check src tests

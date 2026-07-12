@@ -1,0 +1,15 @@
+{
+  "name": "bootstrap-agents-md",
+  "display_name": "Bootstrap AGENTS.md",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Create or replace durable repository-root AGENTS.md guidance and an exact CLAUDE.md import after an evidence-backed whole-project inspection.",
+  "tags": [
+    "agents-md",
+    "claude-md",
+    "agent-instructions",
+    "repository-guidance",
+    "maintainability"
+  ]
+}

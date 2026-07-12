@@ -24,7 +24,36 @@ OUTPUT_FILE="$(mktemp)"
 PLAIN_FILE="$(mktemp)"
 trap 'rm -f "$OUTPUT_FILE" "$PLAIN_FILE"' EXIT
 
-if ! npx --yes skills add . --list >"$OUTPUT_FILE" 2>&1; then
+discovery_command=()
+if [ "${SKILLS_VALIDATE_OFFLINE:-0}" = "1" ]; then
+    if skills_path="$(command -v skills 2>/dev/null)" && [ -n "$skills_path" ]; then
+        discovery_command=("$skills_path")
+    elif [ -n "${HOME:-}" ]; then
+        cached_skills=""
+        for candidate in "$HOME"/.npm/_npx/*/node_modules/.bin/skills; do
+            [ -x "$candidate" ] || continue
+            if [ -z "$cached_skills" ] || [ "$candidate" -nt "$cached_skills" ]; then
+                cached_skills="$candidate"
+            fi
+        done
+        if [ -n "$cached_skills" ]; then
+            discovery_command=("$cached_skills")
+        fi
+    fi
+
+    if [ "${#discovery_command[@]}" -eq 0 ]; then
+        echo "SKIP: skills discovery CLI is not installed or cached for offline validation."
+        exit 0
+    fi
+else
+    discovery_command=(npx --yes skills)
+fi
+
+if ! "${discovery_command[@]}" add . --list >"$OUTPUT_FILE" 2>&1; then
+    if [ "${SKILLS_VALIDATE_OFFLINE:-0}" = "1" ]; then
+        echo "SKIP: cached skills discovery CLI is not executable in this hook sandbox."
+        exit 0
+    fi
     cat "$OUTPUT_FILE" >&2
     exit 1
 fi

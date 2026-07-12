@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -177,6 +178,7 @@ def test_skill(skill_path: Path) -> dict:
         "files_verified": {"passed": 0, "total": 0},
         "integration_checks": {"passed": 0, "total": 0},
         "errors": [],
+        "warnings": [],
     }
 
     evals_path = skill_path / "evals" / "evals.json"
@@ -208,6 +210,10 @@ def test_skill(skill_path: Path) -> dict:
     if not os.access(scaffold_script, os.X_OK):
         results["errors"].append("scripts/scaffold_all_hooks.sh must be executable")
         results["passed"] = False
+
+    if os.environ.get("SKILLS_VALIDATE_OFFLINE") == "1" and shutil.which("bun") is None:
+        results["warnings"].append("bun not found; skipped scaffold integration checks")
+        return results
 
     with tempfile.TemporaryDirectory(prefix="scaffold-hooks-test-") as tmp:
         project = Path(tmp) / "project"
@@ -319,19 +325,24 @@ def test_skill(skill_path: Path) -> dict:
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
-        universal_manifest = load_json(project / "hooks" / ".state" / "scaffold-hooks" / "manifest.json")
-        provenance = universal_manifest.get("scaffold_hooks", {})
-        if (
-            provenance.get("schema_version") == 1
-            and provenance.get("skill_name") == "scaffold-hooks"
-            and provenance.get("skill_version")
-            and provenance.get("generator", {}).get("sha256")
-            and provenance.get("plan_sha256")
-            and universal_manifest.get("harness_selection_source") == "cli"
-        ):
-            results["integration_checks"]["passed"] += 1
+        manifest_path = project / "hooks" / ".state" / "scaffold-hooks" / "manifest.json"
+        if manifest_path.is_file():
+            universal_manifest = load_json(manifest_path)
+            provenance = universal_manifest.get("scaffold_hooks", {})
+            if (
+                provenance.get("schema_version") == 1
+                and provenance.get("skill_name") == "scaffold-hooks"
+                and provenance.get("skill_version")
+                and provenance.get("generator", {}).get("sha256")
+                and provenance.get("plan_sha256")
+                and universal_manifest.get("harness_selection_source") == "cli"
+            ):
+                results["integration_checks"]["passed"] += 1
+            else:
+                results["errors"].append("Universal manifest did not record scaffold provenance and plan/generator hashes")
+                results["passed"] = False
         else:
-            results["errors"].append("Universal manifest did not record scaffold provenance and plan/generator hashes")
+            results["errors"].append("Universal manifest was not generated")
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
@@ -525,6 +536,10 @@ def main() -> int:
         "Integration checks: "
         f"{results['integration_checks']['passed']}/{results['integration_checks']['total']}"
     )
+    if results["warnings"]:
+        print("\nWarnings:")
+        for warning in results["warnings"]:
+            print(f"- {warning}")
     if not results["passed"]:
         print("\nFAIL:")
         for error in results["errors"]:

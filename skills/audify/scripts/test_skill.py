@@ -52,8 +52,11 @@ def main() -> int:
         )
     )
 
+    offline_validation = os.environ.get("SKILLS_VALIDATE_OFFLINE") == "1"
     api_key_present = bool(os.environ.get("GEMINI_API_KEY"))
-    if api_key_present:
+    if offline_validation:
+        results.append((True, "SKIP: live Gemini smoke probe (offline validation mode)"))
+    elif api_key_present:
         with tempfile.TemporaryDirectory(prefix="audify-live-test-") as temp_dir:
             results.append(
                 run_step(

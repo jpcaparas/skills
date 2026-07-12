@@ -52,6 +52,16 @@ Production skill for drafting local Azure DevOps work item packets from loose co
 
 Production writing skill that starts from Strunk's durable rules, then extends them with progressive disclosure, staged revision passes, cadence repair, genre routing, and bundled style families for technical, analytical, editorial, reflective, and conversion writing.
 
+### `bootstrap-agents-md`
+
+`npx skills add jpcaparas/skills --skill bootstrap-agents-md`
+
+<p align="center">
+  <img src="skills/bootstrap-agents-md/skill-card.png" alt="16-bit side-scrolling pixel art badge for bootstrap-agents-md" width="480">
+</p>
+
+Production skill for creating or replacing compact, evidence-backed root agent guidance and an exact Claude import without freezing the project's current paths, tools, dependencies, or versions.
+
 ### `claude-code-auto-advisor`
 
 `npx skills add jpcaparas/skills --skill claude-code-auto-advisor`

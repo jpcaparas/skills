@@ -1,0 +1,8 @@
+[
+  {"query": "Create a future-proof AGENTS.md for this repo and make Claude import it.", "should_trigger": true},
+  {"query": "Our coding-agent instructions are stale and brittle; inspect the project and replace them with durable root guidance.", "should_trigger": true},
+  {"query": "Bootstrap shared agent instructions for this monorepo without hard-coding the current toolchain.", "should_trigger": true},
+  {"query": "Write a contributor guide with setup commands for the README.", "should_trigger": false},
+  {"query": "Review this pull request for maintainability and missing tests.", "should_trigger": false},
+  {"query": "Create a reusable skill for our deployment API.", "should_trigger": false}
+]

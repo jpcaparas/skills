@@ -1,0 +1,3 @@
+Payout intent is immutable and identified by a stable intent key.
+Cancellation is allowed before external acceptance.
+An acceptance receipt makes cancellation invalid.

@@ -1,0 +1,78 @@
+{
+  "skill_name": "bootstrap-agents-md",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "bootstrap-existing-service-repository",
+      "prompt": "Replace the root agent instructions for this established service. Inspect the whole repository first, create durable AGENTS.md guidance, and make Claude use the same source without duplicating it.",
+      "expected_output": "The agent inventories every meaningful project surface, writes a compact evidence-backed root AGENTS.md, writes an exact one-line CLAUDE.md import, validates both, and accounts for every replaced instruction.",
+      "files": [
+        "evals/files/ledgerbird/PROJECT.md",
+        "evals/files/ledgerbird/AGENTS.md",
+        "evals/files/ledgerbird/CLAUDE.md",
+        "evals/files/ledgerbird/domain-policy.txt",
+        "evals/files/ledgerbird/service-flow.txt",
+        "evals/files/ledgerbird/tests.txt",
+        "evals/files/ledgerbird/automation.yml"
+      ],
+      "assertions": [
+        {"text": "Inspects purpose, architecture, tests, automation, operational boundaries, and existing instruction precedence before writing", "type": "functional"},
+        {"text": "Writes CLAUDE.md as exactly @AGENTS.md followed by one newline", "type": "structural"},
+        {"text": "Reports a disposition and concrete reason for every prior root instruction group", "type": "verification"},
+        {"text": "Runs the packaged validator or records an equivalent manual check", "type": "verification"}
+      ],
+      "tags": ["smoke", "replacement"]
+    },
+    {
+      "id": 2,
+      "name": "new-polyglot-monorepo-with-nested-guidance",
+      "prompt": "Bootstrap shared agent guidance for this polyglot monorepo. There is no root AGENTS.md, but two components have their own local instruction files. Keep the root future-proof and do not disturb component-specific rules.",
+      "expected_output": "The agent creates only the root pair, inventories nested precedence, encodes repository-wide conceptual invariants, avoids competing with local rules, and reports any conflicts or gaps.",
+      "assertions": [
+        {"text": "Accounts for nested instruction scope and precedence without overwriting it", "type": "functional"},
+        {"text": "Keeps the root guidance repository-wide rather than flattening component-specific rules", "type": "functional"},
+        {"text": "Does not create additional nested instruction files", "type": "negative"},
+        {"text": "Generated AGENTS.md contains no concrete paths, commands, package names, versions, or URLs", "type": "negative"}
+      ],
+      "tags": ["edge", "portability"]
+    },
+    {
+      "id": 3,
+      "name": "replace-brittle-command-heavy-instructions",
+      "prompt": "Our AGENTS.md is a long dump of pinned setup commands, dependency names, absolute paths, and duplicated lint rules. Replace it with guidance that survives normal tooling and layout changes, then explain precisely what was removed and why.",
+      "expected_output": "The agent does not merge the brittle file, preserves only evidenced intent in conceptual form, produces an exhaustive replacement ledger, and keeps mechanically enforced details out of always-loaded prose.",
+      "assertions": [
+        {"text": "Treats the old file as comparison evidence rather than a template", "type": "functional"},
+        {"text": "Removes brittle literal details while preserving supported intent", "type": "functional"},
+        {"text": "Does not describe the old file as inferior without evidence", "type": "negative"},
+        {"text": "Explains which rules belong in automated enforcement or narrower scope", "type": "verification"}
+      ],
+      "tags": ["replacement", "edge"]
+    },
+    {
+      "id": 4,
+      "name": "negative-wording-with-autonomy",
+      "prompt": "Create project agent instructions that strongly prevent bypassing tests, swallowing errors, unsafe retries, drive-by cleanup, and speculative abstractions, but still let the coding agent choose the best implementation from local evidence.",
+      "expected_output": "The generated guidance uses targeted negative guardrails for costly failures, pairs each with a permitted action, keeps ordinary guidance positive, and does not prescribe unevidenced mechanisms.",
+      "assertions": [
+        {"text": "Each material prohibition names the safe or permitted action", "type": "functional"},
+        {"text": "Reliability rules are conditional on project evidence and operational risk", "type": "functional"},
+        {"text": "Does not use repeated urgency, emotional pressure, role-play, or blanket MUST language", "type": "negative"},
+        {"text": "Leaves implementation choices open when multiple approaches fit local evidence", "type": "functional"}
+      ],
+      "tags": ["negative", "portability"]
+    },
+    {
+      "id": 5,
+      "name": "adjacent-readme-request",
+      "prompt": "Rewrite the README so new contributors can install the project and understand its command-line examples.",
+      "expected_output": "The bootstrap skill does not take ownership of an ordinary README rewrite and does not create AGENTS.md or CLAUDE.md.",
+      "assertions": [
+        {"text": "Does not create or replace persistent agent instruction files", "type": "negative"},
+        {"text": "Routes the task as repository documentation work", "type": "functional"}
+      ],
+      "tags": ["negative"]
+    }
+  ]
+}

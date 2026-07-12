@@ -1,0 +1,4 @@
+Behavior coverage:
+- accepted payouts cannot be canceled
+- replayed intent returns the existing result without another dispatch
+- uncertain delivery remains pending
