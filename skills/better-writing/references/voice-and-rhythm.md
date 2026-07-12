@@ -1,143 +1,168 @@
 # Voice and rhythm
 
-Use this file when the draft is readable but not yet alive.
+Use this reference when prose is legible but stiff, anonymous, clipped, over-formal, or tonally wrong.
 
-## Core idea
+## Voice is a pattern of decisions
 
-Voice is not decoration. It is the felt result of stance, cadence, emphasis, specificity, and ownership.
+Voice comes from:
 
-Good voice does not mean loud voice. It means the page sounds like someone who knows what they mean.
+- what the writer notices and omits
+- how directly they judge
+- what they can speak about with authority
+- how they qualify uncertainty
+- which details, comparisons, and examples they choose
+- sentence movement, not decorative personality
 
-## 1. Cut verdict avoidance
+Do not manufacture voice with slang, quirks, swearing, fragments, or jokes detached from the writer.
 
-Weak prose often hides behind soft framing right where a sentence should commit.
+## Establish the writer's seat
 
-| Soft version | Stronger version |
+Ask:
+
+- What does this writer know first-hand?
+- What are they inferring or borrowing from sources?
+- What do they believe, prefer, fear, doubt, or reject?
+- What do they owe the reader: instruction, candour, evidence, reassurance, or a decision?
+- Which limits strengthen trust when stated plainly?
+
+First person is useful when it clarifies source or responsibility:
+
+> I changed my mind after the second rollout failed for the same reason.
+
+It is not useful when pasted onto generic opinion:
+
+> I truly believe innovation is important.
+
+## Calibrate stance
+
+| Evidence state | Better stance |
 |---|---|
-| `It could be argued that this is a bad trade.` | `This is a bad trade.` |
-| `This seems more like a retreat than a strategy.` | `This is a retreat, not a strategy.` |
-| `It is worth noting that the launch slipped twice.` | `The launch slipped twice.` |
-| `One might say the product is overly complicated.` | `The product is overly complicated.` |
+| Direct observation | say what happened and where you saw it |
+| Supported judgement | state the verdict and point to the evidence |
+| Genuine uncertainty | name exactly what is unknown |
+| Preference | own the preference and its trade-off |
+| Forecast | attribute the forecast and give its assumptions |
+| Disagreement | represent the opposing claim fairly before answering it |
 
-Use genuine uncertainty when it is real:
+Avoid both fog and false certainty. `It seems` is weak when it merely protects the writer; `we do not know whether the cache caused the spike` is precise.
 
-- `I am not sure the current metric captures the risk.`
-- `We do not know yet whether the rollout will hold at full scale.`
+## Build cadence from thought
 
-That is stronger than padded hedging because it names the uncertainty instead of fogging the whole sentence.
+Sentence length should respond to information, not alternate mechanically.
 
-## 2. Repair cadence
+- Use a short sentence for a clean verdict, turn, or release of pressure.
+- Use a longer sentence when conditions, accumulation, or causal sequence belong together.
+- Keep related clauses connected when splitting them would make the reader reset.
+- Let punctuation reveal syntax: commas for attachment, colons for consequence or expansion, parentheses for a real aside, dashes for a sharper interruption.
 
-### Repeated-subject sentence pairs
+Chopped:
 
-If two adjacent sentences share a subject, ask whether they want to be one sentence.
+> The tool worked locally. It failed in CI. The environment was different. The docs never said so.
 
-Bad:
+Joined where the thought joins:
 
-- `The docs are clear. They are also surprisingly hard to skim.`
-- `The tool works locally. It breaks as soon as the team adds CI.`
+> The tool worked locally but failed in CI because the environment was different, a requirement the docs never mentioned.
 
-Better:
+Monotony can also come from repeated long sentences. Let one line land before the next carries more weight.
 
-- `The docs are clear, but they are surprisingly hard to skim.`
-- `The tool works locally, then breaks as soon as the team adds CI.`
+## Repair common rhythm failures
 
-### Overformal openers
+### Repeated starts
 
-Search for:
+Three nearby sentences beginning with the same shell may be deliberate anaphora. If the repetition has no rising pressure or semantic purpose, vary the syntax or combine the thought.
 
-- `There is`
-- `There are`
-- `It is`
-- `That is`
-- `Here is`
+### Sentence-length uniformity
 
-These are not forbidden. They are just common sources of stiffness.
+Do not chase arbitrary length targets. Inspect a paragraph when every sentence occupies the same amount of breath and performs the same claim-explanation cadence.
 
-### Self-announcing emphasis
+### Fragment drumbeats
 
-If a sentence only exists to say something matters, rewrite it as the actual consequence.
+Fragments lose force when every point is staged as a reveal.
 
-Bad:
+Performed:
 
-- `That distinction matters.`
-- `This is important.`
+> No delay. No confusion. Just results.
 
-Better:
+Owned:
 
-- `The distinction changes who owns the decision.`
-- `That choice locks the team into another migration.`
+> The change removed a two-day approval delay and gave reviewers one place to work.
 
-### Spoken stress
+### Over-bridging
 
-If the stress falls on one word, let the sentence carry it.
+Transitions such as `moreover`, `additionally`, and `on the other hand` are useful only when they express the actual relation. A plain `but`, `so`, or no transition at all may be more natural.
 
-- `The rollback path is where the plan really breaks.`
-- `The hard part is not the query. It is the cleanup after the query.`
+### Under-bridging
 
-Use italics lightly if they help, but do not lean on formatting to rescue a weak line.
+An over-tight edit can leave facts adjacent but unrelated. Restore the missing relation:
 
-## 3. Restore ownership
+- cause: `because`, `so`, `which meant`
+- contrast: `but`, `although`, `even so`
+- sequence: `then`, `once`, `after`
+- example: name the example directly
+- consequence: state what changed
 
-Writing gets stronger when the reader can feel who is making the claim and from what seat.
+## Use contractions according to voice
 
-Useful moves:
+Contractions often remove unnecessary formality in conversational, technical, editorial, and product prose. They are not compulsory.
 
-- `I used to think X. Now I think Y.`
-- `In our rollout, the failure was not the API. It was the retry policy.`
-- `What changed my mind was seeing the support queue after launch.`
-- `I am biased toward this approach because I have had to maintain it.`
+Keep the full form when:
 
-Use first person when it clarifies authority or experience, not because first person is automatically warmer.
+- the writer needs contrastive emphasis: `It is a policy failure`
+- the genre or house style calls for formality
+- contraction would be ambiguous or awkward
+- the writer's established voice avoids it
 
-## 4. Prefer specific references over general mood
+Do not run a global replacement that touches quotations, code, or required wording.
 
-| Generic | Specific |
-|---|---|
-| `The team saw strong engagement.` | `The team saw a 34% lift in replies over two weeks.` |
-| `Users found the change confusing.` | `Six of eight testers clicked the old control first.` |
-| `The article felt flat.` | `Every paragraph opened with a thesis sentence and ended the same way.` |
+## Warmth without performance
 
-Named people, dates, products, rooms, and numbers give prose texture that mood words cannot.
+Warmth can come from:
 
-## 5. Warmth, used precisely
+- recognising the reader's real constraint
+- admitting a limit or mistake
+- choosing a humane example
+- giving a direct answer before the caveat
+- making the next action easy
+- allowing one earned aside or joke
 
-Warmth usually comes from control, not looseness.
+Warmth does not require exclamation marks, emoji, praise, or faux intimacy.
 
-Good sources of warmth:
+## Preserve rough edges that carry truth
 
-- contractions that sound natural
-- brief asides
-- one earned joke
-- an admission, reversal, or direct answer
-- a question that the paragraph actually answers
+Do not polish away:
 
-Bad substitutes for warmth:
+- an awkward chronology that explains causation
+- an unusual noun that is more accurate than the familiar one
+- a regional expression the audience understands
+- a deliberately abrupt sentence after a long build
+- discomfort or anger that is proportionate to the event
+- a metaphor that came from the writer's experience and still works
 
-- fake slang
-- borrowed writer tics
-- empty swearing
-- canned vulnerability
-- three rhetorical questions in a row
+If a sentence becomes smoother and less true, restore it.
 
-## 6. Read-aloud tests
+## Read-aloud protocol
 
-Read the paragraph aloud.
+Read the opening, the densest paragraph, and the ending aloud.
 
-If any of these happen, edit again:
+Mark where:
 
-- your voice fully resets after every sentence
-- the paragraph sounds like a moderator setting up a panel
-- the line announces weight instead of carrying weight
-- every sentence lands at the same length and pressure
-- you hear yourself using filler bridges rather than thought bridges
+- you run out of breath for syntactic rather than intentional reasons
+- your voice resets after every sentence
+- stress lands on empty words
+- a transition sounds like a presenter introducing a slide
+- a contraction or uncontracted form sounds foreign to the writer
+- several sentences share the same pressure and contour
+- the closing voice becomes safer, grander, or tidier than the body earned
 
-## 7. Useful sentence moves
+Fix the smallest unit that causes the stumble.
 
-These are tools, not requirements.
+## Voice gate
 
-- direct contrast: `X helps early. Y helps once the system is under load.`
-- admission: `I was wrong about the bottleneck.`
-- specific reversal: `What looked like a product issue was really a permissions issue.`
-- controlled aside: `That sounds small until you try to undo it.`
-- sharpened verdict: `The workflow is elegant. The rollout plan is not.`
+The prose is ready when:
+
+- the reader can locate the writer's stance and authority
+- uncertainty is specific rather than evasive
+- sentence movement follows meaning
+- repeated forms are deliberate
+- warmth comes from attention, not costume
+- at least one high-signal detail or line remains unmistakably the writer's

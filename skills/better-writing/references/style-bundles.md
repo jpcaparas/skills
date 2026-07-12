@@ -1,186 +1,208 @@
-# Style bundles
+# Style and voice calibration
 
-Borrow discipline, not costume.
+Use this reference after structure and clarity are sound. Calibrate the prose to a writer, audience, or voice family without copying signature phrases.
 
-These bundles package useful habits from multiple strong writing traditions without requiring imitation of any one writer's signature phrasing.
+## Preference order
 
-## Quick chooser
+When sources conflict, prefer:
 
-| Want this feel | Start here |
-|---|---|
-| Exact, humane technical explanation | Technical teacher |
-| High-signal professional analysis | Operator analyst |
-| Reported, evidence-heavy interpretation | Reported editorial |
-| Reflective or braided human prose | Essay and reflection |
-| Clear, persuasive commercial writing | Conversion copy |
+1. the user's explicit instructions
+2. the writer's supplied samples
+3. the organisation's current house style
+4. genre conventions
+5. a general voice family below
 
-## Technical teacher
+Do not infer a writer's voice from demographic stereotypes or a single sentence.
 
-Best when:
+## Calibrate from samples
 
-- writing docs, tutorials, field guides, README files, deep technical explainers, or notebook walkthroughs
+If representative samples exist, build a small style sheet from repeated choices.
 
-Steal these habits:
+Observe:
 
-- state the goal early
-- make the starting point explicit
+- stance: direct, exploratory, sceptical, warm, restrained
+- sentence movement: short turns, long builds, mixed cadence
+- paragraph scale and use of white space
+- first, second, or third person
+- contractions, fragments, asides, and questions
+- preference for examples, analogies, data, scenes, or definitions
+- degree of formality and domain vocabulary
+- heading and list habits
+- openings and endings
+- words, jokes, and rhetorical moves the writer avoids
+
+Separate stable habits from topic accidents. A sample about a difficult incident may be unusually terse; that does not make terseness the writer's universal style.
+
+Use `templates/personal-style-sheet.md` when the work will recur.
+
+## Translate named-style requests
+
+When the user asks for a living writer's style, do not imitate signature wording. Translate the request into broad, non-exclusive traits:
+
+- level of directness
+- evidence density
+- technical depth
+- humour or restraint
+- narrative distance
+- sentence length and pace
+- opening and ending behaviour
+
+State the translation briefly when it helps: “I’ll use a direct, example-led technical voice with compact explanations.”
+
+## Voice families
+
+Choose one primary family. Add a secondary family only when the deliverable genuinely needs it.
+
+### Technical teacher
+
+Best for documentation, tutorials, runbooks, READMEs, and system explanations.
+
+Habits:
+
+- state the finish line and starting state
 - use one real example at a time
-- show the exact artifact, command, or setting when it matters
-- surface the surprise, failure, or limitation that changed the path
-- keep explanation close to the step that needs it
+- keep explanation beside the step or concept it unlocks
+- show exact artefacts where precision matters
+- surface the failure or limitation that changes the path
+- verify the result
 
-Opening:
+Avoid: magical placeholders, devlog chronology, analogy before mechanism, cheerleading.
 
-- what the reader will accomplish
-- what they need
-- where they start
+### Maintainer and reviewer
 
-Ending:
+Best for pull requests, architecture notes, incident reviews, and engineering proposals.
 
-- how to verify success
-- what to try next
+Habits:
 
-Avoid:
+- name the behaviour and trade-off
+- distinguish verified result from expectation
+- preserve exact identifiers and commands
+- make risk, compatibility, rollback, and testing visible
+- use plain verdicts without theatrical certainty
 
-- devlog sprawl
-- magical placeholders
-- abstract explanation before the reader knows why to care
+Avoid: file-by-file narration, unverified test claims, clever compression, blame.
 
-## Operator analyst
+### Product owner
 
-Best when:
+Best for briefs, specifications, roadmaps, decision memos, and stakeholder updates.
 
-- writing memos, executive explainers, professional deep dives, work analysis, market interpretation, or discussion-worthy newsletter pieces
+Habits:
 
-Steal these habits:
+- lead with user or business consequence
+- separate problem evidence from solution preference
+- make scope, non-goals, owner, and decision explicit
+- translate metrics into decisions
+- name risks and unresolved questions
 
-- define the live shift fast
-- make the professional stake visible early
-- let headings carry real claims
-- keep the reader smarter fast with summary bullets where they help
-- turn evidence into implications, not slogans
+Avoid: roadmap theatre, fake certainty, generic customer claims, lists of features with no user job.
 
-Opening:
+### Operator analyst
 
-- what changed
-- who it affects
-- why it matters now
+Best for executive analysis, professional deep dives, market notes, and operational memos.
 
-Ending:
+Habits:
 
-- a decision, implication, or one good question
+- define the live change early
+- put numbers and mechanisms before adjectives
+- use headings that carry claims
+- turn evidence into a decision or implication
+- state the supported verdict
 
-Avoid:
+Avoid: keynote volume, leadership slogans, balanced mush, recap without a call.
 
-- keynote volume
-- leadership-speak
-- recap without a point of view
+### Reported analyst
 
-## Reported editorial
+Best for evidence-heavy articles, investigations, impact reports, and factual explainers.
 
-Best when:
+Habits:
 
-- writing analysis that leans on reporting, numbers, attribution, or human impact
+- lead with a concrete fact pattern or consequence
+- attribute claims, pressure, and uncertainty
+- separate observation from interpretation
+- let people, documents, numbers, and chronology carry colour
+- keep the ending proportionate to the reporting
 
-Steal these habits:
+Avoid: unsupported omniscience, decorative metaphor in reporter voice, source laundering, moral summary.
 
-- lead with the concrete fact pattern
-- put numbers before adjectives
-- attribute pressure, claims, and uncertainty
-- let quotes and facts carry the color
-- end on practical consequence rather than sermon
+### Essay and reflection
 
-Opening:
+Best for personal, braided, reported-personal, and reflective work.
 
-- the friction point
-- the number
-- the institutional or human stake
+Habits:
 
-Ending:
+- begin with scene, pressure, image, or a live question
+- let reflection arise from specific moments
+- use research to alter understanding
+- keep contradiction and uncertainty alive when they are honest
+- end with an outward turn or changed image
 
-- the consequence the reader should keep watching
+Avoid: thesis disguised as memory, decorative vulnerability, invented detail, tidy universal lesson.
 
-Avoid:
+### Product and conversion copy
 
-- unsupported verdicts
-- ornate metaphors in reporter voice
-- abstract openings with no reporting underneath
+Best for landing pages, product pages, pricing, onboarding, and calls to action.
 
-## Essay and reflection
+Habits:
 
-Best when:
+- make the offer and audience clear
+- tie benefits to mechanisms
+- use customer language only when it is sourced
+- place proof near the claim
+- reduce a real objection or risk
+- say what the action does
 
-- writing personal essays, braided essays, reported-personal work, memoir-adjacent explainers, or reflective notebooks
+Avoid: praise fog, fabricated proof, several audiences at once, clever wording that hides the offer.
 
-Steal these habits:
+### Support and UI
 
-- begin with scene, pressure, or image instead of thesis
-- let reflection rise from specific moments
-- use research to change the narrator's understanding, not decorate it
-- keep one real question or tension line alive
-- land on an earned image, turn, or open question
+Best for help text, errors, notifications, empty states, and transactional messages.
 
-Opening:
+Habits:
 
-- where are we
-- what is under pressure
-- why this person is worth following
+- name what happened
+- explain consequence only when needed
+- offer a safe next action
+- use consistent product vocabulary
+- sound calm without minimising the problem
 
-Ending:
+Avoid: blame, false reassurance, generic failure text, jokes during loss or interruption.
 
-- outward turn, not recap
-
-Avoid:
-
-- canned intimacy
-- decorative vulnerability
-- metaphors that do not carry real load
-
-## Conversion copy
-
-Best when:
-
-- writing homepages, landing pages, pricing pages, feature pages, product pages, or high-intent emails
-
-Steal these habits:
-
-- clarity over cleverness
-- benefits over raw features
-- customer language over internal language
-- one argument per section
-- proof near the claim
-- CTA text that says what the reader gets
-
-Opening:
-
-- outcome plus pain point
-- one main action
-
-Ending:
-
-- risk reduction
-- repeated value
-- direct next action
-
-Avoid:
-
-- vague praise words
-- generic `learn more` calls to action
-- cute language that hides the offer
-
-## Good blends
+## Useful blends
 
 | Blend | Use when |
 |---|---|
-| Technical teacher + operator analyst | a practical deep dive for experienced readers |
-| Technical teacher + reported editorial | a guide that must also explain what changed and why |
-| Operator analyst + reported editorial | a market or product analysis piece with strong evidence |
-| Essay and reflection + reported editorial | a reported personal piece |
-| Technical teacher + conversion copy | a product explainer that still needs to sell cleanly |
+| Technical teacher + maintainer | a guide for experienced engineers that includes operational trade-offs |
+| Technical teacher + product owner | a specification needs implementation clarity without losing the user problem |
+| Operator analyst + reported analyst | a decision memo depends on external evidence |
+| Essay + reported analyst | personal experience is tested against reporting or research |
+| Product copy + technical teacher | a technical product must explain enough mechanism to earn trust |
+| Support/UI + technical teacher | troubleshooting text must stay concise while preserving exact recovery steps |
 
-## Red flags
+Do not blend more modes than the page can hold. When tones compete, genre and reader task win.
 
-- The draft sounds "human" only because it added jokes and filler.
-- The draft sounds "professional" only because it lost the person making the case.
-- The draft copied surface habits from one writer without the underlying discipline.
-- The draft blended three bundles at once and lost its center.
+## Voice transfer checklist
+
+Before editing:
+
+- identify three stable traits to preserve
+- identify two habits to avoid
+- save three representative lines as anchors
+- note how the writer expresses uncertainty and disagreement
+
+After editing:
+
+- compare the opening, densest paragraph, and ending with the samples
+- check whether vocabulary became more generic or more ornate
+- check whether sentence length drifted toward one average
+- confirm that first-person authority still matches the writer's real experience
+- remove any borrowed catchphrase or recognisable signature tic
+
+## Style gate
+
+The calibration passes when:
+
+- the output matches the requested traits and genre
+- the writer's stable habits survive
+- no named person's signature language is imitated
+- voice does not hide weak evidence or structure
+- the prose still sounds like one person rather than a blend of presets

@@ -1,22 +1,16 @@
 # better-writing
 
-Installable writing skill for clear, strong, mode-aware prose.
+Production-grade writing and revision skill for prose that must stay accurate, useful, and recognisably owned by its writer.
 
-`better-writing` is a broader successor to [obra/the-elements-of-style](https://github.com/obra/the-elements-of-style): it keeps Strunk's durable principles, then extends them with revision passes, cadence repair, genericity cleanup, style bundles, and genre-aware page architecture.
+It supports five jobs: drafting, rewriting, review, humanisation, and adaptation. The workflow protects facts and exact literals, fixes structure before style, restores voice without invented personality, and finishes with explicit fidelity and quality gates.
 
-## What it covers
+## What it adds
 
-- first-principles clarity and composition
-- staged revision passes instead of one vague polish step
-- voice and rhythm repair for stiff or over-edited prose
-- style bundles for technical, operator, editorial, reflective, and conversion writing
-- genre routing for guides, memos, essays, reports, emails, docs, and landing pages
+- a preservation contract for facts, uncertainty, quotations, commands, identifiers, citations, and voice anchors
+- genre-specific shapes for developers, writers, product owners, operators, and customer-facing teams
+- paragraph, sentence, evidence, voice, and humanisation passes with observable stop conditions
+- a research-backed AI-ism taxonomy that treats matches as editorial signals, never authorship proof
+- an extensible machine-readable corpus and optional Python scanner with false-positive protections
+- release-grade behavioural, routing, edge, disclosure, and near-miss evals
 
-## Key files
-
-- `SKILL.md` — authoritative instructions
-- `references/foundations.md` — Strunk core, modernized
-- `references/revision-pass-stack.md` — default editing sequence
-- `references/style-bundles.md` — bundled writing families and blend recipes
-- `references/genre-modes.md` — page shapes by deliverable
-- `scripts/probe_better_writing.py` — lightweight routing helper and self-test
+`SKILL.md` is the canonical instruction file. References provide branch-specific depth; scripts provide optional deterministic diagnostics and package validation.

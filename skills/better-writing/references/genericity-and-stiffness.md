@@ -1,112 +1,137 @@
 # Genericity and stiffness
 
-Use this file when the prose is correct but interchangeable.
+Use this reference when the prose is competent but interchangeable: correct sentences, familiar transitions, abstract praise, and no evidence that this writer needed to write this piece.
 
-This is the failure mode where a draft sounds polished, respectable, and faintly lifeless all at once.
+## Diagnose the source
 
-## Common symptoms
+Genericity usually comes from one or more of these failures:
 
-- the writing sounds ceremonial rather than observed
-- every paragraph feels like it was built from the same kit
-- the draft keeps announcing importance instead of proving it
-- abstract praise words outnumber concrete nouns
-- the opening uses familiar setup phrases instead of the real point
+| Failure | Symptom | Repair |
+|---|---|---|
+| Missing mechanism | the prose names a benefit but not how it happens | name the action, constraint, or causal link |
+| Missing evidence | praise words carry the claim | add proof or narrow the claim |
+| Missing actor | organisations, users, or teams act as a blur | name the responsible person or group |
+| Missing stake | a paragraph announces importance | state what changes, costs, breaks, or becomes possible |
+| Missing position | the prose lists balanced considerations forever | give the supported verdict or decision |
+| Missing texture | every noun is a category | restore a date, object, place, interface, failure, or observed detail |
+| Template structure | paragraphs share one reusable frame | rebuild the thought, not the vocabulary |
 
-## 1. Cut brochure language
+## Replace value fog
 
-Replace value fog with evidence.
+Words such as `robust`, `seamless`, `innovative`, `powerful`, `strategic`, `transformative`, and `world-class` are not forbidden. They are weak when the sentence asks them to stand in for evidence.
 
-| Foggy word or phrase | Better move |
-|---|---|
-| `robust` | say what survives what |
-| `seamless` | name what friction is absent |
-| `comprehensive` | state what is actually covered |
-| `transformative` | describe the change |
-| `innovative` | show what is new and why it matters |
-| `leverage` | use `use`, `apply`, or the exact action |
-| `optimize` | say what gets faster, smaller, cheaper, or simpler |
-| `powerful` | say what the tool can actually do |
-| `strategic` | say what decision it changes |
-| `world-class` | cut it unless you can prove it |
+Ask the word to cash out:
 
-## 2. Delete stock frames
+- robust against what failure?
+- seamless between which steps?
+- innovative compared with what?
+- powerful enough to do what?
+- strategic because it changes which decision?
+- transformative from what state to what state?
 
-These phrases often add posture instead of meaning.
+Foggy:
 
-- `In today's fast-paced environment`
-- `When it comes to`
-- `It is important to note that`
-- `It goes without saying`
-- `At the end of the day`
-- `The reality is`
-- `The truth is`
-- `Needless to say`
-- `Last but not least`
+> The platform delivers a seamless, powerful workflow for modern teams.
 
-Usually the fix is simple: start with the actual claim.
+Specific:
 
-## 3. Remove false drama
+> Reviewers comment, approve, and see the change history in one queue; the team no longer reconciles three email threads before release.
 
-The sentence should not behave like a trailer voice-over.
+If the source supplies only the foggy claim, do not invent the specific version. Remove the unsupported claim, mark the gap, or ask what changed and what evidence exists. Rearranging `clarity`, `speed`, `impact`, and `streamline` is not a humanisation pass.
 
-Watch for:
+## Remove ceremonial setup
 
-- `Here's the thing`
-- `The catch?`
-- `Not X. Not Y. Just Z.`
-- `But then everything changed`
-- `The result?`
-- `What happened next surprised everyone`
+Delete a setup line when the next sentence works without it.
 
-Most of the time, the stronger version is a direct sentence that trusts the fact pattern.
+Common forms include:
 
-## 4. Watch the structure, not just the words
+- announcing that the topic is important
+- describing the present as fast-changing or complex
+- saying the writer will explore, unpack, or discuss the topic
+- telling the reader that a distinction, pattern, or result deserves attention
+- calling a conclusion a key takeaway before giving it
 
-Genericity is often structural.
+Do not substitute a newer ceremony. Start with the event, constraint, question, or claim.
 
-Red flags:
+## Replace generic authority
 
-- repeated `X, Y, and Z` cadence in every section
-- every paragraph opens with a claim and closes with a restatement
-- every heading names a topic instead of making a claim
-- every section ends with a tidy mini-lesson
-- the final paragraph summarizes the article instead of extending it
+`Experts say`, `research shows`, `many organisations`, and `users want` borrow credibility without allowing the reader to inspect it.
 
-## 5. Replace abstraction with owned detail
+Use one of four honest moves:
 
-Bad:
+1. name and cite the source
+2. describe the writer's own observation and its limits
+3. quantify the sample
+4. remove the authority claim and state the proposition as analysis
 
-- `The platform creates significant business value for stakeholders.`
+Never invent the missing source during revision.
 
-Better:
+## Repair abstract noun stacks
 
-- `The platform cut quote turnaround from two days to twenty minutes for the sales team.`
+Watch for sentences built from several broad nouns:
 
-Bad:
+> Strategic alignment enables operational excellence and stakeholder value.
 
-- `The new process unlocks better collaboration.`
+Find the buried actors and verbs:
 
-Better:
+> Product and support now review the same incident list each Monday, so duplicate fixes are caught before planning.
 
-- `The new process gives product, legal, and support one shared review queue instead of three email threads.`
+Technical abstractions can be exact. Keep `eventual consistency`, `strict liability`, or `working-memory load` when that is the concept the piece needs.
 
-## 6. Keep the precise term when it is real
+## Break template thought
 
-Do not overcorrect into vagueness.
+Word swaps cannot fix a reusable rhetorical mould.
 
-Keep a term if it is:
+Inspect clusters of:
 
-- the actual product or API name
-- the smallest accurate technical concept
-- the phrase the customer or reader already uses
-- the only precise legal, medical, or financial term
+- staged contrast: reject X, reveal Y
+- question-stub pivots followed by a neat answer
+- short slogan fragments
+- repeated three-part lists
+- paragraphs that open with a maxim and close with its restatement
+- compressed authority frames that turn a provisional observation into an aphorism
+- headings that describe document furniture rather than make a useful promise
 
-Cut it only when it is acting as filler.
+Rewrite from the source material:
 
-## 7. Quick cleanup checklist
+1. What happened?
+2. What evidence supports it?
+3. What does it change for this reader?
+4. Which caveat keeps the claim honest?
 
-- Did you replace praise words with facts?
-- Did you cut stock openers and closers?
-- Did you remove reveal scaffolds and tidy binary flips?
-- Did you convert at least three abstractions into named people, dates, numbers, places, or consequences?
-- Did you keep the technical terms that actually matter?
+Read `references/ai-isms-and-humanisation.md` when these frames cluster or feel machine-smooth.
+
+## Keep legitimate simplicity
+
+Not every broad sentence is empty. A summary can orient readers; a conventional transition can reduce cognitive load; a plain heading can help navigation.
+
+Keep the line when it:
+
+- accurately compresses detail already established
+- expresses a real logical relation
+- matches a regulated, technical, or organisational term
+- helps a novice without patronising an expert
+- sounds natural in the writer's established voice
+
+## Specificity ladder
+
+When a sentence is vague, move only as far down this ladder as the evidence allows:
+
+1. category: `customers were confused`
+2. behaviour: `customers opened the old settings page first`
+3. count: `six of eight testers opened the old settings page first`
+4. situation: `in the June mobile test, six of eight new customers opened the old settings page first`
+5. consequence: `support added a manual redirect while the navigation was redesigned`
+
+Do not fabricate level five detail when the source only supports level one.
+
+## Genericity gate
+
+The passage passes when:
+
+- praise is supported or removed
+- authority is named, bounded, or withdrawn
+- abstractions resolve into actors, actions, mechanisms, or exact terms
+- importance resolves into a consequence
+- repeated frames no longer carry the argument
+- the remaining generalisations are earned by the detail around them

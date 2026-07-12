@@ -1,125 +1,158 @@
 # Revision pass stack
 
-Use this as the shortest working contract for turning a draft into stronger writing.
+Use this reference for a reliable edit order. Each pass has one job, a completion test, and a loopback. Do not make every pass equally heavy; a clean draft may need only one or two.
 
-## Quick triage
+## Pass 0: Preserve and diagnose
 
-| Symptom | Start here | Then |
-|---|---|---|
-| The draft wanders, repeats itself, or buries the point | Pass 1: paragraph architecture | Pass 2 |
-| The sentences are dense, vague, or hard to parse | Pass 2: sentence clarity | Pass 3 |
-| The draft is clear but sounds stiff, clipped, or flat | Pass 3: voice and cadence | Pass 4 |
-| The prose sounds ceremonial, corporate, or interchangeable | Pass 4: genericity cleanup | Pass 5 |
-| The writing is competent but wrong for the format | Pass 5: genre and style calibration | Final read-aloud |
+Before rewriting:
 
-## Default sequence
+- establish edit freedom and source authority
+- record protected literals, facts, uncertainty, citations, and voice anchors
+- identify the reader's desired outcome
+- name the failure at whole-piece, section, paragraph, sentence, or surface level
+- mark the strongest passage so revision does not flatten it
 
-1. diagnose the real failure mode
-2. fix paragraph architecture
-3. fix sentence clarity
-4. repair voice and cadence if needed
-5. remove canned or generic phrasing
-6. calibrate the piece to its genre and style family
-7. read aloud and stop when the prose is carrying its own weight
+Use `references/operating-contract.md` for high-risk or constrained work.
 
-## Pass 0: Diagnose
+**Pass when:** you can say what must change and what must not.
 
-Before editing, answer these questions:
+## Pass 1: Whole-piece shape
 
-- What should the reader know, do, or feel by the end?
-- What is the actual unit of composition here: sentence, paragraph, section, or whole page?
-- Which paragraph currently earns the piece?
-- Which sentence is creating the most drag?
-- Is the problem really language, or is the shape wrong for the deliverable?
+Choose the genre in `references/genre-modes.md`, then inspect:
 
-If the page shape is wrong, jump to `references/genre-modes.md` before line editing.
+- opening contract: does the reader know where the piece is taking them?
+- thesis or task: is the central job visible where this genre expects it?
+- section order: does each section create the need for the next?
+- scope: does every part belong?
+- ending: does it decide, verify, ask, invite, or turn outward as required?
 
-## Pass 1: Paragraph architecture
+Make a reverse outline: one short line describing what each paragraph does. Reorder, merge, or cut before polishing sentences.
 
-Fix the unit before the line.
+**Pass when:** the reverse outline forms a coherent sequence with no duplicate jobs or missing bridge.
 
-- give each paragraph one job
-- move the point closer to the front
-- cut repeated claims and throat-clearing
-- split paragraphs that mix scene, argument, evidence, and aside with no control
-- merge paragraphs that artificially separate one thought into multiple fragments
-- replace dramatic transitions with literal ones
+## Pass 2: Paragraph architecture
 
-Useful checks:
+Give each paragraph one governing job.
 
-- Can you say the job of the paragraph in one short sentence?
-- Does the first or second sentence tell the reader why the paragraph exists?
-- Does the last sentence land on new information instead of rephrasing the setup?
+- move the point nearer the front unless suspense or scene has earned delay
+- keep evidence beside the claim it supports
+- split paragraphs that mix unrelated argument, evidence, scene, and aside
+- merge fragments that artificially break one thought into several blocks
+- cut echo paragraphs and miniature conclusions
+- replace transition labels with the relationship itself: cause, contrast, sequence, example, or consequence
 
-## Pass 2: Sentence clarity
+Useful questions:
 
-Now clean the line without flattening it.
+- What would be lost if this paragraph disappeared?
+- Does its first or second sentence explain why it exists?
+- Does its last sentence move forward rather than repeat the opening?
+- Is the transition logical, or merely smooth?
 
-- keep actor close to action
-- replace vague shells with the real claim
-- prefer concrete nouns and verbs over abstract announcements
-- use positive form when it sharpens the sentence
-- keep related words together
-- end on the informative word
-- cut duplicated intensifiers and filler
+**Pass when:** every paragraph has one nameable job and advances the piece.
 
-Common repairs:
+## Pass 3: Sentence clarity
 
-- `There is` or `It is` opener -> contraction or recast
-- abstract setup -> direct claim
-- repeated shell sentence -> collapse into one stronger sentence
-- bloated contrast -> one real contrast, not three
+Make the sentence easy to parse without lowering its precision.
 
-## Pass 3: Voice and cadence
+- keep actor, action, and object within sight of one another
+- turn noun-heavy actions back into verbs where that shortens the path
+- replace abstract setup with the claim it postpones
+- keep conditions and exceptions attached to the rule they qualify
+- place the most informative material where the sentence can land on it
+- use positive form when it clarifies, but keep negation when the contrast itself matters
+- remove duplicated intensifiers, empty preambles, and throat-clearing
+- preserve exact technical terms instead of “simplifying” them into vagueness
 
-Run this pass when the draft became too neat, too formal, or too dead.
+Read `references/foundations.md` for grammar and usage decisions.
 
-- reconnect adjacent sentences that share a subject
-- restore natural contractions where they sound earned
-- vary long and short sentences on purpose
-- keep some asymmetry in paragraph and sentence length
-- use one strong aside or direct question only when it helps the motion
-- remove self-announcing emphasis such as `That point matters here`
+**Pass when:** the sentence reads correctly on the first attempt and means exactly what the source meant.
 
-Read `references/voice-and-rhythm.md` for the detailed repair moves.
+## Pass 4: Evidence and epistemics
 
-## Pass 4: Genericity cleanup
+Compare the prose with the source, not with memory.
 
-This is where you cut language that sounds competent but carries little thought.
+- verify names, dates, quantities, units, quotations, and causal direction
+- keep citations attached to the claims they support
+- distinguish observation, inference, estimate, prediction, and opinion
+- replace vague authority with a named source or remove the borrowed authority
+- remove proof words such as `clearly`, `obviously`, and `undeniably` when the evidence does not carry them
+- preserve `may`, `likely`, `could`, and other qualifications when they are doing real epistemic work
 
-- delete stock openers and closers
-- replace empty praise words with evidence
-- remove false suspense and tidy binary flips
-- cut management sludge, brochure nouns, and ceremonial abstractions
-- convert broad claims into named people, dates, numbers, consequences, or exact actions
+**Pass when:** every factual claim has the right source, scope, and confidence.
 
-Read `references/genericity-and-stiffness.md`.
+## Pass 5: Voice and cadence
 
-## Pass 5: Genre and style calibration
+Run this pass after clarity so voice does not hide structural trouble.
 
-Only now should you deliberately shape the page to its destination.
+- reconnect adjacent sentences when one thought has been chopped apart
+- vary sentence length and architecture in response to meaning
+- use contractions where they suit the writer and genre
+- restore stance: who knows this, from what seat, and with what limit?
+- keep a useful aside, fragment, reversal, or joke when it earns its space
+- remove sentences that only announce importance
 
-- choose the right genre in `references/genre-modes.md`
-- choose one primary style family in `references/style-bundles.md`
-- blend only when the piece truly needs two disciplines at once
-- rewrite the opening and ending to suit the mode
-- keep the borrow at the level of operating habits, not signature tics
+Read `references/voice-and-rhythm.md`.
 
-## Final read-aloud
+**Pass when:** the paragraph can be read aloud without mechanical resets, accidental monotony, or borrowed performance.
 
-Read the draft aloud or at least subvocalize it sentence by sentence.
+## Pass 6: Genericity and humanisation
 
-Stop conditions:
+Run this pass when the draft sounds interchangeable, machine-smooth, ceremonious, or over-produced.
 
-- the paragraph reads clearly on first pass
-- the sentence no longer needs re-parsing
-- the prose still sounds like a person, not a cleaned transcript
-- the opening earns the next paragraph
-- the ending adds consequence, not recap
+- replace praise words with mechanisms, evidence, or consequences
+- cut service tone, generic authority, false suspense, tidy binaries, and self-summary
+- inspect repeated frames, sentence starts, triads, list shapes, and paragraph silhouettes
+- restore writer-specific selection: the detail, stake, caveat, or judgement only this piece needs
+- keep legitimate technical language, dialect, quotations, and intentional rhetoric
+
+Use `references/genericity-and-stiffness.md` and `references/ai-isms-and-humanisation.md`. For a file-backed draft, the optional scanner can locate hotspots:
+
+```bash
+python3 scripts/scan_aiisms.py path/to/draft.md
+```
+
+**Pass when:** formulae no longer carry the argument, and the revision has more ownership and specificity without invented “human” decoration.
+
+## Pass 7: Genre and delivery calibration
+
+Now tune the finished piece to its destination.
+
+- opening, headings, lists, and ending match the genre
+- length serves the reader rather than a nominal target
+- locale, terminology, and house style are consistent
+- calls to action say what happens next
+- code, commands, paths, citations, and links retain their exact form
+- formatting makes the information easier to use
+
+Use `references/genre-modes.md` and `references/style-bundles.md`.
+
+**Pass when:** the piece feels native to its channel and still matches the preservation ledger.
+
+## Pass 8: Final proof and stop
+
+Read the opening, one middle section, and the ending aloud. Then run `references/quality-gates.md`.
+
+Check the diff for accidental changes to:
+
+- numbers, dates, names, quotations, links, commands, and identifiers
+- uncertainty and source attribution
+- paragraph meaning
+- authorial voice anchors
+
+Rerun any deterministic scanner after the last substantive rewrite.
+
+**Pass when:** every applicable gate is satisfied and another edit would express preference rather than solve a named problem.
 
 ## Loopbacks
 
-- If the prose is clear but the page still feels wrong, go back to genre, not synonyms.
-- If the style pass made the draft louder, go back to Pass 2 and Pass 4.
-- If the draft sounds neat but lifeless, go back to Pass 3.
-- If every pass makes the opening worse, rebuild the opening from the reader need instead of line editing it again.
+| Symptom | Return to |
+|---|---|
+| Clear sentences, wrong page | Pass 1 |
+| Strong point, weak support | Pass 4 |
+| Accurate prose, lifeless rhythm | Pass 5 |
+| Smooth prose, generic voice | Pass 6 |
+| “Human” rewrite lost precision | Pass 0 and Pass 4 |
+| Genre pass reintroduced formulae | Pass 6, then final proof |
+| Each edit makes the piece worse | Restore the last known-good version and read `references/gotchas.md` |
+
+Do not restart the full stack after every small correction. Return only to the pass whose contract was broken, then run final proof again.

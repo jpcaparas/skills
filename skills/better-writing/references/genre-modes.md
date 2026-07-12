@@ -1,214 +1,247 @@
 # Genre modes
 
-Choose the page shape before you obsess over sentence polish.
+Choose the page shape from the reader's task. Sentence style cannot rescue the wrong genre.
 
 ## Quick chooser
 
-| Reader need | Mode |
+| Reader task | Mode |
 |---|---|
-| Finish a task | Technical guide or how-to |
-| Understand a system or decision | Explanation doc or deep dive |
-| Make a call quickly | Memo or executive brief |
-| Follow evidence and implications | Reported analysis or article |
-| Follow a person making meaning | Essay or reflection |
-| Decide whether to buy or act | Landing page or pricing page |
-| Get a fast update | Email or short note |
+| Finish a technical task | guide, tutorial, or runbook |
+| Find a fact quickly | reference documentation |
+| Understand a system or trade-off | explanation or deep dive |
+| Review a code change | pull request description |
+| Decide what to build | product brief or specification |
+| Record a durable technical choice | decision record or proposal |
+| Make a business decision | memo or executive brief |
+| Assess evidence and implications | report or analysis |
+| Follow a person making meaning | essay or reflection |
+| Decide whether to act or buy | landing or product page |
+| Complete a small interaction | UI copy, error, or notification |
+| Respond or coordinate | email, update, or release note |
 
-## Technical guide or how-to
+## Guide, tutorial, or runbook
 
-Reader needs:
+Reader needs: a finish line, prerequisites, ordered steps, exact artefacts, and verification.
 
-- a finish line
-- prerequisites
-- steps in usable order
-- verification
+Shape:
 
-Opening:
+1. state what the reader will accomplish
+2. list genuine prerequisites and starting state
+3. give steps in executable order
+4. explain only where explanation prevents error or supports transfer
+5. show expected result and verification
+6. add recovery or troubleshooting for likely failures
 
-- what this guide helps the reader do
-- what they need before they start
+Protect commands, paths, identifiers, versions, and expected output. Never invent a missing step from convention.
 
-Middle:
+Ending: verified success, rollback or recovery, then the next useful action.
 
-- sequential steps
-- exact commands, paths, or settings when they matter
-- short explanations only where they unblock action
+Red flags: conceptual preamble before the task; hidden assumptions; magical placeholders; no check for success.
 
-Ending:
+## Reference documentation
 
-- how to verify success
-- next useful step
+Reader needs: fast retrieval, completeness within scope, stable terminology, and edge conditions.
 
-Red flags:
+Shape:
 
-- long conceptual throat-clearing
-- hidden assumptions
-- no verification step
+- one entity or operation per section
+- predictable headings
+- signatures, fields, inputs, outputs, defaults, errors, and examples
+- cross-links based on likely lookup paths
 
-## Explanation doc or deep dive
+Do not turn reference into a tutorial. Keep examples exact and label pseudocode.
 
-Reader needs:
+Ending: usually none; add related references, not a ceremonial conclusion.
 
-- a mental model
-- tradeoffs
-- structure
-- consequences
+## Explanation or deep dive
 
-Opening:
+Reader needs: a mental model, mechanism, trade-offs, and consequences.
 
-- the central question or confusion
-- why it matters
+Shape:
 
-Middle:
+1. name the central confusion or question
+2. give the smallest useful model
+3. develop one sub-question per section
+4. use examples to dissolve confusion
+5. compare alternatives where the difference changes a decision
+6. end with the model's practical implication or boundary
 
-- one sub-question per section
-- examples that dissolve confusion
-- contrast between approaches where relevant
+Red flags: tutorial steps mixed into conceptual explanation; fact dump without a through-line; analogy replacing mechanism.
 
-Ending:
+## Pull request description
 
-- the model in one sharp paragraph
-- next adjacent concept or decision
+Reviewer needs: what changed, why, behaviour, risk, verification, and rollout notes.
 
-Red flags:
+Shape:
 
-- tutorial steps inside an explainer
-- reference dump with no through-line
+- summary of the problem and change
+- key implementation choices, not a file-by-file diary
+- user-visible or operational impact
+- tests actually run
+- risks, migrations, feature flags, compatibility, and follow-up
+
+Keep identifiers and commands exact. Do not claim tests, metrics, or compatibility checks that did not run.
+
+Ending: the reviewer decision or special attention needed.
+
+## Product brief or specification
+
+Reader needs: the problem, affected users, desired outcome, boundaries, behaviour, and acceptance evidence.
+
+Shape:
+
+1. problem and evidence
+2. users and jobs
+3. outcome and success measures
+4. scope and non-goals
+5. behaviour, states, and edge cases
+6. dependencies and risks
+7. acceptance criteria and open decisions
+
+Separate observed user need from proposed solution. Use `must`, `should`, and `may` consistently if requirements language is in scope.
+
+Ending: unresolved decisions, owner, and next checkpoint.
+
+## Decision record or proposal
+
+Reader needs: context, options, decision, rationale, and consequences.
+
+Shape:
+
+- current state and forcing constraint
+- decision criteria
+- viable options and trade-offs
+- recommendation or recorded decision
+- consequences, reversibility, migration, and review date
+
+Do not create false balance. Omit options that were never viable; include a rejected option when its rejection teaches a future reader something important.
+
+Ending: decision status and follow-up conditions.
 
 ## Memo or executive brief
 
-Reader needs:
+Reader needs: the point quickly, evidence that changes the call, and a decision or recommendation.
 
-- the point quickly
-- the decision or implication
-- only the evidence that changes the call
+Shape:
 
-Opening:
+1. thesis or decision in the first screen
+2. what changed and why now
+3. only the evidence material to the call
+4. risks and counterarguments
+5. recommendation, owner, or decision question
 
-- thesis in the first screen
-- what changed or why this matters now
+Use claim-driven headings. Bullets should compress trade-offs or actions, not decorate the page.
 
-Middle:
+Red flags: scene-setting before the point; safe summary without a position; recommendation detached from evidence.
 
-- short sections with claim-driven headings
-- bullets only when they compress real tradeoffs
+## Report or analysis
 
-Ending:
+Reader needs: a trustworthy fact pattern, method or provenance, interpretation, and limits.
 
-- recommendation, risk, or one decision question
+Shape:
 
-Red flags:
+- question and scope
+- method, source, and limitations
+- findings in an order that supports comprehension
+- interpretation separated from observation
+- implications proportionate to evidence
 
-- scene-setting before the point
-- hedged thesis
-- no action implied
+Attribute contested claims and preserve uncertainty. Put numbers before evaluative adjectives.
 
-## Reported analysis or article
-
-Reader needs:
-
-- a fact pattern
-- interpretation
-- evidence they can trust
-
-Opening:
-
-- friction point, number, or consequence
-
-Middle:
-
-- evidence, attribution, and implications in a controlled order
-- one real claim per section
-
-Ending:
-
-- practical consequence, open thread, or implication
-
-Red flags:
-
-- abstract introduction with no reporting
-- verdict that outruns the evidence
+Ending: supported implication, decision, or open question—not a sermon.
 
 ## Essay or reflection
 
-Reader needs:
+Reader needs: a person worth following, a live tension, and movement in understanding.
 
-- a person worth following
-- a tension line
-- a meaning-making arc
+Shape may braid:
 
-Opening:
+- scene or image
+- reflection
+- evidence or research
+- reversal, complication, or return
 
-- scene, image, or pressure
+The specific earns the universal. Research should change the narrator's understanding rather than decorate it.
 
-Middle:
+Ending: an outward turn, changed image, or earned unresolved question.
 
-- movement between scene, reflection, and evidence
-- enough specificity to earn the universal
+Red flags: thesis paragraph wearing memoir clothes; invented intimacy; vulnerability that changes nothing; tidy life lesson.
 
-Ending:
+## Landing or product page
 
-- an outward turn, new image, or changed understanding
+Reader needs: a clear offer, relevance, proof, reduced uncertainty, and one main action.
 
-Red flags:
+Shape:
 
-- thesis paragraph disguised as memoir
-- vulnerability that changes nothing
-- summary ending
+1. outcome and audience
+2. problem or constraint in customer language
+3. benefits tied to mechanisms
+4. proof near the claim
+5. objections, boundaries, comparison, or risk reduction
+6. one primary call to action
 
-## Landing page or pricing page
+Do not fabricate testimonials, metrics, customer language, or market position.
 
-Reader needs:
+Ending: direct action and what happens next.
 
-- one clear offer
-- one action
-- proof
-- reduced uncertainty
+Red flags: several audiences with equal weight; praise without mechanism; features mistaken for benefits; generic `learn more` action.
 
-Opening:
+## UI copy, error, or notification
 
-- outcome, audience, or pain point
-- what the product does
+Reader needs: orientation, consequence, and recovery in very little space.
 
-Middle:
+For labels and buttons:
 
-- benefits before features
-- proof and objection handling
-- one argument per section
+- name the action or destination
+- keep terms consistent with the product
+- avoid cleverness that slows recognition
 
-Ending:
+For errors:
 
-- direct CTA
-- risk reduction or comparison help
+1. say what happened in user language
+2. explain consequence if it is not obvious
+3. give a safe recovery action
+4. preserve useful diagnostic detail without exposing secrets
 
-Red flags:
+For destructive or irreversible actions, state the object and consequence before confirmation.
 
-- multiple audiences with no hierarchy
-- generic adjectives in place of proof
-- CTA text that says nothing
+Red flags: blaming the user; `Something went wrong` with no recovery; success messages that merely say success; buttons labelled `OK` when a real action name fits.
 
-## Email or short note
+## Email or coordination note
 
-Reader needs:
+Reader needs: purpose, enough context, one clear ask or update, and timing.
 
-- the point fast
-- context only if needed
-- a clear request or update
+Shape:
 
-Opening:
+- purpose in the first one or two lines
+- context only where it changes the response
+- one primary ask, decision, or update
+- owner and deadline when relevant
 
-- direct purpose in the first line or two
+Ending: explicit next action or a natural courtesy.
 
-Middle:
+Red flags: generic greeting theatre; buried ask; several unrelated requests; memo-length scene-setting.
 
-- short paragraphs or bullets
-- one ask per message when possible
+## Release note or changelog entry
 
-Ending:
+Reader needs: what changed, who is affected, whether action is required, and where to learn more.
 
-- explicit next step, deadline, or thanks
+Shape:
 
-Red flags:
+- user-visible change
+- reason or benefit
+- migration, compatibility, or action required
+- known limitation
+- relevant link
 
-- burying the ask
-- memo-length setup in a short note
+Do not copy commit messages verbatim. Translate implementation into user consequence without inventing a benefit.
+
+## Genre gate
+
+The page shape is right when:
+
+- the opening gives the reader the orientation this mode requires
+- the middle follows the mode's natural unit: steps, entities, claims, decisions, scenes, or interactions
+- proof and explanation appear where the reader needs them
+- the ending performs a real task rather than summarising by habit
+- a reader would recognise the artefact without seeing its filename

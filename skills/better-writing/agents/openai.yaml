@@ -1,4 +1,4 @@
 interface:
   display_name: "better-writing"
-  short_description: "Modern writing system for clarity, cadence, structure, and style-family calibration"
-  default_prompt: "Help me draft, rewrite, or edit prose with stronger clarity, rhythm, specificity, and genre fit"
+  short_description: "Draft, revise, review, and humanise faithful prose"
+  default_prompt: "Help me draft, rewrite, review, humanise, or adapt this prose while preserving its facts, intent, exact literals, uncertainty, and voice."

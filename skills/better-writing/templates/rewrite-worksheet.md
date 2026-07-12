@@ -1,78 +1,128 @@
 # Rewrite worksheet
 
-## Brief
+## Writing contract
 
-- Reader:
 - Deliverable:
-- Goal:
-- Primary style family:
-- Secondary style family, if any:
+- Reader:
+- Reader outcome:
+- Job: draft / rewrite / line edit / review / humanise / adapt
+- Edit freedom:
+- Source authority:
+- Genre and destination:
+- Length, locale, and house style:
+- Open questions or assumptions:
+
+## Preservation ledger
+
+### Exact literals
+
+- commands, code, paths, flags, identifiers:
+- quotations and required wording:
+- links and citation destinations:
+
+### Factual invariants
+
+- names, dates, numbers, units:
+- causal direction and comparison:
+- scope, conditions, exceptions:
+
+### Epistemic invariants
+
+- observed:
+- inferred:
+- estimated or predicted:
+- uncertain or contested:
+
+### Voice anchors
+
+- representative line 1:
+- representative line 2:
+- representative line 3:
+- habits to preserve:
+- habits to avoid:
 
 ## Diagnosis
 
-- What is weak right now?
-- What is already working and must be protected?
-- Which paragraph currently earns the piece?
-- Which sentence creates the most drag?
+- Whole-piece problem:
+- Section problem:
+- Paragraph problem:
+- Sentence problem:
+- Surface problem:
+- Strongest existing material:
+- Smallest responsible edit:
+
+## Reverse outline
+
+| Paragraph or section | Current job | Keep / move / merge / cut | Intended job |
+|---|---|---|---|
+| | | | |
 
 ## Pass log
 
-### Pass 1: Paragraph architecture
+### Pass 1: Shape
 
-- paragraphs split:
-- paragraphs merged:
+- opening contract:
+- order changes:
+- scope changes:
+- ending job:
+
+### Pass 2: Paragraph clarity
+
+- mixed jobs resolved:
 - repeated claims removed:
-- opening rebuilt:
+- evidence moved beside claims:
+- transitions repaired:
 
-### Pass 2: Sentence clarity
+### Pass 3: Sentence clarity
 
-- vague shells replaced:
-- active or clearer recasts:
-- concrete details added:
-- lines cut:
+- actor/action repairs:
+- abstractions resolved:
+- conditions or exceptions clarified:
+- exact terms protected:
 
-### Pass 3: Voice and cadence
+### Pass 4: Evidence and uncertainty
 
-- bridges restored:
-- contractions restored:
-- repeated rhythms broken:
-- emphasis repaired:
+- claims checked against source:
+- attribution repaired:
+- confidence preserved:
+- unresolved factual questions:
 
-### Pass 4: Genericity cleanup
+### Pass 5: Voice and cadence
 
-- stock phrases removed:
-- brochure words replaced:
-- false drama removed:
-- abstractions turned concrete:
+- voice anchors preserved:
+- chopped thoughts rejoined:
+- repetitive cadence repaired:
+- stance or limitations clarified:
 
-### Pass 5: Genre and style calibration
+### Pass 6: Humanisation
 
-- genre choice confirmed:
-- opening shape adjusted:
-- ending shape adjusted:
-- style bundle habits applied:
+- clustered signals reviewed:
+- formulae rewritten from meaning:
+- specific detail restored:
+- deliberate exceptions:
+- scanner command and result, if run:
 
-## Keep / cut / restore
+### Pass 7: Genre and mechanics
 
-### Keep
+- genre checks:
+- headings and lists:
+- locale and house style:
+- links, code, and formatting:
 
-- exact details that carry authority
-- memorable phrases that still sound owned
+## Final gates
 
-### Cut
+- [ ] Fidelity
+- [ ] Logic and evidence
+- [ ] Clarity and cadence
+- [ ] Voice and humanisation
+- [ ] Genre and reader task
+- [ ] Mechanics and accessibility
+- [ ] Final proof after last substantive edit
 
-- throat-clearing
-- duplicated claims
-- empty importance markers
+## Handoff
 
-### Restore
-
-- connective tissue
-- one or two human turns of phrase
-- necessary context
-
-## Final read-aloud notes
-
-- Where did the voice reset?
-- Which sentence still sounds over-built?
-- Does the ending add consequence rather than recap?
+- Material changes worth naming:
+- Protected facts or literals:
+- Unresolved questions:
+- Deliberate exceptions:
+- Reason to stop:

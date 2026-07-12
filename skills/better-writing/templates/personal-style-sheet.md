@@ -1,52 +1,101 @@
 # Personal style sheet
 
-Use this to capture a writer's real tendencies before revision smooths them away.
+Build this from representative samples, not aspiration alone. Record repeated habits and quote short anchor lines.
+
+## Sample set
+
+- Sample 1 and context:
+- Sample 2 and context:
+- Sample 3 and context:
+- Genres represented:
+- Topics or moods that may distort the sample:
 
 ## Core stance
 
-- What do I sound like when I am most clear?
-- How direct am I?
-- How warm am I?
-- What kinds of claims do I make confidently?
+- How direct is the writer?
+- How do they express confidence?
+- How do they express uncertainty?
+- How do they disagree?
+- What kinds of claims do they own in first person?
+- What relationship do they create with the reader?
 
-## Sentence rhythm
+## Selection and attention
 
-- Typical sentence length:
-- Do I prefer short turns, long lines, or a mix?
-- Do I use questions?
-- Do I use fragments?
-- Do I use asides or parentheticals?
+- What details do they notice?
+- Do they prefer mechanisms, scenes, data, examples, or definitions?
+- What do they leave implicit?
+- What kinds of stakes or consequences interest them?
 
-## Word preferences
+## Sentence movement
 
-- Words or phrases I naturally use:
-- Words I never want on the page:
-- Terms I keep because they are precise:
+- Typical sentence range:
+- Short-sentence purpose:
+- Long-sentence purpose:
+- Fragments:
+- Questions:
+- Asides or parentheses:
+- Contractions:
+- Repeated syntax that is truly characteristic:
 
-## Authority and angle
+## Paragraphs and structure
 
-- What seat do I have in this topic?
-- When do I use first person?
-- What experience am I allowed to speak from?
+- Typical paragraph scale:
+- How quickly does the point arrive?
+- How are examples introduced?
+- How are transitions handled?
+- Are headings descriptive, claim-led, or sparse?
+- When are bullets or tables used?
+
+## Diction
+
+- Precise terms the writer keeps:
+- Plain words the writer prefers:
+- Regional or cultural language to preserve:
+- Words or phrases the writer avoids:
+- Formality level by genre:
+
+## Humour and warmth
+
+- What kind of humour, if any, appears?
+- How does the writer show care without praise or performance?
+- Which topics call for restraint?
 
 ## Openings
 
-- How do I usually enter a piece?
-- What opening moves feel false to me?
+- Common opening jobs:
+- Does the writer lead with claim, task, scene, question, or evidence?
+- Opening moves that feel false:
 
 ## Endings
 
-- How do I prefer to close?
-- What kinds of endings feel too tidy or preachy?
+- Common closing jobs:
+- How tidy or open are endings?
+- Ending moves that feel false:
 
-## Friction patterns
+## Voice anchors
 
-- Where do my drafts usually get vague?
-- What do I over-explain?
-- What do I under-explain?
+Quote three short lines that carry stable habits. Note what each line proves.
 
-## Sample lines to preserve
+1. Line:
+   Habit:
+2. Line:
+   Habit:
+3. Line:
+   Habit:
 
-- line 1:
-- line 2:
-- line 3:
+## Boundaries
+
+- Never imitate these surface tics:
+- Never invent these kinds of experience:
+- Do not standardise these identity-bearing choices:
+- House-style requirements that override preference:
+
+## Calibration test
+
+After revision, compare the opening, densest paragraph, and ending with the samples.
+
+- What still sounds like this writer?
+- What became generic?
+- What became more ornate or formal?
+- What factual or emotional authority was added without support?
+- Which anchor line or habit needs restoration?

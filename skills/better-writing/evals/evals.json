@@ -4,84 +4,244 @@
   "evals": [
     {
       "id": 1,
-      "name": "docs_clarity_smoke",
-      "prompt": "Rewrite this README section so a new engineer can follow it on the first read. The current version is bloated and vague.",
-      "expected_output": "Routes to first-principles clarity and the revision pass stack, then favors a technical-doc shape rather than a general essay voice.",
+      "name": "draft-readme-runbook",
+      "prompt": "Draft a short README section from the attached notes for a new engineer. Keep the runbook practical: prerequisites, numbered steps, verification, and rollback. Preserve the command `make db-reset ENV=staging` exactly and do not add setup that is not in the notes.",
+      "expected_output": "A scannable README/runbook with the requested sections, exact command preservation, and a verification and rollback path grounded only in the fixture.",
+      "files": ["evals/files/readme-runbook.md"],
       "assertions": [
-        {
-          "text": "Loads references/revision-pass-stack.md for editing order",
-          "type": "disclosure"
-        },
-        {
-          "text": "Uses references/genre-modes.md to keep the output in a documentation shape",
-          "type": "functional"
-        }
+        {"text": "Organizes the response as README/runbook content with prerequisites, numbered steps, verification, and rollback", "type": "structural"},
+        {"text": "Preserves `make db-reset ENV=staging` character-for-character", "type": "functional"},
+        {"text": "Does not invent commands, prerequisites, evidence, or citations beyond the fixture", "type": "negative"},
+        {"text": "Captured trace records reads of operating-contract.md, revision-pass-stack.md, and genre-modes.md and no reads of style-bundles.md or research-notes.md", "type": "disclosure"}
       ],
-      "tags": ["smoke", "disclosure"]
+      "tags": ["smoke", "drafting", "readme", "runbook", "disclosure"]
     },
     {
       "id": 2,
-      "name": "stiff_memo_edge",
-      "prompt": "This memo is clear enough but still sounds stiff, corporate, and too polished. Make it feel more owned.",
-      "expected_output": "Routes to cadence, ownership, and genericity cleanup rather than only grammar rules.",
+      "name": "rewrite-memo-preserves-evidence",
+      "prompt": "Rewrite the attached Q3 operations memo for an executive audience. Make the argument easier to scan and less corporate, but preserve 18.4%, Q3, the sentence `We have not tested this in production.`, the quoted sentence, and the uncertainty word `may`. Do not add a source, result, or personal experience.",
+      "expected_output": "A tighter executive memo that preserves every supplied number, quote, uncertainty marker, and evidence boundary without adding proof or citations.",
+      "files": ["evals/files/memo.md"],
       "assertions": [
-        {
-          "text": "Loads references/voice-and-rhythm.md",
-          "type": "disclosure"
-        },
-        {
-          "text": "Loads references/genericity-and-stiffness.md",
-          "type": "disclosure"
-        }
+        {"text": "Keeps a memo shape with a clear decision, context, risks, and next step rather than turning it into an essay", "type": "structural"},
+        {"text": "Preserves 18.4%, Q3, `We have not tested this in production.`, the fixture's quoted sentence, and the uncertainty marker `may`", "type": "functional"},
+        {"text": "Does not invent metrics, customer results, first-hand experience, or citations", "type": "negative"},
+        {"text": "Captured trace records the memo-relevant revision, genre, voice, and genericity references and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
       ],
-      "tags": ["edge", "disclosure"]
+      "tags": ["rewrite", "memo", "preservation", "evidence", "disclosure"]
     },
     {
       "id": 3,
-      "name": "style_bundle_calibration",
-      "prompt": "Turn this technical walkthrough into something with more Simon Willison or Julia Evans energy, but keep the commands exact.",
-      "expected_output": "Routes to the technical teacher style bundle and the correct genre mode without turning the piece into imitation or loose personal essay.",
+      "name": "review-only-guide",
+      "prompt": "Review the attached technical guide only. Give me a prioritized diagnosis and concrete edit suggestions; do not rewrite the guide, do not produce a replacement draft, and do not alter the shell commands.",
+      "expected_output": "A review report with prioritized findings and actionable suggestions, while leaving the guide itself unrevised and the commands quoted only as evidence.",
+      "files": ["evals/files/technical-guide.md"],
       "assertions": [
-        {
-          "text": "Loads references/style-bundles.md",
-          "type": "disclosure"
-        },
-        {
-          "text": "Keeps the piece in a technical guide mode",
-          "type": "functional"
-        }
+        {"text": "Returns a review or diagnosis with prioritized findings instead of silently rewriting the guide", "type": "functional"},
+        {"text": "Separates observations from suggested edits and identifies the most consequential issue first", "type": "structural"},
+        {"text": "Does not claim to have changed the fixture or present a full replacement guide", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, and quality-gates.md and excludes genre-modes.md, style-bundles.md, and research-notes.md", "type": "disclosure"}
       ],
-      "tags": ["smoke"]
+      "tags": ["review", "review-only", "technical-guide", "disclosure"]
     },
     {
       "id": 4,
-      "name": "negative_non_writing_prompt",
-      "prompt": "Fix this failing React hydration test and tell me why the state mismatches on the client.",
-      "expected_output": "Does not treat a code-debugging request as a writing problem.",
+      "name": "humanise-stiff-memo",
+      "prompt": "Make the attached internal memo sound more human and owned. Keep it professional, specific, and calm: no slang, fake jokes, random contractions, or borrowed writer tics. Preserve the cautious recommendation and all concrete details.",
+      "expected_output": "A warmer, more owned memo achieved through precise diction and cadence rather than gimmicks or imitation.",
+      "files": ["evals/files/memo.md"],
       "assertions": [
-        {
-          "text": "Does not route a code-only debugging prompt through the writing references",
-          "type": "negative"
-        }
+        {"text": "Improves ownership, cadence, and concrete diction while retaining the memo's professional register", "type": "functional"},
+        {"text": "Does not add slang, fake jokes, random contractions, or a recognizable writer's surface mannerisms", "type": "negative"},
+        {"text": "Preserves the cautious recommendation and the fixture's concrete details", "type": "functional"},
+        {"text": "Captured trace records voice-and-rhythm.md, genericity-and-stiffness.md, and ai-isms-and-humanisation.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
       ],
-      "tags": ["negative"]
+      "tags": ["humanisation", "memo", "voice", "disclosure"]
     },
     {
       "id": 5,
-      "name": "essay_shape_disclosure",
-      "prompt": "This reflective essay probably wants a braided structure and a less tidy ending.",
-      "expected_output": "Routes to essay-appropriate shape and style guidance rather than documentation or copywriting guidance.",
+      "name": "adapt-technical-guide-for-novices",
+      "prompt": "Adapt the attached technical walkthrough for a developer seeing this system for the first time. Use a patient technical-teacher voice, explain why each step exists, and keep the command `curl -fsS http://localhost:8787/healthz` and the terms `idempotency key` and `eventual consistency` exact.",
+      "expected_output": "A novice-friendly technical guide with clear sequence and rationale, preserving the exact command and technical terms.",
+      "files": ["evals/files/technical-guide.md"],
       "assertions": [
-        {
-          "text": "Loads references/genre-modes.md for page architecture",
-          "type": "disclosure"
-        },
-        {
-          "text": "Loads references/style-bundles.md for essay and reflection calibration",
-          "type": "disclosure"
-        }
+        {"text": "Uses a technical-guide shape with ordered steps, rationale, and a verification step", "type": "structural"},
+        {"text": "Preserves `curl -fsS http://localhost:8787/healthz`, `idempotency key`, and `eventual consistency` exactly", "type": "functional"},
+        {"text": "Explains the workflow without claiming tests, benchmarks, or production experience not present in the fixture", "type": "negative"},
+        {"text": "Captured trace records revision-pass-stack.md, genre-modes.md, and style-bundles.md and no read of research-notes.md", "type": "disclosure"}
       ],
-      "tags": ["edge", "disclosure"]
+      "tags": ["adaptation", "technical-guide", "voice", "commands", "terms"]
+    },
+    {
+      "id": 6,
+      "name": "tighten-landing-page-with-bounded-claims",
+      "prompt": "Rewrite the attached landing-page draft for a skeptical B2B buyer. Make the value proposition concrete and the CTA clear, but keep the only supported claim—`reduces triage time in our pilot`—qualified as a pilot observation. Do not invent logos, percentages, testimonials, certifications, or citations.",
+      "expected_output": "Conversion copy with a clear audience problem, concrete value proposition, proof boundary, and CTA, without fabricated social proof or quantified results.",
+      "files": ["evals/files/landing-page.md"],
+      "assertions": [
+        {"text": "Uses landing-page structure with audience problem, specific benefit, proof boundary, and a direct CTA", "type": "structural"},
+        {"text": "Keeps `reduces triage time in our pilot` framed as a pilot observation rather than a universal result", "type": "functional"},
+        {"text": "Does not invent logos, percentages, testimonials, certifications, citations, or customer experience", "type": "negative"},
+        {"text": "Captured trace records genre-modes.md, style-bundles.md, genericity-and-stiffness.md, and quality-gates.md and no read of research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "landing-page", "conversion-copy", "claims", "disclosure"]
+    },
+    {
+      "id": 7,
+      "name": "shape-braided-reflective-essay",
+      "prompt": "Revise the attached reflective essay into a braided structure that can move between the bus-stop scene and the later work incident. Keep the quoted line `I stopped explaining the delay`, retain `I think`, and leave the ending open rather than adding a tidy moral.",
+      "expected_output": "A shaped essay with a deliberate braid, preserved quote and uncertainty, and an earned open ending rather than a summary lesson.",
+      "files": ["evals/files/essay.md"],
+      "assertions": [
+        {"text": "Uses an essay/reflection shape with a purposeful braid between the two scenes", "type": "structural"},
+        {"text": "Preserves the quote `I stopped explaining the delay` and the uncertainty marker `I think`", "type": "functional"},
+        {"text": "Does not add a tidy moral, generic inspirational conclusion, or fabricated personal detail", "type": "negative"},
+        {"text": "Captured trace records genre-modes.md, style-bundles.md, voice-and-rhythm.md, and gotchas.md and no read of research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "essay", "reflection", "structure", "disclosure"]
+    },
+    {
+      "id": 8,
+      "name": "rewrite-email-and-ui-copy",
+      "prompt": "Rewrite the attached product email and its UI labels for a calm account-recovery flow. Keep the button labels `Send recovery link` and `Back to sign in` exact, avoid blame, and make the email scannable on mobile.",
+      "expected_output": "A concise, reassuring email plus consistent UI copy with exact button labels and no blame-oriented language.",
+      "files": ["evals/files/email-ui.md"],
+      "assertions": [
+        {"text": "Separates the email copy from the UI labels and keeps both concise and scannable", "type": "structural"},
+        {"text": "Preserves `Send recovery link` and `Back to sign in` exactly", "type": "functional"},
+        {"text": "Uses calm, non-blaming language and does not invent support promises or security claims", "type": "functional"},
+        {"text": "Captured trace records genre-modes.md, style-bundles.md, and quality-gates.md and no read of research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "email", "ui-copy", "microcopy", "disclosure"]
+    },
+    {
+      "id": 9,
+      "name": "preserve-facts-and-uncertainty",
+      "prompt": "Polish the attached evidence note for clarity. Keep every number, date, quoted phrase, technical term, and uncertainty qualifier. The note says what was observed in staging only; do not turn it into proof of production impact or add citations.",
+      "expected_output": "A clearer evidence note with literal facts and uncertainty intact, and an explicit boundary between staging observation and production proof.",
+      "files": ["evals/files/evidence-boundary.md"],
+      "assertions": [
+        {"text": "Preserves all fixture numbers, dates, quoted phrases, technical terms, and uncertainty qualifiers", "type": "functional"},
+        {"text": "Clearly labels the observation as staging-only and does not upgrade it to production evidence", "type": "functional"},
+        {"text": "Does not add citations, sources, benchmarks, customer proof, or first-hand experience", "type": "negative"},
+        {"text": "Captured trace records foundations.md, revision-pass-stack.md, and quality-gates.md and excludes research-notes.md and style-bundles.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "fact-preservation", "numbers", "uncertainty", "disclosure"]
+    },
+    {
+      "id": 10,
+      "name": "mixed-code-and-prose-scope",
+      "prompt": "Improve only the explanatory prose in the attached engineering note. Leave the TypeScript block, imports, identifiers, comments inside the code, and output example untouched. Make the surrounding explanation clearer for a reviewer.",
+      "expected_output": "Only prose outside the code block is revised; the code, identifiers, comments, and output example remain byte-for-byte unchanged.",
+      "files": ["evals/files/mixed-code-prose.md"],
+      "assertions": [
+        {"text": "Revises explanatory prose while preserving the TypeScript block, imports, identifiers, code comments, and output example byte-for-byte", "type": "functional"},
+        {"text": "Makes the scope boundary visible instead of silently refactoring or reformatting code", "type": "structural"},
+        {"text": "Does not invent runtime results, dependencies, or technical behavior", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, and quality-gates.md and no read of style-bundles.md or research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["mixed-scope", "code-and-prose", "preservation", "review"]
+    },
+    {
+      "id": 11,
+      "name": "tiny-draft-stop-early",
+      "prompt": "The attached draft is just `OK.` Please improve it only if there is a real reader-facing problem. Do not inflate it into a paragraph or invent context; a brief no-change recommendation is acceptable.",
+      "expected_output": "The response recognizes that the tiny draft may need no edit, explains the stop condition briefly, and does not manufacture content.",
+      "files": ["evals/files/tiny.txt"],
+      "assertions": [
+        {"text": "Avoids expanding `OK.` without a demonstrated reader need and may recommend no change", "type": "functional"},
+        {"text": "Does not invent audience, context, facts, or a larger replacement draft", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md and gotchas.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["edge", "tiny-input", "stop-condition"]
+    },
+    {
+      "id": 12,
+      "name": "empty-input-ask-for-material",
+      "prompt": "Rewrite the attached document. It is empty. Do not fabricate a draft; tell me what minimum material or audience detail you need to proceed.",
+      "expected_output": "A concise request for the missing draft and useful context, without pretending an edit occurred.",
+      "files": ["evals/files/empty.txt"],
+      "assertions": [
+        {"text": "States that there is no source text to revise and asks only for the minimum missing material or audience context", "type": "functional"},
+        {"text": "Does not fabricate prose, edits, facts, citations, or a claimed result", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md and quality-gates.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["edge", "empty-input", "clarification"]
+    },
+    {
+      "id": 13,
+      "name": "overedited-draft-recover-cadence",
+      "prompt": "The attached announcement has already been edited three times and now sounds clipped, over-signposted, and generic. Diagnose what went wrong and make the smallest useful pass that restores cadence and ownership without adding claims.",
+      "expected_output": "A restrained diagnosis that refuses to paraphrase unsupported release hype; it asks for the concrete change or produces only source-supported copy, without another layer of slogans.",
+      "files": ["evals/files/overedited.md"],
+      "assertions": [
+        {"text": "Diagnoses clipped cadence, genericity, or over-signposting before making a restrained revision", "type": "functional"},
+        {"text": "Does not merely rearrange `streamline`, `clarity`, `speed`, and `impact`; it removes unsupported hype or asks for the concrete change and evidence", "type": "functional"},
+        {"text": "Does not perform an indiscriminate rewrite or claim new evidence", "type": "negative"},
+        {"text": "Captured trace records voice-and-rhythm.md, genericity-and-stiffness.md, gotchas.md, and quality-gates.md and no read of research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["edge", "over-edited", "humanisation", "cadence", "disclosure"]
+    },
+    {
+      "id": 14,
+      "name": "conflicting-genre-request",
+      "prompt": "Rewrite the attached compliance notice so it is both a legally precise notice and a playful launch-page announcement. Keep the disclaimer exact. If those modes conflict, identify the conflict and ask one focused question or choose a clearly stated priority before editing.",
+      "expected_output": "The response surfaces the incompatible genre goals, protects the exact disclaimer, and asks one focused clarification or states a defensible priority before revising.",
+      "files": ["evals/files/conflicting-modes.md"],
+      "assertions": [
+        {"text": "Identifies the conflict between legal precision and playful conversion copy and asks one focused question or states the chosen priority", "type": "functional"},
+        {"text": "Preserves the disclaimer exactly until the priority is resolved", "type": "functional"},
+        {"text": "Does not blend incompatible modes into misleading legal or marketing claims", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, genre-modes.md, and gotchas.md and no read of research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["edge", "conflicting-modes", "genre", "clarification"]
+    },
+    {
+      "id": 15,
+      "name": "negative-code-only-debugging",
+      "prompt": "Fix the failing TypeScript test in `src/cache.test.ts`, explain the hydration mismatch, and return the patch. There is no prose draft to revise.",
+      "expected_output": "The writing skill does not trigger for a code-only debugging and patch request; it routes to a coding/debugging capability instead.",
+      "assertions": [
+        {"text": "Does not rewrite prose or load better-writing references for a code-only debugging request", "type": "negative"},
+        {"text": "Recognizes that the requested patch belongs to a coding or debugging workflow", "type": "functional"}
+      ],
+      "tags": ["negative", "near-miss", "code-only"]
+    },
+    {
+      "id": 16,
+      "name": "negative-fact-check-only",
+      "prompt": "Fact-check whether the statement `the rollout cut latency by 23%` is true. Search for sources and report a verdict; do not rewrite the sentence.",
+      "expected_output": "The writing skill does not trigger for fact-checking without a prose revision request; it routes to research or verification instead.",
+      "assertions": [
+        {"text": "Does not perform a prose rewrite or claim that better-writing references were needed", "type": "negative"},
+        {"text": "Recognizes fact-checking and source verification as outside this skill's trigger", "type": "functional"}
+      ],
+      "tags": ["negative", "near-miss", "fact-check-only"]
+    },
+    {
+      "id": 17,
+      "name": "negative-docs-question",
+      "prompt": "What does the `POST /v1/jobs/{id}/retry` endpoint do according to the API docs? Answer the factual question only; do not edit or improve any prose.",
+      "expected_output": "The writing skill does not trigger for a documentation lookup question with no revision task.",
+      "assertions": [
+        {"text": "Does not rewrite prose or load better-writing references for a docs question", "type": "negative"},
+        {"text": "Recognizes factual documentation lookup as outside the writing skill's scope", "type": "functional"}
+      ],
+      "tags": ["negative", "near-miss", "docs-question"]
+    },
+    {
+      "id": 18,
+      "name": "verification-preserves-boundaries",
+      "prompt": "Before you call this rewrite finished, verify the attached draft against the user's constraints: exact commands and quoted text, all numbers and uncertainty markers, no invented proof or citations, and the requested genre shape. Report any constraint you could not verify instead of claiming success.",
+      "expected_output": "A verification-oriented response that checks literal and structural constraints, names any unresolved check, and does not overclaim completion.",
+      "files": ["evals/files/evidence-boundary.md", "evals/files/technical-guide.md"],
+      "assertions": [
+        {"text": "Reports checks for exact commands, quoted text, numbers, uncertainty markers, evidence boundaries, and genre shape", "type": "verification"},
+        {"text": "Distinguishes verified constraints from any constraint it could not verify", "type": "verification"},
+        {"text": "Does not claim completion or proof without observable support", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, quality-gates.md, and revision-pass-stack.md and no read of research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["verification", "release", "preservation", "disclosure"]
     }
   ]
 }

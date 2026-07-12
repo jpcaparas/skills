@@ -1,63 +1,138 @@
 # Foundations
 
-Start with Strunk's durable rules. Then modernize them for real writing instead of treating them as scripture.
+Use this reference for sentence-level clarity, grammar, usage, and editorial judgement. Rules serve meaning; they are not a scoring system.
 
-The original 1918 text still earns its keep because it attacks vagueness, padding, and weak sentence motion. The failure is not that Strunk is useless. The failure is acting as if grammar and concision are the whole of good writing.
+## Durable principles
 
-## The enduring rules
+| Principle | Default | Keep the exception when |
+|---|---|---|
+| Prefer concrete language | Name actors, objects, dates, quantities, and consequences | an abstraction is the precise domain term |
+| Prefer active voice | Put the responsible actor near the action | the actor is unknown, irrelevant, obvious, or deliberately de-emphasised |
+| Use positive form | Say what is true before listing what is not | the negation is the actual finding, constraint, or correction |
+| Omit needless words | Cut repetition, padding, and ceremonial setup | connective tissue carries logic, rhythm, or courtesy |
+| Keep related words together | Keep subjects, verbs, objects, modifiers, and conditions within sight | deliberate interruption creates useful emphasis without ambiguity |
+| Give each paragraph one job | Let paragraphs function as units of thought | a short transitional paragraph earns its place |
+| Use parallel form for parallel ideas | Make real siblings grammatically recognisable | the ideas differ in rank or function |
+| Land on informative material | Put useful emphasis late in the sentence | chronology or comprehension requires another order |
+| Keep tense and point of view controlled | Change them for a visible reason | narrative time or perspective genuinely moves |
 
-| Strunk rule | Keep | Modern reading | Overcorrection to avoid |
-|---|---|---|---|
-| Form the possessive singular by adding `'s` | Yes | Use ordinary possessives unless a house style says otherwise. | Do not invent one-off exceptions for common names. |
-| Use a comma after each term in a series except the last | Usually | Default to the serial comma in technical, editorial, and transactional prose. | Do not burn time fighting a house style that already settled this. |
-| Enclose parenthetic expressions between commas | Yes | Mark true interruptions on both sides. | Do not comma-wrap defining information. |
-| Place a comma before a conjunction introducing a co-ordinate clause | Yes | Use it when two independent clauses share the sentence. | Do not add commas where one clause depends on the other. |
-| Do not join independent clauses by a comma | Yes | Fix comma splices with a period, semicolon, or real subordination. | Do not replace every splice with a semicolon. |
-| Do not break sentences in two | Mostly | Keep fragments intentional and load-bearing. | Do not ban fragments that create pace, emphasis, or voice on purpose. |
-| A participial phrase at the beginning must refer to the grammatical subject | Yes | Keep modifiers tied to the thing they modify. | Do not let a dangling opener create accidental comedy. |
-| Make the paragraph the unit of composition: one paragraph to each topic | Yes | Give each paragraph one job. | Do not force every paragraph to the same length. |
-| Begin each paragraph with a topic sentence, end in conformity with the beginning | Usually | Surface the point early unless the mode benefits from delay. | Do not turn every paragraph into a school essay. |
-| Use the active voice | Usually | Prefer active voice when it shortens the path from actor to action. | Passive voice is fine when the actor is unknown, irrelevant, or deliberately de-emphasized. |
-| Put statements in positive form | Yes | State what is true before explaining what it is not. | Contrast is still useful when contrast is the point. |
-| Use definite, specific, concrete language | Yes | Favor named actors, real objects, dates, and numbers over abstractions. | Do not strip real technical terminology when it adds precision. |
-| Omit needless words | Yes | Cut duplicated claims, throat-clearing, and softeners. | Do not cut connective tissue so aggressively that the prose stops sounding human. |
-| Avoid a succession of loose sentences | Usually | Vary sentence architecture and let dependent ideas stay connected. | Do not make the prose so tight that every sentence lands like a hard stop. |
-| Express co-ordinate ideas in similar form | Yes | Use parallelism for real siblings. | Do not force false symmetry where the ideas are not equivalent. |
-| Keep related words together | Yes | Keep subjects, verbs, objects, and modifiers close. | Do not twist natural order into grammar-school stiffness. |
-| In summaries, keep to one tense | Usually | Switch tense only with a visible reason. | Reflective or narrative passages can move in time deliberately. |
-| Place the emphatic words of a sentence at the end | Yes | Land the sentence on the real information. | Do not turn every sentence into a punchline. |
+## Sentence mechanics
 
-## What better-writing adds
+### Subjects and verbs
 
-### 1. Clarity is not compression
+Readers process sentences more easily when the actor and action arrive before a long trail of qualifications.
 
-A sentence can be shorter and worse. Good revision removes drag, not life.
+Weak:
 
-### 2. Cadence carries meaning
+> The implementation of the migration by the platform team was completed after a review of the remaining compatibility issues.
 
-Paragraph rhythm, transitions, and sentence variety help the reader feel the logic as well as parse it.
+Clearer:
 
-### 3. Voice is part of precision
+> The platform team reviewed the remaining compatibility issues, then completed the migration.
 
-Contractions, first person, admissions, and direct verdicts can make writing more exact, not less exact, when they reflect the real stance of the writer.
+Do not force a named actor where none is known:
 
-### 4. Style is mode-specific
+> Three records were deleted overnight.
 
-The right tone for a README is not the right tone for a personal essay, operator memo, or pricing page.
+The passive voice is useful here until evidence identifies who or what deleted them.
 
-### 5. Genericity is a writing problem
+### Modifiers
 
-Perfect grammar can still produce prose that feels ceremonial, interchangeable, or padded with phrases that sound important without carrying thought.
+Put modifiers beside what they modify. Check introductory phrases for a real grammatical subject.
 
-## When to depart from literal Strunk
+Ambiguous:
 
-- Use fragments when they sharpen pace or emphasis and still feel intentional.
-- Use contractions when they sound more natural than the full form.
-- Use first person when it clarifies who knows what, who tried what, or whose judgment is on the line.
-- Delay the point in an essay opening when scene, tension, or image earns the delay.
-- Use bullets and tables when they compress real information better than paragraphs.
-- Let an ending stay open when summary would only repeat what the reader already knows.
+> After reviewing the logs, the timeout looked too short.
 
-## Source line
+Clearer:
 
-This skill explicitly extends the public-domain Strunk text and the narrower [obra/the-elements-of-style](https://github.com/obra/the-elements-of-style) packaging model. The improvement is not "more rules." The improvement is routing, revision order, genre awareness, and stronger modern prose diagnostics.
+> After reviewing the logs, we decided the timeout was too short.
+
+### Coordination
+
+Join independent clauses with a period, semicolon, or coordinating conjunction—not a comma alone. Use semicolons sparingly enough that they retain their organising force.
+
+Use the serial comma by default when it prevents ambiguity, while respecting an established house style.
+
+### Fragments
+
+Fragments are valid when they are intentional, legible, and load-bearing. A fragment can change pace or emphasis. A run of fragments often turns thought into performance.
+
+### Pronouns and references
+
+Make `this`, `that`, `it`, `they`, and `which` point to one unmistakable antecedent. When a paragraph has several candidate nouns, repeat the precise noun rather than making the reader solve the reference.
+
+### Lists
+
+Use a list when items are genuine peers, steps, options, or evidence that becomes easier to compare vertically. Keep grammar parallel. Do not turn a developing argument into bullets merely to make the page look organised.
+
+## Precision
+
+### Prefer the real verb
+
+Watch for nominalisations that hide action:
+
+- `make a decision` → `decide`
+- `conduct an analysis` → `analyse`
+- `provide an explanation` → `explain`
+
+Keep the noun when the thing itself matters, as in `the analysis is attached`.
+
+### Use qualifications honestly
+
+Hedges are not clutter when they encode evidence.
+
+Weak uncertainty:
+
+> It could potentially be argued that the rollout may have contributed to the decline.
+
+Specific uncertainty:
+
+> The decline began after the rollout, but the data does not establish causation.
+
+### Preserve technical and regulated language
+
+Plain language does not mean replacing an exact term with a familiar but inaccurate one. Define a term once if the reader needs help; then use it consistently.
+
+### Prefer measurable consequences to importance claims
+
+Weak:
+
+> This distinction is critically important.
+
+Specific:
+
+> The distinction decides whether the request is retried or discarded.
+
+## Inclusive and accessible prose
+
+- Address the reader directly when it helps them act; avoid a scolding or patronising voice.
+- Use people-first or identity-first language according to the community's stated preference.
+- Avoid gendered defaults for unknown people.
+- Expand uncommon abbreviations on first use.
+- Write links and headings that make sense out of context.
+- Do not encode instructions through colour or visual position alone.
+- Preserve a writer's dialect or second-language identity unless the user asks for standardisation or comprehension is genuinely impaired.
+
+## Modern corrections to over-rigid style rules
+
+- Shorter is not automatically clearer.
+- Passive voice is a grammatical tool, not a defect category.
+- First person can clarify source, responsibility, and limits.
+- Contractions can improve naturalness without lowering standards.
+- A paragraph may delay its point when scene, reasoning, or suspense earns the delay.
+- Singular `they` is standard, useful English.
+- Ending a sentence with a preposition is often natural.
+- Split infinitives are acceptable when they improve meaning or rhythm.
+- An intentional fragment can be better than a syntactically complete but lifeless sentence.
+
+## Sentence gate
+
+A sentence passes when:
+
+- it can be parsed once without backtracking
+- actor, action, condition, and consequence are unambiguous
+- every qualification changes the meaning
+- exact terms remain exact
+- punctuation reflects syntax rather than decorating the line
+- the sentence sounds like part of this paragraph, not a maxim pasted into it

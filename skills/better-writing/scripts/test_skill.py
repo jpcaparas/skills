@@ -1,173 +1,95 @@
 #!/usr/bin/env python3
-"""
-test_skill.py - Validate packaging and run better-writing probes.
-
-Usage:
-    python3 test_skill.py <skill-path>
-"""
+"""Run the better-writing package's portable validation and focused self-tests."""
 
 from __future__ import annotations
 
 import json
-import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Sequence
+
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import probe_better_writing
+import scan_aiisms
 import validate
 
 
-def extract_file_references(content: str) -> list[str]:
-    refs: set[str] = set()
-    stripped = re.sub(r"```[\s\S]*?```", "", content)
-    placeholder_re = re.compile(r"[{}<>]|/X\.md$|\s")
+@dataclass(frozen=True)
+class TestSummary:
+    package_valid: bool
+    probe_passed: bool
+    scanner_passed: bool
+    errors: tuple[str, ...]
+    warnings: tuple[str, ...]
 
-    for match in re.finditer(r"`((?:references|scripts|templates|assets|agents|evals)/[^`]+)`", stripped):
-        path = match.group(1)
-        if not placeholder_re.search(path):
-            refs.add(path)
-
-    for match in re.finditer(r"\[.*?\]\(((?:references|scripts|templates|assets|agents|evals)/[^)]+)\)", stripped):
-        path = match.group(1)
-        if not placeholder_re.search(path):
-            refs.add(path)
-
-    return sorted(refs)
+    @property
+    def passed(self) -> bool:
+        return self.package_valid and self.probe_passed and self.scanner_passed and not self.errors
 
 
 def run_tests(skill_path: str) -> dict[str, object]:
+    """Exercise the package without invoking a network or non-standard dependency."""
+
     root = Path(skill_path).resolve()
-    results: dict[str, object] = {
+    validation = validate.validate_skill(str(root))
+    errors = [str(error) for error in validation["errors"]]
+    warnings = [str(warning) for warning in validation["warnings"]]
+    probe_suite = probe_better_writing.run_suite()
+    scanner_suite = scan_aiisms.run_self_tests()
+    if not probe_suite["passed"]:
+        errors.append("Probe suite failed")
+    if not scanner_suite["passed"]:
+        errors.append("Scanner self-test failed")
+    summary = TestSummary(
+        package_valid=bool(validation["valid"]),
+        probe_passed=bool(probe_suite["passed"]),
+        scanner_passed=bool(scanner_suite["passed"]),
+        errors=tuple(errors),
+        warnings=tuple(warnings),
+    )
+    return {
         "skill_name": root.name,
-        "tests_found": 0,
-        "tags": {},
-        "files_verified": {"passed": 0, "total": 0},
-        "cross_references": {"passed": 0, "total": 0},
-        "assertions_valid": {"passed": 0, "total": 0},
-        "tag_coverage": {"passed": 0, "total": 4},
-        "probe_checks": {"passed": 0, "total": 0},
-        "errors": [],
-        "warnings": [],
-        "passed": True,
+        "passed": summary.passed,
+        "package_validation": validation,
+        "probe_suite": probe_suite,
+        "scanner_suite": scanner_suite,
+        "errors": list(summary.errors),
+        "warnings": list(summary.warnings),
     }
 
-    validation = validate.validate_skill(str(root))
-    results["warnings"].extend(validation["warnings"])
-    if not validation["valid"]:
-        results["errors"].extend(validation["errors"])
-        results["passed"] = False
 
-    evals_path = root / "evals" / "evals.json"
-    if not evals_path.is_file():
-        results["errors"].append("evals/evals.json not found")
-        results["passed"] = False
-    else:
-        evals_data = json.loads(evals_path.read_text(encoding="utf-8"))
-        evals = evals_data.get("evals", [])
-        results["tests_found"] = len(evals)
-        seen_tags: set[str] = set()
-
-        for item in evals:
-            eval_name = item.get("name", item.get("id", "unknown"))
-            for tag in item.get("tags", []):
-                seen_tags.add(tag)
-                results["tags"][tag] = results["tags"].get(tag, 0) + 1
-
-            for assertion in item.get("assertions", []):
-                results["assertions_valid"]["total"] += 1
-                if isinstance(assertion, dict) and "text" in assertion:
-                    results["assertions_valid"]["passed"] += 1
-                else:
-                    results["errors"].append(f"Invalid assertion in eval '{eval_name}'")
-                    results["passed"] = False
-
-            for rel_path in item.get("files", []):
-                results["files_verified"]["total"] += 1
-                if (root / rel_path).exists():
-                    results["files_verified"]["passed"] += 1
-                else:
-                    results["errors"].append(f"Missing eval file reference: {rel_path}")
-                    results["passed"] = False
-
-        for tag in ["smoke", "edge", "negative", "disclosure"]:
-            if tag in seen_tags:
-                results["tag_coverage"]["passed"] += 1
-            else:
-                results["errors"].append(f"Missing eval coverage for tag: {tag}")
-                results["passed"] = False
-
-    markdown_files = [root / "SKILL.md"]
-    markdown_files.extend((root / "references").rglob("*.md"))
-    markdown_files.extend((root / "templates").rglob("*.md"))
-    for md_path in markdown_files:
-        content = md_path.read_text(encoding="utf-8")
-        for rel_path in extract_file_references(content):
-            results["cross_references"]["total"] += 1
-            if (root / rel_path).exists():
-                results["cross_references"]["passed"] += 1
-            else:
-                results["errors"].append(f"Cross-reference not found: {rel_path}")
-                results["passed"] = False
-
-    suite = probe_better_writing.run_suite()
-    summary = suite["summary"]
-    results["probe_checks"]["total"] = summary["checks_total"]
-    results["probe_checks"]["passed"] = summary["checks_passed"]
-    if not suite["passed"]:
-        failing = [item["name"] for item in suite["checks"] if not item["passed"]]
-        results["errors"].append(f"Probe suite failed: {', '.join(failing)}")
-        results["passed"] = False
-
-    return results
-
-
-def main() -> int:
-    if len(sys.argv) != 2:
+def main(argv: Sequence[str] | None = None) -> int:
+    args = list(sys.argv[1:] if argv is None else argv)
+    if len(args) != 1:
         print("Usage: python3 test_skill.py <skill-path>", file=sys.stderr)
         return 1
-
-    results = run_tests(sys.argv[1])
-    print(f"Skill: {results['skill_name']}")
-    print(f"Tests found: {results['tests_found']}")
-    for tag, count in sorted(results["tags"].items()):
-        print(f"  {tag}: {count}")
-    print(
-        "Files verified: "
-        f"{results['files_verified']['passed']}/{results['files_verified']['total']}"
-    )
-    print(
-        "Cross-references checked: "
-        f"{results['cross_references']['passed']}/{results['cross_references']['total']}"
-    )
-    print(
-        "Assertion format: "
-        f"{results['assertions_valid']['passed']}/{results['assertions_valid']['total']} valid"
-    )
-    print(
-        "Tag coverage: "
-        f"{results['tag_coverage']['passed']}/{results['tag_coverage']['total']}"
-    )
-    print(
-        "Probe checks: "
-        f"{results['probe_checks']['passed']}/{results['probe_checks']['total']} passed"
-    )
-
-    if results["warnings"]:
+    result = run_tests(args[0])
+    validation = result["package_validation"]
+    assert isinstance(validation, dict)
+    probe = result["probe_suite"]
+    scanner = result["scanner_suite"]
+    assert isinstance(probe, dict) and isinstance(scanner, dict)
+    print(f"Skill: {result['skill_name']}")
+    print(f"Package validation: {'PASS' if validation['valid'] else 'FAIL'}")
+    print(f"Probe checks: {probe['summary']['checks_passed']}/{probe['summary']['checks_total']} passed")
+    scanner_checks = scanner["checks"]
+    assert isinstance(scanner_checks, dict)
+    print(f"Scanner checks: {sum(1 for passed in scanner_checks.values() if passed)}/{len(scanner_checks)} passed")
+    if result["warnings"]:
         print("\nWarnings:")
-        for warning in results["warnings"]:
-            print(f"  - {warning}")
-
-    if results["errors"]:
+        for warning in result["warnings"]:
+            print(f"- {warning}")
+    if result["errors"]:
         print("\nIssues:")
-        for issue in results["errors"]:
-            print(f"  - {issue}")
-
-    print("\nPASS: all checks passed" if results["passed"] else "\nFAIL: one or more checks failed")
-    return 0 if results["passed"] else 1
+        for error in result["errors"]:
+            print(f"- {error}")
+    print("\nPASS: all checks passed" if result["passed"] else "\nFAIL: one or more checks failed")
+    return 0 if result["passed"] else 1
 
 
 if __name__ == "__main__":

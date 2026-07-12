@@ -1,0 +1,86 @@
+[
+  {
+    "query": "Rewrite this README runbook so a new engineer can follow it on the first read. Keep the commands exact.",
+    "should_trigger": true
+  },
+  {
+    "query": "My Q3 memo is accurate but stiff and hard to scan. Tighten the argument for an executive audience without changing the numbers.",
+    "should_trigger": true
+  },
+  {
+    "query": "Review this draft only: identify the three biggest clarity problems and suggest edits, but do not rewrite it.",
+    "should_trigger": true
+  },
+  {
+    "query": "This internal announcement sounds like corporate boilerplate. Make it more human and owned without adding slang or fake warmth.",
+    "should_trigger": true
+  },
+  {
+    "query": "Adapt this deployment walkthrough for a first-time operator and keep every shell command and technical term unchanged.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make this landing page clearer for a skeptical B2B buyer and sharpen the CTA without inventing testimonials or metrics.",
+    "should_trigger": true
+  },
+  {
+    "query": "Shape this reflective draft into a braided essay with a less tidy ending and preserve the quoted line.",
+    "should_trigger": true
+  },
+  {
+    "query": "Rewrite this account-recovery email and its button labels so the flow is calm, concise, and non-blaming.",
+    "should_trigger": true
+  },
+  {
+    "query": "Improve the explanation around this TypeScript example, but leave the code block and output exactly as written.",
+    "should_trigger": true
+  },
+  {
+    "query": "Polish this staging evidence note while preserving every number and uncertainty qualifier; do not turn it into proof of production impact.",
+    "should_trigger": true
+  },
+  {
+    "query": "The draft is just `OK.` Improve it only if there is a real reader-facing problem; otherwise tell me why no change is needed.",
+    "should_trigger": true
+  },
+  {
+    "query": "Rewrite the attached document, but it is empty. Ask for the minimum material you need and do not fabricate a draft.",
+    "should_trigger": true
+  },
+  {
+    "query": "This announcement has been edited into clipped, generic prose. Diagnose it and make the smallest pass that restores cadence.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make this compliance notice both legally precise and playful launch copy, while keeping the disclaimer exact. Surface the conflict before editing.",
+    "should_trigger": true
+  },
+  {
+    "query": "Verify this rewrite against the exact commands, quotes, numbers, uncertainty markers, evidence limits, and requested genre before saying it is finished.",
+    "should_trigger": true
+  },
+  {
+    "query": "Fix the failing TypeScript test in `src/cache.test.ts` and return the patch. There is no prose to revise.",
+    "should_trigger": false
+  },
+  {
+    "query": "Fact-check whether the rollout cut latency by 23% and report the sources. Do not rewrite the sentence.",
+    "should_trigger": false
+  },
+  {
+    "query": "According to the API docs, what does `POST /v1/jobs/{id}/retry` do? Answer the factual question only.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this typed function for algorithmic complexity and suggest a more efficient implementation.",
+    "should_trigger": false
+  },
+  {
+    "query": "Find three authoritative sources about eventual consistency and summarize the research; do not revise any draft.",
+    "should_trigger": false
+  },
+  {
+    "query": "Draft a new product slogan from scratch. I have not supplied an audience brief, so ask only for the minimum context you need.",
+    "should_trigger": true
+  }
+]

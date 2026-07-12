@@ -50,7 +50,7 @@ Production skill for drafting local Azure DevOps work item packets from loose co
   <img src="skills/better-writing/skill-card.png" alt="16-bit side-scrolling pixel art badge for better-writing" width="480">
 </p>
 
-Production writing skill that starts from Strunk's durable rules, then extends them with progressive disclosure, staged revision passes, cadence repair, genre routing, and bundled style families for technical, analytical, editorial, reflective, and conversion writing.
+Production writing system for drafting, rewriting, review, humanisation, and adaptation, with source-fidelity gates, genre-aware revision, voice preservation, and a calibrated corpus of AI-like writing signals that never claims to determine authorship.
 
 ### `bootstrap-agents-md`
 

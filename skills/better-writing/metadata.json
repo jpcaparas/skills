@@ -1,10 +1,14 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "organization": "JP Caparas",
-  "date": "April 2026",
-  "abstract": "Modern writing skill built as a broader successor to obra/the-elements-of-style. It keeps Strunk's durable clarity rules and adds progressive disclosure, staged revision passes, cadence repair, genericity cleanup, genre routing, and bundled style families for technical, analytical, editorial, reflective, and conversion writing.",
+  "date": "July 2026",
+  "abstract": "Production-grade writing and revision system for drafting, rewriting, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, restores individual voice without fabricated personality, and provides a calibrated, extensible catalogue of AI-like writing signals that never claims to determine authorship.",
   "references": [
-    "https://github.com/obra/the-elements-of-style",
-    "https://www.gutenberg.org/files/37134/37134-h/37134-h.htm"
+    "https://doi.org/10.1126/sciadv.adn5290",
+    "https://arxiv.org/abs/2406.07016",
+    "https://arxiv.org/abs/2412.11385",
+    "https://www.cell.com/patterns/fulltext/S2666-3899(23)00130-7",
+    "https://openai.com/index/new-ai-classifier-for-indicating-ai-written-text/",
+    "https://uwaterloo.ca/writing-and-communication-centre/Resources-AI-Revising"
   ]
 }
