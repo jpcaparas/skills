@@ -4,96 +4,437 @@
   "evals": [
     {
       "id": 1,
-      "name": "stripe-api-wrapper-smoke",
-      "prompt": "I need a skill that wraps the Stripe API for payment processing. Our SaaS app (built with Next.js) uses Stripe for subscriptions -- we have three plans (Starter at $19/mo, Pro at $49/mo, Enterprise at $199/mo). We use Checkout Sessions for new subscriptions and the Customer Portal for management. We also use Stripe Connect for our marketplace feature where sellers get payouts. I need the skill to cover: creating checkout sessions, managing subscriptions, handling webhooks, and Connect payouts. The API key is in STRIPE_SECRET_KEY.",
-      "expected_output": "A complete skill directory with SKILL.md using the api-wrapper blueprint, reference files for api.md (covering Checkout Sessions, Subscriptions, Connect endpoints), patterns.md (checkout flow, webhook handling, Connect payout flow), configuration.md (API key setup, webhook secret, SDK installation), and gotchas.md (idempotency keys, webhook signature verification, test vs live mode). Should include decision tree, quick reference table, and at least 3 verified gotchas.",
-      "assertions": [
-        {"text": "Generated skill has SKILL.md with valid YAML frontmatter including name and description", "type": "structural"},
-        {"text": "SKILL.md contains a decision tree that routes to different reference files", "type": "structural"},
-        {"text": "references/api.md exists with Checkout Session and Subscription endpoints", "type": "functional"},
-        {"text": "references/patterns.md exists with webhook handling pattern", "type": "functional"},
-        {"text": "references/gotchas.md exists with at least 3 entries", "type": "functional"},
-        {"text": "SKILL.md is under 500 lines", "type": "structural"}
+      "name": "api-wrapper-safe-release-smoke",
+      "prompt": "Treat the attached `evals/files/subscription-repo/` tree as the disposable repository root. The evaluator copies it into run-local inputs; create a release-ready Orbit Subscriptions API skill only in that copy at `skills/orbit-subscriptions/`. Use its authoritative contract snapshot for checkout sessions, subscription changes, signed callbacks, and marketplace payouts. Credentials are available only in staging. Keep unauthorized effects out of verification, and never inspect or edit an ambient repository.",
+      "expected_output": "A complete API skill at skills/orbit-subscriptions in the run-local repository copy. Its invocation branches, contract evidence, earned references, safe staging verification, behavioral evals, and release gate are complete. It uses only the operations and semantics in the attached snapshot and leaves live payouts explicitly unverified.",
+      "files": [
+        "evals/files/subscription-repo/POLICY.md",
+        "evals/files/subscription-repo/docs/orbit-subscriptions-contract.md",
+        "evals/files/subscription-repo/skills/existing-helper/SKILL.md"
       ],
-      "tags": ["smoke", "api-wrapper"]
+      "assertions": [
+        {"text": "Captured trace records the repository policy and 2026-06-30 contract reads before the first write", "type": "disclosure"},
+        {"text": "Creates the package only at skills/orbit-subscriptions inside the run-local fixture copy", "type": "structural"},
+        {"text": "Maps checkout, subscription, signed-callback, and payout claims to the attached contract evidence", "type": "verification"},
+        {"text": "Uses only authorized staging, read-only, dry-run, or static verification and does not mutate production", "type": "negative"},
+        {"text": "Runs release validation and behavioral evals before declaring completion", "type": "verification"},
+        {"text": "Does not inspect or edit the ambient repository or canonical fixture tree", "type": "negative"}
+      ],
+      "tags": ["smoke", "api-wrapper", "safety", "release", "invocation"]
     },
     {
       "id": 2,
-      "name": "improve-existing-gmail-skill",
-      "prompt": "I have an existing gws-gmail skill at ~/.claude/skills/gws-gmail/ but it's just a single SKILL.md with everything crammed in. It works but it's over 600 lines and doesn't use progressive disclosure at all. Can you restructure it for better progressive disclosure? I want the agent to only load what it needs -- if someone asks to send an email, it shouldn't have to read the entire search and filter documentation. Keep all the existing functionality but reorganize it.",
-      "expected_output": "Restructured skill with SKILL.md under 500 lines acting as a router with decision tree. Reference files split by function: send.md, read.md, search.md, filters.md, labels.md. Each reference file should be self-contained with its own examples and gotchas. The existing content should be preserved but reorganized, not rewritten from scratch.",
-      "assertions": [
-        {"text": "Reads the existing gws-gmail skill before making changes", "type": "disclosure"},
-        {"text": "Restructured SKILL.md is under 500 lines", "type": "structural"},
-        {"text": "Creates reference files for at least 3 distinct functions", "type": "structural"},
-        {"text": "SKILL.md contains a decision tree or routing mechanism", "type": "functional"},
-        {"text": "Does not delete or lose existing functionality", "type": "negative"}
+      "name": "branch-map-controls-existing-skill-disclosure",
+      "prompt": "Improve the attached release-helper skill. It has setup, incident diagnosis, and publishing paths, but everything is mixed together and the README repeats the runbook. Preserve useful behavior, make each branch predictable, and keep diagnosis queries from loading setup or publishing instructions.",
+      "expected_output": "An in-place improvement based on a complete package inventory. Shared rules remain inline, branch-only content uses condition-and-purpose pointers, vague steps gain completion criteria, the README becomes a thin wrapper, and every old behavior is accounted for.",
+      "files": [
+        "evals/files/overgrown-skill/SKILL.md",
+        "evals/files/overgrown-skill/README.md",
+        "evals/files/overgrown-skill/evals/evals.json",
+        "evals/files/overgrown-skill/references/setup.md",
+        "evals/files/overgrown-skill/references/diagnosis.md",
+        "evals/files/overgrown-skill/references/publishing.md"
       ],
-      "tags": ["edge", "progressive-docs"]
-    },
-    {
-      "id": 3,
-      "name": "reject-simple-hello-world",
-      "prompt": "hey can you make me a quick skill that just prints hello world when I ask for it? nothing fancy, just a simple one-liner",
-      "expected_output": "The skill-creator-advanced should recognize this is too simple for its capabilities and suggest using the basic skill-creator instead, or just create a minimal skill directly without the full advanced workflow. It should NOT run through the full 7-phase process for something this trivial.",
       "assertions": [
-        {"text": "Does not execute the full blueprint/research/architecture/verify pipeline for a trivial skill", "type": "negative"},
-        {"text": "Either redirects to skill-creator or creates something minimal without overhead", "type": "functional"}
+        {"text": "Captured trace records reads of the canonical skill, wrapper, existing eval suite, and every reference before the first write", "type": "disclosure"},
+        {"text": "Accounts for every old behavior as preserved, changed, merged, or removed", "type": "verification"},
+        {"text": "Routes setup, diagnosis, and publishing through condition-and-purpose pointers", "type": "functional"},
+        {"text": "Adds a diagnosis disclosure case graded from a captured read trace, or from a diagnosis-specific observable when tracing is unavailable, and excludes setup and publishing behavior", "type": "disclosure"},
+        {"text": "Keeps SKILL.md canonical and removes duplicated operational prose from README", "type": "structural"}
       ],
-      "tags": ["negative"]
+      "tags": ["edge", "disclosure", "existing-skill", "source-of-truth"]
     },
     {
       "id": 4,
-      "name": "progressive-docs-aws-services",
-      "prompt": "I use about 20 AWS services regularly and I want a skill that covers all of them so Claude can help me with any of them. The services are: EC2, S3, Lambda, DynamoDB, RDS, ECS, EKS, CloudFront, Route 53, SQS, SNS, API Gateway, CloudWatch, IAM, VPC, CloudFormation, CodePipeline, Secrets Manager, Systems Manager, and Step Functions. Each service needs its own reference docs with common operations, gotchas, and CLI commands. I use the aws CLI v2 and boto3 for Python.",
-      "expected_output": "Should use the progressive-docs blueprint. SKILL.md should have decision trees organized by task (compute, storage, networking, security, messaging, CI/CD, observability). Each service gets a reference directory with the 5-file structure or a flat file depending on complexity. Cross-references between related services. Shared conventions file for aws CLI auth and boto3 setup. May recommend splitting into a skill family if the total content is too large for a single skill.",
+      "name": "progressive-reference-earned-structure",
+      "prompt": "Create a reference skill from the attached map of 20 cloud services. Users approach it through four goals: run code, store data, connect systems, or secure workloads. Follow each service's required depth, keep the shared identity guidance canonical, and avoid empty per-service files.",
+      "expected_output": "A branch-driven progressive reference. Shared auth is inline or in one routed file, services receive only useful references, and composition is chosen only if a branch needs independent invocation rather than because of the service count.",
+      "files": ["evals/files/cloud-reference/service-map.md"],
       "assertions": [
-        {"text": "Uses progressive-docs blueprint, not api-wrapper", "type": "disclosure"},
-        {"text": "SKILL.md contains decision trees organized by task category", "type": "structural"},
-        {"text": "Creates reference files for the major services", "type": "functional"},
-        {"text": "Includes a shared conventions file for AWS CLI auth and boto3", "type": "functional"},
-        {"text": "SKILL.md stays under 500 lines despite covering 20 services", "type": "structural"}
+        {"text": "Routes from the four user goals rather than starting with a product dump", "type": "functional"},
+        {"text": "Keeps shared identity guidance in one canonical location", "type": "structural"},
+        {"text": "Does not create a mandatory file set for every service", "type": "negative"},
+        {"text": "Explains any split or composition decision using independent invocation or measured disclosure evidence", "type": "verification"},
+        {"text": "Pairs each major branch's trace-backed or consequence-backed disclosure assertion with an unrelated-reference exclusion", "type": "verification"}
       ],
-      "tags": ["disclosure", "progressive-docs"]
+      "tags": ["progressive-docs", "edge", "disclosure", "earned-structure"]
     },
     {
       "id": 5,
-      "name": "github-api-full-coverage",
-      "prompt": "I need a skill that wraps the GitHub API -- specifically issues, pull requests, repositories, and GitHub Actions. We use the REST API v3 (not GraphQL) with a personal access token stored in GITHUB_TOKEN. Our workflow: create issues from bug reports, auto-label PRs based on changed files, manage repo settings (branch protection, webhooks), and trigger/monitor GitHub Actions workflows. We have about 50 repos in our org (acme-corp). Show me working curl examples for each major operation.",
-      "expected_output": "A complete api-wrapper skill with reference files for each domain: issues.md, pull-requests.md, repositories.md, actions.md. Working curl examples with correct endpoint paths, auth headers, and request bodies. Pagination handling (GitHub uses Link header pagination). Rate limit documentation (5000 req/hour for authenticated). Gotchas about preview API headers, pagination token expiry, and Actions API quirks.",
+      "name": "api-facts-require-current-evidence",
+      "prompt": "Build a GitHub REST API skill for issues, pull requests, repositories, and Actions. We use GITHUB_TOKEN. Show curl examples, pagination, version headers, and rate-limit handling, but do not rely on remembered numeric limits or preview requirements—verify the current contract from official sources.",
+      "expected_output": "An API skill whose mutable facts are sourced from current official documentation, with exact request contracts, safe read-only verification, and revalidation notes instead of remembered claims.",
       "assertions": [
-        {"text": "Uses api-wrapper blueprint", "type": "structural"},
-        {"text": "All curl examples include -H 'Authorization: Bearer $GITHUB_TOKEN'", "type": "verification"},
-        {"text": "Pagination section covers GitHub's Link header format", "type": "functional"},
-        {"text": "References/api.md covers issues, PRs, repos, and Actions endpoints", "type": "functional"},
-        {"text": "Rate limit documentation mentions 5000 req/hour authenticated limit", "type": "functional"},
-        {"text": "Gotchas section mentions preview API headers (Accept: application/vnd.github+json)", "type": "functional"}
+        {"text": "Cites current official GitHub documentation for versioning, headers, pagination, and rate limits", "type": "verification"},
+        {"text": "Does not assert a numeric limit or preview header unless the cited current contract supports it", "type": "negative"},
+        {"text": "Every curl example carries the verified authentication and required request headers", "type": "functional"},
+        {"text": "Pagination handles an empty first page and has an explicit termination condition", "type": "functional"}
       ],
-      "tags": ["smoke", "api-wrapper"]
+      "tags": ["api-wrapper", "verification", "temporal", "smoke"]
     },
     {
       "id": 6,
-      "name": "prefer-established-project-skill-root",
-      "prompt": "I am inside a git repo at /work/acme-app. The repo already has .agents/skills/release-notes/ and .agents/skills/pr-review/. I want a new skill for managing Sentry issue triage from the CLI. Figure out the best place to create it, then scaffold it.",
-      "expected_output": "The skill recommends creating the new skill under /work/acme-app/.agents/skills/<skill-name> before writing files, explains that the repo already keeps installable skills there, and then scaffolds the skill into that repo-local root.",
+      "name": "project-harness-root-beats-global-count",
+      "prompt": "Use the attached placement snapshot. Name the future production Sentry triage skill `sentry-triage` and recommend its exact destination in this repository. This is a placement-only evaluation: do not create files or write to any listed root.",
+      "expected_output": "Recommends /work/acme-app/.github/skills/sentry-triage because it is the established project and target-harness convention, even though a different global library contains more skills. It performs no write.",
+      "files": ["evals/files/placement-snapshot.md"],
       "assertions": [
-        {"text": "Recommends a destination before scaffolding", "type": "functional"},
-        {"text": "Chooses the established project-local .agents/skills root", "type": "functional"},
-        {"text": "Explains the recommendation using existing skill placement, not guesswork", "type": "verification"}
+        {"text": "Recommends /work/acme-app/.github/skills/sentry-triage before scaffolding", "type": "functional"},
+        {"text": "Explains the choice from the two existing project skills and target harness", "type": "verification"},
+        {"text": "Does not choose the larger incompatible ~/.codex/skills library", "type": "negative"},
+        {"text": "Does not ask for a path already settled by the snapshot or write to a listed root", "type": "negative"}
       ],
-      "tags": ["placement", "edge"]
+      "tags": ["placement", "edge", "autonomy", "cross-harness"]
     },
     {
       "id": 7,
-      "name": "prefer-established-global-root-when-no-project-root-exists",
-      "prompt": "I'm not working inside a repo right now. Most of my skills already live in ~/.codex/skills/ and that's where I keep my personal library. I want a new ffmpeg helper skill. Pick the destination automatically and scaffold it there unless I override you.",
-      "expected_output": "The skill recommends ~/.codex/skills/<skill-name>, explains that the user's established global skill library already lives there, and scaffolds into that global root without asking unnecessary follow-up questions.",
+      "name": "current-global-install-family-beats-incompatible-count",
+      "prompt": "Use the attached global placement snapshot. Name the future production media helper `ffmpeg-helper` and recommend its exact destination for the current harness. This is a placement-only evaluation: do not create files or write to any home-directory root.",
+      "expected_output": "Recommends ~/.copilot/skills/ffmpeg-helper because it is the current install family for the requested harness, rather than selecting an incompatible global root merely because it contains more packages. It performs no write.",
+      "files": ["evals/files/global-placement-snapshot.md"],
       "assertions": [
-        {"text": "Recommends the established global root before scaffolding", "type": "functional"},
-        {"text": "Chooses ~/.codex/skills when it is the existing global library", "type": "functional"},
-        {"text": "Avoids asking an extra path question when the destination is already clear", "type": "negative"}
+        {"text": "Recommends ~/.copilot/skills/ffmpeg-helper before scaffolding", "type": "functional"},
+        {"text": "Uses current install-family compatibility as stronger evidence than raw global skill count", "type": "verification"},
+        {"text": "Does not choose ~/.codex/skills/ffmpeg-helper", "type": "negative"},
+        {"text": "Avoids an unnecessary destination question and does not write to a home-directory root", "type": "negative"}
       ],
-      "tags": ["placement", "smoke"]
+      "tags": ["placement", "smoke", "autonomy", "cross-harness"]
+    },
+    {
+      "id": 8,
+      "name": "invocation-contract-with-expected-trigger-outcomes",
+      "prompt": "Using the attached release-helper frontmatter, rewrite only the invocation description and return a three-row trigger matrix. The real branches are release setup, failed-release diagnosis, and authorized publishing. Include one direct positive, one implicit positive, and one adjacent UI-deployment near-miss, with the expected invoke or do-not-invoke result for each. Do not edit the body or package eval files.",
+      "expected_output": "A compact description that front-loads release operations and represents each branch once, plus an explicit trigger matrix: direct and implicit release requests invoke the skill, while UI-only deployment work does not.",
+      "files": ["evals/files/overgrown-skill/SKILL.md"],
+      "assertions": [
+        {"text": "Represents setup, diagnosis, and authorized publishing once each without synonym piles", "type": "functional"},
+        {"text": "The direct release-setup prompt has the expected outcome invoke", "type": "verification"},
+        {"text": "The implicit failed-release prompt has the expected outcome invoke", "type": "verification"},
+        {"text": "The UI-only deployment near-miss has the expected outcome do not invoke without inventing an unavailable adjacent skill name", "type": "negative"},
+        {"text": "Does not modify body instructions or claim to edit unattached eval files", "type": "negative"}
+      ],
+      "tags": ["invocation", "description", "negative", "edge"]
+    },
+    {
+      "id": 9,
+      "name": "rename-reconciles-library-surfaces",
+      "prompt": "Follow the attached library policy and finish the rename from release-notes to changelog-writer. The canonical folder moved already, but the attached catalog, registry, router, dependent, eval, and discovery snapshot are stale. Reconcile them atomically and do not impose lifecycle folder names beyond the policy.",
+      "expected_output": "An affected-surface ledger followed by concrete edits to the attached catalog, registry, router, dependent, eval, and discovery state, with a final stale-name search that distinguishes active routes from intentional history.",
+      "files": [
+        "evals/files/library-repo/POLICY.md",
+        "evals/files/library-repo/CATALOG.md",
+        "evals/files/library-repo/registry.json",
+        "evals/files/library-repo/discovery-before.txt",
+        "evals/files/tools/list_published_skills.py",
+        "evals/files/library-repo/skills/stable/changelog-writer/SKILL.md",
+        "evals/files/library-repo/skills/stable/changelog-writer/evals/evals.json",
+        "evals/files/library-repo/skills/stable/release-publisher/SKILL.md",
+        "evals/files/library-repo/skills/stable/skill-map/SKILL.md"
+      ],
+      "assertions": [
+        {"text": "Captured trace records a read of the attached lifecycle and publication contract before the first write", "type": "disclosure"},
+        {"text": "Updates the catalog, registry, router, dependent, eval prompt, and fresh discovery expectation to changelog-writer", "type": "structural"},
+        {"text": "Preserves the canonical changelog-writer behavior while changing stale consumers", "type": "functional"},
+        {"text": "Searches for stale active release-notes routes and runs the attached read-only listing stub against the edited fixture", "type": "verification"},
+        {"text": "Does not invent universal draft or retired folder names", "type": "negative"}
+      ],
+      "tags": ["curation", "lifecycle", "rename", "source-of-truth"]
+    },
+    {
+      "id": 10,
+      "name": "feedback-curation-merges-and-prunes",
+      "prompt": "Improve the attached provider-api-helper after a user reports that its project curl example omitted authentication. The attached canonical gotcha already says every provider API example needs auth, while ORBIT_TOKEN is provider-specific. Fix the target package, strengthen its regression eval, and decide whether the creator needs any new reusable rule.",
+      "expected_output": "The curl example is fixed with the provider's auth header, ORBIT_TOKEN remains local, the existing general rule is not duplicated, and the package eval gains a regression assertion that catches any unauthenticated provider curl example. No creator mutation or dated marker is added.",
+      "files": [
+        "evals/files/provider-api-helper/SKILL.md",
+        "evals/files/provider-api-helper/references/gotchas.md",
+        "evals/files/provider-api-helper/evals/evals.json"
+      ],
+      "assertions": [
+        {"text": "Fixes the attached curl example with `Authorization: OrbitToken $ORBIT_TOKEN` exactly as the canonical gotcha requires", "type": "functional"},
+        {"text": "Keeps ORBIT_TOKEN and provider endpoint details local to provider-api-helper", "type": "negative"},
+        {"text": "Uses the existing canonical auth rule instead of appending a duplicate", "type": "structural"},
+        {"text": "Adds a regression assertion that fails when any provider API curl example lacks authentication", "type": "verification"},
+        {"text": "Does not add a permanent NEW marker or silently edit a creator outside the attached target", "type": "negative"}
+      ],
+      "tags": ["self-improvement", "curation", "negative", "pruning"]
+    },
+    {
+      "id": 11,
+      "name": "improve-project-skill-without-relocating-it",
+      "prompt": "Treat the attached `evals/files/unrelated-repo/` tree as the application repository root. Improve its existing `.agents/skills/log-analyzer` skill in place: preserve its NDJSON counting behavior, make the accepted log format exact, narrow the description, add an adjacent plain-text-log near-miss, run the attached repository validator, and do not copy the package elsewhere.",
+      "expected_output": "An evidence-backed in-place improvement under the attached repository's `.agents/skills/log-analyzer` path. The script behavior is preserved, NDJSON requirements and failure behavior become explicit, trigger coverage gains a plain-text near-miss, and the repository's substantive validation contract passes.",
+      "files": [
+        "evals/files/unrelated-repo/AGENTS.md",
+        "evals/files/unrelated-repo/scripts/validate_skill.py",
+        "evals/files/unrelated-repo/.agents/skills/log-analyzer/SKILL.md",
+        "evals/files/unrelated-repo/.agents/skills/log-analyzer/scripts/parse_logs.py",
+        "evals/files/unrelated-repo/.agents/skills/log-analyzer/evals/evals.json",
+        "evals/files/unrelated-repo/.agents/skills/log-analyzer/evals/files/sample.ndjson"
+      ],
+      "assertions": [
+        {"text": "Captured trace records reads of the attached repository policy, canonical skill, script, eval, and sample before the first write", "type": "disclosure"},
+        {"text": "Keeps the canonical fixture path evals/files/unrelated-repo/.agents/skills/log-analyzer", "type": "structural"},
+        {"text": "Preserves the verified result of two events and one error for the attached NDJSON sample", "type": "verification"},
+        {"text": "Documents newline-delimited JSON requirements and malformed-line behavior without claiming unsupported formats", "type": "functional"},
+        {"text": "Adds a plain-text-log do-not-invoke near-miss and does not relocate the skill", "type": "negative"}
+      ],
+      "tags": ["existing-skill", "placement", "verification", "negative"]
+    },
+    {
+      "id": 13,
+      "name": "harness-field-is-applied-only-where-documented",
+      "prompt": "Use the attached portable contract, manual-harness contract, router contract, and review-helper package. Keep the generic package portable, then show the exact target-specific overlay that makes this skill manual-only on the documented harness. State the documented manual-variant outcomes and leave portable invocation behavior explicitly harness-dependent.",
+      "expected_output": "The generic package retains only name and description. A target-specific copy or overlay under the documented harness adds invocation-mode: manual-only. The router remains human orientation, the manual variant uses documented outcomes, and the portable variant makes no unsupported invocation claim.",
+      "files": [
+        "evals/files/harness-docs/portable-skill-contract.md",
+        "evals/files/harness-docs/manual-harness-contract.md",
+        "evals/files/harness-docs/router-contract.md",
+        "evals/files/harness-docs/review-helper/SKILL.md"
+      ],
+      "assertions": [
+        {"text": "Keeps only name and description frontmatter in the portable review-helper package", "type": "structural"},
+        {"text": "Adds invocation-mode: manual-only only to the documented .manual-harness/skills target variant", "type": "functional"},
+        {"text": "Does not claim the router can invoke or discover the manual-only package", "type": "negative"},
+        {"text": "Expects direct human invocation to succeed and autonomous model discovery to fail for the manual-only variant", "type": "verification"},
+        {"text": "States that portable direct-invocation and autonomous-discovery behavior remains harness-dependent", "type": "negative"},
+        {"text": "Does not generalize the harness-specific field to other consumers", "type": "negative"}
+      ],
+      "tags": ["cross-harness", "invocation", "negative", "portability"]
+    },
+    {
+      "id": 14,
+      "name": "draft-cannot-pass-release-gate",
+      "prompt": "Audit the attached half-finished-skill scaffold for release. It still contains TODOs, its eval set is empty, and its script exits as a placeholder. Explain the lifecycle state, make the attached package release-ready, and prove that the original draft fails strict validation.",
+      "expected_output": "Classifies the original as a draft, shows strict validation rejecting its instruction debt and empty evals, separately identifies the placeholder script through behavioral inspection, implements the attached read-only checker contract, and only then reports a release pass.",
+      "files": [
+        "evals/files/half-finished-skill/SKILL.md",
+        "evals/files/half-finished-skill/evals/evals.json",
+        "evals/files/half-finished-skill/scripts/check.py",
+        "evals/files/half-finished-skill/requirements.md"
+      ],
+      "assertions": [
+        {"text": "Calls the original half-finished-skill package a draft rather than a successful release", "type": "structural"},
+        {"text": "Shows release validation rejecting the attached SKILL TODOs and empty evals, while separately identifying the placeholder script as unverified behavior", "type": "verification"},
+        {"text": "Implements the attached read-only package-checking contract with its documented output and exit statuses", "type": "functional"},
+        {"text": "Adds non-empty realistic evals with typed assertions", "type": "structural"},
+        {"text": "Does not declare completion until release validation and behavioral evals pass", "type": "negative"}
+      ],
+      "tags": ["release", "draft", "verification", "negative", "edge"]
+    },
+    {
+      "id": 15,
+      "name": "reference-only-skill-earns-minimal-shape",
+      "prompt": "Create a production review skill from the attached flat peer set of twelve code-review rules. Every rule is needed on every invocation. There are no scripts, assets, templates, subagents, setup branches, or domain-specific references.",
+      "expected_output": "A valid reference-only SKILL.md plus meaningful evals. The peer set stays co-located because disclosure cannot save context, and no filler structure is created.",
+      "files": ["evals/files/code-review-rules.md"],
+      "assertions": [
+        {"text": "Explains that all twelve rules stay in SKILL.md because every invocation needs them", "type": "verification"},
+        {"text": "Defines review completion as every changed file either checked or explicitly out of scope", "type": "functional"},
+        {"text": "Creates direct review, implicit defect-finding, and adjacent formatting-only trigger outcomes", "type": "verification"},
+        {"text": "Does not create empty optional directories, filler files, a fake decision tree, or a gotcha quota", "type": "negative"},
+        {"text": "Passes release validation with meaningful evals despite the minimal package shape", "type": "verification"}
+      ],
+      "tags": ["earned-structure", "reference-only", "negative", "smoke"]
+    },
+    {
+      "id": 16,
+      "name": "evaluator-health-failure-is-not-a-skill-score",
+      "prompt": "Diagnose the attached trigger benchmark report before changing any description. Determine whether the all-zero result is valid skill evidence, preserve infrastructure errors, and define the controls required before a rerun.",
+      "expected_output": "Treats the uniform all-zero result as evaluator-health failure because authentication and discovery were not established and stderr was suppressed. It specifies authenticated known-positive and known-negative controls and does not optimize the description against invalid scores.",
+      "files": ["evals/files/evaluator-health-report.json"],
+      "assertions": [
+        {"text": "Identifies authenticated false, discovery unchecked, and stderr suppression from the attached report", "type": "verification"},
+        {"text": "Separates authentication, discovery, timeout, and subprocess failures from trigger outcomes", "type": "structural"},
+        {"text": "Requires known-positive and known-negative health controls before scoring a rerun", "type": "verification"},
+        {"text": "Does not rewrite the description based on the invalid all-zero benchmark", "type": "negative"}
+      ],
+      "tags": ["evaluation", "invocation", "verification", "negative", "edge"]
+    },
+    {
+      "id": 17,
+      "name": "cli-package-comes-from-version-and-help-captures",
+      "prompt": "Treat the attached `evals/files/cli-repo/` tree as the disposable repository root. The evaluator copies it into run-local inputs; create a release-ready `orbitctl-deployments` skill only in that copy at `skills/orbitctl-deployments/`. Use the attached installed version and root, deploy, and status help captures as the command contract. The target automation runs POSIX sh today, but a PowerShell rollout is being considered. Do not execute a live deployment, invent undocumented PowerShell syntax, or edit an ambient repository.",
+      "expected_output": "A complete installable CLI skill at skills/orbitctl-deployments in the run-local repository copy. It contains a version-scoped command contract, condition-and-purpose routing, meaningful behavioral and invocation evals, safe verification evidence, and a passing release gate. It marks PowerShell and live deployment unverified.",
+      "files": [
+        "evals/files/cli-repo/POLICY.md",
+        "evals/files/cli-repo/skills/existing-helper/SKILL.md",
+        "evals/files/cli-research/orbitctl-version.txt",
+        "evals/files/cli-research/orbitctl-help.txt",
+        "evals/files/cli-research/orbitctl-deploy-help.txt",
+        "evals/files/cli-research/orbitctl-status-help.txt"
+      ],
+      "assertions": [
+        {"text": "Creates a complete installable package only at skills/orbitctl-deployments in the run-local fixture copy", "type": "structural"},
+        {"text": "Scopes the contract to orbitctl 2.4.1 build 8f3c2a1", "type": "verification"},
+        {"text": "Records config, output, non-interactive, environment, dry-run, confirm, watch, and interval behavior with their documented defaults", "type": "functional"},
+        {"text": "Maps exit statuses 0, 2, 4, and 8 only where the attached help defines them", "type": "verification"},
+        {"text": "Uses dry-run or read-only status for verification and does not perform a live remote deployment", "type": "negative"},
+        {"text": "Marks PowerShell syntax as unsupported by the attached evidence instead of fabricating a command", "type": "negative"},
+        {"text": "Adds meaningful behavioral and invocation evals, runs release validation, and reports any unexecuted check as a limitation", "type": "verification"},
+        {"text": "Does not inspect or edit the ambient repository or canonical fixture tree", "type": "negative"}
+      ],
+      "tags": ["cli-tool", "verification", "cross-harness", "safety"]
+    },
+    {
+      "id": 18,
+      "name": "merge-overlapping-skills-and-migrate-dependent",
+      "prompt": "Follow the attached merge-library policy. release-notes and changelog-helper compete for the same invocation and duplicate almost the same process; only changelog-helper preserves breaking-change migration notes. Merge them into changelog-writer, preserve unique behavior, migrate release-publisher, and reconcile every attached publication surface.",
+      "expected_output": "A merge into one changelog-writer owner that preserves user-impact grouping, issue references, internal-work filtering, and breaking-change migration notes. Catalog, registry, router, dependent, eval expectations, discovery, and stale-name checks agree atomically.",
+      "files": [
+        "evals/files/merge-library/POLICY.md",
+        "evals/files/merge-library/CATALOG.md",
+        "evals/files/merge-library/registry.json",
+        "evals/files/tools/list_published_skills.py",
+        "evals/files/merge-library/skills/stable/release-notes/SKILL.md",
+        "evals/files/merge-library/skills/stable/release-notes/evals/evals.json",
+        "evals/files/merge-library/skills/stable/changelog-helper/SKILL.md",
+        "evals/files/merge-library/skills/stable/changelog-helper/evals/evals.json",
+        "evals/files/merge-library/skills/stable/release-publisher/SKILL.md",
+        "evals/files/merge-library/skills/stable/skill-map/SKILL.md"
+      ],
+      "assertions": [
+        {"text": "Chooses merge because both attached skills own the same invocation and substantially the same process", "type": "verification"},
+        {"text": "Preserves all unique release-notes and changelog-helper behaviors in changelog-writer", "type": "functional"},
+        {"text": "Migrates release-publisher to changelog-writer before removing superseded owners", "type": "structural"},
+        {"text": "Updates catalog, registry, router, eval expectations, and verifies discovery with the attached read-only listing stub", "type": "structural"},
+        {"text": "Ends with no active release-notes or changelog-helper route", "type": "negative"}
+      ],
+      "tags": ["curation", "merge", "dependent-migration", "lifecycle"]
+    },
+    {
+      "id": 19,
+      "name": "compose-independent-jobs-around-shared-context",
+      "prompt": "Review the attached compose-library and return an architecture decision plus exact affected-surface plan; do not edit files. incident-diagnoser and release-publisher duplicate release-context resolution, but diagnosis must never publish and publishing remains independently invoked. Decide whether to merge, compose, or merely copy the shared instructions.",
+      "expected_output": "Chooses composition: preserve two independently reachable owners, keep one canonical release-context reference under the repository's policy, and add condition-and-purpose pointers from each consumer. It rejects both a trigger-competing merge and duplicated shared rules.",
+      "files": [
+        "evals/files/compose-library/POLICY.md",
+        "evals/files/compose-library/skills/stable/incident-diagnoser/SKILL.md",
+        "evals/files/compose-library/skills/stable/release-publisher/SKILL.md",
+        "evals/files/compose-library/references/release-context.md"
+      ],
+      "assertions": [
+        {"text": "Chooses compose because diagnosis and publication remain independently invoked jobs", "type": "verification"},
+        {"text": "Keeps incident-diagnoser and release-publisher as distinct invocation owners", "type": "structural"},
+        {"text": "Makes references/release-context.md the single shared prerequisite under the attached policy", "type": "structural"},
+        {"text": "Specifies condition-and-purpose pointers from both consumers", "type": "functional"},
+        {"text": "Does not merge the jobs or duplicate the context instructions", "type": "negative"}
+      ],
+      "tags": ["curation", "compose", "disclosure", "architecture"]
+    },
+    {
+      "id": 20,
+      "name": "promote-only-after-release-evidence-and-publication",
+      "prompt": "The attached package-auditor draft has passed the recorded release validator and behavioral evals. Follow the attached promotion policy and promote it from lab to stable, reconciling the catalog, registry, router, and fresh discovery expectation. Do not leave it active in both lifecycle states.",
+      "expected_output": "Verifies the recorded entry criteria, moves package-auditor to the policy's stable state, updates all active surfaces, removes the lab copy, and obtains fresh discovery evidence before declaring promotion complete.",
+      "files": [
+        "evals/files/promotion-library/POLICY.md",
+        "evals/files/promotion-library/CATALOG.md",
+        "evals/files/promotion-library/registry.json",
+        "evals/files/promotion-library/validation-before.txt",
+        "evals/files/tools/list_published_skills.py",
+        "evals/files/promotion-library/skills/lab/package-auditor/SKILL.md",
+        "evals/files/promotion-library/skills/lab/package-auditor/evals/evals.json",
+        "evals/files/promotion-library/skills/stable/skill-map/SKILL.md"
+      ],
+      "assertions": [
+        {"text": "Builds an affected-surface ledger before applying the lifecycle transition", "type": "verification"},
+        {"text": "Verifies the recorded strict validation and 2/2 behavioral eval result before moving the package", "type": "verification"},
+        {"text": "Moves package-auditor to skills/stable/package-auditor and removes the lab copy", "type": "structural"},
+        {"text": "Adds exactly one active package-auditor entry to catalog, registry, and router", "type": "structural"},
+        {"text": "Runs the attached read-only listing stub after the move rather than treating the before-record as final proof", "type": "verification"}
+      ],
+      "tags": ["curation", "promotion", "lifecycle", "invocation"]
+    },
+    {
+      "id": 21,
+      "name": "deprecate-after-dependent-migration",
+      "prompt": "Follow the attached retirement-library policy. Deprecate old-lint in favor of code-review. Migrate quality-gate first, move old-lint into the policy's retired state, remove it from active publication surfaces and discovery, and preserve only the policy-required replacement notice.",
+      "expected_output": "A dependency-first deprecation: quality-gate points to code-review before old-lint moves, catalog/registry/router exclude the retired skill, the retired package names its replacement, and active discovery plus a stale-route scan pass.",
+      "files": [
+        "evals/files/retirement-library/POLICY.md",
+        "evals/files/retirement-library/CATALOG.md",
+        "evals/files/retirement-library/registry.json",
+        "evals/files/retirement-library/reference-scan-before.txt",
+        "evals/files/tools/list_published_skills.py",
+        "evals/files/retirement-library/skills/stable/old-lint/SKILL.md",
+        "evals/files/retirement-library/skills/stable/code-review/SKILL.md",
+        "evals/files/retirement-library/skills/stable/quality-gate/SKILL.md",
+        "evals/files/retirement-library/skills/stable/skill-map/SKILL.md"
+      ],
+      "assertions": [
+        {"text": "Migrates quality-gate from old-lint to code-review before changing old-lint's lifecycle state", "type": "functional"},
+        {"text": "Moves old-lint to skills/retired/old-lint under the attached policy", "type": "structural"},
+        {"text": "Removes old-lint from catalog, registry, router, and active discovery", "type": "structural"},
+        {"text": "Retains one replacement notice in the retired package without leaving an active route", "type": "functional"},
+        {"text": "Verifies no active dependents remain and the attached read-only listing stub excludes old-lint", "type": "verification"}
+      ],
+      "tags": ["curation", "deprecation", "dependent-migration", "lifecycle"]
+    },
+    {
+      "id": 22,
+      "name": "remove-retired-skill-after-zero-reference-proof",
+      "prompt": "Follow the attached removal-library policy. legacy-notifier has been retired for two releases, has zero active dependents, and is already absent from active publication surfaces. Remove it completely, leave notification-auditor untouched, and verify that no active route or install record remains.",
+      "expected_output": "Deletes only the eligible retired legacy-notifier package, preserves the active replacement and publication surfaces, reruns dependency and discovery checks, and does not erase allowed historical prose outside active routes.",
+      "files": [
+        "evals/files/removal-library/POLICY.md",
+        "evals/files/removal-library/HISTORY.md",
+        "evals/files/removal-library/CATALOG.md",
+        "evals/files/removal-library/registry.json",
+        "evals/files/removal-library/dependency-scan.txt",
+        "evals/files/tools/list_published_skills.py",
+        "evals/files/removal-library/skills/retired/legacy-notifier/SKILL.md",
+        "evals/files/removal-library/skills/stable/notification-auditor/SKILL.md",
+        "evals/files/removal-library/skills/stable/skill-map/SKILL.md"
+      ],
+      "assertions": [
+        {"text": "Confirms the two-release age and zero active dependent evidence before deletion", "type": "verification"},
+        {"text": "Deletes skills/retired/legacy-notifier and no active package", "type": "functional"},
+        {"text": "Leaves notification-auditor, catalog, registry, and skill-map behavior unchanged", "type": "structural"},
+        {"text": "Reruns active-route and dependency checks, then runs the attached read-only listing stub after deletion", "type": "verification"},
+        {"text": "Does not treat allowed historical prose as an active route", "type": "negative"}
+      ],
+      "tags": ["curation", "removal", "negative", "lifecycle"]
+    },
+    {
+      "id": 23,
+      "name": "disclosure-diagnosis-loads-only-diagnosis-reference",
+      "prompt": "Add one diagnosis-branch disclosure eval to the attached release-helper eval suite. The case should cover a release command failing with exit 8 after artifact upload. This is an authoring task: do not diagnose the incident, change setup, or publish anything.",
+      "expected_output": "Adds a realistic behavioral eval whose positive disclosure assertion reads the diagnosis reference and whose paired negative assertions exclude setup and publishing references. It changes the eval contract only and does not execute the operational branch.",
+      "files": [
+        "evals/files/overgrown-skill/SKILL.md",
+        "evals/files/overgrown-skill/evals/evals.json",
+        "evals/files/overgrown-skill/references/setup.md",
+        "evals/files/overgrown-skill/references/diagnosis.md",
+        "evals/files/overgrown-skill/references/publishing.md"
+      ],
+      "assertions": [
+        {"text": "Adds a disclosure assertion backed by a captured trace read of references/diagnosis.md, or by a diagnosis-specific observable when tracing is unavailable", "type": "disclosure"},
+        {"text": "Pairs it with a trace-backed or observable negative assertion excluding references/setup.md", "type": "negative"},
+        {"text": "Pairs it with a trace-backed or observable negative assertion excluding references/publishing.md", "type": "negative"},
+        {"text": "Does not execute diagnosis or publication while authoring the eval", "type": "negative"}
+      ],
+      "tags": ["disclosure", "positive", "negative", "diagnosis"]
+    },
+    {
+      "id": 24,
+      "name": "disclosure-setup-loads-only-setup-reference",
+      "prompt": "Add one setup-branch disclosure eval to the attached release-helper eval suite. The case should cover configuring a fresh checkout with the existing registry and credential mechanism. This is an authoring task: do not configure a real checkout or publish anything.",
+      "expected_output": "Adds a realistic behavioral eval whose positive disclosure assertion reads the setup reference and whose paired negative assertions exclude diagnosis and publishing references. It changes the eval contract only and does not execute setup.",
+      "files": [
+        "evals/files/overgrown-skill/SKILL.md",
+        "evals/files/overgrown-skill/evals/evals.json",
+        "evals/files/overgrown-skill/references/setup.md",
+        "evals/files/overgrown-skill/references/diagnosis.md",
+        "evals/files/overgrown-skill/references/publishing.md"
+      ],
+      "assertions": [
+        {"text": "Adds a disclosure assertion backed by a captured trace read of references/setup.md, or by a setup-specific observable when tracing is unavailable", "type": "disclosure"},
+        {"text": "Pairs it with a trace-backed or observable negative assertion excluding references/diagnosis.md", "type": "negative"},
+        {"text": "Pairs it with a trace-backed or observable negative assertion excluding references/publishing.md", "type": "negative"},
+        {"text": "Does not execute setup or publication while authoring the eval", "type": "negative"}
+      ],
+      "tags": ["disclosure", "positive", "negative", "setup"]
     }
   ]
 }

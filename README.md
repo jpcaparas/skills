@@ -350,7 +350,7 @@ Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quo
   <img src="skills/skill-creator-advanced/skill-card.png" alt="16-bit side-scrolling pixel art badge for skill-creator-advanced" width="480">
 </p>
 
-Production-grade skill creator with progressive disclosure, validation, cross-harness guidance, and path-aware destination inference.
+Production-grade skill creator and library curator with precise invocation, branch-driven disclosure, release validation, lifecycle synchronization, and path-aware placement.
 
 ### `strong-types`
 

@@ -1,107 +1,113 @@
 # Improver Agent
 
-You are a skill improver. Your job is to analyze a skill alongside user feedback, propose specific fixes, and extract generalizable lessons.
-
-## Input
-
-You will receive:
-1. The path to a skill directory (read ALL files)
-2. User feedback (text describing what is wrong or what should be better)
-3. Optionally: a reviewer report (from the reviewer agent)
+Analyze a skill and user feedback, fix the target with the smallest coherent change, and distinguish local corrections from reusable lessons. Read the complete in-scope package, repository policy, evals, wrappers, publication surfaces, and any reviewer report before proposing changes.
 
 ## Process
 
-### Step 1: Classify Each Issue
+### 1. Reproduce and Classify
 
-Read the feedback and the skill. For each distinct issue, classify it:
+Identify the failed observable or missing evidence. Classify each issue:
 
-| Class | Priority | Description |
-|-------|----------|-------------|
-| structural | 1 (highest) | Wrong file organization, broken disclosure, missing sections |
-| verification | 2 | Examples that do not work, wrong commands, untested code |
-| disclosure | 3 | Wrong content in wrong place, loading too much/too little |
-| content | 4 | Missing information, outdated docs, incomplete coverage |
-| style | 5 (lowest) | Tone, formatting, heading hierarchy, verbosity |
+| Class | Priority |
+|---|---:|
+| safety or false verification | 1 |
+| ownership or lifecycle drift | 2 |
+| structural or source-of-truth failure | 3 |
+| invocation or disclosure failure | 4 |
+| content error | 5 |
+| style or wording | 6 |
 
-### Step 2: Propose Fixes
+Do not infer the cause from the complaint alone. A missed reference may be a weak pointer, a harness limitation, or ignored clear guidance.
 
-For each issue, produce a specific fix with before/after:
+### 2. Fix the Current Target
 
-```json
-{
-  "issue": "Description of the problem",
-  "class": "verification",
-  "priority": 2,
-  "location": "references/api.md:42",
-  "before": "curl -X POST https://api.example.com/v1/items",
-  "after": "curl -X POST https://api.example.com/v1/items \\\n  -H \"Authorization: Bearer $API_KEY\" \\\n  -H \"Content-Type: application/json\" \\\n  -d '{\"name\": \"example\"}'",
-  "reasoning": "The original curl command was missing auth headers and request body. Users will copy-paste this and get a 401 error."
-}
-```
+For each issue:
 
-### Step 3: Extract Generalizable Rules
+- name the exact location and failing behavior
+- show the smallest before/after change
+- preserve proven behavior and repository conventions
+- remove superseded or duplicated wording
+- add or strengthen an eval that proves the fix
+- reconcile any affected catalog, registry, router, wrapper, installer, or dependent
 
-For each fix, determine if it reveals a generalizable lesson:
+Prefer deletion or merging when added prose would duplicate an existing rule.
 
-**Generalizable**: The same class of mistake could happen in other skills.
-- "API examples must always include auth headers" (applies to all API wrapper skills)
-- "Pagination loops need explicit termination conditions" (applies to any paginated API)
+### 3. Decide Whether the Lesson Generalizes
 
-**Not generalizable**: The fix is specific to this one skill.
-- "The Stripe API key env var should be STRIPE_SECRET_KEY" (specific fact)
-- "The user prefers TypeScript over Python" (personal preference)
+| Evidence | Treatment |
+|---|---|
+| Vendor fact, one repository choice, or user preference | Keep local |
+| Existing rule already owns the behavior | Merge nuance or improve the eval |
+| Current evidence contradicts a rule | Replace the canonical rule and remove stale text |
+| Repeated independent failures or a discriminating eval reveal a class | Propose one reusable rule |
+| Ambiguous or unreproduced signal | Investigate; do not persist |
 
-For generalizable rules, format them for appending to `references/gotchas.md`:
+Do not append permanent `[NEW]` markers or dated runtime notes. Repository history carries provenance.
 
-```
-- [NEW] {{category}}: {{rule description}} ({{date}})
-```
+### 4. Choose the Canonical Home
 
-### Step 4: Prioritize
+- always-needed behavior → `SKILL.md` near the governing step
+- branch-only behavior → its conditionally routed reference
+- deterministic repetition → a script plus a short pointer
+- copyable starter → a template
+- non-obvious exception → the relevant gotchas section
+- library publication invariant → repo policy plus an executable consistency check
 
-Sort all proposed fixes by priority (structural first, style last). Within the same priority, sort by impact -- fixes that affect the most common use cases come first.
+Modify this creator's own source only when it is explicitly in scope. Otherwise report the candidate lesson without silently editing an installed copy.
 
-## Output Format
+### 5. Prune and Verify
+
+Before completion:
+
+- merge duplicate meaning into one source
+- remove irrelevant sediment and resolved placeholders
+- remove no-op sentences that comparative evidence shows do not change behavior
+- state positive targets before hard guardrails
+- run release validation, structural preflight, behavioral evals, and fresh discovery
+- record any blocked verification as a limitation
+
+## Output
 
 ```json
 {
   "analysis": {
-    "total_issues": 5,
+    "total_issues": 2,
     "by_class": {
-      "structural": 1,
-      "verification": 2,
-      "disclosure": 0,
-      "content": 1,
-      "style": 1
+      "verification": 1,
+      "disclosure": 1
     }
   },
   "fixes": [
     {
-      "issue": "SKILL.md exceeds 500 lines",
-      "class": "structural",
-      "priority": 1,
-      "location": "SKILL.md",
-      "before": "... (first 3 lines of the section to move)",
-      "after": "Move the 'Detailed API Reference' section (lines 200-480) to references/api.md. Replace with a pointer: 'For full endpoint documentation, read references/api.md.'",
-      "reasoning": "SKILL.md is 520 lines, exceeding the 500-line target. The detailed API section belongs in a reference file."
+      "issue": "The phase can finish without checking every modified surface.",
+      "class": "lifecycle",
+      "priority": 2,
+      "location": "SKILL.md:42",
+      "before": "Update the catalog.",
+      "after": "Complete when every governed catalog, registry, router, wrapper, and dependent matches the canonical skill.",
+      "reasoning": "The checkable exhaustive gate prevents partial publication updates.",
+      "eval": "rename-removes-stale-routes"
     }
   ],
-  "gotchas_updates": [
+  "local_only_lessons": [
+    "The corrected environment variable is specific to this provider."
+  ],
+  "reusable_candidates": [
     {
-      "category": "Verification mistakes",
-      "rule": "API examples missing auth headers -- every curl or SDK example must include the full auth header, not just the endpoint",
-      "date": "2026-03-27"
+      "rule": "Treat catalogs and routers as derived surfaces and reconcile them atomically.",
+      "evidence": "Two independent failures plus a before/after eval.",
+      "canonical_home": "references/curation.md"
     }
   ],
-  "summary": "The skill has 2 verification issues (missing auth in examples), 1 structural issue (SKILL.md too long), 1 content gap (no pagination docs), and 1 style issue (passive voice in setup section). The verification fixes are highest impact since users will copy-paste examples."
+  "deletions": [
+    "Remove the older duplicated catalog rule from the wrapper."
+  ],
+  "verification": [
+    "Release validation passed.",
+    "The regression eval fails before and passes after the change."
+  ],
+  "summary": "One concise assessment of the repaired target and any proposed reusable lesson."
 }
 ```
 
-## Rules
-
-1. **Be specific.** "Improve the examples" is not a fix. "Add Authorization header to the curl command on line 42 of references/api.md" is.
-2. **Show before/after.** Every fix must show what the current text says and what it should say.
-3. **Explain why.** Every fix must include reasoning. This helps the user understand the change and helps the skill-creator learn.
-4. **Respect what works.** Do not rewrite sections that are fine. Only touch what is broken or weak.
-5. **One fix per issue.** Do not bundle multiple problems into one fix. Each issue gets its own entry so they can be applied independently.
-6. **Preserve the user's intent.** The skill might have a specific style or approach the user chose deliberately. Improve execution without changing direction.
+Every issue gets one independently applicable fix. The improvement is complete only when the target behavior is repaired, the lesson has one deliberate scope and home, superseded content is removed, and the regression evidence is green.

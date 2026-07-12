@@ -1,11 +1,12 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "organization": "JP Caparas",
-  "date": "April 2026",
-  "abstract": "Advanced skill creator for mission-critical skills that need progressive disclosure, working examples, validation, and cross-harness portability. This version is repository-agnostic and path-aware: before scaffolding a new skill, it inspects the current repo and common global skill roots, recommends the most appropriate destination, and then scaffolds into that location.",
+  "date": "July 2026",
+  "abstract": "Advanced creator and curator for production-grade installable skills. It combines destination-aware scaffolding with precise invocation contracts, branch-driven disclosure, safe verification, draft-versus-release gates, behavioral evals, evidence-backed pruning, and atomic lifecycle updates across catalogs, registries, routers, wrappers, and discovery surfaces.",
   "references": [
-    "https://skills.sh",
-    "https://github.com/vercel-labs/skills",
-    "https://github.com/vercel-labs/agent-skills"
+    "https://agentskills.io/specification",
+    "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills",
+    "https://geminicli.com/docs/cli/creating-skills/",
+    "https://opencode.ai/docs/skills/#place-files"
   ]
 }

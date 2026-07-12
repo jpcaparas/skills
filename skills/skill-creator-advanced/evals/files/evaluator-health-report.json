@@ -1,0 +1,15 @@
+{
+  "command": "model-cli evaluate-triggers --skill ./candidate",
+  "authenticated": false,
+  "skill_discovery_checked": false,
+  "stderr_preserved": false,
+  "timeout_count": 0,
+  "positive_prompts": {
+    "attempted": 10,
+    "invoked": 0
+  },
+  "negative_prompts": {
+    "attempted": 10,
+    "invoked": 0
+  }
+}

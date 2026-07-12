@@ -5,6 +5,7 @@
 - [API Wrapper Blueprint](#api-wrapper-blueprint)
 - [CLI Tool Blueprint](#cli-tool-blueprint)
 - [Progressive Docs Blueprint](#progressive-docs-blueprint)
+- [Skill Library Curation Blueprint](#skill-library-curation-blueprint)
 
 ---
 
@@ -12,161 +13,88 @@
 
 ### When to Use
 
-Use this blueprint when wrapping a REST API, GraphQL API, or SDK into a skill. The skill will help agents make correct API calls with proper auth, request formatting, and error handling.
+Use this blueprint when wrapping a REST API, GraphQL API, SDK, or another documented programmatic contract into a skill. The skill will help agents perform promised operations with the contract's real access, input, output, and failure semantics.
 
-**Indicators:** The source material is API documentation. There are endpoints, methods, request/response schemas. The skill must produce working HTTP calls or SDK invocations.
+**Indicators:** The source material documents callable operations, their inputs and outputs, and their failure contract. The skill must produce working invocations through the selected client or protocol.
 
 ### Required Research Phase
 
 Before writing a single line of the skill, gather:
 
-1. **Authentication pattern** -- which one?
-   - API key in header (`Authorization: Bearer <key>` or `X-API-Key: <key>`)
-   - OAuth2 (client credentials, authorization code, PKCE)
-   - Service account / JSON key file
-   - Session-based (cookie, CSRF token)
-   - Multiple patterns (different for server vs. client)
+1. **Access pattern, when required**
+   - Identify the credential, identity, session, or local setup the selected contract actually requires
+   - Distinguish server, client, delegated-user, and unauthenticated branches only when the promised operations expose them
+   - Record where access material enters the invocation and how examples avoid disclosing it
 
-2. **Base URL and versioning**
-   - Is the API versioned in the URL path (`/v1/`, `/v2/`)?
-   - Is it versioned via header (`API-Version: 2024-01-01`)?
-   - What happens when you call an old version? Does it 404 or silently degrade?
-   - Pin the exact version in your skill. Never use "latest" or omit the version.
+2. **Contract location and versioning**
+   - Identify the endpoint, schema, package, client, or other surface that owns each promised operation
+   - Determine how that surface selects a version or dated contract, if it does
+   - Record what the provider documents about unsupported or superseded versions
+   - Pin the exact version or dated contract when the provider exposes one. If the service has no pinnable version, record the retrieval date and revalidation path instead of inventing stability.
 
-3. **Endpoint inventory** -- group by domain
-   - CRUD operations (create, read, update, delete)
-   - Search / list / filter (pagination patterns!)
-   - Admin / config / metadata
-   - Webhook / event operations
-   - Async operations (jobs, polling)
+3. **Promised-operation inventory** -- scope it to the invocation contract
+   - List only the operations the skill promises to perform or route to
+   - Group those operations by the user's goal rather than copying the provider's entire API index
+   - Include lifecycle, search, admin, webhook, or asynchronous operations only when a promised branch needs them
+   - Record important nearby operations as explicit non-goals when omitting them could mislead a consumer
 
-4. **Pagination**
-   - Cursor-based (`starting_after`, `ending_before`)
-   - Offset-based (`offset`, `limit`)
-   - Page-based (`page`, `per_page`)
-   - Link header (GitHub-style)
-   - What is the default page size? What is the max?
+4. **Traversal, when a promised operation returns partial collections or graphs**
+   - Identify the continuation mechanism used by the selected contract
+   - Record default and maximum batch sizes only when the provider defines them
+   - Define termination, duplicate, ordering, and resume behavior needed by the promised workflow
 
-5. **Rate limits and quotas**
-   - Requests per second/minute
-   - Daily/monthly quotas
-   - Per-endpoint limits (some APIs limit writes more than reads)
-   - How are limits communicated? (headers, 429 response, error body)
-   - Retry-After header support
+5. **Limits, when remote or metered operations are promised**
+   - Identify applicable rate, concurrency, payload, usage, or quota limits
+   - Record how the selected contract communicates exhaustion or backpressure
+   - Distinguish retryable from terminal outcomes using provider evidence
 
-6. **Error codes**
-   - Standard HTTP codes the API actually returns
-   - API-specific error codes (Stripe's `card_declined`, etc.)
-   - Error response format (JSON with `error.message`? `error.code`?)
-   - Idempotency support (safe to retry?)
+6. **Failure contract**
+   - Document only the statuses, error payloads, exceptions, result variants, or callback failures the selected surface exposes
+   - Preserve provider-specific error identifiers when they change recovery behavior
+   - Determine whether an operation is safe to retry and whether the contract supports idempotency or deduplication
 
-7. **SDK vs raw HTTP**
-   - Does an official SDK exist for the user's language?
-   - Is the SDK well-maintained (check last release date)?
-   - Does the SDK handle auth, pagination, retries automatically?
-   - If the SDK is thin, raw HTTP with clear examples may be better.
+7. **Client or protocol selection**
+   - Compare supported clients and direct protocol access only when more than one surface can satisfy the promised operation
+   - Confirm the chosen surface is current for the target runtime or environment
+   - Record which access, traversal, resilience, or serialization behavior the client handles automatically
 
-8. **Gotchas** -- test at least one real call to discover:
-   - Content-Type requirements (some APIs reject `application/json` without charset)
-   - Required headers beyond auth (User-Agent, Accept, Idempotency-Key)
-   - Field name casing (camelCase vs snake_case)
-   - Null vs absent fields (some APIs treat them differently)
-   - Expand/include parameters (Stripe-style nested object expansion)
+8. **Gotchas** -- use primary documentation and the safest authorized verification rung to discover contract-specific traps. Depending on the selected surface, these may involve encoding parameters, request metadata, identifier spelling, absent-versus-empty values, expansion controls, callback ordering, or client-side defaults. Include only details evidenced for a promised operation.
 
-### Directory Structure
+### Illustrative Directory Structure
 
 ```
 api-skill/
-SKILL.md
-references/
-  api.md              # Full endpoint reference
-  patterns.md         # Common workflows (create-then-poll, pagination loops)
-  configuration.md    # Auth setup, environment variables, SDK install
-  gotchas.md          # API-specific pitfalls and tribal knowledge
-scripts/
-  test_connection.sh  # Verify auth works (safe, read-only call)
-evals/
-  evals.json
-agents/
-  .gitkeep
-templates/
-  .gitkeep
-assets/
-  .gitkeep
+├── SKILL.md
+├── references/       # Only the earned files below
+│   ├── api.md        # Promised operation contract
+│   ├── patterns.md   # Supported multi-step or resilience workflows
+│   ├── configuration.md
+│   └── gotchas.md
+└── evals/
+    └── evals.json
 ```
 
-### SKILL.md Skeleton
+### Entry-Point Contract
 
-```markdown
----
-name: {{SKILL_NAME}}
-description: "{{DESCRIPTION}}"
----
-
-# {{API_NAME}} API Skill
-
-Wraps the {{API_NAME}} API for [primary use case].
-
-## Authentication
-
-{{AUTH_PATTERN}} -- [1-3 sentences on how to authenticate]
-
-## Quick Reference
-
-| Operation | Method | Endpoint | Notes |
-|-----------|--------|----------|-------|
-| List X    | GET    | /v1/x    | Paginated, cursor-based |
-| Create X  | POST   | /v1/x    | Requires field A, B |
-| Get X     | GET    | /v1/x/:id | Expandable |
-| Update X  | PATCH  | /v1/x/:id | Partial update |
-| Delete X  | DELETE | /v1/x/:id | Irreversible |
-
-## Decision Tree
-
-What do you need to do?
-
-- Create / manage resources -> references/api.md (CRUD section)
-- Set up auth or configure -> references/configuration.md
-- Build a multi-step workflow -> references/patterns.md
-- Debug an error or unexpected behavior -> references/gotchas.md
-
-## Gotchas
-
-1. {{GOTCHA_1}}
-2. {{GOTCHA_2}}
-3. {{GOTCHA_3}}
-
-## Reading Guide
-
-| Task | Read |
-|------|------|
-| Endpoint details, request/response formats | references/api.md |
-| Pagination, webhooks, async patterns | references/patterns.md |
-| Auth setup, env vars, SDK installation | references/configuration.md |
-| Known pitfalls and workarounds | references/gotchas.md |
-```
+Start from `templates/api-wrapper/SKILL.template.md`, then remove every branch and support surface the promised operations do not earn. Keep shared authentication and safety constraints inline. Route operation details, setup, workflows, and evidenced pitfalls through condition-and-purpose pointers only when those files exist. Add a verification script only when a safe reusable probe exists and its runtime is supported in the declared target environment.
 
 ### Reference File Organization
 
-- **api.md**: One section per endpoint group. Each endpoint gets method, URL, required params, optional params, response shape, and a working curl/SDK example.
-- **patterns.md**: Numbered workflow sections. Each workflow shows the full sequence (create -> poll -> fetch result). Include pagination loop template and retry pattern.
-- **configuration.md**: Step-by-step setup. Environment variables table. SDK installation for each language. Config file format if applicable.
-- **gotchas.md**: Numbered entries. Each has: symptom, cause, fix. Self-improving -- new discoveries get appended.
+- **api.md**: One section per promised operation group. Each operation gets its contract identifier or signature, required and optional inputs, output and failure shape, and a verified invocation through the selected surface.
+- **patterns.md**: Numbered workflow sections for the multi-step, asynchronous, traversal, event, or resilience flows the skill actually promises.
+- **configuration.md**: Only the access, identity, dependency, environment, or client setup that promised operations require.
+- **gotchas.md**: Evidenced entries with symptom, cause, and fix. Merge new evidence into the canonical rule and remove superseded wording.
 
 ### Verification Checklist
 
-- [ ] At least one API call has been executed and returned expected output
-- [ ] Auth example includes the exact header format, tested against the real API
-- [ ] Every endpoint in the quick reference table exists in api.md with full documentation
-- [ ] Pagination pattern includes the loop termination condition
-- [ ] Error codes section covers at least: 400, 401, 403, 404, 429, 500
-- [ ] Rate limit information is documented with source (docs link or observed behavior)
-- [ ] SDK version is pinned if an SDK is recommended
-- [ ] All curl examples include required headers (not just auth)
-
-### Example: Stripe API Skill
-
-The `stripe-best-practices` skill follows this pattern. It covers auth (API keys in header), endpoint groups (Checkout Sessions, PaymentIntents, Connect), decision trees for choosing between integration surfaces, and gotchas about deprecated APIs and platform fee handling.
+- [ ] Each claimed operation maps to current primary documentation
+- [ ] Required access is confirmed against the selected contract; a live non-mutating probe is used only when credentials and authority permit it
+- [ ] Every operation-map row has matching contract evidence and routed detail where detail is needed
+- [ ] Any promised traversal documents its continuation and termination behavior
+- [ ] Failure handling covers the outcomes and provider-specific identifiers the selected surface can return for promised operations
+- [ ] Applicable limits are documented with a primary source or explicitly bounded observation
+- [ ] A recommended client or package has a supported version or dated evidence
+- [ ] Every invocation example includes the context required by its selected surface
 
 ---
 
@@ -174,17 +102,17 @@ The `stripe-best-practices` skill follows this pattern. It covers auth (API keys
 
 ### When to Use
 
-Use this blueprint when wrapping a command-line tool into a skill. The skill will help agents invoke the tool with correct subcommands, flags, and output handling.
+Use this blueprint when wrapping a command-line tool into a skill. The skill will help agents invoke the tool with its verified command hierarchy, options, inputs, outputs, and completion semantics in the promised environments.
 
-**Indicators:** The user mentions a CLI tool by name. The source material is man pages, `--help` output, or CLI documentation. The skill must produce correct shell commands.
+**Indicators:** The user mentions a CLI tool by name. The source material is built-in help, manuals, generated command metadata, or primary CLI documentation. The skill must produce correct invocations for a named shell, process API, or command environment.
 
 ### Required Research Phase
 
 1. **Subcommand discovery**
-   - Run `tool --help` and capture the full output
-   - Run `tool <subcommand> --help` for each major subcommand
-   - Identify the subcommand hierarchy (some tools nest: `tool group subcommand`)
-   - Group subcommands by function (CRUD, config, debug, info)
+   - Use the tool's documented help or command-introspection mechanism and capture the relevant output
+   - Inspect every subcommand or operation the skill promises to use
+   - Identify the command hierarchy, including nested groups when present
+   - Group commands by the user's goal rather than an assumed operation taxonomy
 
 2. **Flag documentation**
    - Required vs optional flags per subcommand
@@ -195,113 +123,58 @@ Use this blueprint when wrapping a command-line tool into a skill. The skill wil
    - Default values for optional flags
 
 3. **Version pinning**
-   - Run `tool --version` and record the output
+   - Use the tool's documented version or build-identification mechanism and record the output
    - Check if flag syntax changed between versions (common source of broken examples)
    - Document the minimum supported version
    - If the tool auto-updates, note this in gotchas
 
-4. **Shell compatibility**
-   - Does the tool work in bash, zsh, fish?
-   - Are there shell-specific quoting issues? (e.g., `!` in bash history expansion)
-   - Does it use stdin/stdout/stderr correctly?
-   - Pipe compatibility (can output be piped to jq, grep, etc.?)
+4. **Execution-environment compatibility**
+   - Identify the shells, operating systems, terminals, CI runners, or embedded environments promised by the skill
+   - Verify quoting, escaping, path, and environment-variable behavior in each supported environment
+   - Record stdin, stdout, stderr, and pipeline behavior only where the command map relies on it
 
-5. **Output formats**
-   - Default output format (text, table, JSON, YAML)
-   - How to request JSON output (`--format json`, `--output json`, `-o json`)
-   - Is the text output parseable or human-only?
-   - Exit codes (0 for success, specific codes for specific errors?)
+5. **Output and completion contract**
+   - Identify the actual human-readable and machine-readable formats the promised commands expose
+   - Record the selector for a structured format only when the tool provides one
+   - Distinguish stable machine output from presentation output before recommending parsing
+   - Document the exit status, result object, or other completion signal used in each supported environment
 
-### Directory Structure
+### Illustrative Directory Structure
 
 ```
 cli-skill/
-SKILL.md
-references/
-  commands.md         # Full subcommand reference
-  patterns.md         # Common workflows and pipelines
-  configuration.md    # Installation, shell setup, config files
-  gotchas.md          # Shell quirks, version issues, common mistakes
-scripts/
-  check_install.sh    # Verify tool is installed and version is correct
-evals/
-  evals.json
-agents/
-  .gitkeep
-templates/
-  .gitkeep
-assets/
-  .gitkeep
+├── SKILL.md
+├── references/       # Only the earned files below
+│   ├── commands.md   # Promised command surface
+│   ├── patterns.md   # Supported multi-step workflows
+│   ├── configuration.md
+│   └── gotchas.md
+└── evals/
+    └── evals.json
 ```
 
-### SKILL.md Skeleton
+Add `scripts/` only when a reusable check is safer than repeated ad hoc commands and its runtime is part of the declared target environment. Do not assume POSIX shell availability merely because the wrapped tool is a CLI.
 
-```markdown
----
-name: {{SKILL_NAME}}
-description: "{{DESCRIPTION}}"
----
+### Entry-Point Contract
 
-# {{TOOL_NAME}} CLI Skill
-
-Wraps the `{{TOOL_NAME}}` command-line tool for [primary use case].
-
-**Version:** {{VERSION}} | **Install:** `{{INSTALL_CMD}}`
-
-## Quick Reference
-
-| Task | Command |
-|------|---------|
-| List items | `{{TOOL}} list --format json` |
-| Create item | `{{TOOL}} create --name "X"` |
-| Get details | `{{TOOL}} show ID` |
-| Delete item | `{{TOOL}} delete ID --force` |
-
-## Subcommand Groups
-
-What do you need to do?
-
-- Manage resources -> references/commands.md (CRUD section)
-- Set up or configure the tool -> references/configuration.md
-- Build a multi-step workflow -> references/patterns.md
-- Fix an error -> references/gotchas.md
-
-## Gotchas
-
-1. {{GOTCHA_1}}
-2. {{GOTCHA_2}}
-3. {{GOTCHA_3}}
-
-## Reading Guide
-
-| Task | Read |
-|------|------|
-| Full command reference | references/commands.md |
-| Pipelines, scripting, automation | references/patterns.md |
-| Installation, config, shell setup | references/configuration.md |
-| Known bugs, version quirks | references/gotchas.md |
-```
+Start from `templates/cli-tool/SKILL.template.md`, then keep only the commands and routes promised by the invocation contract. Put the supported version or compatibility range, non-destructive defaults, and shared output expectations inline. Route command details, setup, workflows, and evidenced quirks to files that exist.
 
 ### Reference File Organization
 
-- **commands.md**: One section per subcommand group. Each subcommand gets: synopsis, flags table, working example, output sample.
-- **patterns.md**: Multi-step workflows (deploy pipeline, backup + restore, CI/CD integration). Shell scripting patterns (loops, conditionals on exit codes, output parsing).
-- **configuration.md**: Installation methods (brew, apt, npm, cargo). Config file location and format. Shell completions. Environment variables.
-- **gotchas.md**: Shell quoting issues. Flag syntax that changed between versions. Undocumented behaviors. Error messages and what they actually mean.
+- **commands.md**: One section per promised command group, with its verified synopsis, options, example, and result contract.
+- **patterns.md**: Multi-step workflows and composition patterns supported by the selected execution environments.
+- **configuration.md**: Only the installation, identity, configuration, completion, or environment setup the promised commands require.
+- **gotchas.md**: Evidenced environment, quoting, version, option, result, and failure traps.
 
 ### Verification Checklist
 
-- [ ] `tool --version` output matches the documented version
-- [ ] Every command in the quick reference runs without error (or with `--dry-run`)
+- [ ] The documented command surface matches current help or primary documentation for the supported version or range
+- [ ] Every command-map row is checked with current primary help or documentation, parsing, a documented preview, a disposable workspace, or another safe applicable rung
 - [ ] Flag syntax is correct for the documented version (short and long forms)
-- [ ] Output format flag is documented and tested
-- [ ] Installation command works on the target platform
-- [ ] Shell quoting is correct in all examples (especially with spaces, special chars)
-- [ ] Exit codes are documented for at least success and the most common error
-
-### Example: `gh` (GitHub CLI) Skill
-
-A `gh-cli` skill would cover: subcommand groups (repo, issue, pr, release, workflow), auth (`gh auth login`), output formats (`--json` flag with `--jq` filtering), and gotchas like `gh api` paginating differently than `gh pr list`.
+- [ ] Any promised output selector is documented and tested
+- [ ] Each documented installation path works in its supported environment
+- [ ] Quoting and escaping are correct for every environment shown in examples
+- [ ] Completion signals distinguish success from the failure outcomes the command map promises to handle
 
 ---
 
@@ -311,38 +184,35 @@ A `gh-cli` skill would cover: subcommand groups (repo, issue, pr, release, workf
 
 Use this blueprint for large reference skills covering many domains, products, or topics. The skill's primary value is organizing knowledge for efficient retrieval rather than wrapping a single API or tool.
 
-**Indicators:** The subject has 10+ distinct topics or products. No single API or CLI -- it's a knowledge domain. The skill needs to route to the right reference file based on the user's question.
+**Indicators:** The subject has several distinct user goals or domains. No single API or CLI owns the whole job, and different invocations should load different reference material.
 
 ### Required Research Phase
 
 1. **Domain mapping**
-   - List every product/topic/area that needs coverage
+   - List every product, topic, or area promised by the invocation contract
    - Group by category (compute, storage, networking, security, etc.)
    - Identify cross-cutting concerns (auth, billing, monitoring) that span domains
-   - Determine the total estimated line count across all topics
+   - Determine which material every branch shares and which material is branch-only
 
 2. **Decision trees**
    - How does a user choose between products? (What question do they start with?)
    - Build a tree from the user's goal to the specific product
    - Multiple trees may be needed (by task, by scale, by cost, by feature)
 
-3. **Scale thresholds**
-
-   | Domains | Structure | Example |
-   |---------|-----------|---------|
-   | 1-5 | Flat references in `references/` | `claude-api` |
-   | 6-15 | 5-file structure per domain | `cloudflare` |
-   | 16-30 | 5-file structure + shared directory | Large platform |
-   | 30+ | Skill composition (multiple skills) | `gws-*` family |
+3. **Access pattern**
+   - Keep a flat peer set together when every invocation needs it
+   - Use hub-and-spoke references when branches share a small core
+   - Use repeated domain directories only when domains share the same real access surfaces
+   - Compose multiple skills when jobs need independent invocation
 
 4. **Cross-referencing plan**
    - Which domains reference each other?
-   - Map "See Also" links before writing
-   - Ensure no circular chains longer than 2 hops (A -> B is OK, A -> B -> C is not)
+   - Map useful transitions before writing
+   - Point directly to the file that completes the current decision; avoid cycles or breadcrumb chains that make the reader assemble one answer across unrelated files
 
 ### Directory Structure
 
-For 6-15 domains:
+For domains that genuinely share setup, API, pattern, and gotcha access:
 
 ```
 docs-skill/
@@ -365,73 +235,17 @@ references/
     conventions.md
 evals/
   evals.json
-scripts/
-  .gitkeep
-agents/
-  .gitkeep
-templates/
-  .gitkeep
-assets/
-  .gitkeep
 ```
 
-For 30+ domains, decompose into a skill family instead.
+Omit empty support files and directories. Decompose into a skill family only when the jobs need independent reachability, not at an arbitrary domain count.
 
-### SKILL.md Skeleton
+### Entry-Point Contract
 
-```markdown
----
-name: {{SKILL_NAME}}
-description: "{{DESCRIPTION}}"
----
-
-# {{PLATFORM_NAME}} Skill
-
-Covers {{DOMAIN_COUNT}} products/services in the {{PLATFORM_NAME}} ecosystem.
-
-## Decision Tree
-
-What are you trying to do?
-
-- Store data
-  - Key-value -> references/kv/
-  - Relational -> references/database/
-  - Object/blob -> references/storage/
-- Run code
-  - Serverless functions -> references/functions/
-  - Containers -> references/containers/
-  - Edge/CDN -> references/edge/
-- Secure your app
-  - Auth -> references/auth/
-  - WAF/DDoS -> references/security/
-  - Secrets -> references/secrets/
-
-## Product Index
-
-| Product | Category | Reference | When to use |
-|---------|----------|-----------|-------------|
-| Product A | Storage | references/product-a/ | Storing files and blobs |
-| Product B | Compute | references/product-b/ | Running serverless code |
-| ... | ... | ... | ... |
-
-## Shared Conventions
-
-Authentication, naming, and global flags apply across all products.
-Read `references/shared/auth.md` before using any product reference.
-
-## Reading Guide
-
-| Task | Read |
-|------|------|
-| Choose a product | This file (decision tree above) |
-| Set up auth | references/shared/auth.md |
-| Use product X | references/product-x/README.md first |
-| Debug an issue | references/product-x/gotchas.md |
-```
+Start from `templates/progressive-docs/SKILL.template.md`, then model the real user branches rather than a product-count taxonomy. Keep shared selection rules inline. Add indexes, shared references, or repeated domain surfaces only when they shorten a demonstrated retrieval path.
 
 ### The 5-File Reference Structure
 
-Each domain directory contains exactly 5 files (see `references/patterns.md` for details):
+This optional layout offers up to five familiar surfaces (see `references/patterns.md` for details):
 
 1. **README.md** -- overview, when to use, quick start, "See Also" links
 2. **api.md** -- API reference (endpoints, methods, types, schemas)
@@ -439,26 +253,57 @@ Each domain directory contains exactly 5 files (see `references/patterns.md` for
 4. **configuration.md** -- setup, config files, environment variables
 5. **gotchas.md** -- pitfalls, limits, tribal knowledge
 
-Not every file needs to be long. A simple product might have a 20-line gotchas.md. But the structure is consistent, so the agent always knows where to look.
+Create only surfaces that carry useful content. An empty or invented gotchas file is worse than a smaller honest structure.
 
 ### Cross-Referencing
 
-- Every `README.md` ends with a "See Also" section linking related domains
-- Cross-references are one level deep only: `README.md -> ../other-domain/README.md`
-- Never reference a file that itself references another file to complete its answer
-- SKILL.md links to domain directories; domain files link to siblings and adjacent domains
+- Add related-domain links only when the transition supports a realistic task
+- Point to the file that answers the next question instead of forcing traversal through an index
+- Keep each decision's rule, caveat, and example together; a reference may link onward for a separate decision
+- Detect cycles that strand the reader or duplicate routing, but do not impose a numeric hop limit on a useful graph
 
 ### Verification Checklist
 
-- [ ] Every product in the decision tree has a corresponding reference directory
-- [ ] Every reference directory has all 5 files (README, api, patterns, configuration, gotchas)
-- [ ] Decision tree branches are mutually exclusive (no product appears in two branches)
+- [ ] Every routed branch points to an existing reference entry
+- [ ] Every reference directory contains only earned, routed files
+- [ ] Every branch has one owner, with precedence stated where overlap is unavoidable
 - [ ] Cross-references resolve to real files
-- [ ] No reference chain goes deeper than 2 hops
-- [ ] Shared conventions file exists and is referenced from SKILL.md
-- [ ] Product index table is complete and matches the directory structure
+- [ ] Each branch reaches the material needed to complete its task without unrelated traversal
+- [ ] Shared conventions remain inline or in a routed shared file according to actual branch use
+- [ ] Any product index is complete for the promised scope and matches the directory structure
 - [ ] Total SKILL.md is under 500 lines
 
-### Example: Cloudflare Skill
+---
 
-The `cloudflare` skill covers Workers, Pages, KV, D1, R2, AI, Vectorize, Tunnel, Spectrum, WAF, DDoS, and more. Each product gets a reference directory. SKILL.md contains decision trees organized by task (deploy, store, secure, serve) and a product index. The `references/shared/` directory covers Wrangler CLI and authentication patterns used across all products.
+## Skill Library Curation Blueprint
+
+### When to Use
+
+Use this blueprint when adding, improving, merging, promoting, renaming, moving, deprecating, or removing skills in an established collection.
+
+Use `references/curation.md` as the canonical workflow. The matrix below records only the transition-specific evidence needed in addition to that shared process.
+
+### Required Discovery
+
+1. Read repository policy and discover its actual lifecycle states.
+2. Inventory canonical skills, invocation descriptions, adjacent owners, wrappers, catalogs, registries, routers, installers, dependents, and evals.
+3. Decide create, improve, merge, compose, or retire before editing.
+4. Build an affected-surface ledger for every governed projection of the canonical skill.
+5. Find the repo-native validation and fresh discovery commands.
+
+### Change Matrix
+
+| Transition | Required evidence |
+|---|---|
+| Create | A distinct invocation branch, no better existing owner, release evals, all active surfaces updated |
+| Improve | Every old behavior accounted for, canonical rule updated in place, regressions covered |
+| Merge | Trigger ownership resolved, dependents migrated, duplicate package and routes removed |
+| Compose | Each child remains independently discoverable; dependency resolution and dependent revalidation pass |
+| Promote | Release validation and behavioral evals pass; every active discovery surface includes it |
+| Rename or move | Canonical path, wrappers, dependents, registries, routers, tests, and stale-name search agree |
+| Deprecate or remove | Replacement or rationale recorded; active discovery and dependents reconciled |
+
+## See Also
+
+- `references/patterns.md` — branch ledgers, earned structure, and composition decisions
+- `references/testing.md` — release, trigger, disclosure, and curation eval design

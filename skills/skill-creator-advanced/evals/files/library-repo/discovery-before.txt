@@ -1,0 +1,4 @@
+$ tool skills list
+release-notes
+release-publisher
+skill-map

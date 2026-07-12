@@ -1,0 +1,19 @@
+{
+  "skill_name": "log-analyzer",
+  "evals": [
+    {
+      "id": 1,
+      "name": "count-errors",
+      "prompt": "Count error events in evals/files/sample.ndjson.",
+      "expected_output": "A JSON summary with two events and one error.",
+      "files": ["evals/files/sample.ndjson"],
+      "assertions": [
+        {
+          "text": "Reports exactly two events and one error",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke"]
+    }
+  ]
+}

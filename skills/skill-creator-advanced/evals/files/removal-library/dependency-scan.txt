@@ -1,0 +1,6 @@
+$ rg -n "legacy-notifier" skills CATALOG.md registry.json
+skills/retired/legacy-notifier/SKILL.md:2:name: legacy-notifier
+skills/retired/legacy-notifier/SKILL.md:7:Replaced by `notification-auditor`.
+
+Retirement age: 2 releases
+Active dependents: 0

@@ -1,170 +1,83 @@
-# {{API_NAME}} API Reference
+# {{API_NAME}} Contract Reference
 
-## Table of Contents
+## Contract Overview
 
-- [Overview](#overview)
-- [Base URL and Versioning](#base-url-and-versioning)
-- [Common Headers](#common-headers)
-- [{{RESOURCE_GROUP_1}}](#{{RESOURCE_GROUP_1_ANCHOR}})
-- [{{RESOURCE_GROUP_2}}](#{{RESOURCE_GROUP_2_ANCHOR}})
-- [{{RESOURCE_GROUP_3}}](#{{RESOURCE_GROUP_3_ANCHOR}})
-- [Error Codes](#error-codes)
+- Style or transport: {{API_CONTRACT_STYLE}}
+- Version or compatibility range: {{API_CONTRACT_VERSION}}
+- Endpoint, service, or discovery source: {{API_ENTRY_POINT}}
+- Input and output encoding: {{API_ENCODING_OR_SCHEMA}}
+- Current evidence: {{API_CONTRACT_EVIDENCE}}
 
----
+Describe the API in its native model. HTTP resources, RPC methods, graph
+operations, messages, events, streams, and SDK-only calls need different
+terminology and examples.
 
-## Overview
+## Shared Request Context
 
-The {{API_NAME}} API uses {{API_STYLE}} with {{DATA_FORMAT}} request and response bodies.
+{{SHARED_REQUEST_CONTEXT}}
 
-**Base URL:** `{{BASE_URL}}`
-**API Version:** `{{API_VERSION}}`
-**Authentication:** `{{AUTH_HEADER_FORMAT}}`
+Keep this section only for context shared by several operations, such as
+metadata, headers, deadlines, version selectors, tenant scope, or content
+negotiation. Put operation-specific context with the operation.
 
-## Base URL and Versioning
+## Operation Index
 
-```
-{{BASE_URL}}/{{VERSION_PREFIX}}/
-```
+| User intent | Contract operation | Effect | Detailed section |
+|-------------|--------------------|--------|------------------|
+{{OPERATION_INDEX_ROWS}}
 
-{{VERSIONING_DETAILS}}
+## {{OPERATION_GROUP_NAME}}
 
-## Common Headers
+### {{OPERATION_NAME}}
 
-Every request requires:
+**Use when:** {{OPERATION_APPLICABILITY}}
 
-```
-Authorization: {{AUTH_HEADER_FORMAT}}
-Content-Type: application/json
-Accept: application/json
-{{ADDITIONAL_REQUIRED_HEADERS}}
-```
+**Effect:** {{OPERATION_EFFECT}}
 
----
+**Contract form:**
 
-## {{RESOURCE_GROUP_1}}
-
-### List {{RESOURCE_GROUP_1}}
-
-```
-GET {{BASE_URL}}/{{RESOURCE_GROUP_1_PATH}}
+```{{CONTRACT_FENCE_LANGUAGE}}
+{{OPERATION_CONTRACT_FORM}}
 ```
 
-**Query Parameters:**
+**Inputs:**
 
-| Parameter | Type | Required | Default | Description |
-|-----------|------|----------|---------|-------------|
-| {{PAGINATION_PARAM}} | {{PAGINATION_TYPE}} | No | {{PAGINATION_DEFAULT}} | {{PAGINATION_DESCRIPTION}} |
-| limit | integer | No | {{DEFAULT_PAGE_SIZE}} | Max {{MAX_PAGE_SIZE}} |
-| {{FILTER_PARAM_1}} | string | No | - | {{FILTER_DESCRIPTION_1}} |
+| Input | Type or shape | Required | Constraints |
+|-------|---------------|----------|-------------|
+{{OPERATION_INPUT_ROWS}}
 
-**Response:**
+**Success outcome:** {{OPERATION_SUCCESS_CONTRACT}}
 
-```json
-{
-  "data": [
-    {
-      "id": "{{EXAMPLE_ID}}",
-      "{{FIELD_1}}": "{{FIELD_1_VALUE}}",
-      "{{FIELD_2}}": "{{FIELD_2_VALUE}}",
-      "created_at": "{{EXAMPLE_TIMESTAMP}}"
-    }
-  ],
-  "{{PAGINATION_RESPONSE_FIELD}}": {{PAGINATION_RESPONSE_VALUE}}
-}
-```
+**Failure outcomes:** {{OPERATION_FAILURE_CONTRACT}}
+
+**Safest verification:** {{OPERATION_VERIFICATION}}
 
 **Example:**
 
-```bash
-curl -X GET "{{BASE_URL}}/{{RESOURCE_GROUP_1_PATH}}?limit=10" \
-  -H "Authorization: {{AUTH_HEADER_FORMAT}}"
+```{{EXAMPLE_LANGUAGE}}
+{{OPERATION_EXAMPLE}}
 ```
 
-### Create {{RESOURCE_SINGULAR_1}}
+Repeat this operation section for each independently useful operation. If the
+contract is HTTP, document methods, media types, and status semantics evidenced
+by that API; do not assume JSON, CRUD, deletion, pagination, or `201 Created`.
 
-```
-POST {{BASE_URL}}/{{RESOURCE_GROUP_1_PATH}}
-```
+## Failure Model
 
-**Request Body:**
+{{FAILURE_MODEL}}
 
-```json
-{
-  "{{REQUIRED_FIELD_1}}": "{{REQUIRED_FIELD_1_VALUE}}",
-  "{{REQUIRED_FIELD_2}}": "{{REQUIRED_FIELD_2_VALUE}}",
-  "{{OPTIONAL_FIELD_1}}": "{{OPTIONAL_FIELD_1_VALUE}}"
-}
-```
-
-**Required Fields:** {{REQUIRED_FIELD_1}}, {{REQUIRED_FIELD_2}}
-
-**Response:** Returns the created object with status `201 Created`.
-
-### Get {{RESOURCE_SINGULAR_1}}
-
-```
-GET {{BASE_URL}}/{{RESOURCE_GROUP_1_PATH}}/{{ID_PARAM}}
-```
-
-{{EXPAND_DETAILS}}
-
-### Update {{RESOURCE_SINGULAR_1}}
-
-```
-{{UPDATE_METHOD}} {{BASE_URL}}/{{RESOURCE_GROUP_1_PATH}}/{{ID_PARAM}}
-```
-
-Send only the fields you want to change. Omitted fields are not modified.
-
-### Delete {{RESOURCE_SINGULAR_1}}
-
-```
-DELETE {{BASE_URL}}/{{RESOURCE_GROUP_1_PATH}}/{{ID_PARAM}}
-```
-
-{{DELETE_DETAILS}}
-
----
-
-## {{RESOURCE_GROUP_2}}
-
-{{RESOURCE_GROUP_2_CONTENT}}
-
----
-
-## {{RESOURCE_GROUP_3}}
-
-{{RESOURCE_GROUP_3_CONTENT}}
-
----
-
-## Error Codes
-
-| HTTP Status | Error Code | Description | Resolution |
-|-------------|-----------|-------------|------------|
-| 400 | `{{ERROR_CODE_400}}` | {{ERROR_DESC_400}} | {{ERROR_FIX_400}} |
-| 401 | `{{ERROR_CODE_401}}` | {{ERROR_DESC_401}} | {{ERROR_FIX_401}} |
-| 403 | `{{ERROR_CODE_403}}` | {{ERROR_DESC_403}} | {{ERROR_FIX_403}} |
-| 404 | `{{ERROR_CODE_404}}` | {{ERROR_DESC_404}} | {{ERROR_FIX_404}} |
-| 429 | `{{ERROR_CODE_429}}` | {{ERROR_DESC_429}} | {{ERROR_FIX_429}} |
-| 500 | `{{ERROR_CODE_500}}` | {{ERROR_DESC_500}} | {{ERROR_FIX_500}} |
-
-**Error Response Format:**
-
-```json
-{
-  "error": {
-    "code": "{{EXAMPLE_ERROR_CODE}}",
-    "message": "{{EXAMPLE_ERROR_MESSAGE}}",
-    "{{ERROR_DETAIL_FIELD}}": "{{ERROR_DETAIL_VALUE}}"
-  }
-}
-```
-
----
+Describe the contract's actual failure surface: status or error codes,
+structured details, retry eligibility, partial success, stream termination, or
+transport failures as applicable. Do not invent an HTTP status table for a
+non-HTTP API.
 
 ## See Also
 
-- `references/patterns.md` -- common workflows and pagination patterns
-- `references/configuration.md` -- auth setup and SDK installation
-- `references/gotchas.md` -- pitfalls specific to these endpoints
+- `references/configuration.md` -- access and client setup
+- `references/patterns.md` -- supported multi-step workflows
+- `references/gotchas.md` -- evidenced contract pitfalls
+
+## Release Gate
+
+Replace every template token, remove unsupported contract concepts, and verify
+every example against the pinned contract before release.

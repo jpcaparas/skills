@@ -1,60 +1,71 @@
-# {{TOOL_NAME}} Commands Reference
+# {{TOOL_NAME}} Command Reference
 
-## Table of Contents
+## Command Surface
 
-- [Overview](#overview)
-- [Global Flags](#global-flags)
-- [{{COMMAND_GROUP_1}}](#{{COMMAND_GROUP_1_ANCHOR}})
-- [{{COMMAND_GROUP_2}}](#{{COMMAND_GROUP_2_ANCHOR}})
-- [{{COMMAND_GROUP_3}}](#{{COMMAND_GROUP_3_ANCHOR}})
-- [Exit Codes](#exit-codes)
+- Executable or entry point: `{{TOOL_ENTRY_POINT}}`
+- Supported version or range: {{SUPPORTED_TOOL_VERSION_OR_RANGE}}
+- Help or documentation evidence: {{COMMAND_SURFACE_EVIDENCE}}
+- Invocation environments: {{SUPPORTED_INVOCATION_ENVIRONMENTS}}
 
----
+## Shared Invocation Rules
 
-## Overview
+{{SHARED_INVOCATION_RULES}}
 
-Use this file for the exact `{{TOOL_NAME}}` subcommands, flags, and output modes.
+Keep only rules shared by several commands, such as target selection, global
+options, configuration precedence, output selection, quoting, or interaction
+mode. Put command-specific options with the command.
 
-**Binary:** `{{TOOL_BIN}}`  
-**Version:** `{{TOOL_VERSION}}`
+## Command Index
 
-## Global Flags
+| User intent | Command | Effect | Detailed section |
+|-------------|---------|--------|------------------|
+{{COMMAND_INDEX_ROWS}}
 
-| Flag | Meaning | Notes |
-|------|---------|-------|
-| `{{GLOBAL_FLAG_1}}` | {{GLOBAL_FLAG_1_DESCRIPTION}} | {{GLOBAL_FLAG_1_NOTES}} |
-| `{{GLOBAL_FLAG_2}}` | {{GLOBAL_FLAG_2_DESCRIPTION}} | {{GLOBAL_FLAG_2_NOTES}} |
-| `{{GLOBAL_FLAG_3}}` | {{GLOBAL_FLAG_3_DESCRIPTION}} | {{GLOBAL_FLAG_3_NOTES}} |
+## {{COMMAND_GROUP_NAME}}
 
-## {{COMMAND_GROUP_1}}
+### `{{COMMAND_NAME}}`
 
-### `{{TOOL_BIN}} {{COMMAND_1}}`
+**Use when:** {{COMMAND_APPLICABILITY}}
 
-```bash
-{{TOOL_BIN}} {{COMMAND_1}} {{COMMAND_1_USAGE}}
+**Effect:** {{COMMAND_EFFECT}}
+
+**Syntax:**
+
+```{{COMMAND_FENCE_LANGUAGE}}
+{{COMMAND_SYNTAX}}
 ```
 
-**Required flags:** {{COMMAND_1_REQUIRED_FLAGS}}  
-**Common output:** {{COMMAND_1_OUTPUT}}
+**Inputs and options:**
 
-## {{COMMAND_GROUP_2}}
+| Input or option | Required | Default | Constraints |
+|-----------------|----------|---------|-------------|
+{{COMMAND_INPUT_ROWS}}
 
-{{COMMAND_GROUP_2_CONTENT}}
+**Success outcome:** {{COMMAND_SUCCESS_CONTRACT}}
 
-## {{COMMAND_GROUP_3}}
+**Failure outcomes:** {{COMMAND_FAILURE_CONTRACT}}
 
-{{COMMAND_GROUP_3_CONTENT}}
+**Safest verification:** {{COMMAND_VERIFICATION}}
 
-## Exit Codes
+Repeat this command section for each independently useful command. Do not infer
+commands or flags from naming conventions; verify them against the pinned help
+surface.
 
-| Exit Code | Meaning | Resolution |
-|-----------|---------|------------|
-| `0` | Success | No action needed |
-| `{{EXIT_CODE_1}}` | {{EXIT_CODE_1_MEANING}} | {{EXIT_CODE_1_FIX}} |
-| `{{EXIT_CODE_2}}` | {{EXIT_CODE_2_MEANING}} | {{EXIT_CODE_2_FIX}} |
+## Process and Outcome Model
+
+{{PROCESS_AND_OUTCOME_MODEL}}
+
+Document exit semantics, standard streams, structured output, partial success,
+prompts, signals, and retryability only as the tool defines them. Do not assume
+exit code zero, JSON output, or POSIX shell behavior without evidence.
 
 ## See Also
 
-- `references/configuration.md` -- installation and auth setup
-- `references/patterns.md` -- multi-step workflows and pipelines
-- `references/gotchas.md` -- shell quirks and edge cases
+- `references/configuration.md` -- installation and identity setup
+- `references/patterns.md` -- supported multi-step workflows
+- `references/gotchas.md` -- evidenced command and platform pitfalls
+
+## Release Gate
+
+Replace every template token, remove unsupported command concepts, and verify
+every example against the pinned command surface before release.

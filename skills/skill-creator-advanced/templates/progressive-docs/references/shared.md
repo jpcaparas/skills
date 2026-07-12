@@ -1,37 +1,40 @@
 # {{DOMAIN_NAME}} Shared Conventions
 
-## Table of Contents
-
-- [Scope](#scope)
-- [Terminology](#terminology)
-- [Shared Setup](#shared-setup)
-- [Navigation Guide](#navigation-guide)
-- [Cross-Cutting Gotchas](#cross-cutting-gotchas)
-
----
+Keep this file only when multiple domain branches genuinely depend on the same
+rules. If one branch owns the material, move it there and delete this file and
+its route.
 
 ## Scope
 
-This file covers conventions shared across the {{DOMAIN_NAME}} reference skill.
+{{SHARED_SCOPE_AND_CONSUMERS}}
 
 ## Terminology
 
-| Term | Meaning |
-|------|---------|
-| {{TERM_1}} | {{TERM_1_MEANING}} |
-| {{TERM_2}} | {{TERM_2_MEANING}} |
-| {{TERM_3}} | {{TERM_3_MEANING}} |
+| Term | Meaning | Used by |
+|------|---------|---------|
+{{TERMINOLOGY_ROWS}}
 
-## Shared Setup
+## Shared Setup or Preconditions
 
-{{SHARED_SETUP_DETAILS}}
+{{SHARED_SETUP_OR_PRECONDITIONS}}
 
-## Navigation Guide
+## Cross-Cutting Rules
 
-- Read the domain-specific reference that matches the user's immediate task.
-- Return here when the user needs shared auth, config, naming, or glossary context.
+{{CROSS_CUTTING_RULES}}
 
-## Cross-Cutting Gotchas
+## Evidenced Gotchas
 
-- {{SHARED_GOTCHA_1}}
-- {{SHARED_GOTCHA_2}}
+{{SHARED_EVIDENCED_GOTCHAS}}
+
+## See Also
+
+{{CONDITION_AND_PURPOSE_CROSS_LINKS}}
+
+Every cross-link must say when to follow it and what decision or procedure it
+supports. Do not duplicate the root routing guide here.
+
+## Release Gate
+
+Replace every template token and delete sections without shared, evidenced
+content. If this file is not needed by at least two branches, delete it before
+release.

@@ -1,0 +1,5 @@
+$ python3 scripts/validate.py skills/lab/package-auditor --profile release
+VALID: package-auditor
+
+$ model-eval run skills/lab/package-auditor/evals/evals.json
+PASS: 2/2 scenarios, 7/7 assertions

@@ -1,0 +1,5 @@
+$ rg -n "old-lint" .
+CATALOG.md:3:- `old-lint` — Review source changes for quality problems.
+registry.json:2:  "published": ["old-lint", "code-review", "quality-gate", "skill-map"]
+skills/stable/quality-gate/SKILL.md:8:Invoke `old-lint` before reporting a pass.
+skills/stable/skill-map/SKILL.md:8:- General review: `old-lint`

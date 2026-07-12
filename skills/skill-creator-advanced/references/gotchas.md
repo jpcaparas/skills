@@ -1,105 +1,61 @@
-# Gotchas — Common Mistakes & Tribal Knowledge
+# Gotchas — Skill Authoring Failure Modes
 
-> **This file is self-improving.** When user feedback reveals a new generalizable mistake,
-> append it to the appropriate category with a date stamp. Prefix new entries with `[NEW]`.
-> Remove the `[NEW]` prefix after the rule has been validated across multiple skills.
+Use this catalog after the relevant branch is known. It contains non-obvious failure modes; canonical process rules live in `SKILL.md` and the focused references.
 
----
+## Structure and Ownership
 
-## Structural Mistakes
+- **Scaffold mistaken for release** — generated folders, placeholders, and an empty eval file prove only that a draft exists. Release validation must reject unresolved work.
+- **Empty structure as status** — `.gitkeep` trees, placeholder references, and forced sections add maintenance surface without behavior. Earn each artifact from the branch/content ledger.
+- **New skill without a new owner** — another package already owns the same trigger and process. Improve or merge unless the branch needs independent invocation.
+- **Multiple canonical homes** — wrappers, templates, and references repeat the runbook. Keep behavior in one place and derive or validate projections.
+- **Router drift** — a router names removed skills or misses current ones. Treat it as a governed publication surface and audit it on every lifecycle change.
 
-- Putting everything in SKILL.md instead of using references -- SKILL.md should be a router
-  and quick reference, not an encyclopedia. If it exceeds 300 lines, start moving content out.
-- Making SKILL.md too short (just a paragraph) -- it needs decision trees, a quick reference
-  table, a gotchas section, and pointers to references. A bare paragraph is not a skill, it is
-  a description.
-- Missing frontmatter fields -- `name` and `description` are required. Skills without them
-  silently fail to trigger on most platforms.
-- Directory name not matching skill name -- the `name` field in frontmatter must exactly match
-  the directory name. `stripe-api/SKILL.md` with `name: stripe` will confuse harnesses.
-- Nested cross-references (A -> B -> C) -- reference chains deeper than one hop mean the agent
-  has to read three files to answer one question. Flatten: SKILL.md -> B and SKILL.md -> C.
-- Missing evals directory -- every production skill should have `evals/evals.json`, even if it
-  starts with just one smoke test.
-- Forgetting .gitkeep in empty directories -- empty directories are not tracked by git without
-  a placeholder file. Use `.gitkeep` and remove it when real files are added.
-- Using README.md at the skill root instead of SKILL.md -- SKILL.md IS the readme for agent
-  consumption. A separate README.md is redundant and may confuse harnesses.
+## Invocation and Disclosure
 
-## Content Mistakes
+- **Synonym-heavy description** — repeated keywords rename one branch and increase permanent context load. Represent each real branch once.
+- **Catch-all scope** — phrases such as “for anything related to X” overtrigger. State the actual job and add near-miss evals.
+- **Universal exclusions** — long prohibition lists activate adjacent tasks and crowd out the positive target. Add explicit exclusions only when trigger evidence needs them.
+- **Bare pointer** — a path exists but its wording does not tell the agent when to open it or what to do with it. Encode condition, purpose, and target.
+- **Hidden invariant** — every branch needs a rule that was pushed behind optional disclosure. Keep shared must-have material inline.
+- **Reference maze** — one answer requires chasing several accidental hops. Route directly from the earliest context that knows the condition.
+- **Furniture without a branch** — a linear or reference-only skill gains an invented decision tree, table, or gotcha quota. Use only structures that improve access.
 
-- Pseudocode instead of working examples -- every code example should be syntactically valid
-  and ideally tested. Agents copy code; pseudocode becomes real bugs.
-- Outdated API versions or endpoints -- always verify endpoints against current docs before
-  writing. Pin the API version explicitly. Never use "latest" as a version.
-- Missing gotchas section -- gotchas are the highest-value content in most skills. They encode
-  the things that are hard to discover from official documentation alone. Include at least 3.
-- Explaining things the agent already knows -- do not restate how HTTP requests work, what JSON
-  is, or how to use pip. Add knowledge the agent lacks: API-specific quirks, undocumented
-  behaviors, version gotchas.
-- Using MUST/NEVER instead of explaining reasoning -- agents respond better to understanding why
-  something matters than to rigid directives. "Explain the why" means writing "Use POST for
-  creation because the API returns 405 for PUT on the create endpoint" instead of "MUST use POST".
-- Hallucinating endpoints or flags -- never write an endpoint or CLI flag from memory. Verify
-  by fetching docs, running --help, or testing a real call.
-- Incomplete auth documentation -- auth is the first thing that breaks. Always include: the
-  exact header format, where to get credentials, and a tested example.
-- Mixing SDK versions -- if showing SDK examples, pin the SDK version and ensure all examples
-  use the same version's API surface.
-- [NEW] Over-broad planning triggers in passive escalation skills -- when a skill is meant to
-  invoke a reviewer, advisor, or second-opinion tool for risky work, include substantial
-  multi-step high-level plan validation after a concrete plan is drafted and before
-  implementation begins, but explicitly exclude ordinary planning, small todo lists, and
-  one-step or two-step plans.
+## Process and Completion
 
-## Disclosure Mistakes
+- **Activity without a gate** — “review,” “research,” and “test” let the agent move on early. End each phase with checkable evidence and exhaustive accounting where partial work is dangerous.
+- **Size-driven split** — line count alone produces several skills with competing triggers. Disclose branch-only content first; split for independent invocation or a useful context boundary.
+- **Implicit choice** — an omitted decision is neither intentional freedom nor a routed branch. Name the choice or state why the model may decide it.
+- **Question-first intake** — the skill asks for information already present in the request or repository. Inspect first and ask only when a material branch remains unresolved.
 
-- Loading all references upfront instead of on demand -- SKILL.md should tell the agent WHEN
-  to read each reference, not load them all at trigger time. Use conditional pointers:
-  "Read references/auth.md when setting up authentication."
-- No reading guide (agent does not know which file to read) -- include a task-to-file mapping
-  table in SKILL.md so the agent can route directly to the right reference.
-- Reference files without TOC when over 300 lines -- long reference files without a table of
-  contents force the agent to scan the entire file. Add a TOC at the top with anchor links.
-- Duplicating content between SKILL.md and references -- information should live in ONE place.
-  SKILL.md summarizes; references elaborate. If you find yourself copying a paragraph, replace
-  the copy with a pointer.
-- Over-granular references -- splitting content into 20 tiny files (one per endpoint) creates
-  navigation overhead. Group by domain or function: one file per endpoint group, not one per
-  endpoint.
-- Under-granular references -- one massive 2000-line reference file defeats progressive
-  disclosure. Split by the 5-file structure (README, api, patterns, configuration, gotchas)
-  when a domain exceeds 500 lines.
+## Verification and Safety
 
-## Verification Mistakes
+- **Schema pass presented as behavioral proof** — structural preflight cannot show that prompts trigger correctly or that instructions improve behavior. Run behavioral evals before release.
+- **Broken evaluator scored as skill failure** — missing authentication, undiscovered temporary skills, or swallowed subprocess errors can make every positive return false. Health-probe the evaluator and separate infrastructure failures from model behavior.
+- **Live-first verification** — testing a write, send, purchase, or production mutation creates risk merely to prove syntax. Climb from parsing and docs through dry run/sandbox/read-only calls, and require authority for external effects.
+- **Plausible but wrong evidence** — a command returns zero while the assertion checks the wrong path, type, or surface. Trace the promised behavior to its exact observable.
+- **Unpinned unstable fact** — an endpoint, flag, rate limit, model ID, or harness capability drifts. Cite current primary evidence and record a revalidation path.
+- **Unsupported portability claim** — scripts, subagents, manual invocation controls, or auto-loading are treated as universal. Capability-gate them and keep the portable core useful.
 
-- Examples that do not actually work -- the most common complaint. Before shipping, execute
-  every code example (or at minimum, syntax-check it).
-- CLI commands with wrong flag syntax -- flag syntax changes between tool versions. Always
-  verify against `tool --help` for the pinned version.
-- API endpoints that return errors -- test at least one real API call per endpoint group.
-  Document the exact request format that succeeds.
-- Missing auth in example commands -- every curl or API example must include the auth header.
-  Users will copy-paste; omitting auth means the first thing they try fails.
-- Incorrect HTTP methods -- some APIs use PATCH for partial updates, PUT for full replacement.
-  Do not guess; check the docs.
-- Untested pagination examples -- pagination loops are a common source of bugs (off-by-one,
-  infinite loops, wrong termination condition). Test with real data.
-- Assuming environment variables exist -- if a script or command references an env var, document
-  where to set it and what happens if it is missing.
+## Feedback and Curation
 
-## Style Mistakes
+- **Append-only learning** — every correction adds a dated rule and none leaves. Fix locally, merge proven nuance into one canonical rule, then prune superseded text.
+- **One-off promoted as doctrine** — a vendor fact or user preference becomes a global authoring rule. Require repeated independent evidence or a discriminating eval.
+- **No-op instruction** — prose sounds relevant but the model behaves the same without it. Compare against a baseline and delete behavior-neutral text.
+- **Sediment preserved in runtime guidance** — change history, stale versions, resolved TODOs, and retired exceptions remain loaded. Keep provenance in version control or release notes.
+- **Partial lifecycle update** — canonical skill changes while catalog, registry, router, wrapper, installer, or dependents remain stale. Reconcile the affected-surface ledger atomically.
+- **Checklist-only consistency** — repeated publication rules drift because nothing executes them. Add a repo-native inventory check when the mapping is deterministic.
+- **Silent self-modification** — feedback about a target skill mutates an installed creator copy without authority or a canonical source checkout. Report the candidate lesson unless the creator itself is in scope.
 
-- Passive voice instead of imperative -- "The command should be run" is weaker than "Run the
-  command." Skills are instructions; use the imperative form.
-- Over-explaining general programming concepts -- do not include a tutorial on REST APIs or
-  JSON parsing. The agent already knows this. Focus on what is unique to this skill's domain.
-- Inconsistent heading levels -- use strict hierarchy: # for title, ## for sections, ### for
-  subsections. Never skip a level (# -> ### without ##).
-- No "See Also" cross-references in reference files -- every reference file should end with
-  a "See Also" section linking to related files. This aids navigation when the agent needs
-  adjacent information.
-- Overly verbose descriptions -- the frontmatter description should be a dense, keyword-rich
-  paragraph, not a marketing essay. Every word should help with triggering.
-- Inconsistent example formatting -- pick one style for code examples (curl, SDK, or both)
-  and use it consistently throughout all reference files.
+## Writing and Examples
+
+- **Positive target missing** — a prohibition names the unwanted behavior but never says what to do. Lead with the desired action; retain hard safety guardrails and pair them with the safe alternative.
+- **Pseudocode disguised as copyable code** — placeholders look executable and fail when copied. Mark drafts clearly and verify release examples.
+- **General knowledge crowds out domain knowledge** — the skill explains programming basics instead of the unstable contract, exceptions, and decisions the agent lacks.
+- **Thin wrappers become alternate instructions** — public `README.md`, `AGENTS.md`, or metadata files drift into a second runbook. Keep them short and point to canonical `SKILL.md`.
+
+## See Also
+
+- `references/curation.md` — ownership, lifecycle, affected surfaces, and pruning
+- `references/patterns.md` — branch ledgers, pointers, completion criteria, and granularity
+- `references/testing.md` — behavioral proof and safe verification ladders
+- `references/self-improvement.md` — evidence thresholds for reusable lessons

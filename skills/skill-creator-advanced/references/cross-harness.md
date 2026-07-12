@@ -1,327 +1,182 @@
 # Cross-Harness Compatibility
 
+Use this reference when a skill must work in more than one agent harness. Treat portability as a set of verified contracts, not as a property implied by the directory layout.
+
 ## Table of Contents
 
-- [Agent Skills Standard Overview](#agent-skills-standard-overview)
-- [Supported Platforms](#supported-platforms)
-- [Discovery Paths](#discovery-paths)
-- [Required vs Optional Frontmatter](#required-vs-optional-frontmatter)
-- [Platform-Specific Extensions](#platform-specific-extensions)
-- [Installation via npx](#installation-via-npx)
-- [What Works Everywhere vs Platform-Specific](#what-works-everywhere-vs-platform-specific)
-- [Script Portability](#script-portability)
+- [Portable Core](#portable-core)
+- [Target Capability Record](#target-capability-record)
+- [Capability Checklist](#capability-checklist)
+- [Invocation Contract](#invocation-contract)
+- [Keep Metadata Namespaces Separate](#keep-metadata-namespaces-separate)
+- [Discovery and Installation](#discovery-and-installation)
+- [Scripts and Evals](#scripts-and-evals)
+- [Release Gate](#release-gate)
 
+## Portable Core
+
+For harnesses that implement the Agent Skills format, the conservative interchange unit is a directory containing `SKILL.md`:
+
+```text
+skill-name/
+└── SKILL.md
+```
+
+```yaml
 ---
-
-## Agent Skills Standard Overview
-
-The Agent Skills standard (agentskills.io) defines a portable format for packaging instructions, reference documentation, and automation scripts that any AI agent harness can consume.
-
-Core principle: a skill is a directory containing a `SKILL.md` file with YAML frontmatter. Everything else is optional. This minimum viable format works across all supporting harnesses because the contract is simple -- the harness reads frontmatter for metadata and loads the markdown body as instructions.
-
-The standard does NOT specify:
-- How the harness decides to load a skill (each harness has its own triggering mechanism)
-- How reference files are loaded (Read tool, file inclusion, etc.)
-- How scripts are executed (Bash tool, subprocess, etc.)
-- How the skill interacts with the user (this is harness-dependent)
-
-What the standard DOES specify:
-- Directory structure conventions
-- Frontmatter field names and types
-- File naming rules
-- Portability expectations
-
+name: skill-name
+description: "Create or improve the named outcome when the request matches this domain."
 ---
+```
 
-## Supported Platforms
+The shared format covers the entry file, its frontmatter, Markdown instructions, and relative references. It does not by itself guarantee:
 
-| Platform | SKILL.md | References | Scripts | Subagents | Notes |
-|----------|----------|------------|---------|-----------|-------|
-| Claude Code | Full | Full | Full | Full | Primary development target |
-| OpenAI Codex | Full | Full | Full | Limited | Add `agents/openai.yaml` for UI |
-| Gemini CLI | Full | Full | Full | Limited | Add `metadata.openclaw` for registry |
-| Cursor | Full | Full | Full | No | Skills load as context rules |
-| VS Code (Copilot) | Full | Full | Partial | No | Markdown-only context |
-| GitHub Copilot | Full | Read-only | No | No | No script execution |
-| AMP | Full | Full | Full | Yes | Similar capabilities to Claude Code |
-| OpenCode | Full | Full | Full | Limited | Open-source harness |
+- where a harness discovers the directory
+- when or whether the body is loaded
+- whether linked files are read automatically
+- whether scripts, tools, or subagents are available
+- whether UI manifests or invocation controls are honored
+- whether an eval format has a runner
 
-"Full" means the platform can read, load, and act on that component.
-"Partial" means the component is loaded but execution may be restricted.
-"No" means the component is not supported on that platform.
+Keep relative references inside the skill directory. Keeping `SKILL.md` below 500 lines is a useful format recommendation, not proof that every harness will load or follow it correctly.
 
----
+Supporting directories are earned artifacts. Add `references/`, `scripts/`, `assets/`, `agents/`, or `evals/` only when the target workflow and harness can use them.
 
-## Discovery Paths
+## Target Capability Record
 
-How each platform finds and loads skills.
+Record the primary documentation or installed behavior checked for every promised target. Product contracts change; refresh this table when releasing portability-sensitive changes.
 
-For public source repositories consumed by `npx skills add owner/repo`, the lowest-friction layout is:
+| Target contract | Checked | Confirmed capability | Boundary not to infer |
+|---|---|---|---|
+| [Agent Skills format](https://agentskills.io/specification) | 2026-07-12 | `SKILL.md`, `name`, `description`, relative references, and the under-500-line recommendation for conforming harnesses | Discovery, invocation, script execution, and eval execution |
+| [GitHub Copilot skills](https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills) | 2026-07-12 | Repository roots include `.github/skills/`, `.claude/skills/`, and `.agents/skills/`; personal roots include `~/.copilot/skills/` and `~/.agents/skills/`; supporting scripts and resources are supported | Identical discovery precedence, tool access, or subagent behavior in other harnesses |
+| [Gemini CLI skills](https://geminicli.com/docs/cli/creating-skills/) | 2026-07-12 | Documented roots include `.gemini/skills/` and `.agents/skills/` | Any requirement for an unrelated registry metadata namespace |
+| [OpenCode skills](https://opencode.ai/docs/skills/#place-files) | 2026-07-12 | Documented project and user skill locations used by this package's placement helper | Identical precedence or behavior in another harness |
+| This package's observed Codex environment and repository contract | 2026-07-12 | The local install uses `$CODEX_HOME/skills/` when configured or `~/.codex/skills/`; optional UI metadata uses `agents/openai.yaml` with an `interface` mapping | Universal Codex discovery paths, repo-local precedence, invocation semantics, or support outside the observed install |
+
+Use exact version numbers or documentation links in release evidence when a compatibility promise matters. If a capability is undocumented and untested, mark it unknown and do not promise it.
+
+## Capability Checklist
+
+For each target harness, verify:
+
+| Capability | Question to answer |
+|---|---|
+| Discovery | Which repository and user roots are documented, and what is their precedence? |
+| Startup metadata | Which fields are scanned before the body loads? |
+| Body loading | Is loading automatic, model-selected, or explicitly requested? |
+| References | Can the harness follow relative files, and must `SKILL.md` route to them? |
+| Automation | Which runtimes, tools, permissions, and network policies are available? |
+| Subagents | Is delegation supported, and does it preserve the skill context? |
+| Invocation controls | Are manual-only, user-invocable, or model-invocable controls documented? |
+| UI metadata | Is there a separate manifest, and what exact schema owns it? |
+| Evals | Is there a supported runner, or are evals only repository-local fixtures? |
+| Effects | How are approvals, dry runs, credentials, and external writes handled? |
+
+Do not use labels such as “full,” “partial,” or “supported” without naming the tested capability. A harness may read Markdown while rejecting scripts, or run scripts while ignoring a UI manifest.
+
+## Invocation Contract
+
+Choose the intended reachability before adding platform controls:
+
+| Need | Cross-harness design |
+|---|---|
+| Agent should discover the skill | Put the defining action first in `description`; cover each semantic branch once |
+| Human should invoke it explicitly | Use only a control documented for that target harness |
+| Another skill needs the behavior | Verify that dependency invocation works; otherwise co-locate shared guidance or expose a human route |
+| Several explicit entrypoints need orientation | Add a human-facing router and validate it as derived state |
+
+The description is startup metadata only in harnesses that document scanning it. Test positive triggers and near misses on each promised target; text-only review cannot establish invocation behavior.
+
+Distinguish dependencies:
+
+- A **hard dependency** makes the result incorrect or nonfunctional when unavailable. Document detection and setup or stop safely.
+- A **soft dependency** improves the result. Degrade gracefully when it is absent.
+
+Manual-only flags, slash commands, and skill-to-skill invocation are harness contracts. Never copy them between platforms by analogy.
+
+## Keep Metadata Namespaces Separate
+
+These surfaces may coexist, but they do different jobs:
+
+- `SKILL.md` frontmatter belongs to the selected skill format.
+- `agents/openai.yaml` is a repository-specific Codex UI manifest.
+- `metadata.json` is packaging or catalog metadata when repository policy defines it.
+- owner-specific frontmatter extensions belong only to the contract that documents them.
+- `evals/evals.json` is test data for a runner that explicitly supports its schema.
+
+Do not move keys between these files, nest one owner's extension under another owner's namespace, or assume a registry field changes harness discovery.
+
+### Codex UI manifest used by this repository
+
+When this repository's packaging contract calls for Codex UI metadata, use the nested shape:
+
+```yaml
+# agents/openai.yaml
+interface:
+  display_name: "API Integration Helper"
+  short_description: "Create and verify a safe API integration"
+  default_prompt: "Help me create and verify a safe API integration."
+```
+
+Do not flatten the fields to the document root. The manifest is optional presentation metadata; it does not replace `SKILL.md` or establish discovery and invocation behavior. Validate it against the current repository or installed-harness schema before release.
+
+For any other extension, copy the exact documented schema from its owner and record which harness, registry, or installer consumes it. Omit speculative metadata.
+
+## Discovery and Installation
+
+Repository layout, discovery roots, and installer behavior are separate contracts.
+
+This repository publishes installable skills under:
 
 ```text
 skills/<skill-name>/SKILL.md
 ```
 
-The installer also searches common project and agent-specific roots such as `.agents/skills/`, `.claude/skills/`, `.codex/skills/`, and related directories.
-
-### Claude Code
-
-Skills are discovered from:
-1. `~/.claude/skills/` (user-level)
-2. `.claude/skills/` (project-level)
-3. Installed via `.skill` files
-
-Triggering: Claude reads all `name` + `description` fields at session start. Decides to load SKILL.md body based on description match to user query.
-
-### OpenAI Codex
-
-Skills are discovered from:
-1. `.agents/skills/` (project-level via `skills` CLI conventions)
-2. `~/.codex/skills/` (user-level)
-3. `.codex/skills/` (seen in some local setups and worth treating as compatible when scanning existing skills)
-4. The `agents/` directory (for openai.yaml UI integration)
-
-Triggering: Similar metadata scan. The `agents/openai.yaml` file provides UI display metadata.
-
-### Gemini CLI
-
-Skills are discovered from:
-1. `.gemini/skills/` (project-level)
-2. `~/.gemini/skills/` (user-level)
-
-Triggering: Metadata scan with `openclaw` fields used for categorization in the Gemini ecosystem.
-
-### Cursor
-
-Skills are discovered from:
-1. `.cursor/skills/` (project-level)
-2. Cursor rules (`.cursorrules` can reference skills)
-
-Triggering: Skills are loaded as enhanced context. Cursor may load them proactively based on file type or project context.
-
-### VS Code (GitHub Copilot)
-
-Skills are discovered from:
-1. `.github/copilot-instructions.md` (can reference skill files)
-2. `.vscode/skills/` (project-level)
-
-Triggering: Loaded as workspace context. Limited to markdown instructions -- no script execution.
-
-### AMP
-
-Skills are discovered from:
-1. `.amp/skills/` (project-level)
-2. `~/.amp/skills/` (user-level)
-
-Triggering: Full skill loading with subagent support.
-
-### OpenCode
-
-Skills are discovered from:
-1. `.opencode/skills/` (project-level)
-2. `~/.opencode/skills/` (user-level)
-
-Triggering: Metadata-based, similar to Claude Code.
-
----
-
-## Required vs Optional Frontmatter
-
-### Universal (all platforms)
-
-```yaml
----
-name: skill-name          # Required. [a-z0-9-], 1-64 chars.
-description: "..."        # Required. Non-empty, max 1024 chars.
----
-```
-
-These two fields are the only requirement for cross-platform compatibility. If a skill has valid `name` and `description`, it will work on every platform that supports Agent Skills.
-
-### Commonly Supported Optional Fields
-
-```yaml
----
-name: skill-name
-description: "..."
-license: MIT                              # License identifier
-compatibility: "Requires: python3"        # Human-readable requirements
----
-```
-
-### Extended Metadata (platform-specific)
-
-```yaml
----
-name: skill-name
-description: "..."
-metadata:
-  version: "1.0.0"                        # Semantic version
-  short-description: "Brief text"         # UI chip text (Codex, Gemini)
-  openclaw:                               # Registry metadata
-    category: "development"
-    requires:
-      bins: [some-cli]                    # Required binaries
-    cliHelp: "some-cli --help"            # Help command for validation
-  references:                             # Cloudflare-style reference listing
-    - domain-a
-    - domain-b
----
-```
-
----
-
-## Platform-Specific Extensions
-
-### OpenAI Codex: agents/openai.yaml
-
-For Codex UI integration, add an `agents/openai.yaml` file in the skill directory:
-
-```yaml
-# agents/openai.yaml
-display_name: "Stripe API Helper"
-short_description: "Wrap Stripe API for payments, subscriptions, and Connect"
-default_prompt: "Help me integrate Stripe payments into my application"
-icon: "credit-card"
-```
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `display_name` | Yes | Name shown in Codex UI |
-| `short_description` | Yes | One-line description for UI card |
-| `default_prompt` | No | Pre-filled prompt when user clicks the agent |
-| `icon` | No | Icon identifier for UI display |
-
-This file is ignored by non-Codex harnesses. Safe to always include.
-
-### Google Ecosystem: metadata.openclaw
-
-For Gemini CLI and Google ecosystem tools, add `openclaw` fields to the frontmatter metadata:
-
-```yaml
-metadata:
-  openclaw:
-    category: "development"           # Skill category for registry
-    subcategory: "api-integration"    # Finer classification
-    requires:
-      bins: [curl, jq]               # Required CLI tools
-      env: [STRIPE_SECRET_KEY]        # Required environment variables
-    cliHelp: "curl --version"         # Command to validate installation
-    tags: ["payments", "stripe", "api"]
-```
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `category` | Yes (for registry) | Top-level category |
-| `subcategory` | No | Finer classification |
-| `requires.bins` | No | CLI tools the skill needs |
-| `requires.env` | No | Environment variables needed |
-| `cliHelp` | No | Validation command |
-| `tags` | No | Searchable tags |
-
-### Cloudflare-Style: references List
-
-Some harnesses use a `references` list in frontmatter to enumerate key reference directories:
-
-```yaml
-references:
-  - workers
-  - pages
-  - kv
-  - d1
-```
-
-This is informational -- it tells the harness what reference domains exist. It does NOT change how files are loaded (that is still driven by SKILL.md pointers).
-
----
-
-## Installation via npx
-
-Skills can be installed across platforms using the `npx` installer:
+Use the installed CLI's help and a non-mutating discovery command to verify what the current version sees. For the installer used by this repository:
 
 ```bash
-npx skills add owner/repo
-npx skills add https://github.com/owner/repo
-npx skills add https://github.com/owner/repo/tree/main/skills/skill-name
+npx --yes skills add . --list
 ```
 
-This command:
-1. Clones or fetches the source repository (or URL)
-2. Discovers `SKILL.md` files in standard locations such as `skills/` and `.agents/skills/`
-3. Places selected skills in the platform's skill directory (auto-detected)
-4. Validates the `SKILL.md` frontmatter
+Treat successful listing as evidence for that installer version and repository state only. It does not prove that a target harness will load, invoke, or execute the skill after installation. Verify the resolved destination and harness behavior separately.
 
-For local installation (not from registry):
+## Scripts and Evals
 
-```bash
-npx skills add /path/to/skill-repo
-npx skills add /path/to/skill-repo --list
-npx skills add /path/to/skill-repo --skill my-skill
-```
+Design automation for the documented target environment:
 
-For the least friction, publish skills in a repository with a top-level `skills/` directory and one skill per child folder.
+- Declare required runtimes, binaries, permissions, credentials, and network access.
+- Resolve files relative to the skill or an explicit input, never a developer-specific absolute path.
+- Prefer dependencies already guaranteed by the target; otherwise provide setup and failure guidance.
+- Provide a non-interactive mode when an agent is expected to run the command.
+- Use structured output only when a caller consumes a documented schema.
+- Define exit codes according to the script's CLI contract. Use zero for documented success and nonzero codes for documented failure classes when that convention applies.
+- Make help, dry-run, overwrite, and confirmation behavior explicit when the script can mutate state.
+- Offer a manual fallback only when it can preserve correctness and safety.
 
----
+Language and shell choices are dependencies, not universal defaults. If a Python script targets environments that document `python3`, an environment-based shebang can reduce path assumptions. If a Bash script is required, declare Bash rather than assuming every shell is compatible.
 
-## What Works Everywhere vs Platform-Specific
+Eval files are portable as repository content, not automatically executable across harnesses. Before claiming a pass, confirm that:
 
-### Universal (safe to include in any skill)
+1. the intended evaluator is installed and authenticated
+2. the runner actually executed every scenario
+3. trigger and near-miss outcomes came from the promised harness
+4. assertion and process failures produce the documented result or exit status
+5. all-zero, empty, skipped, or infrastructure-failed runs are rejected as invalid evidence
 
-| Component | Works on all platforms |
-|-----------|-----------------------|
-| SKILL.md with frontmatter | Yes |
-| `name` and `description` fields | Yes |
-| Markdown body with instructions | Yes |
-| `references/` directory with .md files | Yes |
-| Decision trees in SKILL.md | Yes |
-| Quick reference tables | Yes |
-| Cross-references between files | Yes |
-| `evals/evals.json` | Yes (ignored if platform doesn't support evals) |
+## Release Gate
 
-### Platform-Dependent (include but don't rely on)
+Release a cross-harness claim only when:
 
-| Component | Depends on |
-|-----------|-----------|
-| `scripts/` execution | Platform has Bash/Python execution |
-| `agents/` subagent spawning | Platform supports subagents |
-| `agents/openai.yaml` | OpenAI Codex only |
-| `metadata.openclaw` | Google ecosystem only |
-| Live file read from `references/` | Platform has file read tools |
+- the portable core validates against the chosen format version
+- every target has a dated capability record backed by primary documentation or an installed-behavior test
+- discovery, invocation, references, automation, and effects are verified independently
+- owner-specific metadata is isolated and schema-checked
+- unsupported capabilities have a safe fallback or are excluded from the promise
+- eval evidence is valid for the named runner and harness
 
-### Design Principle
+## See Also
 
-Write skills that degrade gracefully. The core instructions in SKILL.md should work even if scripts cannot execute and references cannot be read. The skill gets better with those capabilities, but it should not be useless without them.
-
-Example: instead of "Run `scripts/validate.py` to check the config", write "Run `scripts/validate.py` to check the config. If scripts are not available, manually verify: [checklist of things the script checks]."
-
----
-
-## Script Portability
-
-### Rules
-
-1. **Use `python3`**, not `python`. Some systems only have `python3` on PATH.
-2. **Use `#!/usr/bin/env python3`** shebang, not `#!/usr/bin/python3` (path varies).
-3. **Use `#!/usr/bin/env bash`** for shell scripts, not `#!/bin/bash`.
-4. **No platform-specific paths.** Use `os.path.expanduser("~")` not `/Users/username/`.
-5. **No platform-specific tools.** Use `curl` (universal) not `wget` (not on macOS by default).
-6. **Standard library only** for Python scripts. No `pip install` requirements unless documented in `compatibility`.
-7. **JSON output** for scripts that produce structured data. All platforms can parse JSON.
-8. **Exit codes**: 0 for success, 1 for failure. Include `--help` flag.
-9. **No interactive input.** Scripts must accept all parameters via arguments or environment variables.
-10. **UTF-8 encoding.** Assume UTF-8 everywhere.
-
-### Testing Portability
-
-If you're unsure whether a script is portable:
-
-```bash
-# Check shebang
-head -1 script.py  # Should be #!/usr/bin/env python3
-
-# Check for platform-specific paths
-grep -n '/Users/\|/home/\|C:\\' script.py  # Should find nothing
-
-# Check for non-standard imports
-python3 -c "import ast; tree = ast.parse(open('script.py').read()); [print(n.names[0].name) for n in ast.walk(tree) if isinstance(n, ast.Import)]"
-```
+- `references/curation.md` — invocation ownership, routers, hard and soft dependencies, and lifecycle surfaces
+- `references/anatomy.md` — portable core and earned support artifacts
+- `references/testing.md` — target-harness invocation and portability evidence

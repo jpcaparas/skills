@@ -13,7 +13,7 @@
 
 ## File Structure
 
-The Agent Skills standard (agentskills.io) defines a portable format compatible with 12+ agent harnesses including Claude Code, OpenAI Codex, Gemini CLI, Cursor, VS Code, GitHub Copilot, and others.
+The Agent Skills format provides a portable core recognized by multiple agent harnesses. Verify current platform-specific behavior before promising discovery, script execution, or invocation controls.
 
 ### Minimum Viable Skill
 
@@ -22,9 +22,9 @@ skill-name/
 └── SKILL.md
 ```
 
-Only SKILL.md is required. Everything else is optional but recommended for non-trivial skills.
+Only `SKILL.md` is universally required. A production release should also have meaningful evals, but every other artifact is earned by behavior rather than created as empty scaffolding.
 
-### Production Skill (this creator's standard)
+### Production Skill (earned structure)
 
 ```
 skill-name/
@@ -32,30 +32,28 @@ skill-name/
 ├── README.md             # Optional thin public wrapper
 ├── AGENTS.md             # Optional thin agent-facing summary
 ├── metadata.json         # Optional public metadata
-├── references/           # On-demand documentation
+├── references/           # Optional: branch-only documentation
 │   ├── README.md         # or domain-specific files
 │   └── ...
-├── scripts/              # Executable automation
+├── scripts/              # Optional: deterministic automation
 │   └── ...
-├── templates/            # Ready-to-use starter files
+├── templates/            # Optional: copyable starter files
 │   └── ...
-├── evals/                # Test cases
+├── evals/                # Release evidence
 │   └── evals.json
-├── assets/               # Static resources
+├── assets/               # Optional: static output resources
 │   └── ...
-└── agents/               # Subagent instructions
+└── agents/               # Optional: supported specialized roles
     └── ...
 ```
 
 ### Public Skills Repository Layout
 
-When publishing skills in a repository meant for `npx skills add owner/repo` or [skills.sh](https://skills.sh), use the top-level public layout:
+When the repository's installer or discovery contract uses a top-level `skills/` directory, keep the canonical packages under that root:
 
 ```text
 repo-root/
 ├── README.md
-├── AGENTS.md
-├── CLAUDE.md
 └── skills/
     └── skill-name/
         ├── SKILL.md
@@ -67,9 +65,9 @@ repo-root/
 
 This keeps repo discovery simple while still letting the skill itself stay portable.
 
-### Large Reference Skill (60+ domains)
+### Domain-Heavy Reference Skill
 
-For skills covering many products/domains (like the Cloudflare skill), each domain gets a subdirectory with a standardized 5-file structure:
+When several domains share the same access pattern, a consistent five-file layout can reduce navigation cost. Use only the files each domain earns; do not create empty siblings to satisfy the example:
 
 ```
 skill-name/
@@ -89,7 +87,7 @@ skill-name/
 
 ### Skill Composition (multiple skills)
 
-For very large platforms, decompose into a family of skills with a shared foundation:
+Compose a family when jobs need independent invocation but share a stable prerequisite or reference. Do not split only because the package is large:
 
 ```
 platform-shared/SKILL.md     # Auth, global flags, conventions
@@ -97,7 +95,7 @@ platform-action-a/SKILL.md   # One action per skill
 platform-action-b/SKILL.md   # Thin wrapper, references shared
 ```
 
-Each sub-skill's SKILL.md starts with: `> Load {{ skill:platform-shared }} first.`
+Express the prerequisite using a mechanism the target harness actually supports. If symbolic skill references are documented, a sub-skill can say `> Load {{ skill:platform-shared }} first.` Otherwise use a plain instruction such as `> Invoke the installed platform-shared skill first.` and verify name-based discovery. If neither form resolves reliably, keep the shared requirement inline or package it through the repository's documented dependency mechanism.
 
 ---
 
@@ -106,30 +104,29 @@ Each sub-skill's SKILL.md starts with: `> Load {{ skill:platform-shared }} first
 ### Structure
 
 1. **YAML frontmatter** (required) — enclosed in `---` fences
-2. **Title** — `# Skill Name` (matches the name field)
-3. **One-line summary** — what this skill does, in one sentence
-4. **Decision tree** — if multiple paths exist, force disambiguation early
-5. **Quick reference** — most common operations in a table
-6. **Pointers to references** — "Read X when you need Y"
-7. **Gotchas** — non-obvious pitfalls (minimum 3 for production skills)
+2. **Title or immediate purpose** — make the skill's job obvious
+3. **Ordered steps** — only when the skill is procedural; give each a checkable completion criterion
+4. **Early routing** — only when distinct branches need disambiguation
+5. **Quick reference** — only when repeated operations benefit from scanning
+6. **Conditional pointers** — name when to load a support file and what decision or action it supports
+7. **Evidenced gotchas** — include non-obvious pitfalls that actually exist; do not invent a quota
 
 ### What Goes in SKILL.md vs References
 
-| SKILL.md (always loaded) | References (loaded on demand) |
+| SKILL.md (needed by every branch) | References (branch-only material) |
 |--------------------------|-------------------------------|
-| Decision trees | Full API documentation |
-| Quick reference tables | Detailed configuration guides |
-| 1-2 line examples per operation | Complete code examples |
-| Gotchas summary (top 5) | Full gotchas catalog |
-| Cross-references to files | Extended patterns & workflows |
+| Ordered steps and completion criteria | Full API documentation |
+| Shared invariants and safety bounds | Detailed configuration guides |
+| Early branch routing where needed | Complete branch-specific examples |
+| Conditional context pointers | Extended patterns and workflows |
 
 ### What NOT to Include
 
-- INSTALLATION_GUIDE.md, QUICK_REFERENCE.md, CHANGELOG.md
+- Extra files that merely rename a section already reachable from `SKILL.md`
 - Process documentation about how the skill was created
 - Redundant content (same info in SKILL.md AND a reference)
 
-For public skill repositories, a thin `README.md`, `AGENTS.md`, or `metadata.json` beside `SKILL.md` is acceptable when it improves repository presentation or marketplace metadata. Keep `SKILL.md` authoritative and avoid copying detailed procedures into the wrappers.
+For public skill repositories, a thin `README.md`, `AGENTS.md`, or `metadata.json` beside `SKILL.md` is acceptable when repository policy needs presentation or marketplace metadata. Keep `SKILL.md` authoritative and derive or validate shared fields instead of copying detailed procedures.
 
 ---
 
@@ -139,28 +136,30 @@ For public skill repositories, a thin `README.md`, `AGENTS.md`, or `metadata.jso
 
 ```yaml
 ---
-name: skill-name        # [a-z0-9-], 1-64 chars, must match directory name
+name: skill-name        # ^[a-z0-9]+(?:-[a-z0-9]+)*$, 1-64 chars; matches directory
 description: "..."      # Non-empty, max 1024 chars
 ---
 ```
 
-### Optional Fields
+### Harness-Contract-Specific Optional Fields
+
+Fields beyond `name` and `description` are not uniformly portable. Include an optional field only when the target harness or repository contract documents it, and test that unknown consumers either preserve or safely ignore it.
 
 ```yaml
 ---
 name: skill-name
 description: "..."
-license: MIT                          # License name or file reference
-compatibility: "Requires: node >= 18" # Environment requirements
+license: MIT                          # When the contract accepts license metadata
+compatibility: "Requires: runtime X"  # When the contract exposes requirements
 metadata:
-  version: "1.0.0"                    # Semantic version
-  short-description: "Brief text"     # For UI chips (OpenAI Codex)
-  openclaw:                           # Registry metadata
+  version: "1.0.0"                    # Repository-defined release metadata
+  short-description: "Brief text"     # Harness-defined presentation field
+  target-harness:                     # Replace with the documented namespace
     category: "development"
     requires:
       bins: [some-cli]
     cliHelp: "some-cli --help"
-references:                           # Key reference directories (non-standard but useful)
+references:                           # Only when the contract defines this field
   - domain-a
   - domain-b
 ---
@@ -168,13 +167,7 @@ references:                           # Key reference directories (non-standard 
 
 ### Description Writing Guide
 
-The description is the primary trigger mechanism. Agents scan descriptions to decide whether to load a skill. Write it to maximize correct triggering:
-
-1. **State what the skill does** — "Wrap the Stripe API for payment processing"
-2. **List trigger contexts** — "Use when building payment flows, subscriptions, or marketplace payouts"
-3. **Include trigger keywords** — specific terms users would say
-4. **Add negative triggers** — "Do NOT trigger for general HTTP requests or non-Stripe payment providers"
-5. **Be pushy** — agents undertrigger; err on the side of triggering too often
+Use the canonical description and invocation rules in `SKILL.md` Phase 2. This anatomy reference adds only the format boundary: `description` is a frontmatter scalar, while manual-only or model-invoked controls belong to documented harness-specific fields and their target-native validation.
 
 ---
 
@@ -182,23 +175,24 @@ The description is the primary trigger mechanism. Agents scan descriptions to de
 
 ### `references/`
 
-Documentation loaded into context on demand. The agent reads these when SKILL.md points it to them.
+Documentation intended for conditional loading. The target harness may expose it through file reads, retrieval, or another mechanism; verify the promised behavior.
 
 **Best practices:**
-- One file per topic or domain
+- Organize by a branch's access pattern, not by arbitrary topic count
 - Include a TOC if >300 lines
-- Cross-reference related files (one level deep)
-- Working examples, not pseudocode
+- Use condition-and-purpose pointers; keep navigation shallow
+- Match example precision to the intended freedom: keep executable examples syntactically valid and label pseudocode or parameterized forms clearly
 
 ### `scripts/`
 
-Executable code for deterministic or repetitive tasks. Scripts execute without being loaded into context (saving tokens).
+Executable code for deterministic or repetitive tasks. A capable harness can run a script without reasoning over its full implementation, but do not assume every harness can execute it.
 
 **Best practices:**
-- Use `#!/usr/bin/env python3` shebang (not `python`)
-- Accept arguments via argparse or sys.argv
-- Print structured output (JSON preferred)
-- Include `--help` with usage examples
+- Add a script only when it makes a repeated or fragile operation safer and the consumer has a supported execution path
+- Choose a runtime already available in the declared target environment; use its portable launcher convention rather than assuming one language
+- Accept explicit arguments through the runtime's conventional parser and avoid hidden machine-local state
+- Emit stable, documented output suited to the consumer; use a structured format when another tool must parse it
+- Provide help and examples for scripts people or agents are expected to invoke directly
 
 ### `templates/`
 
@@ -208,7 +202,7 @@ Ready-to-use starter files that can be copied and modified. Unlike scripts (whic
 
 ### `evals/`
 
-Test cases for verifying the skill works correctly. Always contains at least `evals.json`.
+Test cases for structural, behavioral, invocation, disclosure, and near-miss evidence. A release contains a non-empty `evals.json`; a draft may start empty but cannot be promoted that way.
 
 ### `assets/`
 
@@ -224,27 +218,30 @@ Instructions for spawning specialized subagents. Each `.md` file contains the sy
 
 | Element | Rule | Example |
 |---------|------|---------|
-| Skill name | `[a-z0-9-]`, 1-64 chars | `stripe-api` |
-| Directory name | Must match `name` field exactly | `stripe-api/` |
+| Skill name | `^[a-z0-9]+(?:-[a-z0-9]+)*$`, 1-64 chars | `payments-api` |
+| Directory name | Must match `name` field exactly | `payments-api/` |
 | Reference files | Descriptive, lowercase, hyphens | `webhook-patterns.md` |
 | Script files | Descriptive, lowercase, underscores | `validate_config.py` |
-| Domain directories | Product/domain name, lowercase | `references/payments/` |
+| Domain directories | Product/domain name, lowercase | A concrete route such as `references/payments/` |
 
-Prefer short, verb-led phrases for skill names. Namespace by tool for clarity:
-- `gh-review-pr` (GitHub tool)
-- `stripe-create-checkout` (Stripe tool)
-- `aws-deploy-lambda` (AWS tool)
+Prefer short, verb-led phrases for skill names. Namespace by tool or domain when it prevents collisions, such as `forge-review-change`, `payments-create-checkout`, or `cloud-deploy-function`.
 
 ---
 
 ## Size Budgets
 
-| Component | Target | Hard Limit |
+| Component | Review signal | Release ceiling |
 |-----------|--------|------------|
-| Frontmatter description | 100-300 chars | 1024 chars |
-| SKILL.md body | <300 lines | 500 lines |
-| Individual reference file | <500 lines | 1000 lines (needs TOC) |
+| Frontmatter description | Every word should improve invocation | 1024 chars or the target harness's lower limit |
+| SKILL.md body | Keep the always-loaded path legible | 500 lines for this creator's release profile |
+| Individual reference file | Add navigation when scanning becomes costly | 1000 lines for this creator's release profile |
 | Total skill (all files) | Varies | No limit, but disclosure must work |
-| Script file | <200 lines | No limit |
+| Script file | One coherent operation | No universal line limit |
 
-If approaching any limit, restructure by moving content to references or splitting into sub-skills.
+Treat size as evidence to inspect the information hierarchy, not as an automatic split rule. Disclose branch-only material first. Split only when a job needs independent invocation or a real context boundary fixes observed premature completion.
+
+## See Also
+
+- `references/curation.md` — invocation ownership, branch ledgers, lifecycle, and publication surfaces
+- `references/patterns.md` — context pointers, co-location, granularity, and degrees of freedom
+- `references/testing.md` — release evidence for the resulting structure

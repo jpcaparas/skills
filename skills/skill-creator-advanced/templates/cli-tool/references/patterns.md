@@ -1,45 +1,64 @@
-# {{TOOL_NAME}} Patterns & Workflows
+# {{TOOL_NAME}} Supported Workflows
 
-## Table of Contents
+Include a workflow only when it is useful to an invocation branch and verified
+against the supported command surface. Pipelines, structured-output parsing,
+batch execution, and dry-run flags are contract-specific, not universal.
 
-- [List Then Filter](#list-then-filter)
-- [Create Then Inspect](#create-then-inspect)
-- [Pipe to JSON Tools](#pipe-to-json-tools)
-- [Batch Operations](#batch-operations)
-- [Safe Dry Runs](#safe-dry-runs)
+## Workflow Index
 
----
+| Workflow | Use when | Effect boundary |
+|----------|----------|-----------------|
+{{WORKFLOW_INDEX_ROWS}}
 
-## List Then Filter
+## {{WORKFLOW_NAME}}
 
-```bash
-{{LIST_THEN_FILTER_PATTERN}}
+**Use when:** {{WORKFLOW_APPLICABILITY}}
+
+**Do not use when:** {{WORKFLOW_EXCLUSIONS}}
+
+**Command evidence:** {{WORKFLOW_EVIDENCE}}
+
+### Preconditions and Invariants
+
+{{WORKFLOW_PRECONDITIONS_AND_INVARIANTS}}
+
+### Procedure
+
+```{{COMMAND_FENCE_LANGUAGE}}
+{{WORKFLOW_COMMANDS}}
 ```
 
-## Create Then Inspect
+### Effects and Authorization
 
-```bash
-{{CREATE_THEN_INSPECT_PATTERN}}
-```
+{{WORKFLOW_EFFECTS_AND_AUTHORIZATION}}
 
-## Pipe to JSON Tools
+### Success Evidence
 
-```bash
-{{JSON_PIPELINE_PATTERN}}
-```
+{{WORKFLOW_SUCCESS_EVIDENCE}}
 
-## Batch Operations
+### Failure and Recovery
 
-```bash
-{{BATCH_PATTERN}}
-```
+{{WORKFLOW_FAILURE_AND_RECOVERY}}
 
-## Safe Dry Runs
+Repeat the section only for distinct workflows. When the tool supports a
+preview, plan, validation, or dry-run mode, use it before effects. Otherwise use
+the safest disposable or read-only verification available and say that no
+native dry-run exists.
 
-Use `{{DRY_RUN_FLAG}}` when available before mutating resources.
+## Composition Rules
+
+Keep this section only when composition is supported. Document the actual
+output contract and quoting rules before piping to another tool. Do not assume
+JSON, a POSIX shell, stable human-readable output, or successful partial
+results.
 
 ## See Also
 
-- `references/commands.md` -- command reference
-- `references/configuration.md` -- installation and auth
-- `references/gotchas.md` -- shell and version pitfalls
+- `references/commands.md` -- command and outcome contracts
+- `references/configuration.md` -- installation and identity
+- `references/gotchas.md` -- evidenced workflow pitfalls
+
+## Release Gate
+
+Replace every template token, duplicate the workflow skeleton only as needed,
+and remove illustrative or unsupported sections before release.

@@ -1,43 +1,29 @@
-# {{API_NAME}} Gotchas & Tribal Knowledge
+# {{API_NAME}} Evidenced Gotchas
 
-> This file captures non-obvious pitfalls, undocumented behaviors, and hard-won knowledge
-> about the {{API_NAME}} API. New entries are appended as they are discovered.
+Capture only non-obvious behavior supported by current evidence. Merge repeated
+feedback into one canonical entry and remove superseded wording instead of
+appending a history log.
 
----
+## {{GOTCHA_TITLE}}
 
-## Authentication Gotchas
+- **Applies when:** {{GOTCHA_SCOPE}}
+- **Evidence:** {{GOTCHA_EVIDENCE}}
+- **Failure mode:** {{GOTCHA_FAILURE_MODE}}
+- **Required rule:** {{GOTCHA_RULE}}
+- **Verification:** {{GOTCHA_VERIFICATION}}
+- **Supersedes:** {{SUPERSEDED_ENTRY_OR_NONE}}
 
-- {{AUTH_GOTCHA_1}}
-- {{AUTH_GOTCHA_2}}
-
-## Request Format Gotchas
-
-- {{REQUEST_GOTCHA_1}}
-- {{REQUEST_GOTCHA_2}}
-
-## Response Handling Gotchas
-
-- {{RESPONSE_GOTCHA_1}}
-- {{RESPONSE_GOTCHA_2}}
-
-## Rate Limit Gotchas
-
-- {{RATE_LIMIT_GOTCHA_1}}
-- {{RATE_LIMIT_GOTCHA_2}}
-
-## Versioning Gotchas
-
-- {{VERSIONING_GOTCHA_1}}
-
-## SDK-Specific Gotchas
-
-- {{SDK_GOTCHA_1}}
-- {{SDK_GOTCHA_2}}
-
----
+Repeat the entry only for distinct gotchas. Create categories such as identity,
+request encoding, event delivery, quotas, versioning, or client behavior only
+when the API actually has evidenced entries in that category.
 
 ## See Also
 
-- `references/api.md` -- endpoint reference
-- `references/patterns.md` -- retry and pagination patterns
-- `references/configuration.md` -- auth setup
+- `references/api.md` -- operation and failure contracts
+- `references/patterns.md` -- supported workflows and recovery rules
+- `references/configuration.md` -- access and client setup
+
+## Release Gate
+
+Replace every template token and delete this entry skeleton if no evidenced
+gotcha exists. Do not release speculative warnings, empty categories, or filler.

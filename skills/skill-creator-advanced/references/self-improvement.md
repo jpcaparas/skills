@@ -1,353 +1,151 @@
-# Self-Improvement Protocol
+# Evidence-Backed Self-Improvement
+
+Feedback is a curation signal, not permission to append permanent rules. Fix the current target first, then decide whether the lesson is local, duplicated, contradictory, or genuinely general.
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Feedback Capture Process](#feedback-capture-process)
-- [Error Classification Taxonomy](#error-classification-taxonomy)
-- [Rule Storage Format](#rule-storage-format)
-- [Contradiction Resolution](#contradiction-resolution)
-- [Description Optimization Loop](#description-optimization-loop)
-- [Trigger Eval Queries Guidance](#trigger-eval-queries-guidance)
-- [When NOT to Save Feedback](#when-not-to-save-feedback)
+- [Operating Contract](#operating-contract)
+- [Classify the Failure](#classify-the-failure)
+- [Decide Whether the Lesson Generalizes](#decide-whether-the-lesson-generalizes)
+- [Choose the Canonical Home](#choose-the-canonical-home)
+- [Merge, Replace, and Prune](#merge-replace-and-prune)
+- [Prove the Improvement](#prove-the-improvement)
+- [Optimize Invocation Descriptions](#optimize-invocation-descriptions)
+- [When to Keep Feedback Local](#when-to-keep-feedback-local)
+- [Completion Gate](#completion-gate)
 
----
+## Operating Contract
 
-## Overview
+When a user corrects a generated skill:
 
-This skill learns from mistakes. When a generated skill has a flaw that the user catches, the lesson should be captured in `references/gotchas.md` so the same mistake is never repeated.
+1. Apply the smallest correct fix to the target in scope.
+2. Reproduce the failure or identify the missing observable.
+3. Classify the cause.
+4. Search the target and this creator's canonical rules for an existing owner.
+5. Propose a reusable lesson only if evidence shows it applies beyond the one case.
+6. Add or strengthen an eval that fails before the fix and passes after it.
+7. Modify this creator's own source only when the user has placed that canonical package in scope.
 
-The feedback loop:
+If the creator is merely installed elsewhere, report the candidate lesson and its proposed canonical location. Do not silently edit an installed copy or append to unrelated repositories.
 
-```
-User identifies issue
-    |
-    v
-Classify the error type
-    |
-    v
-Extract a generalizable rule
-    |
-    v
-Check for existing rules in gotchas.md
-    |
-    +-- New rule -> Append to gotchas.md
-    |
-    +-- Contradicts existing -> Update existing rule with date
-    |
-    +-- Already covered -> No action (maybe strengthen wording)
-```
+## Classify the Failure
 
----
+| Class | Typical symptom | First repair |
+|---|---|---|
+| Structural | Behavior lives in the wrong artifact or empty scaffold obscures the package | Rebuild the branch/content ledger |
+| Verification | Example, command, or claim has weak or false evidence | Add the safest applicable check and preserve limitations |
+| Disclosure | Required material is hidden, unrelated material loads, or pointer wording is vague | Fix the condition-and-purpose pointer or inline shared material |
+| Invocation | Skill fails to trigger, overtriggers, or competes with a neighbor | Clarify branch ownership and add positive/near-miss evals |
+| Lifecycle | Catalog, registry, router, wrapper, or dependent disagrees with canonical state | Reconcile the affected-surface ledger atomically |
+| Content | Domain fact is wrong, stale, or incomplete | Verify current primary evidence and correct the canonical fact |
+| Style | Wording weakens execution without changing the intended behavior | State the positive target and prune no-op prose |
 
-## Feedback Capture Process
+Classify the cause, not merely the visible complaint. “The agent did not open the file” may be a disclosure pointer problem, a target-harness limitation, or ignored clear guidance; test before choosing the fix.
 
-### Step 1: Identify the Signal
+## Decide Whether the Lesson Generalizes
 
-User feedback that indicates a learnable mistake:
+Use this decision table:
 
-| Signal | Example |
-|--------|---------|
-| Direct correction | "This endpoint is wrong, it should be /v2/customers not /v1/customers" |
-| Quality complaint | "The examples are pseudocode, they don't actually work" |
-| Structural feedback | "Everything is crammed into SKILL.md, split it out" |
-| Missing content | "You forgot to mention rate limits" |
-| Style feedback | "Stop writing MUST everywhere, explain why instead" |
+| Evidence | Treatment |
+|---|---|
+| One vendor fact or user preference | Keep the fix local |
+| Existing rule already covers it | Strengthen the eval or wording; do not add another rule |
+| New evidence adds a caveat | Merge the caveat into the canonical rule |
+| New evidence contradicts a rule | Resolve against current authoritative evidence and replace superseded text |
+| Repeated independent failures or a discriminating eval reveal a class of mistake | Promote one general rule |
+| Signal is ambiguous | Investigate or ask; do not persist it yet |
 
-### Step 2: Extract the Generalizable Rule
+Repeated evidence does not mean repeated wording. Store one rule with the narrowest scope that explains every proven case.
 
-The goal is NOT to fix the specific skill. The goal is to capture a rule that prevents the same class of mistake in future skills.
+## Choose the Canonical Home
 
-**Bad extraction:** "Add /v2/customers endpoint to the Stripe skill"
-**Good extraction:** "When documenting API endpoints, always verify the current API version from official docs. Do not assume /v1/ -- many APIs have migrated to /v2/ or use date-based versioning."
+Place the lesson according to how it changes behavior:
 
-**Bad extraction:** "Add rate limits to the gotchas section"
-**Good extraction:** "Every API wrapper skill must include rate limit documentation. Check for: requests per minute, daily quotas, per-endpoint limits, and how limits are communicated (headers vs error response)."
+| Lesson | Canonical home |
+|---|---|
+| Needed by every invocation | `SKILL.md` near the step it governs |
+| Needed only by a branch | The routed reference for that branch |
+| Deterministic repeated check | A script plus a brief invocation pointer |
+| Copyable starting material | A template |
+| Non-obvious exception | The relevant gotchas section |
+| Repository publication invariant | Repo policy plus an executable consistency check |
+| One-off domain fact | The target skill, not this creator |
 
-### Step 3: Check for Duplicates
+Repository history is the provenance record. Do not leave permanent `[NEW]` markers, dated append logs, or superseded variants in runtime guidance.
 
-Before appending to gotchas.md:
+## Merge, Replace, and Prune
 
-1. Read the entire `references/gotchas.md` file
-2. Search for keywords related to the new rule
-3. If a similar rule exists:
-   - If the new feedback adds nuance, update the existing rule
-   - If the new feedback contradicts it, see [Contradiction Resolution](#contradiction-resolution)
-   - If the existing rule fully covers it, no action needed
+Run the canonical pruning pass in `references/curation.md`. For feedback specifically, also remove the superseded correction, keep local facts in the target package, and ensure the regression eval—not duplicated prose—preserves the lesson. Finish by confirming that a deletion did not reopen the reported failure or a neighboring branch.
 
-### Step 4: Append or Update
+## Prove the Improvement
 
-If the rule is new, append it to the appropriate category in `references/gotchas.md`:
+For each accepted lesson:
 
-```markdown
-- Explaining things the agent already knows
-- [NEW] Not verifying API version before documenting endpoints — always fetch
-  current docs and confirm the version path (2026-03-27)
-```
+1. Create a realistic failing prompt or fixture.
+2. Capture the before behavior.
+3. Make the smallest canonical change.
+4. Run the same eval with the skill and, when useful, without it.
+5. Confirm the target behavior improves and no neighboring branch regresses.
+6. Repeat stochastic cases enough to establish process consistency.
 
-The date stamp in parentheses tracks when the rule was added.
+A rule that does not improve a discriminating eval may be a no-op, an assertion problem, or a model-specific hypothesis. Keep it out of permanent guidance until the evidence is clearer.
 
----
+## Optimize Invocation Descriptions
 
-## Error Classification Taxonomy
+Optimize after the skill body and branch ownership stabilize.
 
-Every mistake falls into one of five classes. Classify before fixing, because the fix strategy differs by class.
+### Query Set
 
-### Structural Errors (highest priority)
+Build a balanced set that covers:
 
-Problems with how the skill is organized.
+- direct positives naming the domain or action
+- implicit positives that need the skill without naming it
+- every distinct invocation branch
+- adjacent near-misses with shared vocabulary
+- a competing skill that should win
+- varied formality, terminology, and project contexts
 
-| Error | Fix |
-|-------|-----|
-| Everything crammed into SKILL.md | Move deep content to references, keep SKILL.md as router |
-| SKILL.md too short (just a paragraph) | Add decision tree, quick reference table, gotchas section |
-| Missing frontmatter fields | Add name and description at minimum |
-| Directory name != skill name | Rename directory to match frontmatter `name` |
-| No evals directory | Create evals/ with at least evals.json stub |
+Do not use obviously unrelated negatives; they inflate scores without testing the boundary.
 
-### Content Errors
+### Iteration
 
-Wrong or missing information in the skill's content.
+1. Split queries into a tuning set and a held-out set.
+2. Run multiple trials when the harness is stochastic.
+3. Diagnose misses by branch rather than adding synonym lists.
+4. Apply the canonical description rules in `SKILL.md` Phase 2 to the failing branch.
+5. Choose the shortest candidate that preserves held-out accuracy without moving implementation detail into frontmatter.
 
-| Error | Fix |
-|-------|-----|
-| Pseudocode instead of working examples | Replace with tested, executable code |
-| Outdated API versions | Fetch current docs, update all endpoints and examples |
-| Missing gotchas section | Add at least 3 non-obvious pitfalls |
-| Hallucinated endpoints or flags | Verify against official docs or tool --help output |
-| Incomplete auth documentation | Test the auth flow, document the exact header/token format |
+If an available evaluator provides a description-optimization loop, use it with the current supported model identifier and record the exact command. Do not hard-code stale model names into the skill.
 
-### Disclosure Errors
+## When to Keep Feedback Local
 
-Problems with progressive disclosure -- the wrong content is loaded at the wrong time.
+Keep feedback out of this creator's canonical rules when it is:
 
-| Error | Fix |
-|-------|-----|
-| All references loaded upfront | Add conditional loading ("Read X when you need Y") |
-| No reading guide | Add a task-to-file mapping table to SKILL.md |
-| Reference files without TOC | Add TOC to files over 300 lines |
-| Duplicated content | Choose one canonical location, replace duplicates with references |
-| Nested cross-references (A -> B -> C) | Flatten: A -> B and A -> C separately |
+- a vendor-specific endpoint, environment variable, or version fact
+- a personal formatting or language preference
+- already covered by an adequate rule
+- too ambiguous to reproduce
+- caused by a transient tool failure rather than skill behavior
+- specific to a harness capability this skill does not universally promise
+- unsupported by authority to modify the canonical creator package
 
-### Verification Errors
+If the same local class recurs independently, revisit it with evidence; recurrence may reveal a general rule.
 
-Examples and commands that don't actually work.
+## Completion Gate
 
-| Error | Fix |
-|-------|-----|
-| curl commands with wrong flags | Run the command, fix the flags |
-| API endpoints that 404 | Verify against current API docs |
-| Code that doesn't parse | Syntax-check all code blocks |
-| Missing auth in examples | Add required headers to every API example |
-| Wrong HTTP method | Check API docs for correct method |
+Improvement is complete when:
 
-### Style Errors (lowest priority)
+- the current target is fixed
+- the failure class and evidence are recorded
+- the lesson is either deliberately local or has one canonical reusable home
+- duplicated, contradicted, stale, and no-op wording is removed
+- the regression eval fails before and passes after the change
+- adjacent branches and publication surfaces remain consistent
+- release validation and behavioral evals pass
 
-Tone, formatting, and presentation issues.
+## See Also
 
-| Error | Fix |
-|-------|-----|
-| Passive voice | Rewrite in imperative ("Run this" not "This should be run") |
-| Over-explaining basics | Remove general programming knowledge; add domain-specific knowledge |
-| Inconsistent heading levels | Fix hierarchy (# -> ## -> ### only) |
-| No "See Also" links | Add cross-references to related files |
-| Heavy-handed MUST/NEVER | Replace with reasoning ("X because Y" not "MUST do X") |
-
----
-
-## Rule Storage Format
-
-Rules are stored in `references/gotchas.md` in this skill's own directory. The file is organized by category with a self-improving header.
-
-### Format
-
-Each rule is a list item under its category heading:
-
-```markdown
-**Structural mistakes:**
-- Putting everything in SKILL.md instead of using references
-- SKILL.md too short (just a paragraph) -- needs decision trees and quick reference
-- [NEW] Forgetting to add .gitkeep to empty directories (2026-03-27)
-```
-
-### Conventions
-
-- New rules get a `[NEW]` prefix and a date stamp in parentheses
-- After a rule has been validated across multiple skills, remove the `[NEW]` prefix
-- Each rule is one line (can be long). No multi-line explanations in the gotchas list -- if a rule needs explanation, it belongs in a different reference file.
-- Rules are imperative and describe the mistake, not the fix ("Missing gotchas section" not "Add a gotchas section")
-
----
-
-## Contradiction Resolution
-
-When new feedback contradicts an existing rule:
-
-### Same-Category Contradiction
-
-The new rule directly opposes an existing rule in the same category.
-
-**Process:**
-1. Read both rules carefully
-2. Determine if the new feedback represents a more recent or authoritative source
-3. If the new rule is better: update the existing rule, add a date stamp, note what changed
-4. If the existing rule is better: discard the new feedback, optionally add a note explaining why the alternative was considered and rejected
-
-**Example:**
-
-Existing: "Use MUST/NEVER for critical operations"
-New feedback: "Stop writing MUST/NEVER, explain reasoning instead"
-
-Resolution: Update the rule. The reasoning-based approach is better because it gives the agent theory of mind to handle edge cases. Update to: "Using MUST/NEVER instead of explaining reasoning -- agents perform better when they understand why (2026-03-27, updated from previous MUST/NEVER guidance)"
-
-### Cross-Category Contradiction
-
-The new rule is valid in one context but contradicts another rule in a different context.
-
-**Process:**
-1. Both rules may be correct for their respective contexts
-2. Add qualifying context to each rule
-3. Add a cross-reference note
-
-**Example:**
-
-Structural rule: "Keep SKILL.md under 500 lines"
-Content rule: "Include complete working examples"
-
-Resolution: Both are valid. The structural rule takes precedence -- move complete examples to reference files and keep SKILL.md examples brief (1-2 lines per operation).
-
----
-
-## Description Optimization Loop
-
-After the skill content is finalized, optimize the frontmatter description for triggering accuracy. This is compatible with skill-creator's `run_loop.py`.
-
-### Prerequisites
-
-- The skill's SKILL.md is complete and verified
-- `claude` CLI is available (`claude -p` for programmatic invocation)
-- Python 3 is available
-
-### Process
-
-1. Generate trigger eval queries (see next section)
-2. Review queries with the user
-3. Run the optimization loop:
-
-```bash
-python -m scripts.run_loop \
-  --eval-set /path/to/trigger-eval.json \
-  --skill-path /path/to/skill \
-  --model <current-model-id> \
-  --max-iterations 5 \
-  --verbose
-```
-
-4. The loop automatically:
-   - Splits eval set into 60% train / 40% test
-   - Evaluates current description (3 runs per query for reliability)
-   - Proposes improvements based on failures
-   - Re-evaluates on both train and test
-   - Selects best by test score (avoids overfitting)
-
-5. Apply `best_description` to the skill's frontmatter
-
-### Running from skill-creator directory
-
-The `run_loop.py` script lives in skill-creator's scripts directory. Run it from there:
-
-```bash
-cd /path/to/skill-creator
-python -m scripts.run_loop \
-  --eval-set /path/to/trigger-eval.json \
-  --skill-path /path/to/target-skill \
-  --model claude-sonnet-4-20250514 \
-  --max-iterations 5 \
-  --verbose
-```
-
----
-
-## Trigger Eval Queries Guidance
-
-The quality of the description optimization depends on the quality of the eval queries.
-
-### Composition Rules
-
-- **20 total queries**: 10 should-trigger, 10 should-not-trigger
-- **60/40 train/test split**: the loop handles this automatically
-- **Realistic prompts**: like a real user at their terminal, not abstract test cases
-- **Varied formality**: formal requests, casual questions, typos, abbreviations
-- **Edge-case focused**: most value comes from hard cases, not obvious ones
-
-### Should-Trigger Queries (10)
-
-Think about coverage:
-
-- **Direct invocation**: user names the tool/API explicitly
-- **Implicit need**: user describes a problem that clearly needs this skill
-- **Uncommon use case**: rare but valid scenario
-- **Competition winner**: query where this skill competes with another but should win
-- **Casual phrasing**: "hey can you help me with [thing]"
-- **Different languages/frameworks**: if the skill is language-agnostic
-- **Error-driven**: user has an error and needs this skill to fix it
-- **Migration**: user is moving from one approach to another
-
-### Should-Not-Trigger Queries (10)
-
-The most valuable negatives are near-misses:
-
-- **Keyword overlap**: shares terms with the skill but needs something else
-- **Adjacent domain**: related topic but different tool/skill
-- **Subset mismatch**: needs a specific part of a larger platform that has its own skill
-- **UI vs API**: user wants a frontend component, not backend integration
-- **Different provider**: same domain (payments, auth) but different vendor
-- **Simple task**: something the agent can handle without any skill
-- **Documentation request**: wants to read about X, not implement X
-- **Already solved**: user has working code, just wants a review
-
-### Bad vs Good Negative Queries
-
-**Bad:** "Write a fibonacci function" (obviously unrelated, tests nothing)
-**Good:** "I need to accept credit card payments on my site using PayPal's checkout SDK" (shares payment domain keywords but needs a different provider's skill)
-
----
-
-## When NOT to Save Feedback
-
-Not every correction is a generalizable lesson. Skip saving feedback when:
-
-### One-Off Fixes
-
-The mistake was specific to one skill and would not recur elsewhere.
-
-- "The Stripe API key variable should be STRIPE_SECRET_KEY not STRIPE_API_KEY" -- this is a fact about Stripe, not a pattern.
-- Exception: if you see the same "one-off" three times, it is a pattern. Save it.
-
-### User-Specific Preferences
-
-The feedback reflects a personal style choice, not a quality issue.
-
-- "I prefer tabs over spaces in code examples"
-- "I like shorter descriptions"
-- "Can you use TypeScript instead of Python for examples"
-
-### Already Covered
-
-The rule exists in gotchas.md and the current wording is adequate.
-
-### Ambiguous Signal
-
-The user's comment could mean multiple things, or it is unclear whether it applies generally.
-
-- "This feels off" (what specifically?)
-- "Not sure about this" (about what?)
-
-Ask for clarification before saving. If the user doesn't clarify, don't save.
-
-### Model Behavior (Not Skill Behavior)
-
-The issue is about how the model executed instructions, not about the instructions themselves.
-
-- "The model took too long" -- a model performance issue, not a skill issue
-- "The model didn't read the reference file" -- could be a skill issue (bad pointer) or a model issue (ignored a clear pointer). Investigate before saving.
+- `references/curation.md` — lifecycle, invocation ownership, and publication-surface reconciliation
+- `references/testing.md` — discriminating, repeated, trigger, and disclosure evals
+- `references/patterns.md` — branch-based placement and completion criteria
+- `references/gotchas.md` — current non-obvious authoring failure catalog

@@ -1,0 +1,16 @@
+{
+  "skill_name": "changelog-helper",
+  "evals": [
+    {
+      "id": 1,
+      "name": "draft-breaking-changelog",
+      "prompt": "Draft changelog copy for merged changes that include a breaking configuration change.",
+      "expected_output": "User-impact groups, issue references, and an actionable migration note.",
+      "assertions": [
+        {"text": "Groups changes by user impact", "type": "functional"},
+        {"text": "Includes linked issue references", "type": "functional"},
+        {"text": "Preserves an actionable breaking-change migration note", "type": "functional"}
+      ]
+    }
+  ]
+}

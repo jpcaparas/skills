@@ -1,0 +1,18 @@
+{
+  "skill_name": "provider-api-helper",
+  "evals": [
+    {
+      "id": 1,
+      "name": "inspect-project",
+      "prompt": "Show the read-only request for project prj_42.",
+      "expected_output": "A curl request for project prj_42.",
+      "assertions": [
+        {
+          "text": "Uses the project endpoint",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke"]
+    }
+  ]
+}

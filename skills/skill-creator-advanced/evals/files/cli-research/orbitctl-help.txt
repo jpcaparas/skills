@@ -1,0 +1,27 @@
+$ orbitctl --help
+Orbit deployment command line
+
+Usage: orbitctl [GLOBAL OPTIONS] <COMMAND>
+
+Commands:
+  deploy    Validate or deploy a project
+  status    Read deployment status
+
+Global options:
+  --config <PATH>       Configuration file [default: ./orbit.yaml]
+  --output <FORMAT>     Output format: text, json [default: text]
+  --non-interactive     Disable prompts; required in automation
+  -h, --help            Print help
+  -V, --version         Print version
+
+Environment:
+  ORBIT_TOKEN           Required for status and live deploy; not read by --dry-run
+
+Shell support:
+  POSIX sh, bash, and zsh. PowerShell syntax is not documented.
+
+Exit status:
+  0 success
+  2 command-line usage error
+  4 authentication failure
+  8 remote operation failure

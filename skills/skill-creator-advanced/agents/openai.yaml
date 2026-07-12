@@ -1,4 +1,4 @@
 interface:
   display_name: "Skill Creator Advanced"
-  short_description: "Blueprint, place, validate, and harden production-grade skills"
-  default_prompt: "Help me create or improve a production-grade skill, choose the right destination for it, and verify the result"
+  short_description: "Create, curate, validate, and release production-grade skills"
+  default_prompt: "Help me create, improve, or curate a production-grade skill, reconcile its library surfaces, and verify the release"

@@ -1,0 +1,98 @@
+[
+  {
+    "query": "Build a production-grade API skill for subscription changes and signed event callbacks, with safe verification and behavioral evals.",
+    "should_trigger": true
+  },
+  {
+    "query": "Our existing deployment CLI skill documents options that changed. Harden it against current version and help output and add release tests.",
+    "should_trigger": true
+  },
+  {
+    "query": "We renamed one installable skill and now the catalog, registry, router, and dependents disagree. Reconcile the library.",
+    "should_trigger": true
+  },
+  {
+    "query": "This agent guidance handles both autonomous review and an explicit release command. Decide whether those jobs should be discoverable together, explicitly invoked, or split into independently reached packages.",
+    "should_trigger": true
+  },
+  {
+    "query": "Our agent loads a 3,000-line multi-domain reference for every question. Reorganize the installable guidance so each request reaches only the relevant topic without losing shared rules.",
+    "should_trigger": true
+  },
+  {
+    "query": "The draft under our experimental agent-guidance lane is supposed to move into the stable collection. Gate the promotion on placeholders, evals, wrappers, registry entries, and fresh discovery.",
+    "should_trigger": true
+  },
+  {
+    "query": "Audit this installable agent package: it still has unresolved draft markers, an empty eval suite, duplicate wrapper instructions, and claims verification passed.",
+    "should_trigger": true
+  },
+  {
+    "query": "Figure out the correct repo-local destination for a new production agent capability, scaffold the installable package there, and prove a fresh installer can discover it.",
+    "should_trigger": true
+  },
+  {
+    "query": "These two installed agent packages compete for the same request and follow the same workflow. Decide whether to merge, compose, or keep them separate, then reconcile their routes.",
+    "should_trigger": true
+  },
+  {
+    "query": "Create a deployment CLI skill, but verify it without performing an unauthorized production write or sending notifications.",
+    "should_trigger": true
+  },
+  {
+    "query": "Old-lint is still active in our catalog even though code-review replaced it. Migrate every dependent, move the old package to the repository's retired state, and remove active routes without erasing required migration history.",
+    "should_trigger": true
+  },
+  {
+    "query": "The retired legacy notifier has exceeded our retention window and a dependency scan is empty. Remove the package and reconcile catalog, registry, router, installer, and discovery output.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make a tiny personal hello-world skill; it is a disposable one-liner and needs no production workflow.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this typed function for readability and refactor the nested conditionals.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write maintainable unit tests for this billing service and improve the fixtures.",
+    "should_trigger": false
+  },
+  {
+    "query": "Tighten the prose in our repository README without changing any agent skill behavior.",
+    "should_trigger": false
+  },
+  {
+    "query": "Install an existing database skill into my current agent's global skills folder.",
+    "should_trigger": false
+  },
+  {
+    "query": "Build an MCP server that exposes our inventory API to agents.",
+    "should_trigger": false
+  },
+  {
+    "query": "What installed skills are available for working with embedded databases?",
+    "should_trigger": false
+  },
+  {
+    "query": "Organize our architecture decision records and write an index for the documentation folder.",
+    "should_trigger": false
+  },
+  {
+    "query": "Use the repository CLI to list my open change requests and filter them by author.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a reusable system prompt for a customer-support chatbot; do not package it as an installable skill.",
+    "should_trigger": false
+  },
+  {
+    "query": "Deprecate the `legacyMode` method in our application SDK and add a compiler warning; this is ordinary product code, not agent guidance.",
+    "should_trigger": false
+  },
+  {
+    "query": "Delete the retired-notifier source module from this application after its imports are gone; there are no agent packages, catalogs, or discovery surfaces involved.",
+    "should_trigger": false
+  }
+]

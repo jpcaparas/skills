@@ -1,380 +1,282 @@
 ---
 name: skill-creator-advanced
-description: "Create or improve production-quality installable skills: API wrappers, progressive docs, CLI integrations, complex references, cross-harness behavior, placement, tests, and self-improvement loops. Trigger on advanced skill, production skill, installable skill, API skill, or rigorous skill."
+description: "Create, harden, and curate production-grade installable skills and skill libraries. Use for API/CLI/reference skills, invocation design, progressive disclosure, evals, placement, promotion, renames, deprecation, or catalog/router consistency. Skip trivial one-file utilities."
 ---
 
 # Advanced Skill Creator
 
-Creates and improves mission-critical skills with enforced progressive disclosure, verified operations, self-improving feedback loops, and destination-aware scaffolding. This skill is for advanced use cases where shortcuts are unacceptable.
+Creates and curates production skills whose process is predictable, evidence-backed, portable, and safe to release. Predictability means following the same sound decision path each run, not forcing identical wording or output.
 
-This skill differs from `{{ skill:skill-creator }}` in four ways: (1) it enforces a structured blueprint phase before writing, (2) it verifies all examples and operations actually work, (3) it produces skills with a complete directory scaffold including tests, and (4) it chooses the destination root intelligently instead of assuming the current working directory.
+Use the installed `skill-creator` skill for a small utility or simple workflow that does not need a release-grade research, curation, and eval loop. If that skill is unavailable, apply its documented lightweight workflow or create the minimal package directly.
 
-## When to Use This vs `{{ skill:skill-creator }}`
-
-```
-What kind of skill are you building?
-
-├── Quick utility, style guide, simple workflow
-│   └── Use `{{ skill:skill-creator }}` (lighter, faster iteration)
-│
-├── API wrapper, CLI tool integration, SDK reference
-│   └── Use THIS skill (operations must be verified)
-│
-├── Large reference skill (60+ products/domains)
-│   └── Use THIS skill (progressive disclosure is critical)
-│
-├── Upgrading an existing skill to production quality
-│   └── Use THIS skill (restructuring for disclosure)
-│
-└── Anything where "it works on the first try" matters
-    └── Use THIS skill
-```
-
----
-
-## Phase 0: Intake
-
-Ask the user ONE question: **"What are you building a skill for?"**
-
-From their answer, infer everything you can. Then present a brief plan (3-5 bullets) and ask for confirmation. Only ask follow-up questions if genuinely ambiguous. The goal is autonomy after the first answer.
-
-Before writing files, determine the destination root:
-
-1. If the user gave an explicit path, use it.
-2. Otherwise inspect the current repo, the current installation context, and common global skill roots. Use `scripts/infer_destination.py` or apply the same logic manually.
-3. Prefer a repo-local skill root when the current repo already stores skills there.
-4. Otherwise prefer the currently installed skill family or the global root with the most existing skills.
-5. If nothing is established yet, default to `<repo-root>/.agents/skills/` inside a git repo, or the current harness's global root outside a repo.
-
-Always tell the user where the skill will be created before scaffolding it:
+## Route the Work
 
 ```text
-Recommended destination: <skills-root>/<skill-name>
-Reason: <one sentence based on existing skills or current install context>
-Alternative: <optional fallback path if there is a reasonable second choice>
+What is changing?
+
+├── One small, focused skill with little operational risk
+│   └── Use the installed skill-creator skill when available
+│
+├── A new or existing API, CLI, SDK, or large reference skill
+│   └── Follow Phases 0–7 below
+│
+├── A skill collection: create, improve, merge, compose, promote, move, deprecate, retire, or remove
+│   └── Read references/curation.md first, then follow the applicable phases
+│
+└── An existing production skill with weak triggering, disclosure, or verification
+    └── Inventory it completely, preserve proven behavior, then harden it in place
 ```
 
-Treat that recommendation as author-time context only. Do not copy it into the generated skill's `SKILL.md`, `README.md`, `AGENTS.md`, or `metadata.json`.
+## Quick Reference
 
-Classify the skill into a blueprint type:
+| Need | Read or run |
+|---|---|
+| Decide an ownership or lifecycle action | `references/curation.md` |
+| Choose destination | `references/placement.md` or `scripts/infer_destination.py` |
+| Regression-test destination inference | `python3 scripts/test_infer_destination.py` |
+| Design earned package structure | `references/anatomy.md` |
+| Choose disclosure, granularity, and specificity | `references/patterns.md` |
+| Use an API, CLI, or reference blueprint | `references/blueprints.md` and the matching template |
+| Design behavioral and trigger evals | `references/testing.md` |
+| Curate feedback without accumulating stale rules | `references/self-improvement.md` |
+| Validate a draft | `python3 scripts/validate.py <skill-path> --profile draft` |
+| Validate a release | `python3 scripts/validate.py <skill-path> --profile release` |
+| Run structural eval preflight | `python3 scripts/test_skill.py <skill-path>` |
 
-| Blueprint | When to use | Template |
-|-----------|-------------|----------|
-| API Wrapper | Wrapping an external API or SDK | `templates/api-wrapper/` |
-| CLI Tool | Wrapping a command-line tool | `templates/cli-tool/` |
-| Progressive Docs | Large reference/documentation skill | `templates/progressive-docs/` |
-| Custom | None of the above | Build from anatomy |
+## Phase 0: Intake and Ownership
 
-Read the relevant template and `references/blueprints.md` for the chosen type. Read `references/placement.md` when the destination is not obvious.
+Inspect the request, current repository, installed skill family, and local instructions before asking questions. Skip decisions that supplied context or repository evidence already settles. Ask only when one unresolved choice would materially change the result; confirm only an irreversible or genuinely ambiguous action.
 
----
+1. Inventory adjacent skills and choose the applicable ownership or lifecycle action. Read `references/curation.md` when a library or neighboring skill is in scope.
+2. Identify every distinct invocation branch and its current or proposed owner.
+3. Determine who must reach the skill—agent, human, another skill, or a router—and verify how the target harness represents that contract.
+4. Determine the destination:
+   - An explicit user path wins.
+   - Otherwise inspect established repo-local and global roots with `scripts/infer_destination.py`.
+   - Prefer an existing repo convention over a generic fallback.
+5. Classify the work:
 
-## Phase 1: Research & Discovery
+| Blueprint | Use when | Starting point |
+|---|---|---|
+| API Wrapper | External API or SDK operations need exact auth and request contracts | `templates/api-wrapper/` |
+| CLI Tool | A command-line surface needs verified commands, flags, and output handling | `templates/cli-tool/` |
+| Progressive Docs | Several branches need navigable reference without loading every topic | `templates/progressive-docs/` |
+| Library Curation | Existing skills or publication surfaces are changing | `references/curation.md` |
+| Custom | None of the above fits | `references/anatomy.md` |
 
-Before writing a single line, gather ground truth. This phase is non-negotiable.
+Before scaffolding a new skill, tell the user the inferred destination and concise reason. Keep that author-time recommendation out of the generated package.
 
-### For API Wrappers
+**Phase complete when:** the destination, lifecycle decision, invocation branches, owner, and blueprint are recorded, and every material choice is resolved or explicitly bounded so later work cannot silently choose a different outcome.
 
-1. **Fetch the actual API docs** — use WebFetch, Firecrawl, or context7 MCP to get current documentation
-2. **Identify auth patterns** — API key, OAuth, service account, bearer token
-3. **List all endpoints/operations** — group by domain (CRUD, admin, analytics, etc.)
-4. **Find rate limits, quotas, pricing** — these go in gotchas
-5. **Test a real API call** — execute at least one operation to verify the API is reachable and the auth pattern works. Save the working command to `scripts/`
+## Phase 1: Research and Evidence
 
-### For CLI Tools
+Gather ground truth before writing behavior.
 
-1. **Run `--help`** on the tool and capture output
-2. **Identify subcommands** — group by function
-3. **Test the most common operation** — execute it and verify output
-4. **Find version** — pin the version in the skill
+### API or SDK
 
-### For Progressive Docs
+- Read current primary documentation for auth, versioning, operations, pagination, errors, quotas, pricing, and destructive effects.
+- Map each claimed operation to evidence. Mark anything unresolved rather than guessing.
+- Verify with the safest useful rung: static syntax → documented contract → dry run or sandbox → read-only live call.
+- Do not perform writes, sends, purchases, production mutations, or credential-dependent effects without authority already present in the user's request.
 
-1. **Map the domain** — list all products/topics that need coverage
-2. **Identify the decision tree** — how does a user choose between options?
-3. **Estimate reference count** — if >20 references, plan for the 5-file structure (see `references/patterns.md`)
+### CLI
 
-### For Improving Existing Skills
+- Capture the installed version or build identity and the tool's documented help or command-introspection output for the root and relevant subcommands.
+- Map commands, options or parameters, defaults, output or result formats, completion or exit semantics, environment constraints, and mutation boundaries.
+- Prefer a documented preview or dry-run facility, a temporary workspace, or a disposable sandbox for operational checks.
 
-1. **Read the entire existing skill** — SKILL.md + all references, scripts, assets
-2. **Run `scripts/validate.py`** against it to get a structural audit
-3. **Identify disclosure gaps** — content that should be in references but is inline, or vice versa
-4. **Preserve what works** — don't rewrite from scratch unless structurally broken
+### Progressive Reference
 
----
+- Map user goals and branches before mapping products or files.
+- Identify shared prerequisites and branch-only knowledge.
+- Estimate likely access patterns; raw line count is only a pressure signal.
+
+### Existing Skill or Library
+
+- Read the complete canonical package and relevant repo policy: `SKILL.md`, references, scripts, templates, evals, assets, agents, wrappers, catalogs, registries, routers, and dependents.
+- Before the first write, preserve a recoverable baseline outside the target package: record an immutable version-control revision and working-tree state, or copy an unversioned package into the evaluation workspace. Stop if the old behavior cannot be recovered for comparison.
+- Run baseline validation and record current failures.
+- Account for every existing behavior as preserved, changed, merged, or intentionally removed.
+- Find duplicated rules, stale surfaces, unresolved placeholders, weak pointers, and filler structure.
+
+**Phase complete when:** every retained factual or operational claim has evidence, a safe verification plan, or an explicit unresolved limitation; every existing behavior in scope is accounted for; and an improvement has a recoverable pre-write baseline.
 
 ## Phase 2: Architecture
 
-Design the skill structure before writing content. Read `references/anatomy.md` for the full specification.
+Read `references/anatomy.md` and `references/patterns.md`. Build a branch-and-content ledger before creating files.
 
-### Required Directory Structure
+### Earn Each Artifact
 
-Every skill produced by this creator has ALL of these directories, even if some start empty:
+Only `SKILL.md` is universally required. A production release also needs meaningful evals. Add support artifacts because they carry behavior:
 
-```
-skill-name/
-├── SKILL.md              # Required — <500 lines, progressive disclosure entry point
-├── README.md             # Optional — thin public wrapper for marketplace/repo presentation
-├── AGENTS.md             # Optional — thin agent-facing summary when publishing in a public repo
-├── metadata.json         # Optional — public metadata for repository presentation
-├── references/           # On-demand deep-dive documentation
-│   └── .gitkeep
-├── scripts/              # Executable code for deterministic/repetitive tasks
-│   └── .gitkeep
-├── templates/            # Ready-to-use starter files (if applicable)
-│   └── .gitkeep
-├── evals/                # Test cases and assertions
-│   └── evals.json
-├── assets/               # Static files (images, data, HTML templates)
-│   └── .gitkeep
-└── agents/               # Subagent instructions (if applicable)
-    └── .gitkeep
-```
+| Artifact | Earn it when |
+|---|---|
+| `references/` | Some branches need detail that other branches should not load |
+| `scripts/` | Work is deterministic, repeated, or safer as executable validation |
+| `templates/` | Consumers copy and customize a stable starter |
+| `assets/` | Static resources are used in generated output |
+| `agents/` | A supported harness benefits from an independently scoped role |
+| thin wrappers | Repository presentation or registry policy requires them |
 
-The `.gitkeep` files ensure empty directories are tracked. Remove them when real files are added. If you add public wrapper files, keep `SKILL.md` authoritative and avoid duplicating detailed instructions.
+Do not manufacture empty directories or placeholder references. Keep `SKILL.md` authoritative; wrappers orient humans or registries without copying the runbook.
 
-### Frontmatter Rules
+### Design the Information Hierarchy
 
-```yaml
----
-name: skill-name          # Lowercase, hyphens, digits. Must match directory name. Max 64 chars.
-description: "..."        # Max 1024 chars. Primary trigger mechanism. Be pushy — see below.
-# Optional:
-# license: MIT
-# compatibility: "Requires: node >= 18, API key for X"
-# metadata:
-#   version: "1.0.0"
-#   openclaw:
-#     category: "development"
-#     requires:
-#       bins: [some-cli]
----
-```
+1. Keep ordered, always-needed steps in `SKILL.md`.
+2. Keep compact always-needed rules beside the steps they govern.
+3. Move branch-only reference behind a context pointer that says **when to read it** and **what decision or action it supports**.
+4. Put deterministic repetition in scripts and copyable starting material in templates.
+5. Omit advice the target agent already follows reliably without the skill.
 
-**Description writing**: The description is how agents decide to load your skill. Write it like you're convincing someone to open the file. Include: what it does, when to trigger, trigger keywords, and explicit negative triggers (when NOT to use). The Anthropic guidance says to be "pushy" because agents undertrigger.
+Inline must-have material used by every branch. Co-locate each concept's rule, caveat, and example. Split a skill when a job needs independent invocation or when a real context boundary fixes observed early completion; do not split only because a line threshold was crossed.
 
-### Progressive Disclosure Design
+### Define Frontmatter and Invocation
 
-Read `references/patterns.md` for the full catalog of patterns. Choose one:
+Use portable `name` and `description` fields by default. Apply harness-specific invocation controls only after reading that harness's current contract.
 
-| Content size | Pattern | Example |
-|-------------|---------|---------|
-| <500 lines total | Everything in SKILL.md | `gws-gmail-send` |
-| 500-2000 lines | SKILL.md + flat references | `claude-api` |
-| 2000-10000 lines | Decision trees + domain references | `cloudflare` |
-| >10000 lines | Skill composition (multiple skills) | `gws-*` family |
+For a discoverable description:
 
-Design the disclosure layers:
-1. **Layer 0** (always loaded): Frontmatter name + description (~100 tokens)
-2. **Layer 1** (on trigger): SKILL.md body — decision trees, quick reference, pointers
-3. **Layer 2** (on demand): Reference files — deep dives loaded when needed
-4. **Layer 3** (on execute): Scripts — run without loading into context
+- front-load the defining action or domain
+- represent each distinct invocation branch once
+- collapse synonym-only trigger lists
+- state adjacent-use boundaries positively
+- add explicit exclusions only for realistic near-misses demonstrated by evals
+- keep implementation details in the body
 
-If the skill is being published in a public source repository for `npx skills add`, place it under `skills/<skill-name>/` whenever that repo already uses the standard public layout.
+### Define Completion Criteria
 
----
+End every procedural phase or step with an observable criterion. Make it exhaustive where thin coverage is the likely failure: “every governed surface reconciled” is stronger than “update documentation.”
 
-## Phase 3: Write
+**Phase complete when:** every branch, content item, dependency, completion criterion, and publication surface has one deliberate location or documented omission.
 
-Write the skill following the architecture from Phase 2. Apply these rules in order:
+## Phase 3: Write and Prune
 
-### SKILL.md Body Rules
+Write the smallest package that reliably changes behavior.
 
-1. **Open with a one-line summary** of what this skill does
-2. **Decision tree within the first 50 lines** — if there are multiple paths, force disambiguation early
-3. **Quick reference table** — the most common operations in a scannable table
-4. **Pointers to references** — explicit "Read `references/X.md` when you need Y" guidance
-5. **Gotchas section** — at least 3 non-obvious pitfalls. This is the highest-value content
-6. **Stay under 500 lines** — if approaching this, move content to references
+- Use an early decision tree only when branches genuinely need disambiguation.
+- Add a quick-reference table only when repeated operations benefit from scanning.
+- Document gotchas that are non-obvious and evidenced; do not invent a quota.
+- Keep working examples syntactically valid and match specificity to fragility.
+- Use imperative instructions and explain load-bearing reasons.
+- State the desired behavior first. Retain prohibitions for real safety, integrity, or scope guardrails and pair them with the permitted action.
+- Keep each meaning in one canonical place. Replace copies with conditional pointers.
+- Prefer current official sources for unstable technical claims, but keep creation history out of runtime instructions.
 
-### Reference File Rules
+Then run the canonical sentence-level pruning pass in `references/curation.md`. Record what was deleted, merged, moved behind disclosure, or retained as an intentional choice; use comparative evals when a suspected no-op is disputed.
 
-For skills with >3 reference files, use the 5-file structure per domain:
+Use the five-file domain layout from `references/patterns.md` only when that access pattern is genuinely useful; it is an optional blueprint, not a universal requirement.
 
-```
-references/<domain>/
-├── README.md           # Overview, when to use, cross-references
-├── api.md              # API reference (endpoints, methods, types)
-├── patterns.md         # Common workflows and usage patterns
-├── configuration.md    # Setup, config, environment
-└── gotchas.md          # Pitfalls, limits, tribal knowledge
-```
+**Phase complete when:** every retained sentence has a declared role—behavior, load-bearing rationale, or necessary routing—while disputed no-op guidance is resolved with comparative evidence; no placeholder or duplicate canonical rule remains.
 
-For smaller skills, flat files in `references/` are fine. Each reference file should:
-- Have a table of contents if >300 lines
-- Include cross-references to related files (one level deep only)
-- Contain working examples, not pseudocode
+## Phase 4: Verify Safely
 
-### Writing Style
+Verification is part of completion, not an optional follow-up.
 
-- **Imperative form**: "Run this command" not "You should run this command"
-- **Explain the why**: Prefer reasoning over MUST/NEVER directives
-- **Add what the agent lacks, omit what it knows**: Don't restate general programming knowledge
-- **Match specificity to fragility**: High freedom for flexible tasks, low freedom for brittle operations
-- **Working examples over prose**: If you can show it in 5 lines of code, don't explain it in 50 words
+1. Run the packaged release validator when Python 3.10 or newer is available:
 
-### Degrees of Freedom
+   ```bash
+   python3 /path/to/skill-creator-advanced/scripts/validate.py <skill-path> --profile release
+   ```
 
-See the Degrees of Freedom Framework in `references/patterns.md`. Quick version:
+   Extended YAML frontmatter and live YAML manifests also require PyYAML or the target harness's strict schema tooling. When the runtime or parser is unavailable, apply the same release gates with repository-native tooling or a manual audit and report that the packaged validator was not executed; do not translate a missing validator capability into a passing result.
 
-| Freedom | When | Style |
-|---------|------|-------|
-| High | Multiple valid approaches | Text instructions, explain tradeoffs |
-| Medium | Preferred pattern exists | Pseudocode or parameterized examples |
-| Low | Operations are fragile/exact | Specific scripts, copy-paste commands |
+2. Verify every example at the safest applicable rung:
+   - parse or syntax-check code without executing unsafe behavior
+   - confirm commands, options, defaults, and versions against current primary help or introspection output
+   - use dry runs, temporary directories, sandboxes, or read-only calls
+   - execute external mutations only when authorized and scoped
+3. Verify all local pointers and eval fixtures remain inside the package and resolve.
+4. Verify every description branch has realistic positive and near-miss trigger coverage.
+5. For library changes, reconcile every governed catalog, registry, router, wrapper, installer, dependent, and lifecycle state from the affected-surface ledger.
+6. Run the repository's fresh discovery or install-list command when one exists.
 
-API auth, config file formats, and version-specific syntax are LOW freedom. Design patterns and architecture choices are HIGH freedom.
+Record evidence and limitations honestly. A structural checker cannot substitute for behavioral evals, and a blocked live call is not a verified call.
 
----
+**Phase complete when:** every claimed behavior and publication surface has passing evidence or an explicit limitation, with no unauthorized effect used to obtain it.
 
-## Phase 4: Verify
+## Phase 5: Test Behavior and Invocation
 
-This is what separates this skill from `{{ skill:skill-creator }}`. Every operation in the skill must be verified.
+Read `references/testing.md`. Save realistic cases in `<skill-name>/evals/evals.json` with unique IDs, concrete prompts, expected outcomes, typed assertions, and any committed fixtures.
 
-### Verification Checklist
+Keep invocation queries in a separate trigger-eval file using the target runner's `query` and `should_trigger` contract. Do not feed behavioral cases to a trigger-only runner or treat structural preflight as either result.
 
-Run through this checklist and fix failures before proceeding:
+Cover applicable categories:
 
-1. **Structure validation** — run `scripts/validate.py <skill-path>` from this skill's directory
-2. **Example verification** — for EACH code example or command in the skill:
-   - If it's an API call: execute it (or a safe variant) and confirm it returns expected output
-   - If it's a CLI command: run it with `--help` or `--dry-run` to confirm syntax is correct
-   - If it's a code snippet: write it to a temp file and syntax-check it (parse, don't execute unsafe code)
-3. **Cross-reference integrity** — every file path mentioned in SKILL.md must exist
-   - For first-class skill or agent mentions in reusable instructions, always use symbolic refs: `{{ skill:<name> }}` and `{{ agent:<name> }}`.
-   - Apply the symbolic form even in quick load-order lists, numbered steps, tables, and examples. Do not fall back to plain backticked primitive names if the symbolic form already works.
-   - Reserve literal file paths for actual support files, scripts, templates, configs, or data files that must be opened or executed directly.
-4. **Disclosure metrics** — SKILL.md must be <500 lines; no reference file >1000 lines without a TOC
-5. **Description coverage** — the frontmatter description must mention every major capability
+| Category | Proves |
+|---|---|
+| Smoke | The primary branch works end to end |
+| Edge | A boundary or unusual input does not collapse the process |
+| Negative | A near-miss routes elsewhere or an unsafe request is bounded correctly |
+| Disclosure | A captured tool trace proves the relevant file loaded and unrelated material did not, or observable branch-specific consequences prove the distinction |
+| Invocation | Implicit positive and adjacent negative prompts trigger accurately |
+| Curation | Every applicable ownership and lifecycle transition reconciles governed surfaces |
 
-### Automated Validation
-
-Run the validator from this skill's scripts directory:
+Follow the paired with-skill/baseline behavioral workflow supplied by the installed `skill-creator` package when available. Its `run_eval` command is for trigger queries, not behavioral output grading. Locate the package through the current harness or installation root rather than assuming a machine-specific path. Use this package's lightweight script only as structural preflight:
 
 ```bash
-python3 /path/to/skill-creator-advanced/scripts/validate.py /path/to/new-skill/
+python3 /path/to/skill-creator-advanced/scripts/test_skill.py <skill-path>
 ```
 
-This checks: frontmatter format, directory structure, line counts, cross-references, naming conventions.
+Compare runs with and without the skill. An assertion that passes equally well without it may expose a no-op instruction. Repeat stochastic evals enough to distinguish a stable process improvement from luck.
 
----
+**Phase complete when:** every applicable branch and meaningful near-miss is covered, all structural preflight checks pass, behavioral evals pass, and failures are either fixed or explicitly accepted by the user.
 
-## Phase 5: Test
+## Phase 6: Curate Feedback and Lifecycle
 
-Create test cases that exercise the skill with realistic prompts.
+Read `references/self-improvement.md` and `references/curation.md` when feedback or library state changes.
 
-### Writing Evals
+1. Fix the current target first.
+2. Classify the cause: structure, content, disclosure, verification, invocation, lifecycle, or style.
+3. Find the canonical existing rule before proposing another.
+4. Promote a general lesson only when repeated evidence or a failing eval shows it changes behavior beyond one case.
+5. Merge nuance into the canonical rule; remove contradicted, duplicated, stale, and no-op wording.
+6. Add or strengthen the eval that proves the lesson.
+7. Modify this creator's own canonical source only when it is explicitly in scope; otherwise report the candidate lesson without silently persisting it.
 
-Save to `<skill-name>/evals/evals.json`:
+For every ownership or lifecycle transition—including create, improve, merge, compose, promote, rename or move, deprecate, retire, and remove—update every governed derived surface atomically and search for stale names afterward.
 
-```json
-{
-  "skill_name": "example-skill",
-  "created_by": "skill-creator-advanced",
-  "evals": [
-    {
-      "id": 1,
-      "name": "descriptive-test-name",
-      "prompt": "Realistic user prompt with specifics — file paths, context, detail",
-      "expected_output": "What a correct response looks like",
-      "assertions": [
-        {
-          "text": "Output contains a working API call",
-          "type": "functional"
-        }
-      ],
-      "tags": ["smoke", "api-wrapper"]
-    }
-  ]
-}
-```
+**Phase complete when:** the target is fixed, the evidence-backed lesson has one canonical home, superseded guidance is removed, affected surfaces agree, and regression evals pass.
 
-### Test Categories
+## Phase 7: Portability and Handoff
 
-Every skill needs at least one test from each applicable category:
+Read `references/cross-harness.md` for the target platforms.
 
-| Category | What it tests | Minimum |
-|----------|--------------|---------|
-| Smoke | Basic happy path works | 1 |
-| Edge case | Boundary conditions, unusual inputs | 1 |
-| Negative | Should-not-trigger or error handling | 1 |
-| Disclosure | Correct reference file is loaded for a given query | 1 (if multi-reference) |
+- Keep the core useful with only portable `SKILL.md` behavior.
+- Treat scripts, subagents, UI metadata, invocation controls, and auto-loading as harness capabilities to verify, not universal guarantees.
+- Express skill and agent dependencies through primitives the publishing system documents. When symbolic references are unsupported, use literal installed names, repository dependency metadata, or inline the required portable behavior. Use relative literal paths for files inside the package.
+- Choose a runtime guaranteed by the target environment. Follow that runtime's portable launcher and dependency conventions, prefer built-in facilities where practical, emit structured output when machines consume it, document exit semantics, and avoid machine-specific paths.
+- Distinguish hard dependencies from soft enhancements. Surface required setup only when the skill would otherwise be wrong; let optional context degrade gracefully.
 
-### Running Tests
+**Phase complete when:** the package works on the promised harnesses, platform-specific enhancements are capability-gated, discovery succeeds, and the handoff names verification evidence plus any remaining limitation.
 
-Use the eval infrastructure from `{{ skill:skill-creator }}` (it's compatible):
+## Gotchas
 
-```bash
-# From the skill-creator directory:
-python -m scripts.run_eval --skill-path <new-skill> --eval-path <new-skill>/evals/evals.json
-```
-
-Or run the lightweight test script from this skill:
-
-```bash
-python /path/to/skill-creator-advanced/scripts/test_skill.py <skill-path>
-```
-
----
-
-## Phase 6: Self-Improvement Protocol
-
-This skill learns from feedback. Read `references/self-improvement.md` for the full protocol.
-
-### Feedback Capture
-
-When the user comments on a generated skill's quality ("this is wrong", "you missed X", "this pattern is better"), capture the lesson:
-
-1. **Identify the class of error** — structural, content, disclosure, verification, or style
-2. **Extract the generalizable rule** — not "add X to skill Y" but "when wrapping APIs that use pagination, always include a pagination patterns section"
-3. **Check for existing rules** — read `references/gotchas.md` to see if this is already covered
-4. **If new**: append the rule to `references/gotchas.md` under the appropriate category
-5. **If contradicts existing**: update the existing rule and note the date
-
-### Improvement Triggers
-
-After generating a skill, proactively ask: "Want me to run the verification suite, or does this look good?"
-
-If the user provides corrections:
-1. Apply the fix to the current skill
-2. Update `references/gotchas.md` with the lesson (if generalizable)
-3. Re-run `scripts/validate.py` to confirm the fix didn't break structure
-
----
-
-## Phase 7: Cross-Harness Compatibility
-
-Read `references/cross-harness.md` for the full compatibility matrix. Quick rules:
-
-- **SKILL.md + frontmatter** is universal across Claude Code, OpenAI Codex, Gemini CLI, Cursor, VS Code, and others
-- **`name` and `description`** are the only required frontmatter fields
-- For OpenAI Codex UI integration, add an openai.yaml file in the agents/ directory (see reference)
-- For Google ecosystem integration, add `metadata.openclaw` fields
-- For public repositories intended for `skills.sh`, keep installable skills under `skills/<skill-name>/`
-- Scripts should use `python3` (not `python`) and avoid platform-specific paths
-- For first-class skill and agent references inside reusable instructions, always use `{{ skill:<name> }}` and `{{ agent:<name> }}` instead of harness-specific file paths or plain backticked primitive names
-- Reference files work identically across all harnesses
-
----
+1. A scaffold is a draft, not a release; unresolved placeholders and empty evals must fail release validation.
+2. Pointer existence does not prove disclosure. Test that the right branch loads the file and an unrelated branch does not.
+3. More keywords can reduce invocation precision. Cover branches once and let trigger evals justify exclusions.
+4. Append-only feedback creates sediment. Merge, replace, and delete before adding a rule.
+5. Catalogs and routers are derived state. Make consistency executable where the repository repeats the rule.
+6. The bundled scaffold publishes only when the host and destination filesystem expose an atomic no-replace directory move. If it reports partial certification or unsupported publication, create the earned files through repository-native tooling and apply the same validation gates; do not weaken no-clobber semantics.
 
 ## Reference Files
 
-Read these on demand — don't load them all upfront:
+Read only the files the current branch needs:
 
 | File | When to read |
-|------|-------------|
-| `references/anatomy.md` | Designing skill structure |
-| `references/placement.md` | Choosing the right repo-local or global destination |
-| `references/patterns.md` | Choosing disclosure patterns and degrees of freedom |
-| `references/blueprints.md` | Using a specific blueprint (API wrapper, CLI tool, progressive docs) |
-| `references/testing.md` | Writing thorough evals and assertions |
-| `references/self-improvement.md` | Processing user feedback into skill improvements |
-| `references/cross-harness.md` | Ensuring compatibility across agent platforms |
-| `references/gotchas.md` | Common mistakes and tribal knowledge (self-improving) |
+|---|---|
+| `references/curation.md` | Choosing create, improve, merge, compose, promote, rename, deprecate, remove, invocation ownership, or publication surfaces |
+| `references/anatomy.md` | Assigning behavior to `SKILL.md` and earned support artifacts |
+| `references/placement.md` | Choosing a repo-local or global destination |
+| `references/patterns.md` | Designing disclosure, context pointers, co-location, granularity, and freedom |
+| `references/blueprints.md` | Applying an API, CLI, progressive-reference, or curation blueprint |
+| `references/testing.md` | Designing behavioral, trigger, disclosure, differential, and safety evals |
+| `references/self-improvement.md` | Converting feedback into evidence-backed canonical rules |
+| `references/cross-harness.md` | Verifying portability and harness-specific capabilities |
+| `references/gotchas.md` | Diagnosing non-obvious authoring failures after the relevant phase is known |
 
 ## Agent Instructions
 
 | File | When to use |
-|------|------------|
-| `agents/reviewer.md` | Spawn a reviewer subagent to audit a generated skill |
-| `agents/improver.md` | Spawn an improver subagent to analyze and propose upgrades |
+|---|---|
+| `agents/reviewer.md` | Independently audit the release gate, evidence, disclosure, and lifecycle consistency |
+| `agents/improver.md` | Diagnose feedback, propose minimal changes, and identify what should be pruned |

@@ -1,39 +1,48 @@
 ---
 name: {{SKILL_NAME}}
-description: "Progressively document {{DOMAIN_NAME}} for {{PRIMARY_USE_CASE}}. Use when the user needs structured guidance across {{DOMAIN_AREA_1}}, {{DOMAIN_AREA_2}}, or {{DOMAIN_AREA_3}} without loading every reference at once. Triggers on: '{{KEYWORD_1}}', '{{KEYWORD_2}}', '{{KEYWORD_3}}', or when the user needs a broad but navigable reference skill for {{DOMAIN_NAME}}. Do NOT trigger for {{NEGATIVE_TRIGGER_1}} or {{NEGATIVE_TRIGGER_2}}."
+description: "Guide {{DOMAIN_NAME}} work for {{PRIMARY_USE_CASE}}. Use when {{SEMANTIC_INVOCATION_BRANCHES}}. {{OPTIONAL_BOUNDARY_SENTENCE}}"
 ---
 
 # {{DOMAIN_NAME}} Reference Skill
 
-Provides a progressively-disclosed reference for {{DOMAIN_NAME}}.
+Provides progressively disclosed guidance for {{PRIMARY_USE_CASE}}.
 
-## Decision Tree
+## Operating Contract
 
-What area are you working in?
+- In scope: {{IN_SCOPE_TASKS}}
+- Out of scope or adjacent owner: {{OUT_OF_SCOPE_BOUNDARY}}
+- Primary observable: {{PRIMARY_OBSERVABLE}}
+- Current evidence: {{REFERENCE_EVIDENCE}}
 
-- {{DOMAIN_AREA_1}}
-  -> Read `references/{{DOMAIN_AREA_1_FILE}}.md`
+## Routing Guide
 
-- {{DOMAIN_AREA_2}}
-  -> Read `references/{{DOMAIN_AREA_2_FILE}}.md`
+{{CONDITION_AND_PURPOSE_ROUTES}}
 
-- {{DOMAIN_AREA_3}}
-  -> Read `references/{{DOMAIN_AREA_3_FILE}}.md`
+Write each route as a condition plus a purpose, for example: “When working on
+the signing flow, read `references/signing.md` to choose the verified key and
+rotation procedure.” Route directly to the narrowest useful reference. Include
+`references/shared.md` only when multiple branches genuinely need the same
+conventions; otherwise co-locate the rule with its single consumer.
 
-- Shared conventions, auth, or terminology
-  -> Read `references/shared.md`
+## Core Rules
 
-## Quick Reference
+{{ALWAYS_NEEDED_RULES}}
 
-| Task | Read |
-|------|------|
-| Shared setup and conventions | `references/shared.md` |
-| {{DOMAIN_AREA_1}} tasks | `references/{{DOMAIN_AREA_1_FILE}}.md` |
-| {{DOMAIN_AREA_2}} tasks | `references/{{DOMAIN_AREA_2_FILE}}.md` |
-| {{DOMAIN_AREA_3}} tasks | `references/{{DOMAIN_AREA_3_FILE}}.md` |
+Keep instructions required for every invocation here. Move branch-specific
+detail behind the matching route.
 
-## Gotchas
+## Verified Gotchas
 
-1. **{{GOTCHA_1_TITLE}}**: {{GOTCHA_1_DESCRIPTION}}
-2. **{{GOTCHA_2_TITLE}}**: {{GOTCHA_2_DESCRIPTION}}
-3. **{{GOTCHA_3_TITLE}}**: {{GOTCHA_3_DESCRIPTION}}
+{{EVIDENCED_GOTCHAS_OR_LINK}}
+
+## Completion Gate
+
+Complete when the immediate task reaches {{PRIMARY_OBSERVABLE}}, every route
+has one canonical owner, and disclosure checks show unrelated branches remain
+unloaded.
+
+## Release Gate
+
+Before release, replace every template token, remove unearned references and
+their routes, and remove empty headings, duplicated maps, or filler such as
+`TBD` and `N/A`.

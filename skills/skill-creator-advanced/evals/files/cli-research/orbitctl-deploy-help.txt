@@ -1,0 +1,17 @@
+$ orbitctl deploy --help
+Validate or deploy a project
+
+Usage: orbitctl deploy [OPTIONS] <PROJECT_DIR>
+
+Arguments:
+  <PROJECT_DIR>         Project directory [default: .]
+
+Options:
+  --environment <NAME>  Target environment [default: staging]
+  --dry-run             Validate locally and print the deployment plan; no remote write
+  --confirm             Required for a live remote deployment
+  --output <FORMAT>     Output format: text, json [default: inherited]
+  -h, --help            Print help
+
+Mutation boundary:
+  Without --dry-run, this command writes a remote deployment. Live deployment requires ORBIT_TOKEN and --confirm.

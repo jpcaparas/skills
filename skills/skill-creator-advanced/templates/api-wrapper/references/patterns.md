@@ -1,89 +1,61 @@
-# {{API_NAME}} Common Patterns & Workflows
+# {{API_NAME}} Supported Workflows
 
-## Table of Contents
+Include a workflow only when the API contract and the skill's invocation
+branches require it. Potential examples include collection traversal,
+asynchronous completion, event delivery, quota-aware retries, batching, and
+idempotency; none is universal.
 
-- [Pagination](#pagination)
-- [Rate Limit Handling](#rate-limit-handling)
-- [Webhook Integration](#webhook-integration)
-- [Create-Then-Poll](#create-then-poll)
-- [Batch Operations](#batch-operations)
-- [Idempotent Requests](#idempotent-requests)
+## Workflow Index
 
----
+| Workflow | Use when | Read |
+|----------|----------|------|
+{{WORKFLOW_INDEX_ROWS}}
 
-## Pagination
+## {{WORKFLOW_NAME}}
 
-The {{API_NAME}} API uses {{PAGINATION_TYPE}} pagination.
+**Use when:** {{WORKFLOW_APPLICABILITY}}
 
-### Basic Pagination Loop
+**Do not use when:** {{WORKFLOW_EXCLUSIONS}}
 
-```{{LANGUAGE}}
-{{PAGINATION_LOOP_CODE}}
+**Contract evidence:** {{WORKFLOW_EVIDENCE}}
+
+### Invariants
+
+{{WORKFLOW_INVARIANTS}}
+
+### Procedure
+
+```{{WORKFLOW_LANGUAGE}}
+{{WORKFLOW_EXAMPLE}}
 ```
 
-**Termination condition:** {{PAGINATION_TERMINATION}}
+### Termination and Success Evidence
 
-**Default page size:** {{DEFAULT_PAGE_SIZE}}
-**Maximum page size:** {{MAX_PAGE_SIZE}}
+{{WORKFLOW_TERMINATION_AND_SUCCESS}}
 
-### Collecting All Results
+### Failure and Recovery
 
-```{{LANGUAGE}}
-{{COLLECT_ALL_CODE}}
-```
+{{WORKFLOW_FAILURE_AND_RECOVERY}}
 
----
+Repeat the workflow section only for independently useful, evidenced patterns.
+Co-locate a rule here when only one workflow needs it; move it to a shared
+section only when multiple workflows genuinely depend on it.
 
-## Rate Limit Handling
+## Conditional HTTP Retry Note
 
-**Limits:** {{RATE_LIMIT_DETAILS}}
-
-**Headers returned on every response:**
-
-| Header | Description |
-|--------|-------------|
-| `{{RATE_LIMIT_HEADER_REMAINING}}` | Requests remaining in current window |
-| `{{RATE_LIMIT_HEADER_RESET}}` | When the window resets ({{RESET_FORMAT}}) |
-| `Retry-After` | Seconds to wait (only on 429 responses) |
-
-### Exponential Backoff Pattern
-
-```{{LANGUAGE}}
-{{RETRY_PATTERN_CODE}}
-```
-
----
-
-## Webhook Integration
-
-{{WEBHOOK_SECTION_OR_PLACEHOLDER}}
-
----
-
-## Create-Then-Poll
-
-For async operations that return a job/task ID:
-
-```{{LANGUAGE}}
-{{CREATE_THEN_POLL_CODE}}
-```
-
----
-
-## Batch Operations
-
-{{BATCH_SECTION_OR_PLACEHOLDER}}
-
----
-
-## Idempotent Requests
-
-{{IDEMPOTENCY_SECTION_OR_PLACEHOLDER}}
-
----
+Keep this section only for an HTTP contract that can return `Retry-After`.
+Honor the service contract and the HTTP field syntax: the value can be a delay
+in seconds or an HTTP date, and it is not limited to one status code. Combine
+it with the API's documented retry eligibility, idempotency guarantees, jitter,
+attempt bound, and overall time budget. Never retry every failure blindly.
 
 ## See Also
 
-- `references/api.md` -- endpoint details and response formats
-- `references/configuration.md` -- auth setup and SDK configuration
-- `references/gotchas.md` -- pitfalls with these patterns
+- `references/api.md` -- operation and outcome contracts
+- `references/configuration.md` -- access and client setup
+- `references/gotchas.md` -- evidenced workflow pitfalls
+
+## Release Gate
+
+Replace every template token, duplicate the workflow skeleton only as needed,
+and delete illustrative or unsupported sections before release.

@@ -1,0 +1,16 @@
+{
+  "skill_name": "release-notes",
+  "evals": [
+    {
+      "id": 1,
+      "name": "draft-release-notes",
+      "prompt": "Draft release notes from merged changes and linked issues.",
+      "expected_output": "User-impact groups with issue references and no internal-only work.",
+      "assertions": [
+        {"text": "Groups changes by user impact", "type": "functional"},
+        {"text": "Includes linked issue references", "type": "functional"},
+        {"text": "Omits internal-only work", "type": "negative"}
+      ]
+    }
+  ]
+}

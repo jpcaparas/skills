@@ -1,0 +1,15 @@
+$ orbitctl status --help
+Read deployment status
+
+Usage: orbitctl status [OPTIONS] <DEPLOYMENT_ID>
+
+Options:
+  --watch               Poll until the deployment reaches a terminal state
+  --interval <SECONDS>  Poll interval used with --watch [default: 5]
+  --output <FORMAT>     Output format: text, json [default: inherited]
+  -h, --help            Print help
+
+Exit status:
+  0 status read successfully
+  4 authentication failure
+  8 remote read failure

@@ -1,0 +1,17 @@
+{
+  "skill_name": "overgrown-skill",
+  "evals": [
+    {
+      "id": 1,
+      "name": "release-summary-smoke",
+      "prompt": "Summarize the current release state without changing setup or publishing anything.",
+      "expected_output": "A read-only summary based on the canonical package.",
+      "assertions": [
+        {
+          "text": "Does not perform a publication effect",
+          "type": "negative"
+        }
+      ]
+    }
+  ]
+}

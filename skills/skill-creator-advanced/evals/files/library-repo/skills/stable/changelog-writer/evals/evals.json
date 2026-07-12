@@ -1,0 +1,17 @@
+{
+  "skill_name": "changelog-writer",
+  "evals": [
+    {
+      "id": 1,
+      "name": "legacy-route",
+      "prompt": "Use release-notes to summarize the merged changes.",
+      "expected_output": "A grouped changelog draft.",
+      "assertions": [
+        {
+          "text": "Produces a changelog draft without publishing",
+          "type": "functional"
+        }
+      ]
+    }
+  ]
+}

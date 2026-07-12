@@ -1,119 +1,57 @@
-# {{API_NAME}} Configuration & Setup
+# {{API_NAME}} Configuration and Access
 
-## Table of Contents
+Use this reference only for setup shared by the supported {{API_NAME}}
+operations.
 
-- [Authentication](#authentication)
-- [SDK Installation](#sdk-installation)
-- [Environment Variables](#environment-variables)
-- [Configuration Files](#configuration-files)
-- [Testing Your Setup](#testing-your-setup)
+## Supported Access Paths
 
----
+{{SUPPORTED_ACCESS_PATHS}}
 
-## Authentication
+Document only clients, transports, runtimes, and versions that have current
+evidence. If a low-level request example is useful, label it as illustrative
+and state which contract style it applies to.
 
-### {{AUTH_PATTERN}} Setup
+## Authentication or Identity
 
-{{AUTH_SETUP_STEPS}}
+{{AUTHENTICATION_CONTRACT}}
 
-### Where to Get Credentials
+State explicitly whether authentication is required. When it is required,
+document the credential type, acquisition location, scope, rotation or expiry
+behavior, and injection mechanism supported by the target environment. Do not
+assume an authorization header or bearer token.
 
-1. Go to {{CREDENTIALS_URL}}
-2. {{CREDENTIAL_STEP_1}}
-3. {{CREDENTIAL_STEP_2}}
-4. {{CREDENTIAL_STEP_3}}
+Credentials source: {{CREDENTIALS_SOURCE}}
 
-### Header Format
+## Configuration Inputs
 
-Every request requires:
+{{CONFIGURATION_INPUTS}}
 
-```
-{{AUTH_HEADER_NAME}}: {{AUTH_HEADER_FORMAT}}
-```
+Cover only applicable inputs such as environment configuration, credential
+stores, configuration files, runtime arguments, or platform-native secret
+managers. Prefer secret references over literal credential values. Include
+platform-specific commands only when verified for that platform; never present
+a Unix shell export as the universal setup path.
 
-{{AUTH_NOTES}}
+## Safe Access Check
 
----
+Run the least-privileged, non-mutating check supported by the contract:
 
-## SDK Installation
-
-### Python
-
-```bash
-pip install {{PYTHON_PACKAGE}}=={{SDK_VERSION}}
+```{{ACCESS_CHECK_LANGUAGE}}
+{{SAFE_ACCESS_CHECK}}
 ```
 
-```python
-import {{PYTHON_IMPORT}}
+Success evidence: {{EXPECTED_ACCESS_CHECK_EVIDENCE}}
 
-client = {{PYTHON_CLIENT_INIT}}
-```
-
-### Node.js / TypeScript
-
-```bash
-npm install {{NODE_PACKAGE}}@{{SDK_VERSION}}
-```
-
-```typescript
-import {{NODE_IMPORT}} from '{{NODE_PACKAGE}}';
-
-const client = {{NODE_CLIENT_INIT}};
-```
-
-### Raw HTTP (no SDK)
-
-```bash
-curl -X GET "{{BASE_URL}}/{{HEALTH_ENDPOINT}}" \
-  -H "{{AUTH_HEADER_NAME}}: {{AUTH_HEADER_FORMAT}}"
-```
-
----
-
-## Environment Variables
-
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `{{ENV_VAR_NAME}}` | Yes | {{ENV_VAR_DESCRIPTION}} | `sk_live_...` |
-| `{{ENV_VAR_2}}` | No | {{ENV_VAR_2_DESCRIPTION}} | {{ENV_VAR_2_EXAMPLE}} |
-
-### Setting Environment Variables
-
-```bash
-# Add to ~/.bashrc or ~/.zshrc
-export {{ENV_VAR_NAME}}="your-key-here"
-
-# Or use a .env file (add to .gitignore)
-echo '{{ENV_VAR_NAME}}=your-key-here' >> .env
-```
-
----
-
-## Configuration Files
-
-{{CONFIG_FILE_SECTION_OR_PLACEHOLDER}}
-
----
-
-## Testing Your Setup
-
-Run this to verify your credentials work:
-
-```bash
-{{TEST_COMMAND}}
-```
-
-Expected output: {{EXPECTED_TEST_OUTPUT}}
-
-If you get an error, check:
-1. {{TROUBLESHOOTING_STEP_1}}
-2. {{TROUBLESHOOTING_STEP_2}}
-3. {{TROUBLESHOOTING_STEP_3}}
-
----
+If it fails, distinguish configuration, identity, permission, transport, and
+contract-version failures before changing credentials or retrying.
 
 ## See Also
 
-- `references/api.md` -- endpoint details after setup is complete
-- `references/patterns.md` -- common workflows
-- `references/gotchas.md` -- auth-related pitfalls
+- `references/api.md` -- exact operations after access is established
+- `references/patterns.md` -- supported multi-step workflows
+- `references/gotchas.md` -- evidenced setup and identity pitfalls
+
+## Release Gate
+
+Remove unsupported installation paths and replace every template token. Do not
+ship sample secrets, machine-specific paths, or unverified setup commands.

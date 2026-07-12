@@ -1,0 +1,30 @@
+{
+  "skill_name": "package-auditor",
+  "evals": [
+    {
+      "id": 1,
+      "name": "invalid-frontmatter",
+      "prompt": "Audit a package whose frontmatter name differs from its directory.",
+      "expected_output": "A release-blocking name mismatch.",
+      "assertions": [
+        {"text": "Reports the exact name mismatch", "type": "functional"},
+        {"text": "Classifies the mismatch as release-blocking", "type": "structural"},
+        {"text": "Does not claim the package passes", "type": "negative"}
+      ],
+      "tags": ["smoke"]
+    },
+    {
+      "id": 2,
+      "name": "valid-reference-only",
+      "prompt": "Audit a valid reference-only skill with meaningful evals.",
+      "expected_output": "A pass without invented optional directories.",
+      "assertions": [
+        {"text": "Reports the package as structurally valid", "type": "functional"},
+        {"text": "Does not require empty optional directories", "type": "negative"},
+        {"text": "Separates unexecuted behavioral claims from structural proof", "type": "verification"},
+        {"text": "Names the fresh discovery check still required for promotion", "type": "verification"}
+      ],
+      "tags": ["edge"]
+    }
+  ]
+}

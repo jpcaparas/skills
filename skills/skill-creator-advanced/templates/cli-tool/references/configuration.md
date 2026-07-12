@@ -1,62 +1,59 @@
-# {{TOOL_NAME}} Installation & Configuration
+# {{TOOL_NAME}} Installation and Configuration
 
-## Table of Contents
+## Supported Environments
 
-- [Installation](#installation)
-- [Authentication](#authentication)
-- [Environment Variables](#environment-variables)
-- [Config Files](#config-files)
-- [Verification](#verification)
+{{SUPPORTED_ENVIRONMENT_MATRIX}}
 
----
+Document only operating systems, architectures, runtimes, package managers,
+and versions backed by current evidence. Give a verified path for each claimed
+environment instead of treating one shell or package manager as universal.
 
 ## Installation
 
-### macOS
+{{SUPPORTED_INSTALLATION_PATHS}}
 
-```bash
-{{INSTALL_MACOS}}
+State provenance, version pinning or compatibility policy, integrity checks,
+and upgrade behavior when relevant.
+
+## Authentication or Identity
+
+{{IDENTITY_SETUP}}
+
+State explicitly when the tool needs no identity. Otherwise document the
+credential source, minimum scope, expiry or rotation behavior, and supported
+injection mechanism. Prefer platform-native secret storage or secret references
+over literal credentials.
+
+## Configuration Inputs
+
+{{CONFIGURATION_INPUTS}}
+
+Cover only applicable sources such as flags, environment configuration,
+credential stores, or configuration files. State precedence when multiple
+sources can set the same value. Include platform-specific commands only when
+verified for that platform.
+
+## Safe Verification
+
+Run the least-privileged, non-mutating verification supported by the tool:
+
+```{{COMMAND_FENCE_LANGUAGE}}
+{{SAFE_VERIFY_COMMAND}}
 ```
 
-### Linux
+Success evidence: {{EXPECTED_VERIFY_EVIDENCE}}
 
-```bash
-{{INSTALL_LINUX}}
-```
-
-### Node / Python / Other Package Manager
-
-```bash
-{{INSTALL_OTHER}}
-```
-
-## Authentication
-
-{{AUTH_SETUP_STEPS}}
-
-## Environment Variables
-
-| Variable | Required | Description | Example |
-|----------|----------|-------------|---------|
-| `{{ENV_VAR_1}}` | Yes | {{ENV_VAR_1_DESCRIPTION}} | {{ENV_VAR_1_EXAMPLE}} |
-| `{{ENV_VAR_2}}` | No | {{ENV_VAR_2_DESCRIPTION}} | {{ENV_VAR_2_EXAMPLE}} |
-
-## Config Files
-
-{{CONFIG_FILE_DETAILS}}
-
-## Verification
-
-Run this to confirm the tool is installed correctly:
-
-```bash
-{{VERIFY_COMMAND}}
-```
-
-Expected output: {{VERIFY_OUTPUT}}
+If it fails, distinguish installation, version, identity, permission,
+configuration, connectivity, and target-selection failures before retrying.
 
 ## See Also
 
-- `references/commands.md` -- exact commands and flags
-- `references/patterns.md` -- common workflows
-- `references/gotchas.md` -- install and auth pitfalls
+- `references/commands.md` -- exact commands and outcomes
+- `references/patterns.md` -- supported multi-step workflows
+- `references/gotchas.md` -- evidenced setup and platform pitfalls
+
+## Release Gate
+
+Replace every template token and remove unsupported environment or installation
+paths. Do not ship sample secrets, machine-specific paths, or unverified setup
+commands.
