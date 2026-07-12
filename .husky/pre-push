@@ -1,3 +1,5 @@
 #!/usr/bin/env sh
 
-exec "$(dirname -- "$0")/../scripts/run-pnpm.sh" run validate:readme
+# Match the GitHub Actions entrypoint. A narrower pre-push check can pass while
+# repository-wide skill budgets or package validators still fail in CI.
+exec "$(dirname -- "$0")/../scripts/run-pnpm.sh" run validate

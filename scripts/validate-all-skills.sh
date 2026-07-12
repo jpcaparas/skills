@@ -11,19 +11,22 @@
 #   3. hooks/stop/codex.sh
 #   4. hooks/stop/devin.sh
 #   5. OpenCode Froggy hooks in .opencode/hook/hooks.md
+#   6. .husky/pre-push through the package-level validate script
 #
 # If you change a step here, all callers pick it up.
 # For a containerized Ubuntu GitHub Actions preflight before pushing, use
 # scripts/validate-ci-with-act.sh, which wraps this workflow through act.
 #
 # Steps:
-#   1. Confirm README.md lists every installable skill and includes the
+#   1. Confirm GitHub Actions, pre-push, and agent stop hooks still route to
+#      this canonical validator.
+#   2. Confirm README.md lists every installable skill and includes the
 #      expected skills.sh install commands.
-#   2. Confirm every README skill section has a constrained 16-bit art card
+#   3. Confirm every README skill section has a constrained 16-bit art card
 #      stored in that skill's folder.
-#   3. For every skills/<name>/ that has a SKILL.md, run validate.py and
+#   4. For every skills/<name>/ that has a SKILL.md, run validate.py and
 #      test_skill.py.
-#   4. Confirm skills.sh discovery still works and does not emit Codex
+#   5. Confirm skills.sh discovery still works and does not emit Codex
 #      skills context-budget warnings.
 #
 # Usage:
@@ -40,6 +43,9 @@ unset GREP_OPTIONS
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
+
+echo "Checking local and CI validation entrypoint parity"
+python3 scripts/check-validation-entrypoint-parity.py
 
 echo "Checking README skill coverage"
 python3 scripts/validate-readme-skills.py

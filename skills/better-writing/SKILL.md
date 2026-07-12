@@ -1,6 +1,6 @@
 ---
 name: better-writing
-description: "Draft, rewrite, review, humanise, or adapt human-facing prose while preserving facts, intent, voice, uncertainty, and exact literals. Use for documentation, READMEs, PRs, product specs, memos, reports, essays, articles, newsletters, emails, UI copy, and landing pages. Also use when prose sounds generic, stiff, over-polished, formulaic, or AI-like. Do not use for code-only implementation, authorship detection, or fact-checking that does not include prose work."
+description: "Draft, rewrite, review, humanise, or adapt prose while preserving facts, intent, voice, and uncertainty. Use for technical, product, editorial, marketing, or personal writing, including stiff or AI-like drafts. Skip code-only tasks."
 compatibility: "Core instructions are portable. Optional diagnostics and package checks require Python 3.10+."
 metadata:
   version: "2.0.0"
@@ -36,6 +36,8 @@ Choose the job before touching the prose.
 | Adapt | The substance should stay while audience, genre, channel, length, or voice changes | `references/genre-modes.md`, `references/style-bundles.md` |
 
 Mixed requests can use more than one job. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill owns the wording, not the code diagnosis.
+
+Use another workflow for code-only implementation, standalone fact-checking, or authorship classification. This skill may rewrite prose produced alongside those tasks, but it does not perform them.
 
 ## Operating workflow
 
