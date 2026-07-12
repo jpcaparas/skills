@@ -82,7 +82,6 @@ def main() -> None:
         "errors": [],
         "passed": True,
     }
-    offline_validation = os.environ.get("SKILLS_VALIDATE_OFFLINE") == "1"
 
     rc, output = run([sys.executable, str(validate_script), str(skill_path)], skill_path.parent)
     report["steps"].append({"name": "validate.py", "returncode": rc})
@@ -93,7 +92,7 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="travel-plan-skill-", dir=skill_path) as temp_dir:
         temp_dir_path = Path(temp_dir)
         runtime_python = find_python_with_openpyxl()
-        if not runtime_python and not offline_validation:
+        if not runtime_python:
             runtime_python = create_temporary_openpyxl_runtime(temp_dir_path)
             report["steps"].append(
                 {
@@ -103,16 +102,7 @@ def main() -> None:
                 }
             )
 
-        if not runtime_python and offline_validation:
-            report["steps"].append(
-                {
-                    "name": "functional_workbook_smoke",
-                    "returncode": 0,
-                    "skipped": True,
-                    "reason": "offline validation mode has no installed openpyxl runtime",
-                }
-            )
-        elif not runtime_python:
+        if not runtime_python:
             report["errors"].append("Could not find or provision a Python interpreter with openpyxl for the functional smoke test.")
             report["passed"] = False
         else:

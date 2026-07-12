@@ -47,8 +47,8 @@ jobs:
         run: brew install ripgrep httpie
 
       - name: Install Python Validation Packages
-        # Required by the travel spreadsheet workbook smoke test.
-        run: python -m pip install --upgrade pip openpyxl
+        # Required by the workbook smoke tests and strict YAML validation.
+        run: python -m pip install --upgrade pip openpyxl pyyaml
 
       - name: Print Validation Tool Versions
         shell: bash

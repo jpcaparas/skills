@@ -222,7 +222,7 @@ Instructions for spawning specialized subagents. Each `.md` file contains the sy
 | Directory name | Must match `name` field exactly | `payments-api/` |
 | Reference files | Descriptive, lowercase, hyphens | `webhook-patterns.md` |
 | Script files | Descriptive, lowercase, underscores | `validate_config.py` |
-| Domain directories | Product/domain name, lowercase | A concrete route such as `references/payments/` |
+| Domain directories | Product/domain name, lowercase | A concrete domain subdirectory under references |
 
 Prefer short, verb-led phrases for skill names. Namespace by tool or domain when it prevents collisions, such as `forge-review-change`, `payments-create-checkout`, or `cloud-deploy-function`.
 

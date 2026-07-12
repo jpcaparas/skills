@@ -12,7 +12,7 @@ import tempfile
 from collections.abc import Mapping
 from pathlib import Path
 from types import ModuleType
-from typing import Union
+from typing import TypeAlias
 
 
 REQUIRED_TAGS = {
@@ -42,9 +42,9 @@ VAGUE_MESSAGE = "Function name '{}' is vague."
 WEAK_MESSAGE = "Inspect whether this weak type hides a real contract."
 TODO_MESSAGE = "TODO/FIXME marker merits follow-up review."
 
-JsonScalar = Union[str, int, float, bool, None]
-JsonValue = Union[JsonScalar, list["JsonValue"], Mapping[str, "JsonValue"]]
-JsonObject = Mapping[str, JsonValue]
+JsonScalar: TypeAlias = str | int | float | bool | None
+JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | Mapping[str, "JsonValue"]
+JsonObject: TypeAlias = Mapping[str, JsonValue]
 
 
 def load_json(path: Path) -> JsonObject:
