@@ -68,3 +68,9 @@ Before handing off a diff:
 - Check that generated code did not introduce a parallel style.
 - Check that comments teach non-obvious context instead of narrating syntax.
 - Check that any TODO has an owner, reason, or follow-up path.
+
+## See Also
+
+- `references/decomposition.md`
+- `references/commenting.md`
+- `references/guardrails-and-quality-gates.md`

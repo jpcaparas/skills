@@ -84,7 +84,7 @@
           "type": "functional"
         }
       ],
-      "tags": ["review", "negative", "mocking", "assertions", "disclosure"]
+      "tags": ["review", "mocking", "assertions", "disclosure"]
     },
     {
       "id": 5,
@@ -106,6 +106,82 @@
         }
       ],
       "tags": ["edge", "datasets", "fixtures"]
+    },
+    {
+      "id": 6,
+      "name": "review-false-positive-artifact-assertions",
+      "prompt": "Review evals/files/publish-config.spec.ts against this contract: production writes formatter.ts with `export default { mode: \"strict\" };`, writes formatter.ts.backup only when backup is true, and the backup must equal the old bytes. Identify tests that can pass while the contract is broken and show the smallest repair.",
+      "expected_output": "The agent reads side-effect guidance, catches the boolean-versus-content assertion and formatter.json.backup path drift, recommends reading the exact destination and backup bytes, and preserves the valid backup-content assertion.",
+      "files": ["evals/files/publish-config.spec.ts"],
+      "assertions": [
+        {
+          "text": "Agent reads references/side-effects-and-compatibility.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Identifies that existsSync returns a boolean and therefore cannot prove the previous file contents were replaced",
+          "type": "functional"
+        },
+        {
+          "text": "Identifies formatter.json.backup as a different artifact from the production formatter.ts.backup path",
+          "type": "functional"
+        },
+        {
+          "text": "Repairs the tests by asserting exact destination and backup contents, not only exit status or existence",
+          "type": "functional"
+        },
+        {
+          "text": "Repairs the no-backup case by checking the actual formatter.ts.backup path is absent when backup is false",
+          "type": "functional"
+        },
+        {
+          "text": "Does not discard the already exact backup-content assertion",
+          "type": "negative"
+        }
+      ],
+      "tags": ["review", "edge", "disclosure", "effects", "assertions"]
+    },
+    {
+      "id": 7,
+      "name": "isolate-effects-across-supported-versions",
+      "prompt": "Our retry adapter supports SDK 2 through 4. SDK 4 adds an optional scheduleWithoutBlocking method. The current tests make a real HTTP call, call sleep(2), mutate a global SDK singleton, and run only on SDK 4. Redesign the focused tests and bounded CI coverage without hiding required failures behind broad skips.",
+      "expected_output": "The agent routes to side-effect and compatibility guidance, denies unstubbed requests, fakes waiting while asserting meaningful backoff, restores global state, tests capability presence and absence, and includes the lowest supported plus current SDK combinations.",
+      "assertions": [
+        {
+          "text": "Agent reads references/side-effects-and-compatibility.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Makes unstubbed network access fail and replaces real sleep with a controllable scheduler or clock",
+          "type": "functional"
+        },
+        {
+          "text": "Restores the global SDK state so test order cannot affect the result",
+          "type": "functional"
+        },
+        {
+          "text": "Tests capability-present and capability-absent paths plus the lowest and current supported SDK combinations",
+          "type": "functional"
+        },
+        {
+          "text": "Uses a narrow capability reason for optional skips and fails with context when the requested behavior is required",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "edge", "disclosure", "isolation", "compatibility", "side-effects"]
+    },
+    {
+      "id": 8,
+      "name": "negative-disposable-port-check",
+      "prompt": "Give me a one-off shell command to test whether localhost port 8080 is open. I am not changing product code, do not want an automated test, and will discard the command immediately.",
+      "expected_output": "The skill should not trigger because the word test describes a disposable manual probe, not automated tests or durable test code.",
+      "assertions": [
+        {
+          "text": "Does not load maintainable-tests or produce fixture, mocking, coverage, isolation, or compatibility guidance",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "near-miss"]
     }
   ]
 }

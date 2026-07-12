@@ -20,6 +20,7 @@ REQUIRED_FILES = [
     "references/structure-and-fixtures.md",
     "references/doubles-and-boundaries.md",
     "references/legacy-and-characterization.md",
+    "references/side-effects-and-compatibility.md",
     "references/review-rubric.md",
     "references/gotchas.md",
     "references/source-notes.md",
@@ -40,6 +41,9 @@ REQUIRED_SKILL_TERMS = [
     "DAMP",
     "test doubles",
     "production boundary",
+    "side effects",
+    "compatibility",
+    "false positive",
 ]
 REQUIRED_SOURCE_URLS = [
     "https://pestphp.com/docs/writing-tests",
@@ -50,6 +54,7 @@ REQUIRED_SOURCE_URLS = [
     "https://testing.googleblog.com/2019/12/testing-on-toilet-tests-too-dry-make.html",
     "https://martinfowler.com/testing/",
     "https://martinfowler.com/articles/practical-test-pyramid.html",
+    "https://github.com/nunomaduro/essentials/tree/bad47a6653a035ef8033856f0c4af3b65a704293",
 ]
 REQUIRED_EVAL_TAGS = {
     "smoke",
@@ -59,6 +64,25 @@ REQUIRED_EVAL_TAGS = {
     "legacy",
     "boundary",
     "review",
+    "effects",
+    "isolation",
+    "compatibility",
+}
+
+SIDE_EFFECT_REQUIRED_HEADINGS = [
+    "## Deny Unintended Effects",
+    "## Reset Global Framework State",
+    "## Test Configuration As A Decision Matrix",
+    "## Exercise Compatibility Branches",
+    "## Audit Assertion Subjects",
+]
+
+ALLOWED_ASSERTION_TYPES = {
+    "functional",
+    "structural",
+    "disclosure",
+    "negative",
+    "verification",
 }
 
 
@@ -141,6 +165,7 @@ def validate(root: Path) -> dict[str, object]:
         for expected_ref in [
             "references/doubles-and-boundaries.md",
             "references/legacy-and-characterization.md",
+            "references/side-effects-and-compatibility.md",
             "references/review-rubric.md",
         ]:
             if expected_ref not in content:
@@ -160,6 +185,8 @@ def validate(root: Path) -> dict[str, object]:
             metrics["reference_count"] += 1
             line_count = len(text.splitlines())
             metrics["total_lines"] += line_count
+            if "## See Also" not in text:
+                errors.append(f"reference missing See Also section: {path.relative_to(root)}")
             if line_count > 300 and "## Table of Contents" not in text:
                 errors.append(f"large reference without TOC: {path.relative_to(root)}")
             if line_count > 1000:
@@ -171,6 +198,16 @@ def validate(root: Path) -> dict[str, object]:
         for url in REQUIRED_SOURCE_URLS:
             if url not in source_text:
                 errors.append(f"references/source-notes.md missing source URL: {url}")
+
+    side_effects = root / "references" / "side-effects-and-compatibility.md"
+    if side_effects.is_file():
+        side_effect_text = read_text(side_effects)
+        for heading in SIDE_EFFECT_REQUIRED_HEADINGS:
+            if heading not in side_effect_text:
+                errors.append(
+                    "references/side-effects-and-compatibility.md missing heading: "
+                    + heading
+                )
 
     evals_path = root / "evals" / "evals.json"
     if evals_path.is_file():
@@ -194,6 +231,40 @@ def validate(root: Path) -> dict[str, object]:
                         errors.append(f"eval missing field {field}: {item.get('name', item)}")
                 if not item.get("assertions"):
                     errors.append(f"eval has no assertions: {item.get('name', item)}")
+                for file_ref in item.get("files", []):
+                    candidate = (root / file_ref).resolve()
+                    try:
+                        candidate.relative_to(root.resolve())
+                    except ValueError:
+                        errors.append(f"eval file escapes skill root: {file_ref}")
+                    else:
+                        if not candidate.is_file():
+                            errors.append(f"eval file does not exist: {file_ref}")
+                for assertion in item.get("assertions", []):
+                    if "text" not in assertion or "type" not in assertion:
+                        errors.append(
+                            f"eval assertion must include text and type: {item.get('name', item)}"
+                        )
+                    elif assertion["type"] not in ALLOWED_ASSERTION_TYPES:
+                        errors.append(
+                            f"eval assertion has invalid type: {assertion['type']}"
+                        )
+            required_eval_tags = {
+                "review-false-positive-artifact-assertions": {"effects", "assertions", "disclosure"},
+                "isolate-effects-across-supported-versions": {"isolation", "compatibility", "disclosure"},
+                "negative-disposable-port-check": {"negative", "near-miss"},
+            }
+            evals_by_name = {item.get("name"): item for item in items}
+            for name, required_tags in required_eval_tags.items():
+                item = evals_by_name.get(name)
+                if item is None:
+                    errors.append(f"required eval is missing: {name}")
+                    continue
+                missing_tags = required_tags - set(item.get("tags", []))
+                if missing_tags:
+                    errors.append(
+                        f"eval {name} missing required tags: {', '.join(sorted(missing_tags))}"
+                    )
 
     metadata_path = root / "metadata.json"
     if metadata_path.is_file():

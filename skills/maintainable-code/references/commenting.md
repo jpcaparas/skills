@@ -581,3 +581,9 @@ Before handing off code, inspect comments with these questions:
 - Are stale or misleading comments worse than no comment?
 
 If the answer is uncertain, prefer a short comment that explains the system constraint over silent cleverness.
+
+## See Also
+
+- `references/principles.md`
+- `references/review-rubric.md`
+- `references/guardrails-and-quality-gates.md`

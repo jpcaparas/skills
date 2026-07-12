@@ -23,6 +23,8 @@ Critical issues mean the tests are actively misleading:
 - Assertions check only truthiness, existence, snapshots, or call counts while missing the observable rule.
 - Test depends on execution order, real time, random data, network, shared infrastructure, or mutable global state in a way that can produce false results.
 - Regression test does not reproduce the original bug condition.
+- Assertion reads the wrong path, key, artifact, or collaborator and therefore passes while the real effect is broken.
+- Matcher compares incompatible subject and expected types in a way that makes a positive or negated result trivial.
 
 ## High Findings
 
@@ -34,6 +36,9 @@ High issues create brittle or expensive maintenance:
 - Production code was changed only to expose internals to tests.
 - Legacy or compatibility behavior is pinned without rationale.
 - Edge cases likely to fail are missing from a risky behavior change.
+- Unplanned network, sleep, subprocess, filesystem, or destructive effects are allowed by the test harness.
+- Global framework state leaks between examples or cleanup targets a different artifact than setup created.
+- The suite claims a compatibility range but never exercises the lowest supported combination, or omits a capability-absent path when production feature-detects or conditionally compiles an optional capability.
 
 ## Medium Findings
 
@@ -67,8 +72,11 @@ Ask:
 6. Is historical or legacy behavior explained?
 7. Did production code become easier to observe without becoming test-contorted?
 8. Were focused tests, typechecks, linters, or local validators run?
+9. Does each assertion inspect the exact observable with the expected value type?
+10. Do side-effect and compatibility tests cover isolation, cleanup, and the supported decision matrix?
 
 ## See Also
 
 - `references/gotchas.md`
 - `references/doubles-and-boundaries.md`
+- `references/side-effects-and-compatibility.md`

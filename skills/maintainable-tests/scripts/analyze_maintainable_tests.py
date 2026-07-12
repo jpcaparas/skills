@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Iterable
@@ -27,11 +28,39 @@ TEST_EXTENSIONS = {
 }
 TEST_NAME_RE = re.compile(
     r"""(?x)
-    \b(?:it|test|specify)\s*\(\s*['"](?P<quoted>[^'"]+)['"]
+    \b(?:it|test|specify)\s*\(\s*
+    (?:'(?P<single_quoted>(?:\\.|[^'\\])*)'|"(?P<double_quoted>(?:\\.|[^"\\])*)")
+    |\b(?:it|specify|test)\s+(?:'(?P<ruby_single>(?:\\.|[^'\\])*)'|"(?P<ruby_double>(?:\\.|[^"\\])*)")\s+do\b
     |def\s+(?P<python>test_[A-Za-z0-9_]+)\s*\(
     |function\s+(?P<php>test[A-Za-z0-9_]*)\s*\(
     |func\s+(?P<go>Test[A-Za-z0-9_]*)\s*\(
-    |@Test[\s\S]{0,120}?\b(?P<jvm>[A-Za-z0-9_]+)\s*\(
+    |\#\[(?:(?:tokio::)?test|rstest)(?:\([^\]]*\))?\][\s\S]{0,80}?\bfn\s+(?P<rust>[A-Za-z0-9_]+)\s*\(
+    """
+)
+CSHARP_TEST_NAME_RE = re.compile(
+    r"""(?x)
+    \[(?:Fact|Theory|Test|TestCase|TestMethod|DataTestMethod)(?:\([^\]]*\))?\]
+    (?:\s*\[[^\]]+\])*
+    \s*(?:(?:public|private|protected|internal|static|async|virtual|override|sealed|new)\s+)*
+    [A-Za-z_][A-Za-z0-9_<>,.?\[\]]*\s+
+    (?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\(
+    """
+)
+JAVA_TEST_NAME_RE = re.compile(
+    r"""(?x)
+    @(?:Test|ParameterizedTest|RepeatedTest)
+    (?:\s*@[A-Za-z_][A-Za-z0-9_.]*(?:\([^)]*\))?)*
+    \s*(?:(?:public|private|protected|static|final|synchronized|abstract|default)\s+)*
+    [A-Za-z_][A-Za-z0-9_<>,.?\[\]]*\s+
+    (?P<name>[A-Za-z_][A-Za-z0-9_]*)\s*\(
+    """
+)
+KOTLIN_TEST_NAME_RE = re.compile(
+    r"""(?x)
+    @(?:Test|ParameterizedTest|RepeatedTest)
+    (?:\s*@[A-Za-z_][A-Za-z0-9_.]*(?:\([^)]*\))?)*
+    \s*(?:(?:public|private|protected|internal|suspend|open|final)\s+)*fun\s+
+    (?:`(?P<backtick>[^`]+)`|(?P<name>[A-Za-z_][A-Za-z0-9_]*))\s*\(
     """
 )
 VAGUE_NAMES = {
@@ -50,25 +79,48 @@ VAGUE_NAMES = {
     "edge case",
 }
 ASSERTION_RE = re.compile(
-    r"\b(?:assert|expect|should|verify|require|t\.|assertThat|assertEquals|toBe|toEqual)"
+    r"\b(?:assert|expect|verify|assertThat|assertEquals|toBe|toEqual)\b|"
+    r"\brequire\.|\bassert_[A-Za-z0-9_]+!\s*\(|\bt\.",
+    re.IGNORECASE,
+)
+CSHARP_ASSERTION_RE = re.compile(
+    r"\.\s*(?:Should|ShouldBe[A-Za-z0-9_]*)\s*\(",
+    re.IGNORECASE,
+)
+KOTLIN_ASSERTION_RE = re.compile(
+    r"\b(?:shouldBe|shouldNotBe|shouldThrow|shouldContain|shouldHaveSize)\b"
 )
 WEAK_ASSERTION_RE = re.compile(
-    r"\b(?:assertTrue|assertFalse|assertNotNull|assertNull|toBeTruthy|toBeFalsy|toBeDefined|toBeNull|not\.toBeNull|toBeTrue|toBeFalse)\b"
+    r"\b(?:assertNotNull|toBeTruthy|toBeFalsy|toBeDefined|not\.toBeNull)\b"
 )
 MOCK_RE = re.compile(
-    r"\b(?:mock|Mock|spy|Spy|stub|Stub|shouldReceive|expects|jest\.fn|vi\.fn|sinon|createMock|Mockery|expects\()"
+    r"\b(?:mock|spy|stub|shouldReceive|expects|sinon|createMock|Mockery)\b|(?:jest|vi)\.fn\b|expects\s*\(",
+    re.IGNORECASE,
 )
 IMPLEMENTATION_COUPLING_RE = re.compile(
-    r"\b(?:private|protected|setAccessible|Reflection|_under|_internal|expects\s*\(|shouldReceive\s*\(|toHaveBeenCalledBefore|ordered\()"
+    r"\b(?:setAccessible|Reflection|_under|_internal|"
+    r"toHaveBeenCalledBefore|ordered\()"
 )
 NONDETERMINISM_RE = re.compile(
-    r"\b(?:Date\.now|new Date\(|time\(\)|Carbon::now|datetime\.now|System\.currentTimeMillis|sleep\(|setTimeout\(|Math\.random|random_int|rand\(|uuid\(|fetch\(|https?://)"
+    r"\b(?:Date\.now|new Date\(\s*\)|time\(\)|Carbon::now|datetime\.now|"
+    r"System\.currentTimeMillis|time\.Now\(|SystemTime::now|Time\.now|"
+    r"DateTime\.(?:UtcNow|Now)|Instant\.now\(|sleep\(|setTimeout\(|"
+    r"Math\.random|random_int|rand\(|uuid\()"
 )
 LEGACY_RE = re.compile(r"\b(?:legacy|regression|backward|backwards|compatib|historical|pre-20\d\d|bug|incident)\b", re.IGNORECASE)
 RATIONALE_RE = re.compile(r"\b(?:because|why|regression|issue|ticket|incident|migration|contract|compatib|customer|archived|temporary|characterization)\b", re.IGNORECASE)
-SETUP_START_RE = re.compile(r"\b(?:beforeEach|setUp|setup|before_all|beforeEach\(|before\(|describe\()", re.IGNORECASE)
+SETUP_START_RE = re.compile(
+    r"\b(?:beforeEach|setUp|setup|before_all|beforeEach\(|before\(|describe\(|"
+    r"TestMain\b)|@(?:Before|BeforeEach|BeforeAll)\b|"
+    r"\[(?:SetUp|OneTimeSetUp|TestInitialize|ClassInitialize)\]",
+    re.IGNORECASE,
+)
 TEST_BLOCK_START_RE = re.compile(
-    r"\b(?:it|test|specify)\s*\(|def\s+test_|function\s+test|func\s+Test|@Test\b"
+    r"\b(?:it|test|specify)\s*\(|\b(?:it|specify|test)\s+['\"]|def\s+test_|"
+    r"function\s+test|func\s+Test|"
+    r"\#\[(?:(?:tokio::)?test|rstest)(?:\([^\]]*\))?\]|"
+    r"\[(?:Fact|Theory|Test|TestCase|TestMethod|DataTestMethod)(?:\([^\]]*\))?\]|"
+    r"@(?:Test|ParameterizedTest|RepeatedTest)\b"
 )
 
 
@@ -83,18 +135,10 @@ class Finding:
 
 
 def is_test_file(path: Path) -> bool:
-    if path.suffix not in TEST_EXTENSIONS:
-        return False
-    lowered = str(path).lower()
-    return (
-        "/test" in lowered
-        or "\\test" in lowered
-        or ".test." in lowered
-        or ".spec." in lowered
-        or lowered.endswith("test.php")
-        or lowered.endswith("_test.py")
-        or lowered.endswith("_test.go")
-    )
+    # Scan every advertised source extension, then let TEST_BLOCK_START_RE
+    # distinguish real tests from support and production files. This covers
+    # inline test modules and framework-specific directory conventions.
+    return path.suffix.casefold() in TEST_EXTENSIONS
 
 
 def iter_files(root: Path) -> Iterable[Path]:
@@ -105,7 +149,8 @@ def iter_files(root: Path) -> Iterable[Path]:
     for path in root.rglob("*"):
         if not path.is_file():
             continue
-        if any(part in ignored for part in path.parts):
+        relative_directories = path.relative_to(root).parts[:-1]
+        if any(part.casefold() in ignored for part in relative_directories):
             continue
         if is_test_file(path):
             yield path
@@ -145,8 +190,7 @@ def add(
 
 
 def scan_names(text: str, path: Path, root: Path, findings: list[Finding]) -> None:
-    for match in TEST_NAME_RE.finditer(text):
-        raw = next(group for group in match.groupdict().values() if group)
+    def inspect(raw: str, offset: int) -> None:
         name = normalize_name(raw)
         if name in VAGUE_NAMES or len(name.split()) < 3:
             add(
@@ -155,14 +199,36 @@ def scan_names(text: str, path: Path, root: Path, findings: list[Finding]) -> No
                 kind="vague-test-name",
                 path=path,
                 root=root,
-                line=line_number(text, match.start()),
+                line=line_number(text, offset),
                 message=f"Test name is too vague to document behavior: {raw!r}.",
                 suggestion="Rename it to describe the condition and expected outcome in domain language.",
             )
 
+    for match in TEST_NAME_RE.finditer(text):
+        raw = next(group for group in match.groupdict().values() if group)
+        inspect(raw, match.start())
+
+    suffix = path.suffix.casefold()
+    patterns = []
+    if suffix == ".cs":
+        patterns = [CSHARP_TEST_NAME_RE]
+    elif suffix == ".java":
+        patterns = [JAVA_TEST_NAME_RE]
+    elif suffix == ".kt":
+        patterns = [KOTLIN_TEST_NAME_RE]
+    for pattern in patterns:
+        for match in pattern.finditer(text):
+            raw = next(group for group in match.groupdict().values() if group)
+            inspect(raw, match.start())
+
 
 def scan_assertions(text: str, path: Path, root: Path, findings: list[Finding]) -> None:
     assertion_count = len(ASSERTION_RE.findall(text))
+    suffix = path.suffix.casefold()
+    if suffix == ".cs":
+        assertion_count += len(CSHARP_ASSERTION_RE.findall(text))
+    elif suffix == ".kt":
+        assertion_count += len(KOTLIN_ASSERTION_RE.findall(text))
     weak_count = len(WEAK_ASSERTION_RE.findall(text))
     if assertion_count == 0:
         add(
@@ -278,6 +344,8 @@ def scan_file(path: Path, root: Path) -> list[Finding]:
         text = path.read_text(encoding="utf-8")
     except UnicodeDecodeError:
         text = path.read_text(encoding="utf-8", errors="replace")
+    if not TEST_BLOCK_START_RE.search(text):
+        return []
     findings: list[Finding] = []
     scan_names(text, path, root, findings)
     scan_assertions(text, path, root, findings)
@@ -308,6 +376,9 @@ def main() -> int:
     args = parser.parse_args()
 
     root = Path(args.path).expanduser().resolve()
+    if not root.exists():
+        print(f"not found: {root}", file=sys.stderr)
+        return 1
     scan_root = root if root.is_dir() else root.parent
     findings: list[Finding] = []
     for path in iter_files(root):

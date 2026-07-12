@@ -89,3 +89,9 @@ Spell out the obvious if missing it would cause damage:
 - "Add a short phase comment before the artifact-download pipeline; future maintainers should not have to reverse-engineer the `gh`/`jq` data flow."
 
 Avoid prescribing trivia that the executor can safely infer from the codebase.
+
+## See Also
+
+- `references/principles.md`
+- `references/decomposition.md`
+- `references/commenting.md`

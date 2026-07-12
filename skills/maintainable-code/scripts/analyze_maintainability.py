@@ -8,6 +8,7 @@ does not decide whether code is good or bad.
 from __future__ import annotations
 
 import argparse
+import ast
 import json
 import re
 import sys
@@ -26,6 +27,9 @@ DEFAULT_EXTENSIONS = {
     ".hcl",
     ".html",
     ".java",
+    ".js",
+    ".mjs",
+    ".cjs",
     ".jsx",
     ".kt",
     ".php",
@@ -124,19 +128,32 @@ VAGUE_NAMES = {
     "utils",
 }
 
-FUNCTION_RE = re.compile(
-    r"""
-    ^\s*
-    (?:
-        (?:export\s+)?(?:async\s+)?function\s+(?P<js>[A-Za-z_][A-Za-z0-9_]*) |
-        def\s+(?P<py>[A-Za-z_][A-Za-z0-9_]*)\s*\( |
-        func\s+(?P<go>[A-Za-z_][A-Za-z0-9_]*)\s*\( |
-        (?:public|private|protected|static|\s)+\s*
-        [A-Za-z_<>\[\],\s]+\s+(?P<c>[A-Za-z_][A-Za-z0-9_]*)\s*\(
-    )
-    """,
-    re.VERBOSE,
+CONTROL_FLOW_RE = re.compile(
+    r"^\s*(?:}\s*)?(?:if\b|else\s+if\b|elseif\b|elif\b|unless\b|elsif\b|for\b|foreach\b|"
+    r"while\b|switch\b|match\b|when\b|try\b|catch\b|except\b|rescue\b|"
+    r"case\b|guard\b|repeat\b|loop\b)",
+    re.IGNORECASE,
 )
+CONTROL_FLOW_EXTENSIONS = {
+    ".c",
+    ".cc",
+    ".cpp",
+    ".cs",
+    ".go",
+    ".java",
+    ".js",
+    ".jsx",
+    ".kt",
+    ".mjs",
+    ".cjs",
+    ".php",
+    ".py",
+    ".rb",
+    ".rs",
+    ".swift",
+    ".ts",
+    ".tsx",
+}
 
 
 @dataclass
@@ -150,11 +167,12 @@ class Finding:
 def iter_files(root: Path, extensions: set[str]) -> list[Path]:
     files: list[Path] = []
     for path in root.rglob("*"):
-        if any(part in SKIP_DIRS for part in path.parts):
+        relative_directories = path.relative_to(root).parts[:-1]
+        if any(part.casefold() in SKIP_DIRS for part in relative_directories):
             continue
-        if path.is_file() and path.suffix in extensions:
+        if path.is_file() and path.suffix.casefold() in extensions:
             files.append(path)
-    return sorted(files)
+    return sorted(files, key=lambda path: path.relative_to(root).as_posix().casefold())
 
 
 def read_lines(path: Path) -> list[str]:
@@ -190,7 +208,8 @@ def operational_hint_count(line: str) -> int:
 
 
 def scan_comment_debt(lines: list[str], path: Path, relative: str) -> list[Finding]:
-    if path.suffix not in COMMENT_DEBT_EXTENSIONS:
+    suffix = path.suffix.casefold()
+    if suffix not in COMMENT_DEBT_EXTENSIONS:
         return []
 
     findings: list[Finding] = []
@@ -222,7 +241,7 @@ def scan_comment_debt(lines: list[str], path: Path, relative: str) -> list[Findi
             continue
         if chunk_start == 0:
             chunk_start = index
-        if is_comment_line(line, path.suffix):
+        if is_comment_line(line, suffix):
             has_comment = True
             continue
         non_comment_lines += 1
@@ -232,12 +251,43 @@ def scan_comment_debt(lines: list[str], path: Path, relative: str) -> list[Findi
     return findings
 
 
-def function_name(match: re.Match[str]) -> str:
-    for group in ("js", "py", "go", "c"):
-        value = match.group(group)
-        if value:
-            return value
-    return ""
+def scan_python_functions(
+    lines: list[str],
+    relative: str,
+    max_function_lines: int,
+) -> list[Finding]:
+    try:
+        tree = ast.parse("\n".join(lines))
+    except SyntaxError:
+        return []
+
+    findings: list[Finding] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        if node.name.casefold() in VAGUE_NAMES:
+            findings.append(
+                Finding(
+                    relative,
+                    node.lineno,
+                    "vague-function-name",
+                    f"Function name '{node.name}' is vague.",
+                )
+            )
+        end_line = getattr(node, "end_lineno", None)
+        if end_line is None:
+            continue
+        length = end_line - node.lineno + 1
+        if length > max_function_lines:
+            findings.append(
+                Finding(
+                    relative,
+                    node.lineno,
+                    "large-function",
+                    f"Function '{node.name}' spans {length} lines.",
+                )
+            )
+    return findings
 
 
 def scan_file(path: Path, root: Path, max_file_lines: int, max_function_lines: int) -> list[Finding]:
@@ -245,6 +295,8 @@ def scan_file(path: Path, root: Path, max_file_lines: int, max_function_lines: i
     relative = path.relative_to(root).as_posix()
     findings: list[Finding] = []
     findings.extend(scan_comment_debt(lines, path, relative))
+    if path.suffix.casefold() == ".py":
+        findings.extend(scan_python_functions(lines, relative, max_function_lines))
 
     if len(lines) > max_file_lines:
         findings.append(
@@ -262,51 +314,21 @@ def scan_file(path: Path, root: Path, max_file_lines: int, max_function_lines: i
             Finding(relative, 1, "vague-file-name", f"File name '{path.name}' is vague.")
         )
 
-    current_function: tuple[str, int] | None = None
     for index, line in enumerate(lines, start=1):
-        match = FUNCTION_RE.search(line)
-        if match:
-            if current_function is not None:
-                name, start = current_function
-                length = index - start
-                if length > max_function_lines:
-                    findings.append(
-                        Finding(
-                            relative,
-                            start,
-                            "large-function",
-                            f"Function '{name}' spans about {length} lines.",
-                        )
-                    )
-            name = function_name(match)
-            current_function = (name, index)
-            if name.lower() in VAGUE_NAMES:
-                findings.append(
-                    Finding(relative, index, "vague-function-name", f"Function name '{name}' is vague.")
-                )
-
         stripped = line.strip()
         if "TODO" in stripped or "FIXME" in stripped:
             findings.append(Finding(relative, index, "todo", "TODO/FIXME needs owner, reason, or follow-up."))
 
-        if indentation_depth(line) >= 8 and stripped and not stripped.startswith(("#", "//", "*")):
+        if (
+            path.suffix.casefold() in CONTROL_FLOW_EXTENSIONS
+            and indentation_depth(line) >= 8
+            and CONTROL_FLOW_RE.search(line)
+        ):
             findings.append(Finding(relative, index, "deep-nesting", "Deep indentation increases cognitive load."))
 
-        if re.search(r"\b(any|object|dict|Record<string,\s*any>)\b", line) and path.suffix in {".ts", ".tsx", ".py"}:
+        weak_type = re.search(r"\b(any|object|dict|Record<string,\s*any>)\b", line)
+        if weak_type and path.suffix.casefold() in {".ts", ".tsx", ".py"}:
             findings.append(Finding(relative, index, "weak-type-signal", "Inspect whether this weak type hides a real contract."))
-
-    if current_function is not None:
-        name, start = current_function
-        length = len(lines) - start + 1
-        if length > max_function_lines:
-            findings.append(
-                Finding(
-                    relative,
-                    start,
-                    "large-function",
-                    f"Function '{name}' spans about {length} lines.",
-                )
-            )
 
     return findings
 
@@ -317,7 +339,8 @@ def parse_extensions(value: str) -> set[str]:
         item = item.strip()
         if not item:
             continue
-        extensions.add(item if item.startswith(".") else f".{item}")
+        normalized = item.casefold()
+        extensions.add(normalized if normalized.startswith(".") else f".{normalized}")
     return extensions
 
 
@@ -333,7 +356,12 @@ def main(argv: list[str]) -> int:
         help="Comma-separated extensions to include.",
     )
     parser.add_argument("--max-file-lines", type=int, default=500)
-    parser.add_argument("--max-function-lines", type=int, default=80)
+    parser.add_argument(
+        "--max-function-lines",
+        type=int,
+        default=80,
+        help="Maximum Python function length; other languages use conservative line-level signals.",
+    )
     args = parser.parse_args(argv)
 
     root = Path(args.path).expanduser().resolve()
@@ -345,7 +373,7 @@ def main(argv: list[str]) -> int:
     files = [root] if root.is_file() else iter_files(root, extensions)
     findings: list[Finding] = []
     for path in files:
-        if path.suffix in extensions:
+        if path.suffix.casefold() in extensions:
             findings.extend(scan_file(path, root if root.is_dir() else root.parent, args.max_file_lines, args.max_function_lines))
 
     if args.json:

@@ -1,10 +1,10 @@
 {
   "name": "maintainable-tests",
   "display_name": "Maintainable Tests",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "entrypoint": "SKILL.md",
-  "description": "Passive always-on testing skill for generating, refactoring, reviewing, and planning tests that read as living documentation, cover meaningful edge cases, explain legacy behavior, and remain humane for future maintainers.",
+  "description": "Passive testing skill for generating, refactoring, reviewing, and planning durable tests that document behavior, isolate side effects, verify compatibility, catch false-positive assertions, and remain humane for future maintainers.",
   "tags": [
     "testing",
     "maintainability",
@@ -13,6 +13,9 @@
     "test-doubles",
     "regression-tests",
     "characterization-tests",
+    "test-isolation",
+    "compatibility-testing",
+    "assertion-quality",
     "agent-workflows"
   ]
 }

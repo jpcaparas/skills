@@ -80,3 +80,9 @@ Better names:
 ## Anti-Fragmentation Rule
 
 If understanding the flow requires jumping through more files than before, the decomposition probably failed. Re-inline, rename, or group helpers near the caller until the story is visible again.
+
+## See Also
+
+- `references/principles.md`
+- `references/guardrails-and-quality-gates.md`
+- `references/gotchas.md`

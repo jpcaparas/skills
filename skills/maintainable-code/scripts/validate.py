@@ -20,6 +20,7 @@ REQUIRED_FILES = [
     "references/commenting.md",
     "references/review-rubric.md",
     "references/implementation-plans.md",
+    "references/guardrails-and-quality-gates.md",
     "references/gotchas.md",
     "references/source-notes.md",
     "scripts/analyze_maintainability.py",
@@ -48,6 +49,27 @@ OFFICIAL_SOURCE_URLS = [
     "https://laravel.com/docs/13.x/routing",
     "https://nextjs.org/docs/app/api-reference/file-conventions/route",
     "https://nextjs.org/docs/app/getting-started/fetching-data",
+]
+
+ALLOWED_ASSERTION_TYPES = {
+    "functional",
+    "structural",
+    "disclosure",
+    "negative",
+    "verification",
+}
+
+ESSENTIALS_SNAPSHOT_URL = (
+    "https://github.com/nunomaduro/essentials/tree/"
+    "bad47a6653a035ef8033856f0c4af3b65a704293"
+)
+
+GUARDRAIL_REQUIRED_HEADINGS = [
+    "## Fail Loud At Silent Boundaries",
+    "## Name Activation States Precisely",
+    "## Treat Default Changes As Migrations",
+    "## Handle Optional Capabilities Explicitly",
+    "## Make Quality Policy Executable",
 ]
 
 
@@ -126,6 +148,15 @@ def validate(root: Path) -> dict[str, object]:
             errors.append("SKILL.md must document passive trigger behavior")
         if "references/commenting.md" not in content:
             errors.append("SKILL.md must route dense or operational code to references/commenting.md")
+        guardrail_section = re.search(
+            r"- Choosing strict runtime defaults[\s\S]*?(?=\n- |\n## )",
+            content,
+        )
+        if (
+            not guardrail_section
+            or "references/guardrails-and-quality-gates.md" not in guardrail_section.group(0)
+        ):
+            errors.append("SKILL.md must route strict defaults and quality gates to the guardrails reference")
         review_section = re.search(r"- Reviewing code:[\s\S]*?(?=\n- |\n## )", content)
         if not review_section or "references/commenting.md" not in review_section.group(0):
             errors.append("SKILL.md reviewing route must mention references/commenting.md for operational code")
@@ -146,9 +177,12 @@ def validate(root: Path) -> dict[str, object]:
     if refs_dir.is_dir():
         for path in refs_dir.rglob("*.md"):
             metrics["reference_count"] += 1
-            line_count = len(read_text(path).splitlines())
+            reference_text = read_text(path)
+            line_count = len(reference_text.splitlines())
             metrics["total_lines"] += line_count
-            if line_count > 1000 and "## Table of Contents" not in read_text(path):
+            if "## See Also" not in reference_text:
+                errors.append(f"reference missing See Also section: {path.relative_to(root)}")
+            if line_count > 1000 and "## Table of Contents" not in reference_text:
                 warnings.append(f"large reference without TOC: {path.relative_to(root)}")
 
     commenting_path = root / "references" / "commenting.md"
@@ -184,6 +218,20 @@ def validate(root: Path) -> dict[str, object]:
             if missing:
                 errors.append(f"references/commenting.md missing {label} coverage: {', '.join(missing)}")
 
+    guardrails_path = root / "references" / "guardrails-and-quality-gates.md"
+    if guardrails_path.is_file():
+        guardrails = read_text(guardrails_path)
+        for heading in GUARDRAIL_REQUIRED_HEADINGS:
+            if heading not in guardrails:
+                errors.append(
+                    "references/guardrails-and-quality-gates.md missing heading: "
+                    + heading
+                )
+
+    source_notes_path = root / "references" / "source-notes.md"
+    if source_notes_path.is_file() and ESSENTIALS_SNAPSHOT_URL not in read_text(source_notes_path):
+        errors.append("references/source-notes.md must pin the inspected Essentials snapshot")
+
     evals_path = root / "evals" / "evals.json"
     if evals_path.is_file():
         try:
@@ -200,6 +248,39 @@ def validate(root: Path) -> dict[str, object]:
                 for item in evals.get("evals", [])
                 for tag in item.get("tags", [])
             }
+            root_resolved = root.resolve()
+            eval_items = evals.get("evals", [])
+            for item in eval_items:
+                for file_ref in item.get("files", []):
+                    candidate = (root / file_ref).resolve()
+                    try:
+                        candidate.relative_to(root_resolved)
+                    except ValueError:
+                        errors.append(f"eval file escapes skill root: {file_ref}")
+                    else:
+                        if not candidate.is_file():
+                            errors.append(f"eval file does not exist: {file_ref}")
+                for assertion in item.get("assertions", []):
+                    if assertion.get("type") not in ALLOWED_ASSERTION_TYPES:
+                        errors.append(
+                            f"eval assertion has invalid type: {assertion.get('type')}"
+                        )
+            required_eval_tags = {
+                "review-runtime-default-guardrails": {"guardrails", "disclosure"},
+                "design-executable-quality-gate": {"quality-gates", "compatibility", "disclosure"},
+                "negative-disposable-shell-command": {"negative", "near-miss"},
+            }
+            evals_by_name = {item.get("name"): item for item in eval_items}
+            for name, required_tags in required_eval_tags.items():
+                item = evals_by_name.get(name)
+                if item is None:
+                    errors.append(f"required eval is missing: {name}")
+                    continue
+                missing_tags = required_tags - set(item.get("tags", []))
+                if missing_tags:
+                    errors.append(
+                        f"eval {name} missing required tags: {', '.join(sorted(missing_tags))}"
+                    )
             if "comments" not in all_tags:
                 errors.append("evals/evals.json must cover developer-comment guidance")
             if "markup" not in all_tags:
@@ -208,6 +289,9 @@ def validate(root: Path) -> dict[str, object]:
                 errors.append("evals/evals.json must cover official-source guidance")
             if "diagrams" not in all_tags:
                 errors.append("evals/evals.json must cover ASCII diagram guidance")
+            for tag in ["guardrails", "quality-gates", "compatibility"]:
+                if tag not in all_tags:
+                    errors.append(f"evals/evals.json must cover {tag} guidance")
 
     metadata_path = root / "metadata.json"
     if metadata_path.is_file():

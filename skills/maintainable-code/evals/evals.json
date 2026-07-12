@@ -132,7 +132,7 @@
       "id": 7,
       "name": "source-backed-method-property-comments",
       "prompt": "Add maintainability comments to a Laravel model accessor, a typed TypeScript retry policy property, and a Next.js route handler. Include docblocks or comments wherever they help a junior maintainer, and link official sources for framework claims.",
-      "expected_output": "The agent reads references/commenting.md, places comments at method, property, and block level where useful, keeps explanations junior-friendly with bullets or numbered structure for multi-part concepts, verifies official PHP/Laravel/Python/Next.js-style documentation links before citing framework claims, and paraphrases source-backed behavior instead of inventing details.",
+      "expected_output": "The agent reads references/commenting.md, places comments at method, property, and block level where useful, keeps explanations junior-friendly with bullets or numbered structure for multi-part concepts, verifies current official documentation for the actual language and framework claims in the prompt, and paraphrases source-backed behavior instead of inventing details.",
       "assertions": [
         {
           "text": "Agent reads references/commenting.md",
@@ -190,6 +190,82 @@
         }
       ],
       "tags": ["negative"]
+    },
+    {
+      "id": 10,
+      "name": "review-runtime-default-guardrails",
+      "prompt": "Review evals/files/runtime-defaults.ts before we use it in a mature service. We want stricter records eventually, no accidental external traffic in tests, and protection from destructive production commands. Propose the narrowest maintainable shape and a staged rollout; do not invent a general plugin framework.",
+      "expected_output": "The agent reads the guardrails reference, identifies the inverted dangerous defaults and unconditional mutability, distinguishes configured/applicable/selected/applied state, proposes fail-closed test and production policies, stages strictness as a behavior migration, and keeps the orchestration direct.",
+      "files": ["evals/files/runtime-defaults.ts"],
+      "assertions": [
+        {
+          "text": "Agent reads references/guardrails-and-quality-gates.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Distinguishes configured policy, environment applicability, orchestration selection, and successfully applied effects",
+          "type": "functional"
+        },
+        {
+          "text": "Makes destructive commands and unstubbed test network access fail closed",
+          "type": "functional"
+        },
+        {
+          "text": "Replaces unconditional mutable dates with contract-appropriate immutable value semantics or explains why mutation is required",
+          "type": "functional"
+        },
+        {
+          "text": "Treats strict-record adoption as a behavior migration backed by characterization or compatibility coverage",
+          "type": "functional"
+        },
+        {
+          "text": "Does not create a generic registry or plugin system without independent policies that justify it",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "disclosure", "guardrails", "safety"]
+    },
+    {
+      "id": 11,
+      "name": "design-executable-quality-gate",
+      "prompt": "Our Go module claims support for Go 1.23 and 1.24 plus the oldest and newest supported database-driver versions. CI currently runs only `go test ./...` on Go 1.24. Define a maintainable local check workflow and bounded CI matrix. The repository's formatter and rewrite tool both have write and check/diff modes.",
+      "expected_output": "The agent routes to guardrail guidance and proposes a non-mutating umbrella check that composes formatting, lint/type analysis, codemod dry-run, and behavior tests, while exercising the lowest and current supported combinations without turning CI into an unbounded matrix.",
+      "assertions": [
+        {
+          "text": "Agent reads references/guardrails-and-quality-gates.md",
+          "type": "disclosure"
+        },
+        {
+          "text": "Separates formatter and codemod write modes from CI check or dry-run modes",
+          "type": "functional"
+        },
+        {
+          "text": "Includes static or type analysis and behavior tests rather than treating one tool as the complete gate",
+          "type": "functional"
+        },
+        {
+          "text": "Exercises lowest-supported and current runtime/dependency combinations with a bounded matrix",
+          "type": "functional"
+        },
+        {
+          "text": "Provides one documented local check entry point that CI invokes or faithfully mirrors",
+          "type": "functional"
+        }
+      ],
+      "tags": ["smoke", "disclosure", "quality-gates", "compatibility"]
+    },
+    {
+      "id": 12,
+      "name": "negative-disposable-shell-command",
+      "prompt": "Give me one disposable shell command that prints the top-level keys in config.json. Do not edit the repo or turn this into a script; I will throw the command away after running it once.",
+      "expected_output": "The skill should not trigger because this is an explicitly one-off shell command with no durable code or maintainability surface.",
+      "assertions": [
+        {
+          "text": "Does not load maintainable-code or introduce maintainability architecture, tests, comments, or quality gates",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "near-miss"]
     }
   ]
 }

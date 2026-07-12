@@ -7,7 +7,7 @@
 - [Readable Beats Clever](#readable-beats-clever)
 - [Coverage With Intent](#coverage-with-intent)
 - [Balanced Test Portfolio](#balanced-test-portfolio)
-- [PHP-Inspired Defaults](#php-inspired-defaults)
+- [Cross-Language Behavior Examples](#cross-language-behavior-examples)
 
 ---
 
@@ -83,9 +83,9 @@ Favor a portfolio that gives fast feedback and meaningful confidence:
 
 The exact shape depends on the codebase. The test pyramid is a useful conversation starter, not a quota.
 
-## PHP-Inspired Defaults
+## Cross-Language Behavior Examples
 
-Pest-style descriptions are a good model for readable test intent even outside PHP:
+Short behavior descriptions are portable across test frameworks. This Pest example demonstrates the shape without making its syntax a requirement:
 
 ```php
 it('allows overdraft withdrawals within the configured limit', function () {
@@ -98,7 +98,7 @@ it('allows overdraft withdrawals within the configured limit', function () {
 });
 ```
 
-Carry the same shape into other ecosystems:
+Carry the same behavior name, visible setup, action, and outcome into the project's own ecosystem:
 
 ```ts
 it("allows overdraft withdrawals within the configured limit", () => {

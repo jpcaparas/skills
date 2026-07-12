@@ -10,6 +10,8 @@
 - [Flaky Tests Destroy Trust](#flaky-tests-destroy-trust)
 - [Coverage Metrics Can Distract](#coverage-metrics-can-distract)
 - [Legacy Behavior Needs A Label](#legacy-behavior-needs-a-label)
+- [Plausible Assertions Can Be False Positives](#plausible-assertions-can-be-false-positives)
+- [Current-Only CI Overstates Compatibility](#current-only-ci-overstates-compatibility)
 
 ---
 
@@ -65,7 +67,20 @@ A test that pins strange behavior without context makes the behavior look intent
 
 Repair by adding a compact reason: compatibility, migration, customer data, incident, issue link, or temporary unknown with an owner.
 
+## Plausible Assertions Can Be False Positives
+
+A matcher can look specific while inspecting the wrong subject. Comparing a file-existence boolean with old file contents, or checking a typoed backup path, will stay green even when the protected write behavior is wrong.
+
+Repair by tracing the production effect to its exact path and value type. Assert the before/after contents, backup bytes, or emitted value that would change if the behavior regressed.
+
+## Current-Only CI Overstates Compatibility
+
+Testing only the newest runtime or dependency version leaves the advertised lower bound unproved. Optional APIs can also disappear behind broad version skips.
+
+Repair by testing the lowest supported combination and current stable combinations. When production feature-detects or conditionally compiles an optional capability, also cover focused capability-present and capability-absent paths. Use narrow skip reasons that name the missing capability.
+
 ## See Also
 
 - `references/legacy-and-characterization.md`
 - `references/review-rubric.md`
+- `references/side-effects-and-compatibility.md`

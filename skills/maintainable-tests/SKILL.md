@@ -1,9 +1,9 @@
 ---
 name: maintainable-tests
-description: "Passive testing-quality skill for human-maintainable tests that read as living documentation and onboarding material. Use whenever writing, editing, refactoring, reviewing, or planning tests, fixtures, mocks, regression coverage, edge cases, or testability changes. Do NOT use for non-code writing, one-off shell commands, or deliberately disposable experiments."
+description: "Passive guidance for maintainable tests that document behavior, isolate side effects, prove compatibility, and resist false positives. Use when writing, editing, refactoring, reviewing, or planning tests, fixtures, mocks, regression coverage, harnesses, edge cases, or testability changes. Skip non-code writing and disposable experiments."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
   short-description: "Write tests that document behavior and stay humane to maintain"
   openclaw:
     category: "development"
@@ -15,6 +15,7 @@ references:
   - structure-and-fixtures
   - doubles-and-boundaries
   - legacy-and-characterization
+  - side-effects-and-compatibility
   - review-rubric
   - gotchas
   - source-notes
@@ -53,6 +54,9 @@ What are you doing?
 - Choosing mocks, stubs, fakes, fixtures, or integration tests:
   Read `references/doubles-and-boundaries.md`. Prefer the least powerful test double that proves the behavior, and keep at least one contract or integration check where adapters can drift.
 
+- Tests touch network, waiting, global framework state, environment gates, filesystem/CLI effects, or multiple supported dependency versions:
+  Read `references/side-effects-and-compatibility.md`. Deny unintended effects, reset global state, test configuration as a decision matrix, and assert the exact artifact or capability branch.
+
 ## Quick Reference
 
 | Situation | Default action |
@@ -66,6 +70,12 @@ What are you doing?
 | Hard-to-test production code | Refactor boundaries before adding sleeps, globals, reflection, or broad mocks |
 | Mock-heavy test | Replace incidental interaction assertions with behavior assertions, fakes, or adapter contract tests |
 | Edge case | Name the boundary, not just "handles invalid input" |
+| Network or subprocess in tests | Fail on unplanned calls; explicitly fake, stub, or integrate only the contract under test |
+| Sleep or retry delay | Replace real waiting with a fake scheduler/clock and assert the requested delay when it is behavior |
+| Global framework state | Restore a known baseline before each test and clean up afterward when the framework cannot isolate it |
+| Configurable behavior | Cover the dimensions in its contract: usually default/override/effect, plus environment or capability branches only when relevant |
+| File or CLI effect | Assert exit/result plus the exact path, type, contents, backup, and unchanged-on-cancel behavior that matter |
+| Compatibility promise | Exercise the lowest supported combination and current versions; add capability-present/absent paths when production has an optional capability |
 | Review | Ask whether the test would teach a new maintainer what behavior matters |
 
 ## Core Rules
@@ -82,6 +92,9 @@ What are you doing?
 10. Keep tests deterministic. Control time, randomness, external services, locale, timezone, concurrency, and persistence at clear boundaries.
 11. Verify the failure mode, not only the happy path. A regression test should fail for the bug it guards against.
 12. Match the local test framework and style before importing a new pattern.
+13. Make unintended effects fail fast in the test harness. Unstubbed network calls, real sleeps, destructive commands, and shared process state should never pass unnoticed.
+14. Assert the real observable with the right subject and type. A boolean existence check compared with file contents, or a correct assertion against the wrong path, is a false positive.
+15. For configurable behavior, test the contract's decision dimensions separately from the effect. Exercise capability-present and capability-absent paths when production supports an optional capability.
 
 ## Maintainable Test Gate
 
@@ -96,6 +109,9 @@ Before finishing test changes, run this gate mentally and with local tooling whe
 | Edge cases | Boundary scenarios are explicit and explain why the boundary matters |
 | Legacy context | Historical or compatibility behavior has a rationale or ticket reference |
 | Determinism | Time, randomness, I/O, network, database, and process state are controlled |
+| Isolation | Unplanned network, waits, destructive commands, and leaked global framework state fail or are reset explicitly |
+| Compatibility | Lowest/current supported combinations are exercised, plus capability-present/absent branches when an optional capability is part of the promise |
+| Artifact evidence | Assertions inspect the exact path, value type, contents, and unchanged state that prove the effect |
 | Doubles | Mocks, stubs, fakes, and spies are the least powerful option that proves the rule |
 | Production design | Code was decomposed when that made the test clearer and the product code healthier |
 | Handoff | A new maintainer can use the tests as an onboarding map for the behavior |
@@ -143,6 +159,7 @@ It flags vague test names, weak assertions, fixture noise, over-mocking, impleme
 | Arrange / Act / Assert, fixtures, datasets, and helpers | `references/structure-and-fixtures.md` |
 | Mocks, stubs, fakes, boundaries, and production-code decomposition | `references/doubles-and-boundaries.md` |
 | Legacy systems, characterization tests, and regression rationale | `references/legacy-and-characterization.md` |
+| Side-effect isolation, configuration matrices, exact artifact assertions, and compatibility testing | `references/side-effects-and-compatibility.md` |
 | Severity-first review of test diffs | `references/review-rubric.md` |
 | Common traps and anti-patterns | `references/gotchas.md` |
 | Source influence and adaptation notes | `references/source-notes.md` |
@@ -155,3 +172,5 @@ It flags vague test names, weak assertions, fixture noise, over-mocking, impleme
 4. Parameterized tests become opaque when each row is just data. Name the cases and keep expected outcomes visible.
 5. Legacy tests without rationale freeze confusion. Say whether the behavior is intentional, historical, temporary, or unknown.
 6. Do not accept painful tests as inevitable. Pain can be design feedback from production code that needs a clearer boundary.
+7. A plausible matcher can still prove nothing when its subject has the wrong type or points at the wrong artifact. Trace every assertion back to the observable contract.
+8. Passing only on the newest dependency does not prove the advertised compatibility range. Test the oldest supported combination and optional-capability fallback.

@@ -11,6 +11,7 @@ Core references:
 - `references/commenting.md`
 - `references/review-rubric.md`
 - `references/implementation-plans.md`
+- `references/guardrails-and-quality-gates.md`
 - `references/gotchas.md`
 
 Primary helper:

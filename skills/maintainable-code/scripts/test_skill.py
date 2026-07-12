@@ -19,6 +19,9 @@ REQUIRED_TAGS = {
     "markup",
     "sources",
     "diagrams",
+    "guardrails",
+    "quality-gates",
+    "compatibility",
 }
 
 
@@ -80,6 +83,83 @@ jobs:
 """.lstrip(),
         encoding="utf-8",
     )
+    (source / "Registry.php").write_text(
+        """
+<?php
+
+final class Registry
+{
+    public function policies(): array
+    {
+        return [
+            'strict' => [
+                'development' => true,
+                'production' => false,
+            ],
+        ];
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "DeepNesting.rb").write_text(
+        """
+def select_policy(flags)
+  if flags[:configured]
+    if flags[:supported]
+      if flags[:environment]
+        if flags[:authorized]
+          if flags[:validated]
+            if flags[:recoverable]
+              if flags[:confirmed]
+                unless flags[:blocked]
+                  return :active
+                end
+              end
+            end
+          end
+        end
+      end
+    end
+  end
+end
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "utils.js").write_text(
+        """
+export function process(value) {
+  return value;
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "utils.py").write_text(
+        """
+def process(value: object) -> object:
+    return value
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "large_policy.py").write_text(
+        "def calculate_policy() -> int:\n"
+        + "\n".join(f"    value_{index} = {index}" for index in range(82))
+        + "\n    return value_81\n",
+        encoding="utf-8",
+    )
+    (source / "config.yml").write_text(
+        """
+rules:
+  nested:
+    values:
+      by_environment:
+        production:
+          rollout:
+            policy:
+              case: strict
+""".lstrip(),
+        encoding="utf-8",
+    )
     return fixture
 
 
@@ -108,6 +188,19 @@ def main(argv: list[str]) -> int:
     )
     if help_check.returncode != 0 or "maintainability review prompts" not in help_check.stdout:
         errors.append("analyze_maintainability.py --help did not return expected help text")
+
+    missing_check = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts" / "analyze_maintainability.py"),
+            str(root / "does-not-exist"),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if missing_check.returncode == 0 or "not found:" not in missing_check.stderr:
+        errors.append("analyze_maintainability.py did not reject a missing path")
 
     with tempfile.TemporaryDirectory() as temp_dir:
         fixture_root = Path(temp_dir)
@@ -138,6 +231,54 @@ def main(argv: list[str]) -> int:
             }:
                 if expected not in kinds:
                     errors.append(f"scanner did not report expected finding: {expected}")
+            registry_findings = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "src/Registry.php"
+                and item.get("kind") == "deep-nesting"
+            ]
+            if registry_findings:
+                errors.append("scanner treated nested data formatting as control-flow nesting")
+            ruby_nesting = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "src/DeepNesting.rb"
+                and item.get("kind") == "deep-nesting"
+            ]
+            if not ruby_nesting:
+                errors.append("scanner missed deeply nested Ruby control flow")
+            javascript_findings = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "src/utils.js"
+                and item.get("kind") == "vague-file-name"
+            ]
+            if not javascript_findings:
+                errors.append("scanner did not include plain JavaScript files by default")
+            python_function_findings = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "src/utils.py"
+                and item.get("kind") == "vague-function-name"
+            ]
+            if not python_function_findings:
+                errors.append("scanner missed a vague Python function name")
+            large_python_findings = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "src/large_policy.py"
+                and item.get("kind") == "large-function"
+            ]
+            if not large_python_findings:
+                errors.append("scanner missed a large Python function")
+            yaml_nesting = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "src/config.yml"
+                and item.get("kind") == "deep-nesting"
+            ]
+            if yaml_nesting:
+                errors.append("scanner treated a nested YAML case key as control flow")
 
     evals_path = root / "evals" / "evals.json"
     if not evals_path.is_file():
@@ -157,11 +298,16 @@ def main(argv: list[str]) -> int:
             if field not in item:
                 errors.append(f"eval missing field {field}: {item}")
         tags.update(item.get("tags", []))
+        for file_ref in item.get("files", []):
+            if not (root / file_ref).is_file():
+                errors.append(f"eval file does not exist: {file_ref}")
         for assertion in item.get("assertions", []):
             assertion_count += 1
             if "text" not in assertion:
                 errors.append(f"assertion missing text: {assertion}")
-            if assertion.get("type") and assertion["type"] not in {
+            if "type" not in assertion:
+                errors.append(f"assertion missing type: {assertion}")
+            elif assertion["type"] not in {
                 "functional",
                 "structural",
                 "disclosure",

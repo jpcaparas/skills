@@ -10,8 +10,20 @@ import tempfile
 from pathlib import Path
 
 
-REQUIRED_TAGS = {"smoke", "edge", "negative", "disclosure", "legacy", "boundary", "review"}
+REQUIRED_TAGS = {
+    "smoke",
+    "edge",
+    "negative",
+    "disclosure",
+    "legacy",
+    "boundary",
+    "review",
+    "effects",
+    "isolation",
+    "compatibility",
+}
 EXPECTED_FINDINGS = {
+    "missing-assertion",
     "vague-test-name",
     "weak-assertion",
     "over-mocking",
@@ -45,6 +57,8 @@ beforeEach(function () {
 });
 
 it('works', function () {
+    $method = new ReflectionMethod(AccountService::class, 'withdraw');
+    $method->setAccessible(true);
     $this->repo->expects('find')->once();
     $this->repo->expects('save')->once();
     $this->gateway->shouldReceive('charge')->once();
@@ -69,6 +83,179 @@ it("handles error", async () => {
   expect(response).not.toBeNull();
   expect(startedAt).toBeTruthy();
 });
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (tests / "NoAssertionTest.php").write_text(
+        """
+<?php
+
+it('should load the audit fixture before recording', function () {
+    $fixture = require('audit-fixture.php');
+});
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (tests / "StrictDefaultsTest.php").write_text(
+        """
+<?php
+
+it('adds suffix "Action" when omitted', function () {
+    $generatedUrl = 'https://example.test/actions/CreateUserAction';
+
+    expect(str_ends_with($generatedUrl, 'CreateUserAction'))->toBeTrue();
+});
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (tests / "StubPathsTest.php").write_text(
+        """
+<?php
+
+it('keeps published stub paths inside the workspace', function () {
+    $stubsPath = '/workspace/stubs';
+    $stubsBackup = '/workspace/stubs.backup';
+    $stubDirectory = '/workspace';
+    $stubName = 'action';
+    $stubSuffix = '.stub';
+    $stubContents = 'template';
+
+    expect($stubsPath)->toBe('/workspace/stubs');
+});
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (tests / "TestCase.php").write_text(
+        """
+<?php
+
+abstract class TestCase extends FrameworkTestCase
+{
+    protected function environment(): string
+    {
+        return 'test';
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    source = root / "src"
+    source.mkdir()
+    (source / "strict_defaults.rs").write_text(
+        """
+#[test]
+fn strict_mode_rejects_missing_fields() {
+    assert_eq!(true, true);
+}
+
+#[tokio::test]
+async fn async_adapter_rejects_missing_fields() {
+    assert_eq!(true, true);
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    csharp_tests = root / "MyApp.Tests"
+    csharp_tests.mkdir()
+    (csharp_tests / "StrictDefaults.cs").write_text(
+        """
+public sealed class StrictDefaultsTest
+{
+    [Fact]
+    public void StrictModeRejectsMissingFields()
+    {
+        Assert.True(true);
+    }
+
+    [TestMethod]
+    public void ConfiguredDefaultsRemainExplicit()
+    {
+        Assert.AreEqual(true, true);
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (csharp_tests / "VagueNames.cs").write_text(
+        """
+public sealed class VagueNames
+{
+    [Fact]
+    [Trait("Category", "Boundary")]
+    public void Works()
+    {
+        true.Should().BeTrue();
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    ruby_specs = root / "spec"
+    ruby_specs.mkdir()
+    (ruby_specs / "strict_defaults_spec.rb").write_text(
+        """
+RSpec.describe StrictDefaults do
+  it "rejects missing fields in strict mode" do
+    expect(true).to eq(true)
+  end
+
+  test "keeps configured defaults explicit" do
+    expect(true).to eq(true)
+  end
+end
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "StrictDefaultsTest.java").write_text(
+        """
+final class StrictDefaultsTest {
+    @ParameterizedTest
+    void rejectsMissingFields(String field) {
+        assertEquals("missing", field);
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "VagueNamesTest.java").write_text(
+        """
+final class VagueNamesTest {
+    @ParameterizedTest
+    @DisplayName("boundary behavior")
+    void Works(String field) {
+        assertEquals("missing", field);
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (source / "VagueNamesTest.kt").write_text(
+        """
+final class VagueNamesTest {
+    @Test
+    @DisplayName("boundary behavior")
+    fun `works`() {
+        true shouldBe true
+    }
+}
+""".lstrip(),
+        encoding="utf-8",
+    )
+    (tests / "nondeterminism_test.go").write_text(
+        """
+package tests
+
+import (
+    "testing"
+    "time"
+)
+
+func TestReportUsesInjectedClock(t *testing.T) {
+    startedAt := time.Now()
+    if startedAt.IsZero() {
+        t.Fatal("unexpected zero time")
+    }
+}
 """.lstrip(),
         encoding="utf-8",
     )
@@ -100,6 +287,19 @@ def main(argv: list[str]) -> int:
     if help_check.returncode != 0 or "maintainable test review prompts" not in help_check.stdout:
         errors.append("analyze_maintainable_tests.py --help did not return expected help text")
 
+    missing_check = subprocess.run(
+        [
+            sys.executable,
+            str(root / "scripts" / "analyze_maintainable_tests.py"),
+            str(root / "does-not-exist"),
+        ],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if missing_check.returncode == 0 or "not found:" not in missing_check.stderr:
+        errors.append("analyze_maintainable_tests.py did not reject a missing path")
+
     scan_kinds: set[str] = set()
     with tempfile.TemporaryDirectory() as temp_dir:
         fixture_root = Path(temp_dir)
@@ -123,6 +323,51 @@ def main(argv: list[str]) -> int:
             for expected in EXPECTED_FINDINGS:
                 if expected not in scan_kinds:
                     errors.append(f"scanner did not report expected finding: {expected}")
+            clean_paths = {
+                "tests/StrictDefaultsTest.php",
+                "tests/StubPathsTest.php",
+                "tests/TestCase.php",
+                "src/strict_defaults.rs",
+                "src/StrictDefaultsTest.java",
+                "MyApp.Tests/StrictDefaults.cs",
+                "spec/strict_defaults_spec.rb",
+            }
+            unexpected = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") in clean_paths
+            ]
+            if unexpected:
+                errors.append(f"scanner reported false positives for clean fixtures: {unexpected}")
+            go_time_findings = [
+                item
+                for item in payload.get("findings", [])
+                if item.get("path") == "tests/nondeterminism_test.go"
+                and item.get("kind") == "hidden-nondeterminism"
+            ]
+            if not go_time_findings:
+                errors.append("scanner missed direct Go wall-clock access")
+            for vague_path in {
+                "MyApp.Tests/VagueNames.cs",
+                "src/VagueNamesTest.java",
+                "src/VagueNamesTest.kt",
+            }:
+                vague_findings = [
+                    item
+                    for item in payload.get("findings", [])
+                    if item.get("path") == vague_path
+                    and item.get("kind") == "vague-test-name"
+                ]
+                if not vague_findings:
+                    errors.append(f"scanner missed a vague annotated test name: {vague_path}")
+                missing_assertions = [
+                    item
+                    for item in payload.get("findings", [])
+                    if item.get("path") == vague_path
+                    and item.get("kind") == "missing-assertion"
+                ]
+                if missing_assertions:
+                    errors.append(f"scanner missed an assertion idiom in: {vague_path}")
 
     evals_path = root / "evals" / "evals.json"
     if not evals_path.is_file():
@@ -142,11 +387,16 @@ def main(argv: list[str]) -> int:
             if field not in item:
                 errors.append(f"eval missing field {field}: {item}")
         tags.update(item.get("tags", []))
+        for file_ref in item.get("files", []):
+            if not (root / file_ref).is_file():
+                errors.append(f"eval file does not exist: {file_ref}")
         for assertion in item.get("assertions", []):
             assertion_count += 1
             if "text" not in assertion:
                 errors.append(f"assertion missing text: {assertion}")
-            if assertion.get("type") and assertion["type"] not in {
+            if "type" not in assertion:
+                errors.append(f"assertion missing type: {assertion}")
+            elif assertion["type"] not in {
                 "functional",
                 "structural",
                 "disclosure",

@@ -1,16 +1,19 @@
 {
   "name": "maintainable-code",
   "display_name": "Maintainable Code",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "entrypoint": "SKILL.md",
-  "description": "Passive always-on coding skill for generating, refactoring, reviewing, and planning maintainable, properly decomposed, human-understandable code with context-preserving developer comments.",
+  "description": "Passive coding skill for generating, refactoring, reviewing, and planning maintainable code with clear boundaries, safe defaults, compatibility guardrails, executable quality gates, and context-preserving developer comments.",
   "tags": [
     "maintainability",
     "code-review",
     "code-comments",
     "refactoring",
     "decomposition",
+    "safe-defaults",
+    "quality-gates",
+    "compatibility",
     "clean-code",
     "agent-workflows"
   ]

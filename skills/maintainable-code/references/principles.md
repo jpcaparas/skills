@@ -45,3 +45,9 @@ Ask these questions before finishing:
 Perfect code is not the target. Ship a change when it improves code health, preserves behavior, and leaves the next maintainer with a clearer system than before.
 
 When a larger cleanup is real but out of scope, leave an actionable note in the final response or create a follow-up plan. Do not smuggle broad cleanup into an unrelated fix.
+
+## See Also
+
+- `references/decomposition.md`
+- `references/guardrails-and-quality-gates.md`
+- `references/gotchas.md`

@@ -11,6 +11,7 @@ Core references:
 - `references/structure-and-fixtures.md`
 - `references/doubles-and-boundaries.md`
 - `references/legacy-and-characterization.md`
+- `references/side-effects-and-compatibility.md`
 - `references/review-rubric.md`
 - `references/gotchas.md`
 

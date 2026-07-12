@@ -83,6 +83,10 @@ $this->assertNotNull($response);
 
 Weak assertions are acceptable only as one part of a more specific proof.
 
+Audit the assertion subject as carefully as the matcher. Confirm that the subject has the expected type and names the exact artifact, path, key, or collaborator used by production. A negated comparison between a boolean existence check and old file contents is trivially true; checking that the wrong backup path is absent proves nothing about the real backup.
+
+For file-producing behavior, read the destination and compare its bytes or parsed value. Pair that with existence only when existence is itself part of the contract.
+
 ## Edge Case Coverage
 
 Edge cases should be named and motivated. Good boundary tests teach why the boundary exists:
@@ -114,4 +118,5 @@ Repairs:
 ## See Also
 
 - `references/doubles-and-boundaries.md`
+- `references/side-effects-and-compatibility.md`
 - `references/gotchas.md`

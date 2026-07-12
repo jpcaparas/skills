@@ -114,3 +114,9 @@ Repair:
 - Preserve original error context at logs or typed error causes.
 - Convert errors at user-facing boundaries.
 - Test important failure modes.
+
+## See Also
+
+- `references/principles.md`
+- `references/decomposition.md`
+- `references/guardrails-and-quality-gates.md`
