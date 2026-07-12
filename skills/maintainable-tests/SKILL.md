@@ -148,7 +148,7 @@ python3 scripts/analyze_maintainable_tests.py /path/to/project
 python3 scripts/analyze_maintainable_tests.py /path/to/project --json
 ```
 
-It flags vague test names, weak assertions, fixture noise, over-mocking, implementation coupling, hidden nondeterminism, and missing rationale around legacy behavior. A quiet scan does not prove the suite is good, and a noisy scan does not prove the tests are wrong.
+The helper filters directory scans to conventional test paths plus annotated Rust source, while an explicitly supplied supported source file is inspected directly; recognized declarations are checked for a bounded set of name, assertion, fixture, double, coupling, wall-clock, real-sleep, randomness, and legacy-rationale signals, and network access is not detected. A quiet scan does not prove the suite is good, and a noisy scan does not prove the tests are wrong.
 
 ## Reading Guide
 

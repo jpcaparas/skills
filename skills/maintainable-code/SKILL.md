@@ -139,7 +139,7 @@ python3 scripts/analyze_maintainability.py /path/to/project --json
 ```
 
 Treat its output as prompts for human review. A quiet script does not prove code is good, and a noisy script does not prove code is bad.
-Function-span and function-name checks use Python's parser. Python and TypeScript receive weak-type signals; other advertised languages receive conservative file, control-flow, TODO, and operational-comment signals rather than guessed function boundaries.
+Function-span and function-name checks use Python's AST only; calls and function forms in every other advertised language are deliberately omitted rather than guessed, while weak-type signals remain limited to Python annotations and conservative TypeScript type positions.
 
 ## Reading Guide
 
