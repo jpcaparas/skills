@@ -57,6 +57,7 @@ SKILL_SCENES = {
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
     "mockable-code": "a testing workbench with interchangeable dependency cartridges, stub blocks, fake service gems, and clean adapter rails",
+    "namethatui": "a field-guide scanner comparing an unknown floating interface shape with clear button, menu, panel, and dialog silhouette gems connected to trusted reference beacons",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
     "product-question": "a side-scrolling path of user-flow tiles and glowing inquiry gems leading toward a code city skyline, with simple unlabeled connectors and no screens or papers",

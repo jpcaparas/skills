@@ -232,6 +232,16 @@ Passive production skill for writing and reviewing tests that read as living doc
 
 Passive production skill for keeping generated and edited code mockable, stubbable, fake-friendly, and testable without real external dependencies.
 
+### `namethatui`
+
+`npx skills add jpcaparas/skills --skill namethatui`
+
+<p align="center">
+  <img src="skills/namethatui/skill-card.png" alt="16-bit side-scrolling pixel art badge for namethatui" width="480">
+</p>
+
+Production skill for naming unfamiliar UI components from descriptions, screenshots, live pages, or DOM clues, with ranked aliases, prompt-ready wording, authoritative links, and a hard guard against accessing namethatui.com.
+
 ### `nanobanana-infographic`
 
 `npx skills add jpcaparas/skills --skill nanobanana-infographic`

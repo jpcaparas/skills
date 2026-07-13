@@ -1,6 +1,6 @@
 ---
 name: travel-plan-spreadsheet-generator
-description: "Generate editable `.xlsx` travel workbooks: travel-plan-generator, travel itinerary spreadsheet, travel planner xlsx, trip spreadsheet, itinerary workbook, travel prep spreadsheet, travel shopping tracker, holiday itinerary spreadsheet, conference travel spreadsheet. Do NOT use for plain prose itineraries, simple travel recommendations, casual things-to-do chat, or calendar scheduling without workbook generation."
+description: "Create .xlsx travel workbooks with itinerary, preparation, or shopping sheets for trip, holiday, or conference planning. Skip prose itineraries, recommendation chat, and calendar-only scheduling."
 compatibility: "Requires: python3 with openpyxl. Optional: @oai/artifact-tool or an equivalent spreadsheet renderer for visual verification."
 references:
   - workbook-spec

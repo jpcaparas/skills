@@ -47,12 +47,20 @@ REQUIRED_ALIASES = [
     "conference travel spreadsheet",
 ]
 
-NEGATIVE_TRIGGER_SNIPPETS = [
-    "plain prose itineraries",
-    "simple travel recommendations",
-    "casual things-to-do chat",
-    "calendar scheduling without workbook generation",
-]
+DESCRIPTION_BRANCHES = {
+    "workbook artifact": (".xlsx", "workbook"),
+    "itinerary planning": ("itinerary",),
+    "preparation tracking": ("preparation",),
+    "shopping tracking": ("shopping",),
+    "trip and holiday planning": ("trip", "holiday"),
+    "conference planning": ("conference",),
+}
+
+NEGATIVE_TRIGGER_CONCEPTS = {
+    "prose-only itinerary": ("prose", "itineraries"),
+    "recommendation-only chat": ("recommendation",),
+    "calendar-only scheduling": ("calendar",),
+}
 
 
 def parse_frontmatter(content: str) -> tuple[dict[str, str], str]:
@@ -98,12 +106,13 @@ def validate_skill(skill_path: Path) -> dict[str, object]:
     description = frontmatter.get("description", "")
     if not description:
         errors.append("Frontmatter description is required")
-    for alias in REQUIRED_ALIASES:
-        if alias not in description:
-            errors.append(f"Missing trigger phrase in frontmatter description: {alias}")
-    for snippet in NEGATIVE_TRIGGER_SNIPPETS:
-        if snippet not in description:
-            errors.append(f"Missing negative trigger in frontmatter description: {snippet}")
+    lowered_description = description.lower()
+    for branch, terms in DESCRIPTION_BRANCHES.items():
+        if not all(term in lowered_description for term in terms):
+            errors.append(f"Frontmatter description is missing semantic branch: {branch}")
+    for concept, terms in NEGATIVE_TRIGGER_CONCEPTS.items():
+        if not all(term in lowered_description for term in terms):
+            errors.append(f"Frontmatter description is missing negative boundary: {concept}")
     if "/home/oai/skills/spreadsheets/SKILL.md" not in skill_content:
         errors.append("SKILL.md must mention /home/oai/skills/spreadsheets/SKILL.md for Codex-style environments")
     if metrics["skill_md_lines"] and metrics["skill_md_lines"] > 500:
@@ -116,6 +125,10 @@ def validate_skill(skill_path: Path) -> dict[str, object]:
     metadata = json.loads((skill_path / "metadata.json").read_text(encoding="utf-8"))
     if "tags" not in metadata or not metadata["tags"]:
         errors.append("metadata.json should include tags")
+    metadata_aliases = metadata.get("aliases", [])
+    for alias in REQUIRED_ALIASES:
+        if alias not in metadata_aliases:
+            errors.append(f"metadata.json is missing catalog alias: {alias}")
 
     example_model = json.loads((skill_path / "scripts" / "example_trip_model.json").read_text(encoding="utf-8"))
     if "trip_title" not in example_model or "daily_rows" not in example_model:

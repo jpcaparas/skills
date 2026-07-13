@@ -1,0 +1,4 @@
+interface:
+  display_name: "namethatui"
+  short_description: "Name unfamiliar UI components and find authoritative matches"
+  default_prompt: "Tell me what this UI component is called, explain the closest alternatives, and give me direct authoritative examples without visiting namethatui.com."

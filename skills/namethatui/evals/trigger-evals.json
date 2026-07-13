@@ -1,0 +1,82 @@
+[
+  {
+    "query": "I can picture this control but don't know the name: a text field opens suggestions underneath and filters them while I type. What should I call it in a prompt, and can you link a couple of official examples?",
+    "should_trigger": true
+  },
+  {
+    "query": "Attached is a screenshot from our iOS build. Please tell me what the bottom panel with a drag handle and action rows is actually called, including the closest Apple and Material terms.",
+    "should_trigger": true
+  },
+  {
+    "query": "What is the proper UI name for the dim transparent layer behind a modal? I keep saying overlay but I want a precise term and references.",
+    "should_trigger": true
+  },
+  {
+    "query": "Here's an HTML snippet with role=combobox, aria-autocomplete=list, and a controlled listbox. Explain what component pattern this is and give me authoritative links.",
+    "should_trigger": true
+  },
+  {
+    "query": "In Finder, what's the tiny triangle next to a folder that rotates and reveals its children? Give me the common pattern name and the macOS term if there is one.",
+    "should_trigger": true
+  },
+  {
+    "query": "The Cmd+K box in our editor searches actions and Enter runs the selected command. Name the overall UI pattern and the primitives it is usually made from.",
+    "should_trigger": true
+  },
+  {
+    "query": "I have a vertical three-dot button on every table row that opens Rename and Delete. Is the whole thing a kebab, overflow menu, context menu, or menu button?",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you inspect https://example.com/demo read-only and tell me what the floating interactive surface anchored under the avatar is called? Return likely names and official component docs.",
+    "should_trigger": true
+  },
+  {
+    "query": "What do designers call the gray blocks that match the final card layout while data is still loading? I need the name, nearby alternatives, and links.",
+    "should_trigger": true
+  },
+  {
+    "query": "There's a temporary success message after Save that fades away and doesn't move focus. Help me distinguish toast, snackbar, alert, and banner with direct examples.",
+    "should_trigger": true
+  },
+  {
+    "query": "Implement a React tooltip with Floating UI, keyboard support, Storybook stories, and Vitest coverage. The name is settled; I need production code.",
+    "should_trigger": false
+  },
+  {
+    "query": "Redesign this dashboard screenshot. Fix the hierarchy, spacing, typography, empty states, and color system, but don't inventory or name the components.",
+    "should_trigger": false
+  },
+  {
+    "query": "Find a good outline icon for the 'archive' action from our installed icon set and replace the current SVG in src/components/Toolbar.tsx.",
+    "should_trigger": false
+  },
+  {
+    "query": "Turn this entire Figma screenshot into responsive React and Tailwind code. Preserve every section and interaction as closely as possible.",
+    "should_trigger": false
+  },
+  {
+    "query": "Extract the duplicated JSX in these three files into a reusable UserCard component and update the tests.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run an accessibility audit of our checkout dialog. We already know the component names; check focus trapping, labels, contrast, and screen-reader output.",
+    "should_trigger": false
+  },
+  {
+    "query": "Use agent-browser to submit the contact form on our staging site and verify the success email arrives.",
+    "should_trigger": false
+  },
+  {
+    "query": "Where in this repository is the existing DatePicker implemented, which routes use it, and what would break if we replace it?",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain what namethatui.com is and summarize its homepage. I am asking about that product, not trying to identify an interface element.",
+    "should_trigger": false
+  },
+  {
+    "query": "Our backend has a component called PaymentOrchestrator. Review its retry and idempotency logic; this has nothing to do with UI.",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "July 2026",
+  "abstract": "Production skill for naming unfamiliar UI components from descriptions, screenshots, live pages, and DOM or accessibility clues. It ranks plausible names and aliases, explains the distinctions, emits prompt-ready wording, and links to authoritative standards or design-system examples while blocking namethatui.com and its subdomains.",
+  "references": [
+    "https://x.com/argofowl/status/2076284369883615555",
+    "https://www.w3.org/WAI/ARIA/apg/patterns/",
+    "https://open-ui.org/research/component-matrix/",
+    "https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles",
+    "https://fluent2.microsoft.design/components/web/react/",
+    "https://carbondesignsystem.com/components/overview/components/"
+  ]
+}
