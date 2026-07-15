@@ -1,0 +1,278 @@
+{
+  "documents": [
+    {
+      "article_sha256": "47e2762fb9fde418b3017586292c5c9b5a557943a4393dae5af1906fc12abd65",
+      "branch": "setup",
+      "file": "quick-start.md",
+      "file_sha256": "09e05a3be874c633cd7392040edee0faa25aef335cbe32d612100c29e359489e",
+      "site_last_modified": "2026-07-07",
+      "slug": "quick-start",
+      "url": "https://www.chezmoi.io/quick-start/"
+    },
+    {
+      "article_sha256": "14ba46c9e626d6a538c389bac3e16c0214857b1a158bd943341257b53c9f2e7c",
+      "branch": "setup",
+      "file": "setup.md",
+      "file_sha256": "74f8d03a1c729ff62f53e519b482851771d3a477349372dbeb12746d48510b57",
+      "site_last_modified": "2026-07-07",
+      "slug": "setup",
+      "url": "https://www.chezmoi.io/user-guide/setup/"
+    },
+    {
+      "article_sha256": "c91e47844c491f76d4c8d7d67a0d8109577068828062d7b75121809b96bbb0a9",
+      "branch": "daily",
+      "file": "daily-operations.md",
+      "file_sha256": "31a24d4b3c383fa40194c41305699f100141470491851331f18ac00c84a42a9d",
+      "site_last_modified": "2026-07-07",
+      "slug": "daily-operations",
+      "url": "https://www.chezmoi.io/user-guide/daily-operations/"
+    },
+    {
+      "article_sha256": "fc944a2c52c684b4773f6a319a6b0b273261a7614f4ca0c572b6f173a3e80a2c",
+      "branch": "daily",
+      "file": "command-overview.md",
+      "file_sha256": "3641dad243d2ac32ffd3dca7d89c8df424414f18ab41a51e2470e0d19c749881",
+      "site_last_modified": "2026-07-07",
+      "slug": "command-overview",
+      "url": "https://www.chezmoi.io/user-guide/command-overview/"
+    },
+    {
+      "article_sha256": "ab80b94e23d9aa793cdc6c339bf89745a7b1cc580d7341aeb3710ed0c57f3dc4",
+      "branch": "templates",
+      "file": "templating.md",
+      "file_sha256": "30448342952768cdb0d3705baa240c7e360ec5e068e79fc7b485b5fe0b2abbb1",
+      "site_last_modified": "2026-07-07",
+      "slug": "templating",
+      "url": "https://www.chezmoi.io/user-guide/templating/"
+    },
+    {
+      "article_sha256": "a124d2df8c092f11ef6368b1df334318cc680c7f19c5ad52bf9eee5358abbb84",
+      "branch": "setup",
+      "file": "machine-differences.md",
+      "file_sha256": "719e58a1e4b3933344f44deb88dee050a59d142bf7aee2b2f49378efdef354ba",
+      "site_last_modified": "2026-07-07",
+      "slug": "machine-differences",
+      "url": "https://www.chezmoi.io/user-guide/manage-machine-to-machine-differences/"
+    },
+    {
+      "article_sha256": "fe6b451a524747ef21d4f018813e1818d549a15df01eaef23ed5d66079b7e507",
+      "branch": "automation",
+      "file": "scripts.md",
+      "file_sha256": "783301115cae404bdeed9395ea2f44a8a4b53ae0753c2f452e871c06c9640a54",
+      "site_last_modified": "2026-07-07",
+      "slug": "scripts",
+      "url": "https://www.chezmoi.io/user-guide/use-scripts-to-perform-actions/"
+    },
+    {
+      "article_sha256": "704a45881228459527c2c76fe674ab6014da6e3f450b72d2e84b07ed08b06a83",
+      "branch": "secrets",
+      "file": "password-managers.md",
+      "file_sha256": "4a954b6d0480481ad4eb0a42c97b2f34aedaadefd0327d1c097552ef6b359030",
+      "site_last_modified": "2026-07-07",
+      "slug": "password-managers",
+      "url": "https://www.chezmoi.io/user-guide/password-managers/"
+    },
+    {
+      "article_sha256": "7b29ac3decd66ef0f93495ab594b568ddcb478d8b920ffade9fc91c3dab91f27",
+      "branch": "secrets",
+      "file": "encryption.md",
+      "file_sha256": "a95807f968c8895437cead66e67cc11c0d996f3b46ac97df3e2dde4d7ae2d910",
+      "site_last_modified": "2026-07-07",
+      "slug": "encryption",
+      "url": "https://www.chezmoi.io/user-guide/encryption/"
+    },
+    {
+      "article_sha256": "439380edf22e606ed915571d1038bbacb0498d0b11e60a7702546191424bfc53",
+      "branch": "recovery",
+      "file": "troubleshooting.md",
+      "file_sha256": "990fba617cf1f6d65173b84dc539f851d6d8eed891c27a1742e8259b8cf43cfe",
+      "site_last_modified": "2026-07-07",
+      "slug": "troubleshooting",
+      "url": "https://www.chezmoi.io/user-guide/frequently-asked-questions/troubleshooting/"
+    },
+    {
+      "article_sha256": "30b33cbf9664b504dc8d13103d2d1a5b275c7903d15fda605257633cb6b74b4e",
+      "branch": "commands",
+      "file": "global-flags.md",
+      "file_sha256": "43015e63ac37111a4e74380006407bcd34def8676472aa811080c0596570a685",
+      "site_last_modified": "2026-07-07",
+      "slug": "global-flags",
+      "url": "https://www.chezmoi.io/reference/command-line-flags/global/"
+    },
+    {
+      "article_sha256": "c0a473995ea196581169844bcf537677d0c3c998bd3b18f1c6d7aee0178ecbb5",
+      "branch": "commands",
+      "file": "common-flags.md",
+      "file_sha256": "b0ae43101ed894aa8b98f00556d1d2201366ba16a2fcfa433ff12289c2a5d041",
+      "site_last_modified": "2026-07-07",
+      "slug": "common-flags",
+      "url": "https://www.chezmoi.io/reference/command-line-flags/common/"
+    },
+    {
+      "article_sha256": "bf10a3e42b0e094a749126f24b3560f403b941e8723a3b44c2e63da340de1fb3",
+      "branch": "setup",
+      "file": "init.md",
+      "file_sha256": "2f8e7d617621b41d56e525acf5e7e2732d5df9182505f9910879cfb60bbebe44",
+      "site_last_modified": "2026-07-07",
+      "slug": "init",
+      "url": "https://www.chezmoi.io/reference/commands/init/"
+    },
+    {
+      "article_sha256": "17df663106cabc15ba7fc65cd56aa34aaacf40b79d4e83867023a68b80c01234",
+      "branch": "daily",
+      "file": "add.md",
+      "file_sha256": "7c2e92fbddadc74fe7842b742430b6d05dc4db4bc4b476b17825e6e71ce3f38e",
+      "site_last_modified": "2026-07-07",
+      "slug": "add",
+      "url": "https://www.chezmoi.io/reference/commands/add/"
+    },
+    {
+      "article_sha256": "e477c574b92dc07fe02e3f59c3ea0f2ce166209be667e6116e698f2342a6eb40",
+      "branch": "daily",
+      "file": "edit.md",
+      "file_sha256": "7ccea73696d82cf3124cd0d9d2c1ba851d2d6d790ece519dcb74949d59d72e2e",
+      "site_last_modified": "2026-07-07",
+      "slug": "edit",
+      "url": "https://www.chezmoi.io/reference/commands/edit/"
+    },
+    {
+      "article_sha256": "13ba0f0c1812b0a89e10e746e66e60eac93b9b7e1ac6deef0d957cb3bbd8bc87",
+      "branch": "daily",
+      "file": "diff.md",
+      "file_sha256": "e01a1e76402c1a1817d8b1ac504b5c2934de7d8139fc9f173cceb8b4d19a3e7b",
+      "site_last_modified": "2026-07-07",
+      "slug": "diff",
+      "url": "https://www.chezmoi.io/reference/commands/diff/"
+    },
+    {
+      "article_sha256": "1ebff8d011b90919781fd8244de2c19caa472c72b980eb30fb6bbe81525d3efc",
+      "branch": "daily",
+      "file": "status.md",
+      "file_sha256": "7a833706b7d15fd7da39e974852a42d32bbd7f283e74b6e9f34b73b789d624a9",
+      "site_last_modified": "2026-07-07",
+      "slug": "status",
+      "url": "https://www.chezmoi.io/reference/commands/status/"
+    },
+    {
+      "article_sha256": "1bc00003644579fb2c20fee32bc17a8cd8d4bcf713bfacf97797be19bc607c82",
+      "branch": "daily",
+      "file": "apply.md",
+      "file_sha256": "9dcb5303969ac29b60c4cf4e63ec3cfe5e3f3773110894eef8f6b0715aa6f06e",
+      "site_last_modified": "2026-07-07",
+      "slug": "apply",
+      "url": "https://www.chezmoi.io/reference/commands/apply/"
+    },
+    {
+      "article_sha256": "9fe47e1769a05de5ca5a46039de635abe67359cf774e563c969aecda9f7d12b1",
+      "branch": "daily",
+      "file": "update.md",
+      "file_sha256": "e8e79c362c6a61f88c9c080e816b74418d6703e4d7ce6c2aad2d98c7fb53f07d",
+      "site_last_modified": "2026-07-07",
+      "slug": "update",
+      "url": "https://www.chezmoi.io/reference/commands/update/"
+    },
+    {
+      "article_sha256": "a0148b14a4f453beb7b8c6c1045057c3fd004184a6d3e0f1eea24247591c458d",
+      "branch": "daily",
+      "file": "verify.md",
+      "file_sha256": "4face56ec1a21bce5383abe7b1c6980d3f8a2fb5a9dc76b01717ec5b711dc029",
+      "site_last_modified": "2026-07-07",
+      "slug": "verify",
+      "url": "https://www.chezmoi.io/reference/commands/verify/"
+    },
+    {
+      "article_sha256": "09cc254fd84ce53c9bc8312ec2c8173bbb8b53e3c3a031c3e9242154453b21e8",
+      "branch": "recovery",
+      "file": "doctor.md",
+      "file_sha256": "aade99bdbd90f0ef67fac653916cbb2249084dc6964d4a4dc56947ad4c1cb0b6",
+      "site_last_modified": "2026-07-07",
+      "slug": "doctor",
+      "url": "https://www.chezmoi.io/reference/commands/doctor/"
+    },
+    {
+      "article_sha256": "b2b2c489fa066f1600bb9fb0955085b8803dd9dc7be66b2cb3c0f8379ffc3975",
+      "branch": "recovery",
+      "file": "merge.md",
+      "file_sha256": "a4b97aa13fd672534eb1a9288072e9801c6a45603c0821c91f99c786e5ecaf83",
+      "site_last_modified": "2026-07-07",
+      "slug": "merge",
+      "url": "https://www.chezmoi.io/reference/commands/merge/"
+    },
+    {
+      "article_sha256": "1ce428bcde5a2ff0a19a86061d65670ab3216bc704ec9269520dea8077d46c7b",
+      "branch": "daily",
+      "file": "re-add.md",
+      "file_sha256": "c5f168b4eb1cd3543ad5252904d917a9451faa8b303620a285c6a9c92f7d9200",
+      "site_last_modified": "2026-07-07",
+      "slug": "re-add",
+      "url": "https://www.chezmoi.io/reference/commands/re-add/"
+    },
+    {
+      "article_sha256": "3c3f34389fef7ade23a431d368599e85f442ad832fe9ac5410692e0b01849f60",
+      "branch": "recovery",
+      "file": "forget.md",
+      "file_sha256": "78d150ea3430307bfe2d90c791f990f79fb36f8aa6142045b189783614510c96",
+      "site_last_modified": "2026-07-07",
+      "slug": "forget",
+      "url": "https://www.chezmoi.io/reference/commands/forget/"
+    },
+    {
+      "article_sha256": "0b77b9653c28afb20afac71ac46ea07d3a2c162f1eda5f65972aa7eaade1805e",
+      "branch": "recovery",
+      "file": "destroy.md",
+      "file_sha256": "d03b670c47b8358c5a047fc0932462e32dce2557c486728b4ee1130b6ac40a8c",
+      "site_last_modified": "2026-07-07",
+      "slug": "destroy",
+      "url": "https://www.chezmoi.io/reference/commands/destroy/"
+    },
+    {
+      "article_sha256": "8cea99cbb09714df7ce057736c1eff02f152d49c537b8c81d3bd4d97e2fff0e3",
+      "branch": "recovery",
+      "file": "purge.md",
+      "file_sha256": "b4d8c63c302ee673d827d4fa8781a6bb9c9e9dd859691d84d58da46bff72506e",
+      "site_last_modified": "2026-07-07",
+      "slug": "purge",
+      "url": "https://www.chezmoi.io/reference/commands/purge/"
+    },
+    {
+      "article_sha256": "88b35a0e35a5aed5acf211118e80667ce1b133193b9e74476097bba51698b141",
+      "branch": "commands",
+      "file": "source-path.md",
+      "file_sha256": "7d78ddff2fa6b2f528dfbb42771d826668570724f46ecbe6b76545467407753f",
+      "site_last_modified": "2026-07-07",
+      "slug": "source-path",
+      "url": "https://www.chezmoi.io/reference/commands/source-path/"
+    },
+    {
+      "article_sha256": "e16b906cc930c36b5da5adbe58203488cfb46d334720cdf5dbca1b01d1cbd25d",
+      "branch": "templates",
+      "file": "data.md",
+      "file_sha256": "d9308030b0870207ad783e1ebb007de61bd44a4a2bad5dbbd92e186bc3c0e292",
+      "site_last_modified": "2026-07-07",
+      "slug": "data",
+      "url": "https://www.chezmoi.io/reference/commands/data/"
+    },
+    {
+      "article_sha256": "83c770a5026999614a14229fa1c6bdf4e7466ec791d3c8750eef5a3a732c90fc",
+      "branch": "templates",
+      "file": "execute-template.md",
+      "file_sha256": "f00ce05fb8b1a53653154ada0f97c15e74315755c05994c8496d0e5f7813b339",
+      "site_last_modified": "2026-07-07",
+      "slug": "execute-template",
+      "url": "https://www.chezmoi.io/reference/commands/execute-template/"
+    },
+    {
+      "article_sha256": "d43535bfde6ca83ed3b503a26233296547d384a9a460077d0c1595429ca0b9a1",
+      "branch": "automation",
+      "file": "hooks.md",
+      "file_sha256": "8cf360d9a89c25138b832999cbf519258dd0ad47e430b405e542d245f78d0df4",
+      "site_last_modified": "2026-07-07",
+      "slug": "hooks",
+      "url": "https://www.chezmoi.io/reference/configuration-file/hooks/"
+    }
+  ],
+  "generated_by": "scripts/official_docs.py",
+  "retrieved_at": "2026-07-15T09:54:12Z",
+  "schema_version": 1,
+  "sitemap_url": "https://www.chezmoi.io/sitemap.xml"
+}

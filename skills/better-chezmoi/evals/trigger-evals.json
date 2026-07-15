@@ -1,0 +1,50 @@
+[
+  {
+    "query": "Use chezmoi to edit my zshrc, show the diff, and apply only that file.",
+    "should_trigger": true
+  },
+  {
+    "query": "My managed dotfiles drifted. Inspect chezmoi status and get this machine back to the desired state safely.",
+    "should_trigger": true
+  },
+  {
+    "query": "Bootstrap my dotfiles repo onto a new laptop with chezmoi, but let me review before apply.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need one Git config template with a work email on Linux and a personal email on macOS.",
+    "should_trigger": true
+  },
+  {
+    "query": "chezmoi is timing out on its persistent state lock; diagnose it without deleting my state.",
+    "should_trigger": true
+  },
+  {
+    "query": "Scrape the current official chezmoi command docs and search them for dry-run behavior.",
+    "should_trigger": true
+  },
+  {
+    "query": "Turn this .zshrc into a GNU Stow package.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write an Ansible role that installs zsh and copies a config file.",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain how git rebase --autostash works in a normal application repository.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a fish shell alias for kubectl; I do not use chezmoi.",
+    "should_trigger": false
+  },
+  {
+    "query": "Compare dotfile managers so I can choose between yadm, Stow, and chezmoi.",
+    "should_trigger": false
+  },
+  {
+    "query": "Back up my entire home directory to an external disk.",
+    "should_trigger": false
+  }
+]

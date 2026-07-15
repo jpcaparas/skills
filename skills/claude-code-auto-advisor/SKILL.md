@@ -1,6 +1,6 @@
 ---
 name: claude-code-auto-advisor
-description: "Claude Code only passive advisor policy. Use in Claude Code for security, code reviews, high-stakes design, multi-step high-level plan validation for substantial work, complex refactors, recurring failures, or completion checks. Consult the configured advisor without user prompting. Do NOT use outside Claude Code, without an advisor model/tool, for trivial tasks, or for ordinary planning."
+description: "Claude Code automatic advisor for security, reviews, high-risk design, substantial multi-step plans, complex refactors, recurring failures, and risky completion checks. Skip trivial work, ordinary planning, other harnesses, or sessions without an advisor tool."
 compatibility: "Requires Claude Code v2.1.98+ with a configured advisor model. Optional helper scripts require python3."
 metadata:
   version: "1.0.0"

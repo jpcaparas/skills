@@ -1,0 +1,4 @@
+interface:
+  display_name: "Better chezmoi"
+  short_description: "Use chezmoi safely with current official guidance"
+  default_prompt: "Use $better-chezmoi to inspect, preview, perform, and verify this chezmoi workflow against my installed CLI and current official documentation."

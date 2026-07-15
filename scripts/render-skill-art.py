@@ -38,6 +38,7 @@ SKILL_SCENES = {
     "audify": "headphones catching flowing sound ribbons, waveform crystals, and a small studio mixer made of blank blocks",
     "azure-devops-create-work-item": "a quest-token forge where a hammer stamps a blank glowing slab into a task gem",
     "azure-devops-wiki-markdown": "a knowledge temple linking clean geometric blocks through glowing connector paths",
+    "better-chezmoi": "a dotfile workbench separating a source vault and home directory through a glowing preview gate, with template gems, a shielded secret capsule, and reversible sync rails",
     "better-writing": "a quill-shaped tool smoothing a jagged ribbon into a clean luminous ribbon",
     "bootstrap-agents-md": "a repository observatory distilling many project signal paths into one durable guidance beacon with a smaller companion beacon linked beside it",
     "claude-code-auto-advisor": "a coding cockpit with a main agent console, a glowing advisor beacon, shield gates, review lenses, and careful decision rails",

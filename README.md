@@ -42,6 +42,16 @@ Production skill for Azure DevOps wiki Markdown covering wiki-only blocks, Merma
 
 Production skill for drafting local Azure DevOps work item packets from loose context, using official Azure Boards work item primitives and reusable templates for Agile epics, features, user stories, tasks, issues, and bugs.
 
+### `better-chezmoi`
+
+`npx skills add jpcaparas/skills --skill better-chezmoi`
+
+<p align="center">
+  <img src="skills/better-chezmoi/skill-card.png" alt="16-bit side-scrolling pixel art badge for better-chezmoi" width="480">
+</p>
+
+Safe, version-aware chezmoi workflows for daily dotfile work, multi-machine templates, secrets, recovery, and searchable current official documentation.
+
 ### `better-writing`
 
 `npx skills add jpcaparas/skills --skill better-writing`

@@ -1,0 +1,25 @@
+{
+  "name": "better-chezmoi",
+  "version": "1.0.0",
+  "description": "Safe, version-aware chezmoi workflows with a searchable, refreshable snapshot of selected official documentation.",
+  "category": "development",
+  "tags": [
+    "chezmoi",
+    "dotfiles",
+    "configuration",
+    "templates",
+    "secrets",
+    "cli"
+  ],
+  "requires": {
+    "bins": [
+      "chezmoi",
+      "python3"
+    ]
+  },
+  "entrypoint": "SKILL.md",
+  "references": [
+    "https://www.chezmoi.io/",
+    "https://github.com/twpayne/chezmoi/releases"
+  ]
+}
