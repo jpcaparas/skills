@@ -47,6 +47,9 @@ cd "$REPO_ROOT"
 echo "Checking local and CI validation entrypoint parity"
 python3 scripts/check-validation-entrypoint-parity.py
 
+echo "Checking stop-validation snapshot caching"
+bash scripts/test-agent-stop-checks.sh
+
 echo "Checking README skill coverage"
 python3 scripts/validate-readme-skills.py
 python3 scripts/validate-skill-art.py

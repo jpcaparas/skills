@@ -45,11 +45,24 @@ external_ignored_skill_files() {
     done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
 }
 
+untracked_and_external_skill_file_hashes() {
+    {
+        git ls-files --others --exclude-standard -z 2>/dev/null
+        external_ignored_skill_files | while IFS= read -r file; do
+            printf '%s\0' "$file"
+        done
+    } | LC_ALL=C sort -zu | while IFS= read -r -d '' file; do
+        printf 'file:%s\n' "$file"
+        shasum -a 256 -- "$file"
+    done
+}
+
 repo_snapshot_hash() {
     {
         git rev-parse HEAD 2>/dev/null || true
         git status --porcelain=v1 --untracked-files=all 2>/dev/null || true
-        external_ignored_skill_files
+        git diff --binary --no-ext-diff HEAD -- 2>/dev/null || true
+        untracked_and_external_skill_file_hashes
         if upstream_ref="$(git rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)"; then
             printf 'upstream:%s\n' "$upstream_ref"
             git rev-list --count "${upstream_ref}..HEAD" 2>/dev/null || true
@@ -66,6 +79,34 @@ session_baseline_file() {
         "$(sanitize_hook_id "${AGENT_HOOK_SESSION_ID:-default}")"
 }
 
+validation_cache_file() {
+    local git_dir
+    git_dir="$(git rev-parse --git-dir)"
+    printf '%s/agent-hooks/last-successful-stop.env\n' "$git_dir"
+}
+
+cached_validation_snapshot() {
+    local cache_file
+    cache_file="$(validation_cache_file)"
+    if [ -f "$cache_file" ]; then
+        sed -n 's/^snapshot=\([0-9a-f][0-9a-f]*\)$/\1/p' "$cache_file" | head -n 1
+    fi
+}
+
+record_validated_snapshot() {
+    local snapshot_value="$1"
+    local cache_file cache_dir temporary_file
+    cache_file="$(validation_cache_file)"
+    cache_dir="$(dirname "$cache_file")"
+    temporary_file="${cache_file}.tmp.$$"
+    mkdir -p "$cache_dir"
+    {
+        printf 'snapshot=%s\n' "$snapshot_value"
+        printf 'validated_at=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    } >"$temporary_file"
+    mv "$temporary_file" "$cache_file"
+}
+
 if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] && [ -n "${AGENT_HOOK_HARNESS:-}" ]; then
     baseline_file="$(session_baseline_file)"
     if [ ! -f "$baseline_file" ]; then
@@ -80,6 +121,13 @@ if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] && [ -n "${AGENT_HOOK_HARNESS:-}" 
         hook_log "No repository changes detected since this agent session started; skipping stop validation."
         exit 0
     fi
+fi
+
+validation_snapshot="${current_snapshot:-$(repo_snapshot_hash)}"
+if [ "${SKILLS_AGENT_STOP_FORCE:-0}" != "1" ] \
+    && [ "$(cached_validation_snapshot)" = "$validation_snapshot" ]; then
+    hook_log "Repository snapshot already passed stop validation; skipping repeated checks."
+    exit 0
 fi
 
 has_invisible_skill_files() {
@@ -115,6 +163,12 @@ status=$?
 set -e
 
 if [ "$status" -eq 0 ]; then
+    post_validation_snapshot="$(repo_snapshot_hash)"
+    if [ "$post_validation_snapshot" != "$validation_snapshot" ]; then
+        hook_log "Repository changed while stop validation was running; retry against the new snapshot."
+        exit 2
+    fi
+    record_validated_snapshot "$validation_snapshot"
     exit 0
 fi
 
