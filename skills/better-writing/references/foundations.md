@@ -52,6 +52,8 @@ Clearer:
 
 Join independent clauses with a period, semicolon, or coordinating conjunction—not a comma alone. Use semicolons sparingly enough that they retain their organising force.
 
+Do not treat those options as interchangeable. A semicolon keeps close clauses at roughly equal rank; a colon makes the second part explain, specify, or fulfil the first; a conjunction names the relationship. For explicit punctuation transformation, use `references/punctuation-and-sentence-flow.md`.
+
 Use the serial comma by default when it prevents ambiguity, while respecting an established house style.
 
 ### Fragments

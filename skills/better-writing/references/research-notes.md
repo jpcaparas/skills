@@ -2,7 +2,7 @@
 
 Use this reference when you need the evidence behind the humanisation rules, want to extend `assets/aiisms.json`, or need to explain why the scanner cannot determine authorship.
 
-Last reviewed: 2026-07-12.
+Last reviewed: 2026-07-15.
 
 ## What the evidence supports
 
@@ -73,6 +73,21 @@ Sources:
 - [Population-level em-dash study](https://arxiv.org/abs/2606.29540)
 
 Operational consequence: inspect punctuation distribution, syntactic purpose, and nearby patterns. Never gate a draft because it contains one dash, semicolon, colon, or question mark.
+
+### Punctuation choices encode different sentence relations
+
+Style authorities converge on a relation-first account of punctuation. A semicolon normally holds closely related independent clauses at similar rank. A colon points forward: the second element explains, specifies, exemplifies, or fulfils the first. Coordination and subordination do more than change punctuation; they state logical relations and redistribute emphasis. Public-sector plain-language guidance also advises against using semicolons merely to extend a sentence.
+
+Sources:
+
+- [Chicago Manual of Style Q&A, dash flexibility and overuse](https://www.chicagomanualofstyle.org/qanda/data/faq/topics/HyphensEnDashesEmDashes/faq0181.html)
+- [MLA Style Center, colons and the expansion relation](https://style.mla.org/colons-how-to-use-them/)
+- [MLA Style Center, semicolon constructions](https://style.mla.org/quiz-semicolons/)
+- [Purdue Writing Lab, sentence structure and emphasis](https://owl.purdue.edu/owl/graduate_writing/introduction_to_writing/documents/revising-and-editing/sentence-structure-activity.pdf)
+- [Australian Government Style Manual, semicolons and plain-language alternatives](https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/semicolons)
+- [Australian Government Style Manual, colon functions](https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/colons)
+
+Operational consequence: do not replace an em dash character-for-character. Identify whether it carries explanation, balance, contrast, cause, sequence, an aside, or an interruption; then rebuild the syntax and verify the changed emphasis. See `references/punctuation-and-sentence-flow.md` for the working procedure and original transformations.
 
 ## Why authorship detection is unsafe
 

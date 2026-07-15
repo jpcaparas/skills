@@ -242,6 +242,23 @@
         {"text": "Captured trace records operating-contract.md, quality-gates.md, and revision-pass-stack.md and no read of research-notes.md", "type": "disclosure"}
       ],
       "tags": ["verification", "release", "preservation", "disclosure"]
+    },
+    {
+      "id": 19,
+      "name": "replace-em-dashes-with-natural-sentence-flow",
+      "prompt": "Our house style bans em dashes in prose and prefers semicolons or colons to a string of short sentences. Line-edit the attached fixture accordingly, but keep the flow natural and do not force the preferred marks where the grammar or meaning does not support them. Preserve the document structure, all facts, numbers, dates, and protected literals exactly, including the interrupted quotation, URL, ratio, and YAML block. Briefly note any place where you overrode the house-style preference or retained a dash.",
+      "expected_output": "A relation-aware revision that uses varied, grammatical sentence structures; preserves the source's emphasis and every protected literal; and retains only the dash that encodes interrupted speech.",
+      "files": ["evals/files/punctuation-flow.md"],
+      "assertions": [
+        {"text": "Uses a colon for an explanation, specification, or promised list and a semicolon only between closely related independent clauses", "type": "functional"},
+        {"text": "Uses a conjunction, subordinate clause, commas, or a full stop where those structures express the relation or cadence more naturally than a semicolon or colon", "type": "functional"},
+        {"text": "Preserves 14 minutes, 28 minutes, Tuesday, 8,000 jobs, 12 July 2026, 09:30, the 2:1 ratio, the URL, and the YAML block exactly", "type": "functional"},
+        {"text": "Preserves the fixture's headings, paragraph order, protected-literal labels, and untouched passages", "type": "structural"},
+        {"text": "Retains the dash in `“I was only trying to—”` and explains that it encodes an abrupt interruption rather than treating it as an authorship signal", "type": "negative"},
+        {"text": "Does not create a comma splice, put a semicolon beside a fragment, split a verb from its object with a colon, or turn the paragraph into clipped notes", "type": "negative"},
+        {"text": "Captured trace records punctuation-and-sentence-flow.md and at least one of foundations.md or voice-and-rhythm.md, and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["punctuation-transformation", "line-edit", "em-dash", "semicolon", "colon", "preservation", "disclosure"]
     }
   ]
 }

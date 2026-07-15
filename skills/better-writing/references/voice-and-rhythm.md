@@ -53,7 +53,9 @@ Sentence length should respond to information, not alternate mechanically.
 - Use a short sentence for a clean verdict, turn, or release of pressure.
 - Use a longer sentence when conditions, accumulation, or causal sequence belong together.
 - Keep related clauses connected when splitting them would make the reader reset.
-- Let punctuation reveal syntax: commas for attachment, colons for consequence or expansion, parentheses for a real aside, dashes for a sharper interruption.
+- Let punctuation reveal syntax: commas for attachment, colons for explanation or expansion, semicolons for close equal-ranking clauses, parentheses for a real aside, and dashes for a sharper interruption.
+
+When the user asks to replace dashes or rebalance semicolons and colons, use `references/punctuation-and-sentence-flow.md`. It maps each mark to sentence structure and cadence so the revision does not become clipped or mechanically formal.
 
 Chopped:
 

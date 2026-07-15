@@ -1,14 +1,18 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "organization": "JP Caparas",
   "date": "July 2026",
-  "abstract": "Production-grade writing and revision system for drafting, rewriting, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, restores individual voice without fabricated personality, and provides a calibrated, extensible catalogue of AI-like writing signals that never claims to determine authorship.",
+  "abstract": "Production-grade writing and revision system for drafting, rewriting, line editing, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, restores individual voice without fabricated personality, includes relation-first punctuation and sentence-flow transformations, and provides a calibrated catalogue of AI-like writing signals that never claims to determine authorship.",
   "references": [
     "https://doi.org/10.1126/sciadv.adn5290",
     "https://arxiv.org/abs/2406.07016",
     "https://arxiv.org/abs/2412.11385",
     "https://www.cell.com/patterns/fulltext/S2666-3899(23)00130-7",
     "https://openai.com/index/new-ai-classifier-for-indicating-ai-written-text/",
-    "https://uwaterloo.ca/writing-and-communication-centre/Resources-AI-Revising"
+    "https://uwaterloo.ca/writing-and-communication-centre/Resources-AI-Revising",
+    "https://www.chicagomanualofstyle.org/qanda/data/faq/topics/HyphensEnDashesEmDashes/faq0181.html",
+    "https://style.mla.org/colons-how-to-use-them/",
+    "https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/semicolons",
+    "https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/colons"
   ]
 }

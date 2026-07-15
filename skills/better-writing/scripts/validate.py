@@ -116,10 +116,45 @@ def validate_evals(path: Path, state: ValidationState) -> None:
             for file in files:
                 if not (state.root / file).exists():
                     state.errors.append(f"{location} references missing file: {file}")
-    for tag in ("smoke", "edge", "negative", "disclosure"):
+    for tag in ("smoke", "edge", "negative", "disclosure", "punctuation-transformation"):
         if tag not in tags:
             state.errors.append(f"Missing eval coverage for tag: {tag}")
     state.metrics["eval_count"] = len(evals)
+
+
+def validate_trigger_evals(path: Path, state: ValidationState) -> None:
+    """Validate invocation examples and require both positive and negative coverage."""
+
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        state.errors.append(f"evals/trigger-evals.json is not valid JSON: {exc}")
+        return
+    if not isinstance(payload, list) or not payload:
+        state.errors.append("evals/trigger-evals.json must contain a non-empty list")
+        return
+    seen_queries: set[str] = set()
+    polarities: set[bool] = set()
+    for index, item in enumerate(payload):
+        location = f"trigger-evals[{index}]"
+        if not isinstance(item, dict):
+            state.errors.append(f"{location} must be an object")
+            continue
+        query = item.get("query")
+        should_trigger = item.get("should_trigger")
+        if not isinstance(query, str) or not query.strip():
+            state.errors.append(f"{location}.query must be a non-empty string")
+        elif query in seen_queries:
+            state.errors.append(f"{location}.query duplicates an earlier trigger eval")
+        else:
+            seen_queries.add(query)
+        if not isinstance(should_trigger, bool):
+            state.errors.append(f"{location}.should_trigger must be a boolean")
+        else:
+            polarities.add(should_trigger)
+    if polarities != {False, True}:
+        state.errors.append("Trigger evals must include positive and negative cases")
+    state.metrics["trigger_eval_count"] = len(payload)
 
 
 def validate_routes(state: ValidationState) -> None:
@@ -186,7 +221,7 @@ def validate_skill(skill_path: str) -> dict[str, object]:
     required_files = (
         "README.md", "AGENTS.md", "metadata.json", "agents/openai.yaml",
         "scripts/probe_better_writing.py", "scripts/scan_aiisms.py", "scripts/validate.py", "scripts/test_skill.py",
-        "assets/aiisms.json", "evals/evals.json",
+        "assets/aiisms.json", "evals/evals.json", "evals/trigger-evals.json",
     )
     for relative in required_files:
         if not (root / relative).is_file():
@@ -219,6 +254,9 @@ def validate_skill(skill_path: str) -> dict[str, object]:
     evals_path = root / "evals" / "evals.json"
     if evals_path.is_file():
         validate_evals(evals_path, state)
+    trigger_evals_path = root / "evals" / "trigger-evals.json"
+    if trigger_evals_path.is_file():
+        validate_trigger_evals(trigger_evals_path, state)
     validate_routes(state)
     validate_scanner(state)
     return {"valid": not state.errors, "errors": state.errors, "warnings": state.warnings, "metrics": state.metrics}

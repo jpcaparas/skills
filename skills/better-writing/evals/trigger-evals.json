@@ -82,5 +82,17 @@
   {
     "query": "Draft a new product slogan from scratch. I have not supplied an audience brief, so ask only for the minimum context you need.",
     "should_trigger": true
+  },
+  {
+    "query": "Replace the em dashes in this paragraph with natural semicolons, colons, conjunctions, or new sentence structures according to what each sentence means.",
+    "should_trigger": true
+  },
+  {
+    "query": "This colon-heavy memo feels staged and the semicolons feel stiff. Line-edit the punctuation and flow without making it terse.",
+    "should_trigger": true
+  },
+  {
+    "query": "Replace the colons in this YAML mapping with equals signs and return valid configuration syntax; there is no prose to edit.",
+    "should_trigger": false
   }
 ]

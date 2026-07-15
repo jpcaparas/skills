@@ -3,12 +3,13 @@ name: better-writing
 description: "Draft, rewrite, review, humanise, or adapt prose while preserving facts, intent, voice, and uncertainty. Use for technical, product, editorial, marketing, or personal writing, including stiff or AI-like drafts. Skip code-only tasks."
 compatibility: "Core instructions are portable. Optional diagnostics and package checks require Python 3.10+."
 metadata:
-  version: "2.0.0"
+  version: "2.1.0"
 references:
   - operating-contract
   - revision-pass-stack
   - foundations
   - voice-and-rhythm
+  - punctuation-and-sentence-flow
   - genericity-and-stiffness
   - ai-isms-and-humanisation
   - genre-modes
@@ -36,6 +37,8 @@ Choose the job before touching the prose.
 | Adapt | The substance should stay while audience, genre, channel, length, or voice changes | `references/genre-modes.md`, `references/style-bundles.md` |
 
 Mixed requests can use more than one job. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill owns the wording, not the code diagnosis.
+
+For an explicit request to remove, replace, limit, or standardise em dashes, semicolons, or colons, read `references/punctuation-and-sentence-flow.md`. Load it conditionally; ordinary line editing and humanisation do not imply a punctuation ban.
 
 Use another workflow for code-only implementation, standalone fact-checking, or authorship classification. This skill may rewrite prose produced alongside those tasks, but it does not perform them.
 
@@ -91,6 +94,8 @@ Use `references/revision-pass-stack.md`.
 2. **Sentence pass:** clear actor and action, concrete nouns and verbs, related words together, honest qualifications, informative emphasis.
 
 Do not compress every sentence. Restore connective tissue when the page starts to read like chopped notes.
+
+When punctuation is the edit target, classify the relation before changing the mark. A colon fulfils a promise, a semicolon balances close independent clauses, and a conjunction or subordinate clause should name logic that punctuation would otherwise leave implicit. Protect literal punctuation in code, URLs, times, ratios, quotations, labels, and configuration.
 
 **Complete when:** a reader can follow the argument or procedure on the first read without losing the draft's meaning or cadence.
 
@@ -158,6 +163,7 @@ Do not claim a passage was AI-written. Do not turn stylistic preference into an 
 | Exact revision order and loopbacks | `references/revision-pass-stack.md` |
 | Grammar, clarity, and modern usage baseline | `references/foundations.md` |
 | Cadence, stance, and voice repair | `references/voice-and-rhythm.md` |
+| Em-dash replacement, semicolon and colon judgement, and sentence-flow repair | `references/punctuation-and-sentence-flow.md` |
 | Generic, corporate, ceremonial, or inflated prose | `references/genericity-and-stiffness.md` |
 | AI-like patterns, humanisation, false positives, and scanner use | `references/ai-isms-and-humanisation.md` |
 | Docs, PRs, specs, memos, reports, essays, email, UI, and copy | `references/genre-modes.md` |

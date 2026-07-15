@@ -16,7 +16,7 @@ from typing import Sequence
 
 
 PROSE_ACTIONS = (
-    r"\b(?:draft(?:ing)?|write|rewrit(?:e|ing)|edit(?:ing)?|review(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|clarif(?:y|ying)|human(?:ise|ize|ising|izing)|de-robot(?:ise|ize))\b",
+    r"\b(?:draft(?:ing)?|write|rewrit(?:e|ing)|edit(?:ing)?|review(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|clarif(?:y|ying)|human(?:ise|ize|ising|izing)|de-robot(?:ise|ize)|replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b",
     r"\bmake\s+(?:this|it)\s+(?:clearer|warmer|less\s+(?:stiff|generic|robotic))\b",
     r"\b(?:genre|structure|format)\b",
 )
@@ -28,6 +28,7 @@ PROSE_SCOPE = (
 CODE_ONLY = (
     r"\b(?:debug|compile|build|deploy|implement|refactor|fix)\b.*\b(?:code|function|class|api|test|error|exception|stack trace|hydration|typescript|python|react|next\.js)\b",
     r"\b(?:why|how)\s+(?:does|do|can)\b.*\b(?:code|function|api|test|error|exception)\b",
+    r"\b(?:replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b.*\b(?:colons?|semi-?colons?|dashes|punctuation)\b.*\b(?:code|syntax|typescript|javascript|python|yaml|json|css|regex)\b",
 )
 FACT_CHECK_ONLY = (
     r"\b(?:fact[ -]?check|verify|validate|confirm)\b.*\b(?:fact|claim|source|citation|accuracy|true)\b",
@@ -36,6 +37,13 @@ FACT_CHECK_ONLY = (
 DOCS_QUESTION = (
     r"\b(?:where|how)\s+(?:is|are|do i find|can i find)\b.*\b(?:docs|documentation|readme)\b",
     r"\b(?:what does|how does)\b.*\b(?:the docs|documentation|readme)\b",
+)
+PUNCTUATION_TRANSFORM = (
+    r"\b(?:replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|standardis(?:e|ing)|standardiz(?:e|ing))\b.{0,80}\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons?|punctuation)\b",
+    r"\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons?|punctuation)\b.{0,80}\b(?:replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|standardis(?:e|ing)|standardiz(?:e|ing))\b",
+    r"\b(?:dash|semi-?colon|colon|punctuation)[ -]?(?:heavy|dense|awkward|overused)\b",
+    r"\b(?:ban(?:ned|ning|s)?|avoid(?:ed|ing|s)?)\b.{0,80}\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons|punctuation)\b",
+    r"\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons|punctuation)\b.{0,80}\b(?:ban(?:ned|ning|s)?|avoid(?:ed|ing|s)?)\b",
 )
 
 
@@ -58,6 +66,7 @@ ROUTE_RULES = (
     RouteRule("references/revision-pass-stack.md", (r"\b(?:rewrit(?:e|ing)|edit(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|cleanup|revision|draft(?:ing)?)\b",)),
     RouteRule("references/foundations.md", (r"\b(?:clear|clarity|concise|grammar|usage|composition|basics?)\b",)),
     RouteRule("references/voice-and-rhythm.md", (r"\b(?:stiff|flat|bloodless|formal|robotic|cadence|rhythm|hedg(?:e|ing)|awkward|clipped)\b",)),
+    RouteRule("references/punctuation-and-sentence-flow.md", PUNCTUATION_TRANSFORM),
     RouteRule("references/genericity-and-stiffness.md", (r"\b(?:generic|corporate|canned|fluffy|buzzwords?|over-signposted|dramatic|marketing[- ]speak|ceremonial)\b",)),
     RouteRule("references/ai-isms-and-humanisation.md", (r"\b(?:human(?:ise|ize)|ai[- ]?isms?|sound\s+human|less\s+(?:robotic|ai)|machine[- ]?written)\b",)),
     RouteRule("references/style-bundles.md", (r"\b(?:style|tone|publication|operator|newsletter|editorial|essay|memo|copy|simon\s+willison|julia\s+evans|gergely|lenny|reuters|bloomberg|paul\s+graham)\b",)),
@@ -76,6 +85,7 @@ TEST_CASES = (
             "references/ai-isms-and-humanisation.md",
             "references/genre-modes.md",
         ),
+        ("references/punctuation-and-sentence-flow.md",),
     ),
     TestCase(
         "stiff_runbook_intro",
@@ -87,6 +97,7 @@ TEST_CASES = (
             "references/genericity-and-stiffness.md",
             "references/genre-modes.md",
         ),
+        ("references/punctuation-and-sentence-flow.md",),
     ),
     TestCase(
         "genre_draft",
@@ -108,7 +119,48 @@ TEST_CASES = (
         "Draft a new product slogan from scratch, but ask for the minimum audience context first.",
         ("references/operating-contract.md", "references/revision-pass-stack.md"),
     ),
+    TestCase(
+        "replace_em_dashes_by_relation",
+        "Rewrite these sentences to replace the em dashes with natural punctuation and sentence structures; use semicolons and colons only where their grammar and relation fit.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/punctuation-and-sentence-flow.md",
+        ),
+    ),
+    TestCase(
+        "repair_punctuation_heavy_prose",
+        "Edit this punctuation-heavy paragraph so the flow is less awkward without changing its meaning.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/voice-and-rhythm.md",
+            "references/punctuation-and-sentence-flow.md",
+        ),
+    ),
     TestCase("code_only_rewrite", "Rewrite this Python function to remove a race condition.", (), ("references/operating-contract.md",)),
+    TestCase(
+        "code_punctuation_replacement",
+        "Replace the colons in this YAML syntax with equals signs.",
+        (),
+        ("references/punctuation-and-sentence-flow.md",),
+    ),
+    TestCase(
+        "code_em_dash_replacement",
+        "Remove the em dashes from these TypeScript comments and return the code patch only.",
+        (),
+        ("references/punctuation-and-sentence-flow.md",),
+    ),
+    TestCase(
+        "colon_topic_not_punctuation",
+        "Draft a plain-language article about colon cancer screening.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/genre-modes.md",
+        ),
+        ("references/punctuation-and-sentence-flow.md",),
+    ),
     TestCase("fact_check_only", "Fact-check whether this claim about GDP is accurate.", (), ("references/foundations.md",)),
     TestCase("docs_question", "Where do I find the API documentation for this option?", (), ("references/genre-modes.md",)),
 )
@@ -129,13 +181,14 @@ def has_prose_request(text: str) -> bool:
 
     action = matches_any(text, PROSE_ACTIONS)
     scope = matches_any(text, PROSE_SCOPE)
+    punctuation_transform = matches_any(text, PUNCTUATION_TRANSFORM)
     if matches_any(text, FACT_CHECK_ONLY) and not action:
         return False
     if matches_any(text, DOCS_QUESTION) and not action:
         return False
     if matches_any(text, CODE_ONLY) and not scope:
         return False
-    return action and scope
+    return action and (scope or punctuation_transform)
 
 
 def route_prompt(prompt: str) -> list[str]:
