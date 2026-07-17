@@ -28,6 +28,58 @@ require_command() {
     fi
 }
 
+validate_plan_item_collections() {
+    local plan_file="$1"
+
+    # Validate the complete collection before any jq iterator can turn a bad
+    # scripts/commands value into an empty generated adapter configuration.
+    if jq -e '
+        def valid_args:
+            if has("args") then
+                if (.args | type) != "array" then false
+                else all(.args[]; type == "string")
+                end
+            else true
+            end;
+        def valid_cwd:
+            if has("cwd") then (.cwd | type) == "string" else true end;
+        def valid_script:
+            if type != "object" then false
+            else
+                (.path? // .script? // null) as $path
+                | (if ($path | type) == "string" then ($path | length) > 0 else false end)
+                and valid_args
+                and valid_cwd
+            end;
+        def valid_command:
+            if type != "object" then false
+            else
+                (.command? // null) as $command
+                | (if ($command | type) == "string" then ($command | length) > 0 else false end)
+                and valid_cwd
+            end;
+        def valid_event:
+            if type != "object" then false
+            elif has("scripts") and ((.scripts | type) != "array" or (all(.scripts[]; valid_script) | not)) then false
+            elif has("commands") and ((.commands | type) != "array" or (all(.commands[]; valid_command) | not)) then false
+            else true
+            end;
+        if type != "object" then false
+        elif has("enabled_events") then
+            if (.enabled_events | type) != "array" then false
+            else all(.enabled_events[]; valid_event)
+            end
+        else true
+        end
+    ' "$plan_file" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    echo "Plan file has invalid scripts or commands configuration." >&2
+    echo "Expected arrays of objects with non-empty paths/commands, string args, and string cwd values." >&2
+    return 1
+}
+
 escape_for_sed() {
     printf '%s' "$1" | sed -e 's/[&|\\]/\\&/g'
 }
@@ -95,6 +147,8 @@ if [ ! -f "$PLAN_FILE" ]; then
     echo "Plan file does not exist: $PLAN_FILE" >&2
     exit 1
 fi
+
+validate_plan_item_collections "$PLAN_FILE" || exit 1
 
 MODE="$(jq -r '.mode // "additive"' "$PLAN_FILE")"
 if [ -n "$MODE_OVERRIDE" ]; then
@@ -206,6 +260,13 @@ scaffold_hooks.sh dry run
   managed root:  $MANAGED_ROOT_REL
 EOF
     exit 0
+fi
+
+if ! MANIFEST_ROWS="$(
+    jq -er '.events[] | [.name, .script_name, .description] | @tsv' "$MANIFEST_SOURCE"
+)"; then
+    echo "Failed to read complete Copilot hook manifest rows." >&2
+    exit 1
 fi
 
 mkdir -p "$PROJECT_ROOT/.github/hooks" "$PROJECT_ROOT/.github/copilot/hooks"
@@ -329,6 +390,82 @@ append_command_failure() {
 "
 }
 
+record_invalid_configured_items() {
+    local kind="$1"
+    local expected
+
+    case "$kind" in
+        scripts)
+            expected="an array of objects with a non-empty path, optional string args, and an optional string cwd"
+            ;;
+        commands)
+            expected="an array of objects with a non-empty command and an optional string cwd"
+            ;;
+        *)
+            expected="a valid array"
+            ;;
+    esac
+
+    printf '[copilot-hook] invalid %s configuration: expected %s.\n' "$kind" "$expected" >&2
+    append_command_failure "invalid $kind configuration" "<plan validation>" 64
+}
+
+validate_configured_items_json() {
+    local kind="$1"
+    local items_json="$2"
+    local filter
+
+    case "$kind" in
+        scripts)
+            filter='
+                def valid_args:
+                    if has("args") then
+                        if (.args | type) != "array" then false
+                        else all(.args[]; type == "string")
+                        end
+                    else true
+                    end;
+                def valid_cwd:
+                    if has("cwd") then (.cwd | type) == "string" else true end;
+                def valid_item:
+                    if type != "object" then false
+                    else
+                        (.path? // .script? // null) as $path
+                        | (if ($path | type) == "string" then ($path | length) > 0 else false end)
+                        and valid_args
+                        and valid_cwd
+                    end;
+                if type != "array" then false else all(.[]; valid_item) end
+            '
+            ;;
+        commands)
+            filter='
+                def valid_cwd:
+                    if has("cwd") then (.cwd | type) == "string" else true end;
+                def valid_item:
+                    if type != "object" then false
+                    else
+                        (.command? // null) as $command
+                        | (if ($command | type) == "string" then ($command | length) > 0 else false end)
+                        and valid_cwd
+                    end;
+                if type != "array" then false else all(.[]; valid_item) end
+            '
+            ;;
+        *)
+            record_invalid_configured_items "$kind"
+            return 1
+            ;;
+    esac
+
+    if printf '%s' "$items_json" | jq -e "$filter" >/dev/null 2>&1; then
+        return 0
+    fi
+
+    record_invalid_configured_items "$kind"
+    return 1
+}
+
 configured_command_failure_message() {
     printf 'One or more project hook commands failed.\n\n%s\nFix the failing command output, then retry the agent action.' "$COMMAND_FAILURE_SUMMARY"
 }
@@ -353,8 +490,11 @@ run_project_script() {
     local label="$1"
     local script_path="$2"
     local args_json="${3:-[]}"
+    local args_count
     local cwd
     local resolved_script
+    local script_arg
+    local script_arg_index
     local -a script_args=()
 
     cwd="$(resolve_command_cwd "${4:-.}")"
@@ -368,9 +508,26 @@ run_project_script() {
     esac
 
     require_jq
-    while IFS= read -r script_arg; do
+    if ! args_count="$(
+        printf '%s' "$args_json" | jq -er '
+            if type != "array" then error("script args must be an array")
+            elif all(.[]; type == "string") then length
+            else error("script args must contain only strings")
+            end
+        '
+    )"; then
+        printf '[copilot-hook] invalid script args configuration: expected an array of strings.\n' >&2
+        return 64
+    fi
+    for ((script_arg_index = 0; script_arg_index < args_count; script_arg_index += 1)); do
+        if ! script_arg="$(
+            printf '%s' "$args_json" | jq -er --argjson index "$script_arg_index" '.[$index]'
+        )"; then
+            printf '[copilot-hook] failed to read validated script args.\n' >&2
+            return 64
+        fi
         script_args+=("$script_arg")
-    done < <(printf '%s' "$args_json" | jq -r '.[]?')
+    done
 
     if [ ! -f "$resolved_script" ]; then
         printf '[copilot-hook] missing script: %s\n' "$resolved_script" >&2
@@ -397,10 +554,19 @@ run_project_script() {
 run_configured_scripts() {
     local scripts_json="$1"
     local failed="false"
+    local script_items
 
     require_jq
-
-    if [ "$(printf '%s' "$scripts_json" | jq 'length')" -eq 0 ]; then
+    if ! validate_configured_items_json "scripts" "$scripts_json"; then
+        return 1
+    fi
+    # Capture jq output before entering the loop so producer failures cannot
+    # disappear behind process-substitution exit semantics.
+    if ! script_items="$(printf '%s' "$scripts_json" | jq -c '.[]')"; then
+        record_invalid_configured_items "scripts"
+        return 1
+    fi
+    if [ -z "$script_items" ]; then
         return 0
     fi
 
@@ -429,18 +595,25 @@ run_configured_scripts() {
             append_command_failure "$label" "$script_path" "$status"
             failed="true"
         fi
-    done < <(printf '%s' "$scripts_json" | jq -c '.[]')
+    done <<< "$script_items"
 
     [ "$failed" = "false" ]
 }
 
 run_configured_commands() {
     local commands_json="$1"
+    local command_items
     local failed="false"
 
     require_jq
-
-    if [ "$(printf '%s' "$commands_json" | jq 'length')" -eq 0 ]; then
+    if ! validate_configured_items_json "commands" "$commands_json"; then
+        return 1
+    fi
+    if ! command_items="$(printf '%s' "$commands_json" | jq -c '.[]')"; then
+        record_invalid_configured_items "commands"
+        return 1
+    fi
+    if [ -z "$command_items" ]; then
         return 0
     fi
 
@@ -461,9 +634,26 @@ run_configured_commands() {
             append_command_failure "$label" "$command" "$status"
             failed="true"
         fi
-    done < <(printf '%s' "$commands_json" | jq -c '.[]')
+    done <<< "$command_items"
 
     [ "$failed" = "false" ]
+}
+
+run_configured_event_effects() {
+    local scripts_json="$1"
+    local commands_json="$2"
+
+    # Validate both collections before either one can produce a side effect.
+    if ! validate_configured_items_json "scripts" "$scripts_json"; then
+        return 1
+    fi
+    if ! validate_configured_items_json "commands" "$commands_json"; then
+        return 1
+    fi
+    if ! run_configured_scripts "$scripts_json"; then
+        return 1
+    fi
+    run_configured_commands "$commands_json"
 }
 
 handle_configured_failure() {
@@ -565,7 +755,7 @@ while IFS=$'\t' read -r event_name script_name description; do
         "$EVENT_TEMPLATE" > "$TARGET_SCRIPT"
 
     chmod +x "$TARGET_SCRIPT"
-done < <(jq -r '.events[] | [.name, .script_name, .description] | @tsv' "$MANIFEST_SOURCE")
+done <<< "$MANIFEST_ROWS"
 
 jq \
     --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \

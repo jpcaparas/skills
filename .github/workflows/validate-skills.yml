@@ -8,6 +8,9 @@ jobs:
   validate:
     name: validate (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    env:
+      # Live API probes are opt-in locally and must never run in CI or act.
+      AUDIFY_RUN_LIVE_TESTS: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -19,16 +22,19 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Set Up Python
+        if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
       - name: Set Up Node
+        if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: "24"
 
       - name: Set Up Bun
+        if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: "1.3.11"
@@ -41,19 +47,36 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y ripgrep httpie
 
       - name: Install Validation Tools (macOS)
-        if: runner.os == 'macOS'
+        if: ${{ runner.os == 'macOS' && !env.ACT }}
         # Keep macOS validation equivalent to Linux; the skill probes expect
         # these executable names, not just Python or Node package APIs.
         run: brew install ripgrep httpie
 
+      - name: Prepare Local macOS Toolchain (act)
+        if: ${{ env.ACT && runner.os == 'macOS' }}
+        shell: bash
+        # setup-python's downloaded macOS runtimes are not relocatable outside
+        # GitHub's hosted tool cache. Reuse the host runtimes and isolate the
+        # Python packages in act's temporary job directory instead.
+        run: |
+          set -euo pipefail
+          validation_venv="${RUNNER_TEMP:?RUNNER_TEMP must be set}/skills-validation-venv"
+          python3 -m venv --clear "$validation_venv"
+          "$validation_venv/bin/python3" -m pip install --upgrade pip
+          "$validation_venv/bin/python3" -m pip install -r requirements-validation.txt
+          printf '%s\n' "$validation_venv/bin" >> "$GITHUB_PATH"
+
       - name: Install Python Validation Packages
+        if: ${{ !env.ACT || runner.os == 'Linux' }}
         # Required by the workbook smoke tests and strict YAML validation.
-        run: python -m pip install --upgrade pip openpyxl pyyaml
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install -r requirements-validation.txt
 
       - name: Print Validation Tool Versions
         shell: bash
         run: |
-          python --version
+          python3 --version
           node --version
           npm --version
           bun --version

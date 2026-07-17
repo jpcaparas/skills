@@ -94,8 +94,7 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "Safe editing rule:",
         "handle_event()",
         "Project-specific logic belongs here.",
-        "run_configured_scripts",
-        "run_configured_commands",
+        "run_configured_event_effects",
         "BLOCK_ON_FAILURE",
         "PROJECT_SCRIPTS_JSON",
         "PROJECT_COMMANDS_JSON",
@@ -120,7 +119,9 @@ def readable_common_errors(common_path: Path) -> list[str]:
         "copilot_project_root()",
         "run_project_command()",
         "run_project_script()",
+        "validate_configured_items_json()",
         "run_configured_scripts()",
+        "run_configured_event_effects()",
         "handle_configured_failure()",
         "preToolUse",
         "permissionRequest",
@@ -210,10 +211,14 @@ def test_skill(skill_path: Path) -> dict:
         project = tmp / "project"
         project.mkdir()
         (project / "scripts").mkdir()
+        effect_marker = project / "configured-effect.marker"
         (project / "scripts" / "agent-stop-checks.sh").write_text(
             "#!/usr/bin/env bash\n"
             "set -euo pipefail\n"
-            "printf 'portable shared script %s\\n' \"${1:-}\" >&2\n",
+            "printf 'portable shared script %s\\n' \"${1:-}\" >&2\n"
+            "if [ -n \"${SCAFFOLD_HOOK_EFFECT_MARKER:-}\" ]; then\n"
+            "    printf 'script\\n' >> \"$SCAFFOLD_HOOK_EFFECT_MARKER\"\n"
+            "fi\n",
             encoding="utf-8",
         )
         (project / ".github" / "hooks").mkdir(parents=True)
@@ -250,6 +255,14 @@ def test_skill(skill_path: Path) -> dict:
                     }
                 ]
             if enabled_event.get("name") == "agentStop":
+                enabled_event["scripts"] = [
+                    {
+                        "label": "shared stop checks",
+                        "path": "scripts/agent-stop-checks.sh",
+                        "args": ["copilot"],
+                        "cwd": ".",
+                    }
+                ]
                 enabled_event["commands"] = [
                     {
                         "label": "intentional stop block",
@@ -416,6 +429,52 @@ def test_skill(skill_path: Path) -> dict:
                 results["passed"] = False
         else:
             results["errors"].append("generated permissionRequest hook missing before exit-code-2 check")
+            results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        agent_stop_script = generated_root / "events" / "agent-stop.sh"
+        if agent_stop_script.exists():
+            original_agent_stop = agent_stop_script.read_text(encoding="utf-8")
+            invalid_agent_stop, replacement_count = re.subn(
+                r"^PROJECT_COMMANDS_JSON=.*$",
+                "PROJECT_COMMANDS_JSON='null'",
+                original_agent_stop,
+                count=1,
+                flags=re.MULTILINE,
+            )
+            agent_stop_script.write_text(invalid_agent_stop, encoding="utf-8")
+            effect_marker.unlink(missing_ok=True)
+            preflight_proc = run(
+                ["bash", str(agent_stop_script)],
+                cwd=project,
+                input_text=json.dumps(
+                    {
+                        "sessionId": "s1",
+                        "timestamp": 1781060000000,
+                        "cwd": str(project),
+                    }
+                ),
+                env={
+                    "GITHUB_WORKSPACE": str(project),
+                    "SCAFFOLD_HOOK_EFFECT_MARKER": str(effect_marker),
+                },
+            )
+            agent_stop_script.write_text(original_agent_stop, encoding="utf-8")
+            if (
+                replacement_count != 1
+                or "invalid commands configuration" not in preflight_proc.stderr
+                or effect_marker.exists()
+            ):
+                results["errors"].append(
+                    "generated agentStop hook ran a valid script before rejecting malformed commands: "
+                    f"replacement_count={replacement_count}, status={preflight_proc.returncode}, "
+                    f"marker={effect_marker.exists()}, stderr={preflight_proc.stderr}"
+                )
+                results["passed"] = False
+            else:
+                results["integration_checks"]["passed"] += 1
+        else:
+            results["errors"].append("generated agentStop hook missing before preflight check")
             results["passed"] = False
 
     return results

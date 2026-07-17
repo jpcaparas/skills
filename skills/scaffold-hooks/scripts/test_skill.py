@@ -3,8 +3,10 @@
 
 from __future__ import annotations
 
+import copy
 import json
 import os
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -12,9 +14,18 @@ from pathlib import Path
 
 
 EXPECTED_HARNESSES = {"claude", "codex", "copilot", "devin", "opencode"}
+SHELL_PLAN_HARNESSES = ("claude", "codex", "copilot", "devin")
 
 
-def run(cmd: list[str], cwd: Path | None = None, input_text: str | None = None) -> subprocess.CompletedProcess[str]:
+def run(
+    cmd: list[str],
+    cwd: Path | None = None,
+    input_text: str | None = None,
+    env: dict[str, str] | None = None,
+) -> subprocess.CompletedProcess[str]:
+    merged_env = os.environ.copy()
+    if env:
+        merged_env.update(env)
     return subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -22,7 +33,7 @@ def run(cmd: list[str], cwd: Path | None = None, input_text: str | None = None) 
         check=False,
         capture_output=True,
         text=True,
-        env=os.environ.copy(),
+        env=merged_env,
     )
 
 
@@ -33,6 +44,337 @@ def load_json(path: Path) -> dict:
 def write(path: Path, text: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8")
+
+
+def invalid_plan_item_cases() -> list[tuple[str, str, object]]:
+    """Return behaviorally distinct malformed scripts/commands partitions."""
+    return [
+        ("scripts-null", "scripts", None),
+        ("scripts-string", "scripts", "scripts/check.sh"),
+        ("scripts-object", "scripts", {"path": "scripts/check.sh"}),
+        ("scripts-wrong-item", "scripts", [False]),
+        (
+            "scripts-args-object",
+            "scripts",
+            [{"path": "scripts/check.sh", "args": {}, "cwd": "."}],
+        ),
+        (
+            "scripts-args-wrong-item",
+            "scripts",
+            [{"path": "scripts/check.sh", "args": ["ok", 7], "cwd": "."}],
+        ),
+        (
+            "scripts-cwd-object",
+            "scripts",
+            [{"path": "scripts/check.sh", "args": [], "cwd": {}}],
+        ),
+        ("commands-null", "commands", None),
+        ("commands-string", "commands", "true"),
+        ("commands-object", "commands", {"command": "true"}),
+        ("commands-wrong-item", "commands", [False]),
+        (
+            "commands-cwd-object",
+            "commands",
+            [{"command": "true", "cwd": {}}],
+        ),
+    ]
+
+
+def harness_plan_validation_errors(skill_path: Path, temp_root: Path) -> list[str]:
+    """Exercise every shell scaffolder against the malformed plan matrix."""
+    errors: list[str] = []
+    diagnostic = "Plan file has invalid scripts or commands configuration."
+
+    for harness in SHELL_PLAN_HARNESSES:
+        harness_root = skill_path / "harnesses" / harness
+        base_plan = load_json(harness_root / "templates" / "hook-plan.example.json")
+        project = temp_root / f"invalid-plan-{harness}-project"
+        project.mkdir()
+
+        for case_name, field, invalid_value in invalid_plan_item_cases():
+            plan = copy.deepcopy(base_plan)
+            enabled_events = plan.get("enabled_events")
+            if not isinstance(enabled_events, list) or not enabled_events:
+                errors.append(f"{harness} template has no enabled event for plan validation")
+                break
+            first_event = enabled_events[0]
+            if not isinstance(first_event, dict):
+                errors.append(f"{harness} template has a non-object enabled event")
+                break
+            first_event[field] = copy.deepcopy(invalid_value)
+
+            plan_path = temp_root / f"invalid-plan-{harness}-{case_name}.json"
+            plan_path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+            command = [
+                "bash",
+                str(harness_root / "scripts" / "scaffold_hooks.sh"),
+                "--project",
+                str(project),
+                "--plan",
+                str(plan_path),
+                "--dry-run",
+            ]
+            if harness == "codex":
+                command.extend(["--ensure-feature", "off"])
+
+            proc = run(command, cwd=harness_root)
+            if proc.returncode == 0 or diagnostic not in proc.stderr:
+                errors.append(
+                    f"{harness} accepted or misreported {case_name}: "
+                    f"status={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
+                )
+
+        if any(project.iterdir()):
+            errors.append(f"{harness} malformed-plan dry runs wrote into the target project")
+
+    return errors
+
+
+def manifest_row_stream_errors(skill_path: Path, temp_root: Path) -> list[str]:
+    """Prove a late manifest-row producer failure cannot write a prefix."""
+    errors: list[str] = []
+    real_jq = shutil.which("jq")
+    if not real_jq:
+        return ["jq is required for manifest row stream regression checks"]
+
+    fake_bin = temp_root / "late-row-fake-bin"
+    fake_bin.mkdir()
+    fake_jq = fake_bin / "jq"
+    write(
+        fake_jq,
+        "#!/usr/bin/env bash\n"
+        "set -u\n"
+        "for argument in \"$@\"; do\n"
+        "    case \"$argument\" in\n"
+        "        *\".events[]\"*\"@tsv\"*)\n"
+        "            printf 'LateFailure\\tlate_failure.sh\\tforced prefix row\\tguidance\\tguidance\\tguidance\\n'\n"
+        "            exit 5\n"
+        "            ;;\n"
+        "    esac\n"
+        "done\n"
+        "exec \"$REAL_JQ\" \"$@\"\n",
+    )
+    fake_jq.chmod(0o755)
+
+    for harness in SHELL_PLAN_HARNESSES:
+        source_root = skill_path / "harnesses" / harness
+        harness_root = temp_root / f"late-row-{harness}-harness"
+        shutil.copytree(source_root, harness_root)
+        project = temp_root / f"late-row-{harness}-project"
+        project.mkdir()
+        run(["git", "init", "-q"], cwd=project)
+
+        command = [
+            "bash",
+            str(harness_root / "scripts" / "scaffold_hooks.sh"),
+            "--project",
+            str(project),
+            "--plan",
+            str(harness_root / "templates" / "hook-plan.example.json"),
+        ]
+        if harness == "codex":
+            command.extend(["--ensure-feature", "off"])
+
+        proc = run(
+            command,
+            cwd=harness_root,
+            env={
+                "PATH": f"{fake_bin}{os.pathsep}{os.environ.get('PATH', '')}",
+                "REAL_JQ": real_jq,
+            },
+        )
+        prefix_artifact = (
+            project
+            / ".github"
+            / "copilot"
+            / "hooks"
+            / "generated"
+            / "events"
+            / "late_failure.sh"
+            if harness == "copilot"
+            else project / "hooks" / "late-failure" / "script.sh"
+        )
+        if (
+            proc.returncode == 0
+            or "Failed to read complete" not in proc.stderr
+            or prefix_artifact.exists()
+        ):
+            errors.append(
+                f"{harness} consumed a partial manifest row stream: "
+                f"status={proc.returncode}, prefix={prefix_artifact.exists()}\n"
+                f"stdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+    return errors
+
+
+RUNTIME_VALIDATION_SHELL = r"""
+runtime_path="$1"
+runner_name="$2"
+payload="$3"
+project_root="$4"
+marker_path="$5"
+
+source "$runtime_path"
+export AGENT_HOOK_HARNESS="claude"
+export CLAUDE_PROJECT_DIR="$project_root"
+export GITHUB_WORKSPACE="$project_root"
+export HOOK_INPUT='{}'
+export RUNTIME_MARKER_PATH="$marker_path"
+
+case "$runner_name" in
+    config_scripts)
+        ADAPTER_CONFIG_JSON="$payload"
+        export ADAPTER_CONFIG_JSON
+        run_configured_scripts "$(config_scripts_json)"
+        ;;
+    config_commands)
+        ADAPTER_CONFIG_JSON="$payload"
+        export ADAPTER_CONFIG_JSON
+        run_configured_commands "$(config_commands_json)"
+        ;;
+    run_configured_scripts|run_configured_commands)
+        "$runner_name" "$payload"
+        ;;
+    *)
+        exit 99
+        ;;
+esac
+"""
+
+
+def runtime_plan_validation_errors(
+    runtime_path: Path,
+    project: Path,
+    *,
+    supports_config_accessors: bool,
+) -> list[str]:
+    """Prove malformed runtime plans fail before any configured effect runs."""
+    errors: list[str] = []
+    runtime_content = runtime_path.read_text(encoding="utf-8")
+    if supports_config_accessors:
+        for required_marker in [
+            "hook_should_skip_event()",
+            "validate_code_change_extensions_json()",
+            "preflight_configured_effects()",
+            "run_hook_event()",
+            'command_statuses=("${PIPESTATUS[@]}")',
+            "unable to inspect code changes; running configured checks.",
+        ]:
+            if required_marker not in runtime_content:
+                errors.append(
+                    f"{runtime_path.name} is missing shared event marker: {required_marker}"
+                )
+    marker = project / "runtime-plan-validation.marker"
+    marker_script = project / "scripts" / "runtime-plan-validation.sh"
+    write(
+        marker_script,
+        "#!/usr/bin/env bash\n"
+        "set -euo pipefail\n"
+        "printf 'executed\\n' > \"$RUNTIME_MARKER_PATH\"\n",
+    )
+    marker_script.chmod(0o755)
+
+    script_path = str(marker_script.relative_to(project))
+    marker_command = "printf 'executed\\n' > \"$RUNTIME_MARKER_PATH\""
+    cases = [
+        ("scripts-null", "run_configured_scripts", "null", "invalid scripts configuration"),
+        ("scripts-string", "run_configured_scripts", '"bad"', "invalid scripts configuration"),
+        ("scripts-object", "run_configured_scripts", "{}", "invalid scripts configuration"),
+        ("scripts-wrong-item", "run_configured_scripts", "[false]", "invalid scripts configuration"),
+        ("scripts-malformed-json", "run_configured_scripts", "[", "invalid scripts configuration"),
+        (
+            "scripts-bad-args",
+            "run_configured_scripts",
+            json.dumps([{"path": script_path, "args": {}, "cwd": "."}]),
+            "invalid scripts configuration",
+        ),
+        (
+            "scripts-bad-arg-item",
+            "run_configured_scripts",
+            json.dumps([{"path": script_path, "args": [7], "cwd": "."}]),
+            "invalid scripts configuration",
+        ),
+        (
+            "scripts-bad-cwd",
+            "run_configured_scripts",
+            json.dumps([{"path": script_path, "args": [], "cwd": {}}]),
+            "invalid scripts configuration",
+        ),
+        ("commands-null", "run_configured_commands", "null", "invalid commands configuration"),
+        ("commands-string", "run_configured_commands", '"bad"', "invalid commands configuration"),
+        ("commands-object", "run_configured_commands", "{}", "invalid commands configuration"),
+        ("commands-wrong-item", "run_configured_commands", "[false]", "invalid commands configuration"),
+        ("commands-malformed-json", "run_configured_commands", "[", "invalid commands configuration"),
+        (
+            "commands-bad-cwd",
+            "run_configured_commands",
+            json.dumps([{"command": marker_command, "cwd": {}}]),
+            "invalid commands configuration",
+        ),
+    ]
+    if supports_config_accessors:
+        cases.extend(
+            [
+                (
+                    "config-scripts-null",
+                    "config_scripts",
+                    '{"scripts":null}',
+                    "invalid scripts configuration",
+                ),
+                (
+                    "config-commands-null",
+                    "config_commands",
+                    '{"commands":null}',
+                    "invalid commands configuration",
+                ),
+            ]
+        )
+
+    for case_name, runner_name, payload, diagnostic in cases:
+        marker.unlink(missing_ok=True)
+        proc = run(
+            [
+                "bash",
+                "-c",
+                RUNTIME_VALIDATION_SHELL,
+                "runtime-validation",
+                str(runtime_path),
+                runner_name,
+                payload,
+                str(project),
+                str(marker),
+            ],
+            cwd=project,
+        )
+        if proc.returncode == 0 or diagnostic not in proc.stderr or marker.exists():
+            errors.append(
+                f"{runtime_path.name} did not fail closed for {case_name}: "
+                f"status={proc.returncode}, marker={marker.exists()}\n"
+                f"stdout={proc.stdout}\nstderr={proc.stderr}"
+            )
+
+    for runner_name in ("run_configured_scripts", "run_configured_commands"):
+        proc = run(
+            [
+                "bash",
+                "-c",
+                RUNTIME_VALIDATION_SHELL,
+                "runtime-validation",
+                str(runtime_path),
+                runner_name,
+                "[]",
+                str(project),
+                str(marker),
+            ],
+            cwd=project,
+        )
+        if proc.returncode != 0:
+            errors.append(
+                f"{runtime_path.name} rejected valid empty {runner_name}: {proc.stderr}"
+            )
+
+    return errors
 
 
 def seed_legacy_project(project: Path) -> None:
@@ -210,6 +552,23 @@ def test_skill(skill_path: Path) -> dict:
         results["passed"] = False
 
     with tempfile.TemporaryDirectory(prefix="scaffold-hooks-test-") as tmp:
+        temp_root = Path(tmp)
+        results["integration_checks"]["total"] += 1
+        invalid_plan_errors = harness_plan_validation_errors(skill_path, temp_root)
+        if invalid_plan_errors:
+            results["errors"].extend(invalid_plan_errors)
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
+
+        results["integration_checks"]["total"] += 1
+        row_stream_errors = manifest_row_stream_errors(skill_path, temp_root)
+        if row_stream_errors:
+            results["errors"].extend(row_stream_errors)
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
+
         project = Path(tmp) / "project"
         project.mkdir()
         seed_legacy_project(project)
@@ -404,9 +763,14 @@ def test_skill(skill_path: Path) -> dict:
         quiet_code_change_probe = any(
             token in runtime_content for token in ["grep -Eiq", "grep -Eq", "grep -q", ">/dev/null"]
         )
+        fail_safe_code_change_probe = (
+            'command_statuses=("${PIPESTATUS[@]}")' in runtime_content
+            and "unable to inspect code changes; running configured checks." in runtime_content
+        )
         if (
             "hook_has_code_changes()" in runtime_content
             and quiet_code_change_probe
+            and fail_safe_code_change_probe
             and "head -1" not in runtime_content
             and stop_config.get("run_on_code_changes") is True
             and "ts" in stop_config.get("code_change_extensions", [])
@@ -415,6 +779,69 @@ def test_skill(skill_path: Path) -> dict:
         else:
             results["errors"].append("Universal scaffold did not preserve the quiet shared code-change Stop gate")
             results["passed"] = False
+
+        runtime_targets = [
+            (
+                "universal shared runtime",
+                project / "hooks" / "lib" / "agent-hook-runtime.sh",
+                True,
+            ),
+            (
+                "Copilot generated runtime",
+                project
+                / ".github"
+                / "copilot"
+                / "hooks"
+                / "generated"
+                / "lib"
+                / "common.sh",
+                False,
+            ),
+        ]
+        repository_root = skill_path.parent.parent
+        checked_in_runtime = repository_root / "hooks" / "lib" / "agent-hook-runtime.sh"
+        if (repository_root / ".git").exists() and checked_in_runtime.exists():
+            runtime_targets.append(("checked-in shared runtime", checked_in_runtime, True))
+
+        if (repository_root / ".git").exists():
+            results["integration_checks"]["total"] += 1
+            checked_in_event_scripts = sorted((repository_root / "hooks").glob("*/script.sh"))
+            stale_event_scripts = [
+                script_path
+                for script_path in checked_in_event_scripts
+                if 'run_hook_event handle_event "$@"' not in script_path.read_text(
+                    encoding="utf-8"
+                )
+            ]
+            if checked_in_event_scripts and not stale_event_scripts:
+                results["integration_checks"]["passed"] += 1
+            else:
+                stale_names = ", ".join(
+                    str(script_path.relative_to(repository_root))
+                    for script_path in stale_event_scripts
+                )
+                results["errors"].append(
+                    "Checked-in event scripts bypass the shared event guard"
+                    + (f": {stale_names}" if stale_names else "")
+                )
+                results["passed"] = False
+
+        for runtime_label, runtime_path, supports_config_accessors in runtime_targets:
+            results["integration_checks"]["total"] += 1
+            if not runtime_path.exists():
+                results["errors"].append(f"{runtime_label} is missing: {runtime_path}")
+                results["passed"] = False
+                continue
+            runtime_errors = runtime_plan_validation_errors(
+                runtime_path,
+                project,
+                supports_config_accessors=supports_config_accessors,
+            )
+            if runtime_errors:
+                results["errors"].extend(runtime_errors)
+                results["passed"] = False
+            else:
+                results["integration_checks"]["passed"] += 1
 
         write(project / "scripts" / "empty-args-ok.sh", "#!/usr/bin/env bash\nexit 0\n")
         os.chmod(project / "scripts" / "empty-args-ok.sh", 0o755)

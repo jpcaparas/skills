@@ -95,6 +95,7 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "How this script is organized:",
         "Safe editing rule:",
         "handle_event()",
+        "run_hook_event handle_event",
         "Project-specific logic belongs here.",
         "run_configured_scripts",
         "run_configured_commands",
@@ -116,13 +117,20 @@ def readable_common_errors(common_path: Path) -> list[str]:
     required_snippets = [
         "require_jq()",
         "read_adapter_config()",
+        "config_collection_json()",
         "config_scripts_json()",
         "config_commands_json()",
+        "validate_configured_items_json()",
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
         "hook_has_code_changes()",
         "hook_should_skip_event()",
+        "validate_code_change_extensions_json()",
+        "preflight_configured_effects()",
+        "run_hook_event()",
+        'command_statuses=("${PIPESTATUS[@]}")',
+        "unable to inspect code changes; running configured checks.",
     ]
     return [
         f"agent-hook-runtime.sh is missing helper marker: {snippet}"

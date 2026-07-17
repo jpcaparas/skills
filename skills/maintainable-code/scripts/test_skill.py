@@ -42,6 +42,10 @@ VAGUE_MESSAGE = "Function name '{}' is vague."
 WEAK_MESSAGE = "Inspect whether this weak type hides a real contract."
 TODO_MESSAGE = "TODO/FIXME marker merits follow-up review."
 
+# These stress cases detect unbounded scanner work; they are not performance
+# benchmarks. Allow for linux/amd64 emulation and shared-runner load in local act.
+STRESS_SCAN_TIMEOUT_SECONDS = 15
+
 JsonScalar: TypeAlias = str | int | float | bool | None
 JsonValue: TypeAlias = JsonScalar | list["JsonValue"] | Mapping[str, "JsonValue"]
 JsonObject: TypeAlias = Mapping[str, JsonValue]
@@ -983,7 +987,7 @@ def check_scanner(skill_root: Path, errors: list[str]) -> None:
             adversarial_root,
             "--max-file-lines",
             "2",
-            timeout=5,
+            timeout=STRESS_SCAN_TIMEOUT_SECONDS,
         )
         if timed is None or timed_payload is None:
             errors.append("scanner timed out on an adversarial long line")
@@ -995,7 +999,7 @@ def check_scanner(skill_root: Path, errors: list[str]) -> None:
         weak_timed, weak_payload = run_json_scan(
             skill_root,
             weak_line,
-            timeout=5,
+            timeout=STRESS_SCAN_TIMEOUT_SECONDS,
         )
         if weak_timed is None or weak_payload is None:
             errors.append("scanner timed out on repeated TypeScript weak-type tokens")
@@ -1007,7 +1011,7 @@ def check_scanner(skill_root: Path, errors: list[str]) -> None:
         object_timed, object_payload = run_json_scan(
             skill_root,
             object_line,
-            timeout=5,
+            timeout=STRESS_SCAN_TIMEOUT_SECONDS,
         )
         if object_timed is None or object_payload is None:
             errors.append("scanner timed out on repeated TypeScript object values")

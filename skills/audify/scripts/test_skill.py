@@ -3,12 +3,17 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import json
 import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
+
+
+LIVE_TEST_OPT_IN_VARIABLE = "AUDIFY_RUN_LIVE_TESTS"
+LIVE_TEST_OPT_IN_VALUE = "1"
 
 
 def run_step(label: str, command: list[str]) -> tuple[bool, str]:
@@ -20,6 +25,15 @@ def run_step(label: str, command: list[str]) -> tuple[bool, str]:
     if output:
         rendered += f"\n{output}"
     return status, rendered
+
+
+def should_run_live_probe(environment: Mapping[str, str]) -> bool:
+    """Require deliberate live-test intent as well as provider credentials."""
+
+    return (
+        environment.get(LIVE_TEST_OPT_IN_VARIABLE) == LIVE_TEST_OPT_IN_VALUE
+        and bool(environment.get("GEMINI_API_KEY"))
+    )
 
 
 def main() -> int:
@@ -52,8 +66,10 @@ def main() -> int:
         )
     )
 
-    api_key_present = bool(os.environ.get("GEMINI_API_KEY"))
-    if api_key_present:
+    live_test_requested = (
+        os.environ.get(LIVE_TEST_OPT_IN_VARIABLE) == LIVE_TEST_OPT_IN_VALUE
+    )
+    if should_run_live_probe(os.environ):
         with tempfile.TemporaryDirectory(prefix="audify-live-test-") as temp_dir:
             results.append(
                 run_step(
@@ -68,8 +84,18 @@ def main() -> int:
                     ],
                 )
             )
+    elif live_test_requested:
+        results.append(
+            (True, "SKIP: live Gemini smoke probe (GEMINI_API_KEY not set)")
+        )
     else:
-        results.append((True, "SKIP: live Gemini smoke probe (GEMINI_API_KEY not set)"))
+        results.append(
+            (
+                True,
+                "SKIP: live Gemini smoke probe "
+                f"(set {LIVE_TEST_OPT_IN_VARIABLE}={LIVE_TEST_OPT_IN_VALUE} to opt in)",
+            )
+        )
 
     passed = all(status for status, _ in results)
     summary = {

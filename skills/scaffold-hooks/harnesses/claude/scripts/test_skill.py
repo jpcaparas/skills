@@ -97,8 +97,12 @@ def run(
     cmd: list[str],
     cwd: Path | None = None,
     input_text: str | None = None,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run a command and capture output for test assertions."""
+    merged_env = os.environ.copy()
+    if env:
+        merged_env.update(env)
     return subprocess.run(
         cmd,
         cwd=str(cwd) if cwd else None,
@@ -106,6 +110,7 @@ def run(
         check=False,
         capture_output=True,
         text=True,
+        env=merged_env,
     )
 
 
@@ -116,6 +121,7 @@ def readable_stub_errors(script_path: Path) -> list[str]:
         "How this script is organized:",
         "Safe editing rule:",
         "handle_event()",
+        "run_hook_event handle_event",
         "Project-specific logic belongs here.",
         "run_configured_scripts",
         "run_configured_commands",
@@ -138,13 +144,20 @@ def readable_common_errors(common_path: Path) -> list[str]:
     required_snippets = [
         "require_jq()",
         "read_adapter_config()",
+        "config_collection_json()",
         "config_scripts_json()",
         "config_commands_json()",
+        "validate_configured_items_json()",
         "run_project_command()",
         "run_project_script()",
         "run_configured_scripts()",
         "hook_has_code_changes()",
         "hook_should_skip_event()",
+        "validate_code_change_extensions_json()",
+        "preflight_configured_effects()",
+        "run_hook_event()",
+        'command_statuses=("${PIPESTATUS[@]}")',
+        "unable to inspect code changes; running configured checks.",
     ]
     return [
         f"agent-hook-runtime.sh is missing helper marker: {snippet}"
@@ -232,10 +245,14 @@ def test_skill(skill_path: Path) -> dict:
         (project / "src").mkdir()
         (project / "src" / "example.ts").write_text("export const example = true;\n", encoding="utf-8")
         (project / "scripts").mkdir()
+        effect_marker = project / "configured-effect.marker"
         (project / "scripts" / "agent-stop-checks.sh").write_text(
             "#!/usr/bin/env bash\n"
             "set -euo pipefail\n"
-            "printf 'portable shared script %s\\n' \"${1:-}\" >&2\n",
+            "printf 'portable shared script %s\\n' \"${1:-}\" >&2\n"
+            "if [ -n \"${SCAFFOLD_HOOK_EFFECT_MARKER:-}\" ]; then\n"
+            "    printf 'script\\n' >> \"$SCAFFOLD_HOOK_EFFECT_MARKER\"\n"
+            "fi\n",
             encoding="utf-8",
         )
         temp_plan = tmp / "hook-plan.json"
@@ -253,7 +270,11 @@ def test_skill(skill_path: Path) -> dict:
                 enabled_event["commands"] = [
                     {
                         "label": "portable hook command",
-                        "command": "printf 'portable hook command\\n' >&2",
+                        "command": (
+                            "printf 'portable hook command\\n' >&2; "
+                            "if [ -n \"${SCAFFOLD_HOOK_EFFECT_MARKER:-}\" ]; then "
+                            "printf 'command\\n' >> \"$SCAFFOLD_HOOK_EFFECT_MARKER\"; fi"
+                        ),
                         "cwd": ".",
                     }
                 ]
@@ -372,7 +393,58 @@ def test_skill(skill_path: Path) -> dict:
             results["passed"] = False
 
         results["integration_checks"]["total"] += 1
+        preflight_errors: list[str] = []
+        stop_config_path = generated_root / "stop" / "claude.json"
+        if stop_script.exists() and stop_config_path.exists():
+            original_stop_config = load_json(stop_config_path)
+            invalid_stop_config = json.loads(json.dumps(original_stop_config))
+            invalid_stop_config["run_on_code_changes"] = False
+            invalid_stop_config["commands"] = None
+            stop_config_path.write_text(
+                json.dumps(invalid_stop_config, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            effect_marker.unlink(missing_ok=True)
+            preflight_payload = json.dumps(
+                {
+                    "hook_event_name": "Stop",
+                    "cwd": str(project),
+                    "stop_hook_active": False,
+                }
+            )
+            preflight_proc = run(
+                ["bash", str(stop_script)],
+                cwd=project,
+                input_text=preflight_payload,
+                env={"SCAFFOLD_HOOK_EFFECT_MARKER": str(effect_marker)},
+            )
+            stop_config_path.write_text(
+                json.dumps(original_stop_config, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            if (
+                "invalid commands configuration" not in preflight_proc.stderr
+                or effect_marker.exists()
+            ):
+                preflight_errors.append(
+                    f"status={preflight_proc.returncode}, marker={effect_marker.exists()}, "
+                    f"stderr={preflight_proc.stderr}"
+                )
+        else:
+            preflight_errors.append("generated Stop hook or config is missing")
+
+        if preflight_errors:
+            results["errors"].append(
+                "malformed commands ran a valid configured script before rejection: "
+                + " | ".join(preflight_errors)
+            )
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
+
+        results["integration_checks"]["total"] += 1
         if stop_script.exists():
+            effect_marker.unlink(missing_ok=True)
             active_payload = json.dumps(
                 {
                     "hook_event_name": "Stop",
@@ -380,11 +452,17 @@ def test_skill(skill_path: Path) -> dict:
                     "stop_hook_active": True,
                 }
             )
-            active_proc = run(["bash", str(stop_script)], cwd=project, input_text=active_payload)
+            active_proc = run(
+                ["bash", str(stop_script)],
+                cwd=project,
+                input_text=active_payload,
+                env={"SCAFFOLD_HOOK_EFFECT_MARKER": str(effect_marker)},
+            )
             if (
                 active_proc.returncode == 0
                 and "portable shared script claude" not in active_proc.stderr
                 and "portable hook command" not in active_proc.stderr
+                and not effect_marker.exists()
             ):
                 results["integration_checks"]["passed"] += 1
             else:
@@ -393,6 +471,64 @@ def test_skill(skill_path: Path) -> dict:
         else:
             results["errors"].append("generated Stop hook missing before active-stop skip check")
             results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        subagent_guard_errors: list[str] = []
+        subagent_stop_script = generated_root / "subagent-stop" / "claude.sh"
+        subagent_stop_config_path = generated_root / "subagent-stop" / "claude.json"
+        if (
+            subagent_stop_script.exists()
+            and subagent_stop_config_path.exists()
+            and stop_config_path.exists()
+        ):
+            original_subagent_config = load_json(subagent_stop_config_path)
+            guarded_subagent_config = json.loads(json.dumps(original_subagent_config))
+            stop_effect_config = load_json(stop_config_path)
+            guarded_subagent_config["scripts"] = stop_effect_config["scripts"]
+            guarded_subagent_config["commands"] = stop_effect_config["commands"]
+            guarded_subagent_config["run_on_code_changes"] = False
+            subagent_stop_config_path.write_text(
+                json.dumps(guarded_subagent_config, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            effect_marker.unlink(missing_ok=True)
+            subagent_guard_proc = run(
+                ["bash", str(subagent_stop_script)],
+                cwd=project,
+                input_text=json.dumps(
+                    {
+                        "hook_event_name": "SubagentStop",
+                        "cwd": str(project),
+                        "stop_hook_active": True,
+                    }
+                ),
+                env={"SCAFFOLD_HOOK_EFFECT_MARKER": str(effect_marker)},
+            )
+            subagent_stop_config_path.write_text(
+                json.dumps(original_subagent_config, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            if (
+                subagent_guard_proc.returncode != 0
+                or effect_marker.exists()
+                or "portable shared script claude" in subagent_guard_proc.stderr
+                or "portable hook command" in subagent_guard_proc.stderr
+            ):
+                subagent_guard_errors.append(
+                    f"status={subagent_guard_proc.returncode}, marker={effect_marker.exists()}, "
+                    f"stderr={subagent_guard_proc.stderr}"
+                )
+        else:
+            subagent_guard_errors.append("generated SubagentStop hook or config is missing")
+
+        if subagent_guard_errors:
+            results["errors"].append(
+                "generated SubagentStop entry path bypassed the active-stop guard: "
+                + " | ".join(subagent_guard_errors)
+            )
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
 
         run(["git", "add", "."], cwd=project)
         run(
@@ -431,6 +567,115 @@ def test_skill(skill_path: Path) -> dict:
         else:
             results["errors"].append("generated Stop hook missing before no-change skip check")
             results["passed"] = False
+
+        results["integration_checks"]["total"] += 1
+        git_failure_errors: list[str] = []
+        if stop_script.exists():
+            failing_git_bin = tmp / "failing-git-bin"
+            failing_git_bin.mkdir()
+            failing_git = failing_git_bin / "git"
+            failing_git.write_text(
+                "#!/usr/bin/env bash\n"
+                "set -euo pipefail\n"
+                "case \" $* \" in\n"
+                "    *\" rev-parse --show-toplevel \"*) exit 0 ;;\n"
+                "    *\" diff --cached --name-only \"*) exit 74 ;;\n"
+                "    *) exit 75 ;;\n"
+                "esac\n",
+                encoding="utf-8",
+            )
+            failing_git.chmod(0o755)
+            effect_marker.unlink(missing_ok=True)
+            git_failure_proc = run(
+                ["bash", str(stop_script)],
+                cwd=project,
+                input_text=clean_payload,
+                env={
+                    "PATH": f"{failing_git_bin}{os.pathsep}{os.environ.get('PATH', '')}",
+                    "SCAFFOLD_HOOK_EFFECT_MARKER": str(effect_marker),
+                },
+            )
+            marker_effects = (
+                effect_marker.read_text(encoding="utf-8").splitlines()
+                if effect_marker.exists()
+                else []
+            )
+            if (
+                git_failure_proc.returncode != 0
+                or "unable to inspect code changes; running configured checks."
+                not in git_failure_proc.stderr
+                or set(marker_effects) != {"script", "command"}
+            ):
+                git_failure_errors.append(
+                    f"status={git_failure_proc.returncode}, effects={marker_effects}, "
+                    f"stderr={git_failure_proc.stderr}"
+                )
+        else:
+            git_failure_errors.append("generated Stop hook is missing")
+
+        if git_failure_errors:
+            results["errors"].append(
+                "Git enumeration failure suppressed configured Stop checks: "
+                + " | ".join(git_failure_errors)
+            )
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
+
+        results["integration_checks"]["total"] += 1
+        malformed_extension_errors: list[str] = []
+        stop_config_path = generated_root / "stop" / "claude.json"
+        if stop_script.exists() and stop_config_path.exists():
+            original_stop_config = load_json(stop_config_path)
+            malformed_extensions = [
+                ("null", None),
+                ("object", {"ts": True}),
+                ("wrong item", ["ts", 7]),
+            ]
+            for case_name, invalid_extensions in malformed_extensions:
+                invalid_stop_config = json.loads(json.dumps(original_stop_config))
+                invalid_stop_config["run_on_code_changes"] = True
+                invalid_stop_config["code_change_extensions"] = invalid_extensions
+                stop_config_path.write_text(
+                    json.dumps(invalid_stop_config, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                effect_marker.unlink(missing_ok=True)
+                malformed_proc = run(
+                    ["bash", str(stop_script)],
+                    cwd=project,
+                    input_text=clean_payload,
+                    env={"SCAFFOLD_HOOK_EFFECT_MARKER": str(effect_marker)},
+                )
+                marker_effects = (
+                    effect_marker.read_text(encoding="utf-8").splitlines()
+                    if effect_marker.exists()
+                    else []
+                )
+                if (
+                    malformed_proc.returncode != 0
+                    or "invalid code_change_extensions configuration" not in malformed_proc.stderr
+                    or set(marker_effects) != {"script", "command"}
+                ):
+                    malformed_extension_errors.append(
+                        f"{case_name}: status={malformed_proc.returncode}, "
+                        f"effects={marker_effects}, stderr={malformed_proc.stderr}"
+                    )
+            stop_config_path.write_text(
+                json.dumps(original_stop_config, indent=2) + "\n",
+                encoding="utf-8",
+            )
+        else:
+            malformed_extension_errors.append("generated Stop hook or config is missing")
+
+        if malformed_extension_errors:
+            results["errors"].append(
+                "malformed code_change_extensions suppressed configured checks: "
+                + " | ".join(malformed_extension_errors)
+            )
+            results["passed"] = False
+        else:
+            results["integration_checks"]["passed"] += 1
 
         results["integration_checks"]["total"] += 1
         claude_lib = generated_root / "lib" / "claude.sh"

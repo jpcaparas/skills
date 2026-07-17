@@ -9,8 +9,8 @@
 #
 # How this script is organized:
 #   1. read Copilot's JSON payload from stdin into HOOK_INPUT
-#   2. run reusable project scripts from PROJECT_SCRIPTS_JSON
-#   3. run existing project commands from PROJECT_COMMANDS_JSON
+#   2. preflight scripts and commands before either collection can run
+#   3. run reusable scripts and existing commands from the plan JSON
 #   4. call handle_event() for project-specific logic
 #
 # Safe editing rule:
@@ -41,12 +41,7 @@ main() {
     HOOK_INPUT="$(read_hook_input)"
     export HOOK_INPUT
 
-    if ! run_configured_scripts "$PROJECT_SCRIPTS_JSON"; then
-        handle_configured_failure "$EVENT_NAME" "$BLOCK_ON_FAILURE" "$(configured_command_failure_message)"
-        return "$?"
-    fi
-
-    if ! run_configured_commands "$PROJECT_COMMANDS_JSON"; then
+    if ! run_configured_event_effects "$PROJECT_SCRIPTS_JSON" "$PROJECT_COMMANDS_JSON"; then
         handle_configured_failure "$EVENT_NAME" "$BLOCK_ON_FAILURE" "$(configured_command_failure_message)"
         return "$?"
     fi

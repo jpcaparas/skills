@@ -4,6 +4,8 @@ Public source repository for installable agent skills.
 
 Install the full collection globally with `npx skills add jpcaparas/skills`.
 
+Contributing? Start with the local and hosted-runner checks in [TESTING.md](TESTING.md).
+
 ## Install
 
 ```bash

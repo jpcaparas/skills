@@ -20,3 +20,18 @@ python3 skills/<skill-name>/scripts/validate.py skills/<skill-name>
 python3 skills/<skill-name>/scripts/test_skill.py skills/<skill-name>
 npx --yes skills add . --list
 ```
+
+Run the complete native repository suite before handing off a change:
+
+```bash
+python3 -m pip install -r requirements-validation.txt
+pnpm validate
+```
+
+For a higher-fidelity preflight, run the GitHub Actions matrix locally with nektos/act. This is intentionally separate from `pnpm validate` because the Ubuntu leg needs Docker and the macOS leg needs an Apple Silicon Mac:
+
+```bash
+pnpm validate:act
+```
+
+Use `pnpm validate:act:ubuntu` on hosts that cannot run the native macOS leg. See [TESTING.md](TESTING.md) for prerequisites and limitations.

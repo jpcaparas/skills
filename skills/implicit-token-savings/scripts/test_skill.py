@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 
@@ -50,6 +51,7 @@ def run_tests(skill_path: str) -> dict[str, object]:
         "assertions_valid": {"passed": 0, "total": 0},
         "tag_coverage": {"passed": 0, "total": 4},
         "probe_checks": {"passed": 0, "total": 0, "skipped": 0},
+        "probe_regressions": {"passed": 0, "total": 1},
         "errors": [],
         "warnings": [],
         "passed": True,
@@ -112,6 +114,21 @@ def run_tests(skill_path: str) -> dict[str, object]:
                 results["errors"].append(f"Cross-reference not found: {rel_path}")
                 results["passed"] = False
 
+    regression_cmd = subprocess.run(
+        [sys.executable, str(SCRIPT_DIR / "test_probe_implicit_token_savings.py")],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if regression_cmd.returncode == 0:
+        results["probe_regressions"]["passed"] = 1
+    else:
+        results["errors"].append(
+            "Probe regressions failed: "
+            + (regression_cmd.stderr.strip() or regression_cmd.stdout.strip())
+        )
+        results["passed"] = False
+
     suite = probe_implicit_token_savings.run_suite()
     summary = suite["summary"]
     results["probe_checks"]["total"] = summary["checks_total"]
@@ -156,6 +173,11 @@ def main() -> int:
         f"{results['probe_checks']['passed']} passed, "
         f"{results['probe_checks']['skipped']} skipped, "
         f"{results['probe_checks']['total']} total"
+    )
+    print(
+        "Probe regressions: "
+        f"{results['probe_regressions']['passed']}/"
+        f"{results['probe_regressions']['total']} passed"
     )
 
     if results["warnings"]:

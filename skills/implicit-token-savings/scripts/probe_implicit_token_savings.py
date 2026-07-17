@@ -89,6 +89,37 @@ def skipped_check(name: str, detail: str) -> dict[str, object]:
     }
 
 
+def probe_docker() -> dict[str, object]:
+    """Verify formatted container output when a Docker daemon is available."""
+    if not shutil.which("docker"):
+        return skipped_check("docker-ps-format", "docker is not installed on PATH.")
+
+    daemon_cmd = run_command(["docker", "info"])
+    if not daemon_cmd["ok"]:
+        return skipped_check(
+            "docker-ps-format",
+            "docker is installed, but its daemon is unavailable.",
+        )
+
+    docker_cmd = run_command(["docker", "ps", "--format", "{{json .}}"])
+    docker_rows = str(docker_cmd["stdout"]).splitlines()
+    structured_rows = True
+    for row in docker_rows:
+        try:
+            structured_rows = isinstance(json.loads(row), dict)
+        except json.JSONDecodeError:
+            structured_rows = False
+        if not structured_rows:
+            break
+
+    return check(
+        "docker-ps-format",
+        bool(docker_cmd["ok"]) and structured_rows,
+        docker_cmd,
+        "docker ps returned structured rows or an empty result set.",
+    )
+
+
 def build_fixture(root: Path) -> dict[str, Path]:
     workspace = root / "workspace"
     workspace.mkdir()
@@ -306,22 +337,7 @@ def run_suite() -> dict[str, object]:
             else:
                 checks.append(skipped_check(f"{name}-presence", f"{name} is not installed on PATH."))
 
-        if shutil.which("docker"):
-            docker_cmd = run_command(["docker", "ps", "--format", "{{json .}}"], allowed={0, 1})
-            docker_output = str(docker_cmd["stdout"]).strip()
-            passed = docker_cmd["returncode"] == 0 and (
-                not docker_output or docker_output.startswith("{")
-            )
-            checks.append(
-                check(
-                    "docker-ps-format",
-                    passed,
-                    docker_cmd,
-                    "docker ps returned structured rows or an empty result set.",
-                )
-            )
-        else:
-            checks.append(skipped_check("docker-ps-format", "docker is not installed on PATH."))
+        checks.append(probe_docker())
 
         if shutil.which("jq"):
             jq_cmd = run_shell("printf '{\"value\":1}\\n' | jq -r '.value'")

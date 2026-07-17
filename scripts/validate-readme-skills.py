@@ -6,6 +6,8 @@ import re
 import sys
 from pathlib import Path
 
+from readme_markdown import markdown_visible_text
+
 
 REPO_SLUG = "jpcaparas/skills"
 GLOBAL_INSTALL_COMMAND = f"npx skills add {REPO_SLUG}"
@@ -18,27 +20,21 @@ def fail(errors: list[str]) -> int:
     return 1
 
 
-def main() -> int:
-    repo_root = Path(__file__).resolve().parents[1]
-    readme_path = repo_root / "README.md"
-    skills_root = repo_root / "skills"
+def validate_readme_catalog(readme: str, skill_names: list[str]) -> list[str]:
+    """Return catalog errors for the README content visible to readers."""
 
-    readme = readme_path.read_text(encoding="utf-8")
-    skill_names = sorted(
-        path.parent.name for path in skills_root.glob("*/SKILL.md") if path.is_file()
-    )
-
+    visible_readme = markdown_visible_text(readme)
     errors: list[str] = []
 
     available_match = re.search(
         r"^## Available Skills\s*$\n(?P<body>.*?)(?=^## |\Z)",
-        readme,
+        visible_readme,
         re.MULTILINE | re.DOTALL,
     )
     if not available_match:
-        return fail(["README.md is missing a '## Available Skills' section."])
+        return ["README.md is missing a '## Available Skills' section."]
 
-    before_available = readme[: available_match.start()]
+    before_available = visible_readme[: available_match.start()]
     if GLOBAL_INSTALL_COMMAND not in before_available:
         errors.append(
             "README.md must document the global install command "
@@ -92,6 +88,31 @@ def main() -> int:
                 f"Section '{skill_name}' must put {expected_command} on the first "
                 "non-empty line after the header."
             )
+
+    return errors
+
+
+def main() -> int:
+    repo_root = Path(__file__).resolve().parents[1]
+    readme_path = repo_root / "README.md"
+    skills_root = repo_root / "skills"
+
+    readme = readme_path.read_text(encoding="utf-8")
+    skill_names = sorted(
+        path.parent.name
+        for path in skills_root.glob("*/SKILL.md")
+        if path.is_file() and not path.is_symlink()
+    )
+    errors = validate_readme_catalog(readme, skill_names)
+    symlinked_skill_files = sorted(
+        path.relative_to(repo_root)
+        for path in skills_root.glob("*/SKILL.md")
+        if path.is_symlink()
+    )
+    errors.extend(
+        f"Installable SKILL.md must not be a symlink: {path}"
+        for path in symlinked_skill_files
+    )
 
     if errors:
         return fail(errors)

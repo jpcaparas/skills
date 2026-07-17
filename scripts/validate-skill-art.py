@@ -5,9 +5,12 @@ from __future__ import annotations
 
 import importlib.util
 import re
-import struct
 import sys
 from pathlib import Path
+from typing import Protocol, cast
+
+from png_validation import PngValidationError, parse_png
+from readme_markdown import markdown_visible_text
 
 
 CARD_FILENAME = "skill-card.png"
@@ -24,14 +27,20 @@ NO_TEXT_RULE = (
 )
 
 
-def load_renderer(repo_root: Path):
+class SkillArtRenderer(Protocol):
+    """Typed surface consumed from the dynamically loaded renderer script."""
+
+    def prompt_for_skill(self, name: str) -> str: ...
+
+
+def load_renderer(repo_root: Path) -> SkillArtRenderer:
     script_path = repo_root / "scripts" / "render-skill-art.py"
     spec = importlib.util.spec_from_file_location("render_skill_art", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"Unable to load {script_path}")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    return module
+    return cast(SkillArtRenderer, module)
 
 
 def fail(errors: list[str]) -> int:
@@ -42,47 +51,44 @@ def fail(errors: list[str]) -> int:
 
 
 def skill_names(skills_root: Path) -> list[str]:
-    return sorted(path.parent.name for path in skills_root.glob("*/SKILL.md") if path.is_file())
-
-
-def png_chunks(path: Path) -> tuple[int, int, list[str]] | None:
-    data = path.read_bytes()
-    if len(data) < 24 or not data.startswith(b"\x89PNG\r\n\x1a\n"):
-        return None
-    if data[12:16] != b"IHDR":
-        return None
-    width, height = struct.unpack(">II", data[16:24])
-    chunks: list[str] = []
-    offset = 8
-    while offset + 8 <= len(data):
-        length = struct.unpack(">I", data[offset : offset + 4])[0]
-        chunk_type = data[offset + 4 : offset + 8].decode("latin1")
-        chunks.append(chunk_type)
-        offset += 12 + length
-        if chunk_type == "IEND":
-            break
-    return width, height, chunks
+    return sorted(
+        path.parent.name
+        for path in skills_root.glob("*/SKILL.md")
+        if path.is_file() and not path.is_symlink()
+    )
 
 
 def validate_png(path: Path, errors: list[str]) -> None:
-    parsed = png_chunks(path)
-    if parsed is None:
-        errors.append(f"{path} must be a PNG raster image.")
+    if path.stat().st_size > MAX_CARD_BYTES:
+        errors.append(
+            f"{path} is too large for README use; "
+            "run `python3 scripts/render-skill-art.py --force`."
+        )
         return
 
-    width, height, chunks = parsed
-    if width != FINAL_WIDTH or height != FINAL_HEIGHT:
-        errors.append(f"{path} must be normalized to {FINAL_WIDTH}x{FINAL_HEIGHT}; found {width}x{height}.")
+    data = path.read_bytes()
+    try:
+        metadata = parse_png(data)
+    except PngValidationError as exc:
+        errors.append(f"{path} must be a valid PNG raster image: {exc}.")
+        return
 
-    extra_chunks = sorted(set(chunks) - ALLOWED_PNG_CHUNKS)
+    if metadata.width != FINAL_WIDTH or metadata.height != FINAL_HEIGHT:
+        errors.append(
+            f"{path} must be normalized to {FINAL_WIDTH}x{FINAL_HEIGHT}; "
+            f"found {metadata.width}x{metadata.height}."
+        )
+
+    extra_chunks = sorted(set(metadata.chunks) - ALLOWED_PNG_CHUNKS)
     if extra_chunks:
-        errors.append(f"{path} must be stripped PNG with only IHDR/IDAT/IEND chunks; found {extra_chunks}.")
+        errors.append(
+            f"{path} must be stripped PNG with only IHDR/IDAT/IEND chunks; "
+            f"found {extra_chunks}."
+        )
 
-    size = path.stat().st_size
+    size = len(data)
     if size < 10_000:
         errors.append(f"{path} is suspiciously small for a generated raster badge.")
-    if size > MAX_CARD_BYTES:
-        errors.append(f"{path} is too large for README use; run `python3 scripts/render-skill-art.py --force`.")
 
 
 def validate_prompt(path: Path, skill_name: str, expected_prompt: str, errors: list[str]) -> None:
@@ -111,13 +117,19 @@ def validate_prompt(path: Path, skill_name: str, expected_prompt: str, errors: l
 
 
 def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> None:
-    img_count = len(re.findall(r"<img\s+src=\"skills/[^/]+/skill-card\.png\"", readme))
+    visible_readme = markdown_visible_text(readme)
+    img_count = len(
+        re.findall(
+            r"<img\s+src=\"skills/[^/]+/skill-card\.png\"",
+            visible_readme,
+        )
+    )
     if img_count != len(names):
         errors.append(
             f"README.md must contain exactly {len(names)} skill-card PNG images; found {img_count}."
         )
 
-    if "skill-card.svg" in readme:
+    if "skill-card.svg" in visible_readme:
         errors.append("README.md must use generated raster PNG cards, not SVG cards.")
 
     old_placement = re.findall(
@@ -125,7 +137,7 @@ def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> Non
         r"  <img src=\"skills/([^/]+)/skill-card\.png\"[^>]*>\n"
         r"</p>\n\n"
         r"### `([^`]+)`",
-        readme,
+        visible_readme,
     )
     if old_placement:
         misplaced = sorted({name for name, heading in old_placement if name == heading})
@@ -144,7 +156,7 @@ def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> Non
             f'width="{CARD_WIDTH}">\n'
             f'</p>\n\n'
         )
-        if expected not in readme:
+        if expected not in visible_readme:
             errors.append(
                 "README.md must place the constrained PNG skill card immediately "
                 f"after the install command for `{name}` with path "
@@ -161,6 +173,16 @@ def main() -> int:
     names = skill_names(skills_root)
     readme = readme_path.read_text(encoding="utf-8")
     errors: list[str] = []
+
+    symlinked_skill_files = sorted(
+        path.relative_to(repo_root)
+        for path in skills_root.glob("*/SKILL.md")
+        if path.is_symlink()
+    )
+    errors.extend(
+        f"Installable SKILL.md must not be a symlink: {path}"
+        for path in symlinked_skill_files
+    )
 
     validate_readme_art(readme, names, errors)
 

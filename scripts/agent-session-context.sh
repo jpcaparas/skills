@@ -4,6 +4,10 @@
 
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
+source "$SCRIPT_DIR/agent-repo-snapshot.sh"
+
 REPO_ROOT="${AGENT_HOOK_PROJECT_ROOT:-}"
 if [ -z "$REPO_ROOT" ] && git rev-parse --show-toplevel >/dev/null 2>&1; then
     REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -13,45 +17,78 @@ sanitize_hook_id() {
     printf '%s' "$1" | LC_ALL=C tr -c 'A-Za-z0-9_.-' '_'
 }
 
+absolute_git_dir() {
+    git -C "$REPO_ROOT" rev-parse --absolute-git-dir
+}
+
 session_baseline_file() {
     local git_dir
-    git_dir="$(git -C "$REPO_ROOT" rev-parse --git-dir)"
-    mkdir -p "$git_dir/agent-hooks/session-baselines"
+    git_dir="$(absolute_git_dir)"
     printf '%s/%s-%s.env\n' \
         "$git_dir/agent-hooks/session-baselines" \
         "$(sanitize_hook_id "${AGENT_HOOK_HARNESS:-agent}")" \
         "$(sanitize_hook_id "${AGENT_HOOK_SESSION_ID:-default}")"
 }
 
-external_ignored_skill_files() {
-    while IFS= read -r file; do
-        [ -z "$file" ] && continue
-        source_line="$(git -C "$REPO_ROOT" check-ignore -v -- "$file" 2>/dev/null || true)"
-        source_file="${source_line%%:*}"
-        if [[ "$source_file" == /* ]] || [[ "$source_file" == *".git/info/exclude" ]]; then
-            printf '%s\n' "$file"
-        fi
-    done < <(git -C "$REPO_ROOT" ls-files --others --ignored --exclude-standard skills 2>/dev/null)
+atomic_replace_file() {
+    local source_file="$1"
+    local target_file="$2"
+    local mv_help
+
+    # GNU mv needs -T and BSD mv needs -h to replace a destination symlink
+    # itself instead of treating a symlink-to-directory as the destination.
+    mv_help="$(mv --help 2>&1 || true)"
+    if [[ "$mv_help" == *"--no-target-directory"* ]]; then
+        mv -fT "$source_file" "$target_file"
+    else
+        mv -f -h "$source_file" "$target_file"
+    fi
 }
 
-repo_snapshot_hash() {
-    {
-        git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || true
-        git -C "$REPO_ROOT" status --porcelain=v1 --untracked-files=all 2>/dev/null || true
-        external_ignored_skill_files
-        if upstream_ref="$(git -C "$REPO_ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null)"; then
-            printf 'upstream:%s\n' "$upstream_ref"
-            git -C "$REPO_ROOT" rev-list --count "${upstream_ref}..HEAD" 2>/dev/null || true
-        fi
-    } | shasum -a 256 | awk '{print $1}'
+record_session_baseline() {
+    local snapshot_value="$1"
+    local baseline_file baseline_dir agent_hooks_dir temporary_file
+    baseline_file="$(session_baseline_file)"
+    baseline_dir="$(dirname "$baseline_file")"
+    agent_hooks_dir="$(dirname "$baseline_dir")"
+
+    # Refuse redirected state directories, then replace the final path with a
+    # same-directory rename so an existing baseline symlink is never followed.
+    if [ -L "$agent_hooks_dir" ] || [ -L "$baseline_dir" ]; then
+        printf 'Refusing symlinked agent hook state path: %s\n' "$baseline_dir" >&2
+        return 1
+    fi
+    mkdir -p "$baseline_dir"
+    if [ -L "$agent_hooks_dir" ] || [ -L "$baseline_dir" ]; then
+        printf 'Refusing symlinked agent hook state path: %s\n' "$baseline_dir" >&2
+        return 1
+    fi
+    if [ -d "$baseline_file" ] && [ ! -L "$baseline_file" ]; then
+        printf 'Refusing directory at session baseline file path: %s\n' "$baseline_file" >&2
+        return 1
+    fi
+    temporary_file="$(mktemp "${baseline_file}.tmp.XXXXXX")"
+    if ! {
+        printf 'snapshot=%s\n' "$snapshot_value"
+        printf 'recorded_at=%s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+    } >"$temporary_file"; then
+        rm -f "$temporary_file"
+        return 1
+    fi
+    chmod 600 "$temporary_file"
+    if ! atomic_replace_file "$temporary_file" "$baseline_file"; then
+        rm -f "$temporary_file"
+        return 1
+    fi
 }
 
 if [ -n "$REPO_ROOT" ] && git -C "$REPO_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
-    baseline_file="$(session_baseline_file)"
-    {
-        printf 'snapshot=%q\n' "$(repo_snapshot_hash)"
-        printf 'recorded_at=%q\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
-    } >"$baseline_file"
+    if ! session_snapshot="$(agent_repo_snapshot_hash "$REPO_ROOT")" \
+        || ! [[ "$session_snapshot" =~ ^[0-9a-f]{64}$ ]]; then
+        printf 'Unable to capture a complete repository snapshot; session baseline was not recorded.\n' >&2
+        exit 1
+    fi
+    record_session_baseline "$session_snapshot"
 fi
 
 session_context() {

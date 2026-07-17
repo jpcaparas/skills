@@ -14,8 +14,9 @@
 #   6. .husky/pre-push through the package-level validate script
 #
 # If you change a step here, all callers pick it up.
-# For a containerized Ubuntu GitHub Actions preflight before pushing, use
-# scripts/validate-ci-with-act.sh, which wraps this workflow through act.
+# For an explicit local Ubuntu/macOS GitHub Actions preflight, use
+# scripts/validate-ci-with-act.sh. Do not call it from this script: act invokes
+# this canonical validator, so doing so would recurse.
 #
 # Steps:
 #   1. Confirm GitHub Actions, pre-push, and agent stop hooks still route to
@@ -44,13 +45,26 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
+if ! python3 -c 'import yaml' >/dev/null 2>&1; then
+    {
+        echo "ERROR: native validation requires the pinned Python packages."
+        echo "Install them with: python3 -m pip install -r requirements-validation.txt"
+    } >&2
+    exit 1
+fi
+
 echo "Checking local and CI validation entrypoint parity"
+python3 scripts/test-validation-entrypoint-parity.py
 python3 scripts/check-validation-entrypoint-parity.py
+
+echo "Checking the local act matrix wrapper"
+bash scripts/test-validate-ci-with-act.sh
 
 echo "Checking stop-validation snapshot caching"
 bash scripts/test-agent-stop-checks.sh
 
 echo "Checking README skill coverage"
+python3 scripts/test-shared-validator-regressions.py
 python3 scripts/validate-readme-skills.py
 python3 scripts/validate-skill-art.py
 python3 scripts/check-skill-description-budget.py
@@ -123,4 +137,5 @@ if git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 echo "Checking skills.sh discovery and Codex skills context budget"
+bash scripts/test-codex-skills-context-budget.sh
 bash scripts/check-codex-skills-context-budget.sh

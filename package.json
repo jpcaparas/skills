@@ -5,6 +5,9 @@
   "scripts": {
     "prepare": "husky",
     "validate": "bash scripts/validate-all-skills.sh",
+    "validate:act": "bash scripts/validate-ci-with-act.sh --matrix",
+    "validate:act:macos": "bash scripts/validate-ci-with-act.sh --macos",
+    "validate:act:ubuntu": "bash scripts/validate-ci-with-act.sh --ubuntu",
     "validate:readme": "python3 scripts/validate-readme-skills.py"
   },
   "devDependencies": {

@@ -19,9 +19,10 @@
 # How this script is organized:
 #   1. main() reads the active harness JSON payload from stdin exactly once.
 #   2. read_adapter_config() loads the active <harness>.json plan data.
-#   3. handle_event() contains the shared project-specific logic.
-#   4. run_configured_scripts() and run_configured_commands() execute plan data.
-#   5. Protocol-specific output helpers live in hooks/lib/<harness>.sh.
+#   3. run_hook_event() applies shared skip policy before custom or plan effects.
+#   4. handle_event() contains the shared project-specific logic.
+#   5. run_configured_scripts() and run_configured_commands() execute plan data.
+#   6. Protocol-specific output helpers live in hooks/lib/<harness>.sh.
 #
 # Safe editing rule:
 #   Start by editing handle_event(). Keep protocol-specific stdout/stderr logic
@@ -49,10 +50,6 @@ handle_event() {
     # Project-specific logic belongs here.
     # Use config_scripts_json and config_commands_json for plan-managed
     # reusable behavior, then add any local event logic below those calls.
-    if hook_should_skip_event; then
-        return 0
-    fi
-
     if ! run_configured_scripts "$(config_scripts_json)"; then
         handle_project_command_failure "$AGENT_HOOK_EVENT" "$(configured_command_failure_message)"
         return $?
@@ -83,7 +80,7 @@ main() {
     ADAPTER_CONFIG_JSON="$(read_adapter_config "$SCRIPT_DIR/${AGENT_HOOK_HARNESS}.json")"
     readonly ADAPTER_CONFIG_JSON
 
-    handle_event "$@"
+    run_hook_event handle_event "$@"
 }
 
 main "$@"

@@ -3,11 +3,15 @@
 
 from __future__ import annotations
 
+from contextlib import redirect_stdout
+import io
+import json
 import os
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 import zipfile
 
 
@@ -16,9 +20,55 @@ if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
 import audify  # noqa: E402
+import test_skill as audify_test_runner  # noqa: E402
 
 
 class AudifyUnitTests(unittest.TestCase):
+    def test_live_probe_requires_explicit_opt_in_and_api_key(self) -> None:
+        self.assertFalse(
+            audify_test_runner.should_run_live_probe(
+                {"GEMINI_API_KEY": "ambient-key-only"}
+            )
+        )
+        self.assertFalse(
+            audify_test_runner.should_run_live_probe(
+                {"AUDIFY_RUN_LIVE_TESTS": "1"}
+            )
+        )
+        self.assertTrue(
+            audify_test_runner.should_run_live_probe(
+                {
+                    "AUDIFY_RUN_LIVE_TESTS": "1",
+                    "GEMINI_API_KEY": "explicit-test-key",
+                }
+            )
+        )
+
+    def test_runner_skips_live_probe_when_only_ambient_key_is_present(self) -> None:
+        output = io.StringIO()
+        skill_root = SCRIPT_DIR.parent
+        with (
+            patch.dict(os.environ, {"GEMINI_API_KEY": "ambient-key-only"}, clear=True),
+            patch.object(
+                audify_test_runner,
+                "run_step",
+                return_value=(True, "PASS: isolated local step"),
+            ) as run_step,
+            patch.object(sys, "argv", ["test_skill.py", str(skill_root)]),
+            redirect_stdout(output),
+        ):
+            status = audify_test_runner.main()
+
+        report = json.loads(output.getvalue())
+        step_labels = [call.args[0] for call in run_step.call_args_list]
+        self.assertEqual(status, 0)
+        self.assertNotIn("live Gemini smoke probe", step_labels)
+        self.assertIn(
+            "SKIP: live Gemini smoke probe "
+            "(set AUDIFY_RUN_LIVE_TESTS=1 to opt in)",
+            report["steps"],
+        )
+
     def test_markdown_link_cleaning_preserves_anchor_text(self) -> None:
         text, stats = audify.clean_text(
             "# Hello\nVisit [the docs](https://example.com/docs) for details.\n",
