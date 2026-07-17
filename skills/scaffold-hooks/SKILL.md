@@ -1,6 +1,6 @@
 ---
 name: scaffold-hooks
-description: "Universal /scaffold-hooks scaffolder for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode hooks — together or individually. Audits a project, detects existing hook surfaces, refreshes only those harnesses by default, and wires selected `.claude`, `.codex`, `.github`, `.devin`, and `.opencode` configs into repo-owned `hooks/` scaffolding. Do NOT use for Git hooks or Husky."
+description: "Run /scaffold-hooks to audit, create, or refresh shared repository hooks for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode, together or individually. Skip Git hooks and Husky."
 ---
 
 # Universal Agent Hook Scaffold

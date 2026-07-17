@@ -1,0 +1,46 @@
+[
+  {
+    "query": "Run a comprehensive adversarial unit-test sweep over this repository and keep fixing and adding regressions until the scoped suite is clean.",
+    "should_trigger": true
+  },
+  {
+    "query": "Our parser tests pass, but I want a serious hardening campaign around malformed encodings, length boundaries, invalid state, and weak assertions.",
+    "should_trigger": true
+  },
+  {
+    "query": "Audit the cache test suite for races, stale state, cancellation bugs, leaked tasks, and flaky timing assumptions.",
+    "should_trigger": true
+  },
+  {
+    "query": "Mutation testing found surviving mutants and the suite is slow; prove which tests are weak or redundant before pruning anything.",
+    "should_trigger": true
+  },
+  {
+    "query": "After this incident, systematically exercise dependency failures and resource boundaries and turn every confirmed defect into a permanent regression.",
+    "should_trigger": true
+  },
+  {
+    "query": "Add one normal unit test for the newly introduced email formatter.",
+    "should_trigger": false
+  },
+  {
+    "query": "Fix the failing assertion in this single regression test; the expected currency string changed intentionally.",
+    "should_trigger": false
+  },
+  {
+    "query": "Load-test the staging API at 25,000 requests per second and produce latency percentiles.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run a chaos experiment against the production database failover path.",
+    "should_trigger": false
+  },
+  {
+    "query": "Pen-test the deployed authentication service for injection and authorization bypasses.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this test diff for readability and naming only; do not run a wider suite audit.",
+    "should_trigger": false
+  }
+]

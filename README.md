@@ -12,6 +12,16 @@ npx skills add jpcaparas/skills
 
 ## Available Skills
 
+### `adversarial-test-sweep`
+
+`npx skills add jpcaparas/skills --skill adversarial-test-sweep`
+
+<p align="center">
+  <img src="skills/adversarial-test-sweep/skill-card.png" alt="16-bit side-scrolling pixel art badge for adversarial-test-sweep" width="480">
+</p>
+
+Language-agnostic adversarial test hardening that builds a bounded risk ledger, attacks malformed input, state, concurrency, dependency, and resource failures, strengthens weak or flaky oracles, prunes only with comparative evidence, and preserves every confirmed defect as a replayable regression.
+
 ### `audify`
 
 `npx skills add jpcaparas/skills --skill audify`

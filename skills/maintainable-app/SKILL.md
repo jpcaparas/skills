@@ -1,6 +1,6 @@
 ---
 name: maintainable-app
-description: "Passive production-app resilience skill for self-healing apps. Use when coding or reviewing features with jobs, queues, webhooks, persistence, APIs, retries, concurrency, logging, tracing, observability, incidents, edge cases, failsafes, idempotency, backpressure, graceful degradation, or stuck jobs. Do NOT use for non-code writing, throwaway scripts, or visual-only mockups."
+description: "Guide resilient production-app code involving jobs, queues, webhooks, persistence, APIs, retries, concurrency, observability, idempotency, backpressure, degradation, or stuck work. Skip non-code writing, throwaway scripts, and visual-only mockups."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
   version: "1.0.0"

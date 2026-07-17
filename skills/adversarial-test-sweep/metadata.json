@@ -1,0 +1,32 @@
+{
+  "name": "adversarial-test-sweep",
+  "display_name": "Adversarial Test Sweep",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Language-agnostic campaign skill for falsifying software contracts, finding weak and flaky tests, exercising boundary, state, concurrency, dependency, and resource failures, adding durable regressions, and pruning only with comparative evidence.",
+  "tags": [
+    "testing",
+    "adversarial-testing",
+    "test-hardening",
+    "property-based-testing",
+    "fuzz-testing",
+    "mutation-testing",
+    "concurrency-testing",
+    "fault-injection",
+    "regression-testing",
+    "test-quality",
+    "agent-workflows"
+  ],
+  "references": [
+    "https://doi.org/10.6028/NIST.IR.8397",
+    "https://doi.org/10.6028/NIST.SP.800-142",
+    "https://doi.org/10.1145/351240.351266",
+    "https://doi.org/10.1145/3243734.3243804",
+    "https://doi.org/10.1002/stvr.456",
+    "https://www.microsoft.com/en-us/research/publication/chess-a-systematic-testing-tool-for-concurrent-software/",
+    "https://homes.cs.washington.edu/~mernst/pubs/mutation-effectiveness-fse2014-abstract.html",
+    "https://www.cs.ubc.ca/~rtholmes/papers/icse_2014_inozemtseva.pdf",
+    "https://doi.org/10.1109/32.988498"
+  ]
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Adversarial Test Sweep"
+  short_description: "Falsify contracts and harden an existing test suite"
+  default_prompt: "Run a bounded adversarial sweep of this existing test suite, fix confirmed defects within scope, make regressions durable, and report the remaining risk honestly."

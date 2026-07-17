@@ -35,6 +35,7 @@ NO_TEXT_RULE = (
 )
 
 SKILL_SCENES = {
+    "adversarial-test-sweep": "a testing gauntlet where bug-shaped hazard sprites, boundary gates, race lanes, fault sparks, and resource barriers confront a shielded formation of distinct test gems",
     "audify": "headphones catching flowing sound ribbons, waveform crystals, and a small studio mixer made of blank blocks",
     "azure-devops-create-work-item": "a quest-token forge where a hammer stamps a blank glowing slab into a task gem",
     "azure-devops-wiki-markdown": "a knowledge temple linking clean geometric blocks through glowing connector paths",
