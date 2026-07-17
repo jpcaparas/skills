@@ -60,7 +60,7 @@ Safe, version-aware chezmoi workflows for daily dotfile work, multi-machine temp
   <img src="skills/better-writing/skill-card.png" alt="16-bit side-scrolling pixel art badge for better-writing" width="480">
 </p>
 
-Production writing system for drafting, rewriting, review, humanisation, and adaptation, with source-fidelity gates, genre-aware revision, voice preservation, and a calibrated corpus of AI-like writing signals that never claims to determine authorship.
+Production writing system for drafting, rewriting, review, humanisation, and adaptation, with source-fidelity gates, publication-informed structural examples, long-prose digestibility, voice preservation, and a calibrated corpus of AI-like writing signals that never claims to determine authorship.
 
 ### `bootstrap-agents-md`
 

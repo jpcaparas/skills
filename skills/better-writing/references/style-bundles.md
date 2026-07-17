@@ -49,6 +49,20 @@ When the user asks for a living writer's style, do not imitate signature wording
 
 State the translation briefly when it helps: “I’ll use a direct, example-led technical voice with compact explanations.”
 
+## Learn from publications without cloning a house voice
+
+Treat a named publication as evidence about editorial decisions, not as a persona to reproduce. Separate three layers:
+
+- **house rules:** spelling, capitalisation, attribution, terminology, and legal or ethical policy
+- **format conventions:** how a news update, feature, analysis, review, or live file is organised
+- **transferable habits:** clear leads, ranked information, precise nouns and verbs, evidence near claims, varied cadence, and proportionate endings
+
+Apply a house rule only when the user or destination requires it. Apply a format convention only when the target genre matches. Transfer broad habits when they improve the reader's experience without erasing the writer.
+
+For example, a request for “Economist-style” business prose can become “compact, mechanism-led, low-jargon analysis with a clear position.” Do not reproduce signature wit, headline patterns, editorial ideology, or recognisable turns of phrase. A request for “Reuters-style” clarity can become “fact-first, carefully attributed, restrained prose,” without forcing a personal reflection or product page into neutral wire copy.
+
+Draw from more than one publication when no house style governs the piece. Shared habits are more likely to be portable than one outlet's distinctive surface. Read `references/research-notes.md` for publication-derived practices and `references/natural-structure-and-digestibility.md` for original cross-genre transformations.
+
 ## Voice families
 
 Choose one primary family. Add a secondary family only when the deliverable genuinely needs it.

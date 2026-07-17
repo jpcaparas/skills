@@ -2,7 +2,7 @@
 
 Use this reference when you need the evidence behind the humanisation rules, want to extend `assets/aiisms.json`, or need to explain why the scanner cannot determine authorship.
 
-Last reviewed: 2026-07-15.
+Last reviewed: 2026-07-17.
 
 ## What the evidence supports
 
@@ -88,6 +88,37 @@ Sources:
 - [Australian Government Style Manual, colon functions](https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/colons)
 
 Operational consequence: do not replace an em dash character-for-character. Identify whether it carries explanation, balance, contrast, cause, sequence, an aside, or an interruption; then rebuild the syntax and verify the changed emphasis. See `references/punctuation-and-sentence-flow.md` for the working procedure and original transformations.
+
+## What mainstream publication practice can support
+
+Publication guidance is practice evidence, not proof that one structure fits every genre. Several large news organisations converge on useful editorial habits:
+
+- A Guardian news-writing guide recommends planning an information hierarchy before drafting, selecting one main development for the introduction, and using later paragraphs to add detail, explanation, context, and voices.
+- BBC Academy guidance for online features asks what the reader will want to know next. It recommends mixing sentence and paragraph scale for rhythm, warns that too many short paragraphs are hard to read, and calls for a link when the topic changes.
+- The Associated Press has used short, self-contained blocks for live developments while distinguishing that format from a written-through story that restores detail and background. Its news principles also require outside material to be reassessed and rewritten in AP's own approach, structure, and language rather than republished unchanged.
+- The Economist's public style-guide excerpt treats professional jargon as useful when it carries specialist meaning and obstructive when it merely renames a familiar idea or conceals what happened.
+- The Guardian describes house style as a consistency and values framework, not a device for making every journalist sound alike. Reuters likewise begins its standards by noting that no single definition covers every kind of journalism it publishes.
+
+Sources:
+
+- [The Guardian, *News writing*](https://www.theguardian.com/books/2008/sep/25/writing.journalism.news)
+- [BBC Academy, *Features for the News website: A guide for writers*](https://downloads.bbc.co.uk/academy/academyfiles/Features_for_the_News_website_guide_v1-0.pdf)
+- [Associated Press, *The Latest format delivers the latest news*](https://www.ap.org/the-definitive-source/announcements/heres-the-latest-on-the-latest/)
+- [Associated Press, *Telling the Story*](https://www.ap.org/about/news-values-and-principles/telling-the-story/)
+- [The Economist, *Writing with Style*](https://education.economist.com/blog/what-to-read/writing-with-style)
+- [The Guardian, *Style guide*](https://www.theguardian.com/sustainability/guardian-style-guide)
+- [Reuters, *Standards and Values*](https://reutersagency.com/about/standards-values/)
+
+Operational consequence:
+
+1. rank material by the reader's task before polishing sentences
+2. make the opening perform one clear job rather than preview every point
+3. let each paragraph answer or create a real next question
+4. split at changes of job and preserve enough connection to make the whole coherent
+5. rewrite formulaic or borrowed prose from the facts, mechanism, and intended outcome
+6. treat specialist terms, sentence length, and paragraph length as contextual choices rather than bans or quotas
+
+Do not generalise the inverted pyramid to essays, proposals, tutorials, personal writing, or narrative features. Do not import newsroom neutrality into genres that require an owned recommendation or point of view. Translate named-publication requests into broad traits; never copy an outlet's recognisable voice, headline manner, ideology, or signature phrasing. See `references/natural-structure-and-digestibility.md` and `references/style-bundles.md` for the working rules.
 
 ## Why authorship detection is unsafe
 

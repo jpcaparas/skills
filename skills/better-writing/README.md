@@ -8,7 +8,9 @@ It supports six jobs: drafting, rewriting, line editing, review, humanisation, a
 
 - a preservation contract for facts, uncertainty, quotations, commands, identifiers, citations, and voice anchors
 - genre-specific shapes for developers, writers, product owners, operators, and customer-facing teams
+- publication-informed, original cross-genre examples for natural structure and digestible long prose
 - paragraph, sentence, evidence, voice, and humanisation passes with observable stop conditions
+- worked technical, editorial, memo, product, email, UI, and reflective rewrites that remove formulae by rebuilding the thought
 - relation-first em-dash, semicolon, and colon transformations with natural sentence-flow patterns
 - a research-backed AI-ism taxonomy that treats matches as editorial signals, never authorship proof
 - an extensible machine-readable corpus and optional Python scanner with false-positive protections

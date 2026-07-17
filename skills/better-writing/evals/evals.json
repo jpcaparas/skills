@@ -26,7 +26,7 @@
         {"text": "Keeps a memo shape with a clear decision, context, risks, and next step rather than turning it into an essay", "type": "structural"},
         {"text": "Preserves 18.4%, Q3, `We have not tested this in production.`, the fixture's quoted sentence, and the uncertainty marker `may`", "type": "functional"},
         {"text": "Does not invent metrics, customer results, first-hand experience, or citations", "type": "negative"},
-        {"text": "Captured trace records the memo-relevant revision, genre, voice, and genericity references and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, natural-structure-and-digestibility.md, genericity-and-stiffness.md, and genre-modes.md and excludes style-bundles.md, voice-and-rhythm.md, and research-notes.md", "type": "disclosure"}
       ],
       "tags": ["rewrite", "memo", "preservation", "evidence", "disclosure"]
     },
@@ -259,6 +259,36 @@
         {"text": "Captured trace records punctuation-and-sentence-flow.md and at least one of foundations.md or voice-and-rhythm.md, and excludes research-notes.md", "type": "disclosure"}
       ],
       "tags": ["punctuation-transformation", "line-edit", "em-dash", "semicolon", "colon", "preservation", "disclosure"]
+    },
+    {
+      "id": 20,
+      "name": "restructure-dense-analysis-by-reader-job",
+      "prompt": "Rewrite the attached renewal-pilot analysis for product and engineering readers. Make it digestible by separating the finding, evidence limit, operational consequence, and recommendation where their jobs change. Preserve every number, both uses of `may`, `awaiting_confirmation`, the quoted sentence, and the unresolved callback cause. Do not turn every sentence into its own paragraph, use bullets unless the items are genuine peers, or publish diagnostic labels as headings in this short update.",
+      "expected_output": "A short, connected analysis whose paragraph breaks expose the finding, uncertainty, consequence, and recommendation without losing facts or becoming a stack of fragments.",
+      "files": ["evals/files/dense-analysis.md"],
+      "assertions": [
+        {"text": "Uses deliberate paragraph breaks at changes of job while keeping related claim, evidence, and qualification together", "type": "structural"},
+        {"text": "Preserves 46 of 50, 15 minutes, four jobs, more than 20 minutes, 31 minutes, 25%, both uses of `may`, `awaiting_confirmation`, and the quoted sentence exactly", "type": "functional"},
+        {"text": "Keeps the callback cause unresolved and does not convert the proposed customer rollout into an approved decision", "type": "functional"},
+        {"text": "Does not produce one-sentence-paragraph drumbeats, decorative bullets, diagnostic-label headings, invented evidence, or a generic summary conclusion", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, and natural-structure-and-digestibility.md and excludes quality-gates.md, punctuation-and-sentence-flow.md, and research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "structure", "digestibility", "analysis", "preservation", "uncertainty", "disclosure"]
+    },
+    {
+      "id": 21,
+      "name": "turn-dense-procedure-into-verifiable-runbook",
+      "prompt": "Rewrite the attached long paragraph about staging key rotation as a compact runbook. Use numbered steps for meaningful checkpoints, not every small verb; make the `issuer mismatch` stop condition unmistakable and end with verification. Preserve every command, `kid`, `staging.env`, `issuer mismatch`, `test-user`, and `<old-kid>` exactly. Do not invent a rollback command or claim the rotation succeeded.",
+      "expected_output": "A readable runbook with ordered actions, an attached stop condition, and a verification finish, preserving all literals and the source's evidence boundary.",
+      "files": ["evals/files/dense-procedure.md"],
+      "assertions": [
+        {"text": "Uses a numbered list for ordered actions, groups small actions that share a checkpoint, and keeps the failure branch visibly attached to the verification step that can trigger it", "type": "structural"},
+        {"text": "Preserves every source command plus `kid`, `staging.env`, `issuer mismatch`, `test-user`, and `<old-kid>` exactly", "type": "functional"},
+        {"text": "Makes revocation conditional on successful deployment, signing, and token acceptance", "type": "functional"},
+        {"text": "Does not invent a rollback command, omit the restore instruction, claim execution or success, or add a post-revocation verification requirement absent from the source", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, natural-structure-and-digestibility.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "runbook", "digestibility", "technical-guide", "commands", "preservation", "verification", "disclosure"]
     }
   ]
 }

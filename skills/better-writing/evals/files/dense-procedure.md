@@ -1,0 +1,3 @@
+# Rotate the staging signing key
+
+Export the current key record with `keys export --env staging --out staging-key.json`, open `staging-key.json`, and record its `kid` as the previous `kid`, then create the replacement key with `keys create --env staging --purpose signing`, copy the new `kid` into `staging.env`, and run `keys verify --env staging --config staging.env`; if verification reports `issuer mismatch`, restore the previous `kid` and stop without revoking either key, but otherwise deploy `staging.env`, sign one test token with `keys sign --env staging --subject test-user`, confirm that the token is accepted, and only then revoke the previous key with `keys revoke --env staging --kid <old-kid>`.

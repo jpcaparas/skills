@@ -92,7 +92,27 @@
     "should_trigger": true
   },
   {
+    "query": "This report is a wall of text. Rewrite it into digestible prose without losing the caveats.",
+    "should_trigger": true
+  },
+  {
+    "query": "Rewrite this long deployment paragraph as a compact runbook with clear stop conditions.",
+    "should_trigger": true
+  },
+  {
     "query": "Replace the colons in this YAML mapping with equals signs and return valid configuration syntax; there is no prose to edit.",
     "should_trigger": false
+  },
+  {
+    "query": "Refactor this graph data structure to improve control flow; return code only.",
+    "should_trigger": false
+  },
+  {
+    "query": "Verify whether this report's claims are accurate; do not rewrite it.",
+    "should_trigger": false
+  },
+  {
+    "query": "Verify that this rewritten report preserves every number and quote.",
+    "should_trigger": true
   }
 ]

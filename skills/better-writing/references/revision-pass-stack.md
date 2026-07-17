@@ -28,6 +28,8 @@ Choose the genre in `references/genre-modes.md`, then inspect:
 
 Make a reverse outline: one short line describing what each paragraph does. Reorder, merge, or cut before polishing sentences.
 
+For a substantial recast, use the worked cross-genre transformations in `references/natural-structure-and-digestibility.md`. They show how to rank material by the reader's next question without forcing every genre into a news lead.
+
 **Pass when:** the reverse outline forms a coherent sequence with no duplicate jobs or missing bridge.
 
 ## Pass 2: Paragraph architecture
@@ -40,6 +42,8 @@ Give each paragraph one governing job.
 - merge fragments that artificially break one thought into several blocks
 - cut echo paragraphs and miniature conclusions
 - replace transition labels with the relationship itself: cause, contrast, sequence, example, or consequence
+
+When the source is a wall of text or has been split into fragments, use `references/natural-structure-and-digestibility.md` to choose the breakpoints and display form. Paragraph length is a review signal; the governing job decides whether to split or merge.
 
 Useful questions:
 

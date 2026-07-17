@@ -1,8 +1,8 @@
 {
-  "version": "2.1.0",
+  "version": "2.2.0",
   "organization": "JP Caparas",
   "date": "July 2026",
-  "abstract": "Production-grade writing and revision system for drafting, rewriting, line editing, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, restores individual voice without fabricated personality, includes relation-first punctuation and sentence-flow transformations, and provides a calibrated catalogue of AI-like writing signals that never claims to determine authorship.",
+  "abstract": "Production-grade writing and revision system for drafting, rewriting, line editing, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, uses publication-informed original examples to improve natural structure and long-prose digestibility, restores individual voice without fabricated personality, includes relation-first punctuation and sentence-flow transformations, and provides a calibrated catalogue of AI-like writing signals that never claims to determine authorship.",
   "references": [
     "https://doi.org/10.1126/sciadv.adn5290",
     "https://arxiv.org/abs/2406.07016",
@@ -13,6 +13,13 @@
     "https://www.chicagomanualofstyle.org/qanda/data/faq/topics/HyphensEnDashesEmDashes/faq0181.html",
     "https://style.mla.org/colons-how-to-use-them/",
     "https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/semicolons",
-    "https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/colons"
+    "https://www.stylemanual.gov.au/grammar-punctuation-and-conventions/punctuation/colons",
+    "https://www.theguardian.com/books/2008/sep/25/writing.journalism.news",
+    "https://downloads.bbc.co.uk/academy/academyfiles/Features_for_the_News_website_guide_v1-0.pdf",
+    "https://www.ap.org/the-definitive-source/announcements/heres-the-latest-on-the-latest/",
+    "https://www.ap.org/about/news-values-and-principles/telling-the-story/",
+    "https://education.economist.com/blog/what-to-read/writing-with-style",
+    "https://www.theguardian.com/sustainability/guardian-style-guide",
+    "https://reutersagency.com/about/standards-values/"
   ]
 }

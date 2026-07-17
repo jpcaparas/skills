@@ -3,10 +3,11 @@ name: better-writing
 description: "Draft, rewrite, review, humanise, or adapt prose while preserving facts, intent, voice, and uncertainty. Use for technical, product, editorial, marketing, or personal writing, including stiff or AI-like drafts. Skip code-only tasks."
 compatibility: "Core instructions are portable. Optional diagnostics and package checks require Python 3.10+."
 metadata:
-  version: "2.1.0"
+  version: "2.2.0"
 references:
   - operating-contract
   - revision-pass-stack
+  - natural-structure-and-digestibility
   - foundations
   - voice-and-rhythm
   - punctuation-and-sentence-flow
@@ -82,6 +83,8 @@ Preserve what already works. A good edit is not a demonstration that every sente
 
 Choose the page shape in `references/genre-modes.md`. Give each section and paragraph one job. Put the main point where that genre expects it. Order evidence so the reader never has to guess why it is present.
 
+Read `references/natural-structure-and-digestibility.md` when the request calls for a substantial structural recast, a more natural flow, or repair of dense, wall-of-text, or over-chunked prose. Use its worked transformations to split at changes of job, not at arbitrary lengths.
+
 For review-only work, stop short of rewriting: report the diagnosis, cite exact passages, rank issues by reader impact, and offer a rewrite only as a clearly labelled example.
 
 **Complete when:** the opening establishes the right contract, the middle advances it without echoing itself, and the ending performs the genre's real closing task.
@@ -93,7 +96,7 @@ Use `references/revision-pass-stack.md`.
 1. **Paragraph pass:** one job per paragraph, visible logic, no repeated claim, evidence beside the claim it supports.
 2. **Sentence pass:** clear actor and action, concrete nouns and verbs, related words together, honest qualifications, informative emphasis.
 
-Do not compress every sentence. Restore connective tissue when the page starts to read like chopped notes.
+Do not compress every sentence. Restore connective tissue when the page starts to read like chopped notes. When a long passage needs reshaping, choose paragraphs, lists, headings, or tables from the information's real shape; formatting cannot replace reasoning.
 
 When punctuation is the edit target, classify the relation before changing the mark. A colon fulfils a promise, a semicolon balances close independent clauses, and a conjunction or subordinate clause should name logic that punctuation would otherwise leave implicit. Protect literal punctuation in code, URLs, times, ratios, quotations, labels, and configuration.
 
@@ -161,6 +164,7 @@ Do not claim a passage was AI-written. Do not turn stylistic preference into an 
 |---|---|
 | Brief, preservation ledger, and edit freedom | `references/operating-contract.md` |
 | Exact revision order and loopbacks | `references/revision-pass-stack.md` |
+| Natural structure, paragraph architecture, and long-prose digestibility | `references/natural-structure-and-digestibility.md` |
 | Grammar, clarity, and modern usage baseline | `references/foundations.md` |
 | Cadence, stance, and voice repair | `references/voice-and-rhythm.md` |
 | Em-dash replacement, semicolon and colon judgement, and sentence-flow repair | `references/punctuation-and-sentence-flow.md` |

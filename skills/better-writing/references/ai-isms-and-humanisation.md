@@ -8,6 +8,7 @@ The aim is better writing, not detector evasion. No word, punctuation mark, sent
 
 - [Start with three distinctions](#start-with-three-distinctions)
 - [Humanisation workflow](#humanisation-workflow)
+- [Worked transformations](#worked-transformations)
 - [Signal taxonomy](#signal-taxonomy)
 - [Severity and confidence](#severity-and-confidence)
 - [False-positive protections](#false-positive-protections)
@@ -90,6 +91,132 @@ python3 scripts/scan_aiisms.py --gate path/to/draft.md
 ```
 
 The gate checks unresolved high-confidence revision clusters. It is not an authorship gate.
+
+## Worked transformations
+
+Use these examples to learn the editorial move, not a replacement phrase. Each example assumes its stated details are present in the source. In real work, preserve the source's facts and leave unsupported specificity missing.
+
+### Technical explanation: replace ceremony with mechanism
+
+Before:
+
+> In today's rapidly evolving infrastructure landscape, robust observability is more important than ever. It plays a critical role in empowering teams to navigate complexity with confidence.
+
+After:
+
+> The worker logs the job ID, attempt number, and provider response. When a batch stalls, on-call can see which request failed and whether retrying it would duplicate work.
+
+The revision does not modernise the preamble. It answers what is observed and what decision that evidence supports.
+
+### Analysis: unpack the compressed verdict
+
+Before:
+
+> The limitation is scope. This fundamentally changes how we should think about the result.
+
+After:
+
+> The study followed 24 volunteers from one office for two weeks. It can describe what happened in that group, but it cannot establish how customers in other regions would respond.
+
+The shorter source sounded decisive while hiding the reason. The revision gives the boundary and consequence together.
+
+### Reported prose: remove importance labels
+
+Before:
+
+> In a major development that underscores the growing urgency of the issue, the board has taken a significant step forward by approving the repairs.
+
+After:
+
+> The board approved $2.4 million for roof repairs on Thursday, three days after the library closed because rain reached the electrical room.
+
+The event, amount, chronology, and consequence carry the weight. No adjective needs to assign importance in advance.
+
+### Memo: replace a staged reveal with the decision
+
+Before:
+
+> This is not about slowing down. It is about ensuring that we move forward in the right way. The path ahead is clear: align, validate, and execute.
+
+After:
+
+> Delay the cutover until security validates the new vendor. The review is due Friday; if it passes, operations can keep the current Monday launch date.
+
+The revision makes the actual decision, condition, and timing visible. The three-part slogan had hidden all three.
+
+### Product copy: make the benefit cash out
+
+Before:
+
+> Our innovative platform empowers modern teams to collaborate seamlessly and unlock their full potential.
+
+After:
+
+> Reviewers comment, approve, and compare revisions in one queue, so the release owner no longer reconciles separate email threads.
+
+This repair is valid only when the product really works that way. Without a supported mechanism, narrow or remove the claim.
+
+### Email: remove the assistant wrapper
+
+Before:
+
+> I hope this message finds you well. I wanted to reach out regarding the revised budget and kindly ask whether you might be able to share your thoughts at your earliest convenience.
+
+After:
+
+> Could you approve the revised budget by Thursday? The contractor cannot start until we confirm the amount.
+
+The courtesy remains in the direct request and useful context. The email no longer makes the reader excavate the ask.
+
+### UI copy: name the state and recovery
+
+Before:
+
+> Something went wrong. Please try again to continue your journey.
+
+After:
+
+> We could not save the address. Check the postcode, then try again.
+
+The revision replaces a generic failure and ornamental metaphor with the failed object and a plausible next action. Do not invent a recovery step the product does not support.
+
+### Reflection: remove the explained moral
+
+Before:
+
+> That day taught me that resilience is not about avoiding difficulty; it is about embracing the journey and emerging stronger on the other side.
+
+After:
+
+> On Monday I put the cracked mug back beside the kettle. I still reached for it first on Tuesday.
+
+The image can carry the turn without a universal lesson. Keep an explicit reflection when the writer genuinely thinks it; remove it when it only explains what the scene already showed.
+
+### Missing evidence: delete or ask, do not improvise
+
+Before:
+
+> Trusted by leading organisations worldwide, the service delivers proven results at scale.
+
+When the source contains no names, scale, or results, there is no responsible specific rewrite. Delete the claim or ask for the customer, measure, and comparison. Replacing `leading` with `forward-thinking` preserves the same evidence gap.
+
+### Mechanical formatting: restore an argument
+
+Before:
+
+> **Speed:** Work moves faster.
+>
+> **Clarity:** Everyone stays aligned.
+>
+> **Impact:** Teams achieve better outcomes.
+
+After, when the source supports the mechanism:
+
+> The shared queue gives reviewers one current version and records each approval. Release owners spend less time reconciling comments and can see which decision is holding the work.
+
+The revision removes a decorative three-part list because the ideas were not useful peers. If the source contains three genuinely comparable measures, a list or table may still be the clearest form.
+
+For paragraph-level formulae, repeated section silhouettes, or wall-of-text repair, read `references/natural-structure-and-digestibility.md` and rebuild the order as well as the sentences.
 
 ## Signal taxonomy
 

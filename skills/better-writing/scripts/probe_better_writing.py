@@ -15,15 +15,23 @@ from dataclasses import dataclass
 from typing import Sequence
 
 
+WRITING_VERIFICATION = r"\bverif(?:y|ying)\b.{0,80}\b(?:rewrite|rewritten|revision|revised|edited|draft|prose|copy)\b"
+
 PROSE_ACTIONS = (
-    r"\b(?:draft(?:ing)?|write|rewrit(?:e|ing)|edit(?:ing)?|review(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|clarif(?:y|ying)|human(?:ise|ize|ising|izing)|de-robot(?:ise|ize)|replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b",
-    r"\bmake\s+(?:this|it)\s+(?:clearer|warmer|less\s+(?:stiff|generic|robotic))\b",
+    r"\b(?:adapt(?:ing)?|diagnos(?:e|ing)|draft(?:ing)?|write|rewrit(?:e|ing)|revis(?:e|ing)|edit(?:ed|ing)?|review(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|clarif(?:y|ying)|human(?:ise|ize|ising|izing)|de-robot(?:ise|ize)|replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b",
+    r"\bmake\b.{0,80}\b(?:clearer|warmer|more\s+human|less\s+(?:stiff|generic|robotic))\b",
+    WRITING_VERIFICATION,
     r"\b(?:genre|structure|format)\b",
 )
 PROSE_SCOPE = (
-    r"\b(?:prose|copy|microcopy|sentence|paragraph|comment|intro(?:duction)?|outro|heading|voice|tone|cadence|style|wording|slogan|tagline)\b",
-    r"\b(?:essay|poem|story|fiction|memo|email|cover\s+letter|newsletter|article|report|brief|proposal|bio|release\s+note|product\s+spec|pull\s+request|landing\s+page|homepage|pricing\s+page)\b",
+    r"\b(?:prose|copy|microcopy|sentence|paragraph|comment|document|draft|explanation|intro(?:duction)?|outro|heading|voice|tone|cadence|style|wording|slogan|tagline)\b",
+    r"\b(?:announcement|notice|note|essay|poem|story|fiction|memo|email|cover\s+letter|newsletter|article|report|brief|proposal|bio|release\s+note|product\s+spec|pull\s+request|landing[- ]page|launch[- ]page|homepage|pricing\s+page)\b",
     r"\b(?:readme|guide|tutorial|how-to|runbook|walkthrough|documentation|docs|ui)\s+(?:draft|intro|section|copy|text|page)?\b",
+    WRITING_VERIFICATION,
+)
+NEGATED_PROSE_CLAUSES = (
+    r"\b(?:do\s+not|don't)\s+(?:(?:rewrite|edit|improve|revise|polish|humanise|humanize)\b(?:\s+or\s+)?){1,3}[^.;\n]*",
+    r"\bthere\s+is\s+no\s+prose\b[^.;\n]*",
 )
 CODE_ONLY = (
     r"\b(?:debug|compile|build|deploy|implement|refactor|fix)\b.*\b(?:code|function|class|api|test|error|exception|stack trace|hydration|typescript|python|react|next\.js)\b",
@@ -45,6 +53,13 @@ PUNCTUATION_TRANSFORM = (
     r"\b(?:ban(?:ned|ning|s)?|avoid(?:ed|ing|s)?)\b.{0,80}\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons|punctuation)\b",
     r"\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons|punctuation)\b.{0,80}\b(?:ban(?:ned|ning|s)?|avoid(?:ed|ing|s)?)\b",
 )
+STRUCTURE_AND_DIGESTIBILITY = (
+    r"\b(?:digestible|scannable|wall\s+of\s+text|dense\s+(?:paragraph|passage|prose)|overloaded\s+paragraph|long\s+(?:paragraph|passage|prose))\b",
+    r"\b(?:break|split|chunk)\b.{0,60}\b(?:paragraph|passage|prose|text)\b",
+    r"\b(?:restructur(?:e|ing)|reorgani[sz](?:e|ing)|reorder(?:ing)?)\b.{0,80}\b(?:paragraph|passage|prose|article|memo|report|guide|draft)\b",
+    r"\b(?:natural|clearer|better)\s+(?:structure|flow)\b",
+    r"\b(?:easier|easy)\s+to\s+scan\b",
+)
 
 
 @dataclass(frozen=True)
@@ -62,17 +77,27 @@ class TestCase:
 
 
 ROUTE_RULES = (
-    RouteRule("references/operating-contract.md", (r"\b(?:draft(?:ing)?|rewrit(?:e|ing)|edit(?:ing)?|review(?:ing)?|human(?:ise|ize|ising|izing))\b",)),
-    RouteRule("references/revision-pass-stack.md", (r"\b(?:rewrit(?:e|ing)|edit(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|cleanup|revision|draft(?:ing)?)\b",)),
+    RouteRule("references/operating-contract.md", (r"\b(?:adapt(?:ing)?|diagnos(?:e|ing)|draft(?:ing)?|rewrit(?:e|ing)|revis(?:e|ing)|edit(?:ed|ing)?|review(?:ing)?|human(?:ise|ize|ising|izing)|verif(?:y|ying))\b",)),
+    RouteRule("references/revision-pass-stack.md", (r"\b(?:adapt(?:ing)?|recast(?:ing)?|rewrit(?:e|ing)|rewritten|revis(?:e|ing)|revised|edit(?:ed|ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|cleanup|revision|draft(?:ing)?)\b",)),
+    RouteRule("references/natural-structure-and-digestibility.md", STRUCTURE_AND_DIGESTIBILITY),
     RouteRule("references/foundations.md", (r"\b(?:clear|clarity|concise|grammar|usage|composition|basics?)\b",)),
-    RouteRule("references/voice-and-rhythm.md", (r"\b(?:stiff|flat|bloodless|formal|robotic|cadence|rhythm|hedg(?:e|ing)|awkward|clipped)\b",)),
+    RouteRule("references/voice-and-rhythm.md", (r"\b(?:stiff|flat|bloodless|formal|robotic|cadence|rhythm|voice|owned|more\s+human|hedg(?:e|ing)|awkward|clipped)\b",)),
     RouteRule("references/punctuation-and-sentence-flow.md", PUNCTUATION_TRANSFORM),
     RouteRule("references/genericity-and-stiffness.md", (r"\b(?:generic|corporate|canned|fluffy|buzzwords?|over-signposted|dramatic|marketing[- ]speak|ceremonial)\b",)),
-    RouteRule("references/ai-isms-and-humanisation.md", (r"\b(?:human(?:ise|ize)|ai[- ]?isms?|sound\s+human|less\s+(?:robotic|ai)|machine[- ]?written)\b",)),
-    RouteRule("references/style-bundles.md", (r"\b(?:style|tone|publication|operator|newsletter|editorial|essay|memo|copy|simon\s+willison|julia\s+evans|gergely|lenny|reuters|bloomberg|paul\s+graham)\b",)),
-    RouteRule("references/genre-modes.md", (r"\b(?:guide|tutorial|how-to|docs?|readme|runbook|memo|brief|report|essay|article|landing\s+page|homepage|pricing\s+page|email|walkthrough)\b",)),
-    RouteRule("references/quality-gates.md", (r"\b(?:final\s+(?:review|pass|check)|ready\s+to\s+publish|quality\s+check|sign[- ]?off)\b",)),
-    RouteRule("references/gotchas.md", (r"\b(?:over-edit(?:ed|ing)?|getting\s+worse|each\s+pass|too\s+polished|can'?t\s+get\s+this\s+right)\b",)),
+    RouteRule("references/ai-isms-and-humanisation.md", (r"\b(?:human(?:ise|ize)|ai[- ]?isms?|sound\s+(?:more\s+)?human|less\s+(?:robotic|ai)|machine[- ]?written)\b",)),
+    RouteRule(
+        "references/style-bundles.md",
+        (
+            r"\b(?:style|tone|publication|house[ -](?:style|voice)|voice\s+(?:sample|sheet|family)|operator\s+voice|newsletter\s+voice|editorial\s+voice|technical[ -]teacher\s+voice)\b",
+            r"\b(?:simon\s+willison|julia\s+evans|gergely|lenny|reuters|bloomberg|paul\s+graham)\b",
+        ),
+    ),
+    RouteRule("references/genre-modes.md", (r"\b(?:announcement|notice|guide|tutorial|how-to|docs?|readme|runbook|memo|brief|report|essay|article|landing[- ]page|launch[- ]page|homepage|pricing\s+page|email|walkthrough)\b",)),
+    RouteRule(
+        "references/quality-gates.md",
+        (r"\b(?:final\s+(?:review|pass|check)|ready\s+to\s+publish|quality\s+check|sign[- ]?off)\b", WRITING_VERIFICATION),
+    ),
+    RouteRule("references/gotchas.md", (r"\b(?:over-edit(?:ed|ing)?|already\s+been\s+edited|edited\s+(?:two|three|multiple)\s+times|getting\s+worse|each\s+pass|too\s+polished|modes?\s+conflict|conflicting\s+(?:genres?|modes?)|can'?t\s+get\s+this\s+right)\b",)),
 )
 
 
@@ -112,7 +137,18 @@ TEST_CASES = (
     TestCase(
         "genre_question",
         "What genre and structure should this reflective essay use before I start drafting?",
-        ("references/operating-contract.md", "references/style-bundles.md", "references/genre-modes.md"),
+        ("references/operating-contract.md", "references/genre-modes.md"),
+        ("references/style-bundles.md",),
+    ),
+    TestCase(
+        "explicit_publication_style",
+        "Rewrite this report in a Reuters-style, fact-first tone without copying signature phrasing.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/style-bundles.md",
+            "references/genre-modes.md",
+        ),
     ),
     TestCase(
         "slogan_draft",
@@ -138,6 +174,57 @@ TEST_CASES = (
             "references/punctuation-and-sentence-flow.md",
         ),
     ),
+    TestCase(
+        "restructure_dense_analysis",
+        "Rewrite this long, dense analysis into digestible prose without turning every sentence into a bullet.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/natural-structure-and-digestibility.md",
+        ),
+        ("references/punctuation-and-sentence-flow.md",),
+    ),
+    TestCase(
+        "eval_2_exact_memo_route",
+        "Rewrite the attached Q3 operations memo for an executive audience. Make the argument easier to scan and less corporate, but preserve 18.4%, Q3, the sentence `We have not tested this in production.`, the quoted sentence, and the uncertainty word `may`. Do not add a source, result, or personal experience.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/natural-structure-and-digestibility.md",
+            "references/genericity-and-stiffness.md",
+            "references/genre-modes.md",
+        ),
+        (
+            "references/style-bundles.md",
+            "references/voice-and-rhythm.md",
+            "references/research-notes.md",
+        ),
+    ),
+    TestCase(
+        "eval_20_exact_dense_analysis_route",
+        "Rewrite the attached renewal-pilot analysis for product and engineering readers. Make it digestible by separating the finding, evidence limit, operational consequence, and recommendation where their jobs change. Preserve every number, both uses of `may`, `awaiting_confirmation`, the quoted sentence, and the unresolved callback cause. Do not turn every sentence into its own paragraph, use bullets unless the items are genuine peers, or publish diagnostic labels as headings in this short update.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/natural-structure-and-digestibility.md",
+        ),
+        (
+            "references/quality-gates.md",
+            "references/punctuation-and-sentence-flow.md",
+            "references/research-notes.md",
+        ),
+    ),
+    TestCase(
+        "eval_21_exact_dense_runbook_route",
+        "Rewrite the attached long paragraph about staging key rotation as a compact runbook. Use numbered steps for meaningful checkpoints, not every small verb; make the `issuer mismatch` stop condition unmistakable and end with verification. Preserve every command, `kid`, `staging.env`, `issuer mismatch`, `test-user`, and `<old-kid>` exactly. Do not invent a rollback command or claim the rotation succeeded.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/natural-structure-and-digestibility.md",
+            "references/genre-modes.md",
+        ),
+        ("references/research-notes.md",),
+    ),
     TestCase("code_only_rewrite", "Rewrite this Python function to remove a race condition.", (), ("references/operating-contract.md",)),
     TestCase(
         "code_punctuation_replacement",
@@ -162,6 +249,23 @@ TEST_CASES = (
         ("references/punctuation-and-sentence-flow.md",),
     ),
     TestCase("fact_check_only", "Fact-check whether this claim about GDP is accurate.", (), ("references/foundations.md",)),
+    TestCase(
+        "verify_report_claims_only",
+        "Verify whether this report's claims are accurate; do not rewrite it.",
+        (),
+        ("references/operating-contract.md", "references/revision-pass-stack.md", "references/genre-modes.md"),
+    ),
+    TestCase(
+        "verify_rewritten_report_preservation",
+        "Verify that this rewritten report preserves every number and quote.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/genre-modes.md",
+            "references/quality-gates.md",
+        ),
+        ("references/research-notes.md",),
+    ),
     TestCase("docs_question", "Where do I find the API documentation for this option?", (), ("references/genre-modes.md",)),
 )
 
@@ -179,9 +283,12 @@ def add_unique(items: list[str], new_items: Sequence[str]) -> None:
 def has_prose_request(text: str) -> bool:
     """Accept prose work, including prose embedded in an otherwise technical prompt."""
 
-    action = matches_any(text, PROSE_ACTIONS)
-    scope = matches_any(text, PROSE_SCOPE)
-    punctuation_transform = matches_any(text, PUNCTUATION_TRANSFORM)
+    positive_text = text
+    for pattern in NEGATED_PROSE_CLAUSES:
+        positive_text = re.sub(pattern, " ", positive_text, flags=re.IGNORECASE)
+    action = matches_any(positive_text, PROSE_ACTIONS)
+    scope = matches_any(positive_text, PROSE_SCOPE)
+    punctuation_transform = matches_any(positive_text, PUNCTUATION_TRANSFORM)
     if matches_any(text, FACT_CHECK_ONLY) and not action:
         return False
     if matches_any(text, DOCS_QUESTION) and not action:
