@@ -18,25 +18,34 @@ from typing import Sequence
 WRITING_VERIFICATION = r"\bverif(?:y|ying)\b.{0,80}\b(?:rewrite|rewritten|revision|revised|edited|draft|prose|copy)\b"
 
 PROSE_ACTIONS = (
-    r"\b(?:adapt(?:ing)?|diagnos(?:e|ing)|draft(?:ing)?|write|rewrit(?:e|ing)|revis(?:e|ing)|edit(?:ed|ing)?|review(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|clarif(?:y|ying)|human(?:ise|ize|ising|izing)|de-robot(?:ise|ize)|replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b",
+    r"\b(?:adapt(?:ing)?|diagnos(?:e|ing)|draft(?:ing)?|write|rewrit(?:e|ing)|revis(?:e|ing)|edit(?:ed|ing)?|review(?:ing)?|polish(?:ing)?|tighten(?:ing)?|improv(?:e|ing)|clarif(?:y|ying)|human(?:ise|ize|ising|izing)|de-robot(?:ise|ize)|de-ai|de-bot|rephras(?:e|ing)|replac(?:e|ing)|remov(?:e|ing)|strip(?:ping)?|ban(?:ned|ning|s)?|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b",
     r"\bmake\b.{0,80}\b(?:clearer|warmer|more\s+human|less\s+(?:stiff|generic|robotic))\b",
     WRITING_VERIFICATION,
     r"\b(?:genre|structure|format)\b",
 )
 PROSE_SCOPE = (
-    r"\b(?:prose|copy|microcopy|sentence|paragraph|comment|document|draft|explanation|intro(?:duction)?|outro|heading|voice|tone|cadence|style|wording|slogan|tagline)\b",
-    r"\b(?:announcement|notice|note|essay|poem|story|fiction|memo|email|cover\s+letter|newsletter|article|report|brief|proposal|bio|release\s+note|product\s+spec|pull\s+request|landing[- ]page|launch[- ]page|homepage|pricing\s+page)\b",
+    r"\b(?:prose|copy|microcopy|sentence|paragraph|comment|document|draft|blurb|message|reply|response|explanation|intro(?:duction)?|outro|heading|voice|tone|cadence|style|wording|phrasing|diction|language|words?|phrases?|tropes?|clich[eé]s?|tics?|mannerisms?|tells?|patterns?|slogan|tagline)\b",
+    r"\b(?:announcement|notice|note|essay|poem|story|fiction|memo|email|cover\s+letter|newsletter|article|report|brief|proposal|policy|statement|post|caption|bio|release\s+note|product\s+spec|pull\s+request|landing[- ]page|launch[- ]page|homepage|pricing\s+page)\b",
     r"\b(?:readme|guide|tutorial|how-to|runbook|walkthrough|documentation|docs|ui)\s+(?:draft|intro|section|copy|text|page)?\b",
     WRITING_VERIFICATION,
 )
 NEGATED_PROSE_CLAUSES = (
-    r"\b(?:do\s+not|don't)\s+(?:(?:rewrite|edit|improve|revise|polish|humanise|humanize)\b(?:\s+or\s+)?){1,3}[^.;\n]*",
+    r"\b(?:do\s+not|don't)\s+(?:(?:rewrite|edit|improve|revise|polish|humanise|humanize|touch)\b(?:\s+or\s+)?){1,3}[^.;\n]*",
     r"\bthere\s+is\s+no\s+prose\b[^.;\n]*",
 )
 CODE_ONLY = (
     r"\b(?:debug|compile|build|deploy|implement|refactor|fix)\b.*\b(?:code|function|class|api|test|error|exception|stack trace|hydration|typescript|python|react|next\.js)\b",
     r"\b(?:why|how)\s+(?:does|do|can)\b.*\b(?:code|function|api|test|error|exception)\b",
     r"\b(?:replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|avoid(?:ed|ing|s)?|standardis(?:e|ing)|standardiz(?:e|ing))\b.*\b(?:colons?|semi-?colons?|dashes|punctuation)\b.*\b(?:code|syntax|typescript|javascript|python|yaml|json|css|regex)\b",
+    r"\b(?:rewrite|rephrase|rename|replace|remove|strip|ban|avoid)\b.*\b(?:identifiers?|selectors?|class\s+names?|variable\s+names?|function\s+names?|type\s+names?|schema\s+keys?|configuration\s+keys?)\b",
+    r"\b(?:rewrite|rephrase|rename|replace|remove|strip|ban|avoid|humanise|humanize)\b.*\b(?:source\s+(?:code|file)|codebase|python\s+file|typescript\s+file|javascript\s+file|tsx\s+file|jsx\s+file)\b",
+)
+MIXED_PROSE_SCOPE = (
+    r"\b(?:prose|copy|microcopy|message|reply|response|error\s+message|notification|ui\s+copy|user-facing\s+text|explanation|documentation|docs|readme|guide|tutorial|article|report|memo|email)\b",
+)
+AUTHORSHIP_CLASSIFICATION = (
+    r"\b(?:assess|classify|detect|determine|judge|review|verify)\b.{0,100}\b(?:authorship|written|authored|generated)\b.{0,60}\b(?:ai|bot|human|llm|model)\b",
+    r"\b(?:was|were|is)\b.{0,80}\bwritten\s+by\b.{0,30}\b(?:ai|a\s+bot|a\s+human|an\s+llm|a\s+model)\b",
 )
 FACT_CHECK_ONLY = (
     r"\b(?:fact[ -]?check|verify|validate|confirm)\b.*\b(?:fact|claim|source|citation|accuracy|true)\b",
@@ -59,6 +68,15 @@ STRUCTURE_AND_DIGESTIBILITY = (
     r"\b(?:restructur(?:e|ing)|reorgani[sz](?:e|ing)|reorder(?:ing)?)\b.{0,80}\b(?:paragraph|passage|prose|article|memo|report|guide|draft)\b",
     r"\b(?:natural|clearer|better)\s+(?:structure|flow)\b",
     r"\b(?:easier|easy)\s+to\s+scan\b",
+)
+FORMULAIC_LANGUAGE = (
+    r"\bformulaic[- ]language\b",
+    r"\b(?:ai|llm|chatgpt|chatbot|bot|model)[- ]?(?:sounding|generated|written|like)?\s*(?:words?|phrases?|diction|wording|language|prose|copy|tropes?|clich[eé]s?|tics?|mannerisms?|tells?|patterns?|isms?)\b",
+    r"\b(?:formulaic|template[- ]?like|assistant[- ]?like|bot[- ]?like|llm[- ]?like|chatgpt[- ]?ish|model[- ]?sounding|machine[- ]?smooth)\s+(?:words?|phrases?|diction|wording|language|prose|copy|tropes?|clich[eé]s?|tics?|mannerisms?|tells?|patterns?)\b",
+    r"\b(?:canned|stock|scripted|prefab(?:ricated)?)\b.{0,60}\b(?:phrases?|frames?|wording|language|tropes?|clich[eé]s?|tics?|patterns?|boilerplate|hooks?|openers?|openings?|closers?|closings?|empathy|validation)\b",
+    r"\b(?:academic|research|support|customer[- ]service)\s+boilerplate\b",
+    r"\b(?:(?:bridg(?:e|es|ed|ing)|clos(?:e|es|ed|ing)|fill(?:s|ed|ing)?)\s+(?:a\s+|the\s+)?gap|marks?\s+(?:a\s+)?(?:significant\s+|pivotal\s+|major\s+)?shift|here(?:'|’)s\s+(?:the\s+)?kicker|plot\s+twist|in\s+(?:conclusion|summary)|only\s+time\s+will\s+tell|paves?\s+the\s+way|plays?\s+(?:a\s+)?(?:key|critical|pivotal)\s+role|at\s+its\s+core)\b",
+    r"\b(?:chatgpt[- ]?isms?|ai[- ]?isms?|llm[- ]?isms?|de-ai|de-bot)\b",
 )
 
 
@@ -84,7 +102,14 @@ ROUTE_RULES = (
     RouteRule("references/voice-and-rhythm.md", (r"\b(?:stiff|flat|bloodless|formal|robotic|cadence|rhythm|voice|owned|more\s+human|hedg(?:e|ing)|awkward|clipped)\b",)),
     RouteRule("references/punctuation-and-sentence-flow.md", PUNCTUATION_TRANSFORM),
     RouteRule("references/genericity-and-stiffness.md", (r"\b(?:generic|corporate|canned|fluffy|buzzwords?|over-signposted|dramatic|marketing[- ]speak|ceremonial)\b",)),
-    RouteRule("references/ai-isms-and-humanisation.md", (r"\b(?:human(?:ise|ize)|ai[- ]?isms?|sound\s+(?:more\s+)?human|less\s+(?:robotic|ai)|machine[- ]?written)\b",)),
+    RouteRule(
+        "references/ai-isms-and-humanisation.md",
+        (r"\b(?:human(?:ise|ize)|ai[- ]?isms?|sound\s+(?:more\s+)?human|less\s+(?:robotic|ai)|machine[- ]?written)\b", *FORMULAIC_LANGUAGE),
+    ),
+    RouteRule(
+        "references/formulaic-language-catalogue.md",
+        (*FORMULAIC_LANGUAGE, r"\b(?:human(?:ise|ize)|ai[- ]?isms?|sound\s+(?:more\s+)?human|less\s+(?:robotic|ai)|machine[- ]?written)\b"),
+    ),
     RouteRule(
         "references/style-bundles.md",
         (
@@ -108,9 +133,78 @@ TEST_CASES = (
         (
             "references/operating-contract.md",
             "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
             "references/genre-modes.md",
         ),
         ("references/punctuation-and-sentence-flow.md",),
+    ),
+    TestCase(
+        "ban_formulaic_ai_diction",
+        "Remove AI-sounding words and canned phrases like bridge the gap and marks a significant shift from this report; rephrase them from what actually changed.",
+        (
+            "references/operating-contract.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+            "references/genericity-and-stiffness.md",
+            "references/genre-modes.md",
+        ),
+    ),
+    TestCase(
+        "ban_broad_ai_tropes",
+        "Strip ChatGPTisms, canned hooks, AI tropes, and model-sounding phrasing from this article.",
+        (
+            "references/operating-contract.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+        ),
+    ),
+    TestCase(
+        "rewrite_academic_boilerplate",
+        "Rewrite this research summary and replace its stock research-purpose, significance, and future-work phrases.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+        ),
+    ),
+    TestCase(
+        "rewrite_scripted_support_reply",
+        "Rewrite this support reply to remove scripted empathy, blanket validation, and chatbot closing residue.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+        ),
+    ),
+    TestCase(
+        "avoid_named_formula_in_release_note",
+        "Write a terse release note and avoid phrases like bridge the gap.",
+        (
+            "references/operating-contract.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+        ),
+    ),
+    TestCase(
+        "remove_named_formula_from_policy",
+        "Edit this policy: remove 'in conclusion' and end on the final supported requirement.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+        ),
+    ),
+    TestCase(
+        "humanise_technical_gap_and_shift_prose",
+        "Humanise the prose in this technical glossary entry, but preserve the exact terms phase shift, distribution shift, and band gap.",
+        (
+            "references/operating-contract.md",
+            "references/ai-isms-and-humanisation.md",
+            "references/formulaic-language-catalogue.md",
+        ),
     ),
     TestCase(
         "stiff_runbook_intro",
@@ -227,6 +321,18 @@ TEST_CASES = (
     ),
     TestCase("code_only_rewrite", "Rewrite this Python function to remove a race condition.", (), ("references/operating-contract.md",)),
     TestCase(
+        "code_identifier_renaming",
+        "Rewrite these identifiers to remove formulaic wording.",
+        (),
+        ("references/operating-contract.md", "references/formulaic-language-catalogue.md"),
+    ),
+    TestCase(
+        "code_source_without_prose",
+        "Remove AI language from this Python source file but do not touch prose.",
+        (),
+        ("references/operating-contract.md", "references/formulaic-language-catalogue.md"),
+    ),
+    TestCase(
         "code_punctuation_replacement",
         "Replace the colons in this YAML syntax with equals signs.",
         (),
@@ -239,6 +345,18 @@ TEST_CASES = (
         ("references/punctuation-and-sentence-flow.md",),
     ),
     TestCase(
+        "schedule_shift_not_writing",
+        "Move Alex from the day shift to the night shift in the schedule.",
+        (),
+        ("references/formulaic-language-catalogue.md",),
+    ),
+    TestCase(
+        "research_gap_not_rewriting",
+        "Find studies addressing this research gap and summarize the evidence; do not revise prose.",
+        (),
+        ("references/formulaic-language-catalogue.md",),
+    ),
+    TestCase(
         "colon_topic_not_punctuation",
         "Draft a plain-language article about colon cancer screening.",
         (
@@ -249,6 +367,12 @@ TEST_CASES = (
         ("references/punctuation-and-sentence-flow.md",),
     ),
     TestCase("fact_check_only", "Fact-check whether this claim about GDP is accurate.", (), ("references/foundations.md",)),
+    TestCase(
+        "authorship_classification",
+        "Review whether this AI-generated prose was written by a bot.",
+        (),
+        ("references/operating-contract.md", "references/ai-isms-and-humanisation.md"),
+    ),
     TestCase(
         "verify_report_claims_only",
         "Verify whether this report's claims are accurate; do not rewrite it.",
@@ -289,11 +413,13 @@ def has_prose_request(text: str) -> bool:
     action = matches_any(positive_text, PROSE_ACTIONS)
     scope = matches_any(positive_text, PROSE_SCOPE)
     punctuation_transform = matches_any(positive_text, PUNCTUATION_TRANSFORM)
+    if matches_any(text, AUTHORSHIP_CLASSIFICATION):
+        return False
     if matches_any(text, FACT_CHECK_ONLY) and not action:
         return False
     if matches_any(text, DOCS_QUESTION) and not action:
         return False
-    if matches_any(text, CODE_ONLY) and not scope:
+    if matches_any(text, CODE_ONLY) and not matches_any(positive_text, MIXED_PROSE_SCOPE):
         return False
     return action and (scope or punctuation_transform)
 

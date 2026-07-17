@@ -54,7 +54,7 @@
         {"text": "Improves ownership, cadence, and concrete diction while retaining the memo's professional register", "type": "functional"},
         {"text": "Does not add slang, fake jokes, random contractions, or a recognizable writer's surface mannerisms", "type": "negative"},
         {"text": "Preserves the cautious recommendation and the fixture's concrete details", "type": "functional"},
-        {"text": "Captured trace records voice-and-rhythm.md, genericity-and-stiffness.md, and ai-isms-and-humanisation.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+        {"text": "Captured trace records voice-and-rhythm.md, genericity-and-stiffness.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
       ],
       "tags": ["humanisation", "memo", "voice", "disclosure"]
     },
@@ -289,6 +289,131 @@
         {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, natural-structure-and-digestibility.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
       ],
       "tags": ["rewrite", "runbook", "digestibility", "technical-guide", "commands", "preservation", "verification", "disclosure"]
+    },
+    {
+      "id": 22,
+      "name": "rewrite-formulaic-diction-from-supported-mechanism",
+      "prompt": "Humanise the attached product update. Remove or rewrite AI-sounding diction and canned frames, including rhetorical uses of `shift` and `gap`, from the concrete mechanism already present. Do not swap them for equally abstract synonyms. Preserve `three`, `11`, `may`, and the pilot evidence boundary.",
+      "expected_output": "A natural product update led by the supported workflow change, with formulaic abstractions removed and every number and limitation preserved.",
+      "files": ["evals/files/formulaic-diction.md"],
+      "assertions": [
+        {"text": "Centres the concrete before-and-after workflow: three email threads and a spreadsheet are replaced by one approval queue that shows which team has not responded", "type": "functional"},
+        {"text": "Preserves `three`, `11`, `may`, and the limitation on applying the pilot to larger releases", "type": "functional"},
+        {"text": "Removes the rhetorical uses of `shift`, `gap`, `bridges the gap`, `unlocking`, `seamless alignment`, `not just ... it is ...`, and `move forward with confidence`", "type": "negative"},
+        {"text": "Does not replace the rejected wording with `transition`, `divide`, `chasm`, `evolution`, `transformation`, or another abstraction that still hides the mechanism", "type": "negative"},
+        {"text": "Does not invent time savings, user feedback, adoption, approval, or production results", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, genericity-and-stiffness.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["humanisation", "formulaic-language", "meaning-first-rewrite", "gap", "shift", "preservation", "disclosure"]
+    },
+    {
+      "id": 23,
+      "name": "preserve-contextual-gap-and-shift-uses",
+      "prompt": "Line-edit the attached mixed excerpts. Rephrase generic rhetorical uses of `gap` and `shift`, but preserve quoted material, literal meanings, established technical terms, measured uses, and the specifically defined research gap. Do not treat a word match as sufficient reason to change accurate prose.",
+      "expected_output": "A context-sensitive line edit that rebuilds the generic release sentence while preserving every exact, literal, technical, measured, and quoted use.",
+      "files": ["evals/files/formulaic-diction-exceptions.md"],
+      "assertions": [
+        {"text": "Rewrites the generic release sentence by stating what changed rather than substituting a new abstraction", "type": "functional"},
+        {"text": "Preserves the gap year, Shift key, night shift, phase shift, distribution shift, 8 mm spatial gap, and the measured change in the pay gap from 12% to 8%", "type": "functional"},
+        {"text": "Retains or precisely restates the missing seven-versus-14-day comparison in adults over 70 instead of erasing the research question", "type": "functional"},
+        {"text": "Preserves the direct quotation exactly", "type": "functional"},
+        {"text": "Does not apply the avoidance rule mechanically or invent research findings and scientific meaning", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes punctuation-and-sentence-flow.md and research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["line-edit", "formulaic-language", "contextual-exceptions", "gap", "shift", "protected-literals", "disclosure"]
+    },
+    {
+      "id": 24,
+      "name": "remove-unsupported-formulaic-claims-without-invention",
+      "prompt": "Rewrite the attached launch blurb without AI-like abstractions. Use only the approved facts. If the source does not contain the mechanism needed to support a claim, remove that claim or state what information is missing rather than guessing.",
+      "expected_output": "A bounded availability statement, or a concise request for the missing product facts, with no invented mechanism or equally vague synonym substitutions.",
+      "files": ["evals/files/unsupported-formulaic-blurb.md"],
+      "assertions": [
+        {"text": "Preserves Nimbus, support staff, and 1 September", "type": "functional"},
+        {"text": "Either produces the bounded availability statement alone or explicitly asks for the missing feature, user action, baseline, and result", "type": "functional"},
+        {"text": "Removes `meaningful shift`, `operational excellence`, `capability gaps`, `empowers`, `unlock value`, and `at scale`", "type": "negative"},
+        {"text": "Does not substitute `transformation`, `evolution`, `potential`, `possibilities`, or comparable glaze", "type": "negative"},
+        {"text": "Does not invent a capability, benefit, metric, user reaction, or deployment result", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, genericity-and-stiffness.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "formulaic-language", "evidence-boundary", "no-invention", "gap", "shift", "disclosure"]
+    },
+    {
+      "id": 25,
+      "name": "rewrite-broad-formulaic-trope-stack",
+      "prompt": "Rewrite the attached council update as concise public information. Remove the canned opener and ending, presenter hooks, significance theatre, vague authority, corporate benefit language, and staged contrast. Rebuild the update from the pilot facts rather than swapping in new slogans. Preserve every number, the East Ward boundary, and both unmeasured outcomes.",
+      "expected_output": "A factual council update led by the pilot workflow and evidence limits, with a broad set of formulaic tropes removed and no invented benefit claim.",
+      "files": ["evals/files/broad-formulaic-tropes.md"],
+      "assertions": [
+        {"text": "Explains that one form and queue replaced four inboxes and a spreadsheet, and that each submission receives a reference number for assignment", "type": "functional"},
+        {"text": "Preserves 12 weeks, 84 residents, 137 reports, four inboxes, East Ward, and the lack of resolution-time and satisfaction measurements", "type": "functional"},
+        {"text": "Removes `rapidly evolving landscape`, `research shows`, `pivotal role`, `here's the kicker`, `not just ... it is about`, `empowering`, `unlocking the potential`, `at its core`, `testament`, `commitment to excellence`, `here's what's interesting`, `in conclusion`, `paves the way`, `brighter future`, `only time will tell`, and `possibilities are endless`", "type": "negative"},
+        {"text": "Does not replace the rejected language with new hype, presenter hooks, historical importance, or unsupported authority", "type": "negative"},
+        {"text": "Does not claim faster repairs, greater participation, resident approval, wider adoption, or results outside East Ward", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, genericity-and-stiffness.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "formulaic-language", "broad-ai-tropes", "public-information", "meaning-first-rewrite", "evidence-boundary", "disclosure"]
+    },
+    {
+      "id": 26,
+      "name": "rewrite-academic-boilerplate-from-study-design",
+      "prompt": "Rewrite the attached research summary for a general academic reader. Replace stock research-purpose, significance, and future-work phrases with the actual comparison, result, and limitations. Preserve every number and do not strengthen association into causation or generalise beyond the one hospital.",
+      "expected_output": "A bounded research summary that states the comparison, result, missing variables, and generalisation limit without academic ceremony.",
+      "files": ["evals/files/academic-boilerplate.md"],
+      "assertions": [
+        {"text": "States that the retrospective study compared appointment records for 312 adults at one hospital from 2019 to 2024 and reports the 19-day versus 11-day medians", "type": "functional"},
+        {"text": "Preserves the absence of income, transport, and cancellation data and the limits on causal and cross-hospital conclusions", "type": "functional"},
+        {"text": "Removes `against the backdrop`, `growing body of literature`, `aims to explore`, `deeper understanding`, `patient journey`, `shed light`, `critical issue`, `contribute to our understanding`, and `open new avenues`", "type": "negative"},
+        {"text": "Does not invent a mechanism, recommendation, intervention, causal explanation, or future study design", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "formulaic-language", "broad-ai-tropes", "academic", "uncertainty", "no-invention", "disclosure"]
+    },
+    {
+      "id": 27,
+      "name": "replace-scripted-support-language-with-specific-care",
+      "prompt": "Rewrite the attached support reply so it is warm, direct, and specific. Remove scripted empathy, blanket validation, unsupported reassurance, benefit glaze, and chatbot closing residue. Preserve every identifier, date, time range, owner, limitation, and uncertainty marker. Do not promise a refund or faster bank processing.",
+      "expected_output": "A concise support reply that acknowledges the duplicate charge, explains the pending status and next check, and avoids canned empathy or guarantees.",
+      "files": ["evals/files/scripted-support-reply.md"],
+      "assertions": [
+        {"text": "States that invoice 1042 was charged twice on 16 July, that the second charge is pending, and that Mina will check case 7816 on 22 July", "type": "functional"},
+        {"text": "Preserves `may`, the three-to-five-business-day bank window, and support's inability to accelerate the process", "type": "functional"},
+        {"text": "Removes or naturally replaces `thank you for reaching out`, `we completely understand how frustrating`, `you're absolutely right`, `rest assured`, `committed to making this right`, `seamless resolution`, `I hope this helps`, and `please do not hesitate`", "type": "negative"},
+        {"text": "Does not promise a refund, release date, successful resolution, compensation, or action by the bank", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "formulaic-language", "broad-ai-tropes", "support", "warmth", "no-invention", "disclosure"]
+    },
+    {
+      "id": 28,
+      "name": "distinguish-broad-formulae-from-exact-prose",
+      "prompt": "Line-edit the attached mixed prose. Rewrite the presenter frame, false-breadth audience claim, unnamed validation, hollow authenticity claim, and filler ending from the supplied facts. Preserve every precise medical, statistical, geographic, planning, artistic, and quoted use even when a word also appears in the formulaic-language catalogue.",
+      "expected_output": "A bounded permit update with broad formulaic frames removed and every precise or quoted use retained.",
+      "files": ["evals/files/broad-contextual-exceptions.md"],
+      "assertions": [
+        {"text": "States that the residential form asks seven questions instead of 19 and that commercial applicants still use the existing process", "type": "functional"},
+        {"text": "Preserves the lack of completion-time, approval-rate, and satisfaction measurements", "type": "functional"},
+        {"text": "Removes or rebuilds `Let's be clear`, `whether you're`, `independent testing confirms`, `real impact`, `at the end of the day`, and `this changes everything` without inventing proof", "type": "negative"},
+        {"text": "Preserves robust standard errors, critical care, the physical landscape, the approved 2027 maintenance roadmap, the 4,200-piece mosaic, Tuesday, and the direct quotation exactly", "type": "functional"},
+        {"text": "Does not treat a catalogue word as sufficient reason to edit accurate prose", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, and revision-pass-stack.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["line-edit", "formulaic-language", "broad-ai-tropes", "contextual-exceptions", "protected-literals", "no-invention", "disclosure"]
+    },
+    {
+      "id": 29,
+      "name": "preserve-specific-warmth-in-established-support-voice",
+      "prompt": "Line-edit the attached support reply for clarity while applying the formulaic-language policy contextually. Keep the organisation's established, specific acknowledgement and the necessary follow-up invitation. Preserve every identifier, date, time range, owner, limitation, uncertainty marker, greeting, and sign-off. Do not replace natural warmth with a cold template or add reassurance.",
+      "expected_output": "A warm, concise support reply that retains specific courtesy and a useful next action without adding a scripted empathy stack.",
+      "files": ["evals/files/established-support-voice.md"],
+      "assertions": [
+        {"text": "Retains the specific thanks for invoice 1042 and the bank screenshot rather than deleting courtesy mechanically", "type": "functional"},
+        {"text": "Retains the instruction to reply with the bank statement if the charge posts after 22 July because it is a necessary conditional action, not a generic offer of help", "type": "functional"},
+        {"text": "Preserves case 7816, invoice 1042, 22 July, Mina, `may`, three to five business days, the bank limitation, greeting, and sign-off", "type": "functional"},
+        {"text": "Does not add blanket validation, unsupported reassurance, a refund promise, a generic chatbot closer, or cold impersonal language", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, revision-pass-stack.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["line-edit", "formulaic-language", "broad-ai-tropes", "support", "warmth", "contextual-exceptions", "protected-literals", "disclosure"]
     }
   ]
 }

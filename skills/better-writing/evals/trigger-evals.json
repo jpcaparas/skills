@@ -114,5 +114,57 @@
   {
     "query": "Verify that this rewritten report preserves every number and quote.",
     "should_trigger": true
+  },
+  {
+    "query": "Remove AI-sounding words like gap and shift from this report, and replace the canned frames with what actually changed.",
+    "should_trigger": true
+  },
+  {
+    "query": "This paragraph keeps saying 'marks a shift', 'bridges the gap', and 'at its core'. Rewrite the formulaic language naturally.",
+    "should_trigger": true
+  },
+  {
+    "query": "Humanise the prose in this technical glossary entry, but preserve the exact terms phase shift, distribution shift, and band gap.",
+    "should_trigger": true
+  },
+  {
+    "query": "Calculate the phase shift in this signal-processing exercise; do not revise the explanation.",
+    "should_trigger": false
+  },
+  {
+    "query": "Move Alex from the day shift to the night shift in the schedule.",
+    "should_trigger": false
+  },
+  {
+    "query": "Find studies addressing this research gap and summarize the evidence; do not revise prose.",
+    "should_trigger": false
+  },
+  {
+    "query": "Strip the ChatGPTisms, canned hooks, AI tropes, scripted transitions, and generic conclusion from this essay.",
+    "should_trigger": true
+  },
+  {
+    "query": "Remove model-sounding clichés and LLM mannerisms from this memo, then rebuild each claim from the supplied facts.",
+    "should_trigger": true
+  },
+  {
+    "query": "Rename these identifiers so they contain fewer formulaic words; there is no prose to edit.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review whether this AI-generated prose was written by a bot; do not edit it.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write a terse release note and avoid phrases like bridge the gap.",
+    "should_trigger": true
+  },
+  {
+    "query": "Edit this policy: remove 'in conclusion' and end on the final supported requirement.",
+    "should_trigger": true
+  },
+  {
+    "query": "Remove AI language from this Python source file but do not touch prose.",
+    "should_trigger": false
   }
 ]

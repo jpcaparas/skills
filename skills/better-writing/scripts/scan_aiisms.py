@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Conservative prose diagnostic for the better-writing skill.
+"""Contextual formulaic-language diagnostic for the better-writing skill.
 
 The scanner surfaces revision prompts from an explicit local corpus. It is not
 an authorship detector: a signal does not show who wrote a text, and an empty
@@ -26,12 +26,16 @@ from typing import Literal, Sequence
 
 
 Severity = Literal["low", "medium", "high"]
+EditorialAction = Literal["remove", "rewrite", "review"]
+ClusterScope = Literal["document", "paragraph"]
 
 CORPUS_PATH = Path(__file__).resolve().parent.parent / "assets" / "aiisms.json"
+SUPPORTED_PROSE_SUFFIXES = {"", ".adoc", ".asciidoc", ".htm", ".html", ".md", ".mdx", ".rst", ".text", ".txt"}
 REQUIRED_PATTERN_KEYS = {
     "id",
     "category",
     "kind",
+    "action",
     "severity",
     "confidence",
     "minimum_occurrences",
@@ -58,11 +62,12 @@ REQUIRED_CATEGORIES = {
 
 @dataclass(frozen=True)
 class Cluster:
-    """The only structure allowed to produce an explicit must-revise gate."""
+    """A bounded group of related signals that may produce a revision gate."""
 
     key: str
     minimum_patterns: int
     must_revise: bool
+    scope: ClusterScope
 
 
 @dataclass(frozen=True)
@@ -82,6 +87,7 @@ class Pattern:
     id: str
     category: str
     kind: Literal["regex", "metric"]
+    action: EditorialAction
     regex: re.Pattern[str] | None
     metric: Metric | None
     severity: Severity
@@ -104,11 +110,13 @@ class Signal:
 
     pattern_id: str
     category: str
+    action: EditorialAction
     severity: Severity
     confidence: str
     occurrences: int
     minimum_occurrences: int
     excerpts: tuple[str, ...]
+    matched_texts: tuple[str, ...]
     explanation: str
     revision_move: str
     exceptions: tuple[str, ...]
@@ -173,13 +181,16 @@ def _parse_cluster(value: object, location: str) -> Cluster:
     key = value.get("key")
     minimum_patterns = value.get("minimum_patterns")
     must_revise = value.get("must_revise")
+    scope = value.get("scope")
     if not isinstance(key, str) or not key:
         raise CorpusError(f"{location}.key must be a non-empty string")
     if not isinstance(minimum_patterns, int) or minimum_patterns < 2:
         raise CorpusError(f"{location}.minimum_patterns must be an integer of at least 2")
     if not isinstance(must_revise, bool):
         raise CorpusError(f"{location}.must_revise must be boolean")
-    return Cluster(key=key, minimum_patterns=minimum_patterns, must_revise=must_revise)
+    if scope not in {"document", "paragraph"}:
+        raise CorpusError(f"{location}.scope must be document or paragraph")
+    return Cluster(key=key, minimum_patterns=minimum_patterns, must_revise=must_revise, scope=scope)
 
 
 def _parse_metric(value: object, location: str) -> Metric:
@@ -211,6 +222,7 @@ def _parse_pattern(raw: object, index: int) -> Pattern:
     pattern_id = raw.get("id")
     category = raw.get("category")
     kind = raw.get("kind")
+    action = raw.get("action")
     severity = raw.get("severity")
     confidence = raw.get("confidence")
     occurrences = raw.get("minimum_occurrences")
@@ -222,6 +234,8 @@ def _parse_pattern(raw: object, index: int) -> Pattern:
         raise CorpusError(f"{location}.category must be a non-empty string")
     if kind not in {"regex", "metric"}:
         raise CorpusError(f"{location}.kind must be regex or metric")
+    if action not in {"remove", "rewrite", "review"}:
+        raise CorpusError(f"{location}.action must be remove, rewrite, or review")
     if severity not in {"low", "medium", "high"}:
         raise CorpusError(f"{location}.severity must be low, medium, or high")
     if not isinstance(confidence, str) or confidence not in {"low", "medium", "high"}:
@@ -234,8 +248,8 @@ def _parse_pattern(raw: object, index: int) -> Pattern:
         if not _is_string_list(raw.get(key)):
             raise CorpusError(f"{location}.{key} must be a non-empty list of non-empty strings")
     evidence = raw.get("evidence")
-    if not isinstance(evidence, dict) or not isinstance(evidence.get("tier"), str) or not evidence["tier"]:
-        raise CorpusError(f"{location}.evidence.tier must be a non-empty string")
+    if not isinstance(evidence, dict) or evidence.get("tier") not in {"A", "B", "C"}:
+        raise CorpusError(f"{location}.evidence.tier must be A, B, or C")
     urls = evidence.get("urls")
     if not _is_string_list(urls) or not all(url.startswith(("https://", "http://")) for url in urls):
         raise CorpusError(f"{location}.evidence.urls must contain one or more HTTP(S) URLs")
@@ -264,6 +278,7 @@ def _parse_pattern(raw: object, index: int) -> Pattern:
         id=pattern_id,
         category=category,
         kind=kind,
+        action=action,
         regex=compiled_regex,
         metric=metric,
         severity=severity,
@@ -290,18 +305,43 @@ def load_corpus(path: Path = CORPUS_PATH) -> tuple[Pattern, ...]:
         raise CorpusError(f"Cannot read corpus at {path}: {exc}") from exc
     except json.JSONDecodeError as exc:
         raise CorpusError(f"Corpus is not valid JSON: {exc}") from exc
-    if not isinstance(raw, dict) or raw.get("schema_version") != 1:
-        raise CorpusError("Corpus must be an object with schema_version 1")
+    if not isinstance(raw, dict) or raw.get("schema_version") not in {1, 2}:
+        raise CorpusError("Corpus must be an object with schema_version 1 or 2")
+    schema_version = raw["schema_version"]
     patterns_raw = raw.get("patterns")
     if not isinstance(patterns_raw, list) or not patterns_raw:
         raise CorpusError("Corpus must contain a non-empty patterns list")
-    patterns = tuple(_parse_pattern(item, index) for index, item in enumerate(patterns_raw))
+    normalized_patterns: list[object] = []
+    for item in patterns_raw:
+        if schema_version == 2 or not isinstance(item, dict):
+            normalized_patterns.append(item)
+            continue
+        normalized = dict(item)
+        normalized.setdefault("action", "review")
+        cluster = normalized.get("cluster")
+        if isinstance(cluster, dict):
+            normalized_cluster = dict(cluster)
+            normalized_cluster.setdefault("scope", "document")
+            normalized["cluster"] = normalized_cluster
+        evidence = normalized.get("evidence")
+        if isinstance(evidence, dict) and evidence.get("tier") == "editorial-heuristic":
+            normalized_evidence = dict(evidence)
+            normalized_evidence["tier"] = "C"
+            normalized["evidence"] = normalized_evidence
+        normalized_patterns.append(normalized)
+    patterns = tuple(_parse_pattern(item, index) for index, item in enumerate(normalized_patterns))
     ids = [pattern.id for pattern in patterns]
     if len(ids) != len(set(ids)):
         raise CorpusError("Corpus pattern ids must be unique")
     missing_categories = sorted(REQUIRED_CATEGORIES - {pattern.category for pattern in patterns})
     if missing_categories:
         raise CorpusError(f"Corpus is missing required categories: {', '.join(missing_categories)}")
+    cluster_contracts: dict[str, tuple[int, bool, ClusterScope]] = {}
+    for pattern in patterns:
+        contract = (pattern.cluster.minimum_patterns, pattern.cluster.must_revise, pattern.cluster.scope)
+        previous = cluster_contracts.setdefault(pattern.cluster.key, contract)
+        if previous != contract:
+            raise CorpusError(f"Cluster {pattern.cluster.key!r} has inconsistent threshold, gate, or scope settings")
     return patterns
 
 
@@ -320,10 +360,34 @@ def prepare_text(text: str) -> tuple[str, dict[str, int]]:
     """Drop material that is usually not prose while preserving word boundaries."""
 
     skipped = {"fenced_code": 0, "inline_code": 0, "quotes": 0, "urls": 0}
-    text, skipped["fenced_code"] = _replace_and_count(
-        text, re.compile(r"(?ms)^(```|~~~).*?^\1\s*$"), "\n"
+    text, frontmatter = _replace_and_count(
+        text,
+        re.compile(r"(?ms)\A---\s*\n.*?^---\s*(?:\n|\Z)"),
+        "\n",
     )
-    text, skipped["inline_code"] = _replace_and_count(text, re.compile(r"`[^`\n]+`"), " ")
+    skipped["fenced_code"] += frontmatter
+    text, fenced_code = _replace_and_count(
+        text,
+        re.compile(r"(?ms)^(?P<fence>`{3,}|~{3,})[^\n]*\n.*?^(?P=fence)\s*$"),
+        "\n",
+    )
+    skipped["fenced_code"] += fenced_code
+    text, html_pre = _replace_and_count(text, re.compile(r"(?is)<pre\b[^>]*>.*?</pre>"), "\n")
+    skipped["fenced_code"] += html_pre
+    text, html_script = _replace_and_count(text, re.compile(r"(?is)<script\b[^>]*>.*?</script>"), "\n")
+    skipped["fenced_code"] += html_script
+    text, html_style = _replace_and_count(text, re.compile(r"(?is)<style\b[^>]*>.*?</style>"), "\n")
+    skipped["fenced_code"] += html_style
+    text, html_code = _replace_and_count(text, re.compile(r"(?is)<code\b[^>]*>.*?</code>"), " ")
+    skipped["inline_code"] += html_code
+    text, indented_code = _replace_and_count(
+        text,
+        re.compile(r"(?m)(?:^(?: {4}|\t).*(?:\n|$))+"),
+        "\n",
+    )
+    skipped["fenced_code"] += indented_code
+    text, inline_code = _replace_and_count(text, re.compile(r"`[^`\n]+`"), " ")
+    skipped["inline_code"] += inline_code
     text, skipped["urls"] = _replace_and_count(text, re.compile(r"!\[[^\]]*\]\([^)]*\)"), " ")
     markdown_link_pattern = re.compile(r"(?<!!)\[([^\]]+)\]\([^)]*\)")
     markdown_urls = 0
@@ -337,6 +401,12 @@ def prepare_text(text: str) -> tuple[str, dict[str, int]]:
     skipped["urls"] += markdown_urls
     text, bare_urls = _replace_and_count(text, re.compile(r"https?://[^\s)>]+"), " ")
     skipped["urls"] += bare_urls
+    text, curly_quotes = _replace_and_count(text, re.compile(r"“[\s\S]{1,2000}?”"), " ")
+    skipped["quotes"] += curly_quotes
+    text, curly_single_quotes = _replace_and_count(text, re.compile(r"‘[\s\S]{1,2000}?’"), " ")
+    skipped["quotes"] += curly_single_quotes
+    text, straight_quotes = _replace_and_count(text, re.compile(r'(?<!\w)"[^"\n]{1,2000}"(?!\w)'), " ")
+    skipped["quotes"] += straight_quotes
     text, html_quotes = _replace_and_count(text, re.compile(r"(?is)<blockquote\b[^>]*>.*?</blockquote>"), "\n")
     skipped["quotes"] += html_quotes
     retained: list[str] = []
@@ -390,19 +460,23 @@ def _pattern_signal(pattern: Pattern, text: str) -> Signal | None:
         matches = list(pattern.regex.finditer(text))
         count = len(matches)
         excerpts = tuple(_excerpt(text, match.start(), match.end()) for match in matches[:3])
+        matched_texts = tuple(dict.fromkeys(match.group(0) for match in matches[:5]))
     else:
         assert pattern.metric is not None
         count, excerpts = _metric_matches(pattern.metric, text)
+        matched_texts = ()
     if count < pattern.minimum_occurrences:
         return None
     return Signal(
         pattern_id=pattern.id,
         category=pattern.category,
+        action=pattern.action,
         severity=pattern.severity,
         confidence=pattern.confidence,
         occurrences=count,
         minimum_occurrences=pattern.minimum_occurrences,
         excerpts=excerpts,
+        matched_texts=matched_texts,
         explanation=pattern.explanation,
         revision_move=pattern.revision_move,
         exceptions=pattern.exceptions,
@@ -412,28 +486,59 @@ def _pattern_signal(pattern: Pattern, text: str) -> Signal | None:
     )
 
 
+def _cluster_units(text: str, scope: ClusterScope) -> tuple[str, ...]:
+    if scope == "document":
+        return (text,)
+    block_boundary = re.compile(
+        r"\n\s*\n|(?=^\s*(?:#{1,6}\s+|(?:[-+*]|\d+[.)])\s+))",
+        flags=re.MULTILINE,
+    )
+    return tuple(part for part in block_boundary.split(text) if re.search(r"\w", part))
+
+
+def _scoped_pattern_signal(pattern: Pattern, text: str) -> Signal | None:
+    """Apply paragraph-density rules within one Markdown-like prose block."""
+
+    for unit in _cluster_units(text, pattern.cluster.scope):
+        if signal := _pattern_signal(pattern, unit):
+            return signal
+    return None
+
+
 def scan_text(text: str, patterns: Sequence[Pattern] | None = None) -> ScanReport:
     """Return conservative revision prompts and explicit uncertainty notes."""
 
     active_patterns = tuple(patterns) if patterns is not None else load_corpus()
     scanned_text, skipped = prepare_text(text)
-    signals = tuple(signal for pattern in active_patterns if (signal := _pattern_signal(pattern, scanned_text)) is not None)
+    signals = tuple(
+        signal
+        for pattern in active_patterns
+        if (signal := _scoped_pattern_signal(pattern, scanned_text)) is not None
+    )
     by_cluster: dict[str, list[Pattern]] = defaultdict(list)
-    pattern_by_id = {pattern.id: pattern for pattern in active_patterns}
-    for signal in signals:
-        by_cluster[signal.cluster_key].append(pattern_by_id[signal.pattern_id])
+    for pattern in active_patterns:
+        by_cluster[pattern.cluster.key].append(pattern)
     gates: list[Gate] = []
-    for cluster_key, matched_patterns in sorted(by_cluster.items()):
-        cluster = matched_patterns[0].cluster
-        distinct_ids = tuple(sorted({pattern.id for pattern in matched_patterns}))
-        if cluster.must_revise and len(distinct_ids) >= cluster.minimum_patterns:
+    for cluster_key, cluster_patterns in sorted(by_cluster.items()):
+        cluster = cluster_patterns[0].cluster
+        if not cluster.must_revise:
+            continue
+        qualifying_ids: tuple[str, ...] = ()
+        for unit in _cluster_units(scanned_text, cluster.scope):
+            distinct_ids = tuple(
+                sorted(pattern.id for pattern in cluster_patterns if _pattern_signal(pattern, unit) is not None)
+            )
+            if len(distinct_ids) >= cluster.minimum_patterns:
+                qualifying_ids = distinct_ids
+                break
+        if qualifying_ids:
             gates.append(
                 Gate(
                     cluster_key=cluster_key,
-                    matched_pattern_ids=distinct_ids,
+                    matched_pattern_ids=qualifying_ids,
                     required_distinct_patterns=cluster.minimum_patterns,
                     message=(
-                        "Must-revise cluster: inspect these related frames together. "
+                        f"Must-revise cluster within one {cluster.scope}: inspect these related frames together. "
                         "This gate is triggered only by the corpus's explicit multi-pattern rule."
                     ),
                 )
@@ -453,14 +558,15 @@ def scan_text(text: str, patterns: Sequence[Pattern] | None = None) -> ScanRepor
     uncertainty = [
         "Signals are revision prompts, not proof of quality, intent, or authorship.",
         "The scanner intentionally ignores code, quoted blocks, and URL destinations where practical; review them separately when they are in scope.",
-        "No ordinary word or punctuation mark is banned by this scanner; context and exceptions decide whether revision helps.",
+        "Remove and rewrite labels express the default editorial move, but the scanner cannot evaluate genre, meaning, or listed exceptions; a human must decide whether each use is exact.",
+        "The corpus is a representative diagnostic subset of the broader editorial catalogue, not a complete lexical gate.",
     ]
     if metrics.scanned_words < 80:
         uncertainty.append("Short-text warning: fewer than 80 scannable words makes density and cadence signals especially unstable.")
     if metrics.scanned_characters < metrics.source_characters * 0.55:
         uncertainty.append("More than 45% of the source was skipped, so this report covers only a limited prose sample.")
     return ScanReport(
-        scanner="better-writing ai-ism diagnostic v1",
+        scanner="better-writing formulaic-language diagnostic v2",
         disclaimer="This is not authorship detection. It reports conservative prose signals and revision prompts only.",
         signals=signals,
         must_revise_gates=tuple(gates),
@@ -479,11 +585,13 @@ def report_as_dict(report: ScanReport) -> dict[str, object]:
             {
                 "pattern_id": signal.pattern_id,
                 "category": signal.category,
+                "action": signal.action,
                 "severity": signal.severity,
                 "confidence": signal.confidence,
                 "occurrences": signal.occurrences,
                 "minimum_occurrences": signal.minimum_occurrences,
                 "excerpts": list(signal.excerpts),
+                "matched_texts": list(signal.matched_texts),
                 "explanation": signal.explanation,
                 "revision_move": signal.revision_move,
                 "exceptions": list(signal.exceptions),
@@ -524,12 +632,25 @@ def print_text_report(report: ScanReport) -> None:
 
     print(report.disclaimer)
     print(f"Scanned {report.metrics.scanned_words} words in {report.metrics.sentences} sentences.")
-    print(f"Signals: {len(report.signals)} | must-revise clusters: {len(report.must_revise_gates)}")
+    action_counts = {
+        action: sum(1 for signal in report.signals if signal.action == action)
+        for action in ("remove", "rewrite", "review")
+    }
+    print(
+        f"Signals: {len(report.signals)} | remove: {action_counts['remove']} "
+        f"| rewrite: {action_counts['rewrite']} | review: {action_counts['review']} "
+        f"| must-revise clusters: {len(report.must_revise_gates)}"
+    )
     if report.signals:
         print("\nRevision prompts:")
         for signal in report.signals:
-            print(f"- [{signal.severity}/{signal.confidence}] {signal.pattern_id}: {signal.explanation}")
+            print(
+                f"- [{signal.action}; {signal.severity}/{signal.confidence}] "
+                f"{signal.pattern_id}: {signal.explanation}"
+            )
             print(f"  Move: {signal.revision_move}")
+            if signal.matched_texts:
+                print(f"  Match: {signal.matched_texts[0]}")
             if signal.excerpts:
                 print(f"  Evidence: {signal.excerpts[0]}")
     if report.must_revise_gates:
@@ -541,23 +662,72 @@ def print_text_report(report: ScanReport) -> None:
         print(f"- {note}")
 
 
-def run_self_tests() -> dict[str, object]:
+def run_self_tests(patterns: Sequence[Pattern] | None = None) -> dict[str, object]:
     """Exercise the safety properties that keep this a revision diagnostic."""
 
-    patterns = load_corpus()
+    active_patterns = tuple(patterns) if patterns is not None else load_corpus()
     samples = {
         "single_authority_frame_does_not_gate": "The pattern that keeps showing up is teams delaying ownership.",
         "authority_stack_gates": "The pattern that keeps showing up is delays. The limitation is scope.",
         "code_quote_and_url_are_skipped": "```\nThe limitation is scope.\n```\n> Network restrictions matter.\nSee https://example.com/The-pattern-that-keeps-showing-up\n",
-        "ordinary_words_and_one_em_dash_are_not_banned": "What actually matters in this landscape is the migration — not the marketing.",
+        "ordinary_words_and_one_em_dash_are_not_banned": "The night shift measured an 8 mm gap before the instrument recorded a phase shift — all expected results.",
+        "formulaic_gap_and_shift_are_rewrites": "The platform bridges the gap between planning and delivery and marks a significant shift in how teams collaborate.",
+        "inline_quotations_are_skipped": 'Mara wrote, “The platform bridges the gap and marks a significant shift.” He quoted "I hope this helps" exactly.',
+        "distant_cluster_does_not_gate": "The platform bridges the gap between planning and delivery.\n\nThis paragraph contains enough ordinary prose to stand alone. It marks a significant shift in how teams collaborate.",
+        "code_containers_are_skipped": "````\nThe pattern that keeps showing up is delay.\n````\n    The limitation is scope.\n<pre>Network restrictions matter.</pre>\n<code>The platform bridges the gap.</code>",
+        "frontmatter_script_and_style_are_skipped": "---\ndescription: The platform bridges the gap and marks a significant shift.\n---\n<script>const note = 'Research shows this is pivotal.';</script>\n<style>/* Here is the kicker: this changes everything. */</style>\nPlain prose remains.",
+        "precise_contextual_uses_are_clear": "This policy represents a shift from annual to quarterly audits. The permission enables users to download reports. No trial has compared the groups; this study addresses the defined research gap.",
+        "broad_formulaic_families_are_reported": "But here's the kicker: research shows this study aims to explore the issue. Only time will tell.",
+        "paragraph_density_stays_local": "The estimate is pivotal.\n\nThe estimate is robust.\n\nThe estimate is seamless.",
+        "separate_list_items_do_not_gate": "- The platform bridges the gap between planning and delivery.\n- The policy marks a significant shift in review.",
     }
-    reports = {name: scan_text(sample, patterns) for name, sample in samples.items()}
+    reports = {name: scan_text(sample, active_patterns) for name, sample in samples.items()}
+    formulaic_ids = {signal.pattern_id for signal in reports["formulaic_gap_and_shift_are_rewrites"].signals}
+    broad_ids = {signal.pattern_id for signal in reports["broad_formulaic_families_are_reported"].signals}
+    positive_examples_calibrate = all(
+        _pattern_signal(pattern, " ".join([example] * pattern.minimum_occurrences)) is not None
+        for pattern in active_patterns
+        for example in pattern.positive_examples
+    )
+    counterexamples_clear = all(
+        _pattern_signal(pattern, example) is None
+        for pattern in active_patterns
+        for example in pattern.counterexamples
+    )
     checks = {
-        "corpus_loads": bool(patterns),
+        "corpus_loads": bool(active_patterns),
         "single_authority_frame_does_not_gate": not reports["single_authority_frame_does_not_gate"].must_revise_gates,
         "authority_stack_gates": any(gate.cluster_key == "compressed-authority-stack" for gate in reports["authority_stack_gates"].must_revise_gates),
         "code_quote_and_url_are_skipped": not reports["code_quote_and_url_are_skipped"].signals,
         "ordinary_words_and_one_em_dash_are_not_banned": not reports["ordinary_words_and_one_em_dash_are_not_banned"].signals,
+        "formulaic_gap_and_shift_are_rewrites": {
+            "formulaic-gap-bridge-frame",
+            "formulaic-shift-verdict-frame",
+        }.issubset(formulaic_ids),
+        "formulaic_cluster_gates_locally": any(
+            gate.cluster_key == "abstract-change-placeholder"
+            for gate in reports["formulaic_gap_and_shift_are_rewrites"].must_revise_gates
+        ),
+        "inline_quotations_are_skipped": not reports["inline_quotations_are_skipped"].signals,
+        "distant_cluster_does_not_gate": not reports["distant_cluster_does_not_gate"].must_revise_gates,
+        "code_containers_are_skipped": not reports["code_containers_are_skipped"].signals,
+        "frontmatter_script_and_style_are_skipped": not reports["frontmatter_script_and_style_are_skipped"].signals,
+        "precise_contextual_uses_are_clear": not reports["precise_contextual_uses_are_clear"].signals,
+        "broad_formulaic_families_are_reported": {
+            "presenter-staged-pivot",
+            "vague-attribution-research-claim",
+            "academic-purpose-boilerplate",
+            "optimism-reset",
+        }.issubset(broad_ids),
+        "paragraph_density_stays_local": "lexical-elevated-abstract-noun" not in {
+            signal.pattern_id for signal in reports["paragraph_density_stays_local"].signals
+        },
+        "separate_list_items_do_not_gate": not reports["separate_list_items_do_not_gate"].must_revise_gates,
+        "matched_text_is_reported": any(
+            signal.matched_texts for signal in reports["formulaic_gap_and_shift_are_rewrites"].signals
+        ),
+        "positive_examples_calibrate": positive_examples_calibrate,
+        "counterexamples_clear": counterexamples_clear,
         "short_text_warning": any("Short-text warning" in note for note in reports["single_authority_frame_does_not_gate"].uncertainty),
     }
     return {"passed": all(checks.values()), "checks": checks}
@@ -568,7 +738,14 @@ def _read_input(path: str | None, text: str | None) -> str:
         return text
     if path is None or path == "-":
         return sys.stdin.read()
-    return Path(path).read_text(encoding="utf-8")
+    source_path = Path(path)
+    if source_path.suffix.lower() not in SUPPORTED_PROSE_SUFFIXES:
+        allowed = ", ".join(sorted(suffix or "extensionless" for suffix in SUPPORTED_PROSE_SUFFIXES))
+        raise OSError(
+            f"refusing non-prose file {source_path}; supported documentation suffixes: {allowed}. "
+            "Pass extracted natural-language prose with --text instead."
+        )
+    return source_path.read_text(encoding="utf-8")
 
 
 def main(argv: Sequence[str] | None = None) -> int:

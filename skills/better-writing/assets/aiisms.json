@@ -1,858 +1,3113 @@
 {
-  "schema_version": 1,
-  "title": "Conservative revision-prompt corpus",
-  "purpose": "Surface review signals in prose. This corpus is not an authorship detector and cannot establish whether a person or system wrote a passage.",
-  "last_reviewed": "2026-07-12",
+  "schema_version": 2,
+  "title": "Contextual formulaic-language revision corpus",
+  "purpose": "Surface contextual remove, rewrite, and review signals in prose. This corpus is not an authorship detector and cannot establish whether a person or system wrote a passage.",
+  "last_reviewed": "2026-07-17",
   "patterns": [
     {
       "id": "lexical-delve-into",
       "category": "lexical",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\bdelve(?:s|d|ing)?\\s+into\\b",
       "severity": "low",
       "confidence": "low",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated invitation language can add ceremony without clarifying the action.",
       "revision_move": "Name the subject and action directly, or keep one use when it is the writer's natural voice.",
       "exceptions": ["A literal discussion of research exploration", "Quoted source material"],
       "positive_examples": ["This chapter delves into the trade-offs behind the migration."],
       "counterexamples": ["The chapter compares migration trade-offs."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "lexical-elevated-abstract-noun",
       "category": "lexical",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:multifaceted|intricate|pivotal|paramount|seamless|robust|tapestry)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 3,
-      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A concentration of elevated modifiers can conceal a missing concrete claim.",
       "revision_move": "Replace only the vague occurrence with a fact, consequence, or ordinary precise word.",
       "exceptions": ["A term of art", "A quotation", "A deliberately formal genre"],
       "positive_examples": ["The pivotal, multifaceted framework enables a seamless experience."],
       "counterexamples": ["The framework combines billing, permissions, and audit logs."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "rhetorical-journey-opening",
       "category": "rhetorical_frames",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:embark|join us)\\s+on\\s+(?:a|this|an)\\s+(?:journey|exploration)\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "ceremonial-opening", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "ceremonial-opening", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Ceremonial openings can delay the point of a guide or announcement.",
       "revision_move": "Open with the reader's task, decision, or consequence.",
       "exceptions": ["Event invitations", "Travel writing", "Intentional promotional voice"],
       "positive_examples": ["Join us on a journey through modern observability."],
       "counterexamples": ["This guide shows how to trace a failed request."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
+      "last_reviewed": "2026-07-17"
     },
     {
-      "id": "compressed-pattern-keeps-showing-up",
+      "id": "compressed-recurring-pattern-claim",
       "category": "compressed_authority_frames",
       "kind": "regex",
-      "regex": "\\bthe\\s+pattern\\s+that\\s+keeps\\s+showing\\s+up\\b",
+      "action": "rewrite",
+      "regex": "\\b(?:the|a)\\s+pattern\\s+(?:that\\s+)?(?:keeps|continues)\\s+(?:showing|appearing)\\s+up\\b",
       "severity": "medium",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "The phrase compresses evidence, recurrence, and interpretation into an unshown authority claim.",
       "revision_move": "Name the observed cases and the inference, or remove the frame.",
       "exceptions": ["The pattern is then demonstrated with concrete examples"],
       "positive_examples": ["The pattern that keeps showing up is teams delaying ownership decisions."],
       "counterexamples": ["In three incident reviews, ownership was assigned after the outage began."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/organize/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/organize/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
-      "id": "compressed-limitation-is-scope",
+      "id": "compressed-boundary-verdict",
       "category": "compressed_authority_frames",
       "kind": "regex",
-      "regex": "\\bthe\\s+limitation\\s+is\\s+scope\\b",
+      "action": "rewrite",
+      "regex": "\\bthe\\s+(?:(?:main|key|real|primary)\\s+)?limitation\\s+is\\s+(?:scope|scale|timing|coverage|sample\\s+size|the\\s+(?:sample|data|timeframe))\\b",
       "severity": "medium",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "The compact verdict can hide which population, condition, or decision is out of scope.",
       "revision_move": "Specify the boundary and what it prevents the reader from concluding.",
       "exceptions": ["A heading followed immediately by scope details"],
       "positive_examples": ["The limitation is scope."],
       "counterexamples": ["The study covers paid accounts in New Zealand, so it cannot estimate free-user retention."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.equator-network.org/reporting-guidelines/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.equator-network.org/reporting-guidelines/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
-      "id": "compressed-network-restrictions-matter",
+      "id": "compressed-personal-criteria-frame",
       "category": "compressed_authority_frames",
       "kind": "regex",
-      "regex": "\\bnetwork\\s+restrictions\\s+matter\\b",
-      "severity": "medium",
-      "confidence": "low",
-      "minimum_occurrences": 1,
-      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true},
-      "explanation": "A terse warning may be true but leaves the relevant restriction and operational consequence unstated.",
-      "revision_move": "State the blocked path, affected users, and workaround if known.",
-      "exceptions": ["A compact checklist item linked to detailed network requirements"],
-      "positive_examples": ["Network restrictions matter."],
-      "counterexamples": ["Corporate proxies block the callback on port 8443; allow that port or use the polling setup."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
-      "last_reviewed": "2026-07-12"
-    },
-    {
-      "id": "compressed-heres-how-i-decide",
-      "category": "compressed_authority_frames",
-      "kind": "regex",
+      "action": "review",
       "regex": "\\bhere(?:'|’)s\\s+how\\s+i\\s+(?:actually\\s+)?decide\\b",
       "severity": "medium",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "The frame can create unearned intimacy or authority when the criteria never follow.",
       "revision_move": "Lead with the actual criteria; keep the first person only if experience is the evidence.",
       "exceptions": ["A personal essay or operator note that provides a concrete decision process"],
       "positive_examples": ["Here’s how I actually decide whether to adopt a tool."],
       "counterexamples": ["I adopt a tool when it removes a repeated manual step, works offline, and has an export path."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
+      "last_reviewed": "2026-07-17"
     },
     {
-      "id": "compressed-wasm-keeps-showing-up",
+      "id": "compressed-unexplained-difference-verdict",
       "category": "compressed_authority_frames",
       "kind": "regex",
-      "regex": "\\bone\\s+reason\\s+wasm\\s+keeps\\s+showing\\s+up\\b",
-      "severity": "medium",
-      "confidence": "low",
-      "minimum_occurrences": 1,
-      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true},
-      "explanation": "The phrase gestures at an observed trend without identifying its setting or evidence.",
-      "revision_move": "Name the environments where it appears and the constraint it solves.",
-      "exceptions": ["A linked analysis that supplies the evidence in the next sentence"],
-      "positive_examples": ["One reason Wasm keeps showing up is portability."],
-      "counterexamples": ["Browser sandboxes and edge runtimes use Wasm when they need portable, constrained execution."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://webassembly.org/docs/overview/"]},
-      "last_reviewed": "2026-07-12"
-    },
-    {
-      "id": "compressed-fundamentally-different-default",
-      "category": "compressed_authority_frames",
-      "kind": "regex",
-      "regex": "\\bthat(?:'|’)s\\s+a\\s+fundamentally\\s+different\\s+default\\b",
+      "action": "rewrite",
+      "regex": "\\b(?:that|this|it)(?:(?:'|’)s|\\s+is)\\s+(?:a\\s+)?(?:fundamentally|radically|materially)\\s+different\\s+(?:default|approach|model|way\\s+of\\s+working)\\b",
       "severity": "medium",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true},
-      "explanation": "A verdict about a default can substitute for explaining the behavioral difference.",
-      "revision_move": "Name both defaults and show what changes for the reader or system.",
+      "cluster": {"key": "compressed-authority-stack", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "A verdict about a default, approach, or model can substitute for explaining the practical difference.",
+      "revision_move": "Name both states and show what changes for the reader, organisation, or system.",
       "exceptions": ["A transition sentence followed by a concrete comparison"],
-      "positive_examples": ["That’s a fundamentally different default."],
-      "counterexamples": ["The old client retried writes automatically; the new client requires the caller to opt in."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
-      "last_reviewed": "2026-07-12"
+      "positive_examples": ["That’s a fundamentally different approach."],
+      "counterexamples": ["The old policy required annual reviews; the new policy requires one each quarter."],
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "chat-service-hope-this-helps",
       "category": "chat_service_residue",
       "kind": "regex",
+      "action": "remove",
       "regex": "\\bi\\s+hope\\s+this\\s+helps\\b",
       "severity": "low",
       "confidence": "high",
       "minimum_occurrences": 1,
-      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "A service-chat sign-off can remain after text is repurposed as a document.",
       "revision_move": "Delete it, or replace it with the reader's next concrete step.",
       "exceptions": ["A real support reply where a warm closing is appropriate"],
       "positive_examples": ["I hope this helps!"],
       "counterexamples": ["Run `tool verify` after updating the configuration."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "chat-service-let-me-know",
       "category": "chat_service_residue",
       "kind": "regex",
+      "action": "remove",
       "regex": "\\blet\\s+me\\s+know\\s+if\\s+you\\s+(?:have\\s+)?(?:any\\s+)?(?:questions|need\\s+(?:anything|more))\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "An open-ended service offer can leave a published piece without a useful ending.",
       "revision_move": "End with an owner, decision, or specific contact path when one is needed.",
       "exceptions": ["A direct message or customer-support response"],
       "positive_examples": ["Let me know if you have any questions."],
       "counterexamples": ["For account access, contact support@example.com with the workspace ID."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/organize/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/organize/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "generic-authority-important-to-note",
       "category": "generic_authority",
       "kind": "regex",
-      "regex": "\\bit(?:'|’)s\\s+(?:important|worthwhile|essential)\\s+to\\s+note\\b",
+      "action": "rewrite",
+      "regex": "\\b(?:it(?:'|’)s|it\\s+is)\\s+(?:(?:important|essential|crucial)\\s+to\\s+note|worth\\s+noting)\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "The sentence announces importance instead of demonstrating it.",
       "revision_move": "State the fact and its consequence directly.",
       "exceptions": ["A safety warning with a specific consequence immediately following"],
-      "positive_examples": ["It is important to note that backups matter."],
+      "positive_examples": ["It is worth noting that backups matter.", "It is crucial to note that backups matter."],
       "counterexamples": ["Backups are encrypted but cannot restore deleted workspace keys."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "generic-authority-testament",
       "category": "generic_authority",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:serves|stand(?:s|ing))\\s+as\\s+a\\s+testament\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Ceremonial evaluation can replace the observable result.",
       "revision_move": "Describe the result and who benefited instead.",
       "exceptions": ["A formal commemorative speech"],
       "positive_examples": ["The launch serves as a testament to our commitment."],
       "counterexamples": ["The launch cut onboarding from three days to one."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "formatting-takeaway-heading",
       "category": "formatting",
       "kind": "regex",
+      "action": "review",
       "regex": "(?m)^#{1,6}\\s*(?:key\\s+takeaways?|in\\s+conclusion|final\\s+thoughts?)\\s*$",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 1,
-      "cluster": {"key": "template-formatting", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "template-formatting", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Stock headings can be useful, but repeated template structure may not fit the piece.",
       "revision_move": "Use a heading that names the actual decision, result, or next action.",
       "exceptions": ["A house style that requires this heading", "A short training handout"],
       "positive_examples": ["## Key Takeaways"],
       "counterexamples": ["## What changes for existing accounts"],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.w3.org/WAI/tutorials/page-structure/headings/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.w3.org/WAI/tutorials/page-structure/headings/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "cadence-repeated-sentence-opener",
       "category": "cadence_structure",
       "kind": "metric",
+      "action": "review",
       "metric": {"name": "repeated_sentence_opener", "threshold": 3},
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 3,
-      "cluster": {"key": "flat-cadence", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "flat-cadence", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Several consecutive sentences with the same opener can flatten motion.",
       "revision_move": "Vary only the redundant openings while preserving useful parallelism.",
       "exceptions": ["Intentional anaphora", "Step-by-step instructions"],
       "positive_examples": ["This changes access. This changes billing. This changes reporting."],
       "counterexamples": ["Access changes immediately. Billing changes at renewal. Reports refresh overnight."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://writingcenter.unc.edu/tips-and-tools/paragraphs/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://writingcenter.unc.edu/tips-and-tools/paragraphs/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "cadence-short-sentence-run",
       "category": "cadence_structure",
       "kind": "metric",
+      "action": "review",
       "metric": {"name": "short_sentence_run", "threshold": 4, "max_words": 6},
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 4,
-      "cluster": {"key": "flat-cadence", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "flat-cadence", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "A long run of very short sentences can feel mechanically clipped outside instructions or deliberate emphasis.",
       "revision_move": "Combine related ideas where that improves the thought's rhythm.",
       "exceptions": ["Safety steps", "Dialogue", "Deliberate dramatic pacing"],
       "positive_examples": ["It failed. We waited. It failed again. We stopped."],
       "counterexamples": ["It failed twice, so we stopped the rollout and preserved the logs."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://writingcenter.unc.edu/tips-and-tools/style/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://writingcenter.unc.edu/tips-and-tools/style/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "punctuation-em-dash-density",
       "category": "punctuation",
       "kind": "metric",
+      "action": "review",
       "metric": {"name": "character_count", "character": "—", "threshold": 4},
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 4,
-      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "A dense run of em dashes can obscure sentence relationships. An em dash is not a banned mark.",
       "revision_move": "Keep dashes that carry a real interruption; recast only repeated parenthetical uses.",
       "exceptions": ["Dialogue", "A publication's style", "A single emphatic dash"],
       "positive_examples": ["The queue—already delayed—stalled again—then recovered—without an alert."],
       "counterexamples": ["The queue, already delayed, stalled again and then recovered without an alert."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.merriam-webster.com/grammar/em-dash-en-dash-how-to-use"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.merriam-webster.com/grammar/em-dash-en-dash-how-to-use"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "punctuation-exclamation-density",
       "category": "punctuation",
       "kind": "metric",
+      "action": "review",
       "metric": {"name": "character_count", "character": "!", "threshold": 4},
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 4,
-      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "A concentration of exclamation points can flatten emphasis.",
       "revision_move": "Reserve the mark for the few places where it changes the intended voice.",
       "exceptions": ["Marketing campaigns", "Dialogue", "A deliberately enthusiastic announcement"],
       "positive_examples": ["It shipped! It works! Try it now! Tell everyone!"],
       "counterexamples": ["It shipped. Start with the migration guide."],
-      "evidence": {"tier": "editorial-heuristic", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "lexical-underscore-importance",
       "category": "lexical",
       "kind": "regex",
+      "action": "review",
       "regex": "\\bunderscore(?:s|d|ing)?\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated uses can announce significance instead of providing the supporting detail.",
       "revision_move": "Keep a necessary use, but replace the others with the fact or consequence being emphasised.",
       "exceptions": ["A literal typographic underscore", "A source quotation", "A contrast that needs explicit emphasis"],
       "positive_examples": ["This underscores the pivotal nature of the change."],
       "counterexamples": ["The change prevents archived accounts from signing in."],
       "evidence": {"tier": "A", "urls": ["https://arxiv.org/abs/2412.11385", "https://arxiv.org/abs/2406.07016"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "lexical-showcase-verb",
       "category": "lexical",
       "kind": "regex",
+      "action": "review",
       "regex": "\\bshowcase(?:s|d|ing)?\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "In informational prose, repeated promotional framing can obscure what is actually demonstrated.",
       "revision_move": "Name the demonstration, result, or capability directly.",
       "exceptions": ["An exhibition catalogue", "A product-navigation label", "A literal display context"],
       "positive_examples": ["The dashboard showcases our robust reporting."],
       "counterexamples": ["The dashboard compares weekly revenue by region."],
       "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "lexical-abstract-domain-cluster",
       "category": "lexical",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:in\\s+(?:today['’]s|the)\\s+)?(?:landscape|realm|tapestry)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Abstract domain nouns can make a familiar setting sound grander and less specific.",
       "revision_move": "Name the relevant market, system, place, or audience when that improves precision.",
       "exceptions": ["Landscape used for literal geography", "A literary essay", "A domain term defined by the field"],
       "positive_examples": ["In today's landscape, the data realm forms a rich tapestry."],
       "counterexamples": ["For small retailers, the change affects checkout and inventory sync."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "lexical-contextual-polish-cluster",
       "category": "lexical",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:robust|seamless|leverage(?:d|s|ing)?)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 3,
-      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "These ordinary terms become vague when several stand in for a mechanism, constraint, or result.",
       "revision_move": "Retain technical meanings, but replace unsupported praise with a testable property or action.",
       "exceptions": ["Robust statistics", "A seamless garment", "A precise domain definition of leverage"],
       "positive_examples": ["Leverage the robust platform for a seamless workflow."],
       "counterexamples": ["Use the retry queue to resume interrupted imports without duplicating records."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "significance-importance-preamble",
       "category": "significance_authority",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:this|that|it)\\s+(?:highlights|underscores|demonstrates)\\s+the\\s+(?:importance|significance|need)\\s+of\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "The preamble asks for weight before identifying the relevant effect.",
       "revision_move": "State the effect and its stakes without an importance announcement.",
       "exceptions": ["A formal research discussion immediately followed by a specific result"],
       "positive_examples": ["This highlights the importance of collaboration."],
       "counterexamples": ["The handoff failed because no team owned the customer record."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.findings-emnlp.1065/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "reveal-not-x-just-y",
       "category": "reveal_negation",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\bnot\\s+(?:just|merely|only)\\s+[^.!?]{1,90},?\\s+but\\s+(?:a|the|also)\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "reveal-template", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "reveal-template", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated reveal-by-negation frames can make each point arrive as a staged discovery.",
       "revision_move": "Lead with the supported claim and retain the comparison only when it changes the decision.",
       "exceptions": ["A genuine correction of a likely misconception", "Intentional parallel rhetoric"],
       "positive_examples": ["It is not just a tool, but a fundamentally different default."],
       "counterexamples": ["The tool changes who must approve access requests."],
-      "evidence": {"tier": "B", "urls": ["https://www.nature.com/articles/s41598-023-45644-9"]},
-      "last_reviewed": "2026-07-12"
+      "evidence": {"tier": "C", "urls": ["https://www.nature.com/articles/s41598-023-45644-9"]},
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "reveal-you-dont-need",
       "category": "reveal_negation",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\byou\\s+(?:do\\s+not|don't)\\s+need\\s+[^.!?]{1,80};?\\s+you\\s+need\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "reveal-template", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "reveal-template", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "The correction template can overstate a choice that may have legitimate alternatives.",
       "revision_move": "Name the condition under which the recommended option is preferable.",
       "exceptions": ["A safety instruction with a true substitute", "A direct answer to an explicit misconception"],
       "positive_examples": ["You don't need more features; you need better strategy."],
       "counterexamples": ["If approval is the bottleneck, assign a single reviewer before adding automation."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "question-stub-pivot",
       "category": "question_stub_pivots",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:what\\s+does\\s+that\\s+mean|the\\s+real\\s+question\\s+is|so\\s+what)\\?\\s*(?:it(?:'|’)s|the\\s+answer\\s+is|here(?:'|’)s)\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "presenter-scaffolding", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-scaffolding", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A repeated rhetorical-question pivot can make an argument sound like a slide presentation.",
       "revision_move": "Use the question when the reader truly needs it; otherwise state the answer as a continuation of the argument.",
       "exceptions": ["An FAQ", "A teaching sequence for beginners", "A spoken presentation transcript"],
       "positive_examples": ["So what? The answer is a better default."],
       "counterexamples": ["The new default retries only idempotent requests."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.sigdial-1.16/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "teacher-imagine-analogy",
       "category": "teacher_scaffolding",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:imagine|think\\s+of)\\s+(?:a|an|the)\\s+[^.!?]{1,100}\\s+as\\s+(?:a|an|the)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "presenter-scaffolding", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "presenter-scaffolding", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated pre-announced analogies can over-teach or postpone the concrete explanation.",
       "revision_move": "Explain the mechanism first; retain one analogy only if it resolves a real confusion.",
       "exceptions": ["Educational material for a new audience", "A difficult abstraction that benefits from analogy"],
       "positive_examples": ["Imagine a cache as a librarian who remembers every request."],
       "counterexamples": ["The cache stores recent responses so the service avoids repeated database reads."],
       "evidence": {"tier": "C", "urls": ["https://uwaterloo.ca/writing-and-communication-centre/Resources-AI-Revising"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "teacher-interesting-part",
       "category": "teacher_scaffolding",
       "kind": "regex",
+      "action": "remove",
       "regex": "\\b(?:here(?:'|’)s\\s+the\\s+(?:interesting|exciting)\\s+part|let(?:'|’)s\\s+(?:unpack|break\\s+this\\s+down|dive\\s+in))\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "presenter-scaffolding", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-scaffolding", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Stage directions can remain after a conversational explanation becomes finished prose.",
       "revision_move": "Move directly to the detail that earns the reader's attention.",
       "exceptions": ["A live workshop", "A deliberately conversational newsletter"],
       "positive_examples": ["Here's the interesting part: the queue heals itself."],
       "counterexamples": ["The queue renews its lease every 30 seconds and marks abandoned work stale."],
       "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "generic-opening-changing-landscape",
       "category": "generic_openings_closings",
       "kind": "regex",
+      "action": "remove",
       "regex": "\\b(?:in\\s+(?:today['’]s|an)\\s+(?:rapidly\\s+)?(?:changing|evolving|dynamic)\\s+(?:world|landscape)|in\\s+the\\s+ever-evolving)\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A stock opening can spend the first sentence on atmosphere rather than the actual situation.",
       "revision_move": "Open with the decision, change, reader, or concrete constraint.",
       "exceptions": ["A broad trend piece that immediately defines the change"],
       "positive_examples": ["In today's rapidly evolving landscape, adaptability is key."],
       "counterexamples": ["New import rules take effect on 1 August for sellers using third-party fulfilment."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/organize/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "generic-closing-summary",
       "category": "generic_openings_closings",
       "kind": "regex",
-      "regex": "\\b(?:in\\s+conclusion|to\\s+sum\\s+up|as\\s+we\\s+(?:move|look)\\s+forward)\\b",
+      "action": "remove",
+      "regex": "\\b(?:in\\s+conclusion|in\\s+summary|to\\s+(?:sum\\s+up|summari[sz]e)|overall|final\\s+thoughts|as\\s+we\\s+(?:move|look)\\s+forward)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 1,
-      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A generic closer can repeat the document's job instead of completing it.",
       "revision_move": "End with the decision, unresolved constraint, or next action that the piece has earned.",
       "exceptions": ["A short school exercise", "A template that mandates a conclusion label"],
       "positive_examples": ["In conclusion, the future is bright."],
       "counterexamples": ["Approve the migration only after the restore test passes."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/organize/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "chat-service-praise-question",
       "category": "chat_service_residue",
       "kind": "regex",
+      "action": "remove",
       "regex": "\\b(?:great|excellent|fantastic)\\s+question\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "Generic praise can survive when a chat answer is repurposed as a document.",
       "revision_move": "Remove the service wrapper and begin with the answer or a specific acknowledgement.",
       "exceptions": ["A real mentoring conversation", "A personal note where praise is sincere and specific"],
       "positive_examples": ["Great question! This is a nuanced topic."],
       "counterexamples": ["The option controls whether failed uploads are retried."],
       "evidence": {"tier": "C", "urls": ["https://uwaterloo.ca/writing-and-communication-centre/Resources-AI-Revising"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "chat-service-offer-more",
       "category": "chat_service_residue",
       "kind": "regex",
-      "regex": "\\b(?:i\\s+can\\s+(?:also\\s+)?help|feel\\s+free\\s+to\\s+ask|happy\\s+to\\s+help)\\b",
+      "action": "remove",
+      "regex": "\\b(?:i\\s+can\\s+(?:also\\s+)?help|feel\\s+free\\s+to\\s+ask|happy\\s+to\\s+help|would\\s+you\\s+like\\s+me\\s+to|please\\s+do\\s+not\\s+hesitate\\s+to)\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true},
+      "cluster": {"key": "chat-service-closer", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
       "explanation": "An assistant-like offer can dilute a document ending when no response is possible.",
       "revision_move": "Replace it with a concrete support route or remove it.",
       "exceptions": ["An active support conversation", "A help centre article with a real contact option"],
       "positive_examples": ["I can also help if you need anything else."],
       "counterexamples": ["Open a support ticket and include the workspace identifier."],
       "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "vague-attribution-authority",
       "category": "vague_attribution",
       "kind": "regex",
-      "regex": "\\b(?:experts|industry\\s+leaders|many\\s+believe|it\\s+is\\s+widely\\s+(?:believed|recognised))\\b",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:experts|industry\\s+leaders|analysts|observers)\\s+(?:say|believe|agree|suggest|predict|argue)|many\\s+believe|it\\s+is\\s+widely\\s+(?:believed|recogni[sz]ed))\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Unnamed authority makes a claim hard to assess or verify.",
       "revision_move": "Name the source, scope the claim, or state it as the writer's judgement.",
       "exceptions": ["A deliberate summary that links to named sources nearby"],
-      "positive_examples": ["Industry leaders widely recognise this approach."],
+      "positive_examples": ["Industry leaders agree that this approach works."],
       "counterexamples": ["In the 2025 survey of 312 operators, 61% reported using a weekly review."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.acl-long.443/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "corporate-unlock-value",
       "category": "corporate_linkedin_glaze",
       "kind": "regex",
-      "regex": "\\b(?:unlock|unleash|elevate)\\s+(?:the\\s+)?(?:full\\s+)?(?:potential|value|possibilities)\\b",
+      "action": "rewrite",
+      "regex": "\\b(?:unlock(?:s|ed|ing)?|unleash(?:es|ed|ing)?|elevat(?:e|es|ed|ing))\\s+(?:the\\s+)?(?:full\\s+)?(?:(?:seamless|meaningful|new)\\s+)?(?:potential|value|possibilities|alignment|growth|impact)\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "corporate-glaze", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "corporate-glaze", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Abstract benefit claims can fit almost any product or team.",
       "revision_move": "Name the user, mechanism, and measured or observable result.",
       "exceptions": ["A campaign slogan that is intentionally broad"],
       "positive_examples": ["Unlock the full potential of your data."],
       "counterexamples": ["Export daily orders to the warehouse without a custom integration."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/words/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "corporate-transformative-game-changer",
       "category": "corporate_linkedin_glaze",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:game[- ]?changer|transformative|revolution(?:ary|ise|ize|ising|izing)|next[- ]level)\\b",
       "severity": "low",
       "confidence": "low",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "corporate-glaze", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "corporate-glaze", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Escalated praise can make a modest claim feel generic or untrustworthy.",
       "revision_move": "Replace the verdict with the changed capability, baseline, or constraint.",
       "exceptions": ["A quoted customer statement", "A deliberately exuberant campaign"],
       "positive_examples": ["This game-changing platform is transformative."],
       "counterexamples": ["The platform removes the manual CSV export from the nightly process."],
       "evidence": {"tier": "C", "urls": ["https://www.gov.uk/guidance/content-design/writing-for-gov-uk"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "cover-letter-organisation-praise",
       "category": "corporate_linkedin_glaze",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:thrilled|excited|honoured)\\s+to\\s+(?:apply|join|contribute)\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "corporate-glaze", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "corporate-glaze", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Formulaic enthusiasm can consume space that should show fit and evidence.",
       "revision_move": "Name the relevant work, constraint, or result that connects the writer to the role.",
       "exceptions": ["A personal message with specific accompanying detail"],
       "positive_examples": ["I am thrilled to apply to your innovative organisation."],
       "counterexamples": ["I led the accessibility audit that reduced support requests for keyboard navigation."],
       "evidence": {"tier": "C", "urls": ["https://uwaterloo.ca/writing-and-communication-centre/Resources-AI-Revising"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "formatting-bold-label-bullets",
       "category": "formatting",
       "kind": "regex",
-      "regex": "(?m)^\\s*[-*+]\\s+\\*\\*[A-Za-z][^*]{1,40}\\*\\*:\\s+",
+      "action": "review",
+      "regex": "(?m)^\\s*[-*+]\\s+\\*\\*[A-Za-z][^*]{1,40}(?:\\*\\*:|:\\*\\*)\\s+",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 3,
-      "cluster": {"key": "template-formatting", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "template-formatting", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "A repeated label-and-colon list can be useful, but may turn a connected argument into a template.",
       "revision_move": "Keep labels for scanability; merge items or write prose where relationships matter.",
       "exceptions": ["Reference documentation", "A comparison table rendered as bullets", "Accessibility-oriented quick reference"],
-      "positive_examples": ["- **Speed:** Fast.\\n- **Scale:** Large.\\n- **Value:** High."],
+      "positive_examples": ["- **Speed:** Fast.\n- **Scale:** Large.\n- **Value:** High."],
       "counterexamples": ["The cache reduces repeated reads, but it also needs an eviction policy."],
       "evidence": {"tier": "C", "urls": ["https://www.w3.org/WAI/tutorials/page-structure/content/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "formatting-decorative-marker-density",
       "category": "formatting",
       "kind": "regex",
+      "action": "review",
       "regex": "(?:→|⇒|✅|✨|🚀)",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 3,
-      "cluster": {"key": "template-formatting", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "template-formatting", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Repeated decorative markers can substitute for hierarchy or logical transitions.",
       "revision_move": "Use headings, verbs, and sentence relationships where they carry more meaning.",
       "exceptions": ["A concise social post", "An established internal convention", "A checklist where icons convey state"],
       "positive_examples": ["✨ Plan → Build → Launch 🚀"],
       "counterexamples": ["Plan the migration, test the restore path, then schedule the cutover."],
       "evidence": {"tier": "C", "urls": ["https://www.w3.org/WAI/tutorials/page-structure/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "cadence-triad-density",
       "category": "cadence_structure",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b[^.!?;]{2,45},\\s*[^.!?;]{2,45},\\s*(?:and|or)\\s+[^.!?;]{2,45}[.!?;]",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 3,
-      "cluster": {"key": "flat-cadence", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "flat-cadence", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Repeated three-part cadence can make unrelated points sound manufactured into the same shape.",
       "revision_move": "Keep the triad that improves recall; vary other sentence structures to match the reasoning.",
       "exceptions": ["A real three-part taxonomy", "A speech using intentional anaphora"],
       "positive_examples": ["It is faster, safer, and easier."],
       "counterexamples": ["It removes a manual step and adds an audit record."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.findings-emnlp.1065/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "punctuation-question-density",
       "category": "punctuation",
       "kind": "metric",
+      "action": "review",
       "metric": {"name": "character_count", "character": "?", "threshold": 4},
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 4,
-      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "A steady run of questions can create suspense without moving the explanation forward.",
       "revision_move": "Keep questions that genuinely organise inquiry; convert rhetorical questions into claims.",
       "exceptions": ["An FAQ", "Interview transcript", "Interactive instructional material"],
       "positive_examples": ["Why now? Why this team? Why this tool? Why wait?"],
       "counterexamples": ["The team chose the tool because it supports offline review."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.sigdial-1.16/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "punctuation-semicolon-density",
       "category": "punctuation",
       "kind": "metric",
+      "action": "review",
       "metric": {"name": "character_count", "character": ";", "threshold": 4},
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 4,
-      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "punctuation-overuse", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Repeated semicolons can signal a fixed sentence rhythm rather than necessary close coordination.",
       "revision_move": "Keep semicolons that clarify the relation; split or join the rest by meaning.",
       "exceptions": ["Legal drafting", "Dense comparative prose", "A semicolon-separated complex list"],
       "positive_examples": ["It queued; it retried; it logged; it completed."],
       "counterexamples": ["It queued the work, retried once, and logged the final result."],
       "evidence": {"tier": "B", "urls": ["https://arxiv.org/abs/2606.29540", "https://www.apstylebook.com/blog_posts/24"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "semantic-echo-in-other-words",
       "category": "semantic_echo_self_summary",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:in\\s+other\\s+words|put\\s+simply|to\\s+put\\s+it\\s+simply)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "semantic-echo", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "semantic-echo", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated self-translation can restate an already clear point instead of adding evidence.",
       "revision_move": "Keep the clarification where the first phrasing is technical; delete duplicate paraphrases.",
       "exceptions": ["Teaching material for mixed expertise", "A definition followed by a plain-language translation"],
       "positive_examples": ["In other words, it is a different default. Put simply, the choice changed."],
       "counterexamples": ["The client now retries only idempotent requests."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.findings-emnlp.1065/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "self-summary-takeaway",
       "category": "semantic_echo_self_summary",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:the\\s+(?:key\\s+)?takeaway\\s+is|the\\s+bottom\\s+line\\s+is|what\\s+this\\s+means\\s+is)\\b",
       "severity": "low",
       "confidence": "medium",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "semantic-echo", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "semantic-echo", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated conclusion labels can report the argument instead of advancing it.",
       "revision_move": "Let the paragraph's claim do the work, or use one summary at a genuine decision point.",
       "exceptions": ["An executive summary", "A long report with explicit decision checkpoints"],
       "positive_examples": ["The key takeaway is that this matters. The bottom line is to act."],
       "counterexamples": ["Approve the change only if the owner accepts the recovery plan."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.sigdial-1.16/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "stance-hedge-density",
       "category": "hedging_booster_balance",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:may|might|perhaps|generally|arguably|somewhat)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 5,
-      "cluster": {"key": "stance-imbalance", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "stance-imbalance", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Distributed hedges can make an otherwise supported claim sound uniformly tentative.",
       "revision_move": "Attach uncertainty to the precise unknown and state supported conclusions plainly.",
       "exceptions": ["Scientific writing with genuinely uncertain evidence", "Legal or policy drafting"],
       "positive_examples": ["It may perhaps generally be somewhat useful."],
       "counterexamples": ["The estimate may change if late invoices arrive."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.findings-emnlp.1065/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "stance-booster-density",
       "category": "hedging_booster_balance",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:clearly|obviously|undeniably|fundamentally|undoubtedly)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 4,
-      "cluster": {"key": "stance-imbalance", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "stance-imbalance", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
       "explanation": "Repeated boosters can pre-argue for a conclusion instead of showing why it follows.",
       "revision_move": "Replace the intensifier with evidence, comparison, or a bounded claim.",
       "exceptions": ["A quotation", "A deliberately polemical essay", "A true logical conclusion already demonstrated"],
       "positive_examples": ["Clearly, this is obviously and fundamentally the right choice."],
       "counterexamples": ["The new policy removes the exception that caused duplicate payments."],
       "evidence": {"tier": "B", "urls": ["https://aclanthology.org/2025.findings-emnlp.1065/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "invented-concept-label",
       "category": "invented_concept_labels",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:the|this)\\s+(?:[A-Z][a-z]+\\s+){0,2}(?:effect|principle|paradox|framework|mindset)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "concept-packaging", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "concept-packaging", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeatedly naming a pattern can package an observation before its boundaries are clear.",
       "revision_move": "Define the mechanism, cases, and limits before retaining a useful label.",
       "exceptions": ["An established named concept", "A paper introducing and defining its own term"],
       "positive_examples": ["This Momentum Principle changes everything."],
       "counterexamples": ["Teams moved faster after they assigned one owner to each approval."],
       "evidence": {"tier": "C", "urls": ["https://arxiv.org/abs/2403.01055"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "staged-vulnerability-reversal",
       "category": "staged_vulnerability",
       "kind": "regex",
+      "action": "review",
       "regex": "\\bi\\s+(?:used\\s+to\\s+think|thought)\\s+[^.!?]{1,100}[.!?]\\s*(?:then\\s+)?i\\s+(?:realised|realized|learned)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A repeated confession-and-reveal arc can feel staged when it lacks specific experience.",
       "revision_move": "Keep the reversal when it records a real change; add the event or evidence that changed the view.",
       "exceptions": ["A personal essay built around genuine reflection", "A memoir or retrospective"],
       "positive_examples": ["I used to think speed mattered. Then I realised trust mattered more."],
       "counterexamples": ["After the failed launch, I changed the rollout checklist to require an owner for each rollback step."],
       "evidence": {"tier": "B", "urls": ["https://arxiv.org/abs/2604.03136"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "optimism-reset",
       "category": "optimism_resets",
       "kind": "regex",
-      "regex": "\\b(?:the\\s+future\\s+is\\s+(?:bright|promising)|the\\s+possibilities\\s+are\\s+endless|there(?:'|’)s\\s+never\\s+been\\s+a\\s+better\\s+time)\\b",
+      "action": "remove",
+      "regex": "\\b(?:the\\s+future\\s+is\\s+(?:bright|promising|here)|the\\s+possibilities\\s+are\\s+endless|there(?:'|’)s\\s+never\\s+been\\s+a\\s+better\\s+time|only\\s+time\\s+will\\s+tell|one\\s+thing\\s+is\\s+(?:clear|certain)|the\\s+path\\s+ahead)\\b",
       "severity": "low",
       "confidence": "medium",
       "minimum_occurrences": 1,
-      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A generic optimism reset can flatten the real trade-offs or leave a conclusion unearned.",
       "revision_move": "End with the actual opportunity, risk, or next action supported by the piece.",
       "exceptions": ["A speech or campaign intentionally designed for uplift"],
       "positive_examples": ["The future is bright, and the possibilities are endless."],
       "counterexamples": ["The pilot can expand after the team documents the rollback procedure."],
       "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/concise/"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "narrative-moral-lesson",
       "category": "narrative_moralising",
       "kind": "regex",
+      "action": "rewrite",
       "regex": "\\b(?:the\\s+lesson\\s+is|the\\s+moral\\s+of\\s+the\\s+story\\s+is|what\\s+i\\s+learned\\s+is)\\b",
       "severity": "low",
       "confidence": "low",
-      "minimum_occurrences": 2,
-      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false},
+      "minimum_occurrences": 1,
+      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "A stated moral can explain a story after its concrete consequence has already done the work.",
       "revision_move": "Keep the moral only where the reader needs the inference; otherwise end on the consequence or decision.",
       "exceptions": ["A teaching reflection", "A children’s story", "A retrospective with an explicit lessons section"],
       "positive_examples": ["The lesson is simple: always be adaptable."],
       "counterexamples": ["We now test restores before declaring a migration complete."],
       "evidence": {"tier": "B", "urls": ["https://arxiv.org/abs/2604.03136"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
     },
     {
       "id": "tidy-chronology-ladder",
       "category": "narrative_moralising",
       "kind": "regex",
+      "action": "review",
       "regex": "\\b(?:first|firstly)\\b[^.!?]{1,120}\\b(?:then|next|second(?:ly)?)\\b[^.!?]{1,120}\\b(?:finally|lastly)\\b",
       "severity": "low",
       "confidence": "low",
       "minimum_occurrences": 2,
-      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false},
+      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
       "explanation": "Repeated tidy chronology can impose a lesson-shaped sequence on events that have more useful friction or overlap.",
       "revision_move": "Keep ordered steps for a real procedure; otherwise use the causal or temporal order that explains what changed.",
       "exceptions": ["A procedure", "A checklist", "A chronological incident report"],
       "positive_examples": ["First we planned, then we acted, and finally we succeeded."],
       "counterexamples": ["The incident began during the deploy; the missing alert delayed diagnosis until the next morning."],
       "evidence": {"tier": "B", "urls": ["https://arxiv.org/abs/2604.03136"]},
-      "last_reviewed": "2026-07-12"
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "formulaic-gap-bridge-frame",
+      "category": "abstract_change_frames",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:bridg(?:e|es|ed|ing)|clos(?:e|es|ed|ing)|fill(?:s|ed|ing)?)\\s+(?:a\\s+|an\\s+|the\\s+|this\\s+|that\\s+)?(?:(?:critical|crucial|important|significant|key|knowledge|capability|implementation|evidence|research|skills?|communication)\\s+)?gaps?\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "abstract-change-placeholder",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A bridging verb can hide what is missing, between which things, and what changes when the absence is repaired.",
+      "revision_move": "Name both endpoints, the missing evidence or capability, the affected actor, and the concrete intervention; delete the claim if the source supplies none.",
+      "exceptions": [
+        "A measured gap whose endpoints and unit are stated",
+        "A precisely defined research gap",
+        "A literal or source-supported use that names both endpoints, the mechanism, and the affected actor",
+        "Quoted or required wording"
+      ],
+      "positive_examples": [
+        "The platform bridges the gap between strategy and execution."
+      ],
+      "counterexamples": [
+        "The pay gap narrowed from 12% to 8%.",
+        "A footbridge spans the 1.2-metre gap between the platforms."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "formulaic-shift-verdict-frame",
+      "category": "abstract_change_frames",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:marks?|signals?|heralds?)\\s+(?:a|an|the)\\s+(?:(?:significant|major|meaningful|pivotal|fundamental|broader|profound|notable|strategic|cultural)\\s+)?shift|(?:reflects?|represents?)\\s+(?:a|an|the)\\s+(?:significant|major|meaningful|pivotal|fundamental|broader|profound|notable|strategic|cultural)\\s+shift)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "abstract-change-placeholder",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A ceremonial shift frame grants importance without stating the old state, new state, actor, or date.",
+      "revision_move": "State what was true before, what is true now, who changed it, when, and the practical consequence.",
+      "exceptions": [
+        "A sourced historical realignment with a documented before and after",
+        "Quoted wording"
+      ],
+      "positive_examples": [
+        "The policy marks a significant shift in how councils regulate rentals."
+      ],
+      "counterexamples": [
+        "From July, councils rather than landlords will inspect rentals before tenants move in."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "formulaic-paradigm-shift",
+      "category": "abstract_change_frames",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:paradigm|mindset|cultural|transformative)\\s+shift\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "abstract-change-placeholder",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A labelled shift can magnify a change before its reach or duration is established.",
+      "revision_move": "Replace the label with the changed rule, behaviour, distribution, or decision and its bounded evidence.",
+      "exceptions": [
+        "An established technical or historical term used with supporting evidence",
+        "A quotation or title"
+      ],
+      "positive_examples": [
+        "The launch created a paradigm shift in customer engagement."
+      ],
+      "counterexamples": [
+        "Customers can now reply to an order update without opening the app."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-critical-role",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:plays?|serves?|has)\\s+(?:a|an)\\s+(?:critical|crucial|pivotal|vital|key|important|central)\\s+role\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "Role language assigns importance while weakening the action or causal claim.",
+      "revision_move": "Name what the actor does, what would fail without it, or the measured contribution; qualify multifactor causation locally.",
+      "exceptions": [
+        "A causal analysis that cannot isolate one factor",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Trust plays a pivotal role in completion."
+      ],
+      "counterexamples": [
+        "Naming the sender raised completion from 42% to 61%."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.bea-1.71/",
+         "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-cannot-be-overstated",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:cannot|can['’]t|could\\s+not|couldn['’]t)\\s+be\\s+overstated\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "The frame asserts unlimited importance instead of showing a consequence.",
+      "revision_move": "Lead with the warning, threshold, evidence, or decision that makes the point important.",
+      "exceptions": [
+        "A direct quotation",
+        "Deliberately heightened speech"
+      ],
+      "positive_examples": [
+        "The importance of access control cannot be overstated."
+      ],
+      "counterexamples": [
+        "Without access control, any signed-in user can export the account list."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-symbolic-frame",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:serves?|stands?)\\s+as\\s+(?:a|an)\\s+(?:(?:powerful|stark|lasting)\\s+)?(?:reminder|symbol|example)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A symbolic frame can turn an event into a generic lesson the source never makes.",
+      "revision_move": "State the event and evidence; name whose interpretation it is if symbolic meaning matters.",
+      "exceptions": [
+        "Explicit symbolic analysis",
+        "A sourced interpretation",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The recovery serves as a powerful reminder of the team’s resilience."
+      ],
+      "counterexamples": [
+        "The team restored checkout in 47 minutes and cleared the backlog before noon."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-pathway-metaphor",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:pav(?:e|es|ed|ing)\\s+the\\s+way)|(?:set(?:s|ting)?\\s+the\\s+stage)|(?:(?:lay(?:s|ing)?|laid)\\s+the\\s+(?:groundwork|foundation)))\\s+(?:for|to)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A pathway metaphor compresses an uncertain causal sequence into a familiar historical story.",
+      "revision_move": "Name the prerequisite created, the later decision, and the evidence connecting them; distinguish an enabling condition from a cause.",
+      "exceptions": [
+        "Literal construction or theatre",
+        "A quotation",
+        "An official programme name"
+      ],
+      "positive_examples": [
+        "The agreement paves the way for lasting reform."
+      ],
+      "counterexamples": [
+        "The agreement lets the regulator inspect records without a new court order."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/",
+         "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-shed-light",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:shed(?:s|ding)?|cast(?:s|ing)?)\\s+(?:new\\s+)?light\\s+on\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A discovery metaphor can replace the actual finding or comparison.",
+      "revision_move": "State what the evidence shows, what was previously unknown, and how the conclusion follows.",
+      "exceptions": [
+        "Literal illumination",
+        "A deliberate literary metaphor",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The survey sheds new light on rural access."
+      ],
+      "counterexamples": [
+        "The survey includes 84 rural clinics that earlier studies excluded."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.bea-1.71/",
+         "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-broader-trend",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:reflects?|signals?|forms?|is)\\s+(?:part\\s+of\\s+)?(?:a|the)\\s+(?:broader|wider|growing)\\s+(?:trend|movement|debate|pattern|change|shift)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "The frame enlarges one observation by attaching it to an unnamed pattern.",
+      "revision_move": "Name comparable cases, a time series, or the source that identifies the trend; otherwise limit the claim to the observed case.",
+      "exceptions": [
+        "A sourced trend with several comparable cases",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The decision reflects a broader shift towards transparency."
+      ],
+      "counterexamples": [
+        "Four councils began publishing inspection outcomes after the 2025 rule change."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-lasting-impact",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:lasting|enduring|profound|meaningful)\\s+(?:impact|legacy|influence|relevance)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "Durability and importance are asserted without tracing later adoption or effect.",
+      "revision_move": "Name the later users, rule, institution, behaviour, or dated evidence that continues.",
+      "exceptions": [
+        "A bounded influence claim supported by adoption, citations, or law",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The programme left a lasting impact on the community."
+      ],
+      "counterexamples": [
+        "The council still funds the clinic under the programme created in 2019."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "presenter-core-verdict",
+      "category": "presenter_scaffolding",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:at\\s+(?:its|the)\\s+(?:core|heart)|at\\s+the\\s+root\\s+of)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "presenter-theatre",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A depth marker announces the primary explanation before proving that it outranks alternatives.",
+      "revision_move": "State the proposed cause or governing constraint and show the evidence that gives it priority.",
+      "exceptions": [
+        "Anatomy, graph theory, or formal root-cause analysis",
+        "A supported synthesis",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "At its core, the issue is trust."
+      ],
+      "counterexamples": [
+        "Respondents who could identify the sender completed the form more often."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "presenter-key-lies",
+      "category": "presenter_scaffolding",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\bthe\\s+key\\s+(?:to\\s+(?:success|growth|change|innovation|understanding)|lies?\\s+in)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "presenter-theatre",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "The verdict frame packages a recommendation as a universal key.",
+      "revision_move": "State the action, condition, or evidence and bound it to the actual setting.",
+      "exceptions": [
+        "A quotation",
+        "A clearly defined key factor in a ranked analysis"
+      ],
+      "positive_examples": [
+        "The key to success lies in strategic alignment."
+      ],
+      "counterexamples": [
+        "Each launch has one owner who can approve or stop the release."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "presenter-staged-pivot",
+      "category": "presenter_scaffolding",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:here(?:'|’)s\\s+(?:the\\s+)?(?:thing|catch|kicker|twist)|the\\s+(?:result|catch|kicker|best\\s+part)\\?|plot\\s+twist)",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "presenter-theatre",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A staged pivot manufactures suspense around information the writer can state directly.",
+      "revision_move": "Delete the cue and lead with the answer, exception, or consequence.",
+      "exceptions": [
+        "Interview transcripts",
+        "Conversational teaching",
+        "A writer’s deliberate voice"
+      ],
+      "positive_examples": [
+        "Here’s the catch: the export omits archived records."
+      ],
+      "counterexamples": [
+        "The export omits archived records."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "reveal-not-about-frame",
+      "category": "reveal_negation",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\bthis\\s+(?:is\\s+not|isn['’]t)\\s+(?:just\\s+)?about\\s+[^.!?;]{1,90}[;,.]?\\s*(?:it\\s+is|it['’]s)\\s+about\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "reveal-template",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "The frame invents a rejected premise so the real claim can arrive as a reveal.",
+      "revision_move": "State the positive claim first; keep the contrast only when both interpretations are genuinely in play.",
+      "exceptions": [
+        "Correction of a documented misunderstanding",
+        "Deliberate rhetoric in a speech or essay"
+      ],
+      "positive_examples": [
+        "This isn’t about speed; it’s about confidence."
+      ],
+      "counterexamples": [
+        "Delay the cutover until security validates the vendor."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "reveal-more-than-just",
+      "category": "reveal_negation",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\bmore\\s+than\\s+just\\s+(?:(?:a|an|the)\\s+)?[^,.;:!?]{1,55}",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "reveal-template",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "The phrase inflates a noun by implying an unnamed, lesser interpretation.",
+      "revision_move": "Name the additional function or consequence directly, or remove the comparison.",
+      "exceptions": [
+        "A necessary distinction whose two sides are both specified",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The queue is more than just a tracking tool."
+      ],
+      "counterexamples": [
+        "The queue records approvals and shows which team has not responded."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-empower-enable",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:empower(?:s|ed|ing)?|enabl(?:e|es|ed|ing)|facilitat(?:e|es|ed|ing))\\s+(?:modern\\s+)?(?:teams?|users?|organisations?|organizations?|people|businesses)\\s+to\\s+(?:thrive|succeed|innovate|collaborate|excel|grow|transform|navigate|unlock|drive|maximi[sz]e|achieve|move\\s+forward|act\\s+with\\s+confidence)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "An agency verb promises a benefit without naming the permission, removed obstacle, or new action.",
+      "revision_move": "Say who can now do what and identify the feature, rule, or dependency that makes it possible.",
+      "exceptions": [
+        "Legal authority, permissions, or accessibility language used precisely",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The platform empowers teams to act with confidence."
+      ],
+      "counterexamples": [
+        "Reviewers can approve the current build in the shared queue."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.bea-1.71/",
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-foster-abstract",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:foster(?:s|ed|ing)?|cultivat(?:e|es|ed|ing)|nurtur(?:e|es|ed|ing))\\s+(?:(?:a|an|the)\\s+)?(?:culture|environment|sense|spirit|mindset)\\s+of\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A cultivation metaphor claims culture change without identifying repeated management action or evidence.",
+      "revision_move": "Name the practice, owner, incentive, duration, and observed behaviour.",
+      "exceptions": [
+        "Foster care, agriculture, or literal cultivation",
+        "A measured programme",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Weekly reviews foster a culture of accountability."
+      ],
+      "counterexamples": [
+        "Each Friday, owners report missed deadlines and assign the next action."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://link.springer.com/article/10.1007/s11192-026-05601-5",
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-navigate-complexity",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:navigat(?:e|es|ed|ing)\\s+(?:the\\s+)?(?:complexity|complexities|challenges|landscape))|(?:grappl(?:e|es|ed|ing)\\s+with\\s+(?:complexity|complexities|challenges)))\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "Coping language makes the work sound active while leaving the obstacle or decision unnamed.",
+      "revision_move": "Name the competing constraints, required decision, attempted action, and unresolved problem.",
+      "exceptions": [
+        "Literal navigation or wrestling",
+        "An exact introductory summary followed immediately by specifics"
+      ],
+      "positive_examples": [
+        "Leaders must navigate the complexities of the evolving landscape."
+      ],
+      "counterexamples": [
+        "Regulated teams need separate approvers and a seven-year audit log."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-harness-power",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:harness(?:es|ed|ing)?|leverag(?:e|es|ed|ing))\\s+(?:the\\s+)?(?:power|potential|capabilities|value)\\s+of\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "Strategic gloss replaces the tool, action, input, or output.",
+      "revision_move": "Name the resource, who uses it, what they do with it, and the resulting decision or artefact.",
+      "exceptions": [
+        "Mechanical or financial leverage",
+        "Literal harnesses",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Harness the power of data to unlock growth."
+      ],
+      "counterexamples": [
+        "Analysts compare weekly cancellations by plan before changing renewal emails."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-drive-outcome",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:driv(?:e|es|ing)|drove|fuel(?:s|ed|ing)?|propel(?:s|led|ling)?|accelerat(?:e|es|ed|ing))\\s+(?:(?:meaningful|sustainable|business)\\s+)?(?:growth|innovation|success|transformation|impact|value)\\b",
+      "severity": "medium",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A movement verb often overstates causation while leaving the outcome unmeasured.",
+      "revision_move": "State the causal mechanism, the observed rate or result, and whether the source supports cause or only association.",
+      "exceptions": [
+        "Literal movement, fuel, or acceleration",
+        "A supported causal model"
+      ],
+      "positive_examples": [
+        "The initiative drives meaningful growth and innovation."
+      ],
+      "counterexamples": [
+        "Renewals rose from 71% to 74% during the six-week pilot."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/",
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-seamless-assurance",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:seamless(?:ly)?|frictionless(?:ly)?)\\s+(?:integrat(?:e|es|ed|ing|ion)|collaborat(?:e|es|ed|ing|ion)|experience|workflow|transition|alignment)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A friction-free claim hides the steps removed and the exceptions that remain.",
+      "revision_move": "Describe the user action, handoff removed, supported systems, and remaining failure cases.",
+      "exceptions": [
+        "A measured process with defined success criteria",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The service seamlessly integrates with your workflow."
+      ],
+      "counterexamples": [
+        "The connector imports approved tickets from Jira every five minutes."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.bea-1.71/",
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-streamline-process",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:streamlin(?:e|es|ed|ing)|optimi[sz](?:e|es|ed|ing))\\s+(?:the\\s+)?(?:(?:approval|review|delivery|support)\\s+)?(?:workflow|workflows|process|processes|operations|delivery|experience)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "Efficiency language hides which steps, waits, or handoffs changed.",
+      "revision_move": "List the removed steps or give elapsed time before and after; name any remaining exception.",
+      "exceptions": [
+        "Mathematical optimisation",
+        "A measured process redesign",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The queue streamlines the approval process."
+      ],
+      "counterexamples": [
+        "The queue replaces three email threads and one tracking spreadsheet."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-at-scale",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:deliver(?:s|ed|ing)?|operat(?:e|es|ed|ing)|deploy(?:s|ed|ing)?|perform(?:s|ed|ing)?|work(?:s|ed|ing)?|value|impact|results?)\\s+at\\s+scale\\b",
+      "severity": "medium",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "The phrase claims capacity without naming workload, environment, latency, cost, or failure limits.",
+      "revision_move": "Define scale numerically and state the tested environment and result; otherwise remove the claim.",
+      "exceptions": [
+        "A nearby numeric definition of scale",
+        "A quotation or official requirement"
+      ],
+      "positive_examples": [
+        "The service delivers proven results at scale."
+      ],
+      "counterexamples": [
+        "The staging test processed 8,000 jobs in 14 minutes."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-operational-abstraction",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:strategic\\s+alignment|operational\\s+excellence|value\\s+creation|stakeholder\\s+engagement|capability\\s+(?:gap|uplift)|business\\s+transformation)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "An abstract noun stack converts people and work into a management category.",
+      "revision_move": "Recover the actors and verbs; separate the goal, method, and result.",
+      "exceptions": [
+        "An official programme name",
+        "A defined management term required by the audience"
+      ],
+      "positive_examples": [
+        "The programme closes capability gaps and advances operational excellence."
+      ],
+      "counterexamples": [
+        "Support staff will use one queue to assign and approve refund requests."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/",
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-valuable-insights",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:valuable|actionable|deep|unique|meaningful)\\s+insights?\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "An insight label tells the reader information is useful without giving the finding or action.",
+      "revision_move": "State the finding, measure, decision it supports, and responsible next action.",
+      "exceptions": [
+        "Defined analytics terminology with operational criteria",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The dashboard provides actionable insights."
+      ],
+      "counterexamples": [
+        "The dashboard shows which invoices are more than 30 days overdue."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.bea-1.71/",
+         "https://arxiv.org/abs/2406.07016"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-assurance-guarantee",
+      "category": "corporate_linkedin_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:ensur(?:e|es|ed|ing)|guarantee(?:s|d|ing)?)\\s+(?:(?:robust|seamless)\\s+)?(?:reliability|security|performance|consistency|compliance)\\b",
+      "severity": "high",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "corporate-benefit-glaze",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "An assurance verb can turn design intent into a guarantee without test conditions.",
+      "revision_move": "State the invariant, test, fallback, unsupported case, standard, and result the source actually establishes.",
+      "exceptions": [
+        "A formally verified invariant",
+        "A legal guarantee stated accurately",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Retries ensure robust reliability at scale."
+      ],
+      "counterexamples": [
+        "The client retries idempotent reads twice and returns the last provider error."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-more-important-than-ever",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:more\\s+(?:important|critical|essential)\\s+than\\s+ever|no\\s+longer\\s+(?:(?:a|an)\\s+)?(?:nice\\s+to\\s+have|optional))\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "generic-opening-closing",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "The phrase manufactures urgency without a dated trend, deadline, or consequence.",
+      "revision_move": "Give the trend, deadline, changed rule, or cost of delay.",
+      "exceptions": [
+        "A documented increase in risk or demand",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Security is more important than ever."
+      ],
+      "counterexamples": [
+        "The new rule takes effect on 1 September, and non-compliant accounts will be suspended."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-era-opening",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:in\\s+(?:a|an|the)\\s+(?:era|age|world)\\s+(?:where|of)|in\\s+today['’]s\\s+(?:fast[- ]paced|digital|interconnected)\\s+world)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "generic-opening-closing",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A universal modernity preamble delays the specific event, problem, or decision.",
+      "revision_move": "Delete it and begin with a dated change, reader problem, concrete scene, or thesis.",
+      "exceptions": [
+        "Quotation, parody, or a deliberate speech opening"
+      ],
+      "positive_examples": [
+        "In an era where change is constant, agility is essential."
+      ],
+      "counterexamples": [
+        "From 1 September, support staff will approve refunds in Nimbus."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/",
+         "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-challenges-opportunities",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:challenges?\\s+and\\s+opportunities|opportunities?\\s+and\\s+challenges|challenges?\\s+and\\s+future\\s+directions|future\\s+outlook)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "generic-opening-closing",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A compulsory balance or future section can substitute for named risks and scheduled work.",
+      "revision_move": "List the actual constraint, owner, status, and funded or scheduled next step; remove speculation.",
+      "exceptions": [
+        "A report section containing documented risks and assigned work",
+        "A required house-style heading"
+      ],
+      "positive_examples": [
+        "The report concludes with challenges and future directions."
+      ],
+      "counterexamples": [
+        "The team still lacks a rollback test; Priya will run one before Friday’s review."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "assistant-delivery-wrapper",
+      "category": "chat_service_residue",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "(?m)^\\s*(?:here\\s+(?:is|are)\\s+(?:(?:the|your)\\s+)?(?:(?:requested|revised|polished|updated|comprehensive)\\s+)?(?:version|draft|breakdown|response|copy)|below\\s+is\\s+(?:(?:the|your)\\s+)?(?:revised|polished|requested)\\s+(?:version|draft|copy))\\b",
+      "severity": "low",
+      "confidence": "high",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "assistant-wrapper",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "The wrapper narrates delivery instead of delivering the artefact.",
+      "revision_move": "Delete it and lead with the result or an informative heading; retain only a necessary scope note.",
+      "exceptions": [
+        "A brief conversational orientation when the structure would otherwise surprise the reader"
+      ],
+      "positive_examples": [
+        "Here is your polished version."
+      ],
+      "counterexamples": [
+        "Refund approval changes on 1 September."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "assistant-affirmation-preamble",
+      "category": "chat_service_residue",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "(?m)^\\s*(?:certainly|absolutely|of\\s+course|great\\s+question|excellent\\s+question|you(?:'|’)re\\s+absolutely\\s+right)[!,.]",
+      "severity": "low",
+      "confidence": "high",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "assistant-wrapper",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "Generic praise or agreement delays the answer and can sound ingratiating.",
+      "revision_move": "Answer directly or acknowledge the specific correction and changed conclusion.",
+      "exceptions": [
+        "Warm personal conversation",
+        "A genuine acknowledgement where relationship is the task"
+      ],
+      "positive_examples": [
+        "Absolutely! Here is the answer."
+      ],
+      "counterexamples": [
+        "The refund rule changes on 1 September."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "email-service-wrapper",
+      "category": "chat_service_residue",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:i\\s+hope\\s+this\\s+message\\s+finds\\s+you\\s+well|i\\s+(?:just\\s+)?wanted\\s+to\\s+reach\\s+out(?:\\s+regarding)?|at\\s+your\\s+earliest\\s+convenience)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "email-service",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "Inherited email courtesy can bury the request, dependency, or deadline.",
+      "revision_move": "Make the request directly, give the deadline and reason, and keep only relationship-specific warmth.",
+      "exceptions": [
+        "House style or cultural courtesy",
+        "A writer’s established personal voice"
+      ],
+      "positive_examples": [
+        "I hope this message finds you well. I wanted to reach out regarding the budget."
+      ],
+      "counterexamples": [
+        "Could you approve the revised budget by Thursday?"
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/",
+          "https://www.gov.uk/guidance/content-design/writing-for-gov-uk"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-emergence-trend",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:has|have)\\s+(?:increasingly\\s+)?emerged\\s+as|(?:has|have)\\s+become\\s+increasingly|growing\\s+(?:recognition|interest|attention)|in\\s+recent\\s+years[^.!?]{0,80}\\b(?:has|have)\\s+(?:become|grown|seen))\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "generic-opening-closing",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A trend claim appears without a start date, adopter, comparison, or measure.",
+      "revision_move": "Give the date and series, name who adopted the practice, or limit the sentence to the latest verified event.",
+      "exceptions": [
+        "Sourced longitudinal reporting",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Nimbus has emerged as a leading solution."
+      ],
+      "counterexamples": [
+        "Twelve support teams adopted Nimbus between January and June 2026."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-transition-density",
+      "category": "discourse_regularities",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:additionally|moreover|furthermore)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 3,
+      "cluster": {
+        "key": "generic-transition-stack",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "Repeated additive transitions can leave school-essay scaffolding after the relation is already clear.",
+      "revision_move": "Combine evidence that supports one claim, begin with the new actor or fact, or start a new paragraph when the subject changes.",
+      "exceptions": [
+        "Formal argument where cumulative support needs explicit signposting",
+        "Accessibility-oriented repetition"
+      ],
+      "positive_examples": [
+        "Additionally, costs fell. Moreover, errors fell. Furthermore, delays fell."
+      ],
+      "counterexamples": [
+        "Costs fell, and errors became less frequent."
+      ],
+      "evidence": {
+        "tier": "B",
+        "urls": [
+         "https://arxiv.org/abs/2406.07016"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "participial-commentary-tail",
+      "category": "discourse_regularities",
+      "kind": "regex",
+      "action": "review",
+      "regex": ",\\s*(?:enabl(?:ing)|ensur(?:ing)|foster(?:ing)|highlight(?:ing)|underscor(?:ing)|showcas(?:ing)|reflect(?:ing))\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 2,
+      "cluster": {
+        "key": "generic-transition-stack",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "Repeated participial tails compress agency, causation, and consequence into polished commentary.",
+      "revision_move": "Name the actor in a finite clause, separate action from consequence, and qualify predicted effects.",
+      "exceptions": [
+        "Simultaneous action with an unmistakable actor and relation",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "The queue records approvals, enabling transparency, highlighting delays."
+      ],
+      "counterexamples": [
+        "The queue records approvals. Release owners can see which team has not responded."
+      ],
+      "evidence": {
+        "tier": "B",
+        "urls": [
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC11874169/",
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "copula-avoidance-density",
+      "category": "discourse_regularities",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:(?:serves?|stands?|functions?|operates?)\\s+as|(?:boasts?|features?|offers?)\\s+(?:a|an|the|several|many))\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 3,
+      "cluster": {
+        "key": "generic-transition-stack",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "Repeated substitutes for is or has can make plain description sound promotional or ceremonial.",
+      "revision_move": "Use is or has when exact; otherwise name the function or user action that the verb genuinely adds.",
+      "exceptions": [
+        "Literal boasting or offering",
+        "Product feature terminology",
+        "A technical function stated precisely"
+      ],
+      "positive_examples": [
+        "It serves as a guide. It boasts a dashboard. It offers a toolkit."
+      ],
+      "counterexamples": [
+        "The guide has a dashboard and three export formats."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-importance-adverb",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:notably|importantly|crucially|interestingly|remarkably)\\s*,",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "significance-inflation",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "An evaluative adverb tells the reader how to react before giving the comparison or consequence.",
+      "revision_move": "State the surprising baseline, comparison, or consequence and let it establish importance.",
+      "exceptions": [
+        "Attributed commentary",
+        "A stated comparison with an explicit expectation"
+      ],
+      "positive_examples": [
+        "Notably, completion improved."
+      ],
+      "counterexamples": [
+        "Completion rose from 42% to 61% after the notice named the sender."
+      ],
+      "evidence": {
+        "tier": "B",
+        "urls": [
+         "https://arxiv.org/abs/2406.07016"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-actorless-action",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:efforts?\\s+(?:are|is)\\s+underway|steps?\\s+(?:are|is)\\s+being\\s+taken|work\\s+(?:is|remains)\\s+ongoing|ongoing\\s+initiatives?)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "actorless-abstraction",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "The passive status phrase implies progress while concealing owner, funding, action, and completion.",
+      "revision_move": "Name the responsible actor, current action, start date, status, and next milestone.",
+      "exceptions": [
+        "Sensitive reporting where details cannot be disclosed and that limit is stated",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Efforts are underway to address the issue."
+      ],
+      "counterexamples": [
+        "Facilities began replacing the damaged wiring on Tuesday."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/",
+          "https://www.gov.uk/guidance/content-design/writing-for-gov-uk"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-need-frame",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:there\\s+is\\s+(?:(?:a|an)\\s+)?(?:(?:clear|pressing)\\s+)?need\\s+to|it\\s+is\\s+necessary\\s+to)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "actorless-abstraction",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "An impersonal need frame hides who recommends the action and why.",
+      "revision_move": "Name who should act, the failure or evidence prompting it, and any deadline or decision criterion.",
+      "exceptions": [
+        "Formal legal requirements",
+        "A deliberately impersonal policy statement",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "There is a pressing need to improve communication."
+      ],
+      "counterexamples": [
+        "Team leads should publish release decisions in the shared queue before 16:00."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-solution-label",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:comprehensive|holistic|end[- ]to[- ]end|innovative|modern)\\s+(?:framework|approach|solution|strategy|toolkit)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 2,
+      "cluster": {
+        "key": "actorless-abstraction",
+        "minimum_patterns": 2,
+        "must_revise": true,
+        "scope": "paragraph"
+      },
+      "explanation": "A prestige modifier claims completeness or novelty before the contents and boundaries are clear.",
+      "revision_move": "List components, inputs, outputs, included stages, and exclusions; call the thing what it concretely is.",
+      "exceptions": [
+        "A defined framework or algorithm",
+        "A scope that is explicitly exhaustive",
+        "An official name"
+      ],
+      "positive_examples": [
+        "A comprehensive framework supports a holistic approach."
+      ],
+      "counterexamples": [
+        "The checklist covers intake, approval, deployment, and rollback."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+         "https://aclanthology.org/2025.bea-1.71/",
+         "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "manufactured-inclusivity",
+      "category": "rhetorical_frames",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:whether\\s+you(?:'|’)re\\s+[^.!?]{1,60}\\s+or\\s+[^.!?]{1,60}|from\\s+(?:startups?|small\\s+teams?)\\s+to\\s+(?:enterprises?|global\\s+organisations?|global\\s+organizations?)|organisations?\\s+of\\s+all\\s+sizes)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {
+        "key": "presenter-theatre",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A panoramic audience frame claims universal relevance without naming distinct needs.",
+      "revision_move": "Name the actual audience and task; separate groups when their constraints differ.",
+      "exceptions": [
+        "A genuinely universal requirement",
+        "A deliberate campaign line",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "From startups to enterprises, teams of all sizes can benefit."
+      ],
+      "counterexamples": [
+        "Support teams handling more than 500 refunds a month can import requests in bulk."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://aclanthology.org/2025.acl-long.267/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "administrative-topic-frame",
+      "category": "discourse_regularities",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:in\\s+terms\\s+of|when\\s+it\\s+comes\\s+to|with\\s+regard\\s+to|as\\s+it\\s+relates\\s+to)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 2,
+      "cluster": {
+        "key": "administrative-scaffolding",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "A topic frame can delay the noun without naming a useful analytical dimension.",
+      "revision_move": "Begin with the subject or measure; use a heading only when the passage genuinely changes dimension.",
+      "exceptions": [
+        "A comparison that distinguishes several explicit dimensions",
+        "Formal correspondence"
+      ],
+      "positive_examples": [
+        "In terms of speed, it is faster. When it comes to cost, it is cheaper."
+      ],
+      "counterexamples": [
+        "The new queue is faster but costs $40 more each month."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "vague-this-consequence",
+      "category": "discourse_regularities",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:by\\s+doing\\s+so|this\\s+(?:allows?|enables?|ensures?))\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 2,
+      "cluster": {
+        "key": "administrative-scaffolding",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "A vague demonstrative can hide the responsible action and overclaim its result.",
+      "revision_move": "Repeat the exact action, name the beneficiary, and state the condition under which the result follows.",
+      "exceptions": [
+        "An unambiguous reference to the immediately preceding action",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "This allows better work. By doing so, teams improve."
+      ],
+      "counterexamples": [
+        "Publishing the owner beside each request lets support route overdue work."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "atmospheric-context-frame",
+      "category": "discourse_regularities",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:against\\s+this\\s+backdrop|in\\s+this\\s+context|from\\s+this\\s+perspective)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 2,
+      "cluster": {
+        "key": "administrative-scaffolding",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "An atmospheric transition can substitute for the event or rule that changes the next claim.",
+      "revision_move": "Name the event, date, rule, or evidence that makes the context relevant.",
+      "exceptions": [
+        "Historical or legal context that materially changes interpretation",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Against this backdrop, change is needed. In this context, teams must adapt."
+      ],
+      "counterexamples": [
+        "The new rule takes effect on 1 September, so support needs an approval queue before then."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-vague-plurality",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:a\\s+(?:wide\\s+)?range\\s+of|a\\s+host\\s+of|a\\s+plethora\\s+of|myriad(?:\\s+of)?|numerous|various)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 3,
+      "cluster": {
+        "key": "vague-quantity",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "document"
+      },
+      "explanation": "Repeated vague quantity suggests breadth without committing to scope.",
+      "revision_move": "Give the count, list representative items with a selection reason, or state the bounded scope.",
+      "exceptions": [
+        "A non-exhaustive set where enumeration would distract",
+        "A quotation"
+      ],
+      "positive_examples": [
+        "Various teams use numerous tools across a wide range of workflows."
+      ],
+      "counterexamples": [
+        "Four support teams use Jira, Zendesk, and Linear."
+      ],
+      "evidence": {
+        "tier": "C",
+        "urls": [
+          "https://www.plainlanguage.gov/guidelines/words/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "lexical-research-watch-density",
+      "category": "lexical",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:boast(?:s|ed|ing)?|garner(?:s|ed|ing)?|surpass(?:es|ed|ing)?|align(?:s|ed|ing)?|groundbreaking|advancements?|meticulous|unveil(?:s|ed|ing)?|heighten(?:s|ed|ing)?|nuanc(?:e|es|ed|ing)|bolster(?:s|ed|ing)?|foster(?:s|ed|ing)?|interplay|palpable|camaraderie|amidst|vibrant)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 4,
+      "cluster": {
+        "key": "lexical-research-watch",
+        "minimum_patterns": 2,
+        "must_revise": false,
+        "scope": "paragraph"
+      },
+      "explanation": "A dense run of model-associated prestige or atmospheric words can make prose sound selected from a common palette.",
+      "revision_move": "Inspect each occurrence for exact meaning; keep precise terms and replace ornamental ones with actors, evidence, or concrete description.",
+      "exceptions": [
+        "Disciplinary terminology",
+        "Literal or quoted uses",
+        "A writer’s established diction"
+      ],
+      "positive_examples": [
+        "The vibrant study unveils groundbreaking advancements, fostering a palpable interplay."
+      ],
+      "counterexamples": [
+        "The study compares four treatments and reports the adverse events for each."
+      ],
+      "evidence": {
+        "tier": "A",
+        "urls": [
+          "https://aclanthology.org/2025.coling-main.426/",
+          "https://link.springer.com/article/10.1007/s11192-026-05601-5",
+          "https://pmc.ncbi.nlm.nih.gov/articles/PMC11874169/"
+        ]
+      },
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "presenter-infomercial-hook",
+      "category": "rhetorical_frames",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:let\\s+that\\s+sink\\s+in|read\\s+that\\s+again|make\\s+no\\s+mistake|buckle\\s+up|what\\s+if\\s+i\\s+told\\s+you|this\\s+changes\\s+everything|the\\s+future\\s+is\\s+here|a\\s+masterclass\\s+in)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-theatre", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "An infomercial-style hook tells the reader to expect a reveal or react before the prose has earned the emphasis.",
+      "revision_move": "Delete the cue and state the fact, exception, consequence, or comparison directly.",
+      "exceptions": ["A spoken performance or deliberate social voice", "Quotation, parody, or a writer-owned refrain"],
+      "positive_examples": ["But make no mistake: this changes everything. Let that sink in."],
+      "counterexamples": ["The second charge is pending, and the bank may take three to five business days to release it."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md", "https://www.linkedin.com/posts/dibratto_i-made-a-list-of-all-the-words-and-phrases-activity-7316792225999269889-auSz"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "presenter-meta-narration",
+      "category": "rhetorical_frames",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:in\\s+this\\s+(?:article|section|guide|post),?\\s+(?:we|i)\\s+(?:will|shall)\\s+(?:explore|examine|discuss|look\\s+at)|let(?:'|’)s\\s+(?:take\\s+a\\s+closer\\s+look|dive\\s+(?:deep\\s+)?into|do\\s+a\\s+deep\\s+dive|unpack|break\\s+this\\s+down|explore)|without\\s+further\\s+ado|here(?:'|’)s\\s+why|let\\s+me\\s+explain)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-theatre", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "Meta-narration announces the explanation instead of beginning it.",
+      "revision_move": "Open with the subject, answer, claim, or an informative heading.",
+      "exceptions": ["A teaching plan whose sequence must be previewed", "A speech transition suited to the speaker"],
+      "positive_examples": ["In this article, we will explore the issue. Without further ado, let's take a closer look."],
+      "counterexamples": ["The audit compared 14 invoices issued between January and March."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md", "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "assistant-knowledge-limit",
+      "category": "assistant_residue",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:as\\s+of\\s+my\\s+(?:knowledge\\s+cutoff|last\\s+(?:knowledge\\s+)?update)|up\\s+to\\s+my\\s+last\\s+training\\s+update|based\\s+on\\s+(?:the\\s+)?available\\s+information|(?:specific\\s+)?details\\s+(?:are|remain)\\s+(?:limited|scarce|not\\s+widely\\s+(?:available|documented|disclosed))|i\\s+do\\s+not\\s+have\\s+access\\s+to\\s+real[- ]time\\s+data)\\b",
+      "severity": "medium",
+      "confidence": "high",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "assistant-wrapper", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "A model-limit disclaimer has leaked into prose instead of naming the actual source boundary.",
+      "revision_move": "State which sources and dates were checked, identify the missing record, or remove the irrelevant disclaimer.",
+      "exceptions": ["A dated report on a search process", "Quoted model output under analysis"],
+      "positive_examples": ["As of my knowledge cutoff, specific details are limited based on available information."],
+      "counterexamples": ["The register covers applications filed through 30 June 2026; later records were not available for this review."],
+      "evidence": {"tier": "C", "urls": ["https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "support-scripted-empathy",
+      "category": "support_language",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:thank\\s+you\\s+for\\s+reaching\\s+out|we\\s+(?:completely\\s+)?understand\\s+how\\s+(?:frustrating|difficult|upsetting)|i(?:'|’)m\\s+(?:so\\s+)?sorry\\s+to\\s+hear|rest\\s+assured|committed\\s+to\\s+making\\s+this\\s+right)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "support-script", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A stock empathy sequence can sound detached when it precedes the specific event, remedy, or limit.",
+      "revision_move": "Acknowledge the exact problem in the recipient's terms, then explain the remedy, owner, timing, and limits.",
+      "exceptions": ["A sincere support response in the organisation's established voice", "Care, counselling, crisis, or relationship contexts"],
+      "positive_examples": ["Thank you for reaching out. We completely understand how frustrating this must be. Rest assured that we're committed to making this right."],
+      "counterexamples": ["You were charged twice. The second charge is pending, and Mina will check it again on 22 July."],
+      "evidence": {"tier": "C", "urls": ["https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "support-blanket-validation",
+      "category": "support_language",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:that\\s+makes\\s+complete\\s+sense|your\\s+instincts\\s+are\\s+right|you(?:'|’)re\\s+not\\s+overreacting|you\\s+did\\s+nothing\\s+wrong|you(?:'|’)re\\s+absolutely\\s+(?:right|justified))\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "support-script", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "Blanket validation can convert empathy into agreement with facts or inferences that have not been established.",
+      "revision_move": "Acknowledge the specific concern, separate feeling from contested fact, and state what can and cannot be concluded.",
+      "exceptions": ["Genuine emotional support where the conclusion is warranted", "A quotation"],
+      "positive_examples": ["You're not overreacting. Your instincts are right, and you did nothing wrong."],
+      "counterexamples": ["Your concern is understandable; the available record confirms the duplicate charge but not its cause."],
+      "evidence": {"tier": "B", "urls": ["https://doi.org/10.1126/science.aec8352"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "academic-purpose-boilerplate",
+      "category": "academic_boilerplate",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:this|the\\s+present)\\s+stud(?:y|ies)\\s+(?:aims?|seeks?)\\s+to\\s+(?:explore|investigate|examine|understand)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "academic-boilerplate", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "A stock purpose frame delays the research question and method.",
+      "revision_move": "State the population, comparison, variable, corpus, method, or research question directly.",
+      "exceptions": ["A required abstract structure or protocol field", "A house style that mandates an aim statement"],
+      "positive_examples": ["This study aims to explore appointment delays."],
+      "counterexamples": ["The study compared appointment records for 312 adults referred through two routes."],
+      "evidence": {"tier": "C", "urls": ["https://aclanthology.org/2025.bea-1.71/"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "academic-understanding-boilerplate",
+      "category": "academic_boilerplate",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:gain|provide|offer)\\s+(?:a\\s+)?(?:deeper|better|greater|comprehensive)\\s+understanding|contribut(?:e|es|ed|ing)\\s+to\\s+(?:our|the)\\s+understanding)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "academic-boilerplate", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "An understanding claim labels the contribution without stating what distinction or result became clearer.",
+      "revision_move": "Name the finding, distinction, mechanism, boundary, or decision the work supports.",
+      "exceptions": ["A bounded synthesis that immediately names what is now understood", "Quoted wording"],
+      "positive_examples": ["The study contributes to our understanding and provides a deeper understanding of access."],
+      "counterexamples": ["The records show an eight-day median difference between the two referral routes."],
+      "evidence": {"tier": "C", "urls": ["https://aclanthology.org/2025.bea-1.71/", "https://aclanthology.org/2025.coling-main.426/"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "academic-future-work-boilerplate",
+      "category": "academic_boilerplate",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:opens?\\s+(?:up\\s+)?new\\s+avenues|paves?\\s+the\\s+way\\s+for\\s+future\\s+research|further\\s+research\\s+is\\s+(?:needed|required)(?:\\s+to\\s+(?:fully\\s+)?(?:understand|explore|investigate))?)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "academic-boilerplate", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "A generic future-work line claims an agenda without naming the unresolved question or next design.",
+      "revision_move": "Name the missing population, variable, comparison, method, or experiment; otherwise delete the line.",
+      "exceptions": ["A limitations section proposing a specific next study", "A grant or protocol with defined future work"],
+      "positive_examples": ["Further research is needed to fully understand the issue and open new avenues."],
+      "counterexamples": ["A multi-site study should test whether the eight-day difference persists after accounting for transport and cancellations."],
+      "evidence": {"tier": "C", "urls": ["https://aclanthology.org/2025.bea-1.71/"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "academic-growing-literature",
+      "category": "academic_boilerplate",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:a\\s+growing\\s+body\\s+of\\s+(?:literature|research|evidence)|increasing\\s+scholarly\\s+attention|has\\s+garnered\\s+significant\\s+(?:interest|attention))\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "academic-boilerplate", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "An undated literature-growth claim borrows scale without a review, period, count, or named debate.",
+      "revision_move": "Cite the review, date range, publication count, or specific debate, or remove the trend claim.",
+      "exceptions": ["A sourced bibliometric trend", "A literature review that immediately defines the corpus"],
+      "positive_examples": ["A growing body of literature has garnered significant scholarly attention."],
+      "counterexamples": ["The review includes 43 trials published between 2018 and 2025."],
+      "evidence": {"tier": "C", "urls": ["https://aclanthology.org/2025.bea-1.71/", "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "vague-attribution-research-claim",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:research|studies|evidence|the\\s+literature)\\s+(?:shows?|suggests?|indicates?|demonstrates?|confirms?)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A generic research attribution asks the reader to accept evidence that has not been named or bounded.",
+      "revision_move": "Name and cite the study or review, state the sample and result, or own the claim as analysis.",
+      "exceptions": ["A citation immediately identifies the source", "A summary whose source set is explicitly defined"],
+      "positive_examples": ["Research shows that the programme improves outcomes."],
+      "counterexamples": ["In the 2025 trial of 312 adults, median waiting time fell by eight days."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md", "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-obviousness-authority",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:it\\s+is\\s+(?:clear|evident|obvious)|there\\s+is\\s+no\\s+doubt|needless\\s+to\\s+say|undeniably|this\\s+raises\\s+(?:an?\\s+)?important\\s+questions?)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "An obviousness frame supplies certainty or importance before the evidence or question is visible.",
+      "revision_move": "State the evidence, question, consequence, or calibrated degree of confidence.",
+      "exceptions": ["A demonstrated logical conclusion", "A quotation or required legal formula"],
+      "positive_examples": ["It is clear that this raises important questions. There is no doubt that action is needed."],
+      "counterexamples": ["The records omit cancellation data, so they cannot explain the eight-day difference."],
+      "evidence": {"tier": "C", "urls": ["https://www.plainlanguage.gov/guidelines/words/", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-prestige-claim",
+      "category": "corporate_glaze",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:world[- ]class|best[- ]in[- ]class|industry[- ]leading|state[- ]of[- ]the[- ]art|future[- ]proof|enterprise[- ]grade|production[- ]ready|mission[- ]critical)\\b",
+      "severity": "medium",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "corporate-benefit-glaze", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "A prestige label implies a benchmark, environment, workload, or standard without naming it.",
+      "revision_move": "Cite the benchmark or standard and state the environment, version, load, gate, or supported boundary.",
+      "exceptions": ["A sourced benchmark or named standard", "An official product tier or required term"],
+      "positive_examples": ["The world-class, state-of-the-art platform is production-ready and future-proof."],
+      "counterexamples": ["The service passed the production gate at 8,000 jobs per minute with p95 latency below 120 ms."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md", "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "corporate-virtue-commitment",
+      "category": "corporate_glaze",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:unwavering\\s+commitment|commitment\\s+to\\s+excellence|relentless\\s+pursuit|tireless\\s+dedication|dedication\\s+to\\s+(?:innovation|quality|excellence))\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "corporate-benefit-glaze", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "Ceremonial virtue language awards character without showing the repeated action, duration, cost, or result.",
+      "revision_move": "Name the concrete commitment, responsible actor, repeated practice, deadline, investment, or measured result.",
+      "exceptions": ["A contractual commitment", "Attributed ceremonial, obituary, or speech language"],
+      "positive_examples": ["The launch reflects our unwavering commitment to excellence and tireless dedication to innovation."],
+      "counterexamples": ["The council funded two weekly clinics through June 2027."],
+      "evidence": {"tier": "C", "urls": ["https://aclanthology.org/2025.bea-1.71/"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "lexical-formal-verb-density",
+      "category": "lexical",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:utili[sz](?:e|es|ed|ing)|commenc(?:e|es|ed|ing)|ascertain(?:s|ed|ing)?|endeavou?r(?:s|ed|ing)?|facilitat(?:e|es|ed|ing)|encompass(?:es|ed|ing)?|augment(?:s|ed|ing)?|illuminat(?:e|es|ed|ing)|elucidat(?:e|es|ed|ing)|juxtapos(?:e|es|ed|ing))\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 3,
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A dense run of formal substitutes can make ordinary action sound administrative or ceremonious.",
+      "revision_move": "Keep the exact term where needed; elsewhere use the clearest ordinary verb or name the action more precisely.",
+      "exceptions": ["Legal or disciplinary terminology", "A deliberately formal voice", "A quotation"],
+      "positive_examples": ["The team will utilise the toolkit, facilitate adoption, and commence work to ascertain the outcome."],
+      "counterexamples": ["The team will use the checklist, start on Monday, and measure completion after four weeks."],
+      "evidence": {"tier": "C", "urls": ["https://medium.com/@ameliasoul10/10-phrases-that-instantly-tell-me-you-used-chatgpt-from-a-professional-editors-desk-4e9862f96767", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "lexical-topic-container-density",
+      "category": "lexical",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:ecosystem|intersection|nexus|confluence|lens|prism|roadmap|journey|space|sphere|narrative|dynamics|intricacies|paradigm)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 3,
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "Several topic containers in one paragraph can blur participants, relationships, stages, and actual changes.",
+      "revision_move": "Keep exact terms; otherwise name the organisations, factors, criterion, sequence, dependency, or disputed proposition.",
+      "exceptions": ["Biology, optics, mathematics, narratology, or another exact domain", "A real roadmap or journey", "Writer-owned metaphor"],
+      "positive_examples": ["Through a new lens, the ecosystem journey sits at the intersection of several evolving dynamics."],
+      "counterexamples": ["The regulator changed the filing rule, and three banks altered their review process."],
+      "evidence": {"tier": "C", "urls": ["https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "place-tourism-glaze",
+      "category": "promotional_language",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:nestled\\s+(?:in|within)\\s+the\\s+heart\\s+of|bustling\\s+(?:hub|town|city|community)|breathtaking\\s+(?:views?|scenery|landscape)|vibrant\\s+hub|thriving\\s+community|hidden\\s+gem)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "promotional-place-glaze", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "Stock travel-copy atmosphere can describe almost any place while withholding location, scene, or evidence.",
+      "revision_move": "Give the location, terrain, street, institution, event, population, or observed activity that creates the impression.",
+      "exceptions": ["An attributed description", "A writer's observed scene", "Intentional campaign copy"],
+      "positive_examples": ["Nestled in the heart of the valley, the bustling town is a vibrant hub and hidden gem."],
+      "counterexamples": ["The town sits 12 kilometres north of the pass and hosts a produce market every Saturday."],
+      "evidence": {"tier": "C", "urls": ["https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "place-rich-history-glaze",
+      "category": "promotional_language",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:boasts?\\s+(?:a\\s+)?rich\\s+history|steeped\\s+in\\s+history|from\\s+humble\\s+beginnings|locals?\\s+and\\s+visitors?\\s+alike|something\\s+for\\s+everyone)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "promotional-place-glaze", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "Generic heritage and audience language praises breadth without identifying the history, people, or activity.",
+      "revision_move": "Give the date, origin, conflict, founder, trade, named group, season, or access condition.",
+      "exceptions": ["Quotation or memoir voice", "A campaign deliberately using a familiar slogan"],
+      "positive_examples": ["The town boasts a rich history and offers something for locals and visitors alike."],
+      "counterexamples": ["Tin miners founded the settlement in 1874; the restored assay office opens on weekends."],
+      "evidence": {"tier": "C", "urls": ["https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "significance-new-era-consequence",
+      "category": "significance_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:ushers?\\s+in\\s+a\\s+new\\s+era|opens?\\s+a\\s+new\\s+chapter|far[- ]reaching\\s+implications|a\\s+beacon\\s+of\\s+(?:hope|progress|innovation)|a\\s+significant\\s+step\\s+forward)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "significance-inflation", "minimum_patterns": 2, "must_revise": true, "scope": "paragraph"},
+      "explanation": "Consequence theatre assigns historical reach before tracing an affected group, later event, or time horizon.",
+      "revision_move": "Name the changed rule, later adoption, affected group, measurable consequence, and date; otherwise keep the claim local.",
+      "exceptions": ["A sourced historical judgement", "Attributed ceremonial speech", "A deliberate literary image"],
+      "positive_examples": ["The launch ushers in a new era with far-reaching implications and opens a new chapter for the industry."],
+      "counterexamples": ["From July, the rule moves refund approval from support to finance."],
+      "evidence": {"tier": "C", "urls": ["https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing", "https://aclanthology.org/2025.bea-1.71/"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "narrative-emotional-cue",
+      "category": "narrative_voice",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:what\\s+(?:surprised|struck|fascinated)\\s+me\\s+most|i\\s+was\\s+(?:fascinated|excited)\\s+to\\s+(?:discover|learn)|the\\s+most\\s+interesting\\s+part|resonates?\\s+deeply|captures?\\s+the\\s+essence|transcends?\\s+boundaries|speaks?\\s+volumes)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "An emotion or resonance label can announce the response instead of letting observation and voice create it.",
+      "revision_move": "Show the observation and name who responded; retain the emotion only when the writer owns it and the detail earns it.",
+      "exceptions": ["Personal writing in the author's established voice", "Attributed audience testimony", "Literary criticism or literal resonance"],
+      "positive_examples": ["What surprised me most was how the story resonates deeply and captures the essence of change."],
+      "counterexamples": ["I stopped at the third letter because it used the same sentence my father wrote in 1998."],
+      "evidence": {"tier": "C", "urls": ["https://aclanthology.org/2025.acl-long.267/", "https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "narrative-packaged-growth",
+      "category": "narrative_voice",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:taught\\s+me\\s+a\\s+valuable\\s+lesson|emerged\\s+stronger|authentic\\s+self|full[- ]circle\\s+moment|resilience\\s+is\\s+not\\s+[^.!?]{1,45}\\s+but\\s+[^.!?]{1,45})\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "narrative-packaging", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A packaged growth line turns a particular experience into a tidy universal moral.",
+      "revision_move": "Show the decision, scene, or later behaviour and preserve any unresolved or partial change.",
+      "exceptions": ["A lesson the writer explicitly endorses in their own voice", "Parable, children's instruction, or intentionally didactic prose"],
+      "positive_examples": ["The setback taught me a valuable lesson, and I emerged stronger in a full-circle moment."],
+      "counterexamples": ["After the failed launch, I began testing restores before each migration."],
+      "evidence": {"tier": "C", "urls": ["https://arxiv.org/abs/2604.03136", "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "lexical-sentimental-atmosphere-density",
+      "category": "lexical",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:unspoken|fleeting|solace|cacophony|ignit(?:e|es|ed|ing)|unravel(?:s|ed|ing)?|palpable|camaraderie)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 3,
+      "cluster": {"key": "lexical-sentiment", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A cluster of sentimental or atmospheric terms may supply mood without an observed scene or owned voice.",
+      "revision_move": "Identify the person, action, sound, object, or sensory detail creating the mood; preserve deliberate literary language.",
+      "exceptions": ["Fiction, poetry, quotation, or reported sensory detail", "A writer's established imagery"],
+      "positive_examples": ["An unspoken camaraderie offered fleeting solace amid the palpable cacophony."],
+      "counterexamples": ["The chairs scraped across the floor while Mara folded the letter into her coat pocket."],
+      "evidence": {"tier": "A", "urls": ["https://arxiv.org/html/2410.16107"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "rhetorical-false-concession",
+      "category": "rhetorical_frames",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:while\\s+[^.!?]{1,55}\\s+(?:is|are)\\s+(?:impressive|commendable|promising)|although\\s+[^.!?]{1,55}\\s+(?:has|have)\\s+made\\s+(?:strides|progress))[^.!?]{0,90}\\b(?:remains?|faces?)\\s+(?:a\\s+)?(?:challenge|open\\s+question)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-theatre", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A stock concession can simulate balance while leaving both the success and the constraint vague.",
+      "revision_move": "Name the measured success and actual constraint, compare like with like, or choose the supported claim.",
+      "exceptions": ["A genuine concession with specific evidence on both sides", "A quotation"],
+      "positive_examples": ["While the programme is impressive, adoption remains a challenge."],
+      "counterexamples": ["Completion rose from 42% to 61%, but the pilot excluded accounts with more than 500 users."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md", "https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-future-narrative-closer",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:may|could|will)\\s+become|is\\s+poised\\s+to\\s+become)\\s+(?:one\\s+of\\s+)?the\\s+most\\s+(?:important|defining|significant|powerful)\\s+(?:narratives?|stories|trends?|themes?|chapters?|movements?|forces?)\\b",
+      "severity": "medium",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A future-narrative closer sounds predictive without naming a falsifiable event, measure, or date.",
+      "revision_move": "Give the bounded forecast, condition, measure, and date, or end at the last supported claim.",
+      "exceptions": ["A sourced forecast with a stated test", "Deliberate speech rhetoric"],
+      "positive_examples": ["This may become one of the most important narratives of the coming decade."],
+      "counterexamples": ["The forecast expects annual demand to exceed 40,000 units by 2028 if the subsidy remains in force."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-vague-endorsement",
+      "category": "generic_authority",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:worth\\s+(?:reading|exploring|checking\\s+out|your\\s+time|paying\\s+attention\\s+to)|worth\\s+a\\s+look|a\\s+must[- ]read|you\\s+won(?:'|’)t\\s+want\\s+to\\s+miss\\s+this)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A generic endorsement tells the reader something is valuable without giving a reason suited to them.",
+      "revision_move": "State what the resource contains, who it helps, and why that detail matters; otherwise drop the endorsement.",
+      "exceptions": ["A personal recommendation whose reason is already clear", "A deliberately brief social caption"],
+      "positive_examples": ["This one is worth your time and a must-read you won't want to miss."],
+      "counterexamples": ["The report compares six retry strategies and includes the raw latency data for each."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "rhetorical-stacked-reveal",
+      "category": "reveal_negation",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:(?:no\\s+[^.!?]{1,45}[.!]\\s*){2}just\\s+[^.!?]{1,70}|(?:it(?:(?:'|’)s|\\s+is)\\s+not\\s+[^.!?]{1,45}[.!]\\s*){2}it(?:(?:'|’)s|\\s+is)\\s+[^.!?]{1,70})",
+      "severity": "medium",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "reveal-template", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A sequence of negated fragments can manufacture suspense before a simple positive claim.",
+      "revision_move": "State the supported positive proposition once; retain the countdown only when deliberate rhetoric earns it.",
+      "exceptions": ["Deliberate speech, fiction, or campaign rhetoric", "A contrast in which every rejected option matters"],
+      "positive_examples": ["No tricks. No shortcuts. Just results."],
+      "counterexamples": ["The report excludes price and speed; it measures trust."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md", "https://www.linkedin.com/posts/ben-gusberg_ai-writing-has-a-stench-these-phrases-reek-activity-7476621107974889472-NFry"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "presenter-candour-frame",
+      "category": "presenter_scaffolding",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:here(?:'|’)s\\s+(?:the\\s+)?truth|the\\s+truth\\?|to\\s+be\\s+honest|quite\\s+frankly|let(?:'|’)s\\s+be\\s+clear|the\\s+(?:reality|fact)\\s+is(?:\\s+that)?)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-theatre", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A candour frame can announce truthfulness or certainty instead of earning it from evidence and voice.",
+      "revision_move": "State the fact, judgement, or disagreement directly and give its basis.",
+      "exceptions": ["Dialogue or a writer's established conversational voice", "A genuine contrast with an earlier misconception"],
+      "positive_examples": ["Let's be clear: the truth is that this changes everything."],
+      "counterexamples": ["The permit expires on 31 August, so work must stop the next day."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "stance-stacked-hedge",
+      "category": "hedging_booster_balance",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:could\\s+potentially|may\\s+eventually|might\\s+ultimately|could\\s+conceivably|may\\s+perhaps|perhaps\\s+(?:could|might|may))\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "stance-imbalance", "minimum_patterns": 2, "must_revise": false, "scope": "document"},
+      "explanation": "Two uncertainty markers can cancel the commitment without defining what is unknown.",
+      "revision_move": "Choose the uncertainty the evidence warrants and name the condition, likelihood, or time horizon.",
+      "exceptions": ["A quotation", "A technical distinction in which the markers express separate uncertainties"],
+      "positive_examples": ["The change could potentially improve retention and may eventually reduce costs."],
+      "counterexamples": ["Retention may improve if the reminder reaches inactive accounts."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "rhetorical-false-breadth-audience",
+      "category": "rhetorical_frames",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:whether\\s+you(?:(?:'|’)re|\\s+are)\\s+[^.!?]{1,55}\\s+or\\s+[^.!?]{1,55}|from\\s+beginners?\\s+to\\s+(?:experts?|professionals?|seasoned\\s+professionals)|something\\s+for\\s+everyone)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "presenter-theatre", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A universal-audience frame can avoid choosing whose needs and constraints the prose actually serves.",
+      "revision_move": "Name the primary reader, or distinguish the actions and information each audience needs.",
+      "exceptions": ["The material genuinely supplies different paths for the named audiences", "A sourced accessibility or eligibility statement"],
+      "positive_examples": ["Whether you're a beginner or a seasoned professional, there is something for everyone."],
+      "counterexamples": ["New administrators should start with account setup; experienced operators can go directly to migration."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-social-endorsement-closer",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:save\\s+this\\s+for\\s+later|bookmark\\s+this|don(?:'|’)t\\s+sleep\\s+on\\s+this|trust\\s+me,?\\s+you(?:'|’)ll\\s+want\\s+to|thank\\s+me\\s+later|do\\s+yourself\\s+a\\s+favo(?:u)?r\\s+and\\s+(?:read|watch|listen))\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A stock engagement closer asks for a reaction before giving a reader-specific reason.",
+      "revision_move": "State what the resource contains, who it helps, and why; omit the prompt if no practical reason exists.",
+      "exceptions": ["A channel where saving or bookmarking is a real procedural step", "A writer's deliberate colloquial voice"],
+      "positive_examples": ["Save this for later, and thank me later."],
+      "counterexamples": ["Save the permit PDF because the portal removes completed applications after 30 days."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "vague-third-party-validation",
+      "category": "vague_attribution",
+      "kind": "regex",
+      "action": "rewrite",
+      "regex": "\\b(?:independent\\s+testing\\s+(?:confirms?|shows?|proves?)|third[- ]party\\s+(?:benchmarks?|testing)\\s+(?:confirms?|shows?|proves?)|analysts?\\s+(?:agree|confirm)|studies\\s+consistently\\s+(?:show|demonstrate|confirm))\\b",
+      "severity": "medium",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-authority", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "Unnamed outside validation borrows credibility while withholding the evaluator, method, comparison, and date.",
+      "revision_move": "Name and cite the evaluator, test, comparison, date, and result, or remove the claim.",
+      "exceptions": ["A citation immediately names the evaluator and test", "A summary whose source set is explicitly defined"],
+      "positive_examples": ["Independent testing confirms that we lead, and analysts agree."],
+      "counterexamples": ["In its April 2026 benchmark, Lab Q measured p95 latency at 118 ms."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-filler-idiom",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:at\\s+the\\s+end\\s+of\\s+the\\s+day|all\\s+in\\s+all|it\\s+bears\\s+mentioning|the\\s+reality\\s+is\\s+that)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A familiar filler idiom can delay the claim or restate its importance without adding content.",
+      "revision_move": "Delete the frame and state the claim, qualification, or conclusion directly.",
+      "exceptions": ["Dialogue, quotation, parody, or a writer's established conversational voice"],
+      "positive_examples": ["At the end of the day, the reality is that action is needed."],
+      "counterexamples": ["The licence expires on Friday, so the site must close on Saturday."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "generic-speculative-scenario-opening",
+      "category": "generic_openings_closings",
+      "kind": "regex",
+      "action": "remove",
+      "regex": "\\b(?:imagine|picture|envision)\\s+(?:a|the)\\s+(?:world|future)\\s+(?:where|in\\s+which)\\b",
+      "severity": "low",
+      "confidence": "medium",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "generic-opening-closing", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "A stock hypothetical opening can make the desired outcome do the persuading before evidence appears.",
+      "revision_move": "Begin with the real condition, evidence, reader problem, or bounded proposal.",
+      "exceptions": ["Fiction, speech, futures work, or a scenario that is explicitly analysed"],
+      "positive_examples": ["Imagine a world where every team can unlock its potential."],
+      "counterexamples": ["The proposal would let rural clinics submit claims without a permanent connection."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
+    },
+    {
+      "id": "lexical-abstract-authenticity-intensifier",
+      "category": "lexical",
+      "kind": "regex",
+      "action": "review",
+      "regex": "\\b(?:real|actual|genuine|true)\\s+(?:impact|change|value|utility|innovation|progress|engagement|transformation|commitment|sustainability|authenticity)\\b",
+      "severity": "low",
+      "confidence": "low",
+      "minimum_occurrences": 1,
+      "cluster": {"key": "lexical-ornament", "minimum_patterns": 2, "must_revise": false, "scope": "paragraph"},
+      "explanation": "An authenticity adjective can imply an unnamed fake alternative while leaving the claimed property untested.",
+      "revision_move": "Name the contrasting case, measurement, mechanism, or result; otherwise remove the intensifier.",
+      "exceptions": ["The sentence names the contrasting false, simulated, or nominal case", "A defined disciplinary distinction or quotation"],
+      "positive_examples": ["The programme creates real impact and genuine value."],
+      "counterexamples": ["Fee revenue, rather than grants, funds the programme's monthly operating cost."],
+      "evidence": {"tier": "C", "urls": ["https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md"]},
+      "last_reviewed": "2026-07-17"
     }
   ]
 }

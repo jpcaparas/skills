@@ -104,12 +104,14 @@ Read `references/voice-and-rhythm.md`.
 Run this pass when the draft sounds interchangeable, machine-smooth, ceremonious, or over-produced.
 
 - replace praise words with mechanisms, evidence, or consequences
+- remove default-banned wrappers and rebuild default-rewrite phrases even when they occur once
 - cut service tone, generic authority, false suspense, tidy binaries, and self-summary
 - inspect repeated frames, sentence starts, triads, list shapes, and paragraph silhouettes
 - restore writer-specific selection: the detail, stake, caveat, or judgement only this piece needs
 - keep legitimate technical language, dialect, quotations, and intentional rhetoric
+- reject synonym swaps that preserve the same hidden thought
 
-Use `references/genericity-and-stiffness.md` and `references/ai-isms-and-humanisation.md`. For a file-backed draft, the optional scanner can locate hotspots:
+Use `references/genericity-and-stiffness.md`, `references/ai-isms-and-humanisation.md`, and, for explicit avoidance work, `references/formulaic-language-catalogue.md`. For a file-backed draft, the optional scanner can locate hotspots:
 
 ```bash
 python3 scripts/scan_aiisms.py path/to/draft.md

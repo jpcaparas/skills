@@ -2,11 +2,12 @@
 
 Use this reference to revise prose that feels generic, formulaic, machine-smooth, over-signposted, or unlike its writer.
 
-The aim is better writing, not detector evasion. No word, punctuation mark, sentence shape, or model score can prove who wrote a passage. Treat every match as a revision prompt that needs context.
+The aim is better writing, not detector evasion. No word, punctuation mark, sentence shape, or model score can prove who wrote a passage. The editorial policy can still ban a canned rhetorical use from finished prose: the ban attaches to the phrase's function, not to every occurrence of its words.
 
 ## Contents
 
 - [Start with three distinctions](#start-with-three-distinctions)
+- [Editorial avoidance policy](#editorial-avoidance-policy)
 - [Humanisation workflow](#humanisation-workflow)
 - [Worked transformations](#worked-transformations)
 - [Signal taxonomy](#signal-taxonomy)
@@ -31,6 +32,22 @@ Do not add errors, slang, fragments, anecdotes, or punctuation variance to “lo
 
 Read `references/research-notes.md` for the evidence and its limits.
 
+## Editorial avoidance policy
+
+Use three action levels:
+
+| Action | Instruction |
+|---|---|
+| Remove | Delete assistant residue, empty ceremony, staged delivery, and other wrappers unless the destination genuinely needs them. |
+| Rewrite | Rebuild a canned semantic frame from the source's actor, action, mechanism, evidence, comparison, or consequence. Do this even when the phrase occurs once. |
+| Review | Inspect a contextual word, transition, punctuation habit, or structural pattern in density; retain precise and characteristic uses. |
+
+Read `references/formulaic-language-catalogue.md` for the full phrase-family catalogue, natural rewrite moves, worked examples, and protected uses. Its central rule is firm: never satisfy an avoidance rule by swapping in a fashionable synonym.
+
+The catalogue is much wider than a watch-word list. It covers reveal hooks such as `here's the kicker`, canned importance and benefit claims, vague appeals to research, academic boilerplate, scripted empathy, assistant residue, generic openings and endings, place-and-history glaze, sentimental narrative packaging, and dense lexical habits. `Gap` and `shift` simply illustrate the boundary: rewrite `bridge the gap` or `marks a significant shift` when they hide the proposition, but keep a measured pay gap, a defined research gap, a night shift, the Shift key, a phase shift, or distribution shift. The bare token is not the problem.
+
+This policy applies to drafting as well as revision. Do not introduce a listed formula merely because it was absent from the source.
+
 ## Humanisation workflow
 
 ### 1. Protect the source
@@ -49,9 +66,9 @@ Do not stop at vocabulary. Inspect:
 - domain residue
 - missing human signal
 
-### 3. Find clusters
+### 3. Apply the action level
 
-One familiar phrase is usually noise. Several related signals in a short span deserve attention, especially when they perform the same rhetorical job.
+Remove and rewrite rules do not need a cluster before they deserve an edit. Review-only signals usually do: several related cues in a short span matter more than one ordinary word or transition.
 
 ### 4. Rewrite from meaning
 
@@ -90,7 +107,7 @@ python3 scripts/scan_aiisms.py --format json path/to/draft.md
 python3 scripts/scan_aiisms.py --gate path/to/draft.md
 ```
 
-The gate checks unresolved high-confidence revision clusters. It is not an authorship gate.
+The normal report includes single remove-, rewrite-, and review-labelled matches. `--gate` adds a nonzero exit only for explicit multi-pattern clusters within their configured scope. The scanner cannot evaluate genre or its own written exceptions, so it must not turn every lexical match into an automatic failure. Resolve or deliberately retain each candidate after contextual review. This is a revision aid, never an authorship gate.
 
 ## Worked transformations
 
@@ -232,7 +249,7 @@ Inspect:
 - adjectives that announce complexity, importance, or novelty without evidence
 - abstract nouns outnumbering named actors and objects
 
-Do not ban a useful word. `Landscape` can describe land; `robust` has precise statistical and engineering uses; `delve` may be the writer's natural verb. The cluster and function matter more than the token.
+Do not ban a useful spelling in every setting. `Landscape` can describe land; `robust` has precise statistical and engineering uses; `delve` may be the writer's natural verb. Ban vague rhetorical uses by default and protect exact ones. Function matters more than the token.
 
 Repair: name the mechanism, object, comparison, or consequence.
 
@@ -250,20 +267,19 @@ Examples of compressed authority:
 
 - `The pattern that keeps showing up ...`
 - `The limitation is scope.`
-- `Network restrictions matter.`
 - `Here's how I actually decide.`
-- `One reason Wasm keeps showing up ...`
-- `That's a fundamentally different default.`
+- `That's a fundamentally different approach.`
+- a bare claim that a policy, constraint, or preference “matters” without saying how
 
-None is forbidden. A cluster can make prose sound pre-packaged because each sentence arrives already compressed into a verdict.
+These frames are rewrite prompts when they compress evidence or consequence. A cluster raises the priority because several sentences arrive already packaged as verdicts.
 
 Repair: unpack the evidence and consequence.
 
-> Network restrictions matter.
+> Eligibility rules matter.
 
 becomes, when supported:
 
-> The runner cannot reach the package registry, so the install step fails before the build begins.
+> Applicants without a local address cannot use the online form, so they must apply at a service centre.
 
 ### 3. Reveal and contrast templates
 
@@ -419,13 +435,22 @@ Suggested interpretation:
 
 Even a high signal is not an authorship verdict.
 
+Action is separate from both dimensions:
+
+- **Remove** means the frame has no useful job in the finished artefact unless a named genre exception applies.
+- **Rewrite** means the underlying thought may matter, but the formula cannot carry it.
+- **Review** means context, density, and writer preference decide.
+
+A low-severity phrase can still be remove-by-default because deletion is harmless. A high-severity signal can remain review-only when the scanner cannot distinguish a technical use safely.
+
 ## False-positive protections
 
 Before changing a match, check whether it is:
 
 - inside code, a command, URL, citation, quotation, title, or blockquote
-- an official name or required term
+- an identifier, UI label, official name, or required term
 - literal rather than rhetorical
+- measured, defined, or established technical language
 - established in the writer's samples
 - normal for the genre or accessibility level
 - part of a deliberate parallel structure
@@ -441,7 +466,7 @@ The machine-readable catalogue lives at `assets/aiisms.json`. Add a pattern only
 1. **Recurrence:** it appears independently, not as a single disliked line.
 2. **Generality:** it represents a reusable writing failure rather than one topic or writer.
 3. **Testability:** positive examples and counterexamples can distinguish the pattern.
-4. **Repairability:** the entry names a better editorial move, not merely a ban.
+4. **Repairability:** the entry names the buried meaning and a reconstruction move, not a synonym.
 5. **Calibration:** severity, confidence, minimum occurrence, exceptions, evidence, and review date are explicit.
 6. **Safety:** it does not turn dialect, disability, second-language writing, or ordinary punctuation into suspicion.
 
@@ -452,6 +477,8 @@ Update the corpus, tests, and explanatory reference together. Retire patterns wh
 A revision passes when:
 
 - it is more accurate or clear, not merely less formulaic
+- remove-by-default wrappers are gone unless the genre requires them
+- rewrite-by-default frames no longer carry the claim
 - high-confidence clusters have been resolved or deliberately retained
 - no fact, literal, qualification, citation, or voice anchor was lost
 - no fake experience or stylistic mess was added

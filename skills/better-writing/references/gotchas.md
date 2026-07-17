@@ -51,6 +51,33 @@ Recovery:
 - treat scanner output as revision prompts only
 - read `references/ai-isms-and-humanisation.md`
 
+## The banned phrase came back in disguise
+
+Symptom: `bridge the gap` becomes `close the divide`, `significant shift` becomes `major transformation`, or one prestige word replaces another.
+
+Cause: the edit targeted spelling instead of the proposition.
+
+Recovery:
+
+1. restore the source meaning
+2. identify the actor, action, old state, new state, mechanism, evidence, and consequence the source actually supplies
+3. rebuild the sentence from those elements
+4. delete, narrow, or query the claim when the source supplies no substance
+5. read `references/formulaic-language-catalogue.md`
+
+## A literal or technical use was removed
+
+Symptom: the edit corrupts a phase shift, Shift key, pay gap, band gap, statistical robustness, quotation, identifier, or official term.
+
+Cause: a contextual avoidance rule was applied as a raw string replacement.
+
+Recovery:
+
+- restore the exact term or literal byte-for-byte
+- limit the edit to surrounding rhetorical prose
+- record the deliberate exception in the preservation ledger
+- test the phrase's function, not its spelling
+
 ## The edit invented experience
 
 Symptom: first-person anecdotes, emotions, customer reactions, or scene details appear without a source.

@@ -8,15 +8,19 @@ Last reviewed: 2026-07-17.
 
 ### Lexical preferences exist, but they move
 
-Large-corpus studies have measured abrupt increases in certain style words after widespread LLM adoption. Kobak and colleagues analysed more than 15 million biomedical abstracts and used excess-vocabulary analysis to identify population-level shifts. Juzek and Ward proposed a transferable method that combines time-series change, topical controls, and comparison with model output; their focal terms included words such as `delve`, `intricate`, and `underscore`.
+Large-corpus studies have measured abrupt increases in certain style words after widespread LLM adoption. Kobak and colleagues analysed more than 15 million biomedical abstracts and found excess use of families including `additionally`, `delve`, `showcasing`, `crucial`, `notably`, `comprehensive`, `pivotal`, `potential`, `intricate`, and `underscore`. Juzek and Ward examined 26.7 million PubMed abstracts; their focal forms included `delve`, `showcase`, `boast`, `underscore`, `intricate`, `realm`, `garner`, `groundbreaking`, `advancements`, `align`, and `surpass`.
+
+Other studies broaden or qualify the list. Kousha and Thelwall's cross-database full-text study retained `underscore`, `delve`, `showcase`, `unveil`, `intricate`, `meticulous`, `pivotal`, `heighten`, `nuance`, `bolster`, `foster`, and `interplay`, while stressing disciplinary confounds. A multi-genre parallel-corpus study found preferences including `tapestry`, `palpable`, `camaraderie`, `amidst`, and `vibrant`, along with nominalisation and participial clauses. Liang and colleagues found disproportionate praise adjectives in AI-assisted peer reviews, but those results belong to academic-review language rather than prose in general.
 
 These studies estimate change across corpora. They do not establish that a given author or sentence used a model.
 
 Sources:
 
 - [Kobak et al., *Delving into LLM-assisted writing in biomedical publications through excess vocabulary*](https://arxiv.org/abs/2406.07016)
-- [Juzek and Ward, *Why Does ChatGPT “Delve” So Much?*](https://arxiv.org/abs/2412.11385)
-- [Liang et al., *Monitoring AI-Modified Content at Scale*](https://arxiv.org/abs/2404.01268)
+- [Juzek and Ward, *Why Does ChatGPT “Delve” So Much?*](https://aclanthology.org/2025.coling-main.426/)
+- [Liang et al., *Monitoring AI-Modified Content at Scale*](https://proceedings.mlr.press/v235/liang24b.html)
+- [Kousha and Thelwall, full-text marker study in *Scientometrics*](https://link.springer.com/article/10.1007/s11192-026-05601-5)
+- [Multi-genre parallel-corpus study in *PNAS*](https://pmc.ncbi.nlm.nih.gov/articles/PMC11874169/)
 
 Lexical signals also drift. Public discussion can make writers and model users avoid a notorious word while other preferred words continue to rise. Human speech can absorb model-associated wording as people encounter it. A static blacklist therefore decays quickly and risks punishing ordinary language.
 
@@ -25,7 +29,57 @@ Sources:
 - [Geng and Trotta, *Human-AI Coevolution*](https://arxiv.org/abs/2502.09606)
 - [Yakura et al., *Empirical evidence of Large Language Model’s influence on human spoken communication*](https://arxiv.org/abs/2409.01754)
 
-Operational consequence: treat words as weak, contextual signals. Prefer clusters, record review dates, test counterexamples, and revise the thought rather than banning the token.
+Operational consequence: treat bare words as weak, contextual signals. Record review dates and test counterexamples. A phrase family may still receive an editorial remove or rewrite default when its function is reliably empty or obscuring; that is a house rule for better prose, not evidence of authorship.
+
+### Phrase families are useful editorial leads, not universal fingerprints
+
+Candidate-list evaluations, expert-observation studies, and editorial field guides repeatedly notice families rather than isolated spellings: `valuable insights`, `crucial role in shaping`, `gain deeper understanding`, `not only X but also Y`, `it is important to note`, `in a world where`, `paving the way`, and prestige metaphors such as `landscape`, `realm`, `tapestry`, and `roadmap`. Editorial observations also identify significance frames such as `serves as a testament`, `plays a key role`, `reflects a broader movement`, and `marks a significant shift`.
+
+The limitations are important. Schmalz and Tack evaluate GPTZero vocabulary lists; the lists perform worse than full-vocabulary models and generalise poorly across model families. Russell, Karpinska, and Iyyer study expert authorship judgements, not an editorial standard. Wikipedia's field guide is a descriptive, community-maintained account for one publishing environment. These sources supply candidates and counterexamples. They do not validate a universal blacklist or prove that a phrase is bad after one occurrence.
+
+`Gap` was not among the focal words in the strongest word-frequency studies reviewed; those studies do not establish whether it is or is not a marker. `Shift` appears in limited editorial and community phrase lists, not in evidence that validates a universal ban. The skill uses `bridge the gap` and `marks a significant shift` as house-style examples because they often hide the proposition. It does not treat either noun as evidence of authorship.
+
+Sources:
+
+- [Schmalz and Tack, evaluation of fixed AI-vocabulary lists and cross-model transfer](https://aclanthology.org/2025.bea-1.71/)
+- [Russell, Karpinska, and Iyyer, expert comparison of human and model nonfiction](https://aclanthology.org/2025.acl-long.267/)
+- [Wikipedia's editorial guide to recurring AI-writing signs](https://en.wikipedia.org/wiki/Wikipedia:Signs_of_AI_writing)
+
+Public avoid lists are useful for discovery only. A popular community skill, a LinkedIn discussion, and an editor's Medium post converge on presenter hooks such as `here's the kicker`, negative reveals, generic openings, transition stacks, and formal service language. The discussions themselves contain counterexamples and objections: several commenters note that people used these phrases long before current models and that disability, dialect, genre, and second-language writing can produce the same surface forms. The skill therefore accepts a candidate from such sources only when the phrase also identifies a repairable editorial problem, and it assigns low confidence unless stronger evidence exists.
+
+- [Conor Bronsdon, *Avoid AI Writing* community skill](https://github.com/conorbronsdon/avoid-ai-writing/blob/main/SKILL.md)
+- [Christian Di Bratto, LinkedIn discussion of recurring social-post phrases](https://www.linkedin.com/posts/dibratto_i-made-a-list-of-all-the-words-and-phrases-activity-7316792225999269889-auSz)
+- [Amelia, editor's list of recurring ChatGPT-style phrases](https://medium.com/@ameliasoul10/10-phrases-that-instantly-tell-me-you-used-chatgpt-from-a-professional-editors-desk-4e9862f96767)
+- [UNESCO, *AI and the great linguistic flattening*](https://www.unesco.org/en/articles/ai-and-great-linguistic-flattening)
+
+Mainstream editorial reporting offers corroboration, not causal proof. The Guardian has discussed `delve`, `explore`, `tapestry`, `testament`, and `leverage`, and later reported corpus findings involving `showcase`, `boast`, `underscore`, `garner`, and `align`. Its earlier account also shows why a blacklist can become discriminatory: wording associated with model output may be normal in a regional variety of English.
+
+- [The Guardian, *How cheap, outsourced labour in Africa is shaping AI English*](https://www.theguardian.com/technology/2024/apr/16/techscape-ai-gadgest-humane-ai-pin-chatgpt)
+- [The Guardian, *How AI is changing language*](https://www.theguardian.com/books/ng-interactive/2026/jul/04/future-of-fiction-next-great-novel-ai-language-chat-gpt)
+- [The Guardian, commentary on the overused `not X, but Y` frame](https://www.theguardian.com/commentisfree/2026/apr/15/chatgpt-stylistic-quirk-its-not-x-its-y)
+- [The Atlantic, *The Biggest Tell That Something Was Written by AI*](https://www.theatlantic.com/technology/2026/05/how-to-tell-ai-writing/687345/)
+- [The Atlantic, *Why AI Is Incorrigibly Didactic*](https://www.theatlantic.com/ideas/2026/06/ai-writing-style-literature/687536/)
+
+Operational consequence:
+
+1. remove empty assistant and presentation wrappers by default
+2. rewrite canned semantic frames from actors, mechanisms, evidence, comparisons, or consequences
+3. review ordinary words, transitions, and punctuation only in context or density
+4. preserve literal, technical, legal, measured, quoted, and writer-owned uses
+5. never treat a match as proof that a model wrote the passage
+
+### Some newer families need genre-specific caution
+
+Academic boilerplate, self-awarded praise, templated empathy, and sentimental narrative diction deserve separate treatment. Peer-review corpora support close review of evaluative words such as `commendable`, `noteworthy`, `invaluable`, and self-awarding success adverbs in that genre. Experimental work on sycophancy supports removing blanket validation that agrees with a user before weighing evidence. Emerging multi-genre and narrative studies support reviewing repeated atmospheric clusters, uniform paragraph movement, compulsory morals, and overly tidy resolution. None of these findings justifies banning an emotion word, an academic phrase, or a narrative technique in isolation.
+
+Sources:
+
+- [Liang et al., AI-modified peer-review language](https://proceedings.mlr.press/v235/liang24b.html)
+- [Sycophantic AI decreases prosocial intentions and promotes dependence](https://doi.org/10.1126/science.aec8352)
+- [Multi-genre human and model parallel-corpus study](https://arxiv.org/html/2410.16107)
+- [StoryScope narrative-feature study](https://arxiv.org/abs/2604.03136)
+
+Operational consequence: use these families to prompt a genre-aware meaning check. Rewrite praise from criteria, validation from evidence, empathy from the actual situation, and atmosphere from observed detail. Preserve deliberate voice, care, quotation, technical meaning, and genre conventions.
 
 ### Structure and distribution carry more information than one phrase
 
@@ -51,7 +105,7 @@ Sources:
 - [Guo et al., recursive synthetic-text training and diversity](https://aclanthology.org/2024.findings-naacl.228/)
 - [StoryScope narrative-feature study](https://arxiv.org/abs/2604.03136)
 
-Operational consequence: scan across categories and explain the observation. Do not reduce a multidimensional writing problem to a word list.
+Operational consequence: scan across categories and explain the observation. A comprehensive catalogue helps editors search; it must not reduce a multidimensional writing problem to mechanical word replacement.
 
 ### Model assistance can improve an individual artefact while narrowing collective variety
 
@@ -165,13 +219,13 @@ Operational consequence:
 
 ## Corpus acceptance standard
 
-Classify candidate signals by evidence tier:
+Classify candidate signals by evidence tier. The tier records evidence that a distribution or family recurs; it does not grade prose quality and never determines the remove, rewrite, or review action by itself.
 
 | Tier | Evidence | Appropriate use |
 |---|---|---|
-| A | replicated or large multi-domain research | calibrated feature or strong review prompt |
-| B | one controlled corpus or strong domain study | contextual pattern with explicit confounds |
-| C | repeated editorial or community observation | low-confidence prompt with counterexamples |
+| A | replicated or large multi-domain research directly observing the feature family | calibrated distributional or structural review prompt |
+| B | one controlled corpus or strong domain study directly observing the feature family | contextual pattern confined to the supported genres and confounds |
+| C | indirect research lead or repeated editorial/community observation | low-confidence editorial prompt with counterexamples |
 | D | one anecdote or disliked phrase | do not add yet |
 
 Every accepted pattern needs:
@@ -180,9 +234,11 @@ Every accepted pattern needs:
 - a precise definition or regex
 - positive examples and counterexamples
 - severity and confidence kept separate
+- an explicit action: remove, rewrite, or review
 - a minimum occurrence or cluster rule
+- a bounded cluster scope where clustering can gate
 - likely confounds and exceptions
 - a concrete revision action
 - evidence URLs and last-reviewed date
 
-Re-test patterns as models, genres, and human usage change. Remove rules that no longer discriminate a writing problem or that create more harm than editorial value.
+Re-test patterns as models, genres, and human usage change. Remove rules that no longer identify a writing problem or that create more harm than editorial value. A rule can remain useful even when it does not distinguish human from model text; the acceptance test is whether it finds a repairable editorial problem without damaging precise prose.

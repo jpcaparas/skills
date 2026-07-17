@@ -96,8 +96,10 @@
 
 ### Pass 6: Humanisation
 
-- clustered signals reviewed:
-- formulae rewritten from meaning:
+- remove-by-default wrappers cleared:
+- rewrite-by-default phrases rebuilt from meaning:
+- review-only clusters judged in context:
+- synonym swaps rejected:
 - specific detail restored:
 - deliberate exceptions:
 - scanner command and result, if run:

@@ -3,7 +3,7 @@ name: better-writing
 description: "Draft, rewrite, review, humanise, or adapt prose while preserving facts, intent, voice, and uncertainty. Use for technical, product, editorial, marketing, or personal writing, including stiff or AI-like drafts. Skip code-only tasks."
 compatibility: "Core instructions are portable. Optional diagnostics and package checks require Python 3.10+."
 metadata:
-  version: "2.2.0"
+  version: "2.3.0"
 references:
   - operating-contract
   - revision-pass-stack
@@ -13,6 +13,7 @@ references:
   - punctuation-and-sentence-flow
   - genericity-and-stiffness
   - ai-isms-and-humanisation
+  - formulaic-language-catalogue
   - genre-modes
   - style-bundles
   - quality-gates
@@ -34,10 +35,10 @@ Choose the job before touching the prose.
 | Rewrite | A draft exists and may be restructured or recast | `references/revision-pass-stack.md`, `references/quality-gates.md` |
 | Line edit | The shape works; sentences need clarity, rhythm, or economy | `references/foundations.md`, `references/voice-and-rhythm.md` |
 | Review | The user wants diagnosis or comments, not a rewritten artefact | `references/quality-gates.md` |
-| Humanise | The prose feels generic, machine-smooth, formulaic, or unlike its author | `references/ai-isms-and-humanisation.md`, `references/genericity-and-stiffness.md` |
+| Humanise | The prose feels generic, machine-smooth, formulaic, or unlike its author | `references/ai-isms-and-humanisation.md`, `references/genericity-and-stiffness.md`; add `references/formulaic-language-catalogue.md` for explicit avoidance or dense formulae |
 | Adapt | The substance should stay while audience, genre, channel, length, or voice changes | `references/genre-modes.md`, `references/style-bundles.md` |
 
-Mixed requests can use more than one job. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill owns the wording, not the code diagnosis.
+Mixed requests can use more than one job. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill may revise the user-facing words but does not edit the surrounding source, syntax, or code behaviour. Never rename, rewrite, or reinterpret code constructs to satisfy a style or diction rule. In mixed documentation, edit only the natural-language prose and preserve machine-readable material exactly.
 
 For an explicit request to remove, replace, limit, or standardise em dashes, semicolons, or colons, read `references/punctuation-and-sentence-flow.md`. Load it conditionally; ordinary line editing and humanisation do not imply a punctuation ban.
 
@@ -110,9 +111,20 @@ Human signal comes from judgement, selection, detail, and position—not fake ty
 
 **Complete when:** the prose has a discernible point of view, sentence movement suits the thought, and the writer's high-signal details remain intact.
 
-### 6. Run the humanisation pass when needed
+### 6. Run the formulaic-language and humanisation pass
 
-Read `references/ai-isms-and-humanisation.md` when the user asks to remove AI-like writing or when the draft shows clustered formulae, generic authority, excessive symmetry, service tone, or repeated rhetorical frames.
+Run a light avoidance check on every prose deliverable. Do not introduce assistant residue, empty ceremony, canned significance, unsupported benefit language, or a formula that hides the actor, mechanism, evidence, or consequence.
+
+Read `references/ai-isms-and-humanisation.md` and `references/formulaic-language-catalogue.md` when the user asks to remove AI-like words or phrases, ban formulaic diction, make prose less robotic, or when a draft shows generic authority, excessive symmetry, service tone, or repeated rhetorical frames.
+
+Apply the catalogue's action levels:
+
+- remove wrappers and empty stage directions
+- rewrite canned semantic frames from supported meaning, even when they occur once
+- review ordinary words and structural signals in context or clusters
+- protect literal, technical, legal, measured, quoted, and writer-owned uses
+
+Never perform a synonym swap to satisfy an avoidance rule. This applies across the catalogue, not only to individual watch words. `Bridge the gap` does not become `close the divide`; identify what is missing and what action changes it. `Marks a significant shift` does not become `signals a major transformation`; state the before and after. `Plays a critical role`, `unlocks value`, and `research shows` likewise need a supported action, result, or source. If the source lacks the necessary substance, delete, narrow, or query the claim.
 
 If a substantial draft exists as a file, run:
 
@@ -120,11 +132,11 @@ If a substantial draft exists as a file, run:
 python3 scripts/scan_aiisms.py path/to/draft.md
 ```
 
-Use `--format json` for automation and `--gate` only as a revision gate. The scanner surfaces style signals; it does not determine authorship. Treat a weak phrase, an em dash, a polished sentence, or one unusual word as context—not proof.
+Use `--format json` for automation and `--gate` only as a conservative multi-pattern cluster gate. A normal scan already surfaces single remove-, rewrite-, and review-labelled matches. Judge those matches against their exceptions; the scanner cannot determine whether a use is exact, suitable for its genre, or evidence of authorship. Treat an em dash, polished sentence, or ordinary word as context—not proof.
 
 Rewrite the thought, not just the flagged token. Preserve dialect, accessibility choices, second-language voice, quoted material, literal terminology, and intentional rhetoric.
 
-**Complete when:** high-confidence clusters are resolved or deliberately retained, and the revision reads better by ordinary editorial standards—not merely less detectable.
+**Complete when:** remove and rewrite rules are resolved or deliberately retained, review-only clusters have been judged in context, and the revision reads better by ordinary editorial standards—not merely less detectable.
 
 ### 7. Calibrate the deliverable
 
@@ -170,6 +182,7 @@ Do not claim a passage was AI-written. Do not turn stylistic preference into an 
 | Em-dash replacement, semicolon and colon judgement, and sentence-flow repair | `references/punctuation-and-sentence-flow.md` |
 | Generic, corporate, ceremonial, or inflated prose | `references/genericity-and-stiffness.md` |
 | AI-like patterns, humanisation, false positives, and scanner use | `references/ai-isms-and-humanisation.md` |
+| Contextual avoid rules, phrase families, natural rewrites, and protected uses | `references/formulaic-language-catalogue.md` |
 | Docs, PRs, specs, memos, reports, essays, email, UI, and copy | `references/genre-modes.md` |
 | Personal voice sheets and style calibration | `references/style-bundles.md` |
 | Acceptance criteria and final proof | `references/quality-gates.md` |
@@ -189,4 +202,6 @@ Do not claim a passage was AI-written. Do not turn stylistic preference into an 
 4. Never mimic a named writer's signature; translate the request into high-level traits.
 5. Never use a phrase list or detector score as proof of authorship.
 6. Never sand away dialect, accessibility, or second-language identity to make prose look statistically “human.”
-7. Never keep editing after the applicable gates pass and the remaining options are taste-equivalent.
+7. Never satisfy a formulaic-language rule through synonym substitution alone.
+8. Never keep editing after the applicable gates pass and the remaining options are taste-equivalent.
+9. Never alter code, identifiers, selectors, configuration keys, or other machine-readable constructs; revise only the natural-language prose in scope.

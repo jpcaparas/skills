@@ -11,7 +11,7 @@ Pass when:
 - names, dates, numbers, units, comparisons, and causal direction match
 - quotations remain exact and attributed
 - citations still support the nearby claim
-- commands, code, paths, flags, identifiers, URLs, and required terms are unchanged unless an authorised and verified correction was made
+- commands, code, paths, flags, identifiers, configuration, and other machine-readable constructs are unchanged; route any requested correction to the appropriate non-writing workflow
 - conditions, exceptions, and failure modes survive
 - uncertainty has not become confidence
 - personal experience has not been invented or reassigned
@@ -55,12 +55,15 @@ Pass when:
 - the writer's stance, source of authority, and limits are legible
 - specific detail displaces generic mood or praise where evidence allows
 - formulaic frames no longer carry the argument
+- remove-by-default wrappers are gone unless the genre requires them
+- rewrite-by-default phrases expose their actor, mechanism, evidence, comparison, or consequence
+- rejected phrases were not replaced with equally vague synonyms
 - a diagnostic match was never treated as proof of authorship
 - dialect, second-language identity, accessibility choices, and intentional rhetoric remain intact
 - no fake typo, slang, anecdote, emotion, or first-person claim was added
 - high-signal source lines survived unless there was a clear reason to change them
 
-When a substantial draft was scanned, rerun the scanner after the last substantive edit and review every gated signal in context.
+When a substantial draft was scanned, rerun it after the last substantive edit. Review every remove- and rewrite-labelled candidate when the writing contract includes an explicit formulaic-language ban, and record any deliberate exception. Use `--gate` only for the conservative multi-pattern cluster check.
 
 ## Gate 5: Genre and reader task
 

@@ -1,4 +1,4 @@
 interface:
   display_name: "better-writing"
   short_description: "Draft, revise, review, and humanise faithful prose"
-  default_prompt: "Help me draft, rewrite, review, humanise, or adapt this prose while preserving its facts, intent, exact literals, uncertainty, and voice."
+  default_prompt: "Help me draft, rewrite, review, humanise, or adapt this prose while preserving its facts, intent, exact literals, uncertainty, and voice, and rebuild formulaic language from supported meaning rather than swapping synonyms."

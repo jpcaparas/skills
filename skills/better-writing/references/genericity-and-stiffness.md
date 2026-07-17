@@ -18,7 +18,7 @@ Genericity usually comes from one or more of these failures:
 
 ## Replace value fog
 
-Words such as `robust`, `seamless`, `innovative`, `powerful`, `strategic`, `transformative`, and `world-class` are not forbidden. They are weak when the sentence asks them to stand in for evidence.
+Words such as `robust`, `seamless`, `innovative`, `powerful`, `strategic`, `transformative`, and `world-class` are not forbidden strings. Their vague promotional uses are rewrite-by-default because the sentence asks them to stand in for evidence. Preserve exact uses such as statistical robustness or an official term.
 
 Ask the word to cash out:
 
@@ -37,7 +37,9 @@ Specific:
 
 > Reviewers comment, approve, and see the change history in one queue; the team no longer reconciles three email threads before release.
 
-If the source supplies only the foggy claim, do not invent the specific version. Remove the unsupported claim, mark the gap, or ask what changed and what evidence exists. Rearranging `clarity`, `speed`, `impact`, and `streamline` is not a humanisation pass.
+If the source supplies only the foggy claim, do not invent the specific version. Remove the unsupported claim, state which evidence is missing, or ask what changed. Rearranging `clarity`, `speed`, `impact`, and `streamline` is not a humanisation pass.
+
+The same rule applies to `gap` and `shift`. Do not turn `bridge the gap` into `close the divide` or `significant shift` into `major transformation`. Name the missing capability or measured difference; state the old and new condition. See `references/formulaic-language-catalogue.md` for the full avoidance policy and protected uses.
 
 ## Remove ceremonial setup
 

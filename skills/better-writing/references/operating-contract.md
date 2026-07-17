@@ -38,10 +38,12 @@ For an existing draft, record what must survive. Use the smallest ledger that pr
 
 ### Exact literals
 
-Preserve byte-for-byte unless the user authorises a change:
+Machine-readable constructs are outside this writing skill. Preserve commands, code, configuration, paths, filenames, flags, environment variables, API names, schema fields, identifiers, selectors, and other syntax byte-for-byte. A request to rename or rewrite those constructs is code or configuration work, even when it is framed as a style edit.
 
-- commands, code, configuration, paths, filenames, flags, and environment variables
-- API names, schema fields, identifiers, product names, and version strings
+Also preserve these exact literals unless the user specifically authorises a prose change:
+
+- user-facing labels and messages already declared as fixed
+- product names and version strings
 - quotations and attributed wording
 - URLs and citation destinations
 - legally prescribed or regulated language

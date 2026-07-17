@@ -514,7 +514,17 @@ def validate_evals(path: Path, state: ValidationState) -> None:
                     state.errors.append(f"{location} file escapes the skill package: {file}")
                 elif not status.regular_file:
                     state.errors.append(f"{location} references missing regular file: {file}")
-    for tag in ("smoke", "edge", "negative", "disclosure", "punctuation-transformation", "digestibility"):
+    for tag in (
+        "smoke",
+        "edge",
+        "negative",
+        "disclosure",
+        "punctuation-transformation",
+        "digestibility",
+        "formulaic-language",
+        "broad-ai-tropes",
+        "protected-literals",
+    ):
         if tag not in tags:
             state.errors.append(f"Missing eval coverage for tag: {tag}")
     state.metrics["eval_count"] = len(evals)
@@ -598,8 +608,69 @@ def validate_scanner(state: ValidationState) -> None:
         state.errors.append(f"Diagnostic corpus invalid: {exc}")
         return
     state.metrics["aiism_patterns"] = len(patterns)
-    self_test = scan_aiisms.run_self_tests()
+    required_patterns = {
+        "academic-purpose-boilerplate",
+        "assistant-knowledge-limit",
+        "corporate-prestige-claim",
+        "formulaic-gap-bridge-frame",
+        "formulaic-shift-verdict-frame",
+        "generic-future-narrative-closer",
+        "generic-speculative-scenario-opening",
+        "lexical-abstract-authenticity-intensifier",
+        "narrative-packaged-growth",
+        "place-tourism-glaze",
+        "presenter-infomercial-hook",
+        "significance-new-era-consequence",
+        "stance-stacked-hedge",
+        "support-scripted-empathy",
+        "vague-attribution-research-claim",
+        "vague-third-party-validation",
+    }
+    missing_patterns = sorted(required_patterns - {pattern.id for pattern in patterns})
+    if missing_patterns:
+        state.errors.append(
+            "Diagnostic corpus is missing representative formulaic-language patterns: "
+            + ", ".join(missing_patterns)
+        )
+    categories = {pattern.category for pattern in patterns}
+    clusters = {pattern.cluster.key for pattern in patterns}
+    state.metrics["aiism_categories"] = len(categories)
+    state.metrics["aiism_clusters"] = len(clusters)
+    required_categories = {
+        "academic_boilerplate",
+        "assistant_residue",
+        "corporate_glaze",
+        "narrative_voice",
+        "presenter_scaffolding",
+        "promotional_language",
+        "significance_authority",
+        "support_language",
+        "vague_attribution",
+    }
+    missing_categories = sorted(required_categories - categories)
+    if missing_categories:
+        state.errors.append(
+            "Diagnostic corpus is missing representative prose families: " + ", ".join(missing_categories)
+        )
+    for action in ("remove", "rewrite", "review"):
+        count = sum(1 for pattern in patterns if pattern.action == action)
+        state.metrics[f"aiism_{action}_patterns"] = count
+        if count == 0:
+            state.errors.append(f"Diagnostic corpus has no {action} patterns")
+    delayed_defaults = sorted(
+        pattern.id
+        for pattern in patterns
+        if pattern.action in {"remove", "rewrite"} and pattern.minimum_occurrences != 1
+    )
+    if delayed_defaults:
+        state.errors.append(
+            "Remove and rewrite patterns must trigger on one occurrence: " + ", ".join(delayed_defaults)
+        )
+    self_test = scan_aiisms.run_self_tests(patterns)
     checks = self_test.get("checks", {})
+    if isinstance(checks, dict):
+        state.metrics["scanner_checks"] = len(checks)
+        state.metrics["scanner_checks_passed"] = sum(1 for passed in checks.values() if passed)
     if not self_test.get("passed"):
         failures = [name for name, passed in checks.items() if not passed] if isinstance(checks, dict) else ["unknown"]
         state.errors.append(f"Scanner self-test failed: {', '.join(failures)}")
