@@ -8,16 +8,23 @@ Every prompt entry has:
 
 - `id`: a permanent identifier such as `ow-101`
 - `slug`: a unique lowercase hyphenated label
-- `title`: a short display name
+- `title`: a short, literal display name that a hurried reader understands immediately
+- `description`: a plain one-line explanation used in the catalogue menu
 - `category`: an existing category ID, or a newly declared category
 - `prompt`: the goal presented to the one-shot lead
 - `tags`: a non-empty set of lowercase discovery terms
 
 Every category is a display namespace with a lowercase hyphenated `id`, a short `title`, and a single-line `description` that explains the family of experiences it contains. The unfiltered catalogue prints these namespaces in declaration order and renders every prompt beneath exactly one of them.
 
-The catalogue root also has one single-line `experienceDirection`. A selected entry keeps its goal sentence as paragraph one and inherits this shared direction as paragraph two. Keep that direction visually led and interaction-first: favor direct manipulation, responsive motion, spatial or ambient behavior, and memorable moments worth sharing; keep text concise unless the requested format genuinely depends on richer copy. Leave the technology, dependency, asset, and build choices to the one-shot lead.
+The catalogue root also has one single-line `experienceDirection`. This is silent coordinator guidance for crafting the actual prompt, not content to append to it. Keep the guidance visually led and interaction-first: favor direct manipulation, responsive motion, spatial or ambient behavior, and memorable moments worth sharing; keep text concise unless the requested format genuinely depends on richer copy. Leave the technology, dependency, asset, and build choices to the one-shot lead.
 
-Append new entries at the end. Assign the next unused numeric ID and never renumber or reuse an existing ID. Entries `ow-001` through `ow-100` are a validator-frozen seed: do not edit, delete, replace, or reorder them. Categories may grow; the catalogue has a minimum release floor of 100 entries, not a maximum.
+For a selected entry, use its goal as source material and internalize only the guidance that fits that subject. Turn it into concrete, experience-specific possibilities rather than copying, labelling, or mechanically paraphrasing the shared direction. The literal `experienceDirection` value must never appear in the prepared lead prompt or `PROMPT.md`.
+
+Append new entries at the end. Assign the next unused numeric ID and never renumber or reuse an existing ID. Entries `ow-001` through `ow-100` are the validator-frozen schema 1.1 seed: do not edit, delete, replace, or reorder them. Categories may grow; the catalogue has a minimum release floor of 100 entries, not a maximum.
+
+Schema 1.1 deliberately migrated the original seed's display titles and added plain descriptions while preserving every ID, slug, category, source prompt, and tag. A future user-authorized migration of an existing display contract must bump both the catalogue schema and package version, update the frozen digest, reconcile every title reference and eval, and document which compatibility fields remained stable. Ordinary catalogue additions never rebaseline the seed.
+
+Write browsing metadata for speed. Keep titles at most six words and 48 characters; name the recognizable format directly, such as `First-Person Shooter Game`, `City Sound Map`, or `Bicycle Maintenance Club`. Keep descriptions at most 18 words and 140 characters. Say what the visitor does in ordinary language. Avoid lore names, coined brands, metaphors, mood-only labels, and decorative words that force readers to inspect the full prompt before understanding the option.
 
 ## Prompt Style
 
@@ -33,19 +40,19 @@ Over-constrained:
 
 The first prompt establishes the goal. The second spends the model’s judgement before it starts. Technology, dependency, file-layout, runtime, asset, duration, and workflow requirements belong only when the user’s actual experiment calls for them.
 
-Keep each template self-contained, distinct from existing entries, and broad enough for stronger future agents to surprise the user. Let the shared `experienceDirection` carry the cross-catalogue visual and interaction posture; do not repeat it in every goal or turn the catalogue into a hidden quality checklist.
+Keep each template self-contained, distinct from existing entries, and broad enough for stronger future agents to surprise the user. Let the shared `experienceDirection` guide prompt composition silently; do not repeat it in every goal, expose it as lead-facing boilerplate, or turn the catalogue into a hidden quality checklist.
 
 Treat matching as relevance-gated. Offer an entry only when its core experience is materially useful for the request. Do not splice catalogue language into a custom brief merely because a tag, visual motif, or broad category overlaps. When no entry is a meaningful baseline, leave the catalogue out and refine only the user’s own guidance under the two-paragraph custom-prompt contract in `SKILL.md`.
 
 ## Add and Verify
 
-1. Search titles, slugs, prompts, and tags for overlap.
+1. Search titles, descriptions, slugs, prompts, and tags for overlap.
 2. Append a new category with its one-line namespace description only when no existing category fits.
 3. Append the prompt entry without editing stable IDs.
 4. Run the package validator and listing tests.
 5. Render the new entry through `scripts/list_prompts.py` and confirm it is understandable without surrounding notes.
 
-The addition is complete when the JSON parses, every identity field is unique, each namespace and prompt renders as one explained catalogue option, the prompt is goal-led and implementation-open, and existing entries are unchanged.
+The addition is complete when the JSON parses, every identity field is unique, each namespace and prompt renders with a plain title and scan-friendly description, the source prompt is goal-led and implementation-open, and existing entries are unchanged.
 
 ## See Also
 

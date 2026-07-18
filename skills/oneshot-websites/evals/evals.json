@@ -134,7 +134,7 @@
       "id": 12,
       "name": "custom-brief-with-relevant-catalogue-match",
       "prompt": "Create a browser-based submarine command simulator with sonar, ballast controls, instrument failures, abyssal navigation, and a crew whose survival depends on my mission sequence.",
-      "expected_output": "May offer the materially relevant Abyssal Command Dive catalogue item as an optional baseline. Until the user accepts it, the custom route remains a faithful one- or two-paragraph refinement containing only the user's simulator goal and loose guidance derived from it.",
+      "expected_output": "May offer the materially relevant Submarine Command Game catalogue item as an optional baseline. Until the user accepts it, the custom route remains a faithful one- or two-paragraph refinement containing only the user's simulator goal and loose guidance derived from it.",
       "assertions": [
         {"text": "Offers a genuinely relevant catalogue match as optional rather than mandatory", "type": "functional"},
         {"text": "Does not splice catalogue language into the custom brief without acceptance", "type": "negative"},
@@ -182,12 +182,13 @@
     {
       "id": 16,
       "name": "catalogue-entry-inherits-interactive-direction",
-      "prompt": "Use ow-075, Forest Fungi Network, as the one-shot prompt.",
-      "expected_output": "Builds the actual prompt from the unchanged ow-075 goal as paragraph one and the catalogue's unchanged shared experienceDirection as paragraph two, steering the result toward visual interaction, motion, spatial or ambient behavior, concise integrated text, and lead-owned implementation choices.",
+      "prompt": "Use ow-075, Forest Fungi Explorer, as the one-shot prompt.",
+      "expected_output": "Uses the ow-075 goal as source material and crafts a cohesive one- or two-paragraph actual prompt with forest-specific interaction, motion, spatial or ambient behavior, and concise integrated text. The shared experienceDirection guides composition silently and is absent from the lead dispatch and artifact/PROMPT.md.",
       "assertions": [
-        {"text": "Preserves the selected catalogue prompt as the first paragraph", "type": "verification"},
-        {"text": "Appends the shared visually led and interaction-first direction as the second paragraph", "type": "functional"},
-        {"text": "Does not prescribe Three.js or any other framework, library, or version", "type": "negative"}
+        {"text": "Preserves the selected catalogue goal while turning the shared posture into concrete forest-specific possibilities", "type": "functional"},
+        {"text": "Does not copy, label, or mechanically paraphrase the catalogue experienceDirection in the actual prompt", "type": "negative"},
+        {"text": "Does not prescribe Three.js or any other framework, library, or version", "type": "negative"},
+        {"text": "The same finished actual prompt is dispatched and preserved in artifact/PROMPT.md", "type": "verification"}
       ],
       "tags": ["catalogue", "interaction", "motion", "prompt-composition"]
     },
@@ -217,15 +218,41 @@
     {
       "id": 19,
       "name": "accepted-baseline-context-keeps-shared-direction",
-      "prompt": "Use ow-092, Abyssal Command Dive, as the baseline and add my context: the crew is mapping a newly opened trench for a live science broadcast.",
-      "expected_output": "After baseline acceptance, prepares the actual prompt with three distinct verbatim blocks: the ow-092 prompt, the user's added context, and the catalogue's shared experienceDirection. The fresh lead and artifact/PROMPT.md receive the complete composed prompt unchanged.",
+      "prompt": "Use ow-092, Submarine Command Game, as the baseline and add my context: the crew is mapping a newly opened trench for a live science broadcast.",
+      "expected_output": "After baseline acceptance, crafts a cohesive one- or two-paragraph actual prompt that preserves the ow-092 goal and the live-broadcast trench context. It silently applies any relevant interactive direction without including the shared experienceDirection or internal provenance labels. The fresh lead and artifact/PROMPT.md receive the finished prompt unchanged.",
       "assertions": [
-        {"text": "Keeps the catalogue prompt and user context in distinct verbatim blocks", "type": "verification"},
-        {"text": "Includes the shared visually led and interaction-first direction as a third verbatim block", "type": "functional"},
-        {"text": "Does not omit the shared direction or splice unrelated catalogue content into the user context", "type": "negative"},
-        {"text": "Dispatch and artifact/PROMPT.md contain the same complete composed prompt", "type": "verification"}
+        {"text": "Preserves the accepted catalogue goal and every explicit user addition in a cohesive finished brief", "type": "functional"},
+        {"text": "Does not include an EXPERIENCE DIRECTION block, the literal shared direction, or internal provenance labels", "type": "negative"},
+        {"text": "Does not splice unrelated catalogue content into the user context", "type": "negative"},
+        {"text": "Dispatch and artifact/PROMPT.md contain the same finished actual prompt", "type": "verification"}
       ],
       "tags": ["catalogue", "baseline", "context", "interaction", "regression"]
+    },
+    {
+      "id": 20,
+      "name": "catalogue-guidance-never-leaks-into-prompt",
+      "prompt": "Use ow-083, Floating Island Atlas, as the one-shot prompt.",
+      "expected_output": "Crafts a specific one- or two-paragraph floating-archipelago brief from the catalogue goal, using the internal visual and interaction posture to suggest native possibilities such as charting routes through drifting weather and discovering changing islands. The generic experienceDirection is not copied or exposed in the lead dispatch or artifact/PROMPT.md.",
+      "assertions": [
+        {"text": "The actual prompt remains specifically about the drifting archipelago, its weather, routes, cultures, ecosystems, and encounters", "type": "functional"},
+        {"text": "artifact/PROMPT.md does not contain the sentence beginning 'Default to a visually led, interaction-first experience'", "type": "negative"},
+        {"text": "The lead dispatch does not contain a labelled EXPERIENCE DIRECTION block or generic coordinator guidance", "type": "negative"},
+        {"text": "The same finished actual prompt is dispatched and stored in artifact/PROMPT.md", "type": "verification"}
+      ],
+      "tags": ["catalogue", "prompt-composition", "prompt-provenance", "regression"]
+    },
+    {
+      "id": 21,
+      "name": "catalogue-labels-are-plain-and-scan-friendly",
+      "prompt": "Use oneshot-websites without arguments. I am in a hurry and need to scan all 100 choices quickly.",
+      "expected_output": "Lists the complete catalogue by namespace using short literal titles and plain one-line descriptions, while keeping richer source prompts out of the browsing menu. A first-person shooter is labelled First-Person Shooter Game rather than with a fictional or lore-like title.",
+      "assertions": [
+        {"text": "Every prompt option has a short literal title and a plain one-line description", "type": "structural"},
+        {"text": "The ow-093 option is titled First-Person Shooter Game", "type": "verification"},
+        {"text": "The browsing list uses prompt descriptions rather than dumping the richer source prompt text", "type": "functional"},
+        {"text": "Does not replace clear format names with lore, coined brands, or mood-only labels", "type": "negative"}
+      ],
+      "tags": ["catalogue", "no-arguments", "readability", "regression"]
     }
   ]
 }

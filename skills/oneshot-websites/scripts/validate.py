@@ -8,7 +8,7 @@ import json
 import re
 import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Tuple
+from typing import Any, Dict, Iterable, Iterator, List, Mapping, Match, Optional, Pattern, Set, Tuple
 
 from runtime_contract import parse_json_bounded
 
@@ -47,7 +47,7 @@ LOCAL_REFERENCE_RE = re.compile(
 PROMPT_ID_RE = re.compile(r"^ow-[0-9]{3,}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FROZEN_CATALOGUE_PREFIX_COUNT = 100
-FROZEN_CATALOGUE_PREFIX_SHA256 = "203a370b733bb6342d2d7d016aa6c9b514da109311e77bd72ae9c4ab0991ea76"
+FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
@@ -95,14 +95,15 @@ RUNTIME_CONTRACTS = (
     (
         "two-paragraph custom prompt refinement",
         re.compile(
-            r"Custom brief.*?refine.*?no more than two paragraphs.*?refinement is the actual prompt.*?PROMPT\.md",
+            r"Custom brief.*?refine.*?no more than two paragraphs.*?refinement.*?actual prompt.*?PROMPT\.md",
             re.I | re.S,
         ),
     ),
     (
-        "shared interactive catalogue direction",
+        "silent shared catalogue direction",
         re.compile(
-            r"Selected catalogue entry.*?experienceDirection.*?visual interaction.*?motion.*?without prescribing a stack",
+            r"Selected catalogue entry.*?craft.*?one- or two-paragraph actual prompt.*?"
+            r"experienceDirection.*?coordinator-only.*?never.*?(?:lead dispatch|PROMPT\.md)",
             re.I | re.S,
         ),
     ),
@@ -127,6 +128,37 @@ RUNTIME_CONTRACTS = (
     ),
     ("drop-ready no-build handoff", re.compile(r"(?:drop-ready|static\s+(?:folder|host)).*?(?:no\s+(?:package\s+)?install|no\s+build|deployable)|(?:no\s+(?:package\s+)?install|no\s+build).*?(?:drop-ready|static\s+(?:folder|host))", re.I | re.S)),
 )
+
+GUIDANCE_LEAK_DIRECTIVES = (
+    (
+        "lead-facing verbatim experience direction block",
+        re.compile(r"EXPERIENCE DIRECTION\s*\(verbatim\)", re.I),
+    ),
+    (
+        "instruction to copy internal direction into the lead prompt",
+        re.compile(
+            r"\b(?:copy|paste|append|add|include)\b.{0,240}"
+            r"\b(?:experienceDirection|shared\s+(?:experience\s+)?direction)\b.{0,240}"
+            r"\b(?:actual\s+prompt|lead\s+dispatch|PROMPT\.md|end\s+of\s+the\s+prompt|"
+            r"second\s+(?:paragraph|block)|third\s+(?:paragraph|block))\b",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "instruction to add labelled generic guidance to the lead prompt",
+        re.compile(
+            r"\b(?:add|include|append|create)\b.{0,160}\b(?:labelled|labeled)\b.{0,120}"
+            r"\b(?:block|paragraph)\b.{0,200}\b(?:visual|interaction)\b.{0,120}"
+            r"\b(?:guidance|direction)\b",
+            re.I | re.S,
+        ),
+    ),
+)
+NEGATED_GUIDANCE_DIRECTIVE = re.compile(
+    r"\b(?:never|do\s+not|must\s+not|must\s+never|should\s+not)\b[^.!?;:\n]{0,100}$",
+    re.I,
+)
+GUIDANCE_CLAUSE_BOUNDARY = re.compile(r"[.!?;:\n—–]+|\b(?:but|however|instead|then)\b", re.I)
 
 
 def parse_frontmatter(text: str) -> Dict[str, str]:
@@ -208,8 +240,8 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
     if not isinstance(data, Mapping):
         errors.append("assets/prompt-catalogue.json must contain an object")
         return
-    if data.get("schemaVersion") != "1.0":
-        errors.append("prompt catalogue schemaVersion must be 1.0")
+    if data.get("schemaVersion") != "1.1":
+        errors.append("prompt catalogue schemaVersion must be 1.1")
 
     direction_value = data.get("experienceDirection")
     if isinstance(direction_value, str) and direction_value != direction_value.strip():
@@ -306,19 +338,21 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
     ids: List[str] = []
     slugs: List[str] = []
     titles: List[str] = []
+    descriptions: List[str] = []
     prompt_texts: List[str] = []
     for index, item in enumerate(prompts):
         label = "catalogue prompt {}".format(index)
         if not isinstance(item, Mapping):
             errors.append("{} must be an object".format(label))
             continue
-        for field in ("id", "slug", "title", "category", "prompt"):
+        for field in ("id", "slug", "title", "description", "category", "prompt"):
             field_value = item.get(field)
             if isinstance(field_value, str) and field_value != field_value.strip():
                 errors.append("{} {} must not contain surrounding whitespace".format(label, field))
         prompt_id = as_text(item.get("id"))
         slug = as_text(item.get("slug"))
         title = as_text(item.get("title"))
+        description = as_text(item.get("description"))
         category = as_text(item.get("category"))
         prompt = as_text(item.get("prompt"))
         tags = item.get("tags")
@@ -343,6 +377,24 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
             errors.append("{} is missing a title".format(label))
         else:
             titles.append(title.casefold())
+            if len(title) > 48 or len(title.split()) > 6:
+                errors.append(
+                    "{} title must be a plain label of at most 48 characters and 6 words".format(
+                        label
+                    )
+                )
+        if description is None:
+            errors.append("{} is missing a description".format(label))
+        else:
+            descriptions.append(description.casefold())
+            if "\n" in description or "\r" in description:
+                errors.append("{} description must fit on one line".format(label))
+            if len(description) > 140 or len(description.split()) > 18:
+                errors.append(
+                    "{} description must be scan-friendly: at most 140 characters and 18 words".format(
+                        label
+                    )
+                )
         if category is None or category not in known_categories:
             errors.append("{} uses an undeclared category: {}".format(label, category or "missing"))
         if prompt is None:
@@ -363,24 +415,73 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
             if len(set(clean_tags)) != len(clean_tags):
                 errors.append("{} has duplicate tags".format(label))
 
-    for field, values in (("ids", ids), ("slugs", slugs), ("titles", titles), ("prompt texts", prompt_texts)):
+    for field, values in (
+        ("ids", ids),
+        ("slugs", slugs),
+        ("titles", titles),
+        ("descriptions", descriptions),
+        ("prompt texts", prompt_texts),
+    ):
         duplicates = duplicate_values(values)
         if duplicates:
             errors.append("catalogue contains duplicate {}: {}".format(field, ", ".join(sorted(duplicates))))
 
 
-def validate_runtime_contract(root: Path, errors: List[str]) -> None:
-    paths = (
-        root / "SKILL.md",
-        root / "agents" / "oneshot-lead.md",
-        root / "references" / "execution-protocol.md",
-        root / "references" / "catalog-index.md",
-    )
-    parts = [read_text(path, errors, root) for path in paths if path.is_file()]
-    text = "\n".join(part for part in parts if part is not None)
+def paragraph_blocks(text: str) -> List[str]:
+    """Return prose and fenced-example blocks local to one instruction."""
+
+    return [block for block in re.split(r"\n\s*\n", text) if block.strip()]
+
+
+def directive_is_negated(block: str, directive_start: int) -> bool:
+    """Distinguish a prohibition from the positive leak instruction it quotes."""
+
+    clause_prefix = GUIDANCE_CLAUSE_BOUNDARY.split(block[:directive_start])[-1]
+    return bool(NEGATED_GUIDANCE_DIRECTIVE.search(clause_prefix))
+
+
+def overlapping_matches(expression: Pattern[str], text: str) -> Iterator[Match[str]]:
+    """Yield every directive start, including actions nested in a wider match."""
+
+    search_start = 0
+    while search_start < len(text):
+        match = expression.search(text, search_start)
+        if match is None:
+            return
+        yield match
+        search_start = match.start() + 1
+
+
+def validate_runtime_contract(
+    root: Path,
+    errors: List[str],
+    experience_direction: Optional[str],
+) -> None:
+    paths = sorted(root.rglob("*.md"))
+    texts: List[Tuple[Path, str]] = []
+    for path in paths:
+        part = read_text(path, errors, root)
+        if part is not None:
+            texts.append((path, part))
+    text = "\n".join(part for _, part in texts)
     for label, expression in RUNTIME_CONTRACTS:
         if not expression.search(text):
             errors.append("runtime contract missing {}".format(label))
+
+    for path, part in texts:
+        relative_path = path.relative_to(root)
+        if experience_direction is not None and experience_direction in part:
+            errors.append(
+                "{} copies the literal catalogue experienceDirection into lead-facing prose".format(
+                    relative_path
+                )
+            )
+        for block in paragraph_blocks(part):
+            for label, expression in GUIDANCE_LEAK_DIRECTIVES:
+                for match in overlapping_matches(expression, block):
+                    if not directive_is_negated(block, match.start()):
+                        errors.append("{} contains {}".format(relative_path, label))
+                        break
 
 
 def main() -> int:
@@ -434,16 +535,19 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.1.0":
-        errors.append("metadata.json version must be 2.1.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != "2.2.0":
+        errors.append("metadata.json version must be 2.2.0")
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 
     catalogue = json_data.get(root / "assets" / "prompt-catalogue.json")
+    experience_direction: Optional[str] = None
     if catalogue is not None:
         validate_catalogue(catalogue, errors)
+        if isinstance(catalogue, Mapping):
+            experience_direction = as_text(catalogue.get("experienceDirection"))
 
-    validate_runtime_contract(root, errors)
+    validate_runtime_contract(root, errors, experience_direction)
     result = {"valid": not errors, "errors": errors, "warnings": warnings}
     print(json.dumps(result, indent=2))
     return 0 if result["valid"] else 1

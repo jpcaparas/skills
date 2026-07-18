@@ -35,8 +35,16 @@ This routing step is complete when every requested artifact has one actual promp
 For each experiment, identify the text the lead must act on:
 
 - **Custom brief:** refine rough wording into a clear, vivid instruction of no more than two paragraphs. Preserve every explicit constraint, proper noun, required feature, factual detail, and requested exact wording. In the first paragraph, state the core experience and what the visitor can do. Use a second paragraph only when loose guidance about interaction, atmosphere, motion, spatial behavior, or content density would help the lead see the experience. Do not add catalogue concepts, invent product requirements, or prescribe a technology, library, framework, file layout, or workflow the user did not request. If the user explicitly requires the entire brief to remain verbatim, honor that exception.
-- **Selected catalogue entry:** keep its `prompt` field unchanged as the first paragraph and append the catalogue’s top-level `experienceDirection` unchanged as the second. This shared direction favors visual interaction, motion, and social-worthy moments without prescribing a stack, while allowing text-led formats to remain text-rich when their purpose depends on it.
-- **Accepted catalogue baseline plus user context:** combine them only after acceptance. Keep the catalogue prompt and user context as distinct labelled blocks, then include the shared `experienceDirection`; do not silently splice unrelated catalogue ideas into the request.
+- **Selected catalogue entry:** treat its `prompt` field as the source goal, then craft a cohesive one- or two-paragraph actual prompt for that specific experience. Preserve the goal while adding only concrete, subject-specific possibilities for interaction, motion, atmosphere, spatial behavior, or content density that help the lead see what the experience could become.
+- **Accepted catalogue baseline plus user context:** combine them only after acceptance. Craft one cohesive actual prompt from the baseline and the user’s additions, preserving every explicit constraint and keeping unrelated catalogue ideas out.
+
+The catalogue’s top-level `experienceDirection` is coordinator-only prompt-crafting guidance. Internalize the parts that fit the brief, then express them as specific possibilities native to the requested experience. Never paste, quote, label, or mechanically paraphrase `experienceDirection` in the actual prompt. It must never appear as a generic second paragraph or an `EXPERIENCE DIRECTION` block in the lead dispatch or `PROMPT.md`. Text-rich formats remain text-rich when their purpose depends on copy.
+
+For example, turn the Floating Island Atlas catalogue goal into a finished brief such as:
+
+> Create a living atlas of floating islands that drift and regroup as weather moves across the archipelago. Let visitors chart routes, inspect cultures and ecosystems, and follow unexpected encounters that emerge as currents and storms reshape the journey.
+>
+> Make navigation feel tactile and exploratory: islands should reveal their character through movement, changing conditions, and discovery rather than dense exposition, while leaving room for each culture and ecosystem to carry the detail it needs.
 
 For example, refine `Windows XP clone on a web interface` into something like:
 
@@ -44,7 +52,7 @@ For example, refine `Windows XP clone on a web interface` into something like:
 >
 > Make the experience visually faithful but dynamic, with tactile window motion, responsive transitions, ambient desktop activity, and a few memorable moments worth sharing. Keep text secondary to direct interaction while preserving the recognizable personality and usability of the original interface.
 
-The refinement is the actual prompt. Record it before dispatch as the artifact’s `PROMPT.md`; preserve those exact UTF-8 bytes and their SHA-256 digest from that point onward. Also write the pre-dispatch digest to the coordinator-owned provenance receipt outside the worker’s run. Pass the same actual text in the lead’s initial message, not merely a summary, rough source brief, or file path. The copy that travels with the artifact must therefore reflect every refinement the lead received.
+The finished refinement—not the catalogue source text or internal crafting guidance—is the actual prompt. Record it before dispatch as the artifact’s `PROMPT.md`; preserve those exact UTF-8 bytes and their SHA-256 digest from that point onward. Also write the pre-dispatch digest to the coordinator-owned provenance receipt outside the worker’s run. Pass the same actual text in the lead’s initial message, not merely a summary, rough source brief, or file path. The copy that travels with the artifact must therefore reflect every refinement the lead received.
 
 Also record the raw model name, harness name, and experiment name. Use the active runtime’s reported names when available; use explicit `unknown-model` or `unknown-harness` labels rather than inventing specificity.
 

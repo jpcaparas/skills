@@ -37,6 +37,7 @@ class PromptEntry:
     identifier: str
     slug: str
     title: str
+    description: str
     category: str
     prompt: str
     tags: tuple[str, ...]
@@ -56,7 +57,11 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments without imposing a result-size default."""
 
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--search", metavar="TEXT", help="Search title, slug, tags, and prompt text")
+    parser.add_argument(
+        "--search",
+        metavar="TEXT",
+        help="Search title, description, slug, tags, and prompt text",
+    )
     parser.add_argument(
         "--category",
         action="append",
@@ -165,6 +170,7 @@ def parse_entry(value: object, index: int) -> PromptEntry:
         identifier=required_string(value, "id", context),
         slug=required_string(value, "slug", context),
         title=required_string(value, "title", context),
+        description=required_string(value, "description", context),
         category=required_string(value, "category", context),
         prompt=required_string(value, "prompt", context),
         tags=tuple(tag.strip() for tag in tags_value),
@@ -245,16 +251,26 @@ def search_matches(entry: PromptEntry, search: str) -> bool:
     """Require each search term to appear somewhere in the searchable entry text."""
 
     terms = search.casefold().split()
-    searchable = " ".join((entry.title, entry.slug, " ".join(entry.tags), entry.prompt)).casefold()
+    searchable = " ".join(
+        (entry.title, entry.description, entry.slug, " ".join(entry.tags), entry.prompt)
+    ).casefold()
     return all(term in searchable for term in terms)
 
 
-def search_sort_key(entry: PromptEntry, search: str) -> tuple[int, int, int, int, int, str, str, str]:
-    """Rank title, slug, tags, and prompt matches in documented priority order."""
+def search_sort_key(
+    entry: PromptEntry, search: str
+) -> tuple[int, int, int, int, int, int, str, str, str]:
+    """Rank title, description, slug, tags, and prompt matches in priority order."""
 
     query = search.casefold()
-    fields = (entry.title.casefold(), entry.slug.casefold(), " ".join(entry.tags).casefold(), entry.prompt.casefold())
-    weights = (400, 300, 200, 100)
+    fields = (
+        entry.title.casefold(),
+        entry.description.casefold(),
+        entry.slug.casefold(),
+        " ".join(entry.tags).casefold(),
+        entry.prompt.casefold(),
+    )
+    weights = (500, 400, 300, 200, 100)
     score = sum(field_score(field, query, weight) for field, weight in zip(fields, weights))
     positions = tuple(first_position(field, query) for field in fields)
     return (-score, *positions, entry.title.casefold(), entry.slug.casefold(), entry.identifier.casefold())
@@ -304,15 +320,14 @@ def markdown_output(catalogue: Catalogue, entries: Sequence[PromptEntry]) -> str
         "# Oneshot Websites Prompt Catalogue",
         "",
         f"{len(entries)} prompt(s), grouped by namespace. Choose an ID or slug, or send a custom brief.",
-        "",
-        f"Shared experience direction: {one_line(catalogue.experience_direction)}",
     ]
     for category, grouped in group_entries(catalogue.categories, entries):
         lines.extend(("", f"## Namespace `{category.identifier}` — {category.title}"))
         lines.extend(("", one_line(category.description)))
         for entry in grouped:
             lines.append(
-                f"- `{entry.identifier}` · `{entry.slug}` — **{entry.title}** — {one_line(entry.prompt)}"
+                f"- **{entry.title}** — {one_line(entry.description)} — "
+                f"`{entry.identifier}` · `{entry.slug}`"
             )
     return "\n".join(lines) + "\n"
 

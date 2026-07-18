@@ -51,20 +51,9 @@ The initial lead dispatch contains only:
 
 Pass actual text even when it is also stored on disk. A path-only dispatch makes the benchmark dependent on an extra interpretation step. Do not include the aggregate manifest, sibling names, sibling prompts, sibling output paths, sibling artifacts, or sibling results.
 
-When a catalogue baseline accompanies user context, include three unmodified blocks:
+When a catalogue baseline accompanies user context, preserve both sources while crafting one cohesive one- or two-paragraph actual prompt. Keep every explicit user constraint, use the catalogue goal only as the accepted baseline, and translate any useful visual or interaction posture into concrete details native to that experience.
 
-```text
-BASELINE PROMPT (verbatim)
-<catalogue prompt>
-
-USER CONTEXT (verbatim)
-<user context>
-
-EXPERIENCE DIRECTION (verbatim)
-<catalogue experienceDirection>
-```
-
-The labels identify provenance; they do not authorize the coordinator to rewrite any block. The third block ensures accepted baselines inherit the same visual, interaction-first posture as a catalogue selection without added context.
+`experienceDirection` is coordinator-only crafting guidance. Never include its literal value, a labelled `EXPERIENCE DIRECTION` block, or a generic paraphrase in the actual prompt, lead dispatch, or `PROMPT.md`. Provenance belongs in `run.json` and the coordinator receipt; the deployable prompt should read as the finished brief, not as an assembly of internal instructions.
 
 For an unmatched custom request, the actual prompt is a faithful refinement of no more than two paragraphs, not the rough input copied blindly. Preserve the user’s constraints and exact wording requirements, clarify the core experience, and add only loose experience-level guidance that follows from the request. Do not borrow from the catalogue when there is no genuine match. Store and dispatch that refined text exactly.
 

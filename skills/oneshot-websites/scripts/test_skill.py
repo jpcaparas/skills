@@ -1711,8 +1711,8 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         errors,
     )
     assert_ok(
-        full_listing.stdout.count("Shared experience direction: {}".format(experience_direction)) == 1,
-        "no-arg catalogue presentation did not show the shared experience direction exactly once",
+        experience_direction not in full_listing.stdout,
+        "no-arg catalogue presentation exposed coordinator-only prompt-crafting guidance",
         errors,
     )
     assert_ok(
@@ -1729,11 +1729,11 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         errors,
     )
     expected_option_lines = [
-        "- `{}` · `{}` — **{}** — {}".format(
+        "- **{}** — {} — `{}` · `{}`".format(
+            item.get("title"),
+            re.sub(r"\s+", " ", str(item.get("description"))).strip(),
             item.get("id"),
             item.get("slug"),
-            item.get("title"),
-            re.sub(r"\s+", " ", str(item.get("prompt"))).strip(),
         )
         for item in prompts
         if isinstance(item, Mapping)
@@ -1745,6 +1745,32 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         "no-arg catalogue presentation did not render every prompt as one explained option line",
         errors,
     )
+    shooter = next(
+        (
+            item
+            for item in prompts
+            if isinstance(item, Mapping) and item.get("id") == "ow-093"
+        ),
+        None,
+    )
+    assert_ok(
+        isinstance(shooter, Mapping)
+        and shooter.get("title") == "First-Person Shooter Game"
+        and "**First-Person Shooter Game**" in full_listing.stdout,
+        "catalogue did not keep the first-person shooter option plain and literal",
+        errors,
+    )
+    if isinstance(first, Mapping):
+        first_description = first.get("description")
+        first_prompt = first.get("prompt")
+        assert_ok(
+            isinstance(first_description, str)
+            and first_description in full_listing.stdout
+            and isinstance(first_prompt, str)
+            and first_prompt not in full_listing.stdout,
+            "catalogue listing did not separate scan-friendly descriptions from source prompts",
+            errors,
+        )
     json_listing = run([sys.executable, str(scripts[0]), "--format", "json"])
     json_data = invocation_json(json_listing, errors, "list_prompts.py --format json")
     if json_data is not None:
@@ -2425,6 +2451,152 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         metadata_path.write_bytes(original_metadata)
 
+        skill_path = copied_skill / "SKILL.md"
+        original_skill = skill_path.read_text(encoding="utf-8")
+        skill_path.write_text(
+            original_skill
+            + "\nSelected catalogue entry: append experienceDirection unchanged as the second paragraph.\n",
+            encoding="utf-8",
+        )
+        leaking_direction_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            leaking_direction_result.returncode != 0
+            and "instruction to copy internal direction into the lead prompt" in leaking_direction_result.stdout,
+            "package validator accepted an instruction that leaks internal guidance into PROMPT.md",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        execution_protocol_path = copied_skill / "references" / "execution-protocol.md"
+        original_execution_protocol = execution_protocol_path.read_text(encoding="utf-8")
+        execution_protocol_path.write_text(
+            original_execution_protocol
+            + "\n```text\nEXPERIENCE DIRECTION (verbatim)\n"
+            + "<catalogue experienceDirection>\n```\n",
+            encoding="utf-8",
+        )
+        leaking_block_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            leaking_block_result.returncode != 0
+            and "lead-facing verbatim experience direction block" in leaking_block_result.stdout,
+            "package validator accepted a lead-facing EXPERIENCE DIRECTION block",
+            errors,
+        )
+        execution_protocol_path.write_text(original_execution_protocol, encoding="utf-8")
+
+        guidance_mutations = (
+            (
+                "Copy the catalogue's experienceDirection to the end of the actual prompt.",
+                "instruction to copy internal direction into the lead prompt",
+                "alternate copy instruction",
+            ),
+            (
+                "Add a labelled second block containing the general visual and interaction guidance.",
+                "instruction to add labelled generic guidance to the lead prompt",
+                "generic labelled guidance block",
+            ),
+        )
+        for mutation, expected_error, label in guidance_mutations:
+            skill_path.write_text(original_skill + "\n" + mutation + "\n", encoding="utf-8")
+            mutation_result = run(
+                [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+            )
+            assert_ok(
+                mutation_result.returncode != 0 and expected_error in mutation_result.stdout,
+                "package validator accepted {}".format(label),
+                errors,
+            )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        mixed_guidance_paragraph = original_skill.replace(
+            "Text-rich formats remain text-rich when their purpose depends on copy.",
+            "Text-rich formats remain text-rich when their purpose depends on copy. "
+            "Copy the catalogue's experienceDirection to the end of the actual prompt.",
+        )
+        skill_path.write_text(mixed_guidance_paragraph, encoding="utf-8")
+        mixed_guidance_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            mixed_guidance_result.returncode != 0
+            and "instruction to copy internal direction into the lead prompt"
+            in mixed_guidance_result.stdout,
+            "package validator let a negated warning hide a later positive leak directive",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        nested_guidance_match = original_skill + (
+            "\nDo not copy the catalogue prompt verbatim. "
+            "Copy the shared experience direction into the actual prompt.\n"
+        )
+        skill_path.write_text(nested_guidance_match, encoding="utf-8")
+        nested_guidance_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            nested_guidance_result.returncode != 0
+            and "instruction to copy internal direction into the lead prompt"
+            in nested_guidance_result.stdout,
+            "package validator let a wider negated match consume a positive leak directive",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        clause_guidance_match = original_skill + (
+            "\nDo not modify the catalogue; "
+            "copy the shared experience direction into the actual prompt.\n"
+        )
+        skill_path.write_text(clause_guidance_match, encoding="utf-8")
+        clause_guidance_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            clause_guidance_result.returncode != 0
+            and "instruction to copy internal direction into the lead prompt"
+            in clause_guidance_result.stdout,
+            "package validator let clause-level negation hide a positive leak directive",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        dash_guidance_match = original_skill + (
+            "\nDo not modify the catalogue — "
+            "copy the shared experience direction into the actual prompt.\n"
+        )
+        skill_path.write_text(dash_guidance_match, encoding="utf-8")
+        dash_guidance_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            dash_guidance_result.returncode != 0
+            and "instruction to copy internal direction into the lead prompt"
+            in dash_guidance_result.stdout,
+            "package validator let dash-delimited negation hide a positive leak directive",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        catalogue_for_guidance = json.loads(
+            (copied_skill / "assets" / "prompt-catalogue.json").read_text(encoding="utf-8")
+        )
+        literal_direction = catalogue_for_guidance["experienceDirection"]
+        skill_path.write_text(original_skill + "\n" + literal_direction + "\n", encoding="utf-8")
+        literal_direction_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            literal_direction_result.returncode != 0
+            and "copies the literal catalogue experienceDirection" in literal_direction_result.stdout,
+            "package validator accepted the full internal guidance in lead-facing prose",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
         catalogue_path = copied_skill / "assets" / "prompt-catalogue.json"
         original_catalogue = json.loads(catalogue_path.read_text(encoding="utf-8"))
 
@@ -2564,6 +2736,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
                 "id": "ow-101",
                 "slug": "append-only-fixture",
                 "title": "Append Only Fixture",
+                "description": "Explore an original interactive experience added safely to the growing catalogue.",
                 "category": "immersive-games",
                 "prompt": "Create an original interactive experience that proves the catalogue can grow by appending entries.",
                 "tags": ["append-only", "fixture", "growth"],
@@ -2581,7 +2754,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             errors,
         )
 
-        for field in ("title", "prompt", "tag"):
+        for field in ("title", "description", "prompt", "tag"):
             surrogate_extension = json.loads(json.dumps(extended))
             if field == "tag":
                 surrogate_extension["prompts"][-1]["tags"][0] = "\ud800"
@@ -2631,6 +2804,36 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "slug must not contain surrounding whitespace" in spaced_identity_result.stdout
             and "category must not contain surrounding whitespace" in spaced_identity_result.stdout,
             "package validator accepted surrounding whitespace in appended identity fields",
+            errors,
+        )
+
+        missing_prompt_description = json.loads(json.dumps(extended))
+        missing_prompt_description["prompts"][-1].pop("description")
+        catalogue_path.write_text(json.dumps(missing_prompt_description), encoding="utf-8")
+        missing_prompt_description_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_prompt_description_result.returncode != 0
+            and "missing a description" in missing_prompt_description_result.stdout,
+            "package validator accepted a prompt without a scan-friendly description",
+            errors,
+        )
+
+        verbose_prompt_metadata = json.loads(json.dumps(extended))
+        verbose_prompt_metadata["prompts"][-1]["title"] = "An Extremely Long and Needlessly Esoteric Catalogue Experience Title for Hurried People"
+        verbose_prompt_metadata["prompts"][-1]["description"] = " ".join(
+            ["This"] * 19
+        )
+        catalogue_path.write_text(json.dumps(verbose_prompt_metadata), encoding="utf-8")
+        verbose_prompt_metadata_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            verbose_prompt_metadata_result.returncode != 0
+            and "plain label" in verbose_prompt_metadata_result.stdout
+            and "scan-friendly" in verbose_prompt_metadata_result.stdout,
+            "package validator accepted verbose catalogue browsing metadata",
             errors,
         )
 
