@@ -31,7 +31,7 @@ Every model, harness, and experiment directory also contains a coordinator-owned
 
 The coordinator writes each marker inside a private temporary namespace directory, then atomically publishes the complete directory. Concurrent preparers for the same exact identity verify the winning directory; an existing unmarked namespace is refused rather than adopted. This portable directory-rename protocol does not require hard-link support and turns even a digest-prefix collision into a classified reservation failure instead of shared storage. Published namespace markers are never rolled back—an empty, bound namespace is harmless, while deleting a shared parent marker during concurrent preparation is not. Workers receive write access only to their run directory, not to these markers. `templates/namespace-identity.json` documents the portable shape.
 
-`run.json` preserves the raw names, derived keys, exact prompt digest, run classification, and relative artifact path. `artifact/PROMPT.md` preserves the input bytes and travels with the deployable site.
+`run.json` preserves the raw names, derived keys, exact actual-prompt digest, run classification, and relative artifact path. `artifact/PROMPT.md` preserves the prepared prompt bytes passed to the lead—including any faithful custom-brief refinement—and travels with the deployable site.
 
 Before dispatch, the coordinator also writes `.oneshot-provenance/<run-id>.json` under the output root. That receipt records the run path, identities, classification, prior-run relationship, prompt digest, and byte count outside the worker-owned run. After every initial run file and the receipt are closed, the coordinator atomically creates an empty `.oneshot-provenance/<run-id>.commit` marker. A run without that final marker was never ready for dispatch; the builder and validator can ignore its bounded initialization residue, including a partial receipt, so a killed preparation process does not poison later experiments. A committed run remains strict and visible even when its worker later damages or removes files.
 
@@ -51,7 +51,7 @@ The initial lead dispatch contains only:
 
 Pass actual text even when it is also stored on disk. A path-only dispatch makes the benchmark dependent on an extra interpretation step. Do not include the aggregate manifest, sibling names, sibling prompts, sibling output paths, sibling artifacts, or sibling results.
 
-When a catalogue baseline accompanies user context, include two unmodified blocks:
+When a catalogue baseline accompanies user context, include three unmodified blocks:
 
 ```text
 BASELINE PROMPT (verbatim)
@@ -59,9 +59,14 @@ BASELINE PROMPT (verbatim)
 
 USER CONTEXT (verbatim)
 <user context>
+
+EXPERIENCE DIRECTION (verbatim)
+<catalogue experienceDirection>
 ```
 
-The labels identify provenance; they do not authorize the coordinator to rewrite either block.
+The labels identify provenance; they do not authorize the coordinator to rewrite any block. The third block ensures accepted baselines inherit the same visual, interaction-first posture as a catalogue selection without added context.
+
+For an unmatched custom request, the actual prompt is a faithful refinement of no more than two paragraphs, not the rough input copied blindly. Preserve the user’s constraints and exact wording requirements, clarify the core experience, and add only loose experience-level guidance that follows from the request. Do not borrow from the catalogue when there is no genuine match. Store and dispatch that refined text exactly.
 
 ## Multiple Experiments
 
@@ -86,7 +91,7 @@ Never add a goal-mode requirement, timeout, token cap, step limit, tool-call lim
 
 The lead owns all implementation iteration inside its run. The coordinator may resume that same lead after an infrastructure pause, but does not inject sibling comparisons or post-process the artifact.
 
-The lead may shape `workspace/` however it likes. Before completion it exports a static deployment into `artifact/` with the unchanged exact-case `PROMPT.md` and a single exact-case root `index.html`. All built runtime files needed by that entrypoint belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the deployment origin root. Deployment must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
+The lead may shape `workspace/` however it likes. Before completion it exports a static deployment into `artifact/` with the unchanged exact-case `PROMPT.md` and one exact-case root `index.html` entrypoint. That entrypoint does not imply a one-file artifact: all built runtime scripts, styles, media, fonts, models, data, and asset directories that serve the experience belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the deployment origin root. Deployment must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
 
 For the shared folder-drop target, the built artifact stays within 1,000 files, 5 MiB per file, and 100 MiB total. These final-upload bounds do not constrain workspace dependencies, source files, build assets, iteration, or delegation.
 

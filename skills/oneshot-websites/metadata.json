@@ -1,8 +1,8 @@
 {
-  "version": "2.0.0",
+  "version": "2.1.0",
   "organization": "JP Caparas",
   "date": "July 2026",
-  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with a catalogue seeded with 100 prompts, recursive delegation, collision-free model/harness/experiment namespaces, coordinator-recorded prompt provenance, and drop-ready static artifacts.",
+  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with 100 visually led catalogue prompts, faithful custom-prompt refinement, recursive delegation, collision-free model/harness/experiment namespaces, coordinator-recorded prompt provenance, and drop-ready multi-file static artifacts.",
   "references": [
     "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
     "https://x.com/mweinbach/status/2077827886149439547",

@@ -7,7 +7,7 @@ description: "Run ambitious one-shot websites, web apps, games, simulations, clo
 
 Give each experiment to a fresh lead subagent, pass it the actual prompt, and let it decide how to accomplish the task.
 
-“One-shot” describes the delegation boundary: one initial task prompt and one owning lead subagent per experiment. It does not mean one model call, a short turn, a fixed stack, or a restricted workflow. The lead may work for as long as the task needs, use any suitable tools or dependencies, revise its own work, and create its own subagents. The build process is open; the final handoff is a static folder with one root `index.html`.
+“One-shot” describes the delegation boundary: one initial task prompt and one owning lead subagent per experiment. It does not mean one model call, a short turn, a fixed stack, or a restricted workflow. The lead may work for as long as the task needs, use any suitable tools or dependencies, revise its own work, and create its own subagents. The build process is open; the final handoff is a static folder with one root `index.html` entrypoint and as many supporting asset files and directories as the experience needs.
 
 ## Choose a Compatible Helper Runtime
 
@@ -21,24 +21,30 @@ The override names one executable and contains no flags. On Windows, select any 
 
 ## Route the Invocation
 
-- **No brief or arguments:** immediately run `scripts/list_prompts.py` with no filters and present its complete catalogue before asking the user to choose. Do not silently shortlist the catalogue.
-- **Exploratory context:** search the catalogue and offer only genuinely relevant matches as optional baselines. Keep a custom brief equally available. If there is no meaningful match, say so briefly and follow the user’s guidance without blending in catalogue material.
-- **A clear or highly custom build brief:** use the brief itself as the actual prompt. When a catalogue item is materially relevant, offer it as an optional baseline, but dispatch the original brief unchanged unless the user accepts that match. If there is no real match, start the one-shot without forcing, mashing, or borrowing from a template; mere proximity is not relevance.
+- **No brief or arguments:** catalogue-first is mandatory. Before asking a question, presenting a menu, requesting an ID or slug, or offering to choose for the user, run `scripts/list_prompts.py` with no filters and make its complete stdout the first substantive response content. The listing is grouped by namespace, explains every namespace, and gives every prompt a one-line description. Never make “list the catalogue” an option the user must request. If an undecided user says “let me choose,” “show me the options,” or that they do not know the IDs or slugs, show the complete unfiltered listing immediately.
+- **Exploratory context:** search the catalogue and offer only genuinely relevant matches as optional baselines. Keep a custom brief equally available. If there is no meaningful match, say so briefly and refine the user’s own guidance without blending in catalogue material.
+- **A clear or highly custom build brief:** prepare a faithful one- or two-paragraph actual prompt from the brief. When a catalogue item is materially relevant, offer it as an optional baseline, but keep the custom route independent unless the user accepts that match. If there is no real match, start the one-shot from a clean refinement of the user’s guidance without forcing, mashing, or borrowing from a template; mere proximity is not relevance.
 - **Several briefs, templates, models, or harnesses:** define one experiment per requested artifact. Never merge several one-shots into one worker.
 - **Catalogue expansion:** read `references/catalogue-authoring.md`; append entries without changing existing IDs or imposing an implementation stack.
 - **Artifact validation or indexing:** read `references/catalog-index.md`; validate provenance and the built root entrypoint without judging the chosen technology.
 
-This routing step is complete when every requested artifact has one actual prompt and one experiment name, or the undecided user has the catalogue in front of them.
+This routing step is complete when every requested artifact has one actual prompt and one experiment name, or the undecided user has the complete namespace-grouped catalogue in front of them. A response that merely explains how to request the catalogue or waits for an unknown slug is incomplete.
 
-## 1. Preserve the Actual Prompt
+## 1. Prepare and Preserve the Actual Prompt
 
 For each experiment, identify the text the lead must act on:
 
-- A direct brief stays byte-for-byte unchanged.
-- A selected catalogue entry uses its `prompt` field unchanged.
-- Combine a catalogue baseline with user context only when the user selected or accepted that baseline. Preserve and pass both verbatim as distinct labelled blocks; do not paraphrase either into a replacement brief.
+- **Custom brief:** refine rough wording into a clear, vivid instruction of no more than two paragraphs. Preserve every explicit constraint, proper noun, required feature, factual detail, and requested exact wording. In the first paragraph, state the core experience and what the visitor can do. Use a second paragraph only when loose guidance about interaction, atmosphere, motion, spatial behavior, or content density would help the lead see the experience. Do not add catalogue concepts, invent product requirements, or prescribe a technology, library, framework, file layout, or workflow the user did not request. If the user explicitly requires the entire brief to remain verbatim, honor that exception.
+- **Selected catalogue entry:** keep its `prompt` field unchanged as the first paragraph and append the catalogue’s top-level `experienceDirection` unchanged as the second. This shared direction favors visual interaction, motion, and social-worthy moments without prescribing a stack, while allowing text-led formats to remain text-rich when their purpose depends on it.
+- **Accepted catalogue baseline plus user context:** combine them only after acceptance. Keep the catalogue prompt and user context as distinct labelled blocks, then include the shared `experienceDirection`; do not silently splice unrelated catalogue ideas into the request.
 
-Record the prompt before dispatch as the artifact’s `PROMPT.md`. Preserve its exact UTF-8 bytes and SHA-256 digest. Also write the pre-dispatch digest to the coordinator-owned provenance receipt outside the worker’s run. Pass the same actual text in the lead’s initial message, not merely a summary or file path.
+For example, refine `Windows XP clone on a web interface` into something like:
+
+> Create an interactive web-based recreation of Windows XP that feels like a living desktop rather than a static mockup. Let people open and move windows, explore familiar system surfaces, launch small apps, and discover playful details that reward experimentation.
+>
+> Make the experience visually faithful but dynamic, with tactile window motion, responsive transitions, ambient desktop activity, and a few memorable moments worth sharing. Keep text secondary to direct interaction while preserving the recognizable personality and usability of the original interface.
+
+The refinement is the actual prompt. Record it before dispatch as the artifact’s `PROMPT.md`; preserve those exact UTF-8 bytes and their SHA-256 digest from that point onward. Also write the pre-dispatch digest to the coordinator-owned provenance receipt outside the worker’s run. Pass the same actual text in the lead’s initial message, not merely a summary, rough source brief, or file path. The copy that travels with the artifact must therefore reflect every refinement the lead received.
 
 Also record the raw model name, harness name, and experiment name. Use the active runtime’s reported names when available; use explicit `unknown-model` or `unknown-harness` labels rather than inventing specificity.
 
@@ -111,7 +117,7 @@ On the lead’s work, the skill imposes no time, token, step, tool-call, depende
 
 Each lead may choose any architecture, libraries, services, generated assets, build system, collaboration pattern, verification workflow, and source-project shape that serve the actual prompt and the authority available in the environment. It may research, install dependencies, inspect screenshots, run the result, test interactions, and revise its implementation.
 
-Before finishing, the lead builds or exports the result into `artifact/`. That folder must contain the unchanged, exactly cased `PROMPT.md` and one exactly cased root `index.html` entrypoint. It may also contain the built scripts, styles, media, and asset directories needed by the entrypoint. Local resource URLs may be relative or root-relative and must match stored filename casing; `artifact/` is deployed as the origin root. The folder must need no package installation, build command, framework development server, or server-side runtime after handoff. Package manifests, source-only component files, build or provider configuration, dependency and cache directories, server functions, secrets, and provider-filtered build state such as `.next/` stay out of the entire artifact tree. A React, Vue, Svelte, or other framework project is welcome in `workspace/`; copy its deployable production output, not its project tree, into `artifact/`.
+Before finishing, the lead builds or exports the result into `artifact/`. That folder must contain the unchanged, exactly cased `PROMPT.md` and one exactly cased root `index.html` entrypoint. This is an entrypoint rule, not a single-file rule: include every built script, stylesheet, media file, font, model, shader, data file, and asset directory that improves or supports the experience. Do not collapse a rich build into one HTML file merely to satisfy the handoff. Local resource URLs may be relative or root-relative and must match stored filename casing; `artifact/` is deployed as the origin root. The folder must need no package installation, build command, framework development server, or server-side runtime after handoff. Package manifests, source-only component files, build or provider configuration, dependency and cache directories, server functions, secrets, and provider-filtered build state such as `.next/` stay out of the entire artifact tree. A React, Vue, Svelte, or other framework project is welcome in `workspace/`; copy all of its deployable production output, not its project tree, into `artifact/`.
 
 The final folder, not the workspace, follows the conservative shared Drop envelope: at most 1,000 files, no file larger than 5 MiB, and no more than 100 MiB total. These are deployment-boundary constraints derived from the current static-host upload path, not limits on how the lead works or what it may use.
 

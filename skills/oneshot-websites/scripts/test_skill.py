@@ -1684,13 +1684,20 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
 
     catalogue = read_json(skill / "assets" / "prompt-catalogue.json", errors, "prompt catalogue")
     prompts = catalogue.get("prompts") if isinstance(catalogue, Mapping) else None
-    if not isinstance(prompts, list) or not prompts:
+    categories = catalogue.get("categories") if isinstance(catalogue, Mapping) else None
+    experience_direction = catalogue.get("experienceDirection") if isinstance(catalogue, Mapping) else None
+    if (
+        not isinstance(prompts, list)
+        or not prompts
+        or not isinstance(categories, list)
+        or not isinstance(experience_direction, str)
+    ):
         return
     first = prompts[0] if isinstance(prompts[0], Mapping) else {}
     first_id = first.get("id")
     query = (first.get("tags") or [first.get("slug")])[0] if isinstance(first, Mapping) else ""
 
-    full_listing = run([sys.executable, str(scripts[0]), "--format", "markdown"])
+    full_listing = run([sys.executable, str(scripts[0])])
     assert_ok(full_listing.returncode == 0, "list_prompts.py full listing failed: {}".format(full_listing.stderr), errors)
     expected_ids = [item.get("id") for item in prompts if isinstance(item, Mapping) and isinstance(item.get("id"), str)]
     assert_ok(
@@ -1699,13 +1706,43 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         errors,
     )
     assert_ok(
-        "{} prompt(s)".format(len(prompts)) in full_listing.stdout,
+        "{} prompt(s), grouped by namespace".format(len(prompts)) in full_listing.stdout,
         "no-arg catalogue presentation reported the wrong prompt count",
         errors,
     )
     assert_ok(
-        all(isinstance(item, Mapping) and full_listing.stdout.count(str(item.get("prompt"))) == 1 for item in prompts),
-        "no-arg catalogue presentation did not render every prompt body exactly once",
+        full_listing.stdout.count("Shared experience direction: {}".format(experience_direction)) == 1,
+        "no-arg catalogue presentation did not show the shared experience direction exactly once",
+        errors,
+    )
+    assert_ok(
+        all(
+            isinstance(category, Mapping)
+            and full_listing.stdout.count(
+                "## Namespace `{}` — {}".format(category.get("id"), category.get("title"))
+            )
+            == 1
+            and full_listing.stdout.count(str(category.get("description"))) == 1
+            for category in categories
+        ),
+        "no-arg catalogue presentation did not explain every namespace exactly once",
+        errors,
+    )
+    expected_option_lines = [
+        "- `{}` · `{}` — **{}** — {}".format(
+            item.get("id"),
+            item.get("slug"),
+            item.get("title"),
+            re.sub(r"\s+", " ", str(item.get("prompt"))).strip(),
+        )
+        for item in prompts
+        if isinstance(item, Mapping)
+    ]
+    output_lines = full_listing.stdout.splitlines()
+    assert_ok(
+        len(expected_option_lines) == len(prompts)
+        and all(output_lines.count(option_line) == 1 for option_line in expected_option_lines),
+        "no-arg catalogue presentation did not render every prompt as one explained option line",
         errors,
     )
     json_listing = run([sys.executable, str(scripts[0]), "--format", "json"])
@@ -1718,7 +1755,9 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             else []
         )
         assert_ok(
-            json_data.get("count") == len(prompts) and listed_prompts == prompts,
+            json_data.get("count") == len(prompts)
+            and json_data.get("experienceDirection") == experience_direction
+            and listed_prompts == prompts,
             "JSON catalogue listing differs from canonical prompts",
             errors,
         )
@@ -2388,6 +2427,85 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         catalogue_path = copied_skill / "assets" / "prompt-catalogue.json"
         original_catalogue = json.loads(catalogue_path.read_text(encoding="utf-8"))
+
+        catalogue_without_direction = json.loads(json.dumps(original_catalogue))
+        catalogue_without_direction.pop("experienceDirection")
+        catalogue_path.write_text(json.dumps(catalogue_without_direction), encoding="utf-8")
+        missing_direction_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_direction_result.returncode != 0
+            and "missing experienceDirection" in missing_direction_result.stdout,
+            "package validator accepted a catalogue without a shared experience direction",
+            errors,
+        )
+
+        multiline_direction = json.loads(json.dumps(original_catalogue))
+        multiline_direction["experienceDirection"] += "\nSecond line."
+        catalogue_path.write_text(json.dumps(multiline_direction), encoding="utf-8")
+        multiline_direction_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            multiline_direction_result.returncode != 0
+            and "experienceDirection must fit on one line" in multiline_direction_result.stdout,
+            "package validator accepted a multi-line shared experience direction",
+            errors,
+        )
+
+        prescribed_direction = json.loads(json.dumps(original_catalogue))
+        prescribed_direction["experienceDirection"] += " Build it with Three.js."
+        catalogue_path.write_text(json.dumps(prescribed_direction), encoding="utf-8")
+        prescribed_direction_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            prescribed_direction_result.returncode != 0
+            and "named implementation recipe constraint" in prescribed_direction_result.stdout,
+            "package validator accepted a shared direction that prescribes a library",
+            errors,
+        )
+
+        unknown_stack_direction = json.loads(json.dumps(original_catalogue))
+        unknown_stack_direction["experienceDirection"] += " Build it with Babylon.js and GSAP."
+        catalogue_path.write_text(json.dumps(unknown_stack_direction), encoding="utf-8")
+        unknown_stack_direction_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            unknown_stack_direction_result.returncode != 0
+            and "differs from the canonical reviewed direction" in unknown_stack_direction_result.stdout,
+            "package validator accepted an unlisted stack prescription in the shared direction",
+            errors,
+        )
+
+        category_without_description = json.loads(json.dumps(original_catalogue))
+        category_without_description["categories"][0].pop("description")
+        catalogue_path.write_text(json.dumps(category_without_description), encoding="utf-8")
+        missing_description_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_description_result.returncode != 0
+            and "missing a description" in missing_description_result.stdout,
+            "package validator accepted a catalogue namespace without a description",
+            errors,
+        )
+
+        multiline_category_description = json.loads(json.dumps(original_catalogue))
+        multiline_category_description["categories"][0]["description"] = "First line.\nSecond line."
+        catalogue_path.write_text(json.dumps(multiline_category_description), encoding="utf-8")
+        multiline_description_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            multiline_description_result.returncode != 0
+            and "description must fit on one line" in multiline_description_result.stdout,
+            "package validator accepted a multi-line catalogue namespace description",
+            errors,
+        )
+
         frozen_mutations = (
             "edited prompt",
             "reordered prompts",

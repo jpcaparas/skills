@@ -1,16 +1,17 @@
 {
   "schemaVersion": "1.0",
+  "experienceDirection": "Default to a visually led, interaction-first experience with responsive motion, spatial depth, direct manipulation, ambient state, and memorable moments worth sharing; keep explanatory text concise and integrated into the experience, while allowing richer copy when the requested format—such as a landing page, CMS, publication, or narrative archive—depends on it, and leave technology and dependency choices to the lead.",
   "categories": [
-    {"id": "desktop-environments", "title": "Desktop Environments"},
-    {"id": "creative-tools", "title": "Creative Tools"},
-    {"id": "simulations", "title": "Simulations"},
-    {"id": "data-experiences", "title": "Data Experiences"},
-    {"id": "motion-sound", "title": "Motion and Sound"},
-    {"id": "narrative-culture", "title": "Narrative and Culture"},
-    {"id": "commerce-services", "title": "Commerce and Services"},
-    {"id": "science-nature", "title": "Science and Nature"},
-    {"id": "maps-worlds", "title": "Maps and Worlds"},
-    {"id": "immersive-games", "title": "Immersive Games"}
+    {"id": "desktop-environments", "title": "Desktop Environments", "description": "Desktop-like worlds organized through windows, apps, files, instruments, and ambient state."},
+    {"id": "creative-tools", "title": "Creative Tools", "description": "Hands-on studios for composing visual, material, literary, and performative work."},
+    {"id": "simulations", "title": "Simulations", "description": "Systems-driven scenarios where decisions reshape communities, environments, and operations over time."},
+    {"id": "data-experiences", "title": "Data Experiences", "description": "Explorable stories that turn evidence, timelines, maps, and human records into lived context."},
+    {"id": "motion-sound", "title": "Motion and Sound", "description": "Interactive audiovisual pieces built around typography, rhythm, sound, gesture, and atmosphere."},
+    {"id": "narrative-culture", "title": "Narrative and Culture", "description": "Story worlds, archives, rituals, and cultural spaces shaped by discovery and choice."},
+    {"id": "commerce-services", "title": "Commerce and Services", "description": "Service and marketplace experiences centered on craft, care, hospitality, and community exchange."},
+    {"id": "science-nature", "title": "Science and Nature", "description": "Scientific and natural worlds for observation, experimentation, learning, and stewardship."},
+    {"id": "maps-worlds", "title": "Maps and Worlds", "description": "Navigable places, routes, atlases, and speculative worlds made for exploration."},
+    {"id": "immersive-games", "title": "Immersive Games", "description": "Playable browser experiences with embodied controls, missions, strategy, and responsive worlds."}
   ],
   "prompts": [
     {"id": "ow-001", "slug": "sunlit-workstation", "title": "Sunlit Workstation", "category": "desktop-environments", "prompt": "Create a polished browser desktop world with a dock, windowed apps, files, messages, calendar rituals, and an evolving day outside the glass.", "tags": ["desktop", "workspace", "apps"]},

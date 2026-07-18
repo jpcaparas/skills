@@ -73,7 +73,7 @@ if [ -z "$VALIDATION_PYTHON" ] \
     || ! "$VALIDATION_PYTHON" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
     {
         echo "ERROR: native validation requires Python 3.11 or newer."
-        echo "Create the repository .venv with a compatible interpreter; see TESTING.md."
+        echo "Create the repository .venv with a compatible interpreter; see the Validation section in AGENTS.md."
     } >&2
     exit 1
 fi
@@ -102,7 +102,7 @@ VALIDATION_BUN="$(resolve_validation_executable "$validation_bun_request" || tru
 if [ -z "$VALIDATION_BUN" ] || ! "$VALIDATION_BUN" --version >/dev/null 2>&1; then
     {
         echo "ERROR: native validation requires Bun for the scaffold-hooks probes."
-        echo "Install Bun and ensure bun is on PATH; see TESTING.md."
+        echo "Install Bun and ensure bun is on PATH; see the Validation section in AGENTS.md."
     } >&2
     exit 1
 fi
@@ -129,7 +129,7 @@ if [ -z "$VALIDATION_NPX" ] || [ -z "$VALIDATION_NODE" ] \
         "$VALIDATION_NPX" --version >/dev/null 2>&1; then
     {
         echo "ERROR: native validation requires npx for the skills discovery probe."
-        echo "Install Node.js with npm/npx and ensure npx is on PATH; see TESTING.md."
+        echo "Install Node.js with npm/npx and ensure npx is on PATH; see the Validation section in AGENTS.md."
     } >&2
     exit 1
 fi

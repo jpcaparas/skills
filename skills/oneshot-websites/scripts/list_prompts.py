@@ -27,7 +27,7 @@ class Category:
 
     identifier: str
     title: str
-    description: Optional[str]
+    description: str
 
 
 @dataclass(frozen=True)
@@ -41,6 +41,15 @@ class PromptEntry:
     prompt: str
     tags: tuple[str, ...]
     raw: dict[str, Any]
+
+
+@dataclass(frozen=True)
+class Catalogue:
+    """Validated catalogue metadata and prompt entries."""
+
+    experience_direction: str
+    categories: tuple[Category, ...]
+    prompts: tuple[PromptEntry, ...]
 
 
 def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
@@ -94,8 +103,8 @@ def positive_limit(value: str) -> int:
     return limit
 
 
-def load_catalogue(path: Path = CATALOGUE_PATH) -> tuple[list[Category], list[PromptEntry]]:
-    """Load categories and entries from the canonical JSON file."""
+def load_catalogue(path: Path = CATALOGUE_PATH) -> Catalogue:
+    """Load the shared direction, categories, and entries from canonical JSON."""
 
     try:
         loaded = parse_json_bounded(path.read_text(encoding="utf-8"))
@@ -118,19 +127,29 @@ def load_catalogue(path: Path = CATALOGUE_PATH) -> tuple[list[Category], list[Pr
     if not isinstance(raw_entries, list):
         raise CatalogueError("catalogue prompts must be an array")
 
-    categories = [parse_category(item, index) for index, item in enumerate(raw_categories, start=1)]
-    entries = [parse_entry(item, index) for index, item in enumerate(raw_entries, start=1)]
-    return categories, entries
+    experience_direction = required_string(loaded, "experienceDirection", "catalogue")
+    categories = tuple(parse_category(item, index) for index, item in enumerate(raw_categories, start=1))
+    entries = tuple(parse_entry(item, index) for index, item in enumerate(raw_entries, start=1))
+    category_ids = {category.identifier for category in categories}
+    undeclared = sorted({entry.category for entry in entries} - category_ids, key=str.casefold)
+    if undeclared:
+        raise CatalogueError(f"catalogue prompts use undeclared categories: {', '.join(undeclared)}")
+    return Catalogue(
+        experience_direction=experience_direction,
+        categories=categories,
+        prompts=entries,
+    )
 
 
 def parse_category(value: object, index: int) -> Category:
-    """Validate one optional category declaration."""
+    """Validate one category declaration and its display explanation."""
 
     if not isinstance(value, dict):
         raise CatalogueError(f"category {index} must be an object")
     identifier = required_string(value, "id", f"category {index}")
     title = optional_string(value, "title") or optional_string(value, "name") or humanize(identifier)
-    return Category(identifier=identifier, title=title, description=optional_string(value, "description"))
+    description = required_string(value, "description", f"category {index}")
+    return Category(identifier=identifier, title=title, description=description)
 
 
 def parse_entry(value: object, index: int) -> PromptEntry:
@@ -178,6 +197,12 @@ def humanize(identifier: str) -> str:
     """Produce a stable fallback label for an undeclared category."""
 
     return re.sub(r"[-_]+", " ", identifier).strip().title() or "Uncategorized"
+
+
+def one_line(value: str) -> str:
+    """Collapse display prose to one readable physical line."""
+
+    return re.sub(r"\s+", " ", value).strip()
 
 
 def split_values(values: Iterable[Any]) -> set[str]:
@@ -259,7 +284,6 @@ def group_entries(
 ) -> list[tuple[Category, list[PromptEntry]]]:
     """Keep declared category order and append undeclared categories predictably."""
 
-    by_identifier: dict[str, Category] = {category.identifier: category for category in categories}
     grouped: dict[str, list[PromptEntry]] = {}
     for entry in entries:
         grouped.setdefault(entry.category, []).append(entry)
@@ -269,44 +293,51 @@ def group_entries(
         if category.identifier in grouped:
             result.append((category, grouped.pop(category.identifier)))
     for identifier in sorted(grouped, key=str.casefold):
-        result.append((by_identifier.get(identifier, Category(identifier, humanize(identifier), None)), grouped[identifier]))
+        result.append((Category(identifier, humanize(identifier), f"Prompts grouped under {humanize(identifier)}."), grouped[identifier]))
     return result
 
 
-def markdown_output(categories: Sequence[Category], entries: Sequence[PromptEntry]) -> str:
-    """Render the complete, grouped catalogue in readable Markdown."""
+def markdown_output(catalogue: Catalogue, entries: Sequence[PromptEntry]) -> str:
+    """Render a compact option menu grouped by explicit namespace."""
 
-    lines = ["# Oneshot Websites Prompt Catalogue", "", f"{len(entries)} prompt(s)"]
-    for category, grouped in group_entries(categories, entries):
-        lines.extend(("", f"## {category.title}"))
-        if category.description:
-            lines.extend(("", category.description))
+    lines = [
+        "# Oneshot Websites Prompt Catalogue",
+        "",
+        f"{len(entries)} prompt(s), grouped by namespace. Choose an ID or slug, or send a custom brief.",
+        "",
+        f"Shared experience direction: {one_line(catalogue.experience_direction)}",
+    ]
+    for category, grouped in group_entries(catalogue.categories, entries):
+        lines.extend(("", f"## Namespace `{category.identifier}` — {category.title}"))
+        lines.extend(("", one_line(category.description)))
         for entry in grouped:
-            tags = ", ".join(f"`{tag}`" for tag in entry.tags)
-            lines.extend(
-                (
-                    "",
-                    f"### `{entry.identifier}` — {entry.title}",
-                    "",
-                    f"Slug: `{entry.slug}`  ",
-                    f"Tags: {tags}",
-                    "",
-                    entry.prompt,
-                )
+            lines.append(
+                f"- `{entry.identifier}` · `{entry.slug}` — **{entry.title}** — {one_line(entry.prompt)}"
             )
     return "\n".join(lines) + "\n"
 
 
-def json_output(categories: Sequence[Category], entries: Sequence[PromptEntry]) -> str:
+def json_output(catalogue: Catalogue, entries: Sequence[PromptEntry]) -> str:
     """Render the same grouped result as machine-readable JSON."""
 
     groups = []
-    for category, grouped in group_entries(categories, entries):
-        group: dict[str, Any] = {"id": category.identifier, "title": category.title, "prompts": [entry.raw for entry in grouped]}
-        if category.description is not None:
-            group["description"] = category.description
+    for category, grouped in group_entries(catalogue.categories, entries):
+        group: dict[str, Any] = {
+            "id": category.identifier,
+            "title": category.title,
+            "description": category.description,
+            "prompts": [entry.raw for entry in grouped],
+        }
         groups.append(group)
-    return json.dumps({"count": len(entries), "categories": groups}, ensure_ascii=False, indent=2) + "\n"
+    return json.dumps(
+        {
+            "count": len(entries),
+            "experienceDirection": catalogue.experience_direction,
+            "categories": groups,
+        },
+        ensure_ascii=False,
+        indent=2,
+    ) + "\n"
 
 
 def main(argv: Optional[Sequence[str]] = None) -> int:
@@ -314,13 +345,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
 
     arguments = parse_arguments(argv)
     try:
-        categories, entries = load_catalogue()
-        selected = select_entries(entries, arguments)
+        catalogue = load_catalogue()
+        selected = select_entries(catalogue.prompts, arguments)
     except CatalogueError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
 
-    output = json_output(categories, selected) if arguments.format == "json" else markdown_output(categories, selected)
+    output = json_output(catalogue, selected) if arguments.format == "json" else markdown_output(catalogue, selected)
     sys.stdout.write(output)
     return 0
 

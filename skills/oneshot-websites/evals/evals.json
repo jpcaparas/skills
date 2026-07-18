@@ -6,9 +6,11 @@
       "id": 1,
       "name": "catalogue-no-arguments",
       "prompt": "Use oneshot-websites.",
-      "expected_output": "Immediately presents the complete current prompt catalogue, without silently narrowing it to a shortlist, then invites a selection or custom brief.",
+      "expected_output": "Makes the complete current prompt catalogue the first substantive response content, grouped by namespace with a one-line namespace explanation and one-line description for every prompt, then invites a selection or custom brief.",
       "assertions": [
-        {"text": "Runs the unfiltered catalogue presentation", "type": "functional"},
+        {"text": "Runs and presents the unfiltered catalogue before asking a question or presenting any other choice", "type": "functional"},
+        {"text": "Shows all namespaces and every prompt as an ID-and-slug option with a one-line explanation", "type": "structural"},
+        {"text": "Does not make catalogue listing a later option or expect the user to know an unseen slug", "type": "negative"},
         {"text": "Does not invent a website brief or pick a template for the user", "type": "negative"}
       ],
       "tags": ["smoke", "catalogue", "no-arguments"]
@@ -26,13 +28,14 @@
     },
     {
       "id": 3,
-      "name": "direct-exact-dispatch",
+      "name": "direct-refined-dispatch",
       "prompt": "Build a calm, tactile museum guide for a small collection of kinetic sculptures. Keep the first sentence exactly as written.",
-      "expected_output": "Uses the supplied text as the actual prompt without paraphrase, writes its exact UTF-8 bytes to artifact/PROMPT.md, anchors its SHA-256 digest in a coordinator-owned pre-dispatch receipt, and includes the same text in the fresh lead's initial dispatch.",
+      "expected_output": "Produces a faithful actual prompt of no more than two paragraphs, preserves the explicitly protected first sentence exactly, writes the refined prompt's exact UTF-8 bytes to artifact/PROMPT.md, anchors its SHA-256 digest in a coordinator-owned pre-dispatch receipt, and includes the same refined text in the fresh lead's initial dispatch.",
       "assertions": [
-        {"text": "Preserves the direct prompt byte-for-byte and anchors its digest outside the worker-owned run", "type": "verification"},
+        {"text": "Preserves the protected first sentence while refining the remaining brief into no more than two paragraphs", "type": "functional"},
+        {"text": "Anchors the refined actual prompt's exact bytes outside the worker-owned run", "type": "verification"},
         {"text": "Does not replace the user brief with a framework or template recipe", "type": "negative"},
-        {"text": "Includes the exact actual prompt text in the fresh lead's initial dispatch", "type": "verification"}
+        {"text": "The fresh lead dispatch and artifact/PROMPT.md contain the same refined actual prompt", "type": "verification"}
       ],
       "tags": ["dispatch", "exact-prompt", "provenance"]
     },
@@ -119,10 +122,11 @@
       "id": 11,
       "name": "custom-brief-without-catalogue-match",
       "prompt": "Create a private one-shot memorial for a fictional lighthouse keeper. The interaction must follow my exact seven-scene oral-history sequence, use only the supplied family vocabulary, and preserve my scene wording unchanged. Do not turn it into a game, dashboard, or generic maritime story.",
-      "expected_output": "Treats the complete custom brief as the actual prompt. It may offer a catalogue baseline only if one is materially relevant and the user accepts it; otherwise it dispatches the brief unchanged without splicing in catalogue ideas.",
+      "expected_output": "Refines the custom brief into at most two paragraphs while preserving the seven-scene sequence, family-vocabulary boundary, exact scene wording, and non-game intent. It does not splice in catalogue ideas, and the refined text becomes both the lead dispatch and artifact/PROMPT.md.",
       "assertions": [
-        {"text": "Preserves and dispatches the complete custom brief without catalogue contamination", "type": "functional"},
-        {"text": "Does not force a weak catalogue match or hybridize the brief", "type": "negative"}
+        {"text": "Produces a faithful one- or two-paragraph refinement that preserves every explicit constraint and exact wording requirement", "type": "functional"},
+        {"text": "Does not force a weak catalogue match or hybridize the brief", "type": "negative"},
+        {"text": "Stores and dispatches the same refined actual prompt", "type": "verification"}
       ],
       "tags": ["catalogue", "context", "custom-brief", "exact-prompt"]
     },
@@ -130,11 +134,11 @@
       "id": 12,
       "name": "custom-brief-with-relevant-catalogue-match",
       "prompt": "Create a browser-based submarine command simulator with sonar, ballast controls, instrument failures, abyssal navigation, and a crew whose survival depends on my mission sequence.",
-      "expected_output": "Keeps the complete custom brief as the actual prompt and may offer the materially relevant Abyssal Command Dive catalogue item as an optional baseline. It dispatches the original brief unchanged unless the user explicitly accepts that baseline.",
+      "expected_output": "May offer the materially relevant Abyssal Command Dive catalogue item as an optional baseline. Until the user accepts it, the custom route remains a faithful one- or two-paragraph refinement containing only the user's simulator goal and loose guidance derived from it.",
       "assertions": [
         {"text": "Offers a genuinely relevant catalogue match as optional rather than mandatory", "type": "functional"},
         {"text": "Does not splice catalogue language into the custom brief without acceptance", "type": "negative"},
-        {"text": "Preserves the original brief as the dispatch prompt by default", "type": "verification"}
+        {"text": "Uses the refined custom prompt for dispatch and PROMPT.md unless the user accepts the baseline", "type": "verification"}
       ],
       "tags": ["catalogue", "context", "custom-brief", "relevant-match"]
     },
@@ -149,6 +153,79 @@
         {"text": "Still passes the actual prompt text and lead role explicitly", "type": "verification"}
       ],
       "tags": ["dispatch", "fresh-lead", "isolation", "no-history"]
+    },
+    {
+      "id": 14,
+      "name": "undecided-user-does-not-know-slugs",
+      "prompt": "Use oneshot-websites. Allow me to choose, but I don't know the prompt IDs or slugs yet.",
+      "expected_output": "Immediately shows the complete unfiltered catalogue grouped by namespace, with a one-line explanation for every namespace and prompt. It does not defer, ask for an unknown slug, or merely explain how to request the list.",
+      "assertions": [
+        {"text": "The first substantive response content is the complete namespace-grouped catalogue", "type": "functional"},
+        {"text": "Every option includes both its stable ID and slug plus a one-line explanation", "type": "structural"},
+        {"text": "Does not reply with instructions to send a slug later", "type": "negative"}
+      ],
+      "tags": ["catalogue", "edge", "no-arguments", "regression"]
+    },
+    {
+      "id": 15,
+      "name": "rough-unmatched-custom-brief",
+      "prompt": "Windows XP clone on a web interface",
+      "expected_output": "Refines the fragment into a vivid actual prompt of no more than two paragraphs. The result keeps the Windows XP web-clone goal, adds loose guidance for an explorable desktop with tactile windows, familiar system surfaces, responsive motion, and playful discoveries, avoids unrelated catalogue material and stack prescriptions, and becomes the exact prompt stored in artifact/PROMPT.md and sent to the lead.",
+      "assertions": [
+        {"text": "Turns the fragment into a clear one- or two-paragraph experience brief rather than dispatching it unchanged", "type": "functional"},
+        {"text": "Adds only loose interaction, atmosphere, and motion guidance consistent with a Windows XP web interface", "type": "functional"},
+        {"text": "Does not inject a catalogue premise or require Three.js, React, or another implementation choice", "type": "negative"},
+        {"text": "The refined text is exactly the prompt sent to the lead and preserved in artifact/PROMPT.md", "type": "verification"}
+      ],
+      "tags": ["custom-brief", "refinement", "edge", "prompt-provenance"]
+    },
+    {
+      "id": 16,
+      "name": "catalogue-entry-inherits-interactive-direction",
+      "prompt": "Use ow-075, Forest Fungi Network, as the one-shot prompt.",
+      "expected_output": "Builds the actual prompt from the unchanged ow-075 goal as paragraph one and the catalogue's unchanged shared experienceDirection as paragraph two, steering the result toward visual interaction, motion, spatial or ambient behavior, concise integrated text, and lead-owned implementation choices.",
+      "assertions": [
+        {"text": "Preserves the selected catalogue prompt as the first paragraph", "type": "verification"},
+        {"text": "Appends the shared visually led and interaction-first direction as the second paragraph", "type": "functional"},
+        {"text": "Does not prescribe Three.js or any other framework, library, or version", "type": "negative"}
+      ],
+      "tags": ["catalogue", "interaction", "motion", "prompt-composition"]
+    },
+    {
+      "id": 17,
+      "name": "text-critical-format-keeps-copy",
+      "prompt": "Create a public-health CMS and campaign landing page where editors publish long-form guidance, FAQs, service updates, and translated resources.",
+      "expected_output": "Keeps the content-heavy CMS and landing-page purpose intact. It can still encourage polished interaction and motion where useful, but it does not suppress, trivialize, or replace the long-form and operational text the requested format needs.",
+      "assertions": [
+        {"text": "Treats the requested long-form guidance and CMS content as core product material", "type": "functional"},
+        {"text": "Does not apply the concise-text default as a ban on necessary copy", "type": "negative"}
+      ],
+      "tags": ["custom-brief", "text-rich", "landing-page", "cms", "exception"]
+    },
+    {
+      "id": 18,
+      "name": "root-entrypoint-allows-rich-asset-tree",
+      "prompt": "Create an explorable miniature planet with animated weather, spatial audio, custom illustrations, and several interactive regions.",
+      "expected_output": "Requires one exact root artifact/index.html entrypoint while allowing the production artifact to include all built scripts, styles, audio, images, fonts, models, shaders, data, and asset directories needed for the strongest drop-ready experience.",
+      "assertions": [
+        {"text": "Keeps artifact/index.html as the single root entrypoint", "type": "structural"},
+        {"text": "Allows and encourages a multi-file artifact with supporting asset directories", "type": "functional"},
+        {"text": "Does not collapse the result into one HTML file merely to satisfy the entrypoint rule", "type": "negative"}
+      ],
+      "tags": ["artifact", "assets", "multi-file", "static-handoff", "regression"]
+    },
+    {
+      "id": 19,
+      "name": "accepted-baseline-context-keeps-shared-direction",
+      "prompt": "Use ow-092, Abyssal Command Dive, as the baseline and add my context: the crew is mapping a newly opened trench for a live science broadcast.",
+      "expected_output": "After baseline acceptance, prepares the actual prompt with three distinct verbatim blocks: the ow-092 prompt, the user's added context, and the catalogue's shared experienceDirection. The fresh lead and artifact/PROMPT.md receive the complete composed prompt unchanged.",
+      "assertions": [
+        {"text": "Keeps the catalogue prompt and user context in distinct verbatim blocks", "type": "verification"},
+        {"text": "Includes the shared visually led and interaction-first direction as a third verbatim block", "type": "functional"},
+        {"text": "Does not omit the shared direction or splice unrelated catalogue content into the user context", "type": "negative"},
+        {"text": "Dispatch and artifact/PROMPT.md contain the same complete composed prompt", "type": "verification"}
+      ],
+      "tags": ["catalogue", "baseline", "context", "interaction", "regression"]
     }
   ]
 }

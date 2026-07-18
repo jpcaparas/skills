@@ -11,8 +11,8 @@ You own one isolated experiment. Follow `agents/oneshot-lead.md`.
 - Workspace: `{{RUN_PATH}}/workspace/`
 - Static artifact: `{{RUN_PATH}}/artifact/`
 
-## Actual Prompt (verbatim)
+## Prepared Actual Prompt (verbatim)
 
 {{ACTUAL_PROMPT}}
 
-Complete this prompt autonomously. You may create subagents and choose any implementation approach. Finish with the unchanged prompt at `artifact/PROMPT.md` and a verified drop-ready website at `artifact/index.html`.
+Complete this prompt autonomously. You may create subagents and choose any implementation approach. Finish with the unchanged prepared prompt at `artifact/PROMPT.md` and a verified drop-ready website whose root entrypoint is `artifact/index.html`. This is not a one-file restriction: include whatever built asset tree makes the experience strongest.

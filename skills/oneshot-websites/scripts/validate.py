@@ -48,6 +48,7 @@ PROMPT_ID_RE = re.compile(r"^ow-[0-9]{3,}$")
 SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "203a370b733bb6342d2d7d016aa6c9b514da109311e77bd72ae9c4ab0991ea76"
+CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -84,6 +85,27 @@ IMPLEMENTATION_CONSTRAINTS = (
 )
 
 RUNTIME_CONTRACTS = (
+    (
+        "catalogue-first no-argument response",
+        re.compile(
+            r"No brief or arguments.*?first substantive response.*?grouped by namespace.*?one-line description",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "two-paragraph custom prompt refinement",
+        re.compile(
+            r"Custom brief.*?refine.*?no more than two paragraphs.*?refinement is the actual prompt.*?PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "shared interactive catalogue direction",
+        re.compile(
+            r"Selected catalogue entry.*?experienceDirection.*?visual interaction.*?motion.*?without prescribing a stack",
+            re.I | re.S,
+        ),
+    ),
     ("exact prompt preservation", re.compile(r"(?:byte-for-byte|exact\s+(?:UTF-8\s+)?bytes|verbatim).*?(?:prompt|PROMPT\.md)", re.I | re.S)),
     ("coordinator prompt receipt", re.compile(r"(?:coordinator-owned|pre-dispatch).*?(?:receipt|provenance).*?(?:outside|worker-owned)|\.oneshot-provenance", re.I | re.S)),
     ("one fresh lead per experiment", re.compile(r"(?:one|each|every)\s+(?:fresh\s+)?lead.*?(?:each|every|one).*?experiment|fresh\s+lead\s+subagent", re.I | re.S)),
@@ -96,6 +118,13 @@ RUNTIME_CONTRACTS = (
     ("relevance-gated catalogue matching", re.compile(r"genuinely relevant.*?optional baselines.*?no meaningful match.*?without.*?catalogue", re.I | re.S)),
     ("artifact prompt", re.compile(r"artifact/PROMPT\.md")),
     ("artifact entrypoint", re.compile(r"artifact/index\.html")),
+    (
+        "multi-file artifact allowance",
+        re.compile(
+            r"entrypoint rule.*?not a single-file rule.*?(?:asset directory|built script|stylesheet|media file)",
+            re.I | re.S,
+        ),
+    ),
     ("drop-ready no-build handoff", re.compile(r"(?:drop-ready|static\s+(?:folder|host)).*?(?:no\s+(?:package\s+)?install|no\s+build|deployable)|(?:no\s+(?:package\s+)?install|no\s+build).*?(?:drop-ready|static\s+(?:folder|host))", re.I | re.S)),
 )
 
@@ -182,6 +211,36 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
     if data.get("schemaVersion") != "1.0":
         errors.append("prompt catalogue schemaVersion must be 1.0")
 
+    direction_value = data.get("experienceDirection")
+    if isinstance(direction_value, str) and direction_value != direction_value.strip():
+        errors.append("prompt catalogue experienceDirection must not contain surrounding whitespace")
+    experience_direction = as_text(direction_value)
+    if experience_direction is None:
+        errors.append("prompt catalogue is missing experienceDirection")
+    else:
+        direction_digest = hashlib.sha256(experience_direction.encode("utf-8")).hexdigest()
+        if direction_digest != CANONICAL_EXPERIENCE_DIRECTION_SHA256:
+            errors.append(
+                "prompt catalogue experienceDirection differs from the canonical reviewed direction; "
+                "keep implementation choices open and update the validator digest only after deliberate review"
+            )
+        if "\n" in experience_direction or "\r" in experience_direction:
+            errors.append("prompt catalogue experienceDirection must fit on one line")
+        for reason, expression in IMPLEMENTATION_CONSTRAINTS:
+            if expression.search(experience_direction):
+                errors.append("prompt catalogue experienceDirection contains a {} constraint".format(reason))
+        direction_requirements = (
+            ("a visually led default", re.compile(r"\bvisually led\b", re.I)),
+            ("an interaction-first default", re.compile(r"\binteraction-first\b", re.I)),
+            ("motion or animation", re.compile(r"\b(?:motion|animation)\b", re.I)),
+            ("concise text guidance", re.compile(r"\btext\b.*?\bconcise\b|\bconcise\b.*?\btext\b", re.I)),
+            ("a text-rich format exception", re.compile(r"\b(?:landing page|CMS|publication|narrative archive)\b", re.I)),
+            ("lead-owned technology and dependency choices", re.compile(r"\btechnology\b.*?\bdependency\b.*?\blead\b", re.I)),
+        )
+        for label, expression in direction_requirements:
+            if not expression.search(experience_direction):
+                errors.append("prompt catalogue experienceDirection is missing {}".format(label))
+
     categories = data.get("categories")
     prompts = data.get("prompts")
     if not isinstance(categories, list):
@@ -196,7 +255,7 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
         if not isinstance(category, Mapping):
             errors.append("catalogue category {} must be an object".format(index))
             continue
-        for field in ("id", "title"):
+        for field in ("id", "title", "description"):
             field_value = category.get(field)
             if isinstance(field_value, str) and field_value != field_value.strip():
                 errors.append(
@@ -207,12 +266,17 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
                 )
         category_id = as_text(category.get("id"))
         title = as_text(category.get("title"))
+        description = as_text(category.get("description"))
         if category_id is None or not SLUG_RE.fullmatch(category_id):
             errors.append("catalogue category {} has an invalid id".format(index))
         else:
             category_ids.append(category_id)
         if title is None:
             errors.append("catalogue category {} is missing a title".format(index))
+        if description is None:
+            errors.append("catalogue category {} is missing a description".format(index))
+        elif "\n" in description or "\r" in description:
+            errors.append("catalogue category {} description must fit on one line".format(index))
     duplicates = duplicate_values(category_ids)
     if duplicates:
         errors.append("catalogue contains duplicate category ids: {}".format(", ".join(sorted(duplicates))))
@@ -370,8 +434,8 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.0.0":
-        errors.append("metadata.json version must be 2.0.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != "2.1.0":
+        errors.append("metadata.json version must be 2.1.0")
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 

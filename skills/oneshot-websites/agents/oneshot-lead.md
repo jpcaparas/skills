@@ -24,9 +24,9 @@ You remain accountable for integrating and verifying their work. Recursive deleg
 Work freely in `workspace/`. Before completion:
 
 1. Build or export the production result into `artifact/`.
-2. Preserve the exact-case `artifact/PROMPT.md` byte-for-byte; it is the prompt you received.
-3. Put the one website entrypoint at the exact-case path `artifact/index.html`.
-4. Include every local script, stylesheet, media file, font, and generated asset needed by that entrypoint. Relative and root-relative local URLs are both allowed; their casing must match the files on disk, and `artifact/` will be deployed as the origin root.
+2. Preserve the exact-case `artifact/PROMPT.md` byte-for-byte; it is the prepared actual prompt you received, including any coordinator refinement.
+3. Put the website’s one root entrypoint at the exact-case path `artifact/index.html`.
+4. Treat that as an entrypoint requirement, never a single-file restriction. Include every local script, stylesheet, media file, font, model, shader, data file, and generated asset that serves the experience. Use asset directories freely when they improve the result. Relative and root-relative local URLs are both allowed; their casing must match the files on disk, and `artifact/` will be deployed as the origin root.
 5. Make `artifact/` deployable as a static folder with no install, build, framework development server, or server-side runtime step.
 6. Keep package manifests, source-only components, build and provider configuration, dependency or cache directories, server functions, secrets, and provider-filtered build state such as `.next/` out of the entire `artifact/` tree. Keep them in `workspace/` when the source project needs them.
 7. Keep the final folder within the conservative shared Drop envelope: at most 1,000 files, 5 MiB per file, and 100 MiB total.
