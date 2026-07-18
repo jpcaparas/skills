@@ -45,17 +45,122 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_ROOT"
 
-if ! python3 -c 'import yaml' >/dev/null 2>&1; then
+resolve_validation_executable() {
+    local request="$1"
+    local executable_dir resolved
+
+    if [[ "$request" == */* ]]; then
+        executable_dir="$(cd "$(dirname "$request")" 2>/dev/null && pwd -P)" || return 1
+        resolved="$executable_dir/$(basename "$request")"
+        [ -x "$resolved" ] || return 1
+        printf '%s\n' "$resolved"
+        return 0
+    fi
+
+    command -v "$request" 2>/dev/null
+}
+
+validation_python_request="${SKILLS_VALIDATION_PYTHON:-}"
+if [ -z "$validation_python_request" ] && [ -x "$REPO_ROOT/.venv/bin/python3" ]; then
+    validation_python_request="$REPO_ROOT/.venv/bin/python3"
+fi
+if [ -z "$validation_python_request" ]; then
+    validation_python_request="python3"
+fi
+VALIDATION_PYTHON="$(resolve_validation_executable "$validation_python_request" || true)"
+
+if [ -z "$VALIDATION_PYTHON" ] \
+    || ! "$VALIDATION_PYTHON" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' >/dev/null 2>&1; then
     {
-        echo "ERROR: native validation requires the pinned Python packages."
-        echo "Install them with: python3 -m pip install -r requirements-validation.txt"
+        echo "ERROR: native validation requires Python 3.11 or newer."
+        echo "Create the repository .venv with a compatible interpreter; see TESTING.md."
     } >&2
     exit 1
 fi
 
+if ! "$VALIDATION_PYTHON" -c 'import openpyxl, yaml' >/dev/null 2>&1; then
+    {
+        echo "ERROR: native validation requires the pinned Python packages."
+        echo "Install them with: $VALIDATION_PYTHON -m pip install -r requirements-validation.txt"
+    } >&2
+    exit 1
+fi
+
+readonly VALIDATION_PYTHON
+
+validation_bun_request="${SKILLS_VALIDATION_BUN:-}"
+if [ -z "$validation_bun_request" ]; then
+    validation_bun_request="$(command -v bun 2>/dev/null || true)"
+fi
+if [ -z "$validation_bun_request" ]; then
+    standard_bun="${BUN_INSTALL:-${HOME:-}/.bun}/bin/bun"
+    if [ -x "$standard_bun" ]; then
+        validation_bun_request="$standard_bun"
+    fi
+fi
+VALIDATION_BUN="$(resolve_validation_executable "$validation_bun_request" || true)"
+if [ -z "$VALIDATION_BUN" ] || ! "$VALIDATION_BUN" --version >/dev/null 2>&1; then
+    {
+        echo "ERROR: native validation requires Bun for the scaffold-hooks probes."
+        echo "Install Bun and ensure bun is on PATH; see TESTING.md."
+    } >&2
+    exit 1
+fi
+
+readonly VALIDATION_BUN
+
+validation_npx_request="${SKILLS_VALIDATION_NPX:-}"
+if [ -z "$validation_npx_request" ]; then
+    validation_npx_request="$(command -v npx 2>/dev/null || true)"
+fi
+VALIDATION_NPX="$(resolve_validation_executable "$validation_npx_request" || true)"
+validation_npx_dir="$(dirname "${VALIDATION_NPX:-.}")"
+validation_node_request="${SKILLS_VALIDATION_NODE:-}"
+if [ -z "$validation_node_request" ] && [ -x "$validation_npx_dir/node" ]; then
+    validation_node_request="$validation_npx_dir/node"
+fi
+if [ -z "$validation_node_request" ]; then
+    validation_node_request="$(command -v node 2>/dev/null || true)"
+fi
+VALIDATION_NODE="$(resolve_validation_executable "$validation_node_request" || true)"
+validation_node_dir="$(dirname "${VALIDATION_NODE:-.}")"
+if [ -z "$VALIDATION_NPX" ] || [ -z "$VALIDATION_NODE" ] \
+    || ! PATH="$validation_node_dir:$validation_npx_dir:$PATH" \
+        "$VALIDATION_NPX" --version >/dev/null 2>&1; then
+    {
+        echo "ERROR: native validation requires npx for the skills discovery probe."
+        echo "Install Node.js with npm/npx and ensure npx is on PATH; see TESTING.md."
+    } >&2
+    exit 1
+fi
+
+readonly VALIDATION_NODE VALIDATION_NPX
+
+# Present one collision-proof command directory to every child. Prepending the
+# Bun or Node installation directories directly could shadow the selected
+# Python (or each other) when those runtimes share a package-manager prefix.
+validation_tool_bin="$(mktemp -d "${TMPDIR:-/tmp}/skills-validation-tools.XXXXXX")"
+cleanup_validation_tool_bin() {
+    local command_name
+    for command_name in python python3 bun node npx; do
+        if [ -e "$validation_tool_bin/$command_name" ] || [ -L "$validation_tool_bin/$command_name" ]; then
+            unlink "$validation_tool_bin/$command_name"
+        fi
+    done
+    rmdir "$validation_tool_bin"
+}
+trap cleanup_validation_tool_bin EXIT
+
+ln -s "$VALIDATION_PYTHON" "$validation_tool_bin/python"
+ln -s "$VALIDATION_PYTHON" "$validation_tool_bin/python3"
+ln -s "$VALIDATION_BUN" "$validation_tool_bin/bun"
+ln -s "$VALIDATION_NODE" "$validation_tool_bin/node"
+ln -s "$VALIDATION_NPX" "$validation_tool_bin/npx"
+export PATH="$validation_tool_bin:$PATH"
+
 echo "Checking local and CI validation entrypoint parity"
-python3 scripts/test-validation-entrypoint-parity.py
-python3 scripts/check-validation-entrypoint-parity.py
+"$VALIDATION_PYTHON" scripts/test-validation-entrypoint-parity.py
+"$VALIDATION_PYTHON" scripts/check-validation-entrypoint-parity.py
 
 echo "Checking the local act matrix wrapper"
 bash scripts/test-validate-ci-with-act.sh
@@ -64,15 +169,15 @@ echo "Checking stop-validation snapshot caching"
 bash scripts/test-agent-stop-checks.sh
 
 echo "Checking README skill coverage"
-python3 scripts/test-shared-validator-regressions.py
-python3 scripts/validate-readme-skills.py
-python3 scripts/validate-skill-art.py
-python3 scripts/check-skill-description-budget.py
+"$VALIDATION_PYTHON" scripts/test-shared-validator-regressions.py
+"$VALIDATION_PYTHON" scripts/validate-readme-skills.py
+"$VALIDATION_PYTHON" scripts/validate-skill-art.py
+"$VALIDATION_PYTHON" scripts/check-skill-description-budget.py
 
 while IFS= read -r skill; do
     echo "Validating ${skill}"
-    python3 "${skill}/scripts/validate.py" "${skill}" < /dev/null
-    python3 "${skill}/scripts/test_skill.py" "${skill}" < /dev/null
+    "$VALIDATION_PYTHON" "${skill}/scripts/validate.py" "${skill}" < /dev/null
+    "$VALIDATION_PYTHON" "${skill}/scripts/test_skill.py" "${skill}" < /dev/null
 done < <(find skills -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/SKILL.md" ';' -print | LC_ALL=C sort)
 
 echo "Checking for leaked builder-only placement metadata"

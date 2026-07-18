@@ -1,11 +1,23 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "organization": "JP Caparas",
-  "date": "May 2026",
-  "abstract": "Generate semi-deterministic catalogs of parallel one-shot single-file website variants, with a style repertoire, prompt-per-route output, fairness-aware catalog index, and validation scripts for benchmark-ready directories.",
+  "date": "July 2026",
+  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with a catalogue seeded with 100 prompts, recursive delegation, collision-free model/harness/experiment namespaces, coordinator-recorded prompt provenance, and drop-ready static artifacts.",
   "references": [
     "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
-    "https://kimi-k25-synthetic.pages.dev/",
-    "https://ui.sh/"
+    "https://x.com/mweinbach/status/2077827886149439547",
+    "https://x.com/jumperz/status/2077841331037094042",
+    "https://x.com/shiri_shh/status/2078213686481895812",
+    "https://x.com/LLMJunky/status/2078267563511787532",
+    "https://x.com/sharkydev001/status/2078025345417294325",
+    "https://x.com/adxtyahq/status/2077836136630943999",
+    "https://arena.ai/blog/webdev-arena/",
+    "https://arxiv.org/abs/2505.03733",
+    "https://github.com/NoviScl/Design2Code",
+    "https://github.com/Tencent-Hunyuan/ArtifactsBenchmark",
+    "https://www.cloudflare.com/drop/",
+    "https://developers.cloudflare.com/workers/platform/claim-deployments/#supported-resources",
+    "https://vercel.com/drop",
+    "https://vercel.com/docs/drop"
   ]
 }

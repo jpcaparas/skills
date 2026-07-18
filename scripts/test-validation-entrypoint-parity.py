@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -19,6 +20,7 @@ VALIDATOR_SOURCE: Final = SCRIPT_DIR / "check-validation-entrypoint-parity.py"
 YAML_VALIDATION_SOURCE: Final = SCRIPT_DIR / "yaml_validation.py"
 STOP_CHECK_SOURCE: Final = SCRIPT_DIR / "agent-stop-checks.sh"
 SNAPSHOT_SOURCE: Final = SCRIPT_DIR / "agent-repo-snapshot.sh"
+CANONICAL_VALIDATOR_SOURCE: Final = SCRIPT_DIR / "validate-all-skills.sh"
 CANONICAL_COMMAND: Final = "bash scripts/validate-all-skills.sh"
 ACT_MATRIX_COMMAND: Final = "bash scripts/validate-ci-with-act.sh --matrix"
 ACT_UBUNTU_COMMAND: Final = "bash scripts/validate-ci-with-act.sh --ubuntu"
@@ -39,6 +41,38 @@ jobs:
           - ubuntu-24.04
           - macos-15
     steps:
+      - name: Set Up Python
+        if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Set Up Node
+        if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+      - name: Set Up Bun
+        if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.11"
+      - name: Prepare Local macOS Toolchain (act)
+        if: ${{{{ env.ACT && runner.os == 'macOS' }}}}
+        shell: bash
+        run: |
+          validation_python="${{SKILLS_ACT_MACOS_PYTHON:-}}"
+          validation_node="${{SKILLS_ACT_MACOS_NODE:-}}"
+          validation_npm="${{SKILLS_ACT_MACOS_NPM:-}}"
+          validation_npx="${{SKILLS_ACT_MACOS_NPX:-}}"
+          validation_bun="${{SKILLS_ACT_MACOS_BUN:-}}"
+          "$validation_python" -c 'import sys, venv; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'
+          "$validation_node" --version
+          "$validation_bun" --version
+          "$validation_python" -m venv "$RUNNER_TEMP/validation-venv"
+          ln -s "$validation_node" "$RUNNER_TEMP/bin/node"
+          ln -s "$validation_npm" "$RUNNER_TEMP/bin/npm"
+          ln -s "$validation_npx" "$RUNNER_TEMP/bin/npx"
+          ln -s "$validation_bun" "$RUNNER_TEMP/bin/bun"
       - name: Validate Skills
         run: {CANONICAL_COMMAND}
 """
@@ -229,6 +263,161 @@ class ValidationEntrypointParityTests(unittest.TestCase):
         result = self.run_validator(workflow=workflow)
 
         self.assert_rejected(result, "matrix must set fail-fast to false")
+
+    def test_rejects_drift_from_hosted_python_311(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            'python-version: "3.11"',
+            'python-version: "3.12"',
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(result, "must pin python-version to '3.11'")
+
+    def test_rejects_drift_from_hosted_node_24(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            'node-version: "24"',
+            'node-version: "26"',
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(result, "must pin node-version to '24'")
+
+    def test_rejects_drift_from_hosted_bun_1311(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            'bun-version: "1.3.11"',
+            'bun-version: "1.4.0"',
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(result, "must pin bun-version to '1.3.11'")
+
+    def test_rejects_bare_python_for_local_macos_bootstrap(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            '"$validation_python" -m venv "$RUNNER_TEMP/validation-venv"',
+            'python3 -m venv "$RUNNER_TEMP/validation-venv"',
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(result, "must not bootstrap from bare python3")
+
+    def test_rejects_commented_local_macos_runtime_selection(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            '          validation_bun="${SKILLS_ACT_MACOS_BUN:-}"',
+            '          # validation_bun="${SKILLS_ACT_MACOS_BUN:-}"',
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(
+            result,
+            "must contain 'validation_bun=\"${SKILLS_ACT_MACOS_BUN:-}\"'",
+        )
+
+    def test_rejects_quoted_output_decoys_for_local_macos_toolchain(self) -> None:
+        requirements = (
+            (
+                'validation_python="${SKILLS_ACT_MACOS_PYTHON:-}"',
+                'validation_python="${SKILLS_ACT_MACOS_PYTHON:-}"',
+            ),
+            (
+                'validation_node="${SKILLS_ACT_MACOS_NODE:-}"',
+                'validation_node="${SKILLS_ACT_MACOS_NODE:-}"',
+            ),
+            (
+                'validation_npm="${SKILLS_ACT_MACOS_NPM:-}"',
+                'validation_npm="${SKILLS_ACT_MACOS_NPM:-}"',
+            ),
+            (
+                'validation_npx="${SKILLS_ACT_MACOS_NPX:-}"',
+                'validation_npx="${SKILLS_ACT_MACOS_NPX:-}"',
+            ),
+            (
+                'validation_bun="${SKILLS_ACT_MACOS_BUN:-}"',
+                'validation_bun="${SKILLS_ACT_MACOS_BUN:-}"',
+            ),
+            (
+                '"$validation_python" -c \'import sys, venv; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)\'',
+                "sys.version_info >= (3, 11)",
+            ),
+            ('"$validation_node" --version', '"$validation_node" --version'),
+            ('"$validation_bun" --version', '"$validation_bun" --version'),
+            (
+                '"$validation_python" -m venv "$RUNNER_TEMP/validation-venv"',
+                '"$validation_python" -m venv',
+            ),
+            (
+                'ln -s "$validation_node" "$RUNNER_TEMP/bin/node"',
+                'ln -s "$validation_node"',
+            ),
+            (
+                'ln -s "$validation_npm" "$RUNNER_TEMP/bin/npm"',
+                'ln -s "$validation_npm"',
+            ),
+            (
+                'ln -s "$validation_npx" "$RUNNER_TEMP/bin/npx"',
+                'ln -s "$validation_npx"',
+            ),
+            (
+                'ln -s "$validation_bun" "$RUNNER_TEMP/bin/bun"',
+                'ln -s "$validation_bun"',
+            ),
+        )
+
+        for active_line, expected_fragment in requirements:
+            with self.subTest(active_line=active_line):
+                workflow = VALID_WORKFLOW.replace(
+                    f"          {active_line}",
+                    f"          echo {shlex.quote(active_line)}",
+                    1,
+                )
+
+                result = self.run_validator(workflow=workflow)
+
+                self.assert_rejected(
+                    result,
+                    f"must contain {expected_fragment!r}",
+                )
+
+    def test_rejects_dead_local_macos_runtime_selection(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            '          validation_node="${SKILLS_ACT_MACOS_NODE:-}"',
+            "          if false; then\n"
+            '            validation_node="${SKILLS_ACT_MACOS_NODE:-}"\n'
+            "          fi",
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(
+            result,
+            "must contain 'validation_node=\"${SKILLS_ACT_MACOS_NODE:-}\"'",
+        )
+
+    def test_rejects_commented_local_macos_npm_shim(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            '          ln -s "$validation_npm" "$RUNNER_TEMP/bin/npm"',
+            '          # ln -s "$validation_npm" "$RUNNER_TEMP/bin/npm"',
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(result, 'must contain \'ln -s "$validation_npm"\'')
+
+    def test_rejects_dead_local_macos_npx_shim(self) -> None:
+        workflow = VALID_WORKFLOW.replace(
+            '          ln -s "$validation_npx" "$RUNNER_TEMP/bin/npx"',
+            "          if false; then\n"
+            '            ln -s "$validation_npx" "$RUNNER_TEMP/bin/npx"\n'
+            "          fi",
+        )
+
+        result = self.run_validator(workflow=workflow)
+
+        self.assert_rejected(result, 'must contain \'ln -s "$validation_npx"\'')
 
     def test_rejects_workflow_matrix_exclusion(self) -> None:
         workflow = VALID_WORKFLOW.replace(
@@ -526,6 +715,294 @@ jobs:
                 marker.read_text(encoding="utf-8").splitlines(),
                 ["interactive", "probe"],
             )
+
+
+class ValidationToolchainSelectionTests(unittest.TestCase):
+    """Exercise the canonical validator's local interpreter preflight."""
+
+    def create_fixture(self, root: Path) -> Path:
+        scripts_dir = root / "scripts"
+        scripts_dir.mkdir(parents=True)
+        shutil.copy2(CANONICAL_VALIDATOR_SOURCE, scripts_dir / "validate-all-skills.sh")
+        (scripts_dir / "test-validate-ci-with-act.sh").write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            "python3 --child-probe\n"
+            "bun --child-probe\n"
+            "npx --child-probe\n"
+            "exit 73\n",
+            encoding="utf-8",
+        )
+        return root / "python-invocations.log"
+
+    def create_fake_bun(self, executable: Path) -> None:
+        executable.parent.mkdir(parents=True, exist_ok=True)
+        executable.write_text(
+            "#!/usr/bin/env sh\n"
+            f"printf '%s|%s\\n' {shlex.quote(str(executable))} \"$*\" "
+            ">>\"${FAKE_BUN_LOG:?}\"\n"
+            "exit 0\n",
+            encoding="utf-8",
+        )
+        executable.chmod(0o755)
+
+    def create_fake_npx(self, executable: Path) -> None:
+        executable.parent.mkdir(parents=True, exist_ok=True)
+        node = executable.parent / "node"
+        node.write_text("#!/usr/bin/env sh\nexit 0\n", encoding="utf-8")
+        node.chmod(0o755)
+        executable.write_text(
+            "#!/usr/bin/env sh\n"
+            "command -v node >/dev/null 2>&1 || exit 86\n"
+            f"printf '%s|%s\\n' {shlex.quote(str(executable))} \"$*\" "
+            ">>\"${FAKE_NPX_LOG:?}\"\n"
+            "exit 0\n",
+            encoding="utf-8",
+        )
+        executable.chmod(0o755)
+
+    def create_fake_python(
+        self,
+        executable: Path,
+        *,
+        include_bun: bool = True,
+        include_npx: bool = True,
+    ) -> None:
+        executable.parent.mkdir(parents=True, exist_ok=True)
+        executable.write_text(
+            "#!/usr/bin/env bash\n"
+            "set -euo pipefail\n"
+            f"printf '%s|%s\\n' {shlex.quote(str(executable))} \"$*\" "
+            ">>\"${FAKE_PYTHON_LOG:?}\"\n"
+            "if [ \"${1:-}\" = \"-c\" ]; then\n"
+            "    case \"${2:-}\" in\n"
+            "        *version_info*) exit \"${FAKE_PYTHON_VERSION_STATUS:-0}\" ;;\n"
+            "        *openpyxl*) exit \"${FAKE_PYTHON_DEPENDENCY_STATUS:-0}\" ;;\n"
+            "        *sys.executable*)\n"
+            "            executable_dir=\"$(cd \"$(dirname \"$0\")\" && pwd -P)\"\n"
+            "            printf '%s/%s\\n' \"$executable_dir\" \"$(basename \"$0\")\"\n"
+            "            exit 0\n"
+            "            ;;\n"
+            "    esac\n"
+            "fi\n"
+            "exit 0\n",
+            encoding="utf-8",
+        )
+        executable.chmod(0o755)
+        if include_bun:
+            self.create_fake_bun(executable.parent / "bun")
+        if include_npx:
+            self.create_fake_npx(executable.parent / "npx")
+
+    def run_fixture(
+        self,
+        root: Path,
+        log: Path,
+        *,
+        path_python: Path,
+        override: Path | None = None,
+        npx_override: Path | None = None,
+        version_status: int = 0,
+        dependency_status: int = 0,
+    ) -> subprocess.CompletedProcess[str]:
+        environment = {
+            **os.environ,
+            "PATH": f"{path_python.parent}:/usr/bin:/bin",
+            "HOME": str(root / "home"),
+            "FAKE_PYTHON_LOG": str(log),
+            "FAKE_BUN_LOG": str(log),
+            "FAKE_NPX_LOG": str(log),
+            "FAKE_PYTHON_VERSION_STATUS": str(version_status),
+            "FAKE_PYTHON_DEPENDENCY_STATUS": str(dependency_status),
+        }
+        environment.pop("BUN_INSTALL", None)
+        environment.pop("SKILLS_VALIDATION_BUN", None)
+        environment.pop("SKILLS_VALIDATION_NODE", None)
+        if npx_override is None:
+            environment.pop("SKILLS_VALIDATION_NPX", None)
+        else:
+            environment["SKILLS_VALIDATION_NPX"] = str(npx_override)
+        if override is None:
+            environment.pop("SKILLS_VALIDATION_PYTHON", None)
+        else:
+            environment["SKILLS_VALIDATION_PYTHON"] = str(override)
+        return subprocess.run(
+            ["bash", "scripts/validate-all-skills.sh"],
+            cwd=root,
+            check=False,
+            capture_output=True,
+            text=True,
+            env=environment,
+        )
+
+    def test_explicit_python_override_wins_over_repository_venv(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            venv_python = root / ".venv" / "bin" / "python3"
+            override_python = root / "override" / "bin" / "python3"
+            self.create_fake_python(venv_python)
+            self.create_fake_python(override_python)
+
+            result = self.run_fixture(
+                root,
+                log,
+                path_python=venv_python,
+                override=override_python,
+            )
+
+            self.assertEqual(result.returncode, 73, result.stderr)
+            invocations = log.read_text(encoding="utf-8")
+            self.assertIn(str(override_python), invocations)
+            self.assertNotIn(str(venv_python), invocations)
+
+    def test_repository_venv_wins_over_path_python(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            venv_python = root / ".venv" / "bin" / "python3"
+            path_python = root / "path" / "bin" / "python3"
+            self.create_fake_python(venv_python)
+            self.create_fake_python(path_python)
+
+            result = self.run_fixture(root, log, path_python=path_python)
+
+            self.assertEqual(result.returncode, 73, result.stderr)
+            invocations = log.read_text(encoding="utf-8")
+            self.assertIn(str(venv_python), invocations)
+            self.assertNotIn(str(path_python), invocations)
+
+    def test_python_older_than_311_is_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "path" / "bin" / "python3"
+            self.create_fake_python(python)
+
+            result = self.run_fixture(root, log, path_python=python, version_status=1)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires Python 3.11 or newer", result.stderr)
+
+    def test_missing_python_packages_are_rejected(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "path" / "bin" / "python3"
+            self.create_fake_python(python)
+
+            result = self.run_fixture(root, log, path_python=python, dependency_status=1)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires the pinned Python packages", result.stderr)
+
+    def test_child_python3_uses_the_selected_environment(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "selected" / "bin" / "python3"
+            self.create_fake_python(python)
+
+            result = self.run_fixture(root, log, path_python=python, override=python)
+
+            self.assertEqual(result.returncode, 73, result.stderr)
+            self.assertIn(
+                f"{python}|--child-probe",
+                log.read_text(encoding="utf-8"),
+            )
+
+    def test_versioned_only_python_override_is_exposed_to_children(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            path_python = root / "path" / "bin" / "python3"
+            versioned_python = root / "selected" / "bin" / "python3.13"
+            self.create_fake_python(path_python)
+            self.create_fake_python(versioned_python)
+
+            result = self.run_fixture(
+                root,
+                log,
+                path_python=path_python,
+                override=versioned_python,
+            )
+
+            self.assertEqual(result.returncode, 73, result.stderr)
+            self.assertIn(
+                f"{versioned_python}|--child-probe",
+                log.read_text(encoding="utf-8"),
+            )
+
+    def test_missing_bun_fails_before_skill_validation(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "path" / "bin" / "python3"
+            self.create_fake_python(python, include_bun=False)
+
+            result = self.run_fixture(root, log, path_python=python)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires Bun for the scaffold-hooks probes", result.stderr)
+
+    def test_standard_bun_install_is_added_to_child_path(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "path" / "bin" / "python3"
+            standard_bun = root / "home" / ".bun" / "bin" / "bun"
+            self.create_fake_python(python, include_bun=False)
+            self.create_fake_bun(standard_bun)
+
+            result = self.run_fixture(root, log, path_python=python)
+
+            self.assertEqual(result.returncode, 73, result.stderr)
+            self.assertIn(
+                f"{standard_bun}|--child-probe",
+                log.read_text(encoding="utf-8"),
+            )
+
+    def test_missing_npx_fails_before_skill_validation(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "path" / "bin" / "python3"
+            self.create_fake_python(python, include_npx=False)
+
+            result = self.run_fixture(root, log, path_python=python)
+
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("requires npx for the skills discovery probe", result.stderr)
+
+    def test_explicit_npx_override_uses_its_sibling_node(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
+            root = Path(temp_dir)
+            log = self.create_fixture(root)
+            python = root / "path" / "bin" / "python3"
+            npx = root / "node-toolchain" / "bin" / "npx"
+            self.create_fake_python(python, include_npx=False)
+            self.create_fake_npx(npx)
+            shadow_python = npx.parent / "python3"
+            shadow_python.write_text(
+                "#!/usr/bin/env sh\n"
+                "printf 'shadow-python|%s\\n' \"$*\" >>\"${FAKE_PYTHON_LOG:?}\"\n"
+                "exit 0\n",
+                encoding="utf-8",
+            )
+            shadow_python.chmod(0o755)
+
+            result = self.run_fixture(
+                root,
+                log,
+                path_python=python,
+                npx_override=npx,
+            )
+
+            self.assertEqual(result.returncode, 73, result.stderr)
+            invocations = log.read_text(encoding="utf-8")
+            self.assertIn(f"{npx}|--child-probe", invocations)
+            self.assertIn(f"{python}|--child-probe", invocations)
+            self.assertNotIn("shadow-python|--child-probe", invocations)
 
 
 if __name__ == "__main__":

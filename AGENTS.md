@@ -5,6 +5,7 @@ This repository is a public source for installable agent skills.
 ## Conventions
 
 - Put every installable skill in `skills/<skill-name>/`.
+- This is a public repository used across many developer machines. Keep local and userland tooling requirements flexible: accept compatible version ranges and explicit executable overrides instead of pinning one exact Python, Node.js, Bun, or other runtime version unless compatibility truly requires it. Put deterministic exact pins at reproducible boundaries such as GitHub Actions, containers, and lockfiles, and document the distinction.
 - Treat this repository as the source of truth for existing skills. When modifying an existing skill, make the change in this repo first, not only in an installed copy under another skills directory.
 - Keep `SKILL.md` as the canonical instruction file for each skill.
 - Treat `README.md`, `AGENTS.md`, and `metadata.json` beside a skill as thin packaging wrappers, not alternate sources of truth.

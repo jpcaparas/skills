@@ -1,0 +1,42 @@
+[
+  {
+    "query": "Use oneshot-websites to make a playable orbital rendezvous simulator.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a one-shot web artifact for an interactive street-food atlas, with the final site ready to drop on a static host.",
+    "should_trigger": true
+  },
+  {
+    "query": "Show me ideas from your one-shot website prompt catalogue before I decide what to build.",
+    "should_trigger": true
+  },
+  {
+    "query": "Compare three coding models on the same interactive museum brief, keeping each attempt isolated.",
+    "should_trigger": true
+  },
+  {
+    "query": "Add a new goal-only template to our one-shot website prompt catalogue without renumbering existing entries.",
+    "should_trigger": true
+  },
+  {
+    "query": "Validate my namespaced one-shot website output root and its Drop-ready artifacts before I publish it.",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you help me improve the copy and spacing on my existing bakery homepage?",
+    "should_trigger": false
+  },
+  {
+    "query": "I already have a React site; help me diagnose why its production build command fails in CI.",
+    "should_trigger": false
+  },
+  {
+    "query": "What are a few accessible color-pairing guidelines for a dashboard?",
+    "should_trigger": false
+  },
+  {
+    "query": "How do I deploy my already-built static site to a hosting provider?",
+    "should_trigger": false
+  }
+]

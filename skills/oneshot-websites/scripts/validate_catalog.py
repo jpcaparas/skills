@@ -1,124 +1,1492 @@
 #!/usr/bin/env python3
-"""Validate an output directory generated with the oneshot-websites skill."""
+"""Validate one-shot website run provenance and drop-ready static artifacts."""
 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+import os
 import re
-from pathlib import Path
+import stat
+from dataclasses import dataclass
+from html.parser import HTMLParser
+from pathlib import Path, PurePosixPath
+from typing import Any, Iterator, Optional, Tuple
+from urllib.parse import unquote, urljoin, urlsplit
+
+from build_catalog_index import (
+    CATALOGUE_LOCK,
+    CatalogueBuildError,
+    NAMESPACE_TEMP_RE,
+    RUN_ID_RE,
+    STALE_INDEX_RE,
+    build_html,
+)
+from runtime_contract import (
+    BoundedReadError,
+    identity_key,
+    is_abandoned_run_reservation,
+    is_appledouble_sidecar,
+    parse_json_bounded,
+    read_regular_file_bounded,
+)
 
 
-REMOTE_IMAGE_RE = re.compile(r"<(?:img|source)\b[^>]*\bsrc=[\"']https?://", re.I)
-REMOTE_SCRIPT_RE = re.compile(r"<script\b[^>]*\bsrc=[\"']https?://", re.I)
-FRAMEWORK_HINT_RE = re.compile(r"(react|vue|svelte|alpine|cdn\.tailwindcss)\b", re.I)
+STATUSES = {"PLANNED", "RUNNING", "OK", "PARTIAL", "BLOCKED", "ERROR"}
+CLASSIFICATIONS = {"autonomous-one-shot", "rerun", "curated-attempt"}
+IDENTITY_MARKER = ".oneshot-identity.json"
+DROP_MAX_FILES = 1_000
+DROP_MAX_FILE_BYTES = 5 * 1024 * 1024
+DROP_MAX_TOTAL_BYTES = 100 * 1024 * 1024
+VALIDATION_MAX_DIRECTORIES = 10_000
+VALIDATION_MAX_DEPTH = 128
+MAX_LOCAL_REFERENCE_CHECKS = DROP_MAX_FILES * 4
+MAX_REFERENCE_DISPLAY_CHARS = 240
+MAX_LOCAL_REFERENCE_TEXT_CHARS = 512 * 1024
+MAX_CSS_SCAN_BYTES = 20 * 1024 * 1024
+METADATA_MAX_BYTES = 1024 * 1024
+PREPROCESS_ONLY_SUFFIXES = {
+    ".astro",
+    ".jsx",
+    ".less",
+    ".sass",
+    ".scss",
+    ".svelte",
+    ".ts",
+    ".tsx",
+    ".vue",
+}
+BUILD_OR_PROVIDER_FILES = {
+    "angular.json",
+    "astro.config.js",
+    "astro.config.mjs",
+    "astro.config.ts",
+    "bun.lock",
+    "bun.lockb",
+    "composer.json",
+    "deno.json",
+    "deno.jsonc",
+    "gatsby-config.js",
+    "gatsby-config.mjs",
+    "gatsby-config.ts",
+    "go.mod",
+    "Makefile",
+    "netlify.toml",
+    "next.config.js",
+    "next.config.mjs",
+    "next.config.ts",
+    "nuxt.config.js",
+    "nuxt.config.ts",
+    "package-lock.json",
+    "package.json",
+    "Pipfile",
+    "pnpm-lock.yaml",
+    "pyproject.toml",
+    "requirements.txt",
+    "svelte.config.js",
+    "svelte.config.ts",
+    "tsconfig.json",
+    "vercel.json",
+    "vite.config.js",
+    "vite.config.mjs",
+    "vite.config.ts",
+    "wrangler.json",
+    "wrangler.jsonc",
+    "wrangler.toml",
+    "yarn.lock",
+}
+NON_DEPLOYABLE_DIRECTORIES = {
+    ".bzr",
+    ".cache",
+    ".git",
+    ".hg",
+    ".netlify",
+    ".next",
+    ".now",
+    ".svn",
+    ".turbo",
+    ".venv",
+    ".vercel",
+    ".yarn",
+    "__pycache__",
+    "node_modules",
+    "venv",
+}
+SOURCE_TAGS = {"audio", "embed", "iframe", "img", "input", "script", "source", "track", "video"}
+HREF_TAGS = {"image", "use"}
+RESOURCE_LINK_RELS = {
+    "apple-touch-icon",
+    "icon",
+    "manifest",
+    "mask-icon",
+    "modulepreload",
+    "preload",
+    "stylesheet",
+}
+CSS_URL_RE = re.compile(r"url\(\s*(['\"]?)(.*?)\1\s*\)", re.IGNORECASE | re.DOTALL)
+CSS_IMPORT_RE = re.compile(r"@import\s+(['\"])(.*?)\1", re.IGNORECASE | re.DOTALL)
+CSS_IMAGE_SET_START_RE = re.compile(r"(?:-webkit-)?image-set\(", re.IGNORECASE)
+CSS_IMAGE_SET_CANDIDATE_RE = re.compile(r"(?:^|,)\s*(['\"])(.*?)\1", re.DOTALL)
+BUILD_OR_PROVIDER_FILE_NAMES = {value.casefold() for value in BUILD_OR_PROVIDER_FILES}
+SSH_PRIVATE_KEY_FILE_NAMES = {
+    "id_dsa",
+    "id_ecdsa",
+    "id_ed25519",
+    "id_rsa",
+}
+PRIVATE_KEY_LABELLED_BASENAMES = ("private-key", "private_key")
+PRIVATE_KEY_BEGIN_MARKERS = (
+    b"-----BEGIN PRIVATE KEY-----",
+    b"-----BEGIN ENCRYPTED PRIVATE KEY-----",
+    b"-----BEGIN RSA PRIVATE KEY-----",
+    b"-----BEGIN DSA PRIVATE KEY-----",
+    b"-----BEGIN EC PRIVATE KEY-----",
+    b"-----BEGIN OPENSSH PRIVATE KEY-----",
+    b"-----BEGIN PGP PRIVATE KEY BLOCK-----",
+)
 
 
-def load_manifest(root: Path) -> dict | None:
-    manifest_path = root / "manifest.json"
-    if not manifest_path.exists():
-        return None
-    return json.loads(manifest_path.read_text(encoding="utf-8"))
+@dataclass(frozen=True)
+class WorkerIdentity:
+    """Validated worker telemetry shared by the run manifest and report."""
+
+    lead: Optional[str]
+    descendants: tuple[str, ...]
 
 
-def infer_items(root: Path) -> list[dict]:
-    items: list[dict] = []
-    for child in sorted(p for p in root.iterdir() if p.is_dir()):
-        if (child / "index.html").exists() and (child / "PROMPT.md").exists():
-            items.append(
-                {
-                    "path": f"{child.name}/",
-                    "prompt": f"{child.name}/PROMPT.md",
-                    "type": child.name,
-                    "status": "OK",
-                    "summary": "Inferred route without manifest entry.",
-                }
+class LocalReferenceParser(HTMLParser):
+    """Collect browser-loaded HTML and inline-CSS references."""
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.references: list[str] = []
+        self.inline_styles: list[str] = []
+        self.base_href: Optional[str] = None
+        self.reference_overflow = False
+        self._reference_seen: set[str] = set()
+        self._inline_style_seen: set[str] = set()
+        self._retained_reference_chars = 0
+        self._inside_style = False
+        self._style_parts: list[str] = []
+
+    def _append_reference(self, value: str) -> None:
+        prefix = value[:32].lstrip().casefold()
+        if prefix.startswith(
+            ("data:", "blob:", "http:", "https:", "mailto:", "tel:", "javascript:", "//")
+        ):
+            return
+        if value in self._reference_seen:
+            return
+        if (
+            len(self._reference_seen) >= MAX_LOCAL_REFERENCE_CHECKS
+            or self._retained_reference_chars + len(value) > MAX_LOCAL_REFERENCE_TEXT_CHARS
+        ):
+            self.reference_overflow = True
+            return
+        self._reference_seen.add(value)
+        self._retained_reference_chars += len(value)
+        self.references.append(value)
+
+    def _append_inline_style(self, value: str) -> None:
+        if value in self._inline_style_seen:
+            return
+        if (
+            len(self._inline_style_seen) >= MAX_LOCAL_REFERENCE_CHECKS
+            or self._retained_reference_chars + len(value) > MAX_LOCAL_REFERENCE_TEXT_CHARS
+        ):
+            self.reference_overflow = True
+            return
+        self._inline_style_seen.add(value)
+        self._retained_reference_chars += len(value)
+        self.inline_styles.append(value)
+
+    def handle_starttag(self, tag: str, attrs: list[Tuple[str, Optional[str]]]) -> None:
+        normalized_tag = tag.casefold()
+        normalized_attrs = {name.casefold(): value for name, value in attrs}
+        link_rel = {
+            token.casefold()
+            for token in (normalized_attrs.get("rel") or "").split()
+        }
+        if normalized_tag == "style":
+            self._inside_style = True
+            self._style_parts = []
+        for name, value in attrs:
+            if value is None:
+                continue
+            normalized_name = name.casefold()
+            if normalized_tag == "base" and normalized_name == "href" and self.base_href is None:
+                self.base_href = value
+            elif normalized_name == "src" and normalized_tag in SOURCE_TAGS:
+                self._append_reference(value)
+            elif normalized_name == "poster" and normalized_tag == "video":
+                self._append_reference(value)
+            elif normalized_name == "data" and normalized_tag == "object":
+                self._append_reference(value)
+            elif normalized_name in {"href", "xlink:href"} and normalized_tag in HREF_TAGS:
+                self._append_reference(value)
+            elif (
+                normalized_name == "href"
+                and normalized_tag == "link"
+                and bool(link_rel & RESOURCE_LINK_RELS)
+            ):
+                self._append_reference(value)
+            elif normalized_name in {"srcset", "imagesrcset"}:
+                for reference in srcset_references(value):
+                    self._append_reference(reference)
+                    if self.reference_overflow:
+                        break
+            elif normalized_name == "style":
+                self._append_inline_style(value)
+
+    def handle_data(self, data: str) -> None:
+        if self._inside_style:
+            self._style_parts.append(data)
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag.casefold() == "style" and self._inside_style:
+            self._append_inline_style("".join(self._style_parts))
+            self._inside_style = False
+            self._style_parts = []
+
+    def finish(self) -> None:
+        """Retain CSS from a malformed document whose final style tag is unclosed."""
+
+        if self._inside_style:
+            if self.rawdata:
+                self._style_parts.append(self.rawdata)
+                self.rawdata = ""
+            self._append_inline_style("".join(self._style_parts))
+            self._inside_style = False
+            self._style_parts = []
+
+
+def srcset_references(value: str) -> Iterator[str]:
+    """Extract srcset URLs while preserving commas inside data candidates."""
+
+    position = 0
+    length = len(value)
+    while position < length:
+        while position < length and (value[position].isspace() or value[position] == ","):
+            position += 1
+        start = position
+        is_data = value[start : start + 5].casefold() == "data:"
+        while position < length and not value[position].isspace() and (is_data or value[position] != ","):
+            position += 1
+        candidate = value[start:position].rstrip(",")
+        if position < length and value[position] == ",":
+            position += 1
+            if candidate and not is_data:
+                yield candidate
+            continue
+        while position < length and value[position] != ",":
+            position += 1
+        if position < length:
+            position += 1
+        if candidate and not is_data:
+            yield candidate
+
+
+def object_value(value: object) -> dict[str, Any]:
+    """Return a JSON object value, treating other JSON values as absent."""
+    return value if isinstance(value, dict) else {}
+
+
+def text_value(value: object) -> Optional[str]:
+    """Return a meaningful string or None for malformed manifest fields."""
+    return value.strip() if isinstance(value, str) and value.strip() else None
+
+
+def parse_worker_identity(
+    record: dict[str, Any],
+    source: Path,
+    prefix: str,
+    errors: list[str],
+) -> Optional[WorkerIdentity]:
+    """Parse required worker telemetry fields into one comparable value."""
+
+    field_prefix = f"{prefix}." if prefix else ""
+    valid = True
+
+    if "leadWorkerId" not in record:
+        errors.append(f"{source}: {field_prefix}leadWorkerId is required")
+        lead: Optional[str] = None
+        valid = False
+    else:
+        lead_value = record.get("leadWorkerId")
+        if lead_value is None:
+            lead = None
+        elif isinstance(lead_value, str) and lead_value.strip():
+            lead = lead_value
+        else:
+            errors.append(
+                f"{source}: {field_prefix}leadWorkerId must be null or a non-blank string"
             )
-    return items
+            lead = None
+            valid = False
+
+    descendants_value = record.get("descendantWorkerIds")
+    descendants: list[str] = []
+    normalized_descendants: set[str] = set()
+    if not isinstance(descendants_value, list):
+        errors.append(f"{source}: {field_prefix}descendantWorkerIds must be an array")
+        valid = False
+    else:
+        for index, descendant_value in enumerate(descendants_value):
+            if not isinstance(descendant_value, str) or not descendant_value.strip():
+                errors.append(
+                    f"{source}: {field_prefix}descendantWorkerIds[{index}] "
+                    "must be a non-blank string"
+                )
+                valid = False
+                continue
+            normalized = descendant_value.strip()
+            if normalized in normalized_descendants:
+                errors.append(
+                    f"{source}: {field_prefix}descendantWorkerIds must contain unique IDs"
+                )
+                valid = False
+                continue
+            normalized_descendants.add(normalized)
+            descendants.append(descendant_value)
+
+    if lead is not None and lead.strip() in normalized_descendants:
+        errors.append(
+            f"{source}: {field_prefix}descendantWorkerIds must not repeat leadWorkerId"
+        )
+        valid = False
+
+    if not valid:
+        return None
+    return WorkerIdentity(lead=lead, descendants=tuple(descendants))
 
 
-def check_route_html(path: Path) -> list[str]:
-    errors: list[str] = []
-    text = path.read_text(encoding="utf-8", errors="replace")
-    stripped = text.strip()
-    if not stripped.lower().startswith("<!doctype html>"):
-        errors.append(f"{path}: does not start with <!DOCTYPE html>")
-    if not stripped.lower().endswith("</html>"):
-        errors.append(f"{path}: does not end with </html>")
-    if REMOTE_IMAGE_RE.search(text):
-        errors.append(f"{path}: contains remote image URL")
-    if REMOTE_SCRIPT_RE.search(text):
-        errors.append(f"{path}: contains remote script URL")
-    if FRAMEWORK_HINT_RE.search(text):
-        errors.append(f"{path}: contains framework/CDN hint")
-    return errors
+def is_passed_verification(value: object) -> bool:
+    """Recognize concrete structured evidence for a successful artifact."""
+
+    if not isinstance(value, dict):
+        return False
+    result = text_value(value.get("result"))
+    kind = text_value(value.get("kind"))
+    evidence = text_value(value.get("evidence"))
+    return result is not None and result.casefold() in {"ok", "passed", "success"} and kind is not None and evidence is not None
 
 
-def normalize_rel(value: str) -> str:
-    return value.strip().lstrip("/")
+def is_failed_verification(value: object) -> bool:
+    """Recognize an explicit failed check that contradicts an OK run status."""
+
+    if not isinstance(value, dict):
+        return False
+    result = text_value(value.get("result"))
+    return result is not None and result.casefold() in {"error", "fail", "failed", "failure"}
 
 
-def validate(root: Path) -> dict:
+def load_object(path: Path, errors: list[str]) -> Optional[dict[str, Any]]:
+    """Load a JSON object and report parse problems against its concrete path."""
+    try:
+        raw = read_regular_file_bounded(path, METADATA_MAX_BYTES)
+        decoded = raw.decode("utf-8")
+        value = parse_json_bounded(decoded)
+    except BoundedReadError as exc:
+        detail = str(exc)
+        if "exceeds" in detail:
+            errors.append(f"{path}: JSON metadata exceeds the 1 MiB read limit")
+        elif "regular" in detail:
+            errors.append(f"{path}: JSON metadata must be a regular file")
+        else:
+            errors.append(f"{path}: invalid JSON: {exc}")
+        return None
+    except (UnicodeDecodeError, json.JSONDecodeError, RecursionError, ValueError) as exc:
+        errors.append(f"{path}: invalid JSON: {exc}")
+        return None
+    if not isinstance(value, dict):
+        errors.append(f"{path}: top-level JSON value must be an object")
+        return None
+    return value
+
+
+def exact_child(parent: Path, name: str) -> Optional[Path]:
+    """Return a direct child only when its directory-entry casing is exact."""
+
+    try:
+        return next((entry for entry in parent.iterdir() if entry.name == name), None)
+    except OSError:
+        return None
+
+
+def exact_descendant(root: Path, relative: str) -> Optional[Path]:
+    """Resolve a POSIX relative path through exact-cased directory entries."""
+
+    current = root
+    parts = PurePosixPath(relative).parts
+    if not parts or any(part in {"", ".", ".."} for part in parts):
+        return None
+    for part in parts:
+        current = exact_child(current, part)
+        if current is None:
+            return None
+    return current
+
+
+def is_safe_relative_path(value: object) -> bool:
+    """Accept portable, non-empty paths that cannot escape their run directory."""
+    if not isinstance(value, str) or not value or "\\" in value:
+        return False
+    path = PurePosixPath(value)
+    return not path.is_absolute() and all(part not in {"", ".", ".."} for part in path.parts)
+
+
+def validate_manifest_paths(run_path: Path, run: dict[str, Any], errors: list[str]) -> None:
+    """Enforce the fixed handoff paths without constraining the source project."""
+    prompt = object_value(run.get("prompt"))
+    prompt_path = prompt.get("path")
+    if prompt_path != "artifact/PROMPT.md":
+        errors.append(f"{run_path}: prompt.path must be exactly artifact/PROMPT.md")
+
+    workspace = object_value(run.get("workspace"))
+    if workspace.get("path") != "workspace/":
+        errors.append(f"{run_path}: workspace.path must be exactly workspace/")
+    artifact = object_value(run.get("artifact"))
+    if artifact.get("path") != "artifact/":
+        errors.append(f"{run_path}: artifact.path must be exactly artifact/")
+    if artifact.get("entrypoint") != "artifact/index.html":
+        errors.append(f"{run_path}: artifact.entrypoint must be exactly artifact/index.html")
+    if artifact.get("deployment") != "static-folder":
+        errors.append(f"{run_path}: artifact.deployment must be exactly static-folder")
+
+    for label, value in (
+        ("prompt.path", prompt_path),
+        ("workspace.path", workspace.get("path")),
+        ("artifact.path", artifact.get("path")),
+        ("artifact.entrypoint", artifact.get("entrypoint")),
+    ):
+        if value is not None and not is_safe_relative_path(value):
+            errors.append(f"{run_path}: {label} is not a safe relative path")
+
+
+def has_url_control_character(value: str) -> bool:
+    """Reject browser-path controls before they reach filesystem APIs."""
+
+    return any(ord(character) < 32 or ord(character) == 127 for character in value)
+
+
+def display_reference(value: str) -> str:
+    """Bound attacker-controlled URL text in validator diagnostics."""
+
+    if len(value) <= MAX_REFERENCE_DISPLAY_CHARS:
+        return repr(value)
+    omitted = len(value) - MAX_REFERENCE_DISPLAY_CHARS
+    return f"{value[:MAX_REFERENCE_DISPLAY_CHARS]!r}… (+{omitted} chars)"
+
+
+def local_reference_path(
+    reference: str,
+    base_reference: str,
+    source: Path,
+    errors: list[str],
+) -> Optional[str]:
+    """Resolve one browser URL to an artifact-root-relative path when local."""
+
+    value = reference.strip()
+    if not value or value.startswith("#") or value.startswith("//"):
+        return None
+    try:
+        base_url = urljoin("https://oneshot.invalid/index.html", base_reference)
+        resolved_url = urljoin(base_url, value)
+        parsed = urlsplit(resolved_url)
+    except ValueError as error:
+        errors.append(f"{source}: malformed resource URL {display_reference(reference)}: {error}")
+        return None
+    if parsed.scheme not in {"http", "https"} or parsed.netloc != "oneshot.invalid":
+        return None
+    path = unquote(parsed.path)
+    if not path:
+        return None
+    if "\\" in path or has_url_control_character(path):
+        errors.append(f"{source}: unsafe decoded local resource URL: {display_reference(reference)}")
+        return None
+    artifact_relative = path.lstrip("/")
+    return artifact_relative or "index.html"
+
+
+def css_references(css: str) -> list[str]:
+    """Collect common CSS URL and quoted import references."""
+
+    uncommented = strip_css_comments(css)
+    syntax = mask_css_string_contents(uncommented)
+    references: list[str] = []
+    seen: set[str] = set()
+    retained_chars = 0
+
+    def append(value: str) -> None:
+        nonlocal retained_chars
+        normalized = value.strip()
+        if normalized in seen:
+            return
+        if (
+            len(seen) >= MAX_LOCAL_REFERENCE_CHECKS
+            or retained_chars + len(normalized) > MAX_LOCAL_REFERENCE_TEXT_CHARS
+        ):
+            raise ValueError(
+                "stylesheet resource-reference inventory exceeds its validation safety bound"
+            )
+        seen.add(normalized)
+        retained_chars += len(normalized)
+        references.append(normalized)
+
+    for match in CSS_URL_RE.finditer(uncommented):
+        if syntax[match.start() : match.start() + 3].casefold() == "url":
+            append(match.group(2))
+    for match in CSS_IMPORT_RE.finditer(uncommented):
+        if syntax[match.start() : match.start() + 7].casefold() == "@import":
+            append(match.group(2))
+    for image_set in css_image_set_bodies(uncommented, syntax):
+        for match in CSS_IMAGE_SET_CANDIDATE_RE.finditer(image_set):
+            append(match.group(2))
+    return references
+
+
+def strip_css_comments(css: str) -> str:
+    """Remove closed or EOF-terminated comments without touching string literals."""
+
+    output: list[str] = []
+    position = 0
+    quote: Optional[str] = None
+    escaped = False
+    while position < len(css):
+        character = css[position]
+        if quote is not None:
+            output.append(character)
+            if escaped:
+                escaped = False
+            elif character == "\\":
+                escaped = True
+            elif character == quote:
+                quote = None
+            position += 1
+            continue
+        if character in {"'", '"'}:
+            quote = character
+            output.append(character)
+            position += 1
+            continue
+        if css.startswith("/*", position):
+            closing = css.find("*/", position + 2)
+            if closing == -1:
+                break
+            position = closing + 2
+            continue
+        output.append(character)
+        position += 1
+    return "".join(output)
+
+
+def mask_css_string_contents(css: str) -> str:
+    """Mask quoted content while preserving offsets and live CSS punctuation."""
+
+    output: list[str] = []
+    quote: Optional[str] = None
+    escaped = False
+    for character in css:
+        if quote is None:
+            output.append(character)
+            if character in {"'", '"'}:
+                quote = character
+            continue
+        if escaped:
+            output.append(" ")
+            escaped = False
+        elif character == "\\":
+            output.append(" ")
+            escaped = True
+        elif character == quote:
+            output.append(character)
+            quote = None
+        else:
+            output.append(" ")
+    return "".join(output)
+
+
+def css_image_set_bodies(css: str, syntax: str) -> list[str]:
+    """Extract image-set bodies while respecting strings and nested type calls."""
+
+    bodies: list[str] = []
+    search_from = 0
+    while True:
+        opening = CSS_IMAGE_SET_START_RE.search(syntax, search_from)
+        if opening is None:
+            return bodies
+        position = opening.end()
+        body_start = position
+        depth = 1
+        quote: Optional[str] = None
+        escaped = False
+        while position < len(syntax):
+            character = syntax[position]
+            if quote is not None:
+                if escaped:
+                    escaped = False
+                elif character == "\\":
+                    escaped = True
+                elif character == quote:
+                    quote = None
+            elif character in {"'", '"'}:
+                quote = character
+            elif character == "(":
+                depth += 1
+            elif character == ")":
+                depth -= 1
+                if depth == 0:
+                    bodies.append(css[body_start:position])
+                    position += 1
+                    break
+            position += 1
+        search_from = max(position, opening.end())
+
+
+def validate_reference(
+    reference: str,
+    base_reference: str,
+    source: Path,
+    artifact_root: Path,
+    errors: list[str],
+) -> Optional[Path]:
+    """Validate one local resource and return a stylesheet for queued inspection."""
+
+    relative = local_reference_path(reference, base_reference, source, errors)
+    if relative is None:
+        return None
+    target = exact_descendant(artifact_root, relative)
+    if target is None:
+        errors.append(
+            f"{source}: referenced local file missing or path casing differs: {display_reference(reference)}"
+        )
+        return None
+    try:
+        resolved_target = target.resolve()
+        resolved_target.relative_to(artifact_root)
+    except (OSError, RuntimeError, ValueError) as error:
+        errors.append(
+            f"{source}: local reference escapes or cannot resolve: {display_reference(reference)} ({error})"
+        )
+        return None
+    if not target.is_file():
+        errors.append(f"{source}: referenced local file missing: {display_reference(reference)}")
+        return None
+    if target.suffix.casefold() in PREPROCESS_ONLY_SUFFIXES:
+        errors.append(
+            f"{source}: browser entry references preprocess-only source: {display_reference(reference)}"
+        )
+        return None
+    return target if target.suffix.casefold() == ".css" else None
+
+
+def validate_local_assets(index_path: Path, errors: list[str]) -> None:
+    """Check common HTML and transitive CSS resources in the built artifact."""
+
+    try:
+        artifact_root = index_path.parent.resolve()
+    except (OSError, RuntimeError) as error:
+        errors.append(f"{index_path}: artifact root cannot be resolved safely: {error}")
+        return
+    try:
+        html_text = read_regular_file_bounded(index_path, DROP_MAX_FILE_BYTES).decode("utf-8")
+    except BoundedReadError as error:
+        if "exceeds" in str(error):
+            errors.append(f"{index_path}: file exceeds the conservative 5 MiB folder-drop limit")
+        else:
+            errors.append(f"{index_path}: index.html is not readable UTF-8: {error}")
+        return
+    except UnicodeDecodeError as error:
+        errors.append(f"{index_path}: index.html is not readable UTF-8: {error}")
+        return
+    parser = LocalReferenceParser()
+    try:
+        parser.feed(html_text)
+        parser.close()
+        parser.finish()
+    except ValueError as error:
+        errors.append(f"{index_path}: index.html could not be parsed: {error}")
+        return
+    if parser.reference_overflow:
+        errors.append(
+            f"{index_path}: document exposes more than {MAX_LOCAL_REFERENCE_CHECKS} distinct resource references"
+        )
+
+    base_reference = parser.base_href or "/index.html"
+    pending: list[tuple[str, str, Path]] = []
+    scheduled_references: set[tuple[str, str, Path]] = set()
+    scheduled_reference_chars = 0
+    reference_inventory_overflow = False
+
+    def enqueue_reference(reference: str, reference_base: str, source: Path) -> None:
+        nonlocal reference_inventory_overflow, scheduled_reference_chars
+        key = (reference, reference_base, source)
+        if key in scheduled_references:
+            return
+        reference_chars = len(reference) + len(reference_base)
+        if (
+            len(scheduled_references) >= MAX_LOCAL_REFERENCE_CHECKS
+            or scheduled_reference_chars + reference_chars > MAX_LOCAL_REFERENCE_TEXT_CHARS
+        ):
+            if not reference_inventory_overflow:
+                errors.append(
+                    f"{index_path}: static asset reference inventory exceeds its validation safety bound"
+                )
+            reference_inventory_overflow = True
+            return
+        scheduled_references.add(key)
+        scheduled_reference_chars += reference_chars
+        pending.append(key)
+
+    for reference in parser.references:
+        enqueue_reference(reference, base_reference, index_path)
+    for inline_style in parser.inline_styles:
+        try:
+            inline_references = css_references(inline_style)
+        except ValueError as error:
+            errors.append(f"{index_path}: inline stylesheet reference inventory is too large: {error}")
+            continue
+        for reference in inline_references:
+            enqueue_reference(reference, base_reference, index_path)
+
+    checked_css: set[Path] = set()
+    css_bytes_scanned = 0
+    while pending:
+        reference, reference_base, source = pending.pop()
+        stylesheet = validate_reference(reference, reference_base, source, artifact_root, errors)
+        if stylesheet is None or stylesheet in checked_css:
+            continue
+        checked_css.add(stylesheet)
+        try:
+            css_bytes = read_regular_file_bounded(stylesheet, DROP_MAX_FILE_BYTES)
+        except BoundedReadError as error:
+            if "exceeds" in str(error):
+                errors.append(f"{stylesheet}: file exceeds the conservative 5 MiB folder-drop limit")
+            else:
+                errors.append(f"{stylesheet}: stylesheet is not readable UTF-8: {error}")
+            continue
+        if css_bytes_scanned + len(css_bytes) > MAX_CSS_SCAN_BYTES:
+            errors.append(
+                f"{index_path}: transitive stylesheet scan exceeds the {MAX_CSS_SCAN_BYTES // (1024 * 1024)} MiB validation safety bound"
+            )
+            break
+        css_bytes_scanned += len(css_bytes)
+        try:
+            css = css_bytes.decode("utf-8")
+        except UnicodeDecodeError as error:
+            errors.append(f"{stylesheet}: stylesheet is not readable UTF-8: {error}")
+            continue
+        css_base = "/" + stylesheet.relative_to(artifact_root).as_posix()
+        try:
+            stylesheet_references = css_references(css)
+        except ValueError as error:
+            errors.append(f"{stylesheet}: stylesheet reference inventory is too large: {error}")
+            continue
+        for css_reference in stylesheet_references:
+            enqueue_reference(css_reference, css_base, stylesheet)
+
+
+def forbidden_artifact_file(path: Path) -> bool:
+    """Recognize project metadata and secrets that do not belong in a static export."""
+
+    name = path.name.casefold()
+    return (
+        name in BUILD_OR_PROVIDER_FILE_NAMES
+        or name == ".env"
+        or name.startswith(".env.")
+        or name.startswith(".pnp")
+        or name in {
+            ".dockerignore",
+            ".gitignore",
+            ".gitmodules",
+            ".npmignore",
+            ".npmrc",
+            ".vercelignore",
+        }
+    )
+
+
+def has_private_key_filename(path: Path) -> bool:
+    """Recognize filenames that unambiguously label private key material."""
+
+    name = path.name.casefold()
+    return name in SSH_PRIVATE_KEY_FILE_NAMES or any(
+        name == basename or name.startswith(basename + ".")
+        for basename in PRIVATE_KEY_LABELLED_BASENAMES
+    )
+
+
+def contains_private_key_marker(content: bytes) -> bool:
+    """Recognize exact private-key BEGIN markers without decoding binary artifacts."""
+
+    return any(marker in content for marker in PRIVATE_KEY_BEGIN_MARKERS)
+
+
+def directory_has_read_and_traverse_mode(mode: int) -> bool:
+    """Require at least one POSIX permission class to be able to list and enter."""
+
+    return any(mode & mask == mask for mask in (0o500, 0o050, 0o005))
+
+
+def validate_artifact_tree(artifact_root: Path, errors: list[str]) -> None:
+    """Enforce a conservative folder-drop compatibility envelope."""
+    try:
+        if artifact_root.is_symlink():
+            errors.append(f"{artifact_root}: artifact directory must not be a symbolic link")
+            return
+        if not artifact_root.is_dir():
+            errors.append(f"{artifact_root}: artifact directory is missing")
+            return
+    except OSError as error:
+        errors.append(f"{artifact_root}: unable to inspect artifact directory: {error}")
+        return
+
+    try:
+        root_stat = artifact_root.stat()
+    except OSError as error:
+        errors.append(f"{artifact_root}: unable to inspect artifact directory metadata: {error}")
+        return
+    if not directory_has_read_and_traverse_mode(root_stat.st_mode):
+        errors.append(f"{artifact_root}: artifact directory must have a readable and traversable mode")
+        return
+
+    file_count = 0
+    directory_count = 1
+    total_bytes = 0
+    pending_directories: list[tuple[Path, int]] = [(artifact_root, 0)]
+
+    while pending_directories:
+        directory, depth = pending_directories.pop()
+        try:
+            with os.scandir(directory) as iterator:
+                for entry in iterator:
+                    path = Path(entry.path)
+                    try:
+                        entry_stat = entry.stat(follow_symlinks=False)
+                    except OSError as error:
+                        errors.append(f"{path}: unable to inspect artifact entry: {error}")
+                        continue
+
+                    if stat.S_ISLNK(entry_stat.st_mode):
+                        errors.append(f"{path}: drop-ready artifacts must not contain symbolic links")
+                        continue
+
+                    if stat.S_ISDIR(entry_stat.st_mode):
+                        directory_count += 1
+                        if directory_count > VALIDATION_MAX_DIRECTORIES:
+                            errors.append(
+                                f"{artifact_root}: artifact has more than {VALIDATION_MAX_DIRECTORIES} directories; "
+                                "validation stopped at its traversal safety limit"
+                            )
+                            return
+                        child_depth = depth + 1
+                        if child_depth > VALIDATION_MAX_DEPTH:
+                            errors.append(
+                                f"{path}: artifact nesting exceeds the {VALIDATION_MAX_DEPTH}-directory validation safety limit"
+                            )
+                            continue
+                        if path.name.casefold() in NON_DEPLOYABLE_DIRECTORIES:
+                            errors.append(
+                                f"{path}: cache, provider state, or dependency directory must stay in workspace/"
+                            )
+                            continue
+                        if not directory_has_read_and_traverse_mode(entry_stat.st_mode):
+                            errors.append(f"{path}: artifact directory must have a readable and traversable mode")
+                            continue
+                        pending_directories.append((path, child_depth))
+                        continue
+
+                    if not stat.S_ISREG(entry_stat.st_mode):
+                        errors.append(
+                            f"{path}: drop-ready artifacts may contain only regular files and directories"
+                        )
+                        continue
+
+                    file_count += 1
+                    if file_count > DROP_MAX_FILES:
+                        errors.append(
+                            f"{artifact_root}: artifact has more than {DROP_MAX_FILES} files; "
+                            f"folder-drop limit is {DROP_MAX_FILES}"
+                        )
+                        return
+                    private_key_filename = has_private_key_filename(path)
+                    if private_key_filename:
+                        errors.append(f"{path}: private key material must stay in workspace/")
+                    if forbidden_artifact_file(path):
+                        errors.append(f"{path}: build, provider, package, or secret file must stay in workspace/")
+                    if path.suffix.casefold() in PREPROCESS_ONLY_SUFFIXES:
+                        errors.append(f"{path}: preprocess-only source file must stay in workspace/")
+                    if entry_stat.st_mode & 0o444 == 0:
+                        errors.append(f"{path}: artifact file must have a readable file mode")
+                    try:
+                        file_bytes = read_regular_file_bounded(path, DROP_MAX_FILE_BYTES)
+                    except BoundedReadError as error:
+                        if "exceeds" in str(error):
+                            errors.append(f"{path}: file exceeds the conservative 5 MiB folder-drop limit")
+                            return
+                        errors.append(f"{path}: artifact file is not readable: {error}")
+                        continue
+                    # Scan the bytes already bounded by the 5 MiB per-file read above.
+                    if not private_key_filename and contains_private_key_marker(file_bytes):
+                        errors.append(f"{path}: private key material must stay in workspace/")
+                    total_bytes += len(file_bytes)
+                    if total_bytes > DROP_MAX_TOTAL_BYTES:
+                        errors.append(
+                            f"{artifact_root}: artifact exceeds the conservative 100 MiB folder-drop total"
+                        )
+                        return
+        except OSError as error:
+            errors.append(f"{directory}: unable to traverse artifact directory: {error}")
+
+
+def is_regular_file_within(path: Path, container: Path, label: str, errors: list[str]) -> bool:
+    """Require an ordinary file whose path and parents stay inside its owner."""
+
+    try:
+        if path.is_symlink():
+            errors.append(f"{path}: {label} must not be a symbolic link")
+            return False
+        current = path.parent
+        while current != container and current != current.parent:
+            if current.is_symlink():
+                errors.append(f"{path}: {label} parent directories must not be symbolic links")
+                return False
+            current = current.parent
+    except OSError as error:
+        errors.append(f"{path}: unable to inspect {label} path metadata: {error}")
+        return False
+    try:
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(container.resolve(strict=True))
+    except (OSError, ValueError) as error:
+        errors.append(f"{path}: {label} must resolve inside {container}: {error}")
+        return False
+    try:
+        is_file = path.is_file()
+    except OSError as error:
+        errors.append(f"{path}: unable to inspect {label} file type: {error}")
+        return False
+    if not is_file:
+        errors.append(f"{path}: {label} must be a regular file")
+        return False
+    return True
+
+
+def validate_provenance_receipt(
+    root: Path,
+    run_path: Path,
+    run: dict[str, Any],
+    prompt_bytes: Optional[bytes],
+    errors: list[str],
+) -> None:
+    """Compare worker-writable metadata with its pre-dispatch coordinator receipt."""
+
+    run_id = run_path.parent.name
+    expected_relative = f".oneshot-provenance/{run_id}.json"
+    if run.get("provenanceReceipt") != expected_relative:
+        errors.append(f"{run_path}: provenanceReceipt must be exactly {expected_relative}")
+    commit_path = root / ".oneshot-provenance" / f"{run_id}.commit"
+    if is_regular_file_within(commit_path, root, "provenance commit marker", errors):
+        try:
+            if commit_path.stat().st_size != 0:
+                errors.append(f"{commit_path}: provenance commit marker must be empty")
+        except OSError as error:
+            errors.append(f"{commit_path}: unable to inspect provenance commit marker: {error}")
+    receipt_path = root / expected_relative
+    if not is_regular_file_within(receipt_path, root, "provenance receipt", errors):
+        return
+    receipt = load_object(receipt_path, errors)
+    if receipt is None:
+        return
+    if receipt.get("schemaVersion") != "1.0":
+        errors.append(f"{receipt_path}: schemaVersion must be exactly 1.0")
+    expected_run_path = run_path.parent.relative_to(root).as_posix()
+    if receipt.get("runId") != run_id:
+        errors.append(f"{receipt_path}: runId must match {run_id!r}")
+    if receipt.get("runPath") != expected_run_path:
+        errors.append(f"{receipt_path}: runPath must match {expected_run_path!r}")
+    for field in ("identity", "classification", "priorRun"):
+        if receipt.get(field) != run.get(field):
+            errors.append(f"{receipt_path}: {field} does not match the pre-dispatch run record")
+    receipt_prompt = object_value(receipt.get("prompt"))
+    run_prompt = object_value(run.get("prompt"))
+    if receipt_prompt.get("sha256") != run_prompt.get("sha256"):
+        errors.append(f"{receipt_path}: prompt digest does not match the pre-dispatch receipt")
+    if prompt_bytes is not None:
+        if receipt_prompt.get("sha256") != hashlib.sha256(prompt_bytes).hexdigest():
+            errors.append(f"{receipt_path}: artifact/PROMPT.md differs from the pre-dispatch prompt")
+        if receipt_prompt.get("bytes") != len(prompt_bytes):
+            errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
+
+
+def validate_run(
+    root: Path,
+    run_path: Path,
+    canonical_runs: set[str],
+    errors: list[str],
+    warnings: list[str],
+) -> None:
+    """Validate one run against its immutable namespace and artifact contract."""
+    relative = run_path.relative_to(root)
+    model_key, harness_key, experiment_key, run_id, _ = relative.parts
+    if not is_regular_file_within(run_path, root, "run manifest", errors):
+        return
+    run = load_object(run_path, errors)
+    if run is None:
+        return
+
+    if run.get("schemaVersion") != "2.0":
+        errors.append(f"{run_path}: schemaVersion must be exactly 2.0")
+
+    identity = object_value(run.get("identity"))
+    for field, expected, namespace_directory in (
+        ("model", model_key, run_path.parents[3]),
+        ("harness", harness_key, run_path.parents[2]),
+        ("experiment", experiment_key, run_path.parents[1]),
+    ):
+        identity_part = object_value(identity.get(field))
+        key_value = identity_part.get("key")
+        name_value = identity_part.get("name")
+        key = key_value if isinstance(key_value, str) and key_value else None
+        name = name_value if isinstance(name_value, str) and name_value.strip() else None
+        if key != expected:
+            errors.append(f"{run_path}: identity.{field}.key must match namespace segment {expected!r}")
+        if name is None:
+            errors.append(f"{run_path}: identity.{field}.name must be a non-empty raw name")
+        else:
+            try:
+                expected_key = identity_key(name)
+            except UnicodeEncodeError:
+                errors.append(f"{run_path}: identity.{field}.name must be valid UTF-8 text")
+            else:
+                if key != expected_key:
+                    errors.append(f"{run_path}: identity.{field}.key does not match the raw-name digest")
+        marker_path = exact_child(namespace_directory, IDENTITY_MARKER)
+        if marker_path is None:
+            errors.append(f"{namespace_directory}: missing exact-case {IDENTITY_MARKER}")
+        elif is_regular_file_within(marker_path, root, f"{field} namespace identity marker", errors):
+            marker = load_object(marker_path, errors)
+            if marker is not None:
+                expected_marker = {"schemaVersion": "1.0", "name": name_value, "key": key_value}
+                if marker != expected_marker:
+                    errors.append(f"{marker_path}: marker does not match run identity.{field}")
+    if text_value(run.get("runId")) != run_id:
+        errors.append(f"{run_path}: runId must match namespace segment {run_id!r}")
+
+    status = text_value(run.get("status"))
+    if status not in STATUSES:
+        errors.append(f"{run_path}: status must be one of {sorted(STATUSES)}")
+    classification = text_value(run.get("classification"))
+    if classification not in CLASSIFICATIONS:
+        errors.append(f"{run_path}: classification must be one of {sorted(CLASSIFICATIONS)}")
+
+    prior_run = run.get("priorRun")
+    if classification == "autonomous-one-shot" and prior_run is not None:
+        errors.append(f"{run_path}: autonomous-one-shot must not declare priorRun")
+    if classification in {"rerun", "curated-attempt"}:
+        if not is_safe_relative_path(prior_run):
+            errors.append(f"{run_path}: {classification} must declare a safe priorRun path")
+        elif len(PurePosixPath(str(prior_run)).parts) != 4:
+            errors.append(f"{run_path}: priorRun must use model/harness/experiment/run order")
+        elif str(prior_run) == run_path.parent.relative_to(root).as_posix():
+            errors.append(f"{run_path}: priorRun must not point to the current run")
+        elif str(prior_run) not in canonical_runs:
+            errors.append(f"{run_path}: priorRun does not point to an exact canonical run")
+
+    validate_manifest_paths(run_path, run, errors)
+    prompt = object_value(run.get("prompt"))
+    if prompt.get("preservation") != "verbatim":
+        errors.append(f"{run_path}: prompt.preservation must be exactly verbatim")
+    digest = text_value(prompt.get("sha256"))
+    workspace_directory = exact_child(run_path.parent, "workspace")
+    if workspace_directory is None or not workspace_directory.is_dir() or workspace_directory.is_symlink():
+        errors.append(f"{run_path}: run is missing an exact-case ordinary workspace/ directory")
+    artifact_directory = exact_child(run_path.parent, "artifact")
+    if artifact_directory is None or not artifact_directory.is_dir() or artifact_directory.is_symlink():
+        errors.append(f"{run_path}: run is missing an exact-case ordinary artifact/ directory")
+    prompt_path = exact_child(artifact_directory, "PROMPT.md") if artifact_directory is not None else None
+    prompt_bytes: Optional[bytes] = None
+    if not digest or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+        errors.append(f"{run_path}: prompt.sha256 must be a SHA-256 hex digest")
+    if prompt_path is not None:
+        if is_regular_file_within(prompt_path, run_path.parent, "preserved prompt", errors):
+            try:
+                prompt_bytes = read_regular_file_bounded(prompt_path, DROP_MAX_FILE_BYTES)
+                decoded_prompt = prompt_bytes.decode("utf-8")
+            except BoundedReadError as error:
+                if "exceeds" in str(error):
+                    errors.append(f"{prompt_path}: file exceeds the conservative 5 MiB folder-drop limit")
+                else:
+                    errors.append(f"{prompt_path}: preserved prompt is not readable UTF-8: {error}")
+            except UnicodeDecodeError as error:
+                errors.append(f"{prompt_path}: preserved prompt is not readable UTF-8: {error}")
+            else:
+                if not decoded_prompt.strip():
+                    errors.append(f"{prompt_path}: preserved prompt must not be blank")
+                if digest and re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+                    actual = hashlib.sha256(prompt_bytes).hexdigest()
+                    if actual.lower() != digest.lower():
+                        errors.append(f"{run_path}: prompt SHA-256 does not match artifact/PROMPT.md")
+    else:
+        errors.append(f"{run_path}: run is missing exact-case artifact/PROMPT.md")
+
+    validate_provenance_receipt(root, run_path, run, prompt_bytes, errors)
+
+    execution = object_value(run.get("execution"))
+    if execution.get("recursiveDelegation") != "allowed":
+        errors.append(f"{run_path}: execution.recursiveDelegation must be exactly allowed")
+    if execution.get("skillImposedLimits") != "none":
+        errors.append(f"{run_path}: execution.skillImposedLimits must be exactly none")
+    run_worker_identity = parse_worker_identity(execution, run_path, "execution", errors)
+
+    report_path = exact_child(run_path.parent, "worker-report.json")
+    report = None
+    if report_path is None:
+        errors.append(f"{run_path}: run is missing exact-case worker-report.json")
+    elif is_regular_file_within(report_path, run_path.parent, "worker report", errors):
+        report = load_object(report_path, errors)
+    if report is None:
+        if status == "OK":
+            errors.append(f"{run_path}: successful run is missing worker-report.json")
+    else:
+        if report.get("schemaVersion") != "2.0":
+            errors.append(f"{report_path}: schemaVersion must be exactly 2.0")
+        if text_value(report.get("runId")) != run_id:
+            errors.append(f"{report_path}: runId must match namespace segment {run_id!r}")
+        report_worker_identity = parse_worker_identity(report, report_path, "", errors)
+        if (
+            run_worker_identity is not None
+            and report_worker_identity is not None
+            and report_worker_identity != run_worker_identity
+        ):
+            errors.append(
+                f"{report_path}: worker IDs must exactly match run.json execution worker IDs"
+            )
+        report_status = text_value(report.get("status"))
+        if report_status not in STATUSES:
+            errors.append(f"{report_path}: status must be one of {sorted(STATUSES)}")
+        elif status in STATUSES and report_status != status:
+            errors.append(f"{report_path}: status must match run.json status {status!r}")
+        report_artifact = object_value(report.get("artifact"))
+        if report_artifact.get("entrypoint") != "artifact/index.html":
+            errors.append(f"{report_path}: artifact.entrypoint must be exactly artifact/index.html")
+        if status == "OK" and report_artifact.get("staticDeploymentVerified") is not True:
+            errors.append(f"{report_path}: successful run must set artifact.staticDeploymentVerified to true")
+        verification = report.get("verification")
+        if status == "OK" and (
+            not isinstance(verification, list)
+            or not any(is_passed_verification(item) for item in verification)
+        ):
+            errors.append(f"{report_path}: successful run must record structured passed verification evidence")
+        if status == "OK" and isinstance(verification, list) and any(
+            is_failed_verification(item) for item in verification
+        ):
+            errors.append(f"{report_path}: successful run must not contain failed verification evidence")
+
+    index_path = exact_child(artifact_directory, "index.html") if artifact_directory is not None else None
+    artifact_tree_valid = True
+    if artifact_directory is not None:
+        previous_error_count = len(errors)
+        validate_artifact_tree(artifact_directory, errors)
+        artifact_tree_valid = len(errors) == previous_error_count
+    is_index_file = False
+    if index_path is not None:
+        try:
+            is_index_file = stat.S_ISREG(index_path.lstat().st_mode)
+        except OSError as error:
+            errors.append(f"{index_path}: unable to inspect artifact entrypoint: {error}")
+    if status == "OK" and not is_index_file:
+        errors.append(f"{run_path}: successful run is missing exact-case artifact/index.html")
+    if is_index_file and artifact_tree_valid:
+        validate_local_assets(index_path, errors)
+
+
+def validate_prior_graph(root: Path, run_paths: list[Path], errors: list[str]) -> None:
+    """Reject cycles between separately dispatched reruns."""
+
+    edges: dict[str, str] = {}
+    for run_path in run_paths:
+        run = load_object(run_path, errors)
+        if run is None:
+            continue
+        if not isinstance(run.get("priorRun"), str):
+            continue
+        edges[run_path.parent.relative_to(root).as_posix()] = run["priorRun"]
+
+    completed: set[str] = set()
+    reported: set[tuple[str, ...]] = set()
+    for start in sorted(edges):
+        chain: list[str] = []
+        positions: dict[str, int] = {}
+        current = start
+        while current in edges and current not in completed:
+            if current in positions:
+                cycle = tuple(chain[positions[current] :] + [current])
+                canonical = tuple(sorted(cycle[:-1]))
+                if canonical not in reported:
+                    errors.append(f"priorRun cycle detected: {' -> '.join(cycle)}")
+                    reported.add(canonical)
+                break
+            positions[current] = len(chain)
+            chain.append(current)
+            current = edges[current]
+        completed.update(chain)
+
+
+def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
+    """Enumerate the exact namespace without silently skipping unreadable subtrees."""
+
+    run_paths: list[Path] = []
+
+    def entries(directory: Path) -> Optional[list[os.DirEntry[str]]]:
+        try:
+            with os.scandir(directory) as iterator:
+                return sorted(iterator, key=lambda entry: entry.name)
+        except OSError as error:
+            errors.append(f"{directory}: unable to inspect namespace directory: {error}")
+            return None
+
+    def walk(directory: Path, depth: int) -> None:
+        children = entries(directory)
+        if children is None:
+            return
+        for entry in children:
+            path = Path(entry.path)
+            if is_appledouble_sidecar(path):
+                continue
+            if depth == 0 and entry.name == CATALOGUE_LOCK:
+                try:
+                    lock_stat = entry.stat(follow_symlinks=False)
+                    if (
+                        entry.is_symlink()
+                        or not stat.S_ISREG(lock_stat.st_mode)
+                        or lock_stat.st_nlink != 1
+                    ):
+                        errors.append(f"{path}: catalogue lock path must be a private regular file")
+                except OSError as error:
+                    errors.append(f"{path}: unable to inspect catalogue lock path: {error}")
+                continue
+            if depth == 0 and entry.name in {"index.html", ".oneshot-provenance"}:
+                continue
+            if depth == 0 and STALE_INDEX_RE.fullmatch(entry.name):
+                try:
+                    if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
+                        errors.append(f"{Path(entry.path)}: reserved catalogue temporary path must be a regular file")
+                except OSError as error:
+                    errors.append(f"{Path(entry.path)}: unable to inspect reserved catalogue temporary file: {error}")
+                continue
+            if depth in {0, 1, 2} and NAMESPACE_TEMP_RE.fullmatch(entry.name):
+                try:
+                    if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
+                        errors.append(f"{path}: reserved namespace temporary path must be a directory")
+                        continue
+                except OSError as error:
+                    errors.append(f"{path}: unable to inspect reserved namespace temporary path: {error}")
+                    continue
+                temporary_entries = entries(path)
+                if temporary_entries is None:
+                    continue
+                temporary_entries = [
+                    candidate
+                    for candidate in temporary_entries
+                    if not is_appledouble_sidecar(Path(candidate.path))
+                ]
+                if any(candidate.name != IDENTITY_MARKER for candidate in temporary_entries):
+                    errors.append(f"{path}: reserved namespace temporary directory contains unexpected state")
+                    continue
+                for candidate in temporary_entries:
+                    try:
+                        if candidate.is_symlink() or not candidate.is_file(follow_symlinks=False):
+                            errors.append(f"{Path(candidate.path)}: reserved namespace temporary marker must be a regular file")
+                    except OSError as error:
+                        errors.append(f"{Path(candidate.path)}: unable to inspect reserved namespace temporary marker: {error}")
+                continue
+            if depth in {1, 2, 3} and entry.name == IDENTITY_MARKER:
+                continue
+            try:
+                if entry.is_symlink():
+                    errors.append(f"{path}: namespace directories must not be symbolic links")
+                    continue
+                is_directory = entry.is_dir(follow_symlinks=False)
+            except OSError as error:
+                errors.append(f"{path}: unable to inspect namespace entry: {error}")
+                continue
+            if not is_directory:
+                if entry.name == "run.json":
+                    errors.append(f"{path}: run.json is outside the model/harness/experiment/run namespace")
+                else:
+                    errors.append(f"{path}: unexpected file outside a run, receipt inventory, or root catalogue")
+                continue
+            try:
+                directory_mode = entry.stat(follow_symlinks=False).st_mode
+            except OSError as error:
+                errors.append(f"{path}: unable to inspect namespace directory metadata: {error}")
+                continue
+            if not directory_has_read_and_traverse_mode(directory_mode):
+                errors.append(f"{path}: namespace directory must have a readable and traversable mode")
+            if depth < 3:
+                walk(path, depth + 1)
+                continue
+            commit_path = root / ".oneshot-provenance" / f"{path.name}.commit"
+            if RUN_ID_RE.fullmatch(path.name) is not None and is_abandoned_run_reservation(path, commit_path):
+                continue
+            manifest = exact_child(path, "run.json")
+            if manifest is None:
+                errors.append(f"{path}: run directory is missing exact-case regular run.json")
+                continue
+            try:
+                is_manifest = manifest.is_file() and not manifest.is_symlink()
+            except OSError as error:
+                errors.append(f"{manifest}: unable to inspect run manifest: {error}")
+                continue
+            if not is_manifest:
+                errors.append(f"{path}: run directory is missing exact-case regular run.json")
+                continue
+            run_paths.append(manifest)
+
+    walk(root, 0)
+    return run_paths
+
+
+def validate_root_index(root: Path, errors: list[str]) -> None:
+    """Require the aggregate catalogue entrypoint to be exact, current, and publishable."""
+
+    index_path = exact_child(root, "index.html")
+    if index_path is None or not index_path.is_file() or index_path.is_symlink():
+        errors.append(f"{root}: missing exact-case regular root index.html catalogue")
+        return
+    try:
+        mode = index_path.stat().st_mode
+    except OSError as error:
+        errors.append(f"{index_path}: root catalogue metadata is unreadable: {error}")
+        return
+    if mode & 0o444 == 0:
+        errors.append(f"{index_path}: root catalogue must have a readable file mode")
+        return
+    try:
+        actual = read_regular_file_bounded(index_path, DROP_MAX_FILE_BYTES).decode("utf-8")
+    except BoundedReadError as error:
+        if "exceeds" in str(error):
+            errors.append(f"{index_path}: root catalogue exceeds the 5 MiB read limit")
+        else:
+            errors.append(f"{index_path}: root catalogue is not readable UTF-8: {error}")
+        return
+    except UnicodeDecodeError as error:
+        errors.append(f"{index_path}: root catalogue is not readable UTF-8: {error}")
+        return
+    try:
+        expected = build_html(root, index_path)
+    except (OSError, UnicodeDecodeError, CatalogueBuildError) as error:
+        errors.append(f"{index_path}: unable to derive the current root catalogue: {error}")
+        return
+    if actual != expected:
+        errors.append(
+            f"{index_path}: root catalogue is stale, incomplete, or was not generated by build_catalog_index.py"
+        )
+
+
+def validate_receipt_inventory(root: Path, run_paths: list[Path], errors: list[str]) -> None:
+    """Require a one-to-one inventory between coordinator receipts and run manifests."""
+
+    receipt_directory = exact_child(root, ".oneshot-provenance")
+    if receipt_directory is None:
+        if run_paths:
+            errors.append(f"{root}: missing exact-case .oneshot-provenance directory")
+        return
+    if receipt_directory.is_symlink():
+        errors.append(f"{receipt_directory}: provenance directory must not be a symbolic link")
+        return
+    if not receipt_directory.is_dir():
+        errors.append(f"{receipt_directory}: provenance inventory must be a directory")
+        return
+    try:
+        entries = list(receipt_directory.iterdir())
+    except OSError as error:
+        errors.append(f"{receipt_directory}: unable to inspect provenance inventory: {error}")
+        return
+
+    expected = {run_path.parent.name: run_path for run_path in run_paths}
+    receipts: dict[str, Path] = {}
+    commits: dict[str, Path] = {}
+    for entry in entries:
+        if is_appledouble_sidecar(entry):
+            continue
+        if entry.is_symlink():
+            errors.append(f"{entry}: provenance inventory files must not be symbolic links")
+            continue
+        if not entry.is_file():
+            errors.append(f"{entry}: provenance inventory may contain only regular receipt and commit files")
+            continue
+        run_id = entry.stem
+        if RUN_ID_RE.fullmatch(run_id) is None or entry.suffix not in {".json", ".commit"}:
+            errors.append(f"{entry}: unexpected file in provenance inventory")
+            continue
+        if entry.suffix == ".json":
+            receipts[run_id] = entry
+            continue
+        commits[run_id] = entry
+        try:
+            if entry.stat().st_size != 0:
+                errors.append(f"{entry}: provenance commit marker must be empty")
+        except OSError as error:
+            errors.append(f"{entry}: unable to inspect provenance commit marker: {error}")
+
+    for missing_id in sorted(set(expected) - set(receipts)):
+        errors.append(
+            f"{receipt_directory / (missing_id + '.json')}: run is missing its coordinator provenance receipt"
+        )
+    for missing_id in sorted(set(expected) - set(commits)):
+        errors.append(
+            f"{receipt_directory / (missing_id + '.commit')}: run is missing its provenance commit marker"
+        )
+    for unpaired_id in sorted(set(commits) - set(receipts)):
+        errors.append(
+            f"{commits[unpaired_id]}: provenance commit marker has no matching JSON receipt"
+        )
+
+    committed_ids = set(receipts) & set(commits)
+    for orphan_id in sorted(committed_ids - set(expected)):
+        orphan_path = receipts[orphan_id]
+        errors.append(f"{orphan_path}: orphan provenance receipt has no matching run manifest")
+        receipt = load_object(orphan_path, errors)
+        if receipt is not None:
+            run_path = text_value(receipt.get("runPath"))
+            if run_path:
+                errors.append(f"{orphan_path}: recorded run path is absent: {run_path}")
+
+
+def validate(root: Path) -> dict[str, Any]:
+    """Validate every discovered run and keep incomplete runs in the report."""
     errors: list[str] = []
     warnings: list[str] = []
-    manifest = load_manifest(root)
-    items = manifest.get("items", []) if manifest else infer_items(root)
+    run_paths = discover_run_paths(root, errors)
+    if not run_paths:
+        errors.append("no run.json files found at the expected namespace depth")
 
-    if manifest is None:
-        warnings.append("manifest.json missing; inferred routes from directories")
-    elif not isinstance(items, list):
-        errors.append("manifest.json items field must be an array")
-        items = []
-
-    if not items:
-        errors.append("no route items found")
-
-    root_index = root / "index.html"
-    root_index_text = ""
-    if not root_index.exists():
-        errors.append("root index.html missing")
-    else:
-        root_index_text = root_index.read_text(encoding="utf-8", errors="replace")
-        if "Fairness Note" not in root_index_text:
-            errors.append("root index.html missing Fairness Note")
-        if "PROMPT.md" not in root_index_text:
-            errors.append("root index.html does not expose PROMPT.md")
-
-    required_fields = {"path", "prompt", "type", "status", "summary"}
-    checked_routes = 0
-    for item in items:
-        missing = sorted(field for field in required_fields if not item.get(field))
-        if missing:
-            errors.append(f"manifest item missing fields {missing}: {item}")
+    canonical_runs = {run_path.parent.relative_to(root).as_posix() for run_path in run_paths}
+    seen_paths: set[str] = set()
+    seen_run_ids: set[str] = set()
+    for run_path in run_paths:
+        relative_path = run_path.parent.relative_to(root).as_posix()
+        if relative_path in seen_paths:
+            errors.append(f"duplicate run path: {relative_path}")
             continue
+        seen_paths.add(relative_path)
+        run_id = run_path.parent.name
+        if run_id in seen_run_ids:
+            errors.append(f"duplicate global run ID: {run_id}")
+        seen_run_ids.add(run_id)
+        validate_run(root, run_path, canonical_runs, errors, warnings)
 
-        rel_path = normalize_rel(str(item["path"]))
-        rel_prompt = normalize_rel(str(item["prompt"]))
-        route_dir = root / rel_path
-        route_index = route_dir / "index.html"
-        prompt = root / rel_prompt
-
-        if not route_dir.is_dir():
-            errors.append(f"route directory missing: {rel_path}")
-            continue
-        if not prompt.exists():
-            errors.append(f"prompt missing: {rel_prompt}")
-        if not route_index.exists():
-            errors.append(f"route index missing: {rel_path}index.html")
-        else:
-            checked_routes += 1
-            errors.extend(check_route_html(route_index))
-
-        if root_index_text:
-            for needle in [rel_path, rel_prompt, str(item["type"])]:
-                if needle and needle not in root_index_text:
-                    errors.append(f"root index.html missing {needle}")
+    validate_prior_graph(root, run_paths, errors)
+    validate_receipt_inventory(root, run_paths, errors)
+    validate_root_index(root, errors)
 
     return {
         "valid": not errors,
         "root": str(root),
-        "routes": len(items),
-        "checked_routes": checked_routes,
+        "runs": len(run_paths),
         "errors": errors,
         "warnings": warnings,
     }
@@ -126,13 +1494,26 @@ def validate(root: Path) -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("root", help="Generated catalog directory")
+    parser.add_argument("root", help="One-shot output root")
     args = parser.parse_args()
-
-    root = Path(args.root).resolve()
+    try:
+        root = Path(args.root).resolve(strict=True)
+    except (OSError, RuntimeError) as error:
+        print(
+            json.dumps(
+                {
+                    "valid": False,
+                    "root": str(args.root),
+                    "runs": 0,
+                    "errors": [f"unable to resolve output root: {error}"],
+                    "warnings": [],
+                },
+                indent=2,
+            )
+        )
+        return 1
     if not root.is_dir():
         raise SystemExit(f"not a directory: {root}")
-
     result = validate(root)
     print(json.dumps(result, indent=2))
     return 0 if result["valid"] else 1

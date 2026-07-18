@@ -60,6 +60,11 @@ Environment:
   SKILLS_ACT_ARCH=linux/amd64
   SKILLS_ACT_PULL=true|false
   SKILLS_ACT_OFFLINE=true|false
+  SKILLS_ACT_MACOS_PYTHON=/path/to/python3.11-or-newer
+  SKILLS_ACT_MACOS_NODE=/path/to/node
+  SKILLS_ACT_MACOS_NPM=/path/to/npm
+  SKILLS_ACT_MACOS_NPX=/path/to/npx
+  SKILLS_ACT_MACOS_BUN=/path/to/bun
 
 Logging arguments after -- may be passed to act: -v, --verbose, -q, --quiet,
 --json, and --log-prefix-job-id.
@@ -198,6 +203,105 @@ check_act_version() {
             echo "ERROR: act v0.2.89 or later is required; found v$version_core."
             echo "Older releases can run the macOS matrix leg in a Linux container."
         } >&2
+        exit 64
+    fi
+}
+
+resolve_executable() {
+    local request="$1"
+    local executable_dir resolved
+
+    if [[ "$request" == */* ]]; then
+        executable_dir="$(cd "$(dirname "$request")" 2>/dev/null && pwd -P)" || return 1
+        resolved="$executable_dir/$(basename "$request")"
+        [ -x "$resolved" ] || return 1
+        printf '%s\n' "$resolved"
+        return 0
+    fi
+
+    command -v "$request" 2>/dev/null
+}
+
+resolve_macos_validation_python() {
+    local explicit_request="${SKILLS_ACT_MACOS_PYTHON:-}"
+    local candidate resolved
+    local candidates=(python3 python3.11 python3.12 python3.13 python3.14 python3.15)
+
+    if [ -n "$explicit_request" ]; then
+        resolved="$(resolve_executable "$explicit_request" || true)"
+        if [ -z "$resolved" ] \
+            || ! "$resolved" -c 'import sys, venv; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' \
+                >/dev/null 2>&1; then
+            echo "ERROR: SKILLS_ACT_MACOS_PYTHON must select Python 3.11 or newer with venv support." >&2
+            exit 64
+        fi
+        MACOS_VALIDATION_PYTHON="$resolved"
+        return
+    fi
+
+    for candidate in "${candidates[@]}"; do
+        resolved="$(resolve_executable "$candidate" || true)"
+        if [ -n "$resolved" ] \
+            && "$resolved" -c 'import sys, venv; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)' \
+                >/dev/null 2>&1; then
+            MACOS_VALIDATION_PYTHON="$resolved"
+            return
+        fi
+    done
+
+    {
+        echo "ERROR: the macOS act leg requires host Python 3.11 or newer with venv support."
+        echo "Set SKILLS_ACT_MACOS_PYTHON to a compatible interpreter."
+    } >&2
+    exit 127
+}
+
+resolve_macos_node_toolchain() {
+    local request="${SKILLS_ACT_MACOS_NODE:-node}"
+    local node_dir npm_dir npx_dir npm_request npx_request version
+
+    MACOS_VALIDATION_NODE="$(resolve_executable "$request" || true)"
+    version="$("${MACOS_VALIDATION_NODE:-false}" --version 2>/dev/null || true)"
+    if [ -z "$MACOS_VALIDATION_NODE" ] || [ -z "$version" ]; then
+        echo "ERROR: SKILLS_ACT_MACOS_NODE must select a working Node.js runtime." >&2
+        exit 64
+    fi
+
+    node_dir="$(dirname "$MACOS_VALIDATION_NODE")"
+    npm_request="${SKILLS_ACT_MACOS_NPM:-}"
+    if [ -z "$npm_request" ] && [ -x "$node_dir/npm" ]; then
+        npm_request="$node_dir/npm"
+    fi
+    if [ -z "$npm_request" ]; then
+        npm_request="npm"
+    fi
+    npx_request="${SKILLS_ACT_MACOS_NPX:-}"
+    if [ -z "$npx_request" ] && [ -x "$node_dir/npx" ]; then
+        npx_request="$node_dir/npx"
+    fi
+    if [ -z "$npx_request" ]; then
+        npx_request="npx"
+    fi
+    MACOS_VALIDATION_NPM="$(resolve_executable "$npm_request" || true)"
+    MACOS_VALIDATION_NPX="$(resolve_executable "$npx_request" || true)"
+    npm_dir="$(dirname "${MACOS_VALIDATION_NPM:-.}")"
+    npx_dir="$(dirname "${MACOS_VALIDATION_NPX:-.}")"
+    if [ ! -x "$MACOS_VALIDATION_NPM" ] || [ ! -x "$MACOS_VALIDATION_NPX" ] \
+        || ! PATH="$node_dir:$npm_dir:$npx_dir:$PATH" "$MACOS_VALIDATION_NPM" --version >/dev/null 2>&1 \
+        || ! PATH="$node_dir:$npm_dir:$npx_dir:$PATH" "$MACOS_VALIDATION_NPX" --version >/dev/null 2>&1; then
+        echo "ERROR: the macOS act leg requires working npm and npx commands for the selected Node.js runtime." >&2
+        exit 64
+    fi
+}
+
+resolve_macos_bun() {
+    local request="${SKILLS_ACT_MACOS_BUN:-bun}"
+    local version
+
+    MACOS_VALIDATION_BUN="$(resolve_executable "$request" || true)"
+    version="$("${MACOS_VALIDATION_BUN:-false}" --version 2>/dev/null || true)"
+    if [ -z "$MACOS_VALIDATION_BUN" ] || [ -z "$version" ]; then
+        echo "ERROR: SKILLS_ACT_MACOS_BUN must select a working Bun runtime." >&2
         exit 64
     fi
 }
@@ -345,12 +449,15 @@ if [ "$needs_macos" -eq 1 ]; then
         exit 64
     fi
 
-    for command_name in git python3 node npm bun rg http; do
+    for command_name in git rg http; do
         if ! command -v "$command_name" >/dev/null 2>&1; then
             echo "ERROR: the macOS host leg requires '$command_name' on PATH." >&2
             exit 127
         fi
     done
+    resolve_macos_validation_python
+    resolve_macos_node_toolchain
+    resolve_macos_bun
 fi
 
 if [ "$needs_ubuntu" -eq 1 ]; then
@@ -385,6 +492,13 @@ run_act_leg() {
             ;;
         macos-15)
             cmd+=(-P "macos-15=-self-hosted")
+            cmd+=(
+                --env "SKILLS_ACT_MACOS_PYTHON=$MACOS_VALIDATION_PYTHON"
+                --env "SKILLS_ACT_MACOS_NODE=$MACOS_VALIDATION_NODE"
+                --env "SKILLS_ACT_MACOS_NPM=$MACOS_VALIDATION_NPM"
+                --env "SKILLS_ACT_MACOS_NPX=$MACOS_VALIDATION_NPX"
+                --env "SKILLS_ACT_MACOS_BUN=$MACOS_VALIDATION_BUN"
+            )
             ;;
     esac
 

@@ -4,56 +4,151 @@
   "evals": [
     {
       "id": 1,
-      "name": "full-repertoire-catalog",
-      "prompt": "Generate a complete one-shot website repertoire catalog for a model benchmark. Include every website style, PROMPT.md for each route, a root index, and a fairness note.",
-      "expected_output": "Plans all 11 canonical route slugs, generates route-level PROMPT.md and index.html files, writes manifest.json, and builds a root catalog that exposes path, prompt, type, status, and summary.",
+      "name": "catalogue-no-arguments",
+      "prompt": "Use oneshot-websites.",
+      "expected_output": "Immediately presents the complete current prompt catalogue, without silently narrowing it to a shortlist, then invites a selection or custom brief.",
       "assertions": [
-        {"text": "Uses every canonical style from references/repertoire.md", "type": "functional"},
-        {"text": "Applies isolated single-pass route generation in benchmark mode", "type": "functional"},
-        {"text": "Creates a catalog index with the required columns", "type": "structural"}
+        {"text": "Runs the unfiltered catalogue presentation", "type": "functional"},
+        {"text": "Does not invent a website brief or pick a template for the user", "type": "negative"}
       ],
-      "tags": ["smoke", "catalog"]
+      "tags": ["smoke", "catalogue", "no-arguments"]
     },
     {
       "id": 2,
-      "name": "seeded-subset",
-      "prompt": "Create five semi-deterministic oneshot website variants for a Kimi comparison run. Use a stable selection and record the selection in the manifest.",
-      "expected_output": "Selects five stable style routes using the protocol, records selection metadata, and keeps route slugs stable.",
+      "name": "contextual-baselines",
+      "prompt": "I want to explore ideas for an interactive public-transit experience, but I have not settled on a direction yet.",
+      "expected_output": "Searches the catalogue and offers the closest optional baselines while keeping an original user brief equally available.",
       "assertions": [
-        {"text": "Uses deterministic selection rather than ad hoc random choices", "type": "functional"},
-        {"text": "Writes required manifest item fields for every selected route", "type": "structural"}
+        {"text": "Uses catalogue search rather than declaring a single mandatory template", "type": "functional"},
+        {"text": "Makes clear that the suggestions are optional", "type": "disclosure"}
       ],
-      "tags": ["edge", "manifest"]
+      "tags": ["catalogue", "context", "baseline"]
     },
     {
       "id": 3,
-      "name": "not-normal-landing-page",
-      "prompt": "Build me one normal SaaS landing page for an invoicing product.",
-      "expected_output": "Does not force a full benchmark catalog; treats the task as a normal single website unless the user asks for one-shot catalog behavior.",
+      "name": "direct-exact-dispatch",
+      "prompt": "Build a calm, tactile museum guide for a small collection of kinetic sculptures. Keep the first sentence exactly as written.",
+      "expected_output": "Uses the supplied text as the actual prompt without paraphrase, writes its exact UTF-8 bytes to artifact/PROMPT.md, anchors its SHA-256 digest in a coordinator-owned pre-dispatch receipt, and includes the same text in the fresh lead's initial dispatch.",
       "assertions": [
-        {"text": "Does not over-trigger the full repertoire workflow", "type": "negative"}
+        {"text": "Preserves the direct prompt byte-for-byte and anchors its digest outside the worker-owned run", "type": "verification"},
+        {"text": "Does not replace the user brief with a framework or template recipe", "type": "negative"},
+        {"text": "Includes the exact actual prompt text in the fresh lead's initial dispatch", "type": "verification"}
       ],
-      "tags": ["negative"]
+      "tags": ["dispatch", "exact-prompt", "provenance"]
     },
     {
       "id": 4,
-      "name": "catalog-reference-routing",
-      "prompt": "How should the root directory page list generated one-shot websites and expose their prompts?",
-      "expected_output": "Routes to references/catalog-index.md and describes path, experience, prompt, type, status, summary, and fairness note requirements.",
+      "name": "fresh-leads-for-multiple-briefs",
+      "prompt": "Make two independent experiences: a storm-chasing field notebook and a playful reef survey. Compare Model A and Model B in Harness X.",
+      "expected_output": "Reserves one collision-free model/harness/experiment/run namespace for every requested matrix cell and dispatches one distinct fresh lead for each artifact.",
       "assertions": [
-        {"text": "Loads or cites references/catalog-index.md for the directory page rules", "type": "disclosure"}
+        {"text": "Does not combine multiple artifacts into one worker", "type": "negative"},
+        {"text": "Keeps model, harness, experiment, and run identity in that order", "type": "structural"},
+        {"text": "Creates exactly four isolated runs owned by four distinct fresh leads for the two briefs across two models", "type": "structural"}
       ],
-      "tags": ["disclosure"]
+      "tags": ["multiple", "fresh-leads", "namespace"]
     },
     {
       "id": 5,
-      "name": "validate-generated-catalog",
-      "prompt": "Check this generated oneshot-websites directory before I publish it.",
-      "expected_output": "Runs scripts/validate_catalog.py against the output directory and reports missing route files, prompt links, status issues, or external image/script violations.",
+      "name": "recursive-delegation-without-budgets",
+      "prompt": "Create an ambitious illustrated weather laboratory. Use any collaborators you need and keep improving it until the result is ready.",
+      "expected_output": "Lets the owning lead choose its tools, stack, workflow, iteration, and recursive subagents. It imposes no time, token, step, tool-call, dependency, source-file, or goal-mode limits.",
       "assertions": [
-        {"text": "Uses scripts/validate_catalog.py for deterministic validation", "type": "verification"}
+        {"text": "Permits recursive delegation inside the assigned run", "type": "functional"},
+        {"text": "Does not add arbitrary budgets or require goal mode", "type": "negative"}
       ],
-      "tags": ["verification"]
+      "tags": ["recursive", "autonomy", "no-budgets"]
+    },
+    {
+      "id": 6,
+      "name": "framework-to-static-artifact",
+      "prompt": "Create a multi-view launch explorer with rich transitions and a responsive route map.",
+      "expected_output": "Allows the lead to use a framework project in workspace/ and requires its production export in artifact/, with artifact/PROMPT.md and a root artifact/index.html that can be deployed without installation, build, or an application server.",
+      "assertions": [
+        {"text": "Does not reject a chosen framework project", "type": "negative"},
+        {"text": "Checks the final static handoff rather than a source-file shape", "type": "structural"}
+      ],
+      "tags": ["framework", "artifact", "static-handoff"]
+    },
+    {
+      "id": 7,
+      "name": "collision-free-identities",
+      "prompt": "Run the same harbour experience under model names 'Model One' and 'Model-One'.",
+      "expected_output": "Derives readable identity keys with exact-name digests, produces distinct paths for the two normalized-similar names, and creates a new run ID for every execution.",
+      "assertions": [
+        {"text": "Never overwrites an existing run", "type": "negative"},
+        {"text": "Records raw names and derived keys in run.json", "type": "structural"}
+      ],
+      "tags": ["namespace", "collision", "rerun"]
+    },
+    {
+      "id": 8,
+      "name": "unsupported-no-subagent-harness",
+      "prompt": "The current harness cannot create any fresh subagents. Please generate the site yourself as a stand-in.",
+      "expected_output": "Stops before artifact generation and reports UNSUPPORTED_NO_FRESH_SUBAGENT. It does not imitate isolation with the coordinator or reuse a same-context worker.",
+      "assertions": [
+        {"text": "Treats fresh-subagent support as a hard dependency", "type": "functional"},
+        {"text": "Does not substitute coordinator generation", "type": "negative"},
+        {"text": "Reports the exact UNSUPPORTED_NO_FRESH_SUBAGENT status", "type": "structural"}
+      ],
+      "tags": ["negative", "harness", "isolation"]
+    },
+    {
+      "id": 9,
+      "name": "catalogue-extension",
+      "prompt": "Add a new prompt template for a hands-on river restoration planning experience.",
+      "expected_output": "Reads the catalogue authoring rules, appends a unique stable ID, slug, title, category, prompt, and lowercase tags, and leaves existing entries unchanged and implementation-open.",
+      "assertions": [
+        {"text": "Does not renumber or reuse existing prompt IDs", "type": "negative"},
+        {"text": "Avoids prescribing a framework, library, version, or single-file recipe", "type": "negative"}
+      ],
+      "tags": ["catalogue", "extension", "validation"]
+    },
+    {
+      "id": 10,
+      "name": "artifact-validation",
+      "prompt": "Explain the oneshot-websites validation workflow you would apply before publishing an output root. Assume one successful run was built from a framework workspace and exported as static files.",
+      "expected_output": "Routes to the catalogue validator and explains that it checks namespace, the independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace and would report any missing successful entrypoint or unsafe final artifact.",
+      "assertions": [
+        {"text": "Identifies artifact/PROMPT.md and artifact/index.html as validation targets", "type": "functional"},
+        {"text": "Does not impose a vanilla or single-file implementation rule", "type": "negative"}
+      ],
+      "tags": ["validation", "artifact", "framework", "verification"]
+    },
+    {
+      "id": 11,
+      "name": "custom-brief-without-catalogue-match",
+      "prompt": "Create a private one-shot memorial for a fictional lighthouse keeper. The interaction must follow my exact seven-scene oral-history sequence, use only the supplied family vocabulary, and preserve my scene wording unchanged. Do not turn it into a game, dashboard, or generic maritime story.",
+      "expected_output": "Treats the complete custom brief as the actual prompt. It may offer a catalogue baseline only if one is materially relevant and the user accepts it; otherwise it dispatches the brief unchanged without splicing in catalogue ideas.",
+      "assertions": [
+        {"text": "Preserves and dispatches the complete custom brief without catalogue contamination", "type": "functional"},
+        {"text": "Does not force a weak catalogue match or hybridize the brief", "type": "negative"}
+      ],
+      "tags": ["catalogue", "context", "custom-brief", "exact-prompt"]
+    },
+    {
+      "id": 12,
+      "name": "custom-brief-with-relevant-catalogue-match",
+      "prompt": "Create a browser-based submarine command simulator with sonar, ballast controls, instrument failures, abyssal navigation, and a crew whose survival depends on my mission sequence.",
+      "expected_output": "Keeps the complete custom brief as the actual prompt and may offer the materially relevant Abyssal Command Dive catalogue item as an optional baseline. It dispatches the original brief unchanged unless the user explicitly accepts that baseline.",
+      "assertions": [
+        {"text": "Offers a genuinely relevant catalogue match as optional rather than mandatory", "type": "functional"},
+        {"text": "Does not splice catalogue language into the custom brief without acceptance", "type": "negative"},
+        {"text": "Preserves the original brief as the dispatch prompt by default", "type": "verification"}
+      ],
+      "tags": ["catalogue", "context", "custom-brief", "relevant-match"]
+    },
+    {
+      "id": 13,
+      "name": "no-history-lead-isolation",
+      "prompt": "Run this one-shot in Codex, where spawned agents inherit the current conversation unless configured otherwise.",
+      "expected_output": "Creates the owning lead with spawn_agent fork_turns set to none, then explicitly includes the lead role, exact actual prompt, assigned run path, and experiment metadata in that empty-history dispatch.",
+      "assertions": [
+        {"text": "Uses fork_turns none instead of the history-inheriting spawn default", "type": "structural"},
+        {"text": "Does not leak coordinator or sibling conversation into the lead context", "type": "negative"},
+        {"text": "Still passes the actual prompt text and lead role explicitly", "type": "verification"}
+      ],
+      "tags": ["dispatch", "fresh-lead", "isolation", "no-history"]
     }
   ]
 }

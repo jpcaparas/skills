@@ -26,7 +26,7 @@ mkdir -p "$FIXTURE_ROOT/scripts" "$FIXTURE_ROOT/.github/workflows" "$FAKE_BIN" "
 cp "$SOURCE_WRAPPER" "$FIXTURE_ROOT/scripts/validate-ci-with-act.sh"
 printf '%s\n' 'name: Fixture' > "$FIXTURE_ROOT/.github/workflows/validate-skills.yml"
 printf '%s\n' '--dryrun' > "$TEST_XDG_CONFIG_HOME/act/actrc"
-for utility in dirname grep mkdir mktemp rm; do
+for utility in basename dirname grep mkdir mktemp rm; do
     ln -s "$(command -v "$utility")" "$FAKE_BIN/$utility"
 done
 
@@ -107,12 +107,60 @@ FAKE_COMMAND
     chmod +x "$FAKE_BIN/$command_name"
 }
 
+write_fake_node() {
+    cat > "$FAKE_BIN/node" <<'FAKE_NODE'
+#!/bin/bash
+set -u
+if [ "${1:-}" = "--version" ]; then
+    if [ "${FAKE_NODE_STATUS:-0}" -ne 0 ]; then
+        exit "$FAKE_NODE_STATUS"
+    fi
+    printf '%s\n' "${FAKE_NODE_VERSION:-v26.3.0}"
+fi
+exit 0
+FAKE_NODE
+    chmod +x "$FAKE_BIN/node"
+}
+
+write_fake_bun() {
+    cat > "$FAKE_BIN/bun" <<'FAKE_BUN'
+#!/bin/bash
+set -u
+if [ "${1:-}" = "--version" ]; then
+    if [ "${FAKE_BUN_STATUS:-0}" -ne 0 ]; then
+        exit "$FAKE_BUN_STATUS"
+    fi
+    printf '%s\n' "${FAKE_BUN_VERSION:-1.3.11}"
+fi
+exit 0
+FAKE_BUN
+    chmod +x "$FAKE_BIN/bun"
+}
+
+write_fake_python() {
+    local command_name="$1"
+    local status_variable="$2"
+    cat > "$FAKE_BIN/$command_name" <<FAKE_PYTHON
+#!/bin/bash
+set -u
+if [ "\${1:-}" = "-c" ]; then
+    exit "\${$status_variable:-0}"
+fi
+exit 0
+FAKE_PYTHON
+    chmod +x "$FAKE_BIN/$command_name"
+}
+
 write_fake_act
 write_fake_docker
 write_fake_uname
-for host_command in git python3 node npm bun rg http; do
+for host_command in git npm npx rg http; do
     write_fake_host_command "$host_command"
 done
+write_fake_node
+write_fake_bun
+write_fake_python python3 FAKE_PYTHON3_STATUS
+write_fake_python python3.11 FAKE_PYTHON311_STATUS
 
 run_wrapper() {
     local environment=(
@@ -131,6 +179,12 @@ run_wrapper() {
         "FAKE_DOCKER_STATUS=${FAKE_DOCKER_STATUS:-0}"
         "FAKE_UNAME_S=${FAKE_UNAME_S:-Darwin}"
         "FAKE_UNAME_M=${FAKE_UNAME_M:-arm64}"
+        "FAKE_PYTHON3_STATUS=${FAKE_PYTHON3_STATUS:-0}"
+        "FAKE_PYTHON311_STATUS=${FAKE_PYTHON311_STATUS:-0}"
+        "FAKE_NODE_STATUS=${FAKE_NODE_STATUS:-0}"
+        "FAKE_NODE_VERSION=${FAKE_NODE_VERSION:-v26.3.0}"
+        "FAKE_BUN_STATUS=${FAKE_BUN_STATUS:-0}"
+        "FAKE_BUN_VERSION=${FAKE_BUN_VERSION:-1.3.11}"
     )
 
     if [ -n "${TEST_ACT_OS+x}" ]; then
@@ -144,6 +198,15 @@ run_wrapper() {
     fi
     if [ -n "${TEST_WORKFLOW+x}" ]; then
         environment+=("SKILLS_ACT_WORKFLOW=$TEST_WORKFLOW")
+    fi
+    if [ -n "${TEST_MACOS_PYTHON+x}" ]; then
+        environment+=("SKILLS_ACT_MACOS_PYTHON=$TEST_MACOS_PYTHON")
+    fi
+    if [ -n "${TEST_MACOS_NODE+x}" ]; then
+        environment+=("SKILLS_ACT_MACOS_NODE=$TEST_MACOS_NODE")
+    fi
+    if [ -n "${TEST_MACOS_BUN+x}" ]; then
+        environment+=("SKILLS_ACT_MACOS_BUN=$TEST_MACOS_BUN")
     fi
 
     : > "$ACT_CALL_LOG"
@@ -266,8 +329,16 @@ assert_call_has_no_line 1 "os:macos-15" "first matrix isolation"
 assert_call_has_no_line 1 "macos-15=-self-hosted" "first platform isolation"
 assert_call_line 2 "os:macos-15" "second matrix invocation"
 assert_call_line 2 "macos-15=-self-hosted" "second platform mapping"
+assert_call_line 2 "SKILLS_ACT_MACOS_PYTHON=$FAKE_BIN/python3" "selected macOS Python"
+assert_call_line 2 "SKILLS_ACT_MACOS_NODE=$FAKE_BIN/node" "selected macOS Node"
+assert_call_line 2 "SKILLS_ACT_MACOS_NPM=$FAKE_BIN/npm" "selected macOS npm"
+assert_call_line 2 "SKILLS_ACT_MACOS_NPX=$FAKE_BIN/npx" "selected macOS npx"
+assert_call_line 2 "SKILLS_ACT_MACOS_BUN=$FAKE_BIN/bun" "selected macOS Bun"
 assert_call_has_no_line 2 "os:ubuntu-24.04" "second matrix isolation"
 assert_call_has_no_line 2 "ubuntu-24.04=$PINNED_IMAGE" "second platform isolation"
+assert_call_has_no_line 1 "SKILLS_ACT_MACOS_PYTHON=$FAKE_BIN/python3" "macOS Python isolation"
+assert_call_has_no_line 1 "SKILLS_ACT_MACOS_NODE=$FAKE_BIN/node" "macOS Node isolation"
+assert_call_has_no_line 1 "SKILLS_ACT_MACOS_BUN=$FAKE_BIN/bun" "macOS Bun isolation"
 assert_line_count "$ACT_CALL_LOG" "--rm" 2 "failed-workspace cleanup"
 assert_line_count "$ACT_CALL_LOG" "--reuse=false" 2 "successful-workspace cleanup"
 assert_line_count "$ACT_CALL_LOG" "--container-daemon-socket" 2 "disabled Docker socket mount"
@@ -289,11 +360,21 @@ assert_no_line "$ACT_CALL_LOG" "SKILLS_VALIDATE_ALLOW_UNTRACKED_SKILL_WORKTREE=1
 assert_line "$DOCKER_CALL_LOG" "info" "Docker preflight"
 
 mv "$FAKE_BIN/bun" "$FAKE_BIN/bun.disabled"
+mv "$FAKE_BIN/python3" "$FAKE_BIN/python3.disabled"
+mv "$FAKE_BIN/python3.11" "$FAKE_BIN/python3.11.disabled"
+mv "$FAKE_BIN/node" "$FAKE_BIN/node.disabled"
+mv "$FAKE_BIN/npm" "$FAKE_BIN/npm.disabled"
+mv "$FAKE_BIN/npx" "$FAKE_BIN/npx.disabled"
 FAKE_UNAME_S=Linux FAKE_UNAME_M=x86_64 run_wrapper --ubuntu -- --verbose
 assert_status 0 "Ubuntu-only mode"
 assert_line "$ACT_CALL_LOG" "--matrix" "Ubuntu matrix filter"
 assert_line "$ACT_CALL_LOG" "os:ubuntu-24.04" "Ubuntu matrix value"
 assert_line "$ACT_CALL_LOG" "--verbose" "act passthrough argument"
+mv "$FAKE_BIN/python3.disabled" "$FAKE_BIN/python3"
+mv "$FAKE_BIN/python3.11.disabled" "$FAKE_BIN/python3.11"
+mv "$FAKE_BIN/node.disabled" "$FAKE_BIN/node"
+mv "$FAKE_BIN/npm.disabled" "$FAKE_BIN/npm"
+mv "$FAKE_BIN/npx.disabled" "$FAKE_BIN/npx"
 mv "$FAKE_BIN/bun.disabled" "$FAKE_BIN/bun"
 
 mv "$FAKE_BIN/docker" "$FAKE_BIN/docker.disabled"
@@ -302,6 +383,42 @@ assert_status 0 "macOS-only mode without Docker"
 assert_line "$ACT_CALL_LOG" "os:macos-15" "macOS matrix value"
 assert_empty "$DOCKER_CALL_LOG" "macOS must not probe Docker"
 mv "$FAKE_BIN/docker.disabled" "$FAKE_BIN/docker"
+
+FAKE_PYTHON3_STATUS=1 run_wrapper --macos
+assert_status 0 "macOS mode selects an exact versioned Python"
+assert_line "$ACT_CALL_LOG" "SKILLS_ACT_MACOS_PYTHON=$FAKE_BIN/python3.11" "versioned macOS Python"
+
+TEST_MACOS_PYTHON="$FAKE_BIN/python3.11" run_wrapper --macos
+assert_status 0 "explicit macOS Python"
+assert_line "$ACT_CALL_LOG" "SKILLS_ACT_MACOS_PYTHON=$FAKE_BIN/python3.11" "explicit macOS Python forwarding"
+
+FAKE_PYTHON3_STATUS=1 TEST_MACOS_PYTHON="$FAKE_BIN/python3" run_wrapper --macos
+assert_status 64 "invalid explicit macOS Python"
+assert_stderr_contains "SKILLS_ACT_MACOS_PYTHON must select Python 3.11 or newer" "invalid explicit macOS Python diagnostic"
+assert_empty "$ACT_CALL_LOG" "invalid explicit macOS Python must not run act"
+
+mv "$FAKE_BIN/python3" "$FAKE_BIN/python3.disabled"
+mv "$FAKE_BIN/python3.11" "$FAKE_BIN/python3.11.disabled"
+run_wrapper --macos
+assert_status 127 "missing compatible macOS Python"
+assert_stderr_contains "requires host Python 3.11 or newer" "missing compatible macOS Python diagnostic"
+assert_empty "$ACT_CALL_LOG" "missing compatible macOS Python must not run act"
+mv "$FAKE_BIN/python3.disabled" "$FAKE_BIN/python3"
+mv "$FAKE_BIN/python3.11.disabled" "$FAKE_BIN/python3.11"
+
+FAKE_NODE_STATUS=1 run_wrapper --macos
+assert_status 64 "broken macOS Node"
+assert_stderr_contains "must select a working Node.js runtime" "broken macOS Node diagnostic"
+assert_empty "$ACT_CALL_LOG" "broken macOS Node must not run act"
+
+FAKE_BUN_VERSION=1.4.0 run_wrapper --macos
+assert_status 0 "alternate working macOS Bun version"
+assert_line "$ACT_CALL_LOG" "SKILLS_ACT_MACOS_BUN=$FAKE_BIN/bun" "flexible macOS Bun forwarding"
+
+FAKE_BUN_STATUS=1 run_wrapper --macos
+assert_status 64 "broken macOS Bun"
+assert_stderr_contains "must select a working Bun runtime" "broken macOS Bun diagnostic"
+assert_empty "$ACT_CALL_LOG" "broken macOS Bun must not run act"
 
 FAKE_UNAME_S=Linux FAKE_UNAME_M=x86_64 run_wrapper --macos
 assert_status 64 "macOS mode on Linux"

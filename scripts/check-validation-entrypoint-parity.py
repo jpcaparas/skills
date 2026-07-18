@@ -35,6 +35,15 @@ ACT_PACKAGE_COMMANDS: Final[dict[str, str]] = {
 }
 MATRIX_RUNNER: Final = "${{ matrix.os }}"
 MATRIX_OPERATING_SYSTEMS: Final = ("ubuntu-24.04", "macos-15")
+HOSTED_PYTHON_VERSION: Final = "3.11"
+HOSTED_NODE_VERSION: Final = "24"
+HOSTED_BUN_VERSION: Final = "1.3.11"
+HOSTED_SETUP_PYTHON_STEP: Final = "Set Up Python"
+HOSTED_SETUP_NODE_STEP: Final = "Set Up Node"
+HOSTED_SETUP_BUN_STEP: Final = "Set Up Bun"
+LOCAL_MACOS_TOOLCHAIN_STEP: Final = "Prepare Local macOS Toolchain (act)"
+HOSTED_TOOLCHAIN_CONDITION: Final = "${{ !env.ACT || runner.os == 'Linux' }}"
+LOCAL_MACOS_TOOLCHAIN_CONDITION: Final = "${{ env.ACT && runner.os == 'macOS' }}"
 CANONICAL_PRE_PUSH_COMMAND: Final = (
     'exec "$(dirname -- "$0")/../scripts/run-pnpm.sh" run validate'
 )
@@ -317,6 +326,224 @@ def validate_workflow(
     if not isinstance(steps, list):
         errors.append("GitHub Actions 'validate' job must contain a steps list")
         return
+
+    hosted_python_steps = [
+        step
+        for step in steps
+        if isinstance(step, dict) and step.get("name") == HOSTED_SETUP_PYTHON_STEP
+    ]
+    if len(hosted_python_steps) != 1:
+        errors.append(
+            "GitHub Actions 'validate' job must contain exactly one "
+            f"{HOSTED_SETUP_PYTHON_STEP!r} step"
+        )
+    else:
+        hosted_python_step = hosted_python_steps[0]
+        if hosted_python_step.get("uses") != "actions/setup-python@v6":
+            errors.append(
+                f"GitHub Actions {HOSTED_SETUP_PYTHON_STEP!r} step must use "
+                "'actions/setup-python@v6'"
+            )
+        hosted_python_options = hosted_python_step.get("with")
+        if not isinstance(hosted_python_options, dict) or (
+            hosted_python_options.get("python-version") != HOSTED_PYTHON_VERSION
+        ):
+            errors.append(
+                f"GitHub Actions {HOSTED_SETUP_PYTHON_STEP!r} step must pin "
+                f"python-version to {HOSTED_PYTHON_VERSION!r}"
+            )
+        if hosted_python_step.get("if") != HOSTED_TOOLCHAIN_CONDITION:
+            errors.append(
+                f"GitHub Actions {HOSTED_SETUP_PYTHON_STEP!r} step must use "
+                f"condition {HOSTED_TOOLCHAIN_CONDITION!r}"
+            )
+
+    hosted_runtime_contracts = (
+        (
+            HOSTED_SETUP_NODE_STEP,
+            "actions/setup-node@v6",
+            "node-version",
+            HOSTED_NODE_VERSION,
+        ),
+        (
+            HOSTED_SETUP_BUN_STEP,
+            "oven-sh/setup-bun@v2",
+            "bun-version",
+            HOSTED_BUN_VERSION,
+        ),
+    )
+    for step_name, action, option_name, pinned_version in hosted_runtime_contracts:
+        matching_steps = [
+            step
+            for step in steps
+            if isinstance(step, dict) and step.get("name") == step_name
+        ]
+        if len(matching_steps) != 1:
+            errors.append(
+                "GitHub Actions 'validate' job must contain exactly one "
+                f"{step_name!r} step"
+            )
+            continue
+        runtime_step = matching_steps[0]
+        if runtime_step.get("uses") != action:
+            errors.append(
+                f"GitHub Actions {step_name!r} step must use {action!r}"
+            )
+        runtime_options = runtime_step.get("with")
+        if not isinstance(runtime_options, dict) or (
+            runtime_options.get(option_name) != pinned_version
+        ):
+            errors.append(
+                f"GitHub Actions {step_name!r} step must pin {option_name} "
+                f"to {pinned_version!r}"
+            )
+        if runtime_step.get("if") != HOSTED_TOOLCHAIN_CONDITION:
+            errors.append(
+                f"GitHub Actions {step_name!r} step must use condition "
+                f"{HOSTED_TOOLCHAIN_CONDITION!r}"
+            )
+
+    local_macos_steps = [
+        step
+        for step in steps
+        if isinstance(step, dict) and step.get("name") == LOCAL_MACOS_TOOLCHAIN_STEP
+    ]
+    if len(local_macos_steps) != 1:
+        errors.append(
+            "GitHub Actions 'validate' job must contain exactly one "
+            f"{LOCAL_MACOS_TOOLCHAIN_STEP!r} step"
+        )
+    else:
+        local_macos_step = local_macos_steps[0]
+        if local_macos_step.get("if") != LOCAL_MACOS_TOOLCHAIN_CONDITION:
+            errors.append(
+                f"GitHub Actions {LOCAL_MACOS_TOOLCHAIN_STEP!r} step must use "
+                f"condition {LOCAL_MACOS_TOOLCHAIN_CONDITION!r}"
+            )
+        if local_macos_step.get("shell") != "bash":
+            errors.append(
+                f"GitHub Actions {LOCAL_MACOS_TOOLCHAIN_STEP!r} step must use bash"
+            )
+        local_macos_run = local_macos_step.get("run")
+        if not isinstance(local_macos_run, str):
+            errors.append(
+                f"GitHub Actions {LOCAL_MACOS_TOOLCHAIN_STEP!r} step must run "
+                "the selected host Python bootstrap"
+            )
+        else:
+            active_macos_lines = active_shell_lines(local_macos_run)
+
+            # Match complete shell statements rather than searching their text.
+            # A quoted echo or printf can contain every required fragment while
+            # selecting or invoking none of the host toolchain commands.
+            required_lines: tuple[tuple[str, re.Pattern[str]], ...] = (
+                (
+                    'validation_python="${SKILLS_ACT_MACOS_PYTHON:-}"',
+                    re.compile(
+                        r'validation_python="\$\{SKILLS_ACT_MACOS_PYTHON:-\}"'
+                    ),
+                ),
+                (
+                    'validation_node="${SKILLS_ACT_MACOS_NODE:-}"',
+                    re.compile(
+                        r'validation_node="\$\{SKILLS_ACT_MACOS_NODE:-\}"'
+                    ),
+                ),
+                (
+                    'validation_npm="${SKILLS_ACT_MACOS_NPM:-}"',
+                    re.compile(
+                        r'validation_npm="\$\{SKILLS_ACT_MACOS_NPM:-\}"'
+                    ),
+                ),
+                (
+                    'validation_npx="${SKILLS_ACT_MACOS_NPX:-}"',
+                    re.compile(
+                        r'validation_npx="\$\{SKILLS_ACT_MACOS_NPX:-\}"'
+                    ),
+                ),
+                (
+                    'validation_bun="${SKILLS_ACT_MACOS_BUN:-}"',
+                    re.compile(
+                        r'validation_bun="\$\{SKILLS_ACT_MACOS_BUN:-\}"'
+                    ),
+                ),
+                (
+                    "sys.version_info >= (3, 11)",
+                    re.compile(
+                        r'(?:\|\|\s+)?(?:!\s+)?'
+                        r'"\$validation_python"\s+-c\s+'
+                        r"'[^'\n]*sys\.version_info\s*>=\s*\(3,\s*11\)"
+                        r"[^'\n]*'(?:\s*;\s*then)?"
+                    ),
+                ),
+                (
+                    '"$validation_node" --version',
+                    re.compile(
+                        r'(?:"\$validation_node"\s+--version'
+                        r'|(?:\|\|\s+)?\[\s+-z\s+'
+                        r'"\$\("\$validation_node"\s+--version\)"\s+\]'
+                        r'\s*;\s*then)'
+                    ),
+                ),
+                (
+                    '"$validation_bun" --version',
+                    re.compile(
+                        r'(?:\|\|\s+)?(?:!\s+)?'
+                        r'"\$validation_bun"\s+--version'
+                        r'(?:\s*;\s*then)?'
+                    ),
+                ),
+                (
+                    '"$validation_python" -m venv',
+                    re.compile(
+                        r'"\$validation_python"\s+-m\s+venv'
+                        r'(?:\s+[^;&|]+)?'
+                    ),
+                ),
+                (
+                    'ln -s "$validation_node"',
+                    re.compile(
+                        r'ln\s+-s\s+"\$validation_node"\s+"[^"\n]*/node"'
+                    ),
+                ),
+                (
+                    'ln -s "$validation_npm"',
+                    re.compile(
+                        r'ln\s+-s\s+"\$validation_npm"\s+"[^"\n]*/npm"'
+                    ),
+                ),
+                (
+                    'ln -s "$validation_npx"',
+                    re.compile(
+                        r'ln\s+-s\s+"\$validation_npx"\s+"[^"\n]*/npx"'
+                    ),
+                ),
+                (
+                    'ln -s "$validation_bun"',
+                    re.compile(
+                        r'ln\s+-s\s+"\$validation_bun"\s+"[^"\n]*/bun"'
+                    ),
+                ),
+            )
+            for expected_line, pattern in required_lines:
+                if not any(
+                    pattern.fullmatch(line) for line in active_macos_lines
+                ):
+                    errors.append(
+                        f"GitHub Actions {LOCAL_MACOS_TOOLCHAIN_STEP!r} step must "
+                        f"contain {expected_line!r}"
+                    )
+            bare_python_venv = re.compile(
+                r'(?:(?:if|elif|\|\||&&)\s+)?(?:!\s+)?'
+                r'python3\s+-m\s+venv\b.*'
+            )
+            if any(
+                bare_python_venv.fullmatch(line) for line in active_macos_lines
+            ):
+                errors.append(
+                    f"GitHub Actions {LOCAL_MACOS_TOOLCHAIN_STEP!r} step must not "
+                    "bootstrap from bare python3"
+                )
 
     validation_steps = [
         step

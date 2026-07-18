@@ -1,13 +1,12 @@
 # Oneshot Websites References
 
-Use these files progressively instead of loading the whole skill payload.
+Load only the branch needed for the current request.
 
-| File | Load when |
+| File | Load when and why |
 | --- | --- |
-| `references/repertoire.md` | You need the style list, slugs, palettes, typography, or route summaries. |
-| `references/generation-protocol.md` | You need to plan parallel workers, select subsets, or write the manifest. |
-| `references/catalog-index.md` | You need the root directory index, fairness note, or manifest-to-table rules. |
-| `references/ui-guidance.md` | You need to create or adapt variant style briefs with stronger visual specificity. |
-| `references/quality-bar.md` | You need one-shot HTML constraints, accessibility checks, or validation criteria. |
+| `references/catalogue-authoring.md` | Adding templates; use it to preserve stable IDs and goal-only prompt style. |
+| `references/execution-protocol.md` | Preparing or dispatching runs; use it for namespace, isolation, harness, and rerun decisions. |
+| `references/catalog-index.md` | Indexing or checking outputs; use it to build and validate the generic artifact catalogue. |
+| `references/research-notes.md` | Expanding the catalogue or benchmark contract; use it to understand the source-backed design choices. |
 
-The canonical route output is one folder per style, each containing `PROMPT.md` and `index.html`, plus a root `manifest.json` and `index.html`.
+The canonical prompt data lives in `assets/prompt-catalogue.json`. Runtime behavior remains canonical in `SKILL.md`.

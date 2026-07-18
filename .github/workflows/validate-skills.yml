@@ -61,10 +61,43 @@ jobs:
         run: |
           set -euo pipefail
           validation_venv="${RUNNER_TEMP:?RUNNER_TEMP must be set}/skills-validation-venv"
-          python3 -m venv --clear "$validation_venv"
+          validation_python="${SKILLS_ACT_MACOS_PYTHON:-}"
+          validation_node="${SKILLS_ACT_MACOS_NODE:-}"
+          validation_npm="${SKILLS_ACT_MACOS_NPM:-}"
+          validation_npx="${SKILLS_ACT_MACOS_NPX:-}"
+          validation_bun="${SKILLS_ACT_MACOS_BUN:-}"
+          if [ -z "$validation_python" ] \
+            || [ ! -x "$validation_python" ] \
+            || ! "$validation_python" -c 'import sys, venv; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
+            echo "Local macOS act validation requires SKILLS_ACT_MACOS_PYTHON at Python 3.11 or newer with venv support." >&2
+            exit 1
+          fi
+          if [ -z "$validation_node" ] \
+            || [ ! -x "$validation_node" ] \
+            || [ -z "$("$validation_node" --version)" ]; then
+            echo "Local macOS act validation requires a working SKILLS_ACT_MACOS_NODE runtime." >&2
+            exit 1
+          fi
+          if [ -z "$validation_npm" ] || [ ! -x "$validation_npm" ] \
+            || [ -z "$validation_npx" ] || [ ! -x "$validation_npx" ]; then
+            echo "Local macOS act validation requires working npm and npx commands for the selected Node.js runtime." >&2
+            exit 1
+          fi
+          if [ -z "$validation_bun" ] || [ ! -x "$validation_bun" ] \
+            || ! "$validation_bun" --version; then
+            echo "Local macOS act validation requires a working SKILLS_ACT_MACOS_BUN runtime." >&2
+            exit 1
+          fi
+          "$validation_python" -m venv --clear "$validation_venv"
           "$validation_venv/bin/python3" -m pip install --upgrade pip
           "$validation_venv/bin/python3" -m pip install -r requirements-validation.txt
+          validation_tool_bin="$(mktemp -d "${RUNNER_TEMP:?RUNNER_TEMP must be set}/skills-validation-host-tools.XXXXXX")"
+          ln -s "$validation_node" "$validation_tool_bin/node"
+          ln -s "$validation_npm" "$validation_tool_bin/npm"
+          ln -s "$validation_npx" "$validation_tool_bin/npx"
+          ln -s "$validation_bun" "$validation_tool_bin/bun"
           printf '%s\n' "$validation_venv/bin" >> "$GITHUB_PATH"
+          printf '%s\n' "$validation_tool_bin" >> "$GITHUB_PATH"
 
       - name: Install Python Validation Packages
         if: ${{ !env.ACT || runner.os == 'Linux' }}

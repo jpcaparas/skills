@@ -4,14 +4,17 @@ The repository has two complementary test paths: a fast native suite for everyda
 
 ## Native validation
 
-Create a local Python environment and install the pinned validation packages once:
+Use any compatible Python 3.11 or newer. Create a local Python environment and install the pinned validation packages once; the canonical validator and agent hooks automatically prefer this repository-local environment:
 
 ```bash
-python3 -m venv .venv
+validation_python="${SKILLS_VALIDATION_PYTHON:-python3}"
+"$validation_python" -m venv .venv
 source .venv/bin/activate
-python3 -m pip install --upgrade pip
-python3 -m pip install -r requirements-validation.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements-validation.txt
 ```
+
+Set `SKILLS_VALIDATION_PYTHON` to a compatible executable path or command name when the desired interpreter is not the default `python3`. The native suite also requires Bun because the `scaffold-hooks` integration probes execute its OpenCode TypeScript helpers, plus Node.js/npx for skill discovery. Put compatible commands on `PATH`, or select them explicitly with `SKILLS_VALIDATION_BUN`, `SKILLS_VALIDATION_NODE`, and `SKILLS_VALIDATION_NPX`. Install Bun with the [official installer](https://bun.sh/docs/installation). The remaining command-line dependencies are Git, `jq`, ripgrep (`rg`), and HTTPie (`http`). Hosted validation remains deterministic and currently pins Python 3.11, Node.js 24, and Bun 1.3.11.
 
 Then run the complete repository suite with:
 
@@ -32,7 +35,7 @@ pnpm validate:act
 
 The wrapper invokes the two matrix legs sequentially. Ubuntu uses a pinned `linux/amd64` container image; macOS uses act's `-self-hosted` mode and therefore runs directly on the current Mac. Act's local checkout bridge copies the current non-ignored worktree into an isolated job workspace, including staged, unstaged, and untracked files. The canonical validator still rejects untracked files under `skills/`, because those files would be absent from a fresh hosted checkout.
 
-For deterministic execution, the wrapper isolates repository and XDG `actrc` configuration and rejects an active `$HOME/.actrc`. It accepts only logging flags after `--`, ignores act's default `.env`, `.input`, `.secrets`, and `.vars` files, and prevents automatic GitHub-token import. It also disables bind and remote-checkout overrides so the workflow cannot replace the local checkout copy. The macOS workflow creates a temporary Python virtual environment, but it still uses the host's installed Git, `python3`, Node, npm, Bun, ripgrep, and HTTPie commands.
+For deterministic execution, the wrapper isolates repository and XDG `actrc` configuration and rejects an active `$HOME/.actrc`. It accepts only logging flags after `--`, ignores act's default `.env`, `.input`, `.secrets`, and `.vars` files, and prevents automatic GitHub-token import. It also disables bind and remote-checkout overrides so the workflow cannot replace the local checkout copy. The macOS leg accepts Python 3.11 or newer plus working Node.js/npm/npx and Bun installations, then creates a temporary Python environment and host-tool shim. Use the `SKILLS_ACT_MACOS_PYTHON`, `SKILLS_ACT_MACOS_NODE`, `SKILLS_ACT_MACOS_NPM`, `SKILLS_ACT_MACOS_NPX`, and `SKILLS_ACT_MACOS_BUN` overrides with absolute executable paths when compatible runtimes are installed outside the normal `PATH` or do not share one binary directory. Hosted GitHub Actions remains deterministic and pins Python 3.11, Node.js 24, and Bun 1.3.11.
 
 Run one leg when that is all the host supports:
 

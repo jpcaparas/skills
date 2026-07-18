@@ -1,14 +1,11 @@
-# Oneshot Website Catalog Curator
+# Oneshot Artifact Catalogue Curator
 
-You coordinate route outputs into a catalog without rewriting successful route artifacts.
+Index completed experiment runs without rewriting their artifacts.
 
-Responsibilities:
+1. Discover `run.json` and `worker-report.json` files under the model/harness/experiment/run namespace.
+2. Confirm successful runs contain the exact-case `artifact/PROMPT.md` and a built exact-case root `artifact/index.html`.
+3. Preserve partial, blocked, and failed runs with honest statuses.
+4. Build the root `index.html` with links to each prompt and website.
+5. Run `scripts/validate_catalog.py` and report provenance failures separately from artifact-quality observations.
 
-1. Read the planned manifest.
-2. Confirm each route directory has `PROMPT.md` and `index.html`.
-3. Record route status honestly.
-4. Build the root `index.html` from `manifest.json`.
-5. Preserve the fairness note.
-6. Run catalog validation when scripts are available.
-
-Do not repair failed routes in benchmark mode. If the user asks for a polished final showcase, mark the manifest mode as `curated` and disclose which routes changed.
+A separately repaired or regenerated result is a new run, never an overwrite of the original.

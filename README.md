@@ -282,7 +282,7 @@ Production skill for Nano Banana 2 infographic prompting and verification coveri
   <img src="skills/oneshot-websites/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-websites" width="480">
 </p>
 
-Production skill for generating semi-deterministic catalogs of parallel one-shot single-file website variants, with a full style repertoire, route-level `PROMPT.md` files, a fairness-aware directory index, and validation scripts.
+Production skill for launching unrestricted one-shot website experiments through fresh isolated subagents, with a catalogue seeded with 100 prompts, recursive delegation, coordinator-recorded prompt provenance, collision-free run namespaces, and drop-ready static artifacts.
 
 ### `product-question`
 

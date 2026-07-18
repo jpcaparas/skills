@@ -1,108 +1,2557 @@
 #!/usr/bin/env python3
-"""Run lightweight tests for the oneshot-websites skill."""
+"""Exercise the oneshot-websites package contract with temporary artifacts."""
 
 from __future__ import annotations
 
+import errno
+import hashlib
+import io
 import json
+import multiprocessing
+import os
+import queue
+import re
+import shutil
+import stat
 import subprocess
 import sys
 import tempfile
+import threading
+from concurrent.futures import ThreadPoolExecutor
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
+from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence
+from unittest.mock import patch
+
+import validate_catalog as catalog_validator
+from prepare_run import RunPreparationError, build_identity, make_run_id, reserve_paths
+from build_catalog_index import CATALOGUE_LOCK
+from runtime_contract import enforce_json_nesting_limit, identity_key, parse_json_bounded
 
 
-def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, text=True, capture_output=True, check=False)
+EVAL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
+ASSERTION_TYPES = {"functional", "structural", "disclosure", "negative", "verification"}
 
 
-def assert_ok(condition: bool, message: str, errors: list[str]) -> None:
+def run(command: Sequence[str]) -> subprocess.CompletedProcess:
+    return subprocess.run(list(command), text=True, capture_output=True, check=False)
+
+
+def run_frozen_catalogue_builder(
+    root_value: str,
+    publication_ready: Any,
+    release_publication: Any,
+    outcome_queue: Any,
+) -> None:
+    """Freeze one old catalogue immediately before its atomic publication."""
+
+    import build_catalog_index as catalogue_builder
+
+    root = Path(root_value)
+    out_path = root / "index.html"
+    original_replace = catalogue_builder.os.replace
+    captured_stdout = io.StringIO()
+    captured_stderr = io.StringIO()
+
+    def held_replace(source: Any, destination: Any) -> None:
+        if Path(destination) == out_path:
+            publication_ready.set()
+            if not release_publication.wait(30):
+                raise RuntimeError("timed out waiting to publish the frozen catalogue snapshot")
+        original_replace(source, destination)
+
+    catalogue_builder.os.replace = held_replace
+    original_argv = sys.argv
+    try:
+        sys.argv = [
+            str(Path(catalogue_builder.__file__).resolve()),
+            "--root",
+            str(root),
+            "--out",
+            str(out_path),
+        ]
+        with redirect_stdout(captured_stdout), redirect_stderr(captured_stderr):
+            returncode = catalogue_builder.main()
+    except BaseException as error:
+        outcome_queue.put(
+            {
+                "returncode": 1,
+                "error": repr(error),
+                "stdout": captured_stdout.getvalue(),
+                "stderr": captured_stderr.getvalue(),
+            }
+        )
+    else:
+        outcome_queue.put(
+            {
+                "returncode": returncode,
+                "error": "",
+                "stdout": captured_stdout.getvalue(),
+                "stderr": captured_stderr.getvalue(),
+            }
+        )
+    finally:
+        sys.argv = original_argv
+        catalogue_builder.os.replace = original_replace
+
+
+def catalogue_lock_is_busy(root: Path) -> bool:
+    """Probe the builder's interprocess lock without waiting for ownership."""
+
+    lock_path = root / CATALOGUE_LOCK
+    try:
+        descriptor = os.open(lock_path, os.O_RDWR | getattr(os, "O_CLOEXEC", 0))
+    except FileNotFoundError:
+        return False
+
+    acquired = False
+    try:
+        if os.name == "posix":
+            import fcntl
+
+            try:
+                fcntl.flock(descriptor, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError as error:
+                if error.errno in {errno.EACCES, errno.EAGAIN}:
+                    return True
+                raise
+        else:
+            import msvcrt
+
+            os.lseek(descriptor, 0, os.SEEK_SET)
+            try:
+                msvcrt.locking(descriptor, msvcrt.LK_NBLCK, 1)
+            except OSError as error:
+                if error.errno in {errno.EACCES, errno.EAGAIN, 13, 36}:
+                    return True
+                raise
+        acquired = True
+        return False
+    finally:
+        if acquired:
+            if os.name == "posix":
+                import fcntl
+
+                fcntl.flock(descriptor, fcntl.LOCK_UN)
+            else:
+                import msvcrt
+
+                os.lseek(descriptor, 0, os.SEEK_SET)
+                msvcrt.locking(descriptor, msvcrt.LK_UNLCK, 1)
+        os.close(descriptor)
+
+
+def assert_ok(condition: bool, message: str, errors: List[str]) -> None:
     if not condition:
         errors.append(message)
 
 
-def write_sample_catalog(root: Path) -> Path:
-    route = root / "restaurant"
-    route.mkdir(parents=True)
-    (route / "PROMPT.md").write_text(
-        "# One-Shot Prompt\n\nRestaurant prompt for a single-pass route.\n",
+def rename_with_exact_case(path: Path, name: str) -> Path:
+    """Force a case-only rename to reach disk on case-insensitive filesystems."""
+
+    temporary = path.with_name(".oneshot-case-swap")
+    path.rename(temporary)
+    destination = path.with_name(name)
+    temporary.rename(destination)
+    return destination
+
+
+def read_json(path: Path, errors: List[str], label: str) -> Optional[Any]:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        errors.append("{} is not valid JSON: {}".format(label, exc))
+        return None
+
+
+def check_evals(skill: Path, errors: List[str]) -> None:
+    """Keep the package eval data useful to runners and human reviewers."""
+    evals = read_json(skill / "evals" / "evals.json", errors, "evals/evals.json")
+    triggers = read_json(skill / "evals" / "trigger-evals.json", errors, "evals/trigger-evals.json")
+    if not isinstance(evals, Mapping) or not isinstance(triggers, list):
+        return
+
+    assert_ok(set(evals) == {"skill_name", "created_by", "evals"}, "evals must use the advanced creator top-level schema", errors)
+    assert_ok(evals.get("skill_name") == "oneshot-websites", "evals skill_name must be oneshot-websites", errors)
+    assert_ok(evals.get("created_by") == "skill-creator-advanced", "evals created_by must identify skill-creator-advanced", errors)
+    entries = evals.get("evals")
+    assert_ok(isinstance(entries, list) and bool(entries), "evals must contain a non-empty evals array", errors)
+    seen_ids = set()
+    if isinstance(entries, list):
+        for index, item in enumerate(entries):
+            assert_ok(isinstance(item, Mapping), "eval {} must be an object".format(index), errors)
+            if not isinstance(item, Mapping):
+                continue
+            item_id = item.get("id")
+            assert_ok(isinstance(item_id, int) and not isinstance(item_id, bool), "eval {} needs an integer id".format(index), errors)
+            if isinstance(item_id, int) and not isinstance(item_id, bool):
+                assert_ok(item_id not in seen_ids, "duplicate eval id: {}".format(item_id), errors)
+                seen_ids.add(item_id)
+            for field in ("name", "prompt", "expected_output"):
+                assert_ok(isinstance(item.get(field), str) and bool(item[field].strip()), "eval {} missing {}".format(index, field), errors)
+            name = item.get("name")
+            if isinstance(name, str):
+                assert_ok(bool(EVAL_NAME_RE.fullmatch(name)), "eval {} name must be lowercase hyphenated text".format(index), errors)
+            assertions = item.get("assertions")
+            assert_ok(isinstance(assertions, list) and bool(assertions), "eval {} needs assertions".format(index), errors)
+            if isinstance(assertions, list):
+                for assertion in assertions:
+                    assert_ok(isinstance(assertion, Mapping), "eval assertion must be an object", errors)
+                    if not isinstance(assertion, Mapping):
+                        continue
+                    assert_ok(isinstance(assertion.get("text"), str) and bool(assertion["text"].strip()), "eval assertion needs text", errors)
+                    assert_ok(assertion.get("type") in ASSERTION_TYPES, "eval assertion has an unsupported type", errors)
+            tags = item.get("tags")
+            assert_ok(isinstance(tags, list) and all(isinstance(tag, str) for tag in tags), "eval {} needs string tags".format(index), errors)
+
+    assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
+    seen_queries = set()
+    trigger_values = set()
+    for index, case in enumerate(triggers):
+        assert_ok(isinstance(case, Mapping), "trigger eval {} must be an object".format(index), errors)
+        if not isinstance(case, Mapping):
+            continue
+        assert_ok(set(case) == {"query", "should_trigger"}, "trigger eval {} must contain exactly query and should_trigger".format(index), errors)
+        query = case.get("query")
+        assert_ok(isinstance(query, str) and bool(query.strip()), "trigger eval {} needs a non-empty query".format(index), errors)
+        if isinstance(query, str) and query.strip():
+            assert_ok(query not in seen_queries, "duplicate trigger query: {}".format(query), errors)
+            seen_queries.add(query)
+        should_trigger = case.get("should_trigger")
+        assert_ok(isinstance(should_trigger, bool), "trigger eval {} needs should_trigger boolean".format(index), errors)
+        if isinstance(should_trigger, bool):
+            trigger_values.add(should_trigger)
+    assert_ok(trigger_values == {True, False}, "trigger evals must balance positive and adjacent-negative cases", errors)
+
+
+def invocation_json(result: subprocess.CompletedProcess, errors: List[str], label: str) -> Optional[Mapping[str, Any]]:
+    if result.returncode != 0:
+        errors.append("{} failed: {}".format(label, result.stderr or result.stdout))
+        return None
+    try:
+        data = json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        errors.append("{} did not print JSON: {}".format(label, exc))
+        return None
+    if not isinstance(data, Mapping):
+        errors.append("{} JSON result must be an object".format(label))
+        return None
+    return data
+
+
+def run_directory(data: Mapping[str, Any], errors: List[str], label: str) -> Optional[Path]:
+    value = data.get("runDirectory")
+    if not isinstance(value, str):
+        errors.append("{} JSON result missing runDirectory".format(label))
+        return None
+    path = Path(value)
+    if not path.is_dir():
+        errors.append("{} created run directory does not exist: {}".format(label, path))
+        return None
+    return path
+
+
+def rebuild_catalog_index(output_root: Path) -> subprocess.CompletedProcess:
+    """Regenerate the deterministic root catalogue after a valid fixture changes."""
+
+    builder = Path(__file__).resolve().parent / "build_catalog_index.py"
+    return run(
+        [
+            sys.executable,
+            str(builder),
+            "--root",
+            str(output_root),
+            "--out",
+            str(output_root / "index.html"),
+        ]
+    )
+
+
+def prepare_run(
+    skill: Path,
+    output_root: Path,
+    model: str,
+    harness: str,
+    experiment: str,
+    prompt_file: Path,
+    errors: List[str],
+    classification: str = "autonomous-one-shot",
+    prior_run: Optional[Path] = None,
+) -> Optional[Path]:
+    command = [
+        sys.executable,
+        str(skill / "scripts" / "prepare_run.py"),
+        "--output-root",
+        str(output_root),
+        "--model",
+        model,
+        "--harness",
+        harness,
+        "--experiment",
+        experiment,
+        "--prompt-file",
+        str(prompt_file),
+        "--classification",
+        classification,
+    ]
+    if prior_run is not None:
+        command.extend(("--prior-run", str(prior_run)))
+    result = run(command)
+    data = invocation_json(result, errors, "prepare_run.py")
+    prepared = run_directory(data, errors, "prepare_run.py") if data is not None else None
+    if prepared is not None:
+        built = rebuild_catalog_index(output_root.resolve())
+        assert_ok(
+            built.returncode == 0,
+            "could not build fixture root catalogue: {}".format(built.stderr or built.stdout),
+            errors,
+        )
+    return prepared
+
+
+def mark_successful_static_artifact(run_path: Path) -> None:
+    """Create a framework-shaped source workspace and its static export."""
+    workspace = run_path / "workspace"
+    workspace.mkdir(exist_ok=True)
+    (workspace / "package.json").write_text(
+        json.dumps({"dependencies": {"react": "example"}, "scripts": {"build": "example"}}),
         encoding="utf-8",
     )
-    (route / "index.html").write_text(
-        "<!DOCTYPE html>\n<html lang=\"en\"><head><meta charset=\"utf-8\"><title>Restaurant</title></head><body><main><h1>Maison Vorieux</h1></main></body></html>\n",
+    (workspace / "src").mkdir(exist_ok=True)
+    (workspace / "src" / "App.jsx").write_text("export default function App() { return null; }\n", encoding="utf-8")
+    (workspace / "run.json").write_text('{"sourceFixture": true}\n', encoding="utf-8")
+    (run_path / "artifact" / "assets").mkdir(exist_ok=True)
+    (run_path / "artifact" / "assets" / "site.css").write_text("body { color: #17302c; }\n", encoding="utf-8")
+    (run_path / "artifact" / "index.html").write_text(
+        "<!doctype html><html><head><meta charset=\"utf-8\"><title>Export</title>"
+        "<link rel=\"stylesheet\" href=\"assets/site.css\"></head>"
+        "<body><div id=\"root\">Built static export</div></body></html>\n",
         encoding="utf-8",
     )
-    manifest = {
-        "catalogTitle": "Oneshot Websites Test",
-        "harness": "test",
-        "generated": "2026-05-23",
-        "mode": "single-pass",
-        "selection": "test",
-        "items": [
-            {
-                "path": "restaurant/",
-                "title": "Maison Vorieux",
-                "prompt": "restaurant/PROMPT.md",
-                "type": "restaurant",
-                "typeLabel": "Elegant Restaurant",
-                "status": "OK",
-                "summary": "Fine dining storefront with candlelit course reveals.",
+    manifest_path = run_path / "run.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["status"] = "OK"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    report_path = run_path / "worker-report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["status"] = "OK"
+    report["artifact"]["staticDeploymentVerified"] = True
+    report["verification"] = [
+        {"kind": "static-browser-smoke", "result": "passed", "evidence": "Opened the built root entrypoint"}
+    ]
+    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    built = rebuild_catalog_index(run_path.parents[3])
+    if built.returncode != 0:
+        raise RuntimeError("could not rebuild successful fixture catalogue: {}".format(built.stderr or built.stdout))
+
+
+def write_appledouble(path: Path) -> None:
+    """Write a minimal authentic AppleDouble signature for portable-volume tests."""
+
+    path.write_bytes(b"\x00\x05\x16\x07" + b"\x00" * 28)
+
+
+def assert_invalid_catalog(
+    validator: Path,
+    output_root: Path,
+    expected_message: str,
+    label: str,
+    errors: List[str],
+) -> None:
+    """Require a malformed temporary catalogue to fail with a classified error."""
+
+    result = run([sys.executable, str(validator), str(output_root)])
+    assert_ok(result.returncode != 0, "validator accepted {}".format(label), errors)
+    assert_ok(expected_message in result.stdout, "validator did not classify {}: {}".format(label, result.stdout), errors)
+
+
+def exercise_adversarial_contract(
+    skill: Path,
+    validator: Path,
+    temporary: Path,
+    prompt: Path,
+    errors: List[str],
+) -> None:
+    """Defend the provenance and static-handoff claims against bounded mutations."""
+
+    temporary.mkdir(parents=True, exist_ok=True)
+    try:
+        enforce_json_nesting_limit('{"value":"' + "{" * 400 + '"}')
+        enforce_json_nesting_limit("[" * 256 + "0" + "]" * 256)
+    except ValueError as error:
+        errors.append("JSON nesting guard rejected valid bounded content: {}".format(error))
+    try:
+        enforce_json_nesting_limit("[" * 257 + "0" + "]" * 257)
+    except ValueError:
+        pass
+    else:
+        errors.append("JSON nesting guard accepted metadata beyond 256 levels")
+    try:
+        parse_json_bounded('{"value":' + "9" * 100_000 + "}")
+    except ValueError:
+        pass
+    else:
+        errors.append("bounded JSON parser accepted a 100,000-digit integer token")
+    for numeric_label, numeric_json in (
+        ("oversized float token", '{"value":0.' + "1" * 1_000 + "}"),
+        ("non-finite float", '{"value":1e309}'),
+        ("non-standard numeric constant", '{"value":NaN}'),
+    ):
+        try:
+            parse_json_bounded(numeric_json)
+        except ValueError:
+            pass
+        else:
+            errors.append("bounded JSON parser accepted {}".format(numeric_label))
+    try:
+        parse_json_bounded('{"value":"first","value":"second"}')
+    except ValueError as error:
+        assert_ok(
+            str(error) == "duplicate JSON object member: 'value'",
+            "bounded JSON parser reported a non-deterministic duplicate-member error",
+            errors,
+        )
+    else:
+        errors.append("bounded JSON parser accepted a duplicate object member")
+    try:
+        build_identity("\udcff", "model")
+    except RunPreparationError as error:
+        assert_ok(
+            "valid UTF-8 text" in str(error),
+            "prepare_run.py did not classify an invalid Unicode identity",
+            errors,
+        )
+    else:
+        errors.append("prepare_run.py accepted an invalid Unicode identity")
+
+    def colliding_name(value: int) -> str:
+        return "Model" + "".join("\u0301" if value & (1 << bit) else "\u0300" for bit in range(32))
+
+    first_collision_name = colliding_name(3_739_250)
+    second_collision_name = colliding_name(12_560_894)
+    assert_ok(
+        identity_key(first_collision_name) != identity_key(second_collision_name),
+        "identity keys still collide for a known short-digest collision pair",
+        errors,
+    )
+
+    loop_parent = temporary / "loop-parent"
+    loop_parent.mkdir()
+    loop_path = loop_parent / "loop"
+    try:
+        loop_path.symlink_to("loop")
+    except OSError:
+        pass
+    else:
+        loop_commands = [
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(loop_path),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Loop",
+                "--prompt-file",
+                str(prompt),
+            ],
+            [
+                sys.executable,
+                str(skill / "scripts" / "build_catalog_index.py"),
+                "--root",
+                str(loop_path),
+                "--out",
+                str(loop_path / "index.html"),
+            ],
+            [sys.executable, str(validator), str(loop_path)],
+        ]
+        for command in loop_commands:
+            loop_result = run(command)
+            assert_ok(
+                loop_result.returncode != 0
+                and "unable to resolve output" in (loop_result.stdout + loop_result.stderr)
+                and "Traceback" not in loop_result.stderr,
+                "runtime CLI crashed on a symlink-loop output root",
+                errors,
+            )
+
+    empty_prompt = temporary / "empty-prompt.md"
+    empty_prompt.write_text(" \n\t", encoding="utf-8")
+    empty_result = run(
+        [
+            sys.executable,
+            str(skill / "scripts" / "prepare_run.py"),
+            "--output-root",
+            str(temporary / "empty-root"),
+            "--model",
+            "Model",
+            "--harness",
+            "Harness",
+            "--experiment",
+            "Empty",
+            "--prompt-file",
+            str(empty_prompt),
+        ]
+    )
+    assert_ok(empty_result.returncode != 0 and "non-blank" in empty_result.stderr, "prepare_run.py accepted a blank prompt", errors)
+
+    if os.name == "posix":
+        unreadable_prompt = temporary / "unreadable-prompt.md"
+        unreadable_prompt.write_text("Create an unreadable prompt fixture.\n", encoding="utf-8")
+        os.chmod(unreadable_prompt, 0o000)
+        unreadable_prompt_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(temporary / "unreadable-prompt-root"),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Unreadable Prompt",
+                "--prompt-file",
+                str(unreadable_prompt),
+            ]
+        )
+        assert_ok(
+            unreadable_prompt_result.returncode == 2
+            and "prompt file is not readable" in unreadable_prompt_result.stderr
+            and "Traceback" not in unreadable_prompt_result.stderr,
+            "prepare_run.py crashed on an unreadable prompt file",
+            errors,
+        )
+        os.chmod(unreadable_prompt, 0o600)
+
+    if hasattr(os, "mkfifo"):
+        fifo_prompt = temporary / "fifo-prompt.md"
+        os.mkfifo(fifo_prompt)
+        fifo_prompt_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(temporary / "fifo-prompt-root"),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "FIFO Prompt",
+                "--prompt-file",
+                str(fifo_prompt),
+            ]
+        )
+        assert_ok(
+            fifo_prompt_result.returncode == 2
+            and "prompt file must be a regular file" in fifo_prompt_result.stderr,
+            "prepare_run.py blocked on or accepted a FIFO prompt",
+            errors,
+        )
+
+    rerun_result = run(
+        [
+            sys.executable,
+            str(skill / "scripts" / "prepare_run.py"),
+            "--output-root",
+            str(temporary / "rerun-root"),
+            "--model",
+            "Model",
+            "--harness",
+            "Harness",
+            "--experiment",
+            "Rerun",
+            "--prompt-file",
+            str(prompt),
+            "--classification",
+            "rerun",
+        ]
+    )
+    assert_ok(rerun_result.returncode != 0 and "--prior-run" in rerun_result.stderr, "prepare_run.py accepted an unlinked rerun", errors)
+
+    escaped_receipts = temporary / "escaped-receipts"
+    escaped_receipts.mkdir()
+    linked_root = temporary / "linked-receipt-root"
+    linked_root.mkdir()
+    try:
+        (linked_root / ".oneshot-provenance").symlink_to(escaped_receipts, target_is_directory=True)
+    except OSError:
+        pass
+    else:
+        linked_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(linked_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Linked Receipt",
+                "--prompt-file",
+                str(prompt),
+            ]
+        )
+        assert_ok(
+            linked_result.returncode != 0 and "symbolic link" in linked_result.stderr,
+            "prepare_run.py followed a symlinked provenance directory",
+            errors,
+        )
+
+    if os.name == "posix":
+        unwritable_root = temporary / "unwritable-receipt-root"
+        unwritable_receipts = unwritable_root / ".oneshot-provenance"
+        unwritable_receipts.mkdir(parents=True)
+        os.chmod(unwritable_receipts, 0o500)
+        unwritable_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(unwritable_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Unwritable Receipt",
+                "--prompt-file",
+                str(prompt),
+            ]
+        )
+        assert_ok(
+            unwritable_result.returncode == 2
+            and "writable file mode" in unwritable_result.stderr
+            and not list(unwritable_root.glob("*/*/*/*")),
+            "prepare_run.py left an unreceipted run after initialization failure",
+            errors,
+        )
+        os.chmod(unwritable_receipts, 0o700)
+
+    linked_namespace_root = temporary / "linked-namespace-root"
+    linked_namespace_root.mkdir()
+    linked_namespace_target = linked_namespace_root / "shared-target"
+    linked_namespace_target.mkdir()
+    try:
+        (linked_namespace_root / identity_key("Model")).symlink_to(linked_namespace_target, target_is_directory=True)
+    except OSError:
+        pass
+    else:
+        linked_namespace_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(linked_namespace_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Linked Namespace",
+                "--prompt-file",
+                str(prompt),
+            ]
+        )
+        assert_ok(
+            linked_namespace_result.returncode != 0 and "namespace directory must not be a symbolic link" in linked_namespace_result.stderr,
+            "prepare_run.py followed a symlinked namespace directory",
+            errors,
+        )
+
+    linked_prior_root = temporary / "linked-prior-root"
+    linked_prior_root.mkdir()
+    linked_prior_target = temporary / "outside-prior-model"
+    outside_prior = linked_prior_target / "harness" / "experiment" / "run"
+    outside_prior.mkdir(parents=True)
+    (outside_prior / "run.json").write_text("{}\n", encoding="utf-8")
+    try:
+        (linked_prior_root / "alias").symlink_to(linked_prior_target, target_is_directory=True)
+    except OSError:
+        pass
+    else:
+        linked_prior_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(linked_prior_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Linked Prior",
+                "--prompt-file",
+                str(prompt),
+                "--classification",
+                "rerun",
+                "--prior-run",
+                str(linked_prior_root / "alias" / "harness" / "experiment" / "run"),
+            ]
+        )
+        assert_ok(
+            linked_prior_result.returncode != 0 and "symbolic links" in linked_prior_result.stderr,
+            "prepare_run.py followed a symlinked prior-run component",
+            errors,
+        )
+
+    case_namespace_root = temporary / "case-namespace-root"
+    case_namespace_root.mkdir()
+    model_key = identity_key("Model")
+    (case_namespace_root / model_key.upper()).mkdir()
+    if (case_namespace_root / model_key).exists():
+        case_namespace_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(case_namespace_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Case Namespace",
+                "--prompt-file",
+                str(prompt),
+            ]
+        )
+        assert_ok(
+            case_namespace_result.returncode != 0 and "namespace directory name must use exact casing" in case_namespace_result.stderr,
+            "prepare_run.py reused a wrong-case namespace directory",
+            errors,
+        )
+
+    marker_root = temporary / "marker-root"
+    marker_run = prepare_run(skill, marker_root, "Marker Model", "Harness", "Marker", prompt, errors)
+    if marker_run is not None:
+        marker_path = marker_run.parents[2] / ".oneshot-identity.json"
+        marker = json.loads(marker_path.read_text(encoding="utf-8"))
+        marker["name"] = "Different Model"
+        marker_path.write_text(json.dumps(marker), encoding="utf-8")
+        marker_result = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "prepare_run.py"),
+                "--output-root",
+                str(marker_root),
+                "--model",
+                "Marker Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Marker",
+                "--prompt-file",
+                str(prompt),
+            ]
+        )
+        assert_ok(
+            marker_result.returncode == 2 and "marker mismatch" in marker_result.stderr,
+            "prepare_run.py reused a namespace with a mismatched raw-identity marker",
+            errors,
+        )
+
+    anchor_root = temporary / "anchor-root"
+    anchor_run = prepare_run(skill, anchor_root, "Anchor Model", "Harness", "Anchor", prompt, errors)
+    if anchor_run is not None:
+        mark_successful_static_artifact(anchor_run)
+        changed = b"Create a different prompt.\n"
+        (anchor_run / "artifact" / "PROMPT.md").write_bytes(changed)
+        manifest_path = anchor_run / "run.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["prompt"]["sha256"] = hashlib.sha256(changed).hexdigest()
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        assert_invalid_catalog(validator, anchor_root, "pre-dispatch", "prompt-plus-digest mutation", errors)
+
+    identity_root = temporary / "identity-root"
+    identity_run = prepare_run(skill, identity_root, "Original Model", "Harness", "Identity", prompt, errors)
+    if identity_run is not None:
+        manifest_path = identity_run / "run.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["identity"]["model"]["name"] = "Substituted Model"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        assert_invalid_catalog(validator, identity_root, "raw-name digest", "raw identity substitution", errors)
+
+    whitespace_identity_root = temporary / "whitespace-identity-root"
+    whitespace_identity_run = prepare_run(
+        skill,
+        whitespace_identity_root,
+        " Model ",
+        " Harness ",
+        " Experiment ",
+        prompt,
+        errors,
+    )
+    if whitespace_identity_run is not None:
+        whitespace_validation = run([sys.executable, str(validator), str(whitespace_identity_root)])
+        assert_ok(
+            whitespace_validation.returncode == 0,
+            "validator changed exact whitespace-bearing raw identities: {}".format(whitespace_validation.stdout),
+            errors,
+        )
+
+    prompt_type_root = temporary / "prompt-type-root"
+    prompt_type_run = prepare_run(skill, prompt_type_root, "Model", "Harness", "Prompt Type", prompt, errors)
+    if prompt_type_run is not None:
+        prompt_path = prompt_type_run / "artifact" / "PROMPT.md"
+        prompt_path.unlink()
+        prompt_path.mkdir()
+        assert_invalid_catalog(validator, prompt_type_root, "must be a regular file", "PROMPT.md directory", errors)
+
+    missing_prompt_root = temporary / "missing-prompt-root"
+    missing_prompt_run = prepare_run(skill, missing_prompt_root, "Model", "Harness", "Missing Prompt", prompt, errors)
+    if missing_prompt_run is not None:
+        (missing_prompt_run / "artifact" / "PROMPT.md").unlink()
+        assert_invalid_catalog(
+            validator,
+            missing_prompt_root,
+            "missing exact-case artifact/PROMPT.md",
+            "non-successful run without preserved prompt",
+            errors,
+        )
+
+    case_root = temporary / "case-root"
+    case_run = prepare_run(skill, case_root, "Model", "Harness", "Case", prompt, errors)
+    if case_run is not None:
+        mark_successful_static_artifact(case_run)
+        prompt_path = case_run / "artifact" / "PROMPT.md"
+        wrong_prompt = rename_with_exact_case(prompt_path, "Prompt.md")
+        assert_invalid_catalog(validator, case_root, "missing exact-case artifact/PROMPT.md", "wrong-case prompt", errors)
+        rename_with_exact_case(wrong_prompt, "PROMPT.md")
+        index_path = case_run / "artifact" / "index.html"
+        wrong_index = rename_with_exact_case(index_path, "Index.html")
+        assert_invalid_catalog(validator, case_root, "missing exact-case artifact/index.html", "wrong-case entrypoint", errors)
+        rename_with_exact_case(wrong_index, "index.html")
+        wrong_artifact = rename_with_exact_case(case_run / "artifact", "Artifact")
+        assert_invalid_catalog(validator, case_root, "exact-case ordinary artifact/ directory", "wrong-case artifact directory", errors)
+        rename_with_exact_case(wrong_artifact, "artifact")
+        wrong_report = rename_with_exact_case(case_run / "worker-report.json", "Worker-report.json")
+        assert_invalid_catalog(validator, case_root, "missing exact-case worker-report.json", "wrong-case worker report", errors)
+        rename_with_exact_case(wrong_report, "worker-report.json")
+        wrong_manifest = rename_with_exact_case(case_run / "run.json", "Run.json")
+        assert_invalid_catalog(validator, case_root, "missing exact-case regular run.json", "wrong-case run manifest", errors)
+        rename_with_exact_case(wrong_manifest, "run.json")
+
+    missing_root_index_root = temporary / "missing-root-index-root"
+    missing_root_index_run = prepare_run(skill, missing_root_index_root, "Model", "Harness", "Missing Root Index", prompt, errors)
+    if missing_root_index_run is not None:
+        (missing_root_index_root / "index.html").unlink()
+        assert_invalid_catalog(validator, missing_root_index_root, "root index.html catalogue", "missing root catalogue", errors)
+
+    assets_root = temporary / "assets-root"
+    assets_run = prepare_run(skill, assets_root, "Model", "Harness", "Assets", prompt, errors)
+    if assets_run is not None:
+        mark_successful_static_artifact(assets_run)
+        stylesheet = assets_run / "artifact" / "assets" / "site.css"
+        stylesheet.write_text("body { background: url('missing.png'); }\n", encoding="utf-8")
+        assert_invalid_catalog(validator, assets_root, "referenced local file missing", "missing CSS asset", errors)
+
+        stylesheet.write_text("body { color: #17302c; }\n", encoding="utf-8")
+        (assets_run / "artifact" / "index.html").write_text(
+            "<!doctype html><img srcset=\"missing-1.png 1x, missing-2.png 2x\">",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, assets_root, "referenced local file missing", "missing srcset asset", errors)
+
+        (assets_run / "artifact" / "index.html").write_text(
+            "<!doctype html><script src=\"..%5Coutside.js\"></script>",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, assets_root, "unsafe decoded local resource URL", "decoded backslash URL", errors)
+
+        (assets_run / "artifact" / "index.html").write_bytes(b'<!doctype html><script src="bad\x00path.js"></script>')
+        assert_invalid_catalog(validator, assets_root, "unsafe decoded local resource URL", "NUL resource URL", errors)
+
+    self_link_root = temporary / "self-link-root"
+    self_link_run = prepare_run(skill, self_link_root, "Model", "Harness", "Self Link", prompt, errors)
+    if self_link_run is not None:
+        (self_link_run / "artifact" / "index.html").write_text(
+            "<!doctype html><script src=\"loop.js\"></script>",
+            encoding="utf-8",
+        )
+        loop_asset = self_link_run / "artifact" / "loop.js"
+        try:
+            loop_asset.symlink_to("loop.js")
+        except OSError:
+            pass
+        else:
+            self_link_validation = run([sys.executable, str(validator), str(self_link_root)])
+            assert_ok(
+                self_link_validation.returncode != 0
+                and "symbolic links" in self_link_validation.stdout
+                and "Traceback" not in self_link_validation.stderr,
+                "self-referential artifact symlink escaped classified validation",
+                errors,
+            )
+
+    large_reference_root = temporary / "large-reference-root"
+    large_reference_run = prepare_run(
+        skill,
+        large_reference_root,
+        "Model",
+        "Harness",
+        "Large References",
+        prompt,
+        errors,
+    )
+    if large_reference_run is not None:
+        artifact = large_reference_run / "artifact"
+        (artifact / "index.html").write_text(
+            "<!doctype html><link rel=\"stylesheet\" href=\"0.css\">",
+            encoding="utf-8",
+        )
+        large_query = "x" * (256 * 1024)
+        for index in range(20):
+            content = (
+                '@import "{}.css?{}";\n'.format(index + 1, large_query)
+                if index < 19
+                else "body { color: black; }\n"
+            )
+            (artifact / "{}.css".format(index)).write_text(content, encoding="utf-8")
+        large_reference_validation = run([sys.executable, str(validator), str(large_reference_root)])
+        assert_ok(
+            large_reference_validation.returncode != 0
+            and "validation safety bound" in large_reference_validation.stdout
+            and len(large_reference_validation.stdout) < 50_000
+            and "Traceback" not in large_reference_validation.stderr,
+            "large chained local URLs escaped cumulative reference bounds",
+            errors,
+        )
+
+    reference_grid_root = temporary / "reference-grid-root"
+    reference_grid_run = prepare_run(
+        skill,
+        reference_grid_root,
+        "Model",
+        "Harness",
+        "Reference Grid",
+        prompt,
+        errors,
+    )
+    if reference_grid_run is not None:
+        artifact = reference_grid_run / "artifact"
+        (artifact / "index.html").write_text(
+            "<!doctype html><link rel=\"stylesheet\" href=\"0.css\">",
+            encoding="utf-8",
+        )
+        imports = "".join('@import "{}.css";\n'.format(index) for index in range(100))
+        for index in range(100):
+            (artifact / "{}.css".format(index)).write_text(imports, encoding="utf-8")
+        grid_validation = run([sys.executable, str(validator), str(reference_grid_root)])
+        assert_ok(
+            grid_validation.returncode != 0
+            and "validation safety bound" in grid_validation.stdout
+            and len(grid_validation.stdout) < 50_000
+            and "Traceback" not in grid_validation.stderr,
+            "CSS reference fanout escaped enqueue-time inventory bounds",
+            errors,
+        )
+
+    parser_root = temporary / "parser-root"
+    parser_run = prepare_run(skill, parser_root, "Model", "Harness", "Parser", prompt, errors)
+    if parser_run is not None:
+        mark_successful_static_artifact(parser_run)
+        artifact = parser_run / "artifact"
+        (artifact / "assets" / "hero.avif").write_bytes(b"avif-fixture")
+        (artifact / "index.html").write_text(
+            "<!doctype html><link rel=\"canonical\" href=\"/\"><div data=\"component-state\"></div>"
+            "<a href=\"/\">Home</a><form action=\"/\"><button>Submit</button></form>"
+            "<style>/* url('missing-comment.png') */"
+            ".hero{background-image:image-set(\"assets/hero.avif\" type(\"image/avif\"))}</style>",
+            encoding="utf-8",
+        )
+        valid_parser = run([sys.executable, str(validator), str(parser_root)])
+        assert_ok(valid_parser.returncode == 0, "validator rejected valid metadata/CSS markup: {}".format(valid_parser.stdout), errors)
+
+        (artifact / "assets" / "site.css").write_text(
+            ".example::before { content: \"url(missing-content.png) "
+            "@import 'missing-import.css' image-set('missing-set.png' 1x)\"; }\n",
+            encoding="utf-8",
+        )
+        (artifact / "index.html").write_text(
+            "<!doctype html><link rel=\"stylesheet\" href=\"assets/site.css\">",
+            encoding="utf-8",
+        )
+        quoted_css = run([sys.executable, str(validator), str(parser_root)])
+        assert_ok(
+            quoted_css.returncode == 0,
+            "validator treated resource-like text inside a CSS string as live: {}".format(
+                quoted_css.stdout
+            ),
+            errors,
+        )
+
+        (artifact / "index.html").write_text(
+            "<!doctype html><link rel=\"stylesheet\" href=\"/assets/site.css\">",
+            encoding="utf-8",
+        )
+        root_relative = run([sys.executable, str(validator), str(parser_root)])
+        assert_ok(
+            root_relative.returncode == 0,
+            "validator rejected a Drop-compatible root-relative resource: {}".format(root_relative.stdout),
+            errors,
+        )
+
+        (artifact / "index.html").write_text(
+            "<!doctype html><iframe src=\"/?embed=1\" title=\"Embedded view\"></iframe>",
+            encoding="utf-8",
+        )
+        same_entry = run([sys.executable, str(validator), str(parser_root)])
+        assert_ok(
+            same_entry.returncode == 0,
+            "validator rejected a query-driven same-entry resource: {}".format(same_entry.stdout),
+            errors,
+        )
+
+        (artifact / "index.html").write_text(
+            "<!doctype html><style>/* url('commented-through-eof.png')",
+            encoding="utf-8",
+        )
+        eof_comment = run([sys.executable, str(validator), str(parser_root)])
+        assert_ok(eof_comment.returncode == 0, "validator treated an EOF-terminated CSS comment as live: {}".format(eof_comment.stdout), errors)
+
+        (artifact / "index.html").write_text(
+            "<!doctype html><svg><use xlink:href=\"missing-sprite.svg#icon\"></use></svg>",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, parser_root, "referenced local file missing", "missing xlink sprite", errors)
+
+        (artifact / "index.html").write_text(
+            "<!doctype html><style>.hero{background:url('missing-unclosed.png')}",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, parser_root, "referenced local file missing", "unclosed style resource", errors)
+
+        (artifact / "index.html").write_text(
+            "<!doctype html><style>.hero{background-image:image-set("
+            "\"assets/hero.avif\" type(\"image/avif\"), \"missing-fallback.jpg\" type(\"image/jpeg\"))}</style>",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, parser_root, "referenced local file missing", "missing image-set fallback", errors)
+
+        (artifact / "assets" / "Logo.PNG").write_bytes(b"logo")
+        (artifact / "index.html").write_text(
+            "<!doctype html><img src=\"assets/logo.png\">",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, parser_root, "path casing differs", "case-mismatched asset URL", errors)
+
+    source_root = temporary / "source-root"
+    source_run = prepare_run(skill, source_root, "Model", "Harness", "Source Leak", prompt, errors)
+    if source_run is not None:
+        mark_successful_static_artifact(source_run)
+        (source_run / "artifact" / "package.json").write_text("{}\n", encoding="utf-8")
+        assert_invalid_catalog(validator, source_root, "must stay in workspace", "artifact build marker", errors)
+
+    nested_source_root = temporary / "nested-source-root"
+    nested_source_run = prepare_run(skill, nested_source_root, "Model", "Harness", "Nested Source", prompt, errors)
+    if nested_source_run is not None:
+        mark_successful_static_artifact(nested_source_run)
+        nested = nested_source_run / "artifact" / "nested"
+        nested.mkdir()
+        (nested / "package.json").write_text("{}\n", encoding="utf-8")
+        assert_invalid_catalog(validator, nested_source_root, "must stay in workspace", "nested package marker", errors)
+        (nested / "package.json").unlink()
+        (nested / "App.vue").write_text("<template></template>\n", encoding="utf-8")
+        assert_invalid_catalog(validator, nested_source_root, "preprocess-only source file", "unreferenced component source", errors)
+
+    private_key_root = temporary / "private-key-root"
+    private_key_run = prepare_run(skill, private_key_root, "Model", "Harness", "Private Key Leak", prompt, errors)
+    if private_key_run is not None:
+        mark_successful_static_artifact(private_key_run)
+        artifact = private_key_run / "artifact"
+        for filename in ("id_ed25519", "private-key.pem"):
+            private_key_file = artifact / filename
+            private_key_file.write_text("fixture without key material\n", encoding="utf-8")
+            assert_invalid_catalog(
+                validator,
+                private_key_root,
+                "private key material must stay in workspace/",
+                "private-key filename {}".format(filename),
+                errors,
+            )
+            private_key_file.unlink()
+
+        marker_file = artifact / "assets" / "opaque-browser-asset.bin"
+        for marker_label, marker in (
+            ("PKCS#8 PEM", b"-----BEGIN PRIVATE KEY-----"),
+            ("OpenSSH", b"-----BEGIN OPENSSH PRIVATE KEY-----"),
+            ("PGP", b"-----BEGIN PGP PRIVATE KEY BLOCK-----"),
+        ):
+            marker_file.write_bytes(b"binary-prefix\x00\n" + marker + b"\nfixture-only")
+            assert_invalid_catalog(
+                validator,
+                private_key_root,
+                "private key material must stay in workspace/",
+                "{} private-key marker in an opaque artifact".format(marker_label),
+                errors,
+            )
+        marker_file.unlink()
+
+    partial_private_key_root = temporary / "partial-private-key-root"
+    partial_private_key_run = prepare_run(
+        skill,
+        partial_private_key_root,
+        "Model",
+        "Harness",
+        "Partial Private Key Leak",
+        prompt,
+        errors,
+    )
+    if partial_private_key_run is not None:
+        (partial_private_key_run / "artifact" / "id_rsa").write_text(
+            "fixture without key material\n",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(
+            validator,
+            partial_private_key_root,
+            "private key material must stay in workspace/",
+            "private key in a planned artifact without index.html",
+            errors,
+        )
+
+    worker_identity_root = temporary / "worker-identity-root"
+    worker_identity_run = prepare_run(
+        skill,
+        worker_identity_root,
+        "Model",
+        "Harness",
+        "Worker Identity",
+        prompt,
+        errors,
+    )
+    if worker_identity_run is not None:
+        worker_manifest_path = worker_identity_run / "run.json"
+        worker_report_path = worker_identity_run / "worker-report.json"
+        worker_manifest = json.loads(worker_manifest_path.read_text(encoding="utf-8"))
+        worker_report = json.loads(worker_report_path.read_text(encoding="utf-8"))
+        worker_manifest["execution"]["leadWorkerId"] = "lead-a"
+        worker_manifest["execution"]["descendantWorkerIds"] = ["child-a"]
+        worker_manifest_path.write_text(json.dumps(worker_manifest), encoding="utf-8")
+        mismatch_build = rebuild_catalog_index(worker_identity_root)
+        mismatch_validation = run([sys.executable, str(validator), str(worker_identity_root)])
+        mismatch_html = (worker_identity_root / "index.html").read_text(encoding="utf-8")
+        assert_ok(
+            mismatch_build.returncode == 0
+            and mismatch_validation.returncode != 0
+            and "worker IDs must exactly match" in mismatch_validation.stdout
+            and "Worker metadata mismatch" in mismatch_html,
+            "worker identity disagreement escaped validation or produced a misleading index",
+            errors,
+        )
+
+        worker_report["leadWorkerId"] = "lead-a"
+        worker_report["descendantWorkerIds"] = ["child-a"]
+        worker_report_path.write_text(json.dumps(worker_report), encoding="utf-8")
+        matching_build = rebuild_catalog_index(worker_identity_root)
+        matching_validation = run([sys.executable, str(validator), str(worker_identity_root)])
+        assert_ok(
+            matching_build.returncode == 0 and matching_validation.returncode == 0,
+            "validator rejected matching worker identities: {}".format(matching_validation.stdout),
+            errors,
+        )
+
+        worker_manifest["execution"]["descendantWorkerIds"] = ["child-a", "child-a"]
+        worker_report["descendantWorkerIds"] = ["child-a", "child-a"]
+        worker_manifest_path.write_text(json.dumps(worker_manifest), encoding="utf-8")
+        worker_report_path.write_text(json.dumps(worker_report), encoding="utf-8")
+        duplicate_worker_build = rebuild_catalog_index(worker_identity_root)
+        duplicate_worker_validation = run([sys.executable, str(validator), str(worker_identity_root)])
+        assert_ok(
+            duplicate_worker_build.returncode == 0
+            and duplicate_worker_validation.returncode != 0
+            and "descendantWorkerIds must contain unique IDs" in duplicate_worker_validation.stdout,
+            "validator accepted duplicate descendant worker IDs",
+            errors,
+        )
+
+        worker_manifest["execution"]["descendantWorkerIds"] = ["child-a"]
+        worker_report["descendantWorkerIds"] = ["child-a"]
+        worker_report["leadWorkerId"] = "lead-b"
+        worker_manifest_path.write_text(json.dumps(worker_manifest), encoding="utf-8")
+        worker_report_path.write_text(json.dumps(worker_report), encoding="utf-8")
+        lead_mismatch_build = rebuild_catalog_index(worker_identity_root)
+        lead_mismatch_validation = run([sys.executable, str(validator), str(worker_identity_root)])
+        assert_ok(
+            lead_mismatch_build.returncode == 0
+            and lead_mismatch_validation.returncode != 0
+            and "worker IDs must exactly match" in lead_mismatch_validation.stdout,
+            "validator accepted mismatched lead worker IDs",
+            errors,
+        )
+
+    filtered_root = temporary / "filtered-root"
+    filtered_run = prepare_run(skill, filtered_root, "Model", "Harness", "Filtered", prompt, errors)
+    if filtered_run is not None:
+        mark_successful_static_artifact(filtered_run)
+        next_asset = filtered_run / "artifact" / ".next" / "static"
+        next_asset.mkdir(parents=True)
+        (next_asset / "app.js").write_text("console.log('built')\n", encoding="utf-8")
+        (filtered_run / "artifact" / "index.html").write_text(
+            "<!doctype html><script src=\".next/static/app.js\"></script>",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(validator, filtered_root, "cache, provider state, or dependency", "Vercel-filtered .next output", errors)
+
+    static_route_root = temporary / "static-route-root"
+    static_route_run = prepare_run(skill, static_route_root, "Model", "Harness", "Static API Route", prompt, errors)
+    if static_route_run is not None:
+        mark_successful_static_artifact(static_route_run)
+        artifact = static_route_run / "artifact"
+        api_directory = artifact / "api"
+        api_directory.mkdir()
+        (api_directory / "index.html").write_text(
+            "<!doctype html><title>Static API documentation</title>\n",
+            encoding="utf-8",
+        )
+        (api_directory / "private-key-guide.js").write_text(
+            'const privateKeyField = "privateKey";\n'
+            'const apiKeyRoute = "/api/private-key-help";\n'
+            'const publicKeyHeader = "-----BEGIN PUBLIC KEY-----";\n'
+            'const certificateHeader = "-----BEGIN CERTIFICATE-----";\n',
+            encoding="utf-8",
+        )
+        (artifact / "index.html").write_text(
+            "<!doctype html><a href=\"api/\">API documentation</a>"
+            "<script src=\"api/private-key-guide.js\"></script>\n",
+            encoding="utf-8",
+        )
+        static_route = run([sys.executable, str(validator), str(static_route_root)])
+        assert_ok(
+            static_route.returncode == 0,
+            "validator rejected a harmless static api/ route or private-key prose sample: {}".format(static_route.stdout),
+            errors,
+        )
+
+    evidence_root = temporary / "evidence-root"
+    evidence_run = prepare_run(skill, evidence_root, "Model", "Harness", "Evidence", prompt, errors)
+    if evidence_run is not None:
+        mark_successful_static_artifact(evidence_run)
+        report_path = evidence_run / "worker-report.json"
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        report["verification"] = []
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(validator, evidence_root, "structured passed verification evidence", "unverified OK artifact", errors)
+        report["verification"] = [
+            {"kind": "static-browser-smoke", "result": "failed", "evidence": "Browser did not load"}
+        ]
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(validator, evidence_root, "structured passed verification evidence", "failed OK evidence", errors)
+        report["verification"] = [
+            {"kind": "file-exists", "result": "passed", "evidence": "index.html exists"},
+            {"kind": "static-browser-smoke", "result": "failed", "evidence": "Root page did not render"},
+        ]
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(validator, evidence_root, "must not contain failed verification evidence", "mixed failed OK evidence", errors)
+
+    size_root = temporary / "size-root"
+    size_run = prepare_run(skill, size_root, "Model", "Harness", "Size", prompt, errors)
+    if size_run is not None:
+        mark_successful_static_artifact(size_run)
+        with (size_run / "artifact" / "oversized.bin").open("wb") as handle:
+            handle.truncate(5 * 1024 * 1024 + 1)
+        assert_invalid_catalog(validator, size_root, "exceeds the conservative 5 MiB", "oversized drop artifact", errors)
+
+    unreadable_root = temporary / "unreadable-root"
+    unreadable_run = prepare_run(skill, unreadable_root, "Model", "Harness", "Unreadable", prompt, errors)
+    if unreadable_run is not None and os.name == "posix":
+        mark_successful_static_artifact(unreadable_run)
+        unreadable_asset = unreadable_run / "artifact" / "unreadable.bin"
+        unreadable_asset.write_bytes(b"fixture")
+        os.chmod(unreadable_asset, 0o000)
+        assert_invalid_catalog(validator, unreadable_root, "readable file mode", "unreadable artifact file", errors)
+        os.chmod(unreadable_asset, 0o644)
+
+        unreadable_directory = unreadable_run / "artifact" / "closed"
+        unreadable_directory.mkdir()
+        (unreadable_directory / "hidden.bin").write_bytes(b"hidden")
+        os.chmod(unreadable_directory, 0o000)
+        assert_invalid_catalog(
+            validator,
+            unreadable_root,
+            "readable and traversable mode",
+            "unreadable artifact directory",
+            errors,
+        )
+        os.chmod(unreadable_directory, 0o700)
+
+    symlink_root = temporary / "symlink-root"
+    symlink_run = prepare_run(skill, symlink_root, "Model", "Harness", "Symlink", prompt, errors)
+    if symlink_run is not None:
+        manifest_path = symlink_run / "run.json"
+        escaped_manifest = temporary / "escaped-run.json"
+        manifest_path.replace(escaped_manifest)
+        try:
+            manifest_path.symlink_to(escaped_manifest)
+        except OSError:
+            pass
+        else:
+            assert_invalid_catalog(validator, symlink_root, "missing exact-case regular run.json", "symlinked run manifest", errors)
+
+    namespace_visibility_root = temporary / "namespace-visibility-root"
+    namespace_visibility_run = prepare_run(
+        skill,
+        namespace_visibility_root,
+        "Model",
+        "Harness",
+        "Visible Run",
+        prompt,
+        errors,
+    )
+    if namespace_visibility_run is not None and os.name == "posix":
+        closed_model = namespace_visibility_root / "closed-model"
+        hidden_run = closed_model / "harness" / "experiment" / "run"
+        hidden_run.mkdir(parents=True)
+        (hidden_run / "run.json").write_text("{}\n", encoding="utf-8")
+        os.chmod(closed_model, 0o000)
+        assert_invalid_catalog(
+            validator,
+            namespace_visibility_root,
+            "namespace directory must have a readable and traversable mode",
+            "unreadable top-level namespace",
+            errors,
+        )
+        os.chmod(closed_model, 0o700)
+
+    builder_symlink_root = temporary / "builder-symlink-root"
+    builder_symlink_run = prepare_run(skill, builder_symlink_root, "Model", "Harness", "Visible", prompt, errors)
+    if builder_symlink_run is not None:
+        outside_builder_model = temporary / "outside-builder-model"
+        outside_builder_run = outside_builder_model / "harness" / "experiment" / "run"
+        outside_builder_run.mkdir(parents=True)
+        (outside_builder_run / "run.json").write_text("{}\n", encoding="utf-8")
+        try:
+            (builder_symlink_root / "linked-model").symlink_to(outside_builder_model, target_is_directory=True)
+        except OSError:
+            pass
+        else:
+            linked_build = rebuild_catalog_index(builder_symlink_root)
+            assert_ok(
+                linked_build.returncode != 0 and "symbolic links" in linked_build.stderr,
+                "catalogue builder followed a symlinked namespace outside the output root",
+                errors,
+            )
+
+    inventory_root = temporary / "inventory-root"
+    kept_run = prepare_run(skill, inventory_root, "Model", "Harness", "Kept", prompt, errors)
+    removed_run = prepare_run(skill, inventory_root, "Model", "Harness", "Removed", prompt, errors)
+    if kept_run is not None and removed_run is not None:
+        removed_run.rename(temporary / "detached-run")
+        assert_invalid_catalog(validator, inventory_root, "orphan provenance receipt", "erased run outcome", errors)
+
+    unreadable_receipts_root = temporary / "unreadable-receipts-root"
+    unreadable_receipts_run = prepare_run(
+        skill,
+        unreadable_receipts_root,
+        "Model",
+        "Harness",
+        "Unreadable Receipts",
+        prompt,
+        errors,
+    )
+    if unreadable_receipts_run is not None:
+        receipt_directory = unreadable_receipts_root / ".oneshot-provenance"
+
+        real_iterdir = Path.iterdir
+
+        def injected_iterdir(path: Path) -> Iterator[Path]:
+            if path == receipt_directory:
+                raise PermissionError("injected provenance inventory failure")
+            return real_iterdir(path)
+
+        with patch.object(Path, "iterdir", injected_iterdir):
+            unreadable_receipts = catalog_validator.validate(unreadable_receipts_root)
+        assert_ok(
+            unreadable_receipts.get("valid") is False
+            and any(
+                "unable to inspect provenance inventory" in message
+                for message in unreadable_receipts.get("errors", [])
+                if isinstance(message, str)
+            ),
+            "validator did not classify an unreadable provenance inventory: {}".format(
+                json.dumps(unreadable_receipts, sort_keys=True)
+            ),
+            errors,
+        )
+
+    namespace_root = temporary / "namespace-root"
+    namespace_run = prepare_run(skill, namespace_root, "Model", "Harness", "Namespace", prompt, errors)
+    if namespace_run is not None:
+        rogue = namespace_root / "rogue"
+        rogue.mkdir()
+        (rogue / "run.json").write_text("{}\n", encoding="utf-8")
+        assert_invalid_catalog(validator, namespace_root, "outside the model/harness/experiment/run namespace", "wrong-depth run manifest", errors)
+
+    missing_manifest_root = temporary / "missing-manifest-root"
+    missing_manifest_run = prepare_run(skill, missing_manifest_root, "Model", "Harness", "Kept Run", prompt, errors)
+    if missing_manifest_run is not None:
+        incomplete = missing_manifest_root / "stray-model" / "stray-harness" / "stray-experiment" / "stray-run"
+        (incomplete / "artifact").mkdir(parents=True)
+        assert_invalid_catalog(validator, missing_manifest_root, "missing exact-case regular run.json", "depth-four run without manifest", errors)
+
+    worker_damage_root = temporary / "worker-damage-root"
+    worker_damage_run = prepare_run(skill, worker_damage_root, "Model", "Harness", "Worker Damage", prompt, errors)
+    if worker_damage_run is not None:
+        experiment_directory = worker_damage_run.parent
+        damaged_run_id = make_run_id()
+        damaged_run = experiment_directory / damaged_run_id
+        (damaged_run / "artifact").mkdir(parents=True)
+        (damaged_run / "artifact" / "unexpected.txt").write_text("worker residue\n", encoding="utf-8")
+        damaged_build = rebuild_catalog_index(worker_damage_root)
+        damaged_html = (
+            (worker_damage_root / "index.html").read_text(encoding="utf-8")
+            if damaged_build.returncode == 0
+            else ""
+        )
+        assert_ok(
+            damaged_build.returncode == 0
+            and damaged_run_id in damaged_html
+            and ">INVALID<" in damaged_html
+            and "run directory is missing exact-case run.json" in damaged_html
+            and damaged_html.count("Unavailable") >= 2,
+            "one manifestless worker run prevented or disappeared from sibling catalogue indexing",
+            errors,
+        )
+        assert_invalid_catalog(
+            validator,
+            worker_damage_root,
+            "missing exact-case regular run.json",
+            "manifestless exact-UUID worker run",
+            errors,
+        )
+
+        malformed_variants: List[Path] = []
+        directory_manifest_run = experiment_directory / make_run_id()
+        directory_manifest_run.mkdir()
+        (directory_manifest_run / "run.json").mkdir()
+        malformed_variants.append(directory_manifest_run)
+        if os.name == "posix":
+            fifo_manifest_run = experiment_directory / make_run_id()
+            fifo_manifest_run.mkdir()
+            os.mkfifo(fifo_manifest_run / "run.json")
+            malformed_variants.append(fifo_manifest_run)
+            unreadable_manifest_run = experiment_directory / make_run_id()
+            unreadable_manifest_run.mkdir()
+            (unreadable_manifest_run / "run.json").write_text("{}\n", encoding="utf-8")
+            os.chmod(unreadable_manifest_run / "run.json", 0o000)
+            malformed_variants.append(unreadable_manifest_run)
+            unreadable_run_directory = experiment_directory / make_run_id()
+            unreadable_run_directory.mkdir()
+            os.chmod(unreadable_run_directory, 0o000)
+            malformed_variants.append(unreadable_run_directory)
+        for malformed_variant in malformed_variants:
+            (worker_damage_root / ".oneshot-provenance" / (malformed_variant.name + ".commit")).write_bytes(b"")
+        isolated_build = rebuild_catalog_index(worker_damage_root)
+        isolated_html = (
+            (worker_damage_root / "index.html").read_text(encoding="utf-8")
+            if isolated_build.returncode == 0
+            else ""
+        )
+        assert_ok(
+            isolated_build.returncode == 0
+            and all(path.name in isolated_html for path in malformed_variants)
+            and isolated_html.count(">INVALID<") >= len(malformed_variants) + 1,
+            "a non-regular or unreadable worker manifest aborted sibling catalogue indexing",
+            errors,
+        )
+        if os.name == "posix":
+            os.chmod(unreadable_manifest_run / "run.json", 0o600)
+            os.chmod(unreadable_run_directory, 0o700)
+
+    malformed_root = temporary / "malformed-root"
+    malformed_run = prepare_run(skill, malformed_root, "Model", "Harness", "Malformed", prompt, errors)
+    if malformed_run is not None:
+        (malformed_run / "run.json").write_bytes(b"{\xff}")
+        assert_invalid_catalog(validator, malformed_root, "invalid JSON", "invalid UTF-8 run manifest", errors)
+        malformed_build = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "build_catalog_index.py"),
+                "--root",
+                str(malformed_root),
+                "--out",
+                str(malformed_root / "index.html"),
+            ]
+        )
+        assert_ok(malformed_build.returncode == 0, "catalogue builder crashed on invalid UTF-8 metadata", errors)
+
+    duplicate_json_root = temporary / "duplicate-json-root"
+    duplicate_run = prepare_run(skill, duplicate_json_root, "Model", "Harness", "Duplicate Run", prompt, errors)
+    duplicate_report = prepare_run(skill, duplicate_json_root, "Model", "Harness", "Duplicate Report", prompt, errors)
+    duplicate_receipt = prepare_run(skill, duplicate_json_root, "Model", "Harness", "Duplicate Receipt", prompt, errors)
+    if duplicate_run is not None and duplicate_report is not None and duplicate_receipt is not None:
+        duplicate_run_path = duplicate_run / "run.json"
+        duplicate_report_path = duplicate_report / "worker-report.json"
+        duplicate_receipt_path = duplicate_json_root / ".oneshot-provenance" / (duplicate_receipt.name + ".json")
+        duplicate_run_path.write_text('{"schemaVersion":"2.0","schemaVersion":"3.0"}', encoding="utf-8")
+        duplicate_report_path.write_text('{"status":"PLANNED","status":"OK"}', encoding="utf-8")
+        duplicate_receipt_path.write_text('{"schemaVersion":"1.0","schemaVersion":"2.0"}', encoding="utf-8")
+        duplicate_build = rebuild_catalog_index(duplicate_json_root)
+        duplicate_validation = run([sys.executable, str(validator), str(duplicate_json_root)])
+        duplicate_diagnostics = duplicate_validation.stdout
+        assert_ok(
+            duplicate_build.returncode == 0
+            and duplicate_validation.returncode != 0
+            and all(
+                "{}: invalid JSON: duplicate JSON object member:".format(path) in duplicate_diagnostics
+                for path in (duplicate_run_path, duplicate_report_path, duplicate_receipt_path)
+            )
+            and "Traceback" not in duplicate_validation.stderr,
+            "duplicate JSON members escaped provenance, run, or report parsing",
+            errors,
+        )
+
+    recursive_json_root = temporary / "recursive-json-root"
+    recursive_json_run = prepare_run(skill, recursive_json_root, "Model", "Harness", "Recursive JSON", prompt, errors)
+    if recursive_json_run is not None:
+        nested_json = '{"value":' * 300 + "0" + "}" * 300
+        (recursive_json_run / "worker-report.json").write_text(nested_json, encoding="utf-8")
+        recursive_build = rebuild_catalog_index(recursive_json_root)
+        recursive_validation = run([sys.executable, str(validator), str(recursive_json_root)])
+        assert_ok(
+            recursive_build.returncode == 0
+            and recursive_validation.returncode != 0
+            and "invalid JSON" in recursive_validation.stdout
+            and "Traceback" not in recursive_validation.stderr,
+            "deeply nested bounded JSON crashed or escaped metadata validation",
+            errors,
+        )
+
+    numeric_json_root = temporary / "numeric-json-root"
+    numeric_json_run = prepare_run(skill, numeric_json_root, "Model", "Harness", "Numeric JSON", prompt, errors)
+    if numeric_json_run is not None:
+        oversized_integer_json = '{"status":' + "9" * 100_000 + "}"
+        (numeric_json_run / "worker-report.json").write_text(oversized_integer_json, encoding="utf-8")
+        numeric_build = rebuild_catalog_index(numeric_json_root)
+        numeric_validation = run([sys.executable, str(validator), str(numeric_json_root)])
+        numeric_html = (
+            (numeric_json_root / "index.html").read_text(encoding="utf-8")
+            if numeric_build.returncode == 0
+            else ""
+        )
+        assert_ok(
+            numeric_build.returncode == 0
+            and "Report unavailable: metadata is not valid JSON" in numeric_html
+            and numeric_validation.returncode != 0
+            and "invalid JSON" in numeric_validation.stdout
+            and "Traceback" not in numeric_validation.stderr,
+            "oversized integer JSON escaped the shared bounded parser",
+            errors,
+        )
+
+    repeated_reference_root = temporary / "repeated-reference-root"
+    repeated_reference_run = prepare_run(
+        skill,
+        repeated_reference_root,
+        "Model",
+        "Harness",
+        "Repeated References",
+        prompt,
+        errors,
+    )
+    if repeated_reference_run is not None:
+        mark_successful_static_artifact(repeated_reference_run)
+        repeated_markup = "<img src=\"missing.png\">" * 25_000
+        (repeated_reference_run / "artifact" / "index.html").write_text(
+            "<!doctype html><title>Repeated</title>" + repeated_markup,
+            encoding="utf-8",
+        )
+        repeated_validation = run([sys.executable, str(validator), str(repeated_reference_root)])
+        assert_ok(
+            repeated_validation.returncode != 0
+            and repeated_validation.stdout.count("referenced local file missing") == 1
+            and len(repeated_validation.stdout) < 50_000
+            and "Traceback" not in repeated_validation.stderr,
+            "repeated local references amplified validator diagnostics",
+            errors,
+        )
+
+    large_display_root = temporary / "large-display-root"
+    large_display_runs: List[Path] = []
+    for index in range(7):
+        prepared = prepare_run(
+            skill,
+            large_display_root,
+            "Model",
+            "Harness",
+            "Large Display {}".format(index),
+            prompt,
+            errors,
+        )
+        if prepared is not None:
+            large_display_runs.append(prepared)
+    if len(large_display_runs) == 7:
+        for index, prepared in enumerate(large_display_runs):
+            report_path = prepared / "worker-report.json"
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            report["summary"] = "{}:".format(index) + "x" * 800_000
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+        large_display_build = rebuild_catalog_index(large_display_root)
+        large_display_validation = run([sys.executable, str(validator), str(large_display_root)])
+        large_display_size = (
+            (large_display_root / "index.html").stat().st_size
+            if large_display_build.returncode == 0
+            else 0
+        )
+        assert_ok(
+            large_display_build.returncode == 0
+            and large_display_validation.returncode == 0
+            and large_display_size <= 5 * 1024 * 1024,
+            "worker-controlled display text produced a root catalogue the validator rejects",
+            errors,
+        )
+
+    surrogate_root = temporary / "surrogate-root"
+    surrogate_run = prepare_run(skill, surrogate_root, "Model", "Harness", "Surrogate", prompt, errors)
+    if surrogate_run is not None:
+        manifest_path = surrogate_run / "run.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        manifest["identity"]["model"]["name"] = "\ud800"
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        assert_invalid_catalog(validator, surrogate_root, "must be valid UTF-8 text", "surrogate identity name", errors)
+        surrogate_build = run(
+            [
+                sys.executable,
+                str(skill / "scripts" / "build_catalog_index.py"),
+                "--root",
+                str(surrogate_root),
+                "--out",
+                str(surrogate_root / "index.html"),
+            ]
+        )
+        assert_ok(surrogate_build.returncode == 0, "catalogue builder crashed on a surrogate identity", errors)
+
+    css_chain_root = temporary / "css-chain-root"
+    css_chain_run = prepare_run(skill, css_chain_root, "Model", "Harness", "CSS Chain", prompt, errors)
+    if css_chain_run is not None:
+        mark_successful_static_artifact(css_chain_run)
+        artifact = css_chain_run / "artifact"
+        (artifact / "assets" / "site.css").unlink()
+        for index in range(998):
+            content = "@import '{}.css';\n".format(index + 1) if index < 997 else "body { color: #17302c; }\n"
+            (artifact / "{}.css".format(index)).write_text(content, encoding="utf-8")
+        (artifact / "index.html").write_text(
+            "<!doctype html><link rel=\"stylesheet\" href=\"0.css\"><main>Deep CSS chain</main>",
+            encoding="utf-8",
+        )
+        chain_validation = run([sys.executable, str(validator), str(css_chain_root)])
+        assert_ok(
+            chain_validation.returncode == 0,
+            "validator failed at the exact 1,000-file deep-CSS boundary: {}".format(chain_validation.stdout),
+            errors,
+        )
+        (artifact / "overflow.css").write_text("body{}\n", encoding="utf-8")
+        assert_invalid_catalog(validator, css_chain_root, "folder-drop limit is 1000", "1,001-file artifact", errors)
+
+    total_root = temporary / "total-root"
+    total_run = prepare_run(skill, total_root, "Model", "Harness", "Total Size", prompt, errors)
+    if total_run is not None:
+        mark_successful_static_artifact(total_run)
+        artifact = total_run / "artifact"
+        current_total = sum(path.stat().st_size for path in artifact.rglob("*") if path.is_file())
+        remaining = 100 * 1024 * 1024 - current_total
+        part = 0
+        while remaining > 0:
+            size = min(5 * 1024 * 1024, remaining)
+            with (artifact / "total-{:02d}.bin".format(part)).open("wb") as handle:
+                handle.truncate(size)
+            remaining -= size
+            part += 1
+        exact_total = run([sys.executable, str(validator), str(total_root)])
+        assert_ok(exact_total.returncode == 0, "validator rejected the exact 100 MiB boundary", errors)
+        with (artifact / "total-overflow.bin").open("wb") as handle:
+            handle.truncate(1)
+        assert_invalid_catalog(validator, total_root, "exceeds the conservative 100 MiB", "100 MiB plus one byte", errors)
+
+
+def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
+    scripts = (
+        skill / "scripts" / "list_prompts.py",
+        skill / "scripts" / "prepare_run.py",
+        skill / "scripts" / "build_catalog_index.py",
+        skill / "scripts" / "validate_catalog.py",
+    )
+    if not all(path.is_file() for path in scripts):
+        return
+
+    catalogue = read_json(skill / "assets" / "prompt-catalogue.json", errors, "prompt catalogue")
+    prompts = catalogue.get("prompts") if isinstance(catalogue, Mapping) else None
+    if not isinstance(prompts, list) or not prompts:
+        return
+    first = prompts[0] if isinstance(prompts[0], Mapping) else {}
+    first_id = first.get("id")
+    query = (first.get("tags") or [first.get("slug")])[0] if isinstance(first, Mapping) else ""
+
+    full_listing = run([sys.executable, str(scripts[0]), "--format", "markdown"])
+    assert_ok(full_listing.returncode == 0, "list_prompts.py full listing failed: {}".format(full_listing.stderr), errors)
+    expected_ids = [item.get("id") for item in prompts if isinstance(item, Mapping) and isinstance(item.get("id"), str)]
+    assert_ok(
+        len(expected_ids) == len(prompts) and all(full_listing.stdout.count("`{}`".format(prompt_id)) == 1 for prompt_id in expected_ids),
+        "no-arg catalogue presentation did not include every prompt ID exactly once",
+        errors,
+    )
+    assert_ok(
+        "{} prompt(s)".format(len(prompts)) in full_listing.stdout,
+        "no-arg catalogue presentation reported the wrong prompt count",
+        errors,
+    )
+    assert_ok(
+        all(isinstance(item, Mapping) and full_listing.stdout.count(str(item.get("prompt"))) == 1 for item in prompts),
+        "no-arg catalogue presentation did not render every prompt body exactly once",
+        errors,
+    )
+    json_listing = run([sys.executable, str(scripts[0]), "--format", "json"])
+    json_data = invocation_json(json_listing, errors, "list_prompts.py --format json")
+    if json_data is not None:
+        grouped = json_data.get("categories")
+        listed_prompts = (
+            [item for group in grouped if isinstance(group, Mapping) for item in group.get("prompts", [])]
+            if isinstance(grouped, list)
+            else []
+        )
+        assert_ok(
+            json_data.get("count") == len(prompts) and listed_prompts == prompts,
+            "JSON catalogue listing differs from canonical prompts",
+            errors,
+        )
+    if isinstance(query, str) and query:
+        search = run([sys.executable, str(scripts[0]), "--search", query, "--format", "markdown"])
+        assert_ok(search.returncode == 0, "list_prompts.py search failed: {}".format(search.stderr), errors)
+        if isinstance(first_id, str):
+            assert_ok(first_id in search.stdout, "catalogue search did not return its matching prompt", errors)
+
+    with tempfile.TemporaryDirectory() as temporary:
+        output_root = Path(temporary) / "runs"
+        prompt = Path(temporary) / "prompt.md"
+        prompt_bytes = b"Create a richly interactive harbor weather station.\r\nKeep this exact line.\n"
+        prompt.write_bytes(prompt_bytes)
+
+        concurrent_root = Path(temporary) / "concurrent-reservations"
+        concurrent_root.mkdir()
+        concurrent_root = concurrent_root.resolve()
+        reservation_count = 32
+        barrier = threading.Barrier(reservation_count)
+
+        def reserve_concurrently(index: int) -> tuple[str, Path]:
+            barrier.wait()
+            run_id = "20260718T120000Z-{:08x}-0000-4000-8000-{:012x}".format(index, index)
+            return (
+                run_id,
+                reserve_paths(
+                    concurrent_root,
+                    build_identity("Shared Model", "model"),
+                    build_identity("Shared Harness", "harness"),
+                    build_identity("Shared Experiment", "experiment"),
+                    run_id,
+                ).run,
+            )
+
+        concurrent_failures: List[str] = []
+        concurrent_reservations: List[tuple[str, Path]] = []
+        with ThreadPoolExecutor(max_workers=reservation_count) as executor:
+            futures = [executor.submit(reserve_concurrently, index) for index in range(reservation_count)]
+            for future in futures:
+                try:
+                    concurrent_reservations.append(future.result())
+                except Exception as error:
+                    concurrent_failures.append(str(error))
+        assert_ok(
+            not concurrent_failures,
+            "concurrent namespace reservation failed: {}".format(concurrent_failures[:3]),
+            errors,
+        )
+        assert_ok(
+            len(concurrent_reservations) == reservation_count
+            and len({path for _, path in concurrent_reservations}) == reservation_count
+            and all(
+                path.is_dir()
+                and path.name == run_id
+                and path.parents[3] == concurrent_root
+                and all(
+                    (owner / ".oneshot-identity.json").is_file()
+                    for owner in (path.parent, path.parents[1], path.parents[2])
+                )
+                for run_id, path in concurrent_reservations
+            ),
+            "concurrent namespace reservation did not return distinct, rooted, owned run paths",
+            errors,
+        )
+
+        serialized_root = Path(temporary) / "serialized-builders"
+        serialized_first = prepare_run(
+            skill,
+            serialized_root,
+            "Model",
+            "Harness",
+            "First Snapshot",
+            prompt,
+            errors,
+        )
+        if serialized_first is not None:
+            builder_command = [
+                sys.executable,
+                str(scripts[2]),
+                "--root",
+                str(serialized_root),
+                "--out",
+                str(serialized_root / "index.html"),
+            ]
+            process_context = multiprocessing.get_context("spawn")
+            publication_ready = process_context.Event()
+            release_publication = process_context.Event()
+            first_outcomes = process_context.Queue()
+            first_builder = process_context.Process(
+                target=run_frozen_catalogue_builder,
+                args=(
+                    str(serialized_root.resolve()),
+                    publication_ready,
+                    release_publication,
+                    first_outcomes,
+                ),
+            )
+            first_builder.start()
+            publication_observed = publication_ready.wait(30)
+            assert_ok(
+                publication_observed,
+                "older catalogue builder did not reach its frozen publication barrier",
+                errors,
+            )
+            second_builder: Optional[subprocess.Popen[str]] = None
+            second_result: Optional[subprocess.CompletedProcess[str]] = None
+            lock_was_busy = False
+            second_data: Optional[Mapping[str, Any]] = None
+            try:
+                if not publication_observed:
+                    raise RuntimeError("frozen catalogue publication was not observed")
+                second_prepare = run(
+                    [
+                        sys.executable,
+                        str(scripts[1]),
+                        "--output-root",
+                        str(serialized_root),
+                        "--model",
+                        "Model",
+                        "--harness",
+                        "Harness",
+                        "--experiment",
+                        "Second Snapshot",
+                        "--prompt-file",
+                        str(prompt),
+                    ]
+                )
+                second_data = invocation_json(second_prepare, errors, "serialized second prepare")
+                lock_was_busy = catalogue_lock_is_busy(serialized_root.resolve())
+                if lock_was_busy:
+                    second_builder = subprocess.Popen(
+                        builder_command,
+                        text=True,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                    )
+                else:
+                    second_result = subprocess.run(
+                        builder_command,
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                        timeout=30,
+                    )
+            except (OSError, RuntimeError, subprocess.TimeoutExpired) as error:
+                errors.append("serialized catalogue setup failed: {}".format(error))
+            finally:
+                release_publication.set()
+                first_builder.join(30)
+                if first_builder.is_alive():
+                    first_builder.terminate()
+                    first_builder.join(5)
+                    errors.append("older catalogue builder did not stop after its publication was released")
+
+            first_outcome: Mapping[str, Any] = {
+                "returncode": 1,
+                "error": "missing child outcome",
+                "stdout": "",
+                "stderr": "",
             }
-        ],
-    }
-    manifest_path = root / "manifest.json"
-    manifest_path.write_text(json.dumps(manifest, indent=2), encoding="utf-8")
-    return manifest_path
+            try:
+                candidate_outcome = first_outcomes.get(timeout=5)
+                if isinstance(candidate_outcome, Mapping):
+                    first_outcome = candidate_outcome
+            except queue.Empty:
+                pass
+            finally:
+                first_outcomes.close()
+                first_outcomes.join_thread()
+
+            if second_builder is not None:
+                try:
+                    second_stdout, second_stderr = second_builder.communicate(timeout=30)
+                except subprocess.TimeoutExpired:
+                    second_builder.kill()
+                    second_stdout, second_stderr = second_builder.communicate()
+                    errors.append("newer catalogue builder did not finish after the older builder released the lock")
+                second_returncode = second_builder.returncode
+            elif second_result is not None:
+                second_stdout = second_result.stdout
+                second_stderr = second_result.stderr
+                second_returncode = second_result.returncode
+            else:
+                second_stdout = ""
+                second_stderr = ""
+                second_returncode = 1
+
+            serialized_validation = run([sys.executable, str(scripts[3]), str(serialized_root)])
+            second_run_name = (
+                Path(str(second_data.get("runDirectory"))).name
+                if isinstance(second_data, Mapping) and isinstance(second_data.get("runDirectory"), str)
+                else ""
+            )
+            serialized_index = serialized_root / "index.html"
+            serialized_html = serialized_index.read_text(encoding="utf-8") if serialized_index.is_file() else ""
+            assert_ok(
+                lock_was_busy
+                and first_builder.exitcode == 0
+                and first_outcome.get("returncode") == 0
+                and not first_outcome.get("error")
+                and second_returncode == 0
+                and serialized_validation.returncode == 0
+                and second_run_name
+                and second_run_name in serialized_html,
+                "serialized catalogue builders published a stale older snapshot: {}{}{}{}{}".format(
+                    str(first_outcome.get("error", "")),
+                    str(first_outcome.get("stdout", "")),
+                    str(first_outcome.get("stderr", "")),
+                    second_stdout + second_stderr,
+                    serialized_validation.stdout,
+                ),
+                errors,
+            )
+
+        first_run = prepare_run(skill, output_root, "Model One", "Harness / Alpha", "Harbor Station", prompt, errors)
+        collision_run = prepare_run(skill, output_root, "Model-One", "Harness / Alpha", "Harbor Station", prompt, errors)
+        if first_run is None or collision_run is None:
+            return
+        prior_receipt = output_root / ".oneshot-provenance" / (first_run.name + ".json")
+        prior_commit = output_root / ".oneshot-provenance" / (first_run.name + ".commit")
+        prior_link_command = [
+            sys.executable,
+            str(skill / "scripts" / "prepare_run.py"),
+            "--output-root",
+            str(output_root),
+            "--model",
+            "Model One",
+            "--harness",
+            "Harness / Alpha",
+            "--experiment",
+            "Harbor Station",
+            "--prompt-file",
+            str(prompt),
+            "--classification",
+            "rerun",
+            "--prior-run",
+            str(first_run),
+        ]
+        prior_commit.unlink()
+        uncommitted_prior_result = run(prior_link_command)
+        assert_ok(
+            uncommitted_prior_result.returncode != 0
+            and "missing its provenance commit marker" in uncommitted_prior_result.stderr,
+            "prepare_run.py accepted an uncommitted prior-run residue",
+            errors,
+        )
+        prior_commit.write_bytes(b"")
+        receipt_backup = prior_receipt.read_bytes()
+        prior_receipt.unlink()
+        unreceipted_prior_result = run(prior_link_command)
+        assert_ok(
+            unreceipted_prior_result.returncode != 0
+            and "missing its coordinator provenance receipt" in unreceipted_prior_result.stderr,
+            "prepare_run.py accepted a prior run without its coordinator receipt",
+            errors,
+        )
+        prior_receipt.write_bytes(receipt_backup)
+        rerun_path = prepare_run(
+            skill,
+            output_root,
+            "Model One",
+            "Harness / Alpha",
+            "Harbor Station",
+            prompt,
+            errors,
+            classification="rerun",
+            prior_run=first_run,
+        )
+        if rerun_path is None:
+            return
+
+        abandoned_reservation = first_run.parent / make_run_id()
+        abandoned_reservation.mkdir()
+        interrupted_reservation = first_run.parent / make_run_id()
+        (interrupted_reservation / "workspace").mkdir(parents=True)
+        (interrupted_reservation / "artifact").mkdir()
+        (interrupted_reservation / "artifact" / "PROMPT.md").write_bytes(prompt_bytes)
+        interrupted_metadata_run = first_run.parent / make_run_id()
+        (interrupted_metadata_run / "workspace").mkdir(parents=True)
+        (interrupted_metadata_run / "artifact").mkdir()
+        (interrupted_metadata_run / "artifact" / "PROMPT.md").write_bytes(prompt_bytes)
+        (interrupted_metadata_run / "run.json").write_text('{"schemaVersion":"2.0",', encoding="utf-8")
+        (interrupted_metadata_run / "worker-report.json").write_text('{"schemaVersion":"2.0"}', encoding="utf-8")
+        (output_root / ".oneshot-provenance" / (interrupted_metadata_run.name + ".json")).write_text(
+            '{"schemaVersion":"1.0",',
+            encoding="utf-8",
+        )
+        abandoned_build = rebuild_catalog_index(output_root)
+        abandoned_validation = run([sys.executable, str(scripts[3]), str(output_root)])
+        assert_ok(
+            abandoned_build.returncode == 0 and abandoned_validation.returncode == 0,
+            "an empty or pre-manifest interrupted reservation permanently poisoned the output root",
+            errors,
+        )
+
+        prior_parts = first_run.relative_to(output_root.resolve()).parts
+        resolved_output_root = output_root.resolve()
+        wrong_case_prior = resolved_output_root / prior_parts[0].upper() / Path(*prior_parts[1:])
+        if wrong_case_prior.exists() and wrong_case_prior != first_run:
+            wrong_prior_result = run(
+                [
+                    sys.executable,
+                    str(skill / "scripts" / "prepare_run.py"),
+                    "--output-root",
+                    str(output_root),
+                    "--model",
+                    "Model One",
+                    "--harness",
+                    "Harness / Alpha",
+                    "--experiment",
+                    "Harbor Station",
+                    "--prompt-file",
+                    str(prompt),
+                    "--classification",
+                    "rerun",
+                    "--prior-run",
+                    str(wrong_case_prior),
+                ]
+            )
+            assert_ok(
+                wrong_prior_result.returncode != 0 and "prior run path must use exact casing" in wrong_prior_result.stderr,
+                "prepare_run.py accepted a wrong-case prior run path",
+                errors,
+            )
+
+        first_manifest = read_json(first_run / "run.json", errors, "prepared run.json")
+        preserved_prompt = first_run / "artifact" / "PROMPT.md"
+        assert_ok(preserved_prompt.is_file(), "prepare_run.py did not create artifact/PROMPT.md", errors)
+        if preserved_prompt.is_file():
+            assert_ok(preserved_prompt.read_bytes() == prompt_bytes, "prepare_run.py did not preserve prompt bytes", errors)
+        if isinstance(first_manifest, Mapping):
+            prompt_data = first_manifest.get("prompt")
+            expected_hash = hashlib.sha256(prompt_bytes).hexdigest()
+            assert_ok(isinstance(prompt_data, Mapping) and prompt_data.get("sha256") == expected_hash, "prepare_run.py did not record the exact prompt hash", errors)
+            receipt_value = first_manifest.get("provenanceReceipt")
+            receipt_path = output_root / str(receipt_value)
+            receipt = read_json(receipt_path, errors, "pre-dispatch provenance receipt") if isinstance(receipt_value, str) else None
+            assert_ok(
+                isinstance(receipt, Mapping)
+                and receipt.get("prompt", {}).get("sha256") == expected_hash
+                and receipt.get("prompt", {}).get("bytes") == len(prompt_bytes),
+                "prepare_run.py did not anchor prompt provenance outside the worker run",
+                errors,
+            )
+            identity = first_manifest.get("identity")
+            assert_ok(isinstance(identity, Mapping), "prepared run is missing identity metadata", errors)
+            if isinstance(identity, Mapping):
+                for part in ("model", "harness", "experiment"):
+                    assert_ok(isinstance(identity.get(part), Mapping), "prepared run missing {} identity".format(part), errors)
+
+        assert_ok(first_run != collision_run, "normalized-similar names reused a run directory", errors)
+        rerun_manifest = read_json(rerun_path / "run.json", errors, "rerun run.json")
+        if isinstance(rerun_manifest, Mapping):
+            assert_ok(
+                rerun_manifest.get("priorRun") == first_run.relative_to(output_root.resolve()).as_posix(),
+                "rerun did not preserve its prior-run relationship",
+                errors,
+            )
+        collision_manifest = read_json(collision_run / "run.json", errors, "collision run.json")
+        if isinstance(first_manifest, Mapping) and isinstance(collision_manifest, Mapping):
+            first_model = first_manifest.get("identity", {}).get("model", {})
+            collision_model = collision_manifest.get("identity", {}).get("model", {})
+            assert_ok(first_model.get("key") != collision_model.get("key"), "normalized-similar model names share an identity key", errors)
+
+        mark_successful_static_artifact(first_run)
+        build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+        assert_ok(build.returncode == 0, "build_catalog_index.py rejected a built framework artifact: {}".format(build.stderr or build.stdout), errors)
+        if os.name == "posix":
+            assert_ok(
+                stat.S_IMODE((output_root / "index.html").stat().st_mode) == 0o644,
+                "new catalogue index was not published with a web-readable mode",
+                errors,
+            )
+        catalogue_html = (output_root / "index.html").read_text(encoding="utf-8")
+        assert_ok(str(output_root) not in catalogue_html, "catalogue index exposed its local absolute root", errors)
+        assert_ok("Model One" in catalogue_html, "catalogue index omitted the raw model name", errors)
+
+        receipt_name = "{}.json".format(first_run.name)
+        appledouble_paths = [
+            output_root / "._.oneshot-provenance",
+            output_root / "._{}".format(first_run.parents[2].name),
+            first_run.parents[2] / "._.oneshot-identity.json",
+            first_run.parents[2] / "._{}".format(first_run.parents[1].name),
+            first_run.parents[1] / "._.oneshot-identity.json",
+            first_run.parents[1] / "._{}".format(first_run.parent.name),
+            first_run.parent / "._.oneshot-identity.json",
+            first_run.parent / "._{}".format(first_run.name),
+            output_root / ".oneshot-provenance" / "._{}".format(receipt_name),
+            first_run / "._run.json",
+            first_run / "artifact" / "._PROMPT.md",
+            first_run / "artifact" / "._index.html",
+        ]
+        for appledouble_path in appledouble_paths:
+            write_appledouble(appledouble_path)
+        appledouble_build = rebuild_catalog_index(output_root)
+        appledouble_validation = run([sys.executable, str(scripts[3]), str(output_root)])
+        assert_ok(
+            appledouble_build.returncode == 0 and appledouble_validation.returncode == 0,
+            "authentic AppleDouble metadata poisoned a portable-volume run root: {}{}".format(
+                appledouble_build.stderr,
+                appledouble_validation.stdout,
+            ),
+            errors,
+        )
+        fake_appledouble = output_root / "._user-file"
+        fake_appledouble.write_text("ordinary user content\n", encoding="utf-8")
+        fake_appledouble_build = rebuild_catalog_index(output_root)
+        assert_ok(
+            fake_appledouble_build.returncode != 0 and "unexpected file outside a run" in fake_appledouble_build.stderr,
+            "catalogue builder ignored a filename-only AppleDouble impersonator",
+            errors,
+        )
+        fake_appledouble.unlink()
+        assert_ok(
+            rebuild_catalog_index(output_root).returncode == 0,
+            "catalogue builder did not recover after the AppleDouble impersonator test",
+            errors,
+        )
+
+        wrong_site = rename_with_exact_case(first_run / "artifact" / "index.html", "Index.html")
+        wrong_prompt = rename_with_exact_case(preserved_prompt, "Prompt.md")
+        case_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+        assert_ok(case_build.returncode == 0, "catalogue builder failed on wrong-case artifact names", errors)
+        case_html = (output_root / "index.html").read_text(encoding="utf-8")
+        assert_ok(
+            "Artifact entry</a>" not in case_html
+            and case_html.count("PROMPT.md</a>") == catalogue_html.count("PROMPT.md</a>") - 1,
+            "catalogue builder linked wrong-case artifact filenames",
+            errors,
+        )
+        rename_with_exact_case(wrong_site, "index.html")
+        preserved_prompt = rename_with_exact_case(wrong_prompt, "PROMPT.md")
+        if os.name == "posix":
+            os.chmod(output_root / "index.html", 0o640)
+        restored_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+        assert_ok(restored_build.returncode == 0, "catalogue builder failed after restoring exact artifact names", errors)
+        restored_html = (output_root / "index.html").read_text(encoding="utf-8")
+        assert_ok(
+            "Artifact entry</a>" in restored_html
+            and restored_html.count("PROMPT.md</a>") == catalogue_html.count("PROMPT.md</a>"),
+            "catalogue builder did not restore exact artifact links",
+            errors,
+        )
+        if os.name == "posix":
+            assert_ok(
+                stat.S_IMODE((output_root / "index.html").stat().st_mode) == 0o644,
+                "catalogue rebuild did not normalize the existing output to a web-readable mode",
+                errors,
+            )
+            os.chmod(output_root / "index.html", 0o000)
+            assert_invalid_catalog(scripts[3], output_root, "readable file mode", "unreadable root catalogue", errors)
+            readable_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+            assert_ok(readable_build.returncode == 0, "catalogue builder failed to recover an unreadable destination", errors)
+            assert_ok(
+                stat.S_IMODE((output_root / "index.html").stat().st_mode) == 0o644,
+                "catalogue builder did not recover mode 000 to 0644",
+                errors,
+            )
+            os.chmod(output_root, 0o500)
+            unwritable_build = rebuild_catalog_index(output_root)
+            assert_ok(
+                unwritable_build.returncode != 0
+                and "writable directory mode" in unwritable_build.stderr
+                and "Traceback" not in unwritable_build.stderr,
+                "catalogue builder crashed on a non-writable output root",
+                errors,
+            )
+            os.chmod(output_root, 0o700)
+
+        (output_root / "index.html").write_text("<!doctype html><title>stale</title>\n", encoding="utf-8")
+        assert_invalid_catalog(scripts[3], output_root, "root catalogue is stale", "stale root catalogue", errors)
+        fresh_build = rebuild_catalog_index(output_root)
+        assert_ok(
+            fresh_build.returncode == 0,
+            "catalogue builder failed after stale-index regression: {}".format(fresh_build.stderr or fresh_build.stdout),
+            errors,
+        )
+
+        stale_temporary = output_root / ".oneshot-index-interrupted.tmp"
+        stale_temporary.write_text("partial", encoding="utf-8")
+        recovered_build = rebuild_catalog_index(output_root)
+        assert_ok(
+            recovered_build.returncode == 0 and stale_temporary.exists(),
+            "catalogue builder did not recover its interrupted temporary output",
+            errors,
+        )
+        stale_temporary.unlink()
+
+        wrong_root_index = rename_with_exact_case(output_root / "index.html", "Index.html")
+        collision_build = rebuild_catalog_index(output_root)
+        assert_ok(
+            collision_build.returncode != 0 and "wrong-case root catalogue filename" in collision_build.stderr,
+            "catalogue builder reported success for a wrong-case root index collision",
+            errors,
+        )
+        rename_with_exact_case(wrong_root_index, "index.html")
+
+        root_index_backup = output_root / ".root-index-backup"
+        (output_root / "index.html").rename(root_index_backup)
+        (output_root / "index.html").mkdir()
+        directory_build = rebuild_catalog_index(output_root)
+        assert_ok(
+            directory_build.returncode != 0
+            and "regular non-symlink file" in directory_build.stderr
+            and "Traceback" not in directory_build.stderr,
+            "catalogue builder crashed when index.html was a directory",
+            errors,
+        )
+        (output_root / "index.html").rmdir()
+        root_index_backup.rename(output_root / "index.html")
+
+        manifest_path = first_run / "run.json"
+        original_manifest_text = manifest_path.read_text(encoding="utf-8")
+        placeholder_manifest = json.loads(original_manifest_text)
+        placeholder_manifest["identity"]["model"]["name"] = "{{FOOTER_NOTE}}"
+        manifest_path.write_text(json.dumps(placeholder_manifest), encoding="utf-8")
+        placeholder_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+        assert_ok(placeholder_build.returncode == 0, "catalogue builder failed on placeholder-shaped provenance", errors)
+        placeholder_html = (output_root / "index.html").read_text(encoding="utf-8")
+        assert_ok("{{FOOTER_NOTE}}" in placeholder_html, "catalogue builder recursively rewrote provenance text", errors)
+        manifest_path.write_text(original_manifest_text, encoding="utf-8")
+
+        report_path = first_run / "worker-report.json"
+        report_backup = first_run / "worker-report.backup.json"
+        report_path.rename(report_backup)
+        report_path.mkdir()
+        disclosure_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+        assert_ok(disclosure_build.returncode == 0, "catalogue builder failed on unreadable report metadata", errors)
+        disclosure_html = (output_root / "index.html").read_text(encoding="utf-8")
+        assert_ok(str(output_root) not in disclosure_html, "catalogue builder disclosed an absolute metadata path", errors)
+        report_path.rmdir()
+        report_backup.rename(report_path)
+
+        outside_report = Path(temporary) / "outside-worker-report.json"
+        outside_report.write_text(
+            json.dumps({"summary": "OUTSIDE REPORT SECRET"}),
+            encoding="utf-8",
+        )
+        report_path.rename(report_backup)
+        try:
+            report_path.symlink_to(outside_report)
+        except OSError:
+            report_backup.rename(report_path)
+        else:
+            symlink_report_build = rebuild_catalog_index(output_root)
+            assert_ok(
+                symlink_report_build.returncode == 0
+                and "OUTSIDE REPORT SECRET" not in (output_root / "index.html").read_text(encoding="utf-8"),
+                "catalogue builder followed a symlinked worker report",
+                errors,
+            )
+            report_path.unlink()
+            report_backup.rename(report_path)
+
+        if hasattr(os, "mkfifo"):
+            report_path.rename(report_backup)
+            os.mkfifo(report_path)
+            fifo_report_build = rebuild_catalog_index(output_root)
+            assert_ok(
+                fifo_report_build.returncode == 0,
+                "catalogue builder blocked or failed on a non-regular worker report",
+                errors,
+            )
+            report_path.unlink()
+            report_backup.rename(report_path)
+
+        site_path = first_run / "artifact" / "index.html"
+        site_backup = first_run / "artifact" / "index.backup.html"
+        outside_site = Path(temporary) / "outside-site.html"
+        outside_site.write_text("<!doctype html><title>Outside</title>\n", encoding="utf-8")
+        site_path.rename(site_backup)
+        try:
+            site_path.symlink_to(outside_site)
+        except OSError:
+            site_backup.rename(site_path)
+        else:
+            symlink_site_build = rebuild_catalog_index(output_root)
+            symlink_site_html = (output_root / "index.html").read_text(encoding="utf-8")
+            assert_ok(
+                symlink_site_build.returncode == 0
+                and symlink_site_html.count("Artifact entry</a>") == restored_html.count("Artifact entry</a>") - 1,
+                "catalogue builder linked a symlinked artifact entrypoint",
+                errors,
+            )
+            site_path.unlink()
+            site_backup.rename(site_path)
+
+        (output_root / "index.html").unlink()
+        os.link(str(preserved_prompt), str(output_root / "index.html"))
+        prompt_before_rebuild = preserved_prompt.read_bytes()
+        hardlink_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
+        assert_ok(hardlink_build.returncode == 0, "catalogue rebuild over a hard link failed", errors)
+        assert_ok(
+            preserved_prompt.read_bytes() == prompt_before_rebuild,
+            "catalogue rebuild rewrote a hard-linked artifact prompt",
+            errors,
+        )
+
+        refused_out = Path(temporary) / "outside-index.html"
+        refused_out.write_text("sentinel", encoding="utf-8")
+        outside_build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(refused_out)])
+        assert_ok(
+            outside_build.returncode != 0 and refused_out.read_text(encoding="utf-8") == "sentinel",
+            "catalogue builder wrote outside its root index",
+            errors,
+        )
+        validation = run([sys.executable, str(scripts[3]), str(output_root)])
+        assert_ok(validation.returncode == 0, "validate_catalog.py rejected a drop-ready static artifact: {}".format(validation.stderr or validation.stdout), errors)
+
+        missing_index = prepare_run(skill, output_root, "Second Model", "Harness / Alpha", "Missing Entry", prompt, errors)
+        if missing_index is not None:
+            manifest_path = missing_index / "run.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["status"] = "OK"
+            manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+            report_path = missing_index / "worker-report.json"
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            report["status"] = "OK"
+            report["artifact"]["staticDeploymentVerified"] = True
+            report_path.write_text(json.dumps(report), encoding="utf-8")
+            missing_validation = run([sys.executable, str(scripts[3]), str(output_root)])
+            assert_ok(missing_validation.returncode != 0, "validate_catalog.py accepted OK status without artifact/index.html", errors)
+            assert_ok("missing exact-case artifact/index.html" in missing_validation.stdout, "validate_catalog.py did not report the missing OK entrypoint", errors)
+
+        traversal = output_root / "unsafe-model" / "unsafe-harness" / "unsafe-experiment" / "unsafe-run"
+        (traversal / "workspace").mkdir(parents=True)
+        (traversal / "artifact").mkdir()
+        (traversal / "run.json").write_text(
+            json.dumps(
+                {
+                    "schemaVersion": "2.0",
+                    "identity": {"model": {"name": "unsafe", "key": "unsafe-model"}, "harness": {"name": "unsafe", "key": "unsafe-harness"}, "experiment": {"name": "unsafe", "key": "unsafe-experiment"}},
+                    "runId": "unsafe-run",
+                    "classification": "autonomous-one-shot",
+                    "status": "PLANNED",
+                    "prompt": {"path": "../outside/PROMPT.md", "sha256": "0" * 64, "preservation": "verbatim"},
+                    "workspace": {"path": "workspace/"},
+                    "artifact": {"path": "../outside/", "entrypoint": "../outside/index.html", "deployment": "static-folder"},
+                }
+            ),
+            encoding="utf-8",
+        )
+        traversal_validation = run([sys.executable, str(scripts[3]), str(output_root)])
+        assert_ok(traversal_validation.returncode != 0, "validate_catalog.py accepted a path traversal in run metadata", errors)
+        assert_ok("not a safe relative path" in traversal_validation.stdout, "validate_catalog.py did not identify the path traversal", errors)
+
+        exercise_adversarial_contract(skill, scripts[3], Path(temporary) / "adversarial", prompt, errors)
+
+
+def exercise_package_validator(skill: Path, errors: List[str]) -> None:
+    """Require malformed package metadata to produce a classified result, not a traceback."""
+
+    with tempfile.TemporaryDirectory() as temporary:
+        copied_skill = Path(temporary) / "oneshot-websites"
+        shutil.copytree(skill, copied_skill)
+        metadata_path = copied_skill / "metadata.json"
+        original_metadata = metadata_path.read_bytes()
+        metadata_path.write_bytes(b"{\xff}")
+        result = run([sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)])
+        assert_ok(
+            result.returncode != 0 and "invalid JSON" in result.stdout and "Traceback" not in result.stderr,
+            "package validator crashed or hid invalid UTF-8 metadata",
+            errors,
+        )
+        metadata_path.write_bytes(original_metadata)
+
+        catalogue_path = copied_skill / "assets" / "prompt-catalogue.json"
+        original_catalogue = json.loads(catalogue_path.read_text(encoding="utf-8"))
+        frozen_mutations = (
+            "edited prompt",
+            "reordered prompts",
+            "renumbered prompt",
+        )
+        for mutation in frozen_mutations:
+            mutated = json.loads(json.dumps(original_catalogue))
+            prompts = mutated["prompts"]
+            if mutation == "edited prompt":
+                prompts[0]["prompt"] += " Changed."
+            elif mutation == "reordered prompts":
+                prompts[0], prompts[1] = prompts[1], prompts[0]
+            else:
+                prompts[0]["id"] = "ow-900"
+            catalogue_path.write_text(json.dumps(mutated), encoding="utf-8")
+            mutation_result = run(
+                [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+            )
+            assert_ok(
+                mutation_result.returncode != 0
+                and "frozen append-only prefix" in mutation_result.stdout,
+                "package validator accepted {} in the frozen catalogue prefix".format(mutation),
+                errors,
+            )
+
+        shortened = json.loads(json.dumps(original_catalogue))
+        shortened["prompts"].pop(0)
+        catalogue_path.write_text(json.dumps(shortened), encoding="utf-8")
+        shortened_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            shortened_result.returncode != 0
+            and "must contain at least 100 prompts" in shortened_result.stdout,
+            "package validator accepted deletion from the frozen catalogue prefix",
+            errors,
+        )
+
+        surrogate_catalogue = json.loads(json.dumps(original_catalogue))
+        surrogate_catalogue["prompts"][0]["title"] = "\ud800"
+        catalogue_path.write_text(json.dumps(surrogate_catalogue), encoding="utf-8")
+        surrogate_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            surrogate_result.returncode != 0
+            and "frozen append-only prefix" in surrogate_result.stdout
+            and "Traceback" not in surrogate_result.stderr,
+            "package validator crashed on an escaped unpaired surrogate in the catalogue",
+            errors,
+        )
+
+        extended = json.loads(json.dumps(original_catalogue))
+        extended["prompts"].append(
+            {
+                "id": "ow-101",
+                "slug": "append-only-fixture",
+                "title": "Append Only Fixture",
+                "category": "immersive-games",
+                "prompt": "Create an original interactive experience that proves the catalogue can grow by appending entries.",
+                "tags": ["append-only", "fixture", "growth"],
+            }
+        )
+        catalogue_path.write_text(json.dumps(extended), encoding="utf-8")
+        extension_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            extension_result.returncode == 0,
+            "package validator rejected an append-only catalogue extension: {}".format(
+                extension_result.stdout or extension_result.stderr
+            ),
+            errors,
+        )
+
+        for field in ("title", "prompt", "tag"):
+            surrogate_extension = json.loads(json.dumps(extended))
+            if field == "tag":
+                surrogate_extension["prompts"][-1]["tags"][0] = "\ud800"
+            else:
+                surrogate_extension["prompts"][-1][field] = "\ud800"
+            catalogue_path.write_text(json.dumps(surrogate_extension), encoding="utf-8")
+            surrogate_extension_result = run(
+                [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+            )
+            assert_ok(
+                surrogate_extension_result.returncode != 0
+                and "Traceback" not in surrogate_extension_result.stderr,
+                "package validator accepted or crashed on an escaped surrogate in appended {}".format(field),
+                errors,
+            )
+
+        for invalid_extension_id in ("foo-999", "ow-102"):
+            invalid_extension = json.loads(json.dumps(extended))
+            invalid_extension["prompts"][-1]["id"] = invalid_extension_id
+            catalogue_path.write_text(json.dumps(invalid_extension), encoding="utf-8")
+            invalid_extension_result = run(
+                [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+            )
+            assert_ok(
+                invalid_extension_result.returncode != 0
+                and (
+                    "invalid stable id" in invalid_extension_result.stdout
+                    or "next append-only stable id ow-101" in invalid_extension_result.stdout
+                ),
+                "package validator accepted out-of-sequence appended id {}".format(
+                    invalid_extension_id
+                ),
+                errors,
+            )
+
+        spaced_identity = json.loads(json.dumps(extended))
+        spaced_identity["prompts"][-1]["id"] = " ow-101 "
+        spaced_identity["prompts"][-1]["slug"] = " append-only-fixture "
+        spaced_identity["prompts"][-1]["category"] = " immersive-games "
+        catalogue_path.write_text(json.dumps(spaced_identity), encoding="utf-8")
+        spaced_identity_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            spaced_identity_result.returncode != 0
+            and "id must not contain surrounding whitespace" in spaced_identity_result.stdout
+            and "slug must not contain surrounding whitespace" in spaced_identity_result.stdout
+            and "category must not contain surrounding whitespace" in spaced_identity_result.stdout,
+            "package validator accepted surrounding whitespace in appended identity fields",
+            errors,
+        )
+
+        disguised_duplicate = json.loads(json.dumps(original_catalogue))
+        duplicate_entry = json.loads(json.dumps(disguised_duplicate["prompts"][0]))
+        duplicate_entry["id"] = "ow-101"
+        duplicate_entry["slug"] = "disguised-duplicate"
+        duplicate_entry["title"] += " "
+        duplicate_entry["prompt"] += " "
+        disguised_duplicate["prompts"].append(duplicate_entry)
+        catalogue_path.write_text(json.dumps(disguised_duplicate), encoding="utf-8")
+        duplicate_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            duplicate_result.returncode != 0
+            and "duplicate titles" in duplicate_result.stdout
+            and "duplicate prompt texts" in duplicate_result.stdout,
+            "package validator accepted a whitespace-disguised duplicate catalogue entry",
+            errors,
+        )
 
 
 def main() -> int:
     if len(sys.argv) != 2:
         print("Usage: python3 test_skill.py <skill-path>", file=sys.stderr)
         return 1
-
     skill = Path(sys.argv[1]).resolve()
-    errors: list[str] = []
-
-    evals_path = skill / "evals" / "evals.json"
-    try:
-        evals = json.loads(evals_path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        print(f"failed to read evals: {exc}", file=sys.stderr)
-        return 1
-
-    tags = {tag for item in evals.get("evals", []) for tag in item.get("tags", [])}
-    for required in ["smoke", "edge", "negative", "disclosure", "verification"]:
-        assert_ok(required in tags, f"missing eval tag: {required}", errors)
-
-    for item in evals.get("evals", []):
-        assert_ok("prompt" in item, f"eval missing prompt: {item}", errors)
-        assert_ok("expected_output" in item, f"eval missing expected_output: {item}", errors)
-        for assertion in item.get("assertions", []):
-            assert_ok("text" in assertion, f"assertion missing text: {assertion}", errors)
-
-    with tempfile.TemporaryDirectory() as tmp:
-        root = Path(tmp)
-        manifest_path = write_sample_catalog(root)
-        build = run(
-            [
-                sys.executable,
-                str(skill / "scripts" / "build_catalog_index.py"),
-                "--manifest",
-                str(manifest_path),
-                "--out",
-                str(root / "index.html"),
-            ]
-        )
-        assert_ok(build.returncode == 0, f"build_catalog_index.py failed: {build.stderr}", errors)
-
-        validate = run([sys.executable, str(skill / "scripts" / "validate_catalog.py"), str(root)])
-        assert_ok(validate.returncode == 0, f"validate_catalog.py failed: {validate.stdout}\n{validate.stderr}", errors)
+    errors: List[str] = []
+    check_evals(skill, errors)
+    exercise_runtime_scripts(skill, errors)
+    exercise_package_validator(skill, errors)
 
     if errors:
         print("FAIL")
         for error in errors:
-            print(f"- {error}")
+            print("- {}".format(error))
         return 1
-
-    print("PASS: eval metadata, catalog builder, and catalog validator checks passed")
+    print("PASS: eval, catalogue, provenance, and static-handoff checks passed")
     return 0
 
 

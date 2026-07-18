@@ -1,68 +1,74 @@
-# Catalog Index
+# Artifact Catalogue and Validation
 
-## Table of Contents
-
-- [Purpose](#purpose)
-- [Required Content](#required-content)
-- [Visual Direction](#visual-direction)
-- [Fairness Note](#fairness-note)
-- [Table Columns](#table-columns)
-- [Generated Index Script](#generated-index-script)
+Use this reference after one or more leads finish, or when checking an existing one-shot output root.
 
 ## Purpose
 
-The root `index.html` is the directory for the run. It should expose what was generated, where each route lives, which `PROMPT.md` produced it, and what one-shot website type was used.
+The root catalogue is a provenance and navigation layer over artifacts built without stack prescriptions. It shows which prompt, model, harness, experiment, lead, and run produced each result. It does not impose an internal project shape.
 
-## Required Content
+## Required Run Evidence
 
-Include these elements:
+Each run directory contains:
 
-- A compact hero with catalog title, model or harness name, route count, generated date, and project name.
-- A visible fairness note near the top.
-- A responsive table or table-like list of routes.
-- Links to each route and its `PROMPT.md`.
-- Status chips for OK, partial, or failed routes.
-- A short summary per route.
+- `artifact/PROMPT.md` with the exact dispatched task
+- `run.json` with identity, digest, classification, status, and artifact path
+- `worker-report.json` once a lead has started
+- `workspace/` containing any source project and build tooling the lead chose
+- for every successful run, `artifact/index.html` as the single static-site entrypoint
+- for every successful run, `artifact/` containing the final built scripts, styles, media, and other browser assets
 
-## Visual Direction
+The output root also contains one `.oneshot-provenance/<run-id>.json` receipt and one empty `.oneshot-provenance/<run-id>.commit` marker per dispatched run, kept outside the worker-owned run. The receipt records the prompt digest, identity, and run relationship. The coordinator creates the commit marker last; bounded pre-dispatch residue without it is recoverable, while committed runs remain part of the inventory. Receipt integrity depends on the dispatch contract giving workers write access only to their assigned run; it is not a cryptographic boundary when a worker can write the output root.
 
-Use a restrained catalog look rather than a marketing page:
+Each model, harness, and experiment namespace contains an exact-case `.oneshot-identity.json` marker that binds its derived key to the exact raw name. The validator cross-checks these coordinator-owned markers against every run so distinct identities never silently share a namespace.
 
-- Warm off-white background, ink text, muted dividers, and one calm accent.
-- Dense but readable information layout.
-- Rounded panels are acceptable, but keep the index utilitarian and scannable.
-- On mobile, collapse table rows into labeled blocks with the same information.
-- Avoid decorative hero art. The generated routes are the showcase; the index is navigation.
+The only website entrypoint is the exact-case path `artifact/index.html`; the preserved prompt is the exact-case path `artifact/PROMPT.md`. The artifact folder must be deployable as-is to a static folder host. It must not require `npm install`, a build, a framework development server, or a server-side runtime after the lead finishes.
 
-## Fairness Note
+The target handoff matches folder-drop services such as [Cloudflare Drop](https://www.cloudflare.com/drop/) and [Vercel Drop](https://vercel.com/drop): upload `artifact/` itself, not the source workspace. Deployment is a separate external action and occurs only when the user asks for it.
 
-Use a note equivalent to this, adapted to the actual harness and model:
+The conservative shared compatibility profile is at most 1,000 files, 5 MiB per file, and 100 MiB total. The first two limits come from Cloudflare’s current [temporary-deployment static-asset contract](https://developers.cloudflare.com/workers/platform/claim-deployments/#supported-resources); the total is the current [Drop](https://www.cloudflare.com/drop/) browser preflight. Because provider limits can change, recheck the linked services when updating the validator. Package manifests, source-only components, build and provider configuration, dependencies, caches, secrets, server functions, and provider-filtered project state such as `.next/` stay out of the entire artifact tree. A Drop service should receive built browser output, not a project to install or compile.
 
-```text
-Each one-shot showcase and its paired PROMPT.md were generated in an isolated route context so sibling runs do not influence one another. Route generation is single-pass: no retries were attempted for failures, odd behavior, or output quirks. This keeps the catalog fair as a model-comparison surface and shows how the model performs out of the box.
-```
+## Root Index
 
-If any route was repaired, replace "single-pass" with "curated" and disclose what changed.
-
-## Table Columns
-
-| Column | Content |
-| --- | --- |
-| Path | Route path such as `/restaurant/`. |
-| Experience | Link to the route `index.html`. |
-| Prompt | Link to route `PROMPT.md`. |
-| Type | Canonical type slug or label. |
-| Status | `OK`, `PARTIAL`, `ERROR`, or `CURATED`. |
-| Summary | One sentence describing the generated route. |
-
-## Generated Index Script
-
-Prefer the script when the manifest exists:
+Build a static index after the workers finish:
 
 ```bash
-python3 skills/oneshot-websites/scripts/build_catalog_index.py \
-  --manifest path/to/oneshot-websites/manifest.json \
-  --out path/to/oneshot-websites/index.html
+"${ONESHOT_WEBSITES_PYTHON:-python3}" scripts/build_catalog_index.py --root "<output-root>" --out "<output-root>/index.html"
 ```
 
-If the harness cannot run scripts, fill `templates/catalog-index.html` manually from the manifest using the same columns and fairness note.
+The index lists:
+
+- model and harness
+- experiment and run ID
+- status and classification
+- link to the preserved actual prompt
+- links to `artifact/index.html` and `artifact/PROMPT.md`
+- lead and descendant counts when known
+- summary or blocker
+
+The builder reads `run.json` and `worker-report.json` files; it never rewrites artifacts. It serializes render and atomic publication through a coordinator-owned `.oneshot-catalogue.lock`, preventing a delayed older builder from replacing a newer snapshot.
+The finished output root keeps this generated `index.html` as an exact-case, readable file. Its “Artifact entry” links identify run entrypoints for provenance and inspection. They are not deployment-origin emulators: a site that uses root-relative URLs is expected to work when `artifact/` itself is dropped at a host root.
+
+## Validation
+
+```bash
+"${ONESHOT_WEBSITES_PYTHON:-python3}" scripts/validate_catalog.py "<output-root>"
+```
+
+`ONESHOT_WEBSITES_PYTHON` follows the compatible Python 3.11-or-newer helper-runtime contract in `SKILL.md`; it is an executable path or command name, not a version pin or a constraint on the generated website.
+
+Validation checks namespace order, raw-name identity keys, globally unique run IDs, acyclic rerun links, one-to-one committed receipt inventory, prompt bytes and digest, exact manifest paths and filename casing, status evidence, the current readable aggregate root index, the root `artifact/index.html`, provider-size bounds, local HTML and SVG resources, and transitive CSS resources. It accepts relative and root-relative browser resources against the deployed artifact root. It rejects project, cache, provider-filtered, source-only, and server state anywhere in the final folder while accepting any source framework, dependency, project shape, and build process in `workspace/`.
+
+A passing structural check does not prove visual quality, JavaScript module graphs, every dynamic request, or runtime correctness. Successful runs must also carry concrete worker verification evidence with a `kind`, passed `result`, and non-empty `evidence`; any explicit failed check invalidates `OK`. Inspect or replay that evidence when runtime confidence matters.
+
+## Status and Classification
+
+Use stable terminal statuses: `PLANNED`, `RUNNING`, `OK`, `PARTIAL`, `BLOCKED`, or `ERROR`.
+
+Use `autonomous-one-shot` for the original lead assignment. Use `rerun` or `curated-attempt` for separately dispatched later runs. Internal edits, tests, and revisions by the same owning lead remain part of `autonomous-one-shot`.
+
+Keep partial and failed runs visible. Honest failure evidence is more useful than a polished catalogue that silently replaces weak attempts.
+
+## See Also
+
+- `references/execution-protocol.md` — namespace and delegation rules
+- `templates/run.json` — initial manifest shape
