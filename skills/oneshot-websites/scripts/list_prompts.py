@@ -49,6 +49,7 @@ class Catalogue:
     """Validated catalogue metadata and prompt entries."""
 
     experience_direction: str
+    completion_mandate: str
     categories: tuple[Category, ...]
     prompts: tuple[PromptEntry, ...]
 
@@ -109,7 +110,7 @@ def positive_limit(value: str) -> int:
 
 
 def load_catalogue(path: Path = CATALOGUE_PATH) -> Catalogue:
-    """Load the shared direction, categories, and entries from canonical JSON."""
+    """Load root prompt guidance, categories, and entries from canonical JSON."""
 
     try:
         loaded = parse_json_bounded(path.read_text(encoding="utf-8"))
@@ -133,6 +134,7 @@ def load_catalogue(path: Path = CATALOGUE_PATH) -> Catalogue:
         raise CatalogueError("catalogue prompts must be an array")
 
     experience_direction = required_string(loaded, "experienceDirection", "catalogue")
+    completion_mandate = required_string(loaded, "completionMandate", "catalogue")
     categories = tuple(parse_category(item, index) for index, item in enumerate(raw_categories, start=1))
     entries = tuple(parse_entry(item, index) for index, item in enumerate(raw_entries, start=1))
     category_ids = {category.identifier for category in categories}
@@ -141,6 +143,7 @@ def load_catalogue(path: Path = CATALOGUE_PATH) -> Catalogue:
         raise CatalogueError(f"catalogue prompts use undeclared categories: {', '.join(undeclared)}")
     return Catalogue(
         experience_direction=experience_direction,
+        completion_mandate=completion_mandate,
         categories=categories,
         prompts=entries,
     )
@@ -348,6 +351,7 @@ def json_output(catalogue: Catalogue, entries: Sequence[PromptEntry]) -> str:
         {
             "count": len(entries),
             "experienceDirection": catalogue.experience_direction,
+            "completionMandate": catalogue.completion_mandate,
             "categories": groups,
         },
         ensure_ascii=False,

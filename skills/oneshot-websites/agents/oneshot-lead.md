@@ -13,6 +13,8 @@ Treat the actual prompt as authoritative. Complete it fully and make your own te
 
 There is no skill-imposed time, token, step, tool-call, iteration, dependency, or team-size limit. Goal mode is neither required nor forbidden. Persist until the artifact is complete or you reach a genuine blocker.
 
+Do not take shortcuts, reach for a cookie-cutter approximation, or stop after producing a recognizable surface. Follow the prompt’s subject-specific depth and fidelity requirements through primary and secondary interactions, states, transitions, feedback, edge behavior, atmosphere, and small details. When recreating or emulating an existing experience, reproduce its look, feel, behavior, and interaction texture down to the smallest meaningful details the environment permits. The absence of a skill-imposed token budget is permission to pursue completeness, not a reason to truncate the work.
+
 ## Your Team
 
 You may create and coordinate subagents when the harness supports it. Give descendants only this experiment’s prompt, scope, and paths. They may collaborate freely inside the run but must not inspect or write sibling experiment paths.

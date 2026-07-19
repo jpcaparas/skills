@@ -1686,11 +1686,13 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
     prompts = catalogue.get("prompts") if isinstance(catalogue, Mapping) else None
     categories = catalogue.get("categories") if isinstance(catalogue, Mapping) else None
     experience_direction = catalogue.get("experienceDirection") if isinstance(catalogue, Mapping) else None
+    completion_mandate = catalogue.get("completionMandate") if isinstance(catalogue, Mapping) else None
     if (
         not isinstance(prompts, list)
         or not prompts
         or not isinstance(categories, list)
         or not isinstance(experience_direction, str)
+        or not isinstance(completion_mandate, str)
     ):
         return
     first = prompts[0] if isinstance(prompts[0], Mapping) else {}
@@ -1713,6 +1715,11 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
     assert_ok(
         experience_direction not in full_listing.stdout,
         "no-arg catalogue presentation exposed coordinator-only prompt-crafting guidance",
+        errors,
+    )
+    assert_ok(
+        completion_mandate not in full_listing.stdout,
+        "no-arg catalogue presentation exposed internal prompt-composition metadata",
         errors,
     )
     assert_ok(
@@ -1783,6 +1790,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         assert_ok(
             json_data.get("count") == len(prompts)
             and json_data.get("experienceDirection") == experience_direction
+            and json_data.get("completionMandate") == completion_mandate
             and listed_prompts == prompts,
             "JSON catalogue listing differs from canonical prompts",
             errors,
@@ -2453,6 +2461,142 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         skill_path = copied_skill / "SKILL.md"
         original_skill = skill_path.read_text(encoding="utf-8")
+
+        skill_without_custom_contract = re.sub(
+            r"(?m)^- \*\*Custom brief:\*\*.*\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_custom_contract, encoding="utf-8")
+        missing_custom_contract_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_custom_contract_result.returncode != 0
+            and "SKILL.md runtime contract missing unbounded full-depth custom prompt refinement"
+            in missing_custom_contract_result.stdout,
+            "package validator let reference prose substitute for the canonical custom-prompt contract",
+            errors,
+        )
+
+        skill_without_completion_contract = re.sub(
+            r"(?m)^The catalogue’s top-level `completionMandate`.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_completion_contract, encoding="utf-8")
+        missing_completion_contract_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_completion_contract_result.returncode != 0
+            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            in missing_completion_contract_result.stdout,
+            "package validator let reference prose substitute for the canonical completion mandate",
+            errors,
+        )
+
+        skill_without_verbatim_conflict = original_skill.replace(
+            " If the user also forbids any appended text, stop before dispatch and report that the "
+            "request conflicts with this skill’s mandatory prompt contract; never silently omit the mandate.",
+            "",
+        )
+        skill_path.write_text(skill_without_verbatim_conflict, encoding="utf-8")
+        missing_verbatim_conflict_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_verbatim_conflict_result.returncode != 0
+            and "SKILL.md runtime contract missing unbounded full-depth custom prompt refinement"
+            in missing_verbatim_conflict_result.stdout,
+            "package validator accepted a verbatim custom-prompt rule that silently bypasses the mandate",
+            errors,
+        )
+
+        skill_without_shortcuts_requirement = original_skill.replace(
+            "not to take shortcuts or produce a cookie-cutter approximation",
+            "not to produce a cookie-cutter approximation",
+        )
+        skill_path.write_text(skill_without_shortcuts_requirement, encoding="utf-8")
+        missing_shortcuts_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_shortcuts_result.returncode != 0
+            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            in missing_shortcuts_result.stdout,
+            "package validator accepted a completion mandate without the explicit no-shortcuts requirement",
+            errors,
+        )
+
+        skill_without_universal_depth = original_skill.replace(
+            "must demand complete subject-specific depth",
+            "must demand a polished result",
+        )
+        skill_path.write_text(skill_without_universal_depth, encoding="utf-8")
+        missing_universal_depth_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_universal_depth_result.returncode != 0
+            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            in missing_universal_depth_result.stdout,
+            "package validator accepted a completion mandate without universal subject-specific depth",
+            errors,
+        )
+
+        skill_without_replica_depth = original_skill.replace(
+            "and smallest meaningful interactions—not merely a recognizable shell",
+            "and basic interactions—not merely a recognizable shell",
+        )
+        skill_path.write_text(skill_without_replica_depth, encoding="utf-8")
+        missing_replica_depth_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_replica_depth_result.returncode != 0
+            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            in missing_replica_depth_result.stdout,
+            "package validator accepted a replica mandate without smallest-interaction fidelity",
+            errors,
+        )
+
+        skill_without_original_depth = original_skill.replace(
+            "For an original experience, demand equivalent depth",
+            "For an original experience, suggest some depth",
+        )
+        skill_path.write_text(skill_without_original_depth, encoding="utf-8")
+        missing_original_depth_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_original_depth_result.returncode != 0
+            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            in missing_original_depth_result.stdout,
+            "package validator accepted a completion mandate without equivalent depth for original work",
+            errors,
+        )
+
+        flattened_namespace = original_skill.replace(
+            "    <harness-key>/",
+            "  <harness-key>/",
+            1,
+        )
+        skill_path.write_text(flattened_namespace, encoding="utf-8")
+        flattened_namespace_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            flattened_namespace_result.returncode != 0
+            and "SKILL.md runtime contract missing model-harness-experiment namespace"
+            in flattened_namespace_result.stdout,
+            "package validator accepted a flattened model/harness/experiment namespace",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
         skill_path.write_text(
             original_skill
             + "\nSelected catalogue entry: append experienceDirection unchanged as the second paragraph.\n",
@@ -2599,6 +2743,75 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         catalogue_path = copied_skill / "assets" / "prompt-catalogue.json"
         original_catalogue = json.loads(catalogue_path.read_text(encoding="utf-8"))
+
+        literal_mandate = original_catalogue["completionMandate"]
+        skill_path.write_text(original_skill + "\n" + literal_mandate + "\n", encoding="utf-8")
+        literal_mandate_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            literal_mandate_result.returncode != 0
+            and "copies the literal catalogue completionMandate" in literal_mandate_result.stdout,
+            "package validator accepted the full completion mandate as generic lead-facing boilerplate",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        catalogue_without_mandate = json.loads(json.dumps(original_catalogue))
+        catalogue_without_mandate.pop("completionMandate")
+        catalogue_path.write_text(json.dumps(catalogue_without_mandate), encoding="utf-8")
+        missing_mandate_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_mandate_result.returncode != 0
+            and "missing completionMandate" in missing_mandate_result.stdout,
+            "package validator accepted a catalogue without the universal completion mandate",
+            errors,
+        )
+
+        altered_mandate = json.loads(json.dumps(original_catalogue))
+        altered_mandate["completionMandate"] = altered_mandate["completionMandate"].replace(
+            "no token budget limit",
+            "a concise token budget",
+        )
+        catalogue_path.write_text(json.dumps(altered_mandate), encoding="utf-8")
+        altered_mandate_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            altered_mandate_result.returncode != 0
+            and "completionMandate differs from the canonical reviewed mandate" in altered_mandate_result.stdout
+            and "completionMandate is missing no skill-imposed token budget" in altered_mandate_result.stdout,
+            "package validator accepted a completion mandate with a token budget",
+            errors,
+        )
+
+        multiline_mandate = json.loads(json.dumps(original_catalogue))
+        multiline_mandate["completionMandate"] += "\nSecond line."
+        catalogue_path.write_text(json.dumps(multiline_mandate), encoding="utf-8")
+        multiline_mandate_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            multiline_mandate_result.returncode != 0
+            and "completionMandate must fit on one line" in multiline_mandate_result.stdout,
+            "package validator accepted a multi-line completion mandate",
+            errors,
+        )
+
+        old_schema_catalogue = json.loads(json.dumps(original_catalogue))
+        old_schema_catalogue["schemaVersion"] = "1.1"
+        catalogue_path.write_text(json.dumps(old_schema_catalogue), encoding="utf-8")
+        old_schema_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            old_schema_result.returncode != 0
+            and "schemaVersion must be 1.2" in old_schema_result.stdout,
+            "package validator accepted the pre-mandate catalogue schema",
+            errors,
+        )
 
         catalogue_without_direction = json.loads(json.dumps(original_catalogue))
         catalogue_without_direction.pop("experienceDirection")

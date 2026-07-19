@@ -1,6 +1,7 @@
 {
-  "schemaVersion": "1.1",
+  "schemaVersion": "1.2",
   "experienceDirection": "Default to a visually led, interaction-first experience with responsive motion, spatial depth, direct manipulation, ambient state, and memorable moments worth sharing; keep explanatory text concise and integrated into the experience, while allowing richer copy when the requested format—such as a landing page, CMS, publication, or narrative archive—depends on it, and leave technology and dependency choices to the lead.",
+  "completionMandate": "Every prepared actual prompt must explicitly reject shortcuts and cookie-cutter approximations, state that the skill imposes no token budget limit, and demand complete subject-specific depth. For replicas, clones, and emulators, require faithful recreation of the original's look, feel, behavior, states, transitions, edge cases, and smallest meaningful interactions rather than a recognizable shell. For original experiences, require equivalent depth across primary and secondary interactions, motion, feedback, atmosphere, responsive states, and meaningful details. Express these requirements naturally for the requested subject instead of pasting this root value as generic boilerplate, and never prescribe a technology, library, framework, or workflow unless the user did.",
   "categories": [
     {"id": "desktop-environments", "title": "Desktop Environments", "description": "Desktop-like worlds organized through windows, apps, files, instruments, and ambient state."},
     {"id": "creative-tools", "title": "Creative Tools", "description": "Hands-on studios for composing visual, material, literary, and performative work."},

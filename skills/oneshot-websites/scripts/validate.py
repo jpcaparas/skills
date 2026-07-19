@@ -49,6 +49,7 @@ SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
+CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -93,18 +94,30 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
-        "two-paragraph custom prompt refinement",
+        "unbounded full-depth custom prompt refinement",
         re.compile(
-            r"Custom brief.*?refine.*?no more than two paragraphs.*?refinement.*?actual prompt.*?PROMPT\.md",
-            re.I | re.S,
+            r"^- \*\*Custom brief:\*\*.*?refine.*?fully developed.*?"
+            r"no skill-imposed paragraph or token budget.*?completionMandate.*?"
+            r"forbids any appended text.*?stop before dispatch.*?never silently omit the mandate.*?$",
+            re.I | re.M,
         ),
     ),
     (
         "silent shared catalogue direction",
         re.compile(
-            r"Selected catalogue entry.*?craft.*?one- or two-paragraph actual prompt.*?"
+            r"Selected catalogue entry.*?craft.*?fully developed actual prompt.*?"
             r"experienceDirection.*?coordinator-only.*?never.*?(?:lead dispatch|PROMPT\.md)",
             re.I | re.S,
+        ),
+    ),
+    (
+        "subject-adapted lead-facing completion mandate",
+        re.compile(
+            r"^The catalogue’s top-level `completionMandate` is different:.*?"
+            r"every prepared actual prompt.*?shortcuts.*?cookie-cutter.*?no token budget limit.*?"
+            r"complete subject-specific depth.*?For a replica, clone, or emulator, require.*?"
+            r"smallest meaningful interactions.*?For an original experience, demand equivalent depth.*?$",
+            re.I | re.M,
         ),
     ),
     ("exact prompt preservation", re.compile(r"(?:byte-for-byte|exact\s+(?:UTF-8\s+)?bytes|verbatim).*?(?:prompt|PROMPT\.md)", re.I | re.S)),
@@ -114,7 +127,14 @@ RUNTIME_CONTRACTS = (
     ("recursive subagent delegation", re.compile(r"recursive\s+(?:subagent\s+)?delegation|(?:lead|subagents?).*?create.*?subagents", re.I | re.S)),
     ("no skill-imposed time, token, and tool limits", re.compile(r"no\s+skill-imposed.*?(?:time|token).*?(?:tool|tool-call)|no\s+(?:time|token).*?(?:tool|tool-call).*?(?:limit|budget)", re.I | re.S)),
     ("no goal-mode requirement", re.compile(r"goal[ -]?mode.*?(?:not|required|forbidden)|(?:not|required|forbidden).*?goal[ -]?mode", re.I | re.S)),
-    ("model-harness-experiment namespace", re.compile(r"<model-key>\s*/\s*<harness-key>\s*/\s*<experiment-key>", re.I | re.S)),
+    (
+        "model-harness-experiment namespace",
+        re.compile(
+            r"^  <model-key>/\n(?: {4}[^\n]*\n)*?^    <harness-key>/\n"
+            r"(?: {6}[^\n]*\n)*?^      <experiment-key>/",
+            re.I | re.M,
+        ),
+    ),
     ("raw identity namespace markers", re.compile(r"\.oneshot-identity\.json.*?(?:raw name|raw identity|exact raw)", re.I | re.S)),
     ("relevance-gated catalogue matching", re.compile(r"genuinely relevant.*?optional baselines.*?no meaningful match.*?without.*?catalogue", re.I | re.S)),
     ("artifact prompt", re.compile(r"artifact/PROMPT\.md")),
@@ -240,8 +260,8 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
     if not isinstance(data, Mapping):
         errors.append("assets/prompt-catalogue.json must contain an object")
         return
-    if data.get("schemaVersion") != "1.1":
-        errors.append("prompt catalogue schemaVersion must be 1.1")
+    if data.get("schemaVersion") != "1.2":
+        errors.append("prompt catalogue schemaVersion must be 1.2")
 
     direction_value = data.get("experienceDirection")
     if isinstance(direction_value, str) and direction_value != direction_value.strip():
@@ -272,6 +292,38 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
         for label, expression in direction_requirements:
             if not expression.search(experience_direction):
                 errors.append("prompt catalogue experienceDirection is missing {}".format(label))
+
+    mandate_value = data.get("completionMandate")
+    if isinstance(mandate_value, str) and mandate_value != mandate_value.strip():
+        errors.append("prompt catalogue completionMandate must not contain surrounding whitespace")
+    completion_mandate = as_text(mandate_value)
+    if completion_mandate is None:
+        errors.append("prompt catalogue is missing completionMandate")
+    else:
+        mandate_digest = hashlib.sha256(completion_mandate.encode("utf-8")).hexdigest()
+        if mandate_digest != CANONICAL_COMPLETION_MANDATE_SHA256:
+            errors.append(
+                "prompt catalogue completionMandate differs from the canonical reviewed mandate; "
+                "update the validator digest only after deliberate review"
+            )
+        if "\n" in completion_mandate or "\r" in completion_mandate:
+            errors.append("prompt catalogue completionMandate must fit on one line")
+        for reason, expression in IMPLEMENTATION_CONSTRAINTS:
+            if expression.search(completion_mandate):
+                errors.append("prompt catalogue completionMandate contains a {} constraint".format(reason))
+        mandate_requirements = (
+            ("an explicit no-shortcuts requirement", re.compile(r"\bshortcuts\b", re.I)),
+            ("an explicit anti-cookie-cutter requirement", re.compile(r"\bcookie-cutter\b", re.I)),
+            ("no skill-imposed token budget", re.compile(r"\bno token budget limit\b", re.I)),
+            ("replica, clone, and emulator coverage", re.compile(r"\breplicas?, clones?, and emulators?\b", re.I)),
+            ("small-interaction fidelity", re.compile(r"\bsmallest meaningful interactions\b", re.I)),
+            ("original-experience depth", re.compile(r"\boriginal experiences\b.*?\bequivalent depth\b", re.I)),
+            ("subject-adapted expression", re.compile(r"\bnaturally\b.*?\bsubject\b", re.I)),
+            ("implementation-open guidance", re.compile(r"\bnever prescribe a technology, library, framework, or workflow\b", re.I)),
+        )
+        for label, expression in mandate_requirements:
+            if not expression.search(completion_mandate):
+                errors.append("prompt catalogue completionMandate is missing {}".format(label))
 
     categories = data.get("categories")
     prompts = data.get("prompts")
@@ -456,6 +508,7 @@ def validate_runtime_contract(
     root: Path,
     errors: List[str],
     experience_direction: Optional[str],
+    completion_mandate: Optional[str],
 ) -> None:
     paths = sorted(root.rglob("*.md"))
     texts: List[Tuple[Path, str]] = []
@@ -463,16 +516,23 @@ def validate_runtime_contract(
         part = read_text(path, errors, root)
         if part is not None:
             texts.append((path, part))
-    text = "\n".join(part for _, part in texts)
+    skill_path = root / "SKILL.md"
+    skill_text = next((part for path, part in texts if path == skill_path), "")
     for label, expression in RUNTIME_CONTRACTS:
-        if not expression.search(text):
-            errors.append("runtime contract missing {}".format(label))
+        if not expression.search(skill_text):
+            errors.append("SKILL.md runtime contract missing {}".format(label))
 
     for path, part in texts:
         relative_path = path.relative_to(root)
         if experience_direction is not None and experience_direction in part:
             errors.append(
                 "{} copies the literal catalogue experienceDirection into lead-facing prose".format(
+                    relative_path
+                )
+            )
+        if completion_mandate is not None and completion_mandate in part:
+            errors.append(
+                "{} copies the literal catalogue completionMandate instead of adapting it to the subject".format(
                     relative_path
                 )
             )
@@ -535,19 +595,21 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.2.0":
-        errors.append("metadata.json version must be 2.2.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != "2.3.0":
+        errors.append("metadata.json version must be 2.3.0")
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 
     catalogue = json_data.get(root / "assets" / "prompt-catalogue.json")
     experience_direction: Optional[str] = None
+    completion_mandate: Optional[str] = None
     if catalogue is not None:
         validate_catalogue(catalogue, errors)
         if isinstance(catalogue, Mapping):
             experience_direction = as_text(catalogue.get("experienceDirection"))
+            completion_mandate = as_text(catalogue.get("completionMandate"))
 
-    validate_runtime_contract(root, errors, experience_direction)
+    validate_runtime_contract(root, errors, experience_direction, completion_mandate)
     result = {"valid": not errors, "errors": errors, "warnings": warnings}
     print(json.dumps(result, indent=2))
     return 0 if result["valid"] else 1

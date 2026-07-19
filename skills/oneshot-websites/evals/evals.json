@@ -30,9 +30,10 @@
       "id": 3,
       "name": "direct-refined-dispatch",
       "prompt": "Build a calm, tactile museum guide for a small collection of kinetic sculptures. Keep the first sentence exactly as written.",
-      "expected_output": "Produces a faithful actual prompt of no more than two paragraphs, preserves the explicitly protected first sentence exactly, writes the refined prompt's exact UTF-8 bytes to artifact/PROMPT.md, anchors its SHA-256 digest in a coordinator-owned pre-dispatch receipt, and includes the same refined text in the fresh lead's initial dispatch.",
+      "expected_output": "Produces a faithful, fully developed actual prompt without an arbitrary paragraph or token ceiling, preserves the explicitly protected first sentence exactly, explicitly rejects shortcuts and cookie-cutter treatment, states that the skill imposes no token budget limit, writes the refined prompt's exact UTF-8 bytes to artifact/PROMPT.md, anchors its SHA-256 digest in a coordinator-owned pre-dispatch receipt, and includes the same refined text in the fresh lead's initial dispatch.",
       "assertions": [
-        {"text": "Preserves the protected first sentence while refining the remaining brief into no more than two paragraphs", "type": "functional"},
+        {"text": "Preserves the protected first sentence while fully developing the remaining brief without an arbitrary length ceiling", "type": "functional"},
+        {"text": "The finished prompt explicitly rejects shortcuts and cookie-cutter treatment and states that the skill imposes no token budget limit", "type": "structural"},
         {"text": "Anchors the refined actual prompt's exact bytes outside the worker-owned run", "type": "verification"},
         {"text": "Does not replace the user brief with a framework or template recipe", "type": "negative"},
         {"text": "The fresh lead dispatch and artifact/PROMPT.md contain the same refined actual prompt", "type": "verification"}
@@ -122,9 +123,9 @@
       "id": 11,
       "name": "custom-brief-without-catalogue-match",
       "prompt": "Create a private one-shot memorial for a fictional lighthouse keeper. The interaction must follow my exact seven-scene oral-history sequence, use only the supplied family vocabulary, and preserve my scene wording unchanged. Do not turn it into a game, dashboard, or generic maritime story.",
-      "expected_output": "Refines the custom brief into at most two paragraphs while preserving the seven-scene sequence, family-vocabulary boundary, exact scene wording, and non-game intent. It does not splice in catalogue ideas, and the refined text becomes both the lead dispatch and artifact/PROMPT.md.",
+      "expected_output": "Refines the custom brief into a fully developed actual prompt while preserving the seven-scene sequence, family-vocabulary boundary, exact scene wording, and non-game intent. It does not splice in catalogue ideas, it explicitly rejects shortcuts and cookie-cutter treatment, it states that the skill imposes no token budget limit, and the refined text becomes both the lead dispatch and artifact/PROMPT.md.",
       "assertions": [
-        {"text": "Produces a faithful one- or two-paragraph refinement that preserves every explicit constraint and exact wording requirement", "type": "functional"},
+        {"text": "Produces a faithful, fully developed refinement that preserves every explicit constraint and exact wording requirement", "type": "functional"},
         {"text": "Does not force a weak catalogue match or hybridize the brief", "type": "negative"},
         {"text": "Stores and dispatches the same refined actual prompt", "type": "verification"}
       ],
@@ -134,7 +135,7 @@
       "id": 12,
       "name": "custom-brief-with-relevant-catalogue-match",
       "prompt": "Create a browser-based submarine command simulator with sonar, ballast controls, instrument failures, abyssal navigation, and a crew whose survival depends on my mission sequence.",
-      "expected_output": "May offer the materially relevant Submarine Command Game catalogue item as an optional baseline. Until the user accepts it, the custom route remains a faithful one- or two-paragraph refinement containing only the user's simulator goal and loose guidance derived from it.",
+      "expected_output": "May offer the materially relevant Submarine Command Game catalogue item as an optional baseline. Until the user accepts it, the custom route remains a faithful, fully developed refinement containing only the user's simulator goal, guidance derived from it, and the universal no-shortcuts, no-cookie-cutter, no-skill-imposed-token-budget depth mandate.",
       "assertions": [
         {"text": "Offers a genuinely relevant catalogue match as optional rather than mandatory", "type": "functional"},
         {"text": "Does not splice catalogue language into the custom brief without acceptance", "type": "negative"},
@@ -170,10 +171,11 @@
       "id": 15,
       "name": "rough-unmatched-custom-brief",
       "prompt": "Windows XP clone on a web interface",
-      "expected_output": "Refines the fragment into a vivid actual prompt of no more than two paragraphs. The result keeps the Windows XP web-clone goal, adds loose guidance for an explorable desktop with tactile windows, familiar system surfaces, responsive motion, and playful discoveries, avoids unrelated catalogue material and stack prescriptions, and becomes the exact prompt stored in artifact/PROMPT.md and sent to the lead.",
+      "expected_output": "Refines the fragment into a vivid, fully developed actual prompt that may span several paragraphs. The result keeps the Windows XP web-clone goal; requires fidelity across the desktop, taskbar, Start menu, system tray, window behavior, applications, menus, dialogs, loading and error states, sounds, feedback, and the smallest meaningful interactions; explicitly rejects shortcuts, cookie-cutter desktop templates, and superficial shells; states that the skill imposes no token budget limit; avoids unrelated catalogue material and stack prescriptions; and becomes the exact prompt stored in artifact/PROMPT.md and sent to the lead.",
       "assertions": [
-        {"text": "Turns the fragment into a clear one- or two-paragraph experience brief rather than dispatching it unchanged", "type": "functional"},
-        {"text": "Adds only loose interaction, atmosphere, and motion guidance consistent with a Windows XP web interface", "type": "functional"},
+        {"text": "Turns the fragment into a clear, fully developed experience brief rather than dispatching it unchanged or compressing it to a fixed length", "type": "functional"},
+        {"text": "Requires faithful look, feel, behavior, states, transitions, edge cases, and smallest meaningful interactions rather than a recognizable shell", "type": "functional"},
+        {"text": "Explicitly rejects shortcuts and cookie-cutter treatment and states that the skill imposes no token budget limit", "type": "structural"},
         {"text": "Does not inject a catalogue premise or require Three.js, React, or another implementation choice", "type": "negative"},
         {"text": "The refined text is exactly the prompt sent to the lead and preserved in artifact/PROMPT.md", "type": "verification"}
       ],
@@ -183,7 +185,7 @@
       "id": 16,
       "name": "catalogue-entry-inherits-interactive-direction",
       "prompt": "Use ow-075, Forest Fungi Explorer, as the one-shot prompt.",
-      "expected_output": "Uses the ow-075 goal as source material and crafts a cohesive one- or two-paragraph actual prompt with forest-specific interaction, motion, spatial or ambient behavior, and concise integrated text. The shared experienceDirection guides composition silently and is absent from the lead dispatch and artifact/PROMPT.md.",
+      "expected_output": "Uses the ow-075 goal as source material and crafts a cohesive, fully developed actual prompt with forest-specific interaction, motion, spatial or ambient behavior, concise integrated text, and subject-specific secondary states and details. The prompt explicitly rejects shortcuts and cookie-cutter treatment and states that the skill imposes no token budget limit. The shared experienceDirection guides composition silently and is absent from the lead dispatch and artifact/PROMPT.md.",
       "assertions": [
         {"text": "Preserves the selected catalogue goal while turning the shared posture into concrete forest-specific possibilities", "type": "functional"},
         {"text": "Does not copy, label, or mechanically paraphrase the catalogue experienceDirection in the actual prompt", "type": "negative"},
@@ -219,7 +221,7 @@
       "id": 19,
       "name": "accepted-baseline-context-keeps-shared-direction",
       "prompt": "Use ow-092, Submarine Command Game, as the baseline and add my context: the crew is mapping a newly opened trench for a live science broadcast.",
-      "expected_output": "After baseline acceptance, crafts a cohesive one- or two-paragraph actual prompt that preserves the ow-092 goal and the live-broadcast trench context. It silently applies any relevant interactive direction without including the shared experienceDirection or internal provenance labels. The fresh lead and artifact/PROMPT.md receive the finished prompt unchanged.",
+      "expected_output": "After baseline acceptance, crafts a cohesive, fully developed actual prompt that preserves the ow-092 goal and the live-broadcast trench context. It explicitly rejects shortcuts and cookie-cutter treatment, states that the skill imposes no token budget limit, and requires depth across the simulator's primary, secondary, failure, crew, and broadcast states. It silently applies any relevant interactive direction without including the shared experienceDirection or internal provenance labels. The fresh lead and artifact/PROMPT.md receive the finished prompt unchanged.",
       "assertions": [
         {"text": "Preserves the accepted catalogue goal and every explicit user addition in a cohesive finished brief", "type": "functional"},
         {"text": "Does not include an EXPERIENCE DIRECTION block, the literal shared direction, or internal provenance labels", "type": "negative"},
@@ -232,7 +234,7 @@
       "id": 20,
       "name": "catalogue-guidance-never-leaks-into-prompt",
       "prompt": "Use ow-083, Floating Island Atlas, as the one-shot prompt.",
-      "expected_output": "Crafts a specific one- or two-paragraph floating-archipelago brief from the catalogue goal, using the internal visual and interaction posture to suggest native possibilities such as charting routes through drifting weather and discovering changing islands. The generic experienceDirection is not copied or exposed in the lead dispatch or artifact/PROMPT.md.",
+      "expected_output": "Crafts a specific, fully developed floating-archipelago brief from the catalogue goal, using the internal visual and interaction posture to suggest native possibilities such as charting routes through drifting weather and discovering changing islands. The prompt explicitly rejects shortcuts and cookie-cutter treatment, states that the skill imposes no token budget limit, and calls for complete world depth across routes, weather, arrivals, revisits, discoveries, quiet states, feedback, and environmental details. The generic experienceDirection and literal completionMandate values are not copied or exposed in the lead dispatch or artifact/PROMPT.md.",
       "assertions": [
         {"text": "The actual prompt remains specifically about the drifting archipelago, its weather, routes, cultures, ecosystems, and encounters", "type": "functional"},
         {"text": "artifact/PROMPT.md does not contain the sentence beginning 'Default to a visually led, interaction-first experience'", "type": "negative"},
@@ -253,6 +255,57 @@
         {"text": "Does not replace clear format names with lore, coined brands, or mood-only labels", "type": "negative"}
       ],
       "tags": ["catalogue", "no-arguments", "readability", "regression"]
+    },
+    {
+      "id": 22,
+      "name": "all-catalogue-prompts-inherit-completion-mandate",
+      "prompt": "Choose any three catalogue prompts from different namespaces and prepare their actual prompts without starting the builds.",
+      "expected_output": "Produces three distinct, subject-specific actual prompts. Every prompt explicitly rejects shortcuts and cookie-cutter approximations, states that the skill imposes no token budget limit, and requires complete depth appropriate to its own experience. None copies the literal root completionMandate, prescribes a stack, or receives generic details borrowed from the other selected templates.",
+      "assertions": [
+        {"text": "Every selected catalogue prompt inherits the no-shortcuts, anti-cookie-cutter, no-skill-imposed-token-budget requirements", "type": "structural"},
+        {"text": "Each prompt translates completeness into details native to that subject", "type": "functional"},
+        {"text": "Does not paste the literal completionMandate value or reuse one generic quality paragraph across all three prompts", "type": "negative"},
+        {"text": "Does not prescribe a technology, library, framework, or workflow", "type": "negative"}
+      ],
+      "tags": ["catalogue", "completion-mandate", "prompt-refinement", "breadth"]
+    },
+    {
+      "id": 23,
+      "name": "custom-original-inherits-completion-mandate",
+      "prompt": "Build an interactive web experience where visitors conduct an orchestra of bioluminescent deep-sea creatures with gestures.",
+      "expected_output": "Refines the original custom idea without forcing a catalogue match. The resulting actual prompt explicitly rejects shortcuts and cookie-cutter treatment, states that the skill imposes no token budget limit, and demands equivalent depth across conducting gestures, creature responses, ensemble states, visual and sonic feedback, transitions, atmosphere, responsive behavior, secondary interactions, and meaningful details. The same prompt is dispatched and preserved in artifact/PROMPT.md.",
+      "assertions": [
+        {"text": "Applies the completion mandate to an original custom experience, not only clones or catalogue selections", "type": "functional"},
+        {"text": "Turns full depth into subject-specific primary, secondary, feedback, motion, atmosphere, and responsive-state guidance", "type": "functional"},
+        {"text": "Explicitly rejects shortcuts and cookie-cutter treatment and states that the skill imposes no token budget limit", "type": "structural"},
+        {"text": "Does not mash in a weak catalogue match or prescribe implementation choices", "type": "negative"}
+      ],
+      "tags": ["custom-brief", "completion-mandate", "interactive", "provenance"]
+    },
+    {
+      "id": 24,
+      "name": "verbatim-custom-brief-cannot-bypass-mandate",
+      "prompt": "Use this entire brief verbatim: Create a web-based Windows XP clone. Do not rewrite any of those words.",
+      "expected_output": "Preserves the user-authored brief byte-for-byte as the opening block, then appends a subject-specific completion clause that explicitly rejects shortcuts and cookie-cutter shells, states that the skill imposes no token budget limit, and requires Windows XP fidelity down to the smallest meaningful interactions. The combined actual prompt is sent to the lead and preserved exactly in artifact/PROMPT.md.",
+      "assertions": [
+        {"text": "Keeps the protected user-authored brief byte-for-byte as its own opening block", "type": "verification"},
+        {"text": "Appends the mandatory no-shortcuts, anti-cookie-cutter, no-skill-imposed-token-budget, full-fidelity requirements", "type": "structural"},
+        {"text": "Does not treat a verbatim request as permission to omit the completion mandate", "type": "negative"}
+      ],
+      "tags": ["custom-brief", "completion-mandate", "exact-prompt", "conflict"]
+    },
+    {
+      "id": 25,
+      "name": "verbatim-no-additions-conflicts-with-mandate",
+      "prompt": "Dispatch exactly this sentence and nothing else: Create a web-based Windows XP clone. Do not append, prepend, or add any other text under any circumstances.",
+      "expected_output": "Stops before preparing or dispatching a one-shot and reports that the request is incompatible with the skill's mandatory completion mandate. It does not alter the protected sentence, silently append forbidden text, or omit the no-shortcuts, anti-cookie-cutter, no-skill-imposed-token-budget, full-fidelity contract.",
+      "assertions": [
+        {"text": "Recognizes that an absolute no-additions instruction conflicts with the mandatory prompt contract", "type": "functional"},
+        {"text": "Stops before lead dispatch and artifact generation", "type": "structural"},
+        {"text": "Does not silently drop the completion mandate", "type": "negative"},
+        {"text": "Does not violate the user's exact no-additions instruction", "type": "negative"}
+      ],
+      "tags": ["custom-brief", "completion-mandate", "exact-prompt", "conflict", "negative"]
     }
   ]
 }
