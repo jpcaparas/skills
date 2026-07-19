@@ -13,6 +13,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - No skill-imposed time, stack, dependency, workflow, or source-project constraints
 - Collision-free model/harness/experiment namespaces
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
+- End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake
 - A conservative Cloudflare/Vercel Drop-ready `artifact/` with one root `index.html` entrypoint and any supporting asset tree the experience needs
 - A coordinator-owned receipt-and-commit inventory outside each worker run, with crash recovery and an explicit path-isolation trust boundary
 - Provenance-aware indexing and validation

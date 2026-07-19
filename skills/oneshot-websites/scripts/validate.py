@@ -121,6 +121,15 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     ("exact prompt preservation", re.compile(r"(?:byte-for-byte|exact\s+(?:UTF-8\s+)?bytes|verbatim).*?(?:prompt|PROMPT\.md)", re.I | re.S)),
+    (
+        "Unicode prompt integrity",
+        re.compile(
+            r"Before sealing the actual prompt.*?Unicode.*?UTF-8.*?special characters.*?"
+            r"mojibake.*?prepare_run\.py.*?correct the prepared prompt at its source.*?"
+            r"sealed `artifact/PROMPT\.md`.*?strictly decode.*?UTF-8.*?exact string.*?lead dispatch",
+            re.I | re.S,
+        ),
+    ),
     ("coordinator prompt receipt", re.compile(r"(?:coordinator-owned|pre-dispatch).*?(?:receipt|provenance).*?(?:outside|worker-owned)|\.oneshot-provenance", re.I | re.S)),
     ("one fresh lead per experiment", re.compile(r"(?:one|each|every)\s+(?:fresh\s+)?lead.*?(?:each|every|one).*?experiment|fresh\s+lead\s+subagent", re.I | re.S)),
     ("no inherited coordinator history", re.compile(r"no-history.*?fork_turns.*?none|fork_turns.*?none.*?(?:coordinator|history|conversation)", re.I | re.S)),
@@ -644,8 +653,8 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.4.0":
-        errors.append("metadata.json version must be 2.4.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != "2.5.0":
+        errors.append("metadata.json version must be 2.5.0")
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 

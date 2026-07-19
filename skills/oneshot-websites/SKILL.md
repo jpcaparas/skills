@@ -64,6 +64,10 @@ For example, refine `Windows XP clone on a web interface` into something like:
 
 The finished refinement—not the catalogue source text or internal crafting guidance—is the actual prompt. Record it before dispatch as the artifact’s `PROMPT.md`; preserve those exact UTF-8 bytes and their SHA-256 digest from that point onward. Also write the pre-dispatch digest to the coordinator-owned provenance receipt outside the worker’s run. Pass the same actual text in the lead’s initial message, not merely a summary, rough source brief, or file path. The copy that travels with the artifact must therefore reflect every refinement the lead received.
 
+Before sealing the actual prompt, inspect it as Unicode and write it as UTF-8 at every file and harness boundary. Preserve intended special characters—including curly punctuation, dashes, emoji, and non-Latin scripts—instead of replacing them with ASCII. Treat Unicode replacement characters, stray C1 controls, and recognizable mojibake as corruption rather than valid prompt prose. `prepare_run.py` rejects those high-confidence markers before reserving a run; correct the prepared prompt at its source and rerun instead of transcoding already-corrupted bytes or weakening the wording.
+
+After `prepare_run.py` succeeds, use the sealed `artifact/PROMPT.md` as the dispatch source. Strictly decode its bytes as UTF-8 and use that exact string for the lead dispatch. Never retype, rebuild, or independently reserialize the prompt from another copy. When a harness exposes its serialized payload bytes, compare their SHA-256 digest with the sealed prompt receipt before starting the lead.
+
 Also record the raw model name, harness name, and experiment name. Use the active runtime’s reported names when available; use explicit `unknown-model` or `unknown-harness` labels rather than inventing specificity.
 
 This step is complete when the stored bytes, digest, and text prepared for dispatch agree exactly.
@@ -121,7 +125,7 @@ Actual generation belongs to subagents:
 
 1. Create one fresh lead subagent for every experiment. The coordinator must not generate the artifact itself.
 2. Create the lead with the harness's no-history isolation primitive so it inherits none of the coordinator conversation. In Codex, call `spawn_agent` with `fork_turns: "none"`; never rely on its history-inheriting default. Use the equivalent empty-context option in another harness.
-3. Give the lead `agents/oneshot-lead.md`, its actual prompt verbatim, its assigned run and `.tmp/` paths, the operational temporary-file envelope, and only its experiment metadata in the initial dispatch. An empty inherited history does not replace the explicit role and prompt. The envelope is coordinator/lead runtime guidance and must never be folded into the actual prompt or `artifact/PROMPT.md`.
+3. Strictly decode the pre-created `artifact/PROMPT.md` as UTF-8, then give the lead that exact actual prompt verbatim alongside `agents/oneshot-lead.md`, its assigned run and `.tmp/` paths, the operational temporary-file envelope, and only its experiment metadata in the initial dispatch. An empty inherited history does not replace the explicit role and prompt. The envelope is coordinator/lead runtime guidance and must never be folded into the actual prompt or `artifact/PROMPT.md`.
 4. Keep coordinator history, sibling prompts, instructions, workspaces, artifacts, and outcomes out of its context.
 5. Dispatch multiple requested experiments to multiple leads, concurrently whenever the harness has capacity. If capacity requires batches, retain one distinct fresh lead per experiment.
 6. Let each lead create and coordinate its own subagents when the harness supports recursive delegation. Every descendant receives the same run-local temporary path and supported temporary-environment routing, then stays inside the lead’s experiment scope and namespace wherever the harness permits.

@@ -10,6 +10,7 @@ import os
 import re
 import stat
 import unicodedata
+from dataclasses import dataclass
 from pathlib import Path
 
 
@@ -17,9 +18,55 @@ APPLEDOUBLE_MAGIC = b"\x00\x05\x16\x07"
 JSON_NESTING_MAX = 256
 JSON_NUMBER_TOKEN_MAX_CHARS = 256
 
+_UTF8_LEAD_BYTES_DECODED_AS_CP1252 = frozenset("\u00c2\u00c3\u00e2\u00ef\u00f0")
+
 
 class BoundedReadError(ValueError):
     """Raised when a path is not a stable regular file within the read bound."""
+
+
+@dataclass(frozen=True)
+class MojibakeEvidence:
+    """One high-confidence marker of incorrectly transcoded UTF-8 text."""
+
+    offset: int
+    text: str
+
+    @property
+    def codepoints(self) -> str:
+        """Describe evidence without reproducing terminal-corrupting glyphs."""
+
+        return " ".join("U+{:04X}".format(ord(character)) for character in self.text)
+
+
+def find_likely_mojibake(value: str) -> MojibakeEvidence | None:
+    """Find high-confidence UTF-8/Windows-1252 corruption in decoded text.
+
+    Valid Unicode punctuation, emoji, and non-Latin scripts are intentionally
+    accepted. The matcher reports replacement/control characters immediately.
+    For printable text, it requires a complete two-to-four-character sequence
+    whose Windows-1252 bytes reversibly decode as UTF-8, such as
+    ``\u00e2\u20ac\u201d`` for an em dash. Requiring the complete sequence avoids
+    treating valid neighboring characters such as Icelandic ``or\u00f0\u2014`` as
+    corruption merely because the first character resembles a UTF-8 lead byte.
+    """
+
+    for offset, character in enumerate(value):
+        if character == "\ufffd" or 0x80 <= ord(character) <= 0x9F:
+            return MojibakeEvidence(offset=offset, text=character)
+        if character not in _UTF8_LEAD_BYTES_DECODED_AS_CP1252:
+            continue
+        for width in range(2, 5):
+            candidate = value[offset : offset + width]
+            if len(candidate) != width:
+                break
+            try:
+                repaired = candidate.encode("cp1252").decode("utf-8")
+            except (UnicodeEncodeError, UnicodeDecodeError):
+                continue
+            if repaired != candidate:
+                return MojibakeEvidence(offset=offset, text=candidate)
+    return None
 
 
 def enforce_json_nesting_limit(value: str, max_depth: int = JSON_NESTING_MAX) -> None:

@@ -19,6 +19,7 @@ from typing import Any, Optional, Sequence
 
 from runtime_contract import (
     BoundedReadError,
+    find_likely_mojibake,
     identity_key,
     parse_json_bounded,
     read_regular_file_bounded,
@@ -108,6 +109,13 @@ def read_prompt(path: Path) -> bytes:
         raise RunPreparationError(f"prompt file is not valid UTF-8: {path}") from error
     if not decoded.strip():
         raise RunPreparationError("prompt file must contain a non-blank actual prompt")
+    mojibake = find_likely_mojibake(decoded)
+    if mojibake is not None:
+        raise RunPreparationError(
+            "prompt file contains likely mojibake at character offset "
+            f"{mojibake.offset} ({mojibake.codepoints}): {path}; "
+            "correct the prepared prompt at its source, write it as UTF-8, and retry"
+        )
     return prompt
 
 

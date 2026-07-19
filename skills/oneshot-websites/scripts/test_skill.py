@@ -26,7 +26,12 @@ from unittest.mock import patch
 import validate_catalog as catalog_validator
 from prepare_run import RunPreparationError, build_identity, make_run_id, reserve_paths
 from build_catalog_index import CATALOGUE_LOCK
-from runtime_contract import enforce_json_nesting_limit, identity_key, parse_json_bounded
+from runtime_contract import (
+    enforce_json_nesting_limit,
+    find_likely_mojibake,
+    identity_key,
+    parse_json_bounded,
+)
 
 
 EVAL_NAME_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
@@ -1683,6 +1688,32 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
     if not all(path.is_file() for path in scripts):
         return
 
+    valid_unicode_samples = (
+        "— – ‘single’ “double” … café naïve façade",
+        "orð— orð” é",
+        "日本語 العربية 🚀",
+    )
+    for sample in valid_unicode_samples:
+        assert_ok(
+            find_likely_mojibake(sample) is None,
+            "mojibake detector rejected valid Unicode: {!r}".format(sample),
+            errors,
+        )
+    corrupted_samples = (
+        "â€”",
+        "Cinnamonâ€™s",
+        "cafÃ©",
+        "ðŸš€",
+        "replacement \ufffd",
+        "stray control \u0081",
+    )
+    for sample in corrupted_samples:
+        assert_ok(
+            find_likely_mojibake(sample) is not None,
+            "mojibake detector missed a known corruption signature: {!r}".format(sample),
+            errors,
+        )
+
     catalogue = read_json(skill / "assets" / "prompt-catalogue.json", errors, "prompt catalogue")
     prompts = catalogue.get("prompts") if isinstance(catalogue, Mapping) else None
     categories = catalogue.get("categories") if isinstance(catalogue, Mapping) else None
@@ -1805,8 +1836,75 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
     with tempfile.TemporaryDirectory() as temporary:
         output_root = Path(temporary) / "runs"
         prompt = Path(temporary) / "prompt.md"
-        prompt_bytes = b"Create a richly interactive harbor weather station.\r\nKeep this exact line.\n"
+        prompt_bytes = (
+            "Create a richly interactive harbour weather station — warm, tactile, and precise.\r\n"
+            "Preserve curly quotes like “forecast” and apostrophes like Cinnamon’s, plus emoji 🚀, "
+            "words like café, naïve, and façade, decomposed accents like é, Icelandic orð— and orð”, "
+            "日本語, and العربية.\n"
+        ).encode("utf-8")
         prompt.write_bytes(prompt_bytes)
+
+        mojibake_prompt = Path(temporary) / "mojibake-prompt.md"
+        mojibake_prompt.write_text(
+            "Create a Linux Mint desktop â€” faithful down to Cinnamonâ€™s smallest interactions.\n",
+            encoding="utf-8",
+        )
+        rejected_root = Path(temporary) / "rejected-mojibake-run"
+        rejected_mojibake = run(
+            [
+                sys.executable,
+                str(scripts[1]),
+                "--output-root",
+                str(rejected_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Mojibake Regression",
+                "--prompt-file",
+                str(mojibake_prompt),
+            ]
+        )
+        assert_ok(
+            rejected_mojibake.returncode != 0
+            and "likely mojibake" in rejected_mojibake.stderr
+            and "correct the prepared prompt at its source" in rejected_mojibake.stderr
+            and not rejected_root.exists(),
+            "prepare_run.py accepted or partially reserved a mojibake prompt: {}".format(
+                rejected_mojibake.stderr
+            ),
+            errors,
+        )
+
+        invalid_utf8_prompt = Path(temporary) / "invalid-utf8-prompt.md"
+        invalid_utf8_prompt.write_bytes(b"Create a desktop \xff\n")
+        invalid_utf8_root = Path(temporary) / "rejected-invalid-utf8-run"
+        rejected_invalid_utf8 = run(
+            [
+                sys.executable,
+                str(scripts[1]),
+                "--output-root",
+                str(invalid_utf8_root),
+                "--model",
+                "Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Invalid UTF-8 Regression",
+                "--prompt-file",
+                str(invalid_utf8_prompt),
+            ]
+        )
+        assert_ok(
+            rejected_invalid_utf8.returncode != 0
+            and "prompt file is not valid UTF-8" in rejected_invalid_utf8.stderr
+            and not invalid_utf8_root.exists(),
+            "prepare_run.py accepted invalid UTF-8 or partially reserved its run: {}".format(
+                rejected_invalid_utf8.stderr
+            ),
+            errors,
+        )
 
         concurrent_root = Path(temporary) / "concurrent-reservations"
         concurrent_root.mkdir()
@@ -2198,6 +2296,38 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 "prepare_run.py did not initialize temporary-routing observations",
                 errors,
             )
+
+        original_prompt_bytes = preserved_prompt.read_bytes()
+        original_manifest_bytes = (first_run / "run.json").read_bytes()
+        original_receipt_bytes = prior_receipt.read_bytes()
+        corrupted_prompt_bytes = (
+            "Create a Linux Mint desktop â€” faithful down to Cinnamonâ€™s smallest interactions.\n"
+        ).encode("utf-8")
+        corrupted_digest = hashlib.sha256(corrupted_prompt_bytes).hexdigest()
+        corrupted_manifest = json.loads(original_manifest_bytes)
+        corrupted_manifest["prompt"]["sha256"] = corrupted_digest
+        corrupted_receipt = json.loads(original_receipt_bytes)
+        corrupted_receipt["prompt"]["sha256"] = corrupted_digest
+        corrupted_receipt["prompt"]["bytes"] = len(corrupted_prompt_bytes)
+        preserved_prompt.write_bytes(corrupted_prompt_bytes)
+        (first_run / "run.json").write_text(
+            json.dumps(corrupted_manifest, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        prior_receipt.write_text(
+            json.dumps(corrupted_receipt, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "preserved prompt contains likely mojibake",
+            "digest-consistent mojibake PROMPT.md",
+            errors,
+        )
+        preserved_prompt.write_bytes(original_prompt_bytes)
+        (first_run / "run.json").write_bytes(original_manifest_bytes)
+        prior_receipt.write_bytes(original_receipt_bytes)
 
         assert_ok(first_run != collision_run, "normalized-similar names reused a run directory", errors)
         assert_ok(
@@ -2713,6 +2843,26 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             errors,
         )
         dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_unicode_contract = re.sub(
+            r"(?m)^Before sealing the actual prompt, inspect it as Unicode.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_unicode_contract, encoding="utf-8")
+        missing_unicode_contract_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_unicode_contract_result.returncode != 0
+            and "SKILL.md runtime contract missing Unicode prompt integrity"
+            in missing_unicode_contract_result.stdout,
+            "package validator accepted a skill without Unicode prompt integrity guidance",
+            errors,
+        )
 
         skill_path.write_text(original_skill, encoding="utf-8")
 

@@ -25,6 +25,7 @@ from build_catalog_index import (
 )
 from runtime_contract import (
     BoundedReadError,
+    find_likely_mojibake,
     identity_key,
     is_abandoned_run_reservation,
     is_appledouble_sidecar,
@@ -1165,6 +1166,13 @@ def validate_run(
             else:
                 if not decoded_prompt.strip():
                     errors.append(f"{prompt_path}: preserved prompt must not be blank")
+                mojibake = find_likely_mojibake(decoded_prompt)
+                if mojibake is not None:
+                    errors.append(
+                        f"{prompt_path}: preserved prompt contains likely mojibake at character "
+                        f"offset {mojibake.offset} ({mojibake.codepoints}); correct the prepared "
+                        "prompt at its source and preserve it as UTF-8"
+                    )
                 if digest and re.fullmatch(r"[0-9a-fA-F]{64}", digest):
                     actual = hashlib.sha256(prompt_bytes).hexdigest()
                     if actual.lower() != digest.lower():

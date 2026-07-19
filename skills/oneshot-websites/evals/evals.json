@@ -331,6 +331,19 @@
         {"text": "Preserves run-local scratch evidence while keeping the static artifact and PROMPT.md clean", "type": "verification"}
       ],
       "tags": ["temporary-files", "tool-limitation", "worker-report", "prompt-isolation", "negative"]
+    },
+    {
+      "id": 28,
+      "name": "unicode-prompt-integrity",
+      "prompt": "Prepare a Linux Mint Cinnamon recreation prompt containing an em dash, curly apostrophes, emoji, Japanese text, and Arabic text, then reserve the run. If any punctuation arrives as recognizable mojibake, do not dispatch it.",
+      "expected_output": "Preserves genuine Unicode characters as exact UTF-8 bytes in the lead dispatch and artifact/PROMPT.md. Before reserving or dispatching the run, rejects replacement characters, stray C1 controls, and recognizable mojibake with a correction that points back to the prepared source. It does not silently transcode ambiguous prose or flatten intended characters to ASCII.",
+      "assertions": [
+        {"text": "Em dashes, curly punctuation, emoji, Japanese, and Arabic survive byte-for-byte in artifact/PROMPT.md", "type": "verification"},
+        {"text": "A recognizable mojibake prompt is rejected before a run namespace is reserved or a lead is dispatched", "type": "functional"},
+        {"text": "The correction identifies the source prompt as the repair boundary", "type": "structural"},
+        {"text": "Does not silently reinterpret arbitrary valid Unicode or replace it with ASCII", "type": "negative"}
+      ],
+      "tags": ["prompt-provenance", "unicode", "utf-8", "mojibake", "regression"]
     }
   ]
 }
