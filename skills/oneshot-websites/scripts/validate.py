@@ -128,6 +128,25 @@ RUNTIME_CONTRACTS = (
     ("no skill-imposed time, token, and tool limits", re.compile(r"no\s+skill-imposed.*?(?:time|token).*?(?:tool|tool-call)|no\s+(?:time|token).*?(?:tool|tool-call).*?(?:limit|budget)", re.I | re.S)),
     ("no goal-mode requirement", re.compile(r"goal[ -]?mode.*?(?:not|required|forbidden)|(?:not|required|forbidden).*?goal[ -]?mode", re.I | re.S)),
     (
+        "run-local temporary containment",
+        re.compile(
+            r"Keep disposable working state.*?run’s `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
+            r"Preserve `\.tmp/`.*?best effort.*?Durable project files.*?workspace/.*?never belongs.*?artifact",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "descendant temporary routing",
+        re.compile(r"Every descendant receives.*?run-local temporary path.*?temporary-environment routing", re.I | re.S),
+    ),
+    (
+        "temporary guidance excluded from prompts",
+        re.compile(
+            r"operational guidance.*?stay out of.*?actual prompt.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
         "model-harness-experiment namespace",
         re.compile(
             r"^  <model-key>/\n(?: {4}[^\n]*\n)*?^    <harness-key>/\n"
@@ -179,6 +198,29 @@ NEGATED_GUIDANCE_DIRECTIVE = re.compile(
     re.I,
 )
 GUIDANCE_CLAUSE_BOUNDARY = re.compile(r"[.!?;:\n—–]+|\b(?:but|however|instead|then)\b", re.I)
+
+FILE_RUNTIME_CONTRACTS = (
+    (
+        "agents/oneshot-lead.md",
+        "lead temporary-file discipline",
+        re.compile(
+            r"Temporary-File Discipline.*?assigned run’s `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
+            r"every descendant.*?best-effort containment.*?Preserve `\.tmp/`.*?"
+            r"never copy `\.tmp/` into `artifact/`.*?Never add it.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
+        "dispatch temporary-file envelope",
+        re.compile(
+            r"Operational Runtime Envelope.*?assigned `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
+            r"every descendant.*?Preserve `\.tmp/`.*?Never copy `\.tmp/` into `artifact/`.*?"
+            r"never add.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+)
 
 
 def parse_frontmatter(text: str) -> Dict[str, str]:
@@ -522,6 +564,13 @@ def validate_runtime_contract(
         if not expression.search(skill_text):
             errors.append("SKILL.md runtime contract missing {}".format(label))
 
+    text_by_relative_path = {
+        path.relative_to(root).as_posix(): part for path, part in texts
+    }
+    for relative_path, label, expression in FILE_RUNTIME_CONTRACTS:
+        if not expression.search(text_by_relative_path.get(relative_path, "")):
+            errors.append("{} runtime contract missing {}".format(relative_path, label))
+
     for path, part in texts:
         relative_path = path.relative_to(root)
         if experience_direction is not None and experience_direction in part:
@@ -595,8 +644,8 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.3.0":
-        errors.append("metadata.json version must be 2.3.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != "2.4.0":
+        errors.append("metadata.json version must be 2.4.0")
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 

@@ -50,6 +50,7 @@ class RunPaths:
 
     root: Path
     run: Path
+    temporary: Path
     workspace: Path
     artifact: Path
 
@@ -253,7 +254,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") != "1.0"
+        receipt.get("schemaVersion") not in {"1.0", "1.1"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -372,6 +373,7 @@ def reserve_paths(root: Path, model: Identity, harness: Identity, experiment: Id
     return RunPaths(
         root=root,
         run=run,
+        temporary=run / ".tmp",
         workspace=run / "workspace",
         artifact=run / "artifact",
     )
@@ -440,7 +442,7 @@ def run_document(
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "2.0",
+        "schemaVersion": "2.1",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -450,6 +452,7 @@ def run_document(
         "classification": classification,
         "status": "PLANNED",
         "prompt": {"path": "artifact/PROMPT.md", "sha256": prompt_digest, "preservation": "verbatim"},
+        "temporary": {"path": ".tmp/", "routing": "best-effort-run-local", "preservation": "retain"},
         "workspace": {"path": "workspace/"},
         "artifact": {"path": "artifact/", "entrypoint": "artifact/index.html", "deployment": "static-folder"},
         "execution": {
@@ -478,9 +481,10 @@ def provenance_receipt(
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
     return {
-        "schemaVersion": "1.0",
+        "schemaVersion": "1.1",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
+        "runSchemaVersion": "2.1",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -489,6 +493,7 @@ def provenance_receipt(
         "classification": classification,
         "priorRun": prior_run,
         "prompt": {"sha256": prompt_digest, "bytes": prompt_bytes},
+        "temporary": {"path": ".tmp/", "routing": "best-effort-run-local", "preservation": "retain"},
     }
 
 
@@ -503,6 +508,7 @@ def initial_worker_report(run_id: str) -> dict[str, Any]:
         "blocker": None,
         "leadWorkerId": None,
         "descendantWorkerIds": [],
+        "temporary": {"path": ".tmp/", "routingApplied": None, "externalExceptions": []},
         "workspace": "workspace/",
         "artifact": {"entrypoint": "artifact/index.html", "staticDeploymentVerified": False},
         "technologies": [],
@@ -533,6 +539,7 @@ def create_run(arguments: argparse.Namespace) -> Path:
     owned_provenance_paths: set[Path] = set()
 
     try:
+        paths.temporary.mkdir()
         paths.workspace.mkdir()
         paths.artifact.mkdir()
         with (paths.artifact / "PROMPT.md").open("xb") as prompt_destination:

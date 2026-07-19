@@ -245,7 +245,7 @@ def is_abandoned_run_reservation(run_directory: Path, commit_path: Path) -> bool
         return False
     ordinary_entries = [entry for entry in entries if not is_appledouble_sidecar(entry)]
     if any(
-        entry.name not in {"workspace", "artifact", "run.json", "worker-report.json"}
+        entry.name not in {".tmp", "workspace", "artifact", "run.json", "worker-report.json"}
         for entry in ordinary_entries
     ):
         return False
@@ -261,7 +261,7 @@ def is_abandoned_run_reservation(run_directory: Path, commit_path: Path) -> bool
         if not stat.S_ISREG(metadata_stat.st_mode) or metadata_stat.st_size > 1024 * 1024:
             return False
 
-    for name in ("workspace", "artifact"):
+    for name in (".tmp", "workspace", "artifact"):
         directory = next((entry for entry in ordinary_entries if entry.name == name), None)
         if directory is None:
             continue
@@ -275,7 +275,7 @@ def is_abandoned_run_reservation(run_directory: Path, commit_path: Path) -> bool
         if children is None:
             return False
         ordinary_children = [child for child in children if not is_appledouble_sidecar(child)]
-        if name == "workspace" and ordinary_children:
+        if name in {".tmp", "workspace"} and ordinary_children:
             return False
         if name == "artifact":
             if any(child.name != "PROMPT.md" for child in ordinary_children):

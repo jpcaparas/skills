@@ -106,6 +106,7 @@ NON_DEPLOYABLE_DIRECTORIES = {
     ".now",
     ".svn",
     ".turbo",
+    ".tmp",
     ".venv",
     ".vercel",
     ".yarn",
@@ -436,12 +437,27 @@ def is_safe_relative_path(value: object) -> bool:
     return not path.is_absolute() and all(part not in {"", ".", ".."} for part in path.parts)
 
 
-def validate_manifest_paths(run_path: Path, run: dict[str, Any], errors: list[str]) -> None:
+def validate_manifest_paths(
+    run_path: Path,
+    run: dict[str, Any],
+    require_temporary: bool,
+    errors: list[str],
+) -> None:
     """Enforce the fixed handoff paths without constraining the source project."""
     prompt = object_value(run.get("prompt"))
     prompt_path = prompt.get("path")
     if prompt_path != "artifact/PROMPT.md":
         errors.append(f"{run_path}: prompt.path must be exactly artifact/PROMPT.md")
+
+    temporary = object_value(run.get("temporary"))
+    temporary_path = temporary.get("path")
+    if require_temporary:
+        if temporary_path != ".tmp/":
+            errors.append(f"{run_path}: temporary.path must be exactly .tmp/")
+        if temporary.get("routing") != "best-effort-run-local":
+            errors.append(f"{run_path}: temporary.routing must be exactly best-effort-run-local")
+        if temporary.get("preservation") != "retain":
+            errors.append(f"{run_path}: temporary.preservation must be exactly retain")
 
     workspace = object_value(run.get("workspace"))
     if workspace.get("path") != "workspace/":
@@ -456,6 +472,7 @@ def validate_manifest_paths(run_path: Path, run: dict[str, Any], errors: list[st
 
     for label, value in (
         ("prompt.path", prompt_path),
+        ("temporary.path", temporary_path),
         ("workspace.path", workspace.get("path")),
         ("artifact.path", artifact.get("path")),
         ("artifact.entrypoint", artifact.get("entrypoint")),
@@ -887,9 +904,14 @@ def validate_artifact_tree(artifact_root: Path, errors: list[str]) -> None:
                             )
                             continue
                         if path.name.casefold() in NON_DEPLOYABLE_DIRECTORIES:
-                            errors.append(
-                                f"{path}: cache, provider state, or dependency directory must stay in workspace/"
-                            )
+                            if path.name.casefold() == ".tmp":
+                                errors.append(
+                                    f"{path}: run-local .tmp/ must stay outside artifact/ at the run root"
+                                )
+                            else:
+                                errors.append(
+                                    f"{path}: cache, provider state, or dependency directory must stay in workspace/"
+                                )
                             continue
                         if not directory_has_read_and_traverse_mode(entry_stat.st_mode):
                             errors.append(f"{path}: artifact directory must have a readable and traversable mode")
@@ -979,7 +1001,7 @@ def validate_provenance_receipt(
     run: dict[str, Any],
     prompt_bytes: Optional[bytes],
     errors: list[str],
-) -> None:
+) -> bool:
     """Compare worker-writable metadata with its pre-dispatch coordinator receipt."""
 
     run_id = run_path.parent.name
@@ -995,12 +1017,30 @@ def validate_provenance_receipt(
             errors.append(f"{commit_path}: unable to inspect provenance commit marker: {error}")
     receipt_path = root / expected_relative
     if not is_regular_file_within(receipt_path, root, "provenance receipt", errors):
-        return
+        return False
     receipt = load_object(receipt_path, errors)
     if receipt is None:
-        return
-    if receipt.get("schemaVersion") != "1.0":
-        errors.append(f"{receipt_path}: schemaVersion must be exactly 1.0")
+        return False
+    receipt_schema = receipt.get("schemaVersion")
+    if receipt_schema not in {"1.0", "1.1"}:
+        errors.append(f"{receipt_path}: schemaVersion must be 1.0 or 1.1")
+    current_temporary_contract = receipt_schema == "1.1"
+    expected_run_schema = "2.1" if current_temporary_contract else "2.0"
+    if run.get("schemaVersion") != expected_run_schema:
+        errors.append(
+            f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
+        )
+    if current_temporary_contract:
+        if receipt.get("runSchemaVersion") != "2.1":
+            errors.append(f"{receipt_path}: runSchemaVersion must be exactly 2.1")
+        receipt_temporary = object_value(receipt.get("temporary"))
+        expected_temporary = {
+            "path": ".tmp/",
+            "routing": "best-effort-run-local",
+            "preservation": "retain",
+        }
+        if receipt_temporary != expected_temporary:
+            errors.append(f"{receipt_path}: temporary contract does not match the prepared run")
     expected_run_path = run_path.parent.relative_to(root).as_posix()
     if receipt.get("runId") != run_id:
         errors.append(f"{receipt_path}: runId must match {run_id!r}")
@@ -1018,6 +1058,7 @@ def validate_provenance_receipt(
             errors.append(f"{receipt_path}: artifact/PROMPT.md differs from the pre-dispatch prompt")
         if receipt_prompt.get("bytes") != len(prompt_bytes):
             errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
+    return current_temporary_contract
 
 
 def validate_run(
@@ -1036,8 +1077,9 @@ def validate_run(
     if run is None:
         return
 
-    if run.get("schemaVersion") != "2.0":
-        errors.append(f"{run_path}: schemaVersion must be exactly 2.0")
+    schema_version = run.get("schemaVersion")
+    if schema_version not in {"2.0", "2.1"}:
+        errors.append(f"{run_path}: schemaVersion must be 2.0 or 2.1")
 
     identity = object_value(run.get("identity"))
     for field, expected, namespace_directory in (
@@ -1094,7 +1136,6 @@ def validate_run(
         elif str(prior_run) not in canonical_runs:
             errors.append(f"{run_path}: priorRun does not point to an exact canonical run")
 
-    validate_manifest_paths(run_path, run, errors)
     prompt = object_value(run.get("prompt"))
     if prompt.get("preservation") != "verbatim":
         errors.append(f"{run_path}: prompt.preservation must be exactly verbatim")
@@ -1131,7 +1172,21 @@ def validate_run(
     else:
         errors.append(f"{run_path}: run is missing exact-case artifact/PROMPT.md")
 
-    validate_provenance_receipt(root, run_path, run, prompt_bytes, errors)
+    current_temporary_contract = validate_provenance_receipt(
+        root,
+        run_path,
+        run,
+        prompt_bytes,
+        errors,
+    )
+    validate_manifest_paths(run_path, run, current_temporary_contract, errors)
+    temporary_directory = exact_child(run_path.parent, ".tmp")
+    if current_temporary_contract and (
+        temporary_directory is None
+        or not temporary_directory.is_dir()
+        or temporary_directory.is_symlink()
+    ):
+        errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
 
     execution = object_value(run.get("execution"))
     if execution.get("recursiveDelegation") != "allowed":
@@ -1168,6 +1223,25 @@ def validate_run(
             errors.append(f"{report_path}: status must be one of {sorted(STATUSES)}")
         elif status in STATUSES and report_status != status:
             errors.append(f"{report_path}: status must match run.json status {status!r}")
+        if current_temporary_contract:
+            report_temporary = object_value(report.get("temporary"))
+            if report_temporary.get("path") != ".tmp/":
+                errors.append(f"{report_path}: temporary.path must be exactly .tmp/")
+            routing_applied = report_temporary.get("routingApplied")
+            if routing_applied is not None and not isinstance(routing_applied, bool):
+                errors.append(f"{report_path}: temporary.routingApplied must be true, false, or null")
+            external_exceptions = report_temporary.get("externalExceptions")
+            if not isinstance(external_exceptions, list) or not all(
+                isinstance(item, str) and bool(item.strip()) for item in external_exceptions
+            ):
+                errors.append(f"{report_path}: temporary.externalExceptions must be an array of non-blank strings")
+            elif status == "OK":
+                if not isinstance(routing_applied, bool):
+                    errors.append(f"{report_path}: successful run must record temporary.routingApplied as true or false")
+                elif routing_applied is False and not external_exceptions:
+                    errors.append(
+                        f"{report_path}: successful run with temporary routing disabled must record an external exception"
+                    )
         report_artifact = object_value(report.get("artifact"))
         if report_artifact.get("entrypoint") != "artifact/index.html":
             errors.append(f"{report_path}: artifact.entrypoint must be exactly artifact/index.html")

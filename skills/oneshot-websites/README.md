@@ -9,6 +9,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - Silent visual and interaction-first guidance for crafting each finished brief without leaking generic boilerplate into `PROMPT.md`
 - A universal subject-adapted completion mandate in every finished prompt: no shortcuts, no cookie-cutter approximations, no skill-imposed token budget, and full interaction depth
 - One fresh lead subagent per experiment, with recursive delegation allowed
+- A preserved `.tmp/` inside every unique run, with best-effort temp routing inherited by descendants and kept out of prompts and deployable artifacts
 - No skill-imposed time, stack, dependency, workflow, or source-project constraints
 - Collision-free model/harness/experiment namespaces
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`

@@ -31,9 +31,9 @@ Every model, harness, and experiment directory also contains a coordinator-owned
 
 The coordinator writes each marker inside a private temporary namespace directory, then atomically publishes the complete directory. Concurrent preparers for the same exact identity verify the winning directory; an existing unmarked namespace is refused rather than adopted. This portable directory-rename protocol does not require hard-link support and turns even a digest-prefix collision into a classified reservation failure instead of shared storage. Published namespace markers are never rolled back—an empty, bound namespace is harmless, while deleting a shared parent marker during concurrent preparation is not. Workers receive write access only to their run directory, not to these markers. `templates/namespace-identity.json` documents the portable shape.
 
-`run.json` preserves the raw names, derived keys, exact actual-prompt digest, run classification, and relative artifact path. `artifact/PROMPT.md` preserves the prepared prompt bytes passed to the lead—including any faithful custom-brief refinement—and travels with the deployable site.
+`run.json` preserves the raw names, derived keys, exact actual-prompt digest, run classification, run-local temporary path, and relative artifact path. `artifact/PROMPT.md` preserves the prepared prompt bytes passed to the lead—including any faithful custom-brief refinement—and travels with the deployable site.
 
-Before dispatch, the coordinator also writes `.oneshot-provenance/<run-id>.json` under the output root. That receipt records the run path, identities, classification, prior-run relationship, prompt digest, and byte count outside the worker-owned run. After every initial run file and the receipt are closed, the coordinator atomically creates an empty `.oneshot-provenance/<run-id>.commit` marker. A run without that final marker was never ready for dispatch; the builder and validator can ignore its bounded initialization residue, including a partial receipt, so a killed preparation process does not poison later experiments. A committed run remains strict and visible even when its worker later damages or removes files.
+Before dispatch, the coordinator also writes `.oneshot-provenance/<run-id>.json` under the output root. That receipt records the run path, identities, classification, prior-run relationship, run-schema and temporary-storage contract, prompt digest, and byte count outside the worker-owned run. This external anchor prevents worker edits from disguising a current run as a legacy one to bypass `.tmp/` validation. After every initial run file and the receipt are closed, the coordinator atomically creates an empty `.oneshot-provenance/<run-id>.commit` marker. A run without that final marker was never ready for dispatch; the builder and validator can ignore its bounded initialization residue, including an empty `.tmp/` or a partial receipt, so a killed preparation process does not poison later experiments. A committed run remains strict and visible even when its worker later damages or removes files.
 
 Give the lead only its run path; do not include the receipt directory in its writable scope. The validator requires a one-to-one committed receipt and run inventory. This is a logical ownership boundary unless the harness enforces path-scoped writes; it is not tamper-proof against a worker with output-root access. When another harness reproduces the namespace without `prepare_run.py`, it must reproduce all three identity markers, the receipt, and the final empty commit marker.
 
@@ -46,10 +46,15 @@ The initial lead dispatch contains only:
 - `agents/oneshot-lead.md`
 - the actual prompt as literal text
 - raw and derived experiment identity
-- the assigned run, workspace, and artifact paths
+- the assigned run, `.tmp/`, workspace, and artifact paths
+- the operational temporary-file envelope from `templates/worker-dispatch.md`
 - any user-supplied inputs that belong to this experiment
 
 Pass actual text even when it is also stored on disk. A path-only dispatch makes the benchmark dependent on an extra interpretation step. Do not include the aggregate manifest, sibling names, sibling prompts, sibling output paths, sibling artifacts, or sibling results.
+
+The temporary-file envelope is lead-operational metadata, not part of the actual prompt. The coordinator creates `.tmp/` inside the unique run directory before dispatch. When the harness supports process-environment configuration, point `TMPDIR`, `TMP`, and `TEMP` at that absolute path for the lead; otherwise the lead applies those variables before launching local processes. The lead passes the same run-local path and supported overrides to descendants, preserves `.tmp/` for inspection, keeps durable source in `workspace/`, and never copies `.tmp/` into `artifact/`. Tools may ignore overrides or create state before dispatch, so containment is explicitly best effort: record known exceptions instead of sweeping, moving, or deleting unrelated external paths.
+
+Never fold the `.tmp/` path, temporary environment variables, or this operational envelope into the actual prompt or `artifact/PROMPT.md`. Prompt provenance covers only the finished website brief.
 
 When a catalogue baseline accompanies user context, preserve both sources while crafting one cohesive, fully developed actual prompt. Keep every explicit user constraint, use the catalogue goal only as the accepted baseline, and translate any useful visual or interaction posture into concrete details native to that experience. Do not impose a paragraph ceiling; six paragraphs is acceptable, and a brief may be longer when its substance requires it.
 
@@ -66,7 +71,7 @@ Plan all experiment identities and reserve all run paths before dispatch. Then c
 - Dispatch all leads concurrently when the harness has enough isolated capacity.
 - When capacity is lower than the experiment count, use batches without merging experiments or reusing lead contexts.
 - A model-by-harness matrix produces one experiment run for every requested cell.
-- Every lead may create its own internal team. Descendants inherit only their lead’s experiment scope and write only inside that experiment’s run.
+- Every lead may create its own internal team. Descendants inherit only their lead’s experiment scope, run-local temporary routing, and paths, and write only inside that experiment’s run wherever the harness permits.
 
 The plan is valid when the number of distinct lead owners equals the number of experiment runs and all namespace paths are disjoint.
 
@@ -82,7 +87,7 @@ Never add a goal-mode requirement, timeout, token cap, step limit, tool-call lim
 
 The lead owns all implementation iteration inside its run. The coordinator may resume that same lead after an infrastructure pause, but does not inject sibling comparisons or post-process the artifact.
 
-The lead may shape `workspace/` however it likes. Before completion it exports a static deployment into `artifact/` with the unchanged exact-case `PROMPT.md` and one exact-case root `index.html` entrypoint. That entrypoint does not imply a one-file artifact: all built runtime scripts, styles, media, fonts, models, data, and asset directories that serve the experience belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the deployment origin root. Deployment must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
+The lead may shape `workspace/` however it likes and keeps disposable run state in the sibling `.tmp/`. Before completion it exports a static deployment into `artifact/` with the unchanged exact-case `PROMPT.md` and one exact-case root `index.html` entrypoint. That entrypoint does not imply a one-file artifact: all built runtime scripts, styles, media, fonts, models, data, and asset directories that serve the experience belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the deployment origin root. Deployment must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, run-local `.tmp/`, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
 
 For the shared folder-drop target, the built artifact stays within 1,000 files, 5 MiB per file, and 100 MiB total. These final-upload bounds do not constrain workspace dependencies, source files, build assets, iteration, or delegation.
 
@@ -104,6 +109,7 @@ When the harness exposes the information, `worker-report.json` records:
 - status and blocker
 - source build commands, the fixed artifact entrypoint, and static-deployment verification
 - chosen technologies and external dependencies
+- whether run-local temporary routing was applied and any known external exceptions
 - verification performed
 - artifact file digests
 - start and completion observations

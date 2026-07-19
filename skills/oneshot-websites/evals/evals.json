@@ -306,6 +306,31 @@
         {"text": "Does not violate the user's exact no-additions instruction", "type": "negative"}
       ],
       "tags": ["custom-brief", "completion-mandate", "exact-prompt", "conflict", "negative"]
+    },
+    {
+      "id": 26,
+      "name": "run-local-temporary-isolation",
+      "prompt": "Launch two one-shots for an interactive aquarium and a browser-based train simulator. Keep each lead's temporary work contained without changing either authored website prompt.",
+      "expected_output": "Prepares two disjoint run directories, creates a preserved .tmp/ sibling beside workspace/ and artifact/ inside each unique run, and passes only that run's absolute temporary path through the operational dispatch envelope. It routes supported TMPDIR, TMP, and TEMP values to that directory for the lead and its descendants. Neither actual prompt nor artifact/PROMPT.md contains the temporary-file envelope, and .tmp/ is never copied into either deployable artifact.",
+      "assertions": [
+        {"text": "Every run has its own exact-case .tmp/ directory and run.json records it as retained best-effort run-local temporary storage", "type": "structural"},
+        {"text": "Each lead and its descendants receive only their owning run's temporary path and supported environment routing", "type": "functional"},
+        {"text": "The actual prompts and artifact/PROMPT.md files contain the finished website briefs but no temporary-file operational guidance", "type": "negative"},
+        {"text": "The preserved .tmp/ directories remain siblings of, rather than children of, artifact/", "type": "verification"}
+      ],
+      "tags": ["dispatch", "temporary-files", "isolation", "recursive-delegation", "exact-prompt", "artifact"]
+    },
+    {
+      "id": 27,
+      "name": "temporary-routing-tool-exception",
+      "prompt": "The selected build tool ignores TMPDIR and writes one cache file before the lead can configure it. Finish the one-shot and account for that limitation safely.",
+      "expected_output": "Keeps all controllable scratch work in the run-local .tmp/, preserves that directory, and records the known tool or harness exception in worker-report.json. It does not claim perfect containment, sweep or delete unrelated external temporary paths, copy .tmp/ into artifact/, or add operational temporary-file instructions to the actual prompt or artifact/PROMPT.md.",
+      "assertions": [
+        {"text": "Treats temporary containment as best effort and records the known external exception honestly", "type": "functional"},
+        {"text": "Does not inspect, move, or delete unrelated paths outside the assigned run", "type": "negative"},
+        {"text": "Preserves run-local scratch evidence while keeping the static artifact and PROMPT.md clean", "type": "verification"}
+      ],
+      "tags": ["temporary-files", "tool-limitation", "worker-report", "prompt-isolation", "negative"]
     }
   ]
 }

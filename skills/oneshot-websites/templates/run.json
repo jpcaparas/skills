@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "2.0",
+  "schemaVersion": "2.1",
   "identity": {
     "model": {"name": "{{MODEL_NAME}}", "key": "{{MODEL_KEY}}"},
     "harness": {"name": "{{HARNESS_NAME}}", "key": "{{HARNESS_KEY}}"},
@@ -14,6 +14,11 @@
     "path": "artifact/PROMPT.md",
     "sha256": "{{PROMPT_SHA256}}",
     "preservation": "verbatim"
+  },
+  "temporary": {
+    "path": ".tmp/",
+    "routing": "best-effort-run-local",
+    "preservation": "retain"
   },
   "workspace": {"path": "workspace/"},
   "artifact": {

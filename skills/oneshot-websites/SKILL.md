@@ -87,6 +87,7 @@ Create the run before starting workers:
         <run-id>/
           run.json
           worker-report.json
+          .tmp/
           workspace/
           artifact/
             PROMPT.md
@@ -112,7 +113,7 @@ On Windows, use a compatible `python.exe` or `py -3` launcher as described above
 
 Read `references/execution-protocol.md` when planning multiple experiments, reproducing the namespace manually, recording a rerun, or adapting the contract to another harness.
 
-The hidden receipt and its empty `.commit` marker are coordinator-owned. The marker is created last and atomically distinguishes a fully prepared dispatch from recoverable process-crash residue. Give the lead write authority only to its assigned run, never to the output root or receipt inventory. This is an ownership boundary, not a cryptographic one: if a harness cannot enforce path-scoped writes, the receipt is not tamper-proof against a worker with output-root access. `workspace/` is the lead’s unrestricted source and build area. `artifact/` is the final deployment root. This step is complete when every experiment has a distinct pre-created run directory, `artifact/PROMPT.md` matches the dispatched prompt and receipt, the commit marker exists, and no worker paths overlap.
+The hidden receipt and its empty `.commit` marker are coordinator-owned. The marker is created last and atomically distinguishes a fully prepared dispatch from recoverable process-crash residue. Give the lead write authority only to its assigned run, never to the output root or receipt inventory. This is an ownership boundary, not a cryptographic one: if a harness cannot enforce path-scoped writes, the receipt is not tamper-proof against a worker with output-root access. `.tmp/` is preserved run-local scratch space, `workspace/` is the lead’s unrestricted durable source and build area, and `artifact/` is the final deployment root. This step is complete when every experiment has a distinct pre-created run directory with its own `.tmp/`, `artifact/PROMPT.md` matches the dispatched prompt and receipt, the commit marker exists, and no worker paths overlap.
 
 ## 3. Dispatch Fresh Lead Subagents
 
@@ -120,10 +121,10 @@ Actual generation belongs to subagents:
 
 1. Create one fresh lead subagent for every experiment. The coordinator must not generate the artifact itself.
 2. Create the lead with the harness's no-history isolation primitive so it inherits none of the coordinator conversation. In Codex, call `spawn_agent` with `fork_turns: "none"`; never rely on its history-inheriting default. Use the equivalent empty-context option in another harness.
-3. Give the lead `agents/oneshot-lead.md`, its actual prompt verbatim, and only its assigned run path and experiment metadata in the initial dispatch. An empty inherited history does not replace the explicit role and prompt.
+3. Give the lead `agents/oneshot-lead.md`, its actual prompt verbatim, its assigned run and `.tmp/` paths, the operational temporary-file envelope, and only its experiment metadata in the initial dispatch. An empty inherited history does not replace the explicit role and prompt. The envelope is coordinator/lead runtime guidance and must never be folded into the actual prompt or `artifact/PROMPT.md`.
 4. Keep coordinator history, sibling prompts, instructions, workspaces, artifacts, and outcomes out of its context.
 5. Dispatch multiple requested experiments to multiple leads, concurrently whenever the harness has capacity. If capacity requires batches, retain one distinct fresh lead per experiment.
-6. Let each lead create and coordinate its own subagents when the harness supports recursive delegation. Every descendant stays inside the lead’s experiment scope and namespace.
+6. Let each lead create and coordinate its own subagents when the harness supports recursive delegation. Every descendant receives the same run-local temporary path and supported temporary-environment routing, then stays inside the lead’s experiment scope and namespace wherever the harness permits.
 
 Fresh, no-history subagent support is a hard dependency. If the harness cannot create a subagent without inherited coordinator conversation, stop before generating the artifact, report `UNSUPPORTED_NO_FRESH_SUBAGENT`, and explain that this harness cannot satisfy the one-shot isolation contract. Do not substitute the coordinator or a sequential same-context imitation.
 
@@ -135,7 +136,9 @@ On the lead’s work, the skill imposes no time, token, step, tool-call, depende
 
 Each lead may choose any architecture, libraries, services, generated assets, build system, collaboration pattern, verification workflow, and source-project shape that serve the actual prompt and the authority available in the environment. It may research, install dependencies, inspect screenshots, run the result, test interactions, and revise its implementation.
 
-Before finishing, the lead builds or exports the result into `artifact/`. That folder must contain the unchanged, exactly cased `PROMPT.md` and one exactly cased root `index.html` entrypoint. This is an entrypoint rule, not a single-file rule: include every built script, stylesheet, media file, font, model, shader, data file, and asset directory that improves or supports the experience. Do not collapse a rich build into one HTML file merely to satisfy the handoff. Local resource URLs may be relative or root-relative and must match stored filename casing; `artifact/` is deployed as the origin root. The folder must need no package installation, build command, framework development server, or server-side runtime after handoff. Package manifests, source-only component files, build or provider configuration, dependency and cache directories, server functions, secrets, and provider-filtered build state such as `.next/` stay out of the entire artifact tree. A React, Vue, Svelte, or other framework project is welcome in `workspace/`; copy all of its deployable production output, not its project tree, into `artifact/`.
+Keep disposable working state inside the run’s `.tmp/` wherever the harness and tools permit. When a harness supports process-environment configuration, point `TMPDIR`, `TMP`, and `TEMP` at the absolute run-local `.tmp/` before the lead starts; otherwise the lead sets those variables before launching local processes and passes the same routing to descendants. Use supported tool-specific temporary or cache overrides when they represent disposable scratch. Preserve `.tmp/` at handoff so the run remains inspectable. Because some tools create state before dispatch or ignore overrides, treat containment as best effort and record known exceptions rather than inspecting, moving, or deleting unrelated external paths. Durable project files belong in `workspace/`; `.tmp/` never belongs in the deployable artifact. This operational guidance must stay out of the authored actual prompt and `artifact/PROMPT.md`.
+
+Before finishing, the lead builds or exports the result into `artifact/`. That folder must contain the unchanged, exactly cased `PROMPT.md` and one exactly cased root `index.html` entrypoint. This is an entrypoint rule, not a single-file rule: include every built script, stylesheet, media file, font, model, shader, data file, and asset directory that improves or supports the experience. Do not collapse a rich build into one HTML file merely to satisfy the handoff. Local resource URLs may be relative or root-relative and must match stored filename casing; `artifact/` is deployed as the origin root. The folder must need no package installation, build command, framework development server, or server-side runtime after handoff. Package manifests, source-only component files, build or provider configuration, dependency and cache directories, the run-local `.tmp/`, server functions, secrets, and provider-filtered build state such as `.next/` stay out of the entire artifact tree. A React, Vue, Svelte, or other framework project is welcome in `workspace/`; copy all of its deployable production output, not its project tree, into `artifact/`.
 
 The final folder, not the workspace, follows the conservative shared Drop envelope: at most 1,000 files, no file larger than 5 MiB, and no more than 100 MiB total. These are deployment-boundary constraints derived from the current static-host upload path, not limits on how the lead works or what it may use.
 
@@ -149,6 +152,7 @@ Preserve each outcome, including partial or failed ones. Complete `run.json` and
 
 - lead and descendant worker identifiers when exposed by the harness
 - chosen tools, dependencies, and architecture
+- whether run-local temporary routing was applied and any known external exceptions
 - build choices, verification, and the fixed `artifact/index.html` entrypoint
 - status, blocker, and verification evidence
 - timestamps, usage, duration, and cost only when the harness exposes them; these are observations, never limits

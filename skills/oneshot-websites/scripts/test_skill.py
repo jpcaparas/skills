@@ -335,6 +335,7 @@ def mark_successful_static_artifact(run_path: Path) -> None:
     report_path = run_path / "worker-report.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
     report["status"] = "OK"
+    report["temporary"]["routingApplied"] = True
     report["artifact"]["staticDeploymentVerified"] = True
     report["verification"] = [
         {"kind": "static-browser-smoke", "result": "passed", "evidence": "Opened the built root entrypoint"}
@@ -2066,11 +2067,15 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
 
         abandoned_reservation = first_run.parent / make_run_id()
         abandoned_reservation.mkdir()
+        temporary_only_reservation = first_run.parent / make_run_id()
+        (temporary_only_reservation / ".tmp").mkdir(parents=True)
         interrupted_reservation = first_run.parent / make_run_id()
+        (interrupted_reservation / ".tmp").mkdir(parents=True)
         (interrupted_reservation / "workspace").mkdir(parents=True)
         (interrupted_reservation / "artifact").mkdir()
         (interrupted_reservation / "artifact" / "PROMPT.md").write_bytes(prompt_bytes)
         interrupted_metadata_run = first_run.parent / make_run_id()
+        (interrupted_metadata_run / ".tmp").mkdir(parents=True)
         (interrupted_metadata_run / "workspace").mkdir(parents=True)
         (interrupted_metadata_run / "artifact").mkdir()
         (interrupted_metadata_run / "artifact" / "PROMPT.md").write_bytes(prompt_bytes)
@@ -2120,10 +2125,27 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
 
         first_manifest = read_json(first_run / "run.json", errors, "prepared run.json")
         preserved_prompt = first_run / "artifact" / "PROMPT.md"
+        temporary_directory = first_run / ".tmp"
+        assert_ok(
+            temporary_directory.is_dir() and not temporary_directory.is_symlink(),
+            "prepare_run.py did not create an exact run-local .tmp/ directory",
+            errors,
+        )
         assert_ok(preserved_prompt.is_file(), "prepare_run.py did not create artifact/PROMPT.md", errors)
         if preserved_prompt.is_file():
             assert_ok(preserved_prompt.read_bytes() == prompt_bytes, "prepare_run.py did not preserve prompt bytes", errors)
+            assert_ok(
+                b"TMPDIR" not in preserved_prompt.read_bytes()
+                and b"best-effort-run-local" not in preserved_prompt.read_bytes(),
+                "prepare_run.py leaked the temporary-file envelope into artifact/PROMPT.md",
+                errors,
+            )
         if isinstance(first_manifest, Mapping):
+            assert_ok(
+                first_manifest.get("schemaVersion") == "2.1",
+                "prepare_run.py did not emit the current run schema",
+                errors,
+            )
             prompt_data = first_manifest.get("prompt")
             expected_hash = hashlib.sha256(prompt_bytes).hexdigest()
             assert_ok(isinstance(prompt_data, Mapping) and prompt_data.get("sha256") == expected_hash, "prepare_run.py did not record the exact prompt hash", errors)
@@ -2132,9 +2154,22 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             receipt = read_json(receipt_path, errors, "pre-dispatch provenance receipt") if isinstance(receipt_value, str) else None
             assert_ok(
                 isinstance(receipt, Mapping)
+                and receipt.get("schemaVersion") == "1.1"
+                and receipt.get("runSchemaVersion") == "2.1"
                 and receipt.get("prompt", {}).get("sha256") == expected_hash
                 and receipt.get("prompt", {}).get("bytes") == len(prompt_bytes),
                 "prepare_run.py did not anchor prompt provenance outside the worker run",
+                errors,
+            )
+            assert_ok(
+                isinstance(receipt, Mapping)
+                and receipt.get("temporary")
+                == {
+                    "path": ".tmp/",
+                    "routing": "best-effort-run-local",
+                    "preservation": "retain",
+                },
+                "prepare_run.py did not anchor the current temporary contract outside the worker run",
                 errors,
             )
             identity = first_manifest.get("identity")
@@ -2142,8 +2177,35 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             if isinstance(identity, Mapping):
                 for part in ("model", "harness", "experiment"):
                     assert_ok(isinstance(identity.get(part), Mapping), "prepared run missing {} identity".format(part), errors)
+            temporary_data = first_manifest.get("temporary")
+            assert_ok(
+                isinstance(temporary_data, Mapping)
+                and temporary_data.get("path") == ".tmp/"
+                and temporary_data.get("routing") == "best-effort-run-local"
+                and temporary_data.get("preservation") == "retain",
+                "prepare_run.py did not record the run-local temporary contract",
+                errors,
+            )
+
+        first_report = read_json(first_run / "worker-report.json", errors, "prepared worker report")
+        if isinstance(first_report, Mapping):
+            temporary_report = first_report.get("temporary")
+            assert_ok(
+                isinstance(temporary_report, Mapping)
+                and temporary_report.get("path") == ".tmp/"
+                and temporary_report.get("routingApplied") is None
+                and temporary_report.get("externalExceptions") == [],
+                "prepare_run.py did not initialize temporary-routing observations",
+                errors,
+            )
 
         assert_ok(first_run != collision_run, "normalized-similar names reused a run directory", errors)
+        assert_ok(
+            all((run_path / ".tmp").is_dir() for run_path in (first_run, collision_run, rerun_path))
+            and len({(run_path / ".tmp").resolve() for run_path in (first_run, collision_run, rerun_path)}) == 3,
+            "separate runs did not receive distinct run-local .tmp/ directories",
+            errors,
+        )
         rerun_manifest = read_json(rerun_path / "run.json", errors, "rerun run.json")
         if isinstance(rerun_manifest, Mapping):
             assert_ok(
@@ -2157,9 +2219,142 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             collision_model = collision_manifest.get("identity", {}).get("model", {})
             assert_ok(first_model.get("key") != collision_model.get("key"), "normalized-similar model names share an identity key", errors)
 
+        shutil.rmtree(first_run / ".tmp")
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "missing an exact-case ordinary .tmp/ directory",
+            "current-schema run without its temporary directory",
+            errors,
+        )
+        (first_run / ".tmp").mkdir()
+        rebuilt_after_temporary_restore = rebuild_catalog_index(output_root)
+        assert_ok(
+            rebuilt_after_temporary_restore.returncode == 0,
+            "catalogue builder failed after restoring run-local .tmp/: {}".format(
+                rebuilt_after_temporary_restore.stderr or rebuilt_after_temporary_restore.stdout
+            ),
+            errors,
+        )
+
+        downgrade_manifest_path = first_run / "run.json"
+        downgrade_report_path = first_run / "worker-report.json"
+        downgrade_manifest_bytes = downgrade_manifest_path.read_bytes()
+        downgrade_report_bytes = downgrade_report_path.read_bytes()
+        downgrade_manifest = json.loads(downgrade_manifest_bytes)
+        downgrade_manifest["schemaVersion"] = "2.0"
+        downgrade_manifest.pop("temporary", None)
+        downgrade_manifest_path.write_text(json.dumps(downgrade_manifest, indent=2) + "\n", encoding="utf-8")
+        downgrade_report = json.loads(downgrade_report_bytes)
+        downgrade_report.pop("temporary", None)
+        downgrade_report_path.write_text(json.dumps(downgrade_report, indent=2) + "\n", encoding="utf-8")
+        shutil.rmtree(first_run / ".tmp")
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "receipt schema '1.1' requires run schema 2.1",
+            "new run downgraded through worker-writable metadata",
+            errors,
+        )
+        downgrade_manifest_path.write_bytes(downgrade_manifest_bytes)
+        downgrade_report_path.write_bytes(downgrade_report_bytes)
+        (first_run / ".tmp").mkdir()
+        rebuilt_after_downgrade_restore = rebuild_catalog_index(output_root)
+        assert_ok(
+            rebuilt_after_downgrade_restore.returncode == 0,
+            "catalogue builder failed after restoring an anchored 2.1 run: {}".format(
+                rebuilt_after_downgrade_restore.stderr or rebuilt_after_downgrade_restore.stdout
+            ),
+            errors,
+        )
+
+        legacy_root = Path(temporary) / "legacy-runs"
+        legacy_run = prepare_run(skill, legacy_root, "Legacy Model", "Harness", "Legacy Run", prompt, errors)
+        if legacy_run is not None:
+            legacy_manifest_path = legacy_run / "run.json"
+            legacy_manifest = json.loads(legacy_manifest_path.read_text(encoding="utf-8"))
+            legacy_manifest["schemaVersion"] = "2.0"
+            legacy_manifest.pop("temporary", None)
+            legacy_manifest_path.write_text(json.dumps(legacy_manifest, indent=2) + "\n", encoding="utf-8")
+            legacy_report_path = legacy_run / "worker-report.json"
+            legacy_report = json.loads(legacy_report_path.read_text(encoding="utf-8"))
+            legacy_report.pop("temporary", None)
+            legacy_report_path.write_text(json.dumps(legacy_report, indent=2) + "\n", encoding="utf-8")
+            legacy_receipt_path = legacy_root / ".oneshot-provenance" / (legacy_run.name + ".json")
+            legacy_receipt = json.loads(legacy_receipt_path.read_text(encoding="utf-8"))
+            legacy_receipt["schemaVersion"] = "1.0"
+            legacy_receipt.pop("runSchemaVersion", None)
+            legacy_receipt.pop("temporary", None)
+            legacy_receipt_path.write_text(json.dumps(legacy_receipt, indent=2) + "\n", encoding="utf-8")
+            shutil.rmtree(legacy_run / ".tmp")
+            legacy_build = rebuild_catalog_index(legacy_root)
+            legacy_validation = run([sys.executable, str(scripts[3]), str(legacy_root)])
+            assert_ok(
+                legacy_build.returncode == 0 and legacy_validation.returncode == 0,
+                "validator rejected a legacy 2.0 run without retroactive .tmp/ state: {}{}".format(
+                    legacy_build.stderr or legacy_build.stdout,
+                    legacy_validation.stdout,
+                ),
+                errors,
+            )
+
         mark_successful_static_artifact(first_run)
+        (first_run / "artifact" / ".tmp").mkdir()
+        (first_run / "artifact" / ".tmp" / "scratch.txt").write_text("temporary\n", encoding="utf-8")
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "run-local .tmp/ must stay outside artifact/ at the run root",
+            "run-local .tmp/ copied into the deployable artifact",
+            errors,
+        )
+        shutil.rmtree(first_run / "artifact" / ".tmp")
         build = run([sys.executable, str(scripts[2]), "--root", str(output_root), "--out", str(output_root / "index.html")])
         assert_ok(build.returncode == 0, "build_catalog_index.py rejected a built framework artifact: {}".format(build.stderr or build.stdout), errors)
+        successful_report_path = first_run / "worker-report.json"
+        successful_report_bytes = successful_report_path.read_bytes()
+        successful_report = json.loads(successful_report_bytes)
+        successful_report["temporary"]["routingApplied"] = None
+        successful_report_path.write_text(json.dumps(successful_report, indent=2) + "\n", encoding="utf-8")
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "successful run must record temporary.routingApplied as true or false",
+            "successful run with an unknown temporary-routing outcome",
+            errors,
+        )
+        successful_report["temporary"]["routingApplied"] = False
+        successful_report_path.write_text(json.dumps(successful_report, indent=2) + "\n", encoding="utf-8")
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "successful run with temporary routing disabled must record an external exception",
+            "successful run with unexplained disabled temporary routing",
+            errors,
+        )
+        successful_report["temporary"]["externalExceptions"] = [
+            "The build tool created one cache file before process environment routing was available."
+        ]
+        successful_report_path.write_text(json.dumps(successful_report, indent=2) + "\n", encoding="utf-8")
+        explained_routing_build = rebuild_catalog_index(output_root)
+        explained_routing_validation = run([sys.executable, str(scripts[3]), str(output_root)])
+        assert_ok(
+            explained_routing_build.returncode == 0 and explained_routing_validation.returncode == 0,
+            "validator rejected an honest temporary-routing exception: {}{}".format(
+                explained_routing_build.stderr or explained_routing_build.stdout,
+                explained_routing_validation.stdout,
+            ),
+            errors,
+        )
+        successful_report_path.write_bytes(successful_report_bytes)
+        restored_successful_build = rebuild_catalog_index(output_root)
+        assert_ok(
+            restored_successful_build.returncode == 0,
+            "catalogue builder failed after restoring the successful temporary-routing report: {}".format(
+                restored_successful_build.stderr or restored_successful_build.stdout
+            ),
+            errors,
+        )
         if os.name == "posix":
             assert_ok(
                 stat.S_IMODE((output_root / "index.html").stat().st_mode) == 0o644,
@@ -2461,6 +2656,65 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         skill_path = copied_skill / "SKILL.md"
         original_skill = skill_path.read_text(encoding="utf-8")
+
+        skill_without_temporary_contract = re.sub(
+            r"(?m)^Keep disposable working state inside the run’s `\.tmp/`.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_temporary_contract, encoding="utf-8")
+        missing_temporary_contract_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_temporary_contract_result.returncode != 0
+            and "SKILL.md runtime contract missing run-local temporary containment"
+            in missing_temporary_contract_result.stdout,
+            "package validator accepted a skill without run-local temporary containment",
+            errors,
+        )
+
+        skill_without_descendant_temporary_routing = original_skill.replace(
+            "Every descendant receives the same run-local temporary path and supported temporary-environment routing",
+            "Every descendant stays within the run",
+            1,
+        )
+        skill_path.write_text(skill_without_descendant_temporary_routing, encoding="utf-8")
+        missing_descendant_temporary_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_descendant_temporary_result.returncode != 0
+            and "SKILL.md runtime contract missing descendant temporary routing"
+            in missing_descendant_temporary_result.stdout,
+            "package validator accepted descendants without run-local temporary routing",
+            errors,
+        )
+
+        dispatch_path = copied_skill / "templates" / "worker-dispatch.md"
+        original_dispatch = dispatch_path.read_text(encoding="utf-8")
+        dispatch_path.write_text(
+            original_dispatch.replace(
+                "and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.",
+                ".",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        missing_dispatch_isolation_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_dispatch_isolation_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing dispatch temporary-file envelope"
+            in missing_dispatch_isolation_result.stdout,
+            "package validator accepted a dispatch envelope that could leak into PROMPT.md",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
+        skill_path.write_text(original_skill, encoding="utf-8")
 
         skill_without_custom_contract = re.sub(
             r"(?m)^- \*\*Custom brief:\*\*.*\n",
