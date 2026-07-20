@@ -1,0 +1,33 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "July 2026",
+  "license": "MIT",
+  "abstract": "Portable ADHD-friendly communication and task-support skill that reduces activation and working-state friction through answer-first orientation, honest prioritization, executable steps, interruption re-entry, user-controlled depth, consent-based reminders, and non-clinical safety boundaries.",
+  "attribution": [
+    {
+      "title": "i-have-adhd",
+      "creator": "Ayoub Ghriss",
+      "source_url": "https://github.com/ayghri/i-have-adhd",
+      "source_commit": "72c33eee81ea439cf01991e93729adfce2ffc99e",
+      "source_license": "MIT",
+      "copyright": "Copyright (c) 2026 Ayoub Ghriss",
+      "notice": "THIRD_PARTY_NOTICES.md",
+      "adaptation": "Substantial adaptation of the action-first, low-friction output concept. This skill adds explicit portable invocation, user-controlled depth, evidence-aware estimates, re-entry state, safety boundaries, and behavioral evals; it does not use the upstream logo or branding."
+    }
+  ],
+  "references": [
+    "https://agentskills.io/specification",
+    "https://github.com/ayghri/i-have-adhd/tree/72c33eee81ea439cf01991e93729adfce2ffc99e",
+    "https://www.nice.org.uk/guidance/ng87/chapter/recommendations",
+    "https://www.w3.org/WAI/WCAG2/supplemental/patterns/o4p07-step-instructions/",
+    "https://www.w3.org/WAI/WCAG2/supplemental/patterns/o1p04-clear-steps/",
+    "https://www.w3.org/WAI/WCAG2/supplemental/patterns/o5p01-minimal-interruptions/",
+    "https://www.w3.org/WAI/WCAG2/supplemental/patterns/o7p07-reminders/",
+    "https://pubmed.ncbi.nlm.nih.gov/27554190/",
+    "https://pubmed.ncbi.nlm.nih.gov/20231319/",
+    "https://pubmed.ncbi.nlm.nih.gov/23688211/",
+    "https://pubmed.ncbi.nlm.nih.gov/38145491/",
+    "https://www.nih.gov/nih-style-guide/person-first-destigmatizing-language"
+  ]
+}

@@ -14,6 +14,16 @@ npx skills add jpcaparas/skills
 
 ## Available Skills
 
+### `adhd-friendly`
+
+`npx skills add jpcaparas/skills --skill adhd-friendly`
+
+<p align="center">
+  <img src="skills/adhd-friendly/skill-card.png" alt="16-bit side-scrolling pixel art badge for adhd-friendly" width="480">
+</p>
+
+Portable ADHD-friendly communication and task support that reduces activation and working-state friction while preserving completeness, safety, user autonomy, and requested depth.
+
 ### `adversarial-test-sweep`
 
 `npx skills add jpcaparas/skills --skill adversarial-test-sweep`

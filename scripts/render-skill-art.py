@@ -35,6 +35,7 @@ NO_TEXT_RULE = (
 )
 
 SKILL_SCENES = {
+    "adhd-friendly": "a focused pathway where scattered task fragments converge through a calm priority gate into one bright next-step tile, with completed progress gems behind and optional paths parked nearby",
     "adversarial-test-sweep": "a testing gauntlet where bug-shaped hazard sprites, boundary gates, race lanes, fault sparks, and resource barriers confront a shielded formation of distinct test gems",
     "audify": "headphones catching flowing sound ribbons, waveform crystals, and a small studio mixer made of blank blocks",
     "azure-devops-create-work-item": "a quest-token forge where a hammer stamps a blank glowing slab into a task gem",

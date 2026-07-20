@@ -1,0 +1,50 @@
+[
+  {
+    "query": "Use the adhd-friendly skill for this project plan. Give me one recommended starting point and keep the rest easy to resume.",
+    "should_trigger": true
+  },
+  {
+    "query": "I have ADHD and this migration checklist is overwhelming. Can you make it ADHD-friendly so I can tell what to do now, next, and later?",
+    "should_trigger": true
+  },
+  {
+    "query": "Use adhd-friendly: I lost the thread after an interruption. Please restate the goal, what's done, the current step, and the blocker without replaying everything.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make your answers action-first and low-overwhelm for the rest of this session, but keep full detail when I ask for it.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use the adhd-friendly skill: I'm frozen because six tasks feel equally urgent. Pick a sensible first move, park the rest, and don't shame me.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use adhd-friendly formatting for this medical answer, but keep every safety caveat: does one bad week of task initiation prove I have ADHD?",
+    "should_trigger": true
+  },
+  {
+    "query": "What are the diagnostic criteria and evidence-based treatments for adult ADHD?",
+    "should_trigger": false
+  },
+  {
+    "query": "Summarize the latest research on dopamine signaling in ADHD and cite primary studies.",
+    "should_trigger": false
+  },
+  {
+    "query": "Audit this React form for WCAG keyboard accessibility and screen-reader labels.",
+    "should_trigger": false
+  },
+  {
+    "query": "I lost the thread after an interruption. Restate the goal, what's done, the current step, and the blocker.",
+    "should_trigger": false
+  },
+  {
+    "query": "Hey, how's your day going?",
+    "should_trigger": false
+  },
+  {
+    "query": "I'm overwhelmed by six urgent tasks. Help me choose what to do first.",
+    "should_trigger": false
+  }
+]
