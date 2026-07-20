@@ -2,4 +2,4 @@
 openpyxl==3.1.5
 PyYAML==6.0.3
 numpy==2.4.2
-Pillow==12.1.0
+Pillow==12.2.0
