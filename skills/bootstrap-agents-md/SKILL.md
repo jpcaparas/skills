@@ -1,129 +1,90 @@
 ---
 name: bootstrap-agents-md
-description: "Inspect; create or replace AGENTS.md and CLAUDE.md."
+description: "Bootstrap or refresh root AGENTS.md and CLAUDE.md."
 ---
 
 # Bootstrap AGENTS.md
 
-Create a concise, evidence-backed root `AGENTS.md` and a companion `CLAUDE.md` that imports it. Replace an existing root instruction file wholesale rather than treating inherited wording as correct by default.
+Create the smallest root instruction set that gives capable coding agents project knowledge they cannot reliably infer for themselves. Keep hard contracts exact and leave implementation and presentation choices open when current repository evidence can guide them.
 
 ## Output Contract
 
-Produce exactly these repository-root artifacts unless the user asks for a wider instruction hierarchy:
+Produce these repository-root artifacts unless the user asks for a wider instruction hierarchy:
 
-- `AGENTS.md`: repository-wide truths, decision guardrails, and completion expectations that should survive routine project evolution.
+- `AGENTS.md`: high-signal repository truths, boundaries, and validation expectations that earn space in persistent context.
 - `CLAUDE.md`: exactly `@AGENTS.md` followed by one newline.
 
-The generated `AGENTS.md` must not contain concrete paths, URLs, commands or binary names, dependency or package names, version numbers, machine-specific assumptions, or copied session history. Express project knowledge as stable concepts: purpose, architectural boundaries, domain invariants, change risks, validation expectations, and local decision principles.
+When replacing an existing root instruction file, write a coherent new file rather than appending to inherited wording. Preserve supported intent, not the old file's structure.
 
-## 1. Establish Scope and a Recoverable Baseline
+Exact commands, repository-relative paths, tool or dependency names, versions, and URLs may belong in `AGENTS.md` when their literal form changes agent behavior and repository evidence shows they are stable. Exclude secrets, machine-local absolute paths, copied session history, volatile inventories, and detail that a competent agent can recover cheaply from the repository.
 
-1. Resolve the project root from repository or workspace evidence. Stop only when multiple plausible roots would produce materially different files.
-2. Capture working-tree state before writing. Preserve unrelated changes and do not reformat or clean other files.
-3. Read any existing root `AGENTS.md` and `CLAUDE.md` into a replacement ledger. Treat them only as evidence to compare later; do not inherit their wording, structure, or assumptions into the draft.
-4. Find nested agent-instruction files and record their scope and precedence. Do not replace or delete them unless the user explicitly includes them.
+## 1. Establish Scope and Baseline
 
-This phase is complete when the root is unambiguous, pre-existing content is recoverable or recorded, unrelated changes are known, and every instruction file that could override the root is accounted for.
+1. Resolve the repository root from workspace evidence.
+2. Capture the working-tree state and preserve unrelated changes.
+3. Read existing root `AGENTS.md` and `CLAUDE.md` as evidence. Record material intent that must be preserved, changed, or removed.
+4. Find nested instruction files and respect their narrower scope. Change them only when the user includes them.
 
-## 2. Inspect the Whole Project by Evidence Surface
+Stop for clarification only when competing roots or instruction owners would produce materially different results.
 
-Map the repository before drafting. “Whole project” means every meaningful architectural and operational surface is accounted for, not that generated, vendored, cached, or binary content is read byte by byte.
+**Complete when:** the target root, authorized files, existing material intent, nested precedence, and unrelated work are understood well enough to write without guessing.
 
-Inspect, when present:
+## 2. Inspect Just Enough of the Project
 
-- project purpose, contributor documentation, and durable design notes
-- manifests and workspace metadata without copying their tool-specific syntax
-- top-level modules, entry points, public boundaries, and domain vocabulary
-- tests, fixtures, and the behaviors they document
-- automation, delivery, schema, migration, security, and operational configuration
-- background work, external boundaries, persistence, state transitions, and recovery paths
-- recent changes or repeated review signals when local history is available
-- generated, vendored, cache, artifact, and secret-bearing areas only enough to classify and exclude them
+Inspect the evidence that can reveal non-obvious root guidance: project purpose, durable architecture or domain language, public boundaries, tests, configured checks, delivery or migration risk, external effects, and repeated local conventions. Classify generated, vendored, cached, binary, and secret-bearing areas without loading their contents unnecessarily.
 
-Maintain an evidence ledger with: candidate rule, supporting surfaces, confidence, durability, and whether it belongs in always-loaded root guidance. Prefer repeated code and test evidence over a lone example. Mark contradictions and omit unresolved guesses from the generated file.
+Scale inspection to the repository and task. Prefer repeated code, tests, automation, and maintained design records over a lone example. Resolve contradictions that affect a retained rule; omit uncertain claims that do not need to be in persistent context.
 
-This phase is complete when every meaningful surface is marked inspected, intentionally excluded, or absent, and each candidate project truth has evidence and a confidence level.
+The goal is sufficient evidence for the final guidance, not a census of every file or a permanent authoring ledger.
 
-## 3. Select Only Durable Guidance
+**Complete when:** every proposed project-specific rule has evidence, and further inspection is unlikely to change the root guidance materially.
 
-Keep a candidate rule only when all of these are true:
+## 3. Decide What Earns Persistent Context
 
-- it applies repository-wide and is useful in most coding sessions
-- it changes agent behavior beyond competent defaults
-- it is supported by project evidence or an explicit user requirement
-- it remains useful if files move, tooling changes, or dependencies evolve
-- a reader can tell whether the rule was followed
+Keep a rule when it is project-wide, non-obvious, behavior-changing, supported, and durable enough to justify always-loaded attention. A rule can also earn inclusion when the user explicitly requires it or when an observed failure shows that capable models need the extra steering.
 
-Prefer conceptual specificity over literal specificity. Describe responsibilities, boundaries, and invariants without freezing the current directory layout or toolchain. Omit transient commands, inventories, implementation trivia, speculative architecture, style preferences already enforced mechanically, and task-specific procedures better kept in tests, automation, or scoped guidance.
+Calibrate specificity to consequence:
 
-Use negative-first wording only for costly failure boundaries. Pair every prohibition with the permitted action, for example: do not bypass failing verification; fix the cause or report the blocked check and remaining risk. Lead ordinary guidance with the desired behavior.
+| Direction | Treatment |
+|---|---|
+| Hard contract | State exact syntax, scope, or prohibition when correctness, safety, compatibility, or the harness requires it. Pair costly-failure guardrails with the safe action. |
+| Project heuristic | Explain the project-specific reason and desired outcome. Let the agent choose the mechanism from current evidence. |
+| Open choice | Leave headings, order, implementation design, test shape, abstraction, and documentation volume to the agent unless the repository or user constrains them. |
 
-This phase is complete when every retained rule has evidence, repository-wide scope, durable value, and a declared behavioral purpose, while every rejected candidate has a reason in the working ledger.
+Start with the minimal rule set. Add examples only when an exact form matters or a demonstrated ambiguity survives clear prose; examples of ordinary wording and layout can accidentally become templates.
 
-## 4. Draft for Attention and Autonomy
+Exclude generic competent-agent advice, repeated urgency, style preferences already enforced by tooling, transient procedures, speculative architecture, and duplicated source material. Move guarantees into automation when the repository can enforce them mechanically.
 
-Keep `AGENTS.md` compact and easy to scan. Use normal Markdown headings and short bullets. Put the most consequential boundaries first and avoid repeated urgency, slogans, role-play, exhaustive tutorials, and contradictory qualifiers.
+Treat the absence of a subsystem, dependency, or workflow as current state rather than a permanent prohibition unless project evidence or the user establishes that boundary deliberately.
 
-Use this earned section order, omitting a section that has no project evidence:
+**Complete when:** every retained instruction has a load-bearing reason, and every omitted choice is either recoverable from the repository or deliberately left to agent judgment.
 
-1. **Critical boundaries** — destructive changes, sources of truth, data and secret safety, user-owned work, and validation bypasses.
-2. **Project shape** — purpose, stable architectural responsibilities, domain language, and non-obvious invariants.
-3. **Working method** — inspect before editing, keep scope narrow, follow repeated local patterns, and preserve intent.
-4. **Maintainability** — readable names, stable responsibility boundaries, strong contracts where supported, comments for rationale, and no speculative abstraction.
-5. **Tests and verification** — behavior-focused tests, regression evidence, deterministic boundaries, and proportionate configured checks.
-6. **Reliability and operations** — only when applicable; idempotency before retries, bounded failure handling, explicit state, recovery, degradation, and useful observability.
-7. **Completion** — evidence run, limitations, risks, and a plain handoff.
-8. **Instruction hygiene** — remove stale or conflicting guidance and move mechanically enforceable invariants into project automation.
+## 4. Draft for the Project, Not a Template
 
-Assume the agent has strong fundamentals but lacks project history. Give it room to choose implementation details from current evidence. Do not prescribe an abstraction, test shape, operational mechanism, or documentation volume when the project does not earn it.
+Choose the structure that makes this repository's guidance easiest to use. A small project may need only a few rules. A complex service may earn separate treatment of domain invariants, operational risk, validation, or instruction precedence. Section names, order, and count are output choices rather than release requirements.
 
-This phase is complete when the draft is concise, non-conflicting, project-grounded, free of forbidden literal details, and each negative guardrail names the safe alternative.
+Write at the altitude between vague slogans and brittle implementation scripts. Name the project fact, why it matters, and the result to preserve. Use literal detail when abstraction would make the instruction less actionable; point to a narrower source when the detail is too volatile for root context.
 
-## 5. Replace Atomically
+**Complete when:** the draft is concise, project-specific, internally consistent, and leaves unearned decisions open.
 
-1. Write the new root `AGENTS.md` as a clean replacement, not an append or a patchwork merge.
-2. Write `CLAUDE.md` as exactly one import line with a trailing newline. Do not duplicate instructions or add tool-specific advice.
-3. Re-read both files from disk and inspect the diff. Confirm that only the two authorized root files changed unless the user requested more.
+## 5. Write and Verify the Pair
 
-If either write fails, do not claim partial success. Report which artifact changed and restore a consistent pair when safe.
+1. Write root `AGENTS.md` as the clean replacement or new file authorized by the user.
+2. Write `CLAUDE.md` as the exact import line with a trailing newline.
+3. Re-read both files and inspect the diff for unrelated changes.
+4. Run `scripts/validate_agents_md.py` when Python is available. Treat its structural checks and review signals as aids, not proof of semantic quality.
+5. Confirm each retained claim against repository evidence, check for conflicts with nested guidance, and remove anything that only restates capable-model defaults.
 
-This phase is complete when both files exist, the companion is exact, the root file is a clean replacement, and the diff contains no unrelated edits.
+If the pair cannot be written consistently, report the partial state and restore consistency when safe. Do not claim a semantic pass from the validator alone.
 
-## 6. Validate Structure and Substance
+**Complete when:** both files form a consistent pair, structural validation passes, and the semantic audit finds no unsupported or conflicting root rule.
 
-Run `scripts/validate_agents_md.py` against the project when its runtime is available. Otherwise apply the same checks manually; the helper is an enhancement, not a hard dependency.
+## 6. Report Material Decisions
 
-Then perform a semantic audit the script cannot prove:
+Summarize the evidence surfaces inspected, the high-signal truths retained, the files changed, validation performed, and unresolved uncertainty or risk. When prior instructions existed, account for material groups as preserved, reframed, removed, or moved to narrower ownership and explain why.
 
-- each project claim maps back to the evidence ledger
-- no important rule merely restates a generic competent-agent default
-- no rule conflicts with a more specific surviving instruction file
-- test and reliability guidance is conditional on actual project risk
-- prose guidance does not pretend to enforce what belongs in automated checks
-- a junior developer with solid fundamentals can understand the intent without session context
-
-Fix failures and re-run validation. Do not weaken the validator or delete a useful rule merely to obtain a pass; revise the wording while preserving the evidenced intent.
-
-This phase is complete when deterministic validation passes or its manual equivalent is recorded, the semantic audit has no unsupported claim, and remaining limitations are explicit.
-
-## 7. Explain the Replacement
-
-When either prior root instruction file existed, end the session with an exhaustive replacement report. Group every old instruction or section from both files into one disposition:
-
-- **superseded** — valid intent expressed more durably or clearly
-- **removed as brittle** — tied to a path, command, dependency, version, tool, or transient layout
-- **removed as redundant** — already enforced or obvious from the repository
-- **removed as unsupported** — contradicted or not evidenced by the project
-- **moved out of root scope** — useful only for a specialized area or procedure
-
-Name the reason for every group and mention conflicts with surviving nested instructions. Do not say the old file was “inferior” without evidence; explain the concrete maintenance or instruction-following risk that justified replacement.
-
-When a prior root `CLAUDE.md` existed, account for its instructions too. Explain which content was duplicated, tool-specific, stale, or better owned by the canonical root guidance before replacing it with the import-only companion.
-
-Report the inspection surfaces, stable truths encoded, files written, validation evidence, and any intentionally omitted uncertainty. Do not include research URLs or authoring history in the generated project files.
-
-This phase is complete when every prior instruction is accounted for and the user can audit why the replacement is safer, less brittle, and more autonomous.
+Use an exhaustive line-by-line replacement ledger only when the user asks for it or the previous instructions are safety-critical, contested, or too complex to audit by material groups.
 
 ## Maintenance Reference
 
-Read `references/source-notes.md` only when maintaining this skill, rechecking the `CLAUDE.md` import convention, or revising its prompt-design rationale. It is research evidence, not runtime project guidance.
+Read `references/source-notes.md` when maintaining this skill, rechecking the `CLAUDE.md` import convention, or revising its context-design rationale. Keep research history out of generated project instructions.

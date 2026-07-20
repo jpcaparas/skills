@@ -92,7 +92,7 @@ Production writing system for drafting, rewriting, review, humanisation, and ada
   <img src="skills/bootstrap-agents-md/skill-card.png" alt="16-bit side-scrolling pixel art badge for bootstrap-agents-md" width="480">
 </p>
 
-Production skill for creating or replacing compact, evidence-backed root agent guidance and an exact Claude import without freezing the project's current paths, tools, dependencies, or versions.
+Production skill for creating or replacing minimal, evidence-backed root agent guidance and an exact Claude import while preserving project-specific truth and capable-model judgment.
 
 ### `claude-code-auto-advisor`
 

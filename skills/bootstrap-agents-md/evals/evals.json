@@ -5,8 +5,8 @@
     {
       "id": 1,
       "name": "bootstrap-existing-service-repository",
-      "prompt": "Replace the root agent instructions for this established service. Inspect the whole repository first, create durable AGENTS.md guidance, and make Claude use the same source without duplicating it.",
-      "expected_output": "The agent inventories every meaningful project surface, writes a compact evidence-backed root AGENTS.md, writes an exact one-line CLAUDE.md import, validates both, and accounts for every replaced instruction.",
+      "prompt": "Replace the root agent instructions for this established service. Inspect enough of the supplied repository evidence to identify durable project rules, create the smallest useful AGENTS.md, and make Claude use the same source without duplication.",
+      "expected_output": "The agent writes a compact, evidence-backed root AGENTS.md focused on payout invariants and verification, writes the exact CLAUDE.md import, validates the pair, and explains material replacement decisions.",
       "files": [
         "evals/files/ledgerbird/PROJECT.md",
         "evals/files/ledgerbird/AGENTS.md",
@@ -17,36 +17,47 @@
         "evals/files/ledgerbird/automation.yml"
       ],
       "assertions": [
-        {"text": "Inspects purpose, architecture, tests, automation, operational boundaries, and existing instruction precedence before writing", "type": "functional"},
+        {"text": "Inspects the supplied purpose, domain, flow, tests, automation, and existing instruction files because each can affect retained root guidance", "type": "functional"},
         {"text": "Writes CLAUDE.md as exactly @AGENTS.md followed by one newline", "type": "structural"},
-        {"text": "Reports a disposition and concrete reason for every prior root instruction group", "type": "verification"},
-        {"text": "Runs the packaged validator or records an equivalent manual check", "type": "verification"}
+        {"text": "Retains the immutable-intent, replay, acceptance, and uncertain-delivery rules supported across the fixture", "type": "functional"},
+        {"text": "Runs the packaged validator or records an equivalent manual check without treating structure as semantic proof", "type": "verification"},
+        {"text": "Reports material prior-instruction groups and their concrete dispositions without requiring a line-by-line ledger", "type": "verification"}
       ],
       "tags": ["smoke", "replacement"]
     },
     {
       "id": 2,
       "name": "new-polyglot-monorepo-with-nested-guidance",
-      "prompt": "Bootstrap shared agent guidance for this polyglot monorepo. There is no root AGENTS.md, but two components have their own local instruction files. Keep the root future-proof and do not disturb component-specific rules.",
-      "expected_output": "The agent creates only the root pair, inventories nested precedence, encodes repository-wide conceptual invariants, avoids competing with local rules, and reports any conflicts or gaps.",
+      "prompt": "Bootstrap shared agent guidance for this polyglot monorepo. There is no root AGENTS.md, but two components have their own local instruction files. Keep the root focused on shared truths and do not disturb component-specific rules.",
+      "expected_output": "The agent creates only the root pair, respects nested precedence, selects repository-wide rules from evidence, and chooses a structure proportional to those rules.",
       "assertions": [
         {"text": "Accounts for nested instruction scope and precedence without overwriting it", "type": "functional"},
         {"text": "Keeps the root guidance repository-wide rather than flattening component-specific rules", "type": "functional"},
         {"text": "Does not create additional nested instruction files", "type": "negative"},
-        {"text": "Generated AGENTS.md contains no concrete paths, commands, package names, versions, or URLs", "type": "negative"}
+        {"text": "Includes an exact path, command, tool, version, or URL only when evidence shows its literal form materially improves shared root guidance", "type": "functional"}
       ],
       "tags": ["edge", "portability"]
     },
     {
       "id": 3,
-      "name": "replace-brittle-command-heavy-instructions",
-      "prompt": "Our AGENTS.md is a long dump of pinned setup commands, dependency names, absolute paths, and duplicated lint rules. Replace it with guidance that survives normal tooling and layout changes, then explain precisely what was removed and why.",
-      "expected_output": "The agent does not merge the brittle file, preserves only evidenced intent in conceptual form, produces an exhaustive replacement ledger, and keeps mechanically enforced details out of always-loaded prose.",
+      "name": "replace-brittle-instructions-with-calibrated-specificity",
+      "prompt": "Replace the supplied Ledgerbird AGENTS.md. It mixes a machine-local path, pinned library versions, blanket rules, and duplicated checks. Preserve exact details that are stable and useful, remove unsupported or transient constraints, and summarize the material decisions.",
+      "expected_output": "The replacement keeps the evidenced domain invariants and configured verification commands, removes the machine-local path and unsupported blanket rules, and avoids inheriting the old structure.",
+      "files": [
+        "evals/files/ledgerbird/PROJECT.md",
+        "evals/files/ledgerbird/AGENTS.md",
+        "evals/files/ledgerbird/CLAUDE.md",
+        "evals/files/ledgerbird/domain-policy.txt",
+        "evals/files/ledgerbird/service-flow.txt",
+        "evals/files/ledgerbird/tests.txt",
+        "evals/files/ledgerbird/automation.yml"
+      ],
       "assertions": [
-        {"text": "Treats the old file as comparison evidence rather than a template", "type": "functional"},
-        {"text": "Removes brittle literal details while preserving supported intent", "type": "functional"},
+        {"text": "Treats the old file as comparison evidence rather than a wording or section template", "type": "functional"},
+        {"text": "Retains the exact configured test and lint commands because automation proves their stable behavior-changing value", "type": "functional"},
+        {"text": "Removes the machine-local absolute path, unsupported dependency pins, comment-every-function rule, and blanket RetryManager requirement", "type": "functional"},
         {"text": "Does not describe the old file as inferior without evidence", "type": "negative"},
-        {"text": "Explains which rules belong in automated enforcement or narrower scope", "type": "verification"}
+        {"text": "Explains material preserved, reframed, and removed rule groups without manufacturing an exhaustive report", "type": "verification"}
       ],
       "tags": ["replacement", "edge"]
     },
@@ -54,9 +65,9 @@
       "id": 4,
       "name": "negative-wording-with-autonomy",
       "prompt": "Create project agent instructions that strongly prevent bypassing tests, swallowing errors, unsafe retries, drive-by cleanup, and speculative abstractions, but still let the coding agent choose the best implementation from local evidence.",
-      "expected_output": "The generated guidance uses targeted negative guardrails for costly failures, pairs each with a permitted action, keeps ordinary guidance positive, and does not prescribe unevidenced mechanisms.",
+      "expected_output": "The generated guidance keeps costly failure boundaries explicit, states the safe outcome and reason, and leaves unearned mechanisms and presentation choices open.",
       "assertions": [
-        {"text": "Each material prohibition names the safe or permitted action", "type": "functional"},
+        {"text": "Each material prohibition names the safe or permitted action and why the boundary matters", "type": "functional"},
         {"text": "Reliability rules are conditional on project evidence and operational risk", "type": "functional"},
         {"text": "Does not use repeated urgency, emotional pressure, role-play, or blanket MUST language", "type": "negative"},
         {"text": "Leaves implementation choices open when multiple approaches fit local evidence", "type": "functional"}
@@ -73,6 +84,21 @@
         {"text": "Routes the task as repository documentation work", "type": "functional"}
       ],
       "tags": ["negative"]
+    },
+    {
+      "id": 6,
+      "name": "sparse-library-earns-sparse-guidance",
+      "prompt": "Create root AGENTS.md and CLAUDE.md for Pocketcalc, a small arithmetic-expression library. Keep only project knowledge that deserves persistent context. Its public behavior preserves formatted negative zero as -0 for financial importers, formats positive zero as 0, and rejects locale commas rather than normalizing them. The configured checks are bun test and bun run typecheck. The repository currently has no network calls, persistence, deployment, migrations, or background work.",
+      "expected_output": "A genuinely small AGENTS.md that preserves the signed-zero formatting invariant and exact configured checks without adding generic section boilerplate, plus the exact CLAUDE.md import.",
+      "assertions": [
+        {"text": "Preserves signed-zero formatting as the non-obvious project invariant", "type": "functional"},
+        {"text": "Includes the exact configured test and typecheck commands because they are the repository's shared verification contract", "type": "functional"},
+        {"text": "Does not add reliability, operations, deployment, migration, security, or architecture boilerplate absent from the evidence", "type": "negative"},
+        {"text": "Does not turn the current absence of network, persistence, deployment, migrations, or background work into permanent prohibitions", "type": "negative"},
+        {"text": "Does not force a minimum number of headings, lines, or generic concepts", "type": "structural"},
+        {"text": "Writes CLAUDE.md as exactly @AGENTS.md followed by one newline", "type": "structural"}
+      ],
+      "tags": ["edge", "portability"]
     }
   ]
 }

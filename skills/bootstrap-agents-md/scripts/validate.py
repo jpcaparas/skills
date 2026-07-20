@@ -70,9 +70,12 @@ def main() -> int:
             errors.append("SKILL.md exceeds 500 lines")
         for required in [
             "## Output Contract",
-            "## 1. Establish Scope and a Recoverable Baseline",
-            "## 2. Inspect the Whole Project by Evidence Surface",
-            "## 7. Explain the Replacement",
+            "## 1. Establish Scope and Baseline",
+            "## 2. Inspect Just Enough of the Project",
+            "## 3. Decide What Earns Persistent Context",
+            "## 4. Draft for the Project, Not a Template",
+            "## 5. Write and Verify the Pair",
+            "## 6. Report Material Decisions",
             "@AGENTS.md",
             "scripts/validate_agents_md.py",
         ]:
@@ -86,6 +89,12 @@ def main() -> int:
             ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
         except SyntaxError as exc:
             errors.append(f"python syntax error in {path.name}: {exc}")
+
+    source_notes_path = root / "references" / "source-notes.md"
+    if source_notes_path.is_file():
+        source_notes = source_notes_path.read_text(encoding="utf-8")
+        if "## Behavioral Eval Record" not in source_notes:
+            errors.append("source notes must preserve the behavioral eval record")
 
     evals_path = root / "evals" / "evals.json"
     if evals_path.is_file():

@@ -21,35 +21,12 @@ def load_validator() -> ModuleType:
     return module
 
 
-VALID_AGENTS = """# Project Agent Guidance
+VALID_AGENTS = """# Ledgerbird
 
-## Critical boundaries
-
-- Inspect the relevant implementation and tests before editing.
-- Do not discard user work; preserve it and keep the change narrowly scoped.
-- Do not bypass failed validation; fix the cause or report the blocked check and risk.
-
-## Project shape
-
-- Preserve the separation between domain decisions, orchestration, and external effects.
-- Keep domain language consistent with the behavior documented by the project.
-
-## Maintainability
-
-- Prefer readable names, explicit responsibilities, and strong data contracts where supported.
-- Avoid speculative abstraction; use the smallest design that preserves the current intent.
-- Comment rationale and invariants when structure alone cannot explain them.
-
-## Tests and verification
-
-- Do not leave changed behavior untested; add focused regression evidence or report the gap.
-- Keep tests deterministic and assert observable behavior.
-- Run the repository's configured checks in proportion to the change.
-
-## Completion
-
-- Report what changed, verification performed, remaining limitations, and meaningful risk.
-- Remove stale guidance when the project evolves and prefer automated enforcement for strict invariants.
+- Payout intent is immutable after external acceptance.
+- Replayed intent keys return the recorded result without another dispatch.
+- Run `uv run pytest` and `ruff check src tests` before handoff.
+- Use `docs/payout-lifecycle.md` when changing acceptance or cancellation policy.
 """
 
 
@@ -70,6 +47,8 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
+
+        # Stable commands and repository-relative references are valid context.
         write_project(root, VALID_AGENTS)
         result = validator.validate_project(root)
         assert result["valid"], result
@@ -79,23 +58,25 @@ def main() -> int:
         assert not result["valid"]
         assert any("exactly @AGENTS.md" in error for error in result["errors"])
 
-        write_project(root, VALID_AGENTS + "\nSee https://example.invalid and run `tool test`.\n")
+        # Literal dependencies, versions, and maintained URLs are not structural defects.
+        write_project(
+            root,
+            VALID_AGENTS
+            + "\nCompatibility requires httpx 0.27; see https://example.invalid/contract.\n",
+        )
         result = validator.validate_project(root)
-        assert not result["valid"]
-        assert any("forbidden URL" in error for error in result["errors"])
-        assert any("inline or fenced code" in error for error in result["errors"])
+        assert result["valid"], result
 
-        write_project(root, VALID_AGENTS + "\nUse ./temporary/config at version 4.2.1.\n")
+        # A possible machine-local path is a review signal because explicit user contracts may allow it.
+        write_project(root, VALID_AGENTS + "\nLocal evidence was found at /opt/company/project.\n")
         result = validator.validate_project(root)
-        assert not result["valid"]
-        assert any("forbidden relative path" in error for error in result["errors"])
-        assert any("forbidden version number" in error for error in result["errors"])
+        assert result["valid"], result
+        assert any("machine-local absolute path" in warning for warning in result["warnings"])
 
-        write_project(root, VALID_AGENTS + "\nRun ruff check and use httpx for requests.\n")
+        # Small projects are allowed to produce genuinely small guidance.
+        write_project(root, "# Pocketcalc\n\nPreserve signed zero in formatted output.\n")
         result = validator.validate_project(root)
-        assert not result["valid"]
-        assert any("package or executable" in error for error in result["errors"])
-        assert any("httpx" in error and "ruff" in error for error in result["errors"])
+        assert result["valid"], result
 
         write_project(root, VALID_AGENTS + "\n" + ("context " * 1300) + "\n")
         result = validator.validate_project(root)
