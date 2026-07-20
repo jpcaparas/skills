@@ -73,6 +73,7 @@ SKILL_SCENES = {
     "secure-ai-agent-coding": "a guarded agent workbench behind shields, permission gates, and safe tool lanes",
     "seo-analysis": "a crawl-path garden where sitemap nodes glow under search spotlights",
     "skill-creator-advanced": "a skill forge crafting a reusable instruction cartridge from blank parts and test gems",
+    "sprite-decompose": "a luminous illustrated mosaic passing through a precision cutting gate and separating into several clean transparent sprite gems, with exact crop rails and a small manifest crystal",
     "strong-types": "a foundry casting loose shape-shifting blobs into crisp interlocking typed blocks along guarded connector rails with shield gates rejecting misfit pieces",
     "synthetic-search": "a zero-retention radar scanning the web through clean privacy lanes",
     "tarsier": "a tiny bicycle courier carrying an art packet through a pixel side-scroller lane",
@@ -114,6 +115,13 @@ def skill_names(skills_root: Path) -> list[str]:
 
 def prompt_for_skill(name: str) -> str:
     scene = SKILL_SCENES[name]
+    blank_surface_subjects = (
+        "book, ticket, screen, terminal, dashboard, chart, browser, sign, speech bubble, "
+        "social post, calendar, spreadsheet, map, or interface surface"
+        if name == "sprite-decompose"
+        else "paper, book, ticket, screen, terminal, dashboard, chart, browser, sign, "
+        "speech bubble, social post, calendar, spreadsheet, map, or interface surface"
+    )
     return f"""Nano Banana 2 image generation prompt for the `{name}` README skill badge.
 
 Create a polished rectangular raster badge for a GitHub README.
@@ -122,7 +130,7 @@ Style: consistent side-scrolling 16-bit pixel game art, crisp pixel edges, low-n
 Subject: {scene}.
 Composition: one central readable illustration, a few supporting environmental elements, generous negative space, no crowded UI, no poster collage, no photorealism, no mockup frame.
 Forbidden objects unless unavoidable: pages, documents, signs, posters, terminal windows, dashboard windows, browser windows, charts with axes, speech bubbles, calendars with grids, spreadsheets, tickets with markings, maps with markings, and social media post mockups.
-Blank-surface rule: any paper, book, ticket, screen, terminal, dashboard, chart, browser, sign, speech bubble, social post, calendar, spreadsheet, map, or interface surface must be visually blank or represented only by solid unlabeled rectangles, bars, dots, connectors, and simple icons. Do not draw interior strokes that resemble writing.
+Blank-surface rule: any {blank_surface_subjects} must be visually blank or represented only by solid unlabeled rectangles, bars, dots, connectors, and simple icons. Do not draw interior strokes that resemble writing.
 Palette: deep midnight navy background, cool teal and blue shadows, one warm amber accent, limited saturated highlights, cohesive with the rest of the README skill-card collection.
 Lighting: soft game-like glow, clear silhouette separation, no blur, no grain, no lens effects.
 {NO_TEXT_RULE}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Sprite Decompose"
+  short_description: "Extract reviewed sprites into transparent PNGs"
+  default_prompt: "Separate this multi-illustration image into tightly cropped transparent PNGs and a validated manifest."

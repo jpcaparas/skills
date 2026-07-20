@@ -14,7 +14,7 @@ from yaml_validation import load_unique_yaml
 
 
 MAX_DESCRIPTION_CHARS = 450
-MAX_TOTAL_DESCRIPTION_CHARS = 12_000
+MAX_TOTAL_DESCRIPTION_CHARS = 12_500
 
 
 @dataclass(frozen=True)

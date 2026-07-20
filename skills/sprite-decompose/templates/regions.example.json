@@ -1,0 +1,33 @@
+{
+  "schema_version": 1,
+  "background": {
+    "model": "quadratic",
+    "sample_stride": 4,
+    "selection_distance": 24.0,
+    "fit_iterations": 3
+  },
+  "matting": {
+    "core_distance": 18.0,
+    "edge_distance": 5.0,
+    "edge_growth": 3,
+    "min_component_area": 3
+  },
+  "background_samples": [],
+  "regions": [
+    {
+      "name": "touching-pair",
+      "bounds": {"x": 20, "y": 16, "width": 96, "height": 72},
+      "grouping": "Two touching elements intentionally kept as one logical sprite.",
+      "component_policy": "all",
+      "warnings": []
+    },
+    {
+      "bounds": {"x": 124, "y": 16, "width": 72, "height": 72},
+      "grouping": "One unnamed sprite with a detached particle retained.",
+      "component_policy": "all",
+      "min_component_area": 1,
+      "fill_holes": false,
+      "warnings": ["Review the detached particle against the source."]
+    }
+  ]
+}

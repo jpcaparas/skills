@@ -1,0 +1,120 @@
+{
+  "skill_name": "sprite-decompose",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "fixture-backed-two-sprite-extraction",
+      "prompt": "Use the attached tiny atlas and reviewed region JSON. Extract the two logical sprites into a new output directory, preserve the supplied name for the first and stable numbering for the unnamed second, then report validation evidence.",
+      "expected_output": "Runs deterministic extraction against the explicit regions, produces red-token.png and sprite-002.png plus manifest.json, verifies RGBA mode, alpha-tight edges, hashes, bounds, grouping, and stable order, and reports the actual command outcome.",
+      "files": [
+        "evals/files/tiny-atlas.ppm",
+        "evals/files/tiny-regions.json"
+      ],
+      "assertions": [
+        {
+          "text": "Uses the attached region specification instead of inventing semantic segmentation",
+          "type": "functional"
+        },
+        {
+          "text": "Produces red-token.png, sprite-002.png, and manifest.json in the requested new directory",
+          "type": "structural"
+        },
+        {
+          "text": "Runs the independent verifier and reports its real result",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "fixture", "verification"]
+    },
+    {
+      "id": 2,
+      "name": "touching-pair-and-detached-spark",
+      "prompt": "This sheet has two touching fruit slices that should stay together, plus a one-pixel sparkle belonging to them. Prepare the region plan and extraction settings without splitting the pair or dropping the sparkle.",
+      "expected_output": "Creates one logical region for the touching pair, records the grouping decision, uses all components with a local minimum component area suitable for the assigned sparkle, and requires visual review of both the sprite edge and detached effect.",
+      "assertions": [
+        {
+          "text": "Keeps the touching pair as one named logical sprite and records why",
+          "type": "functional"
+        },
+        {
+          "text": "Uses a local component-area override for the assigned tiny effect rather than weakening every region",
+          "type": "functional"
+        },
+        {
+          "text": "Does not claim that touching or hidden pixels were semantically reconstructed",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "grouping", "particles"]
+    },
+    {
+      "id": 3,
+      "name": "adjacent-atlas-packing-request",
+      "prompt": "I already have 40 separate transparent character PNGs. Pack them into the smallest power-of-two texture atlas and emit CSS coordinates.",
+      "expected_output": "Routes away from this skill because the request combines existing files into an atlas rather than decomposing one raster into separate sprites.",
+      "assertions": [
+        {
+          "text": "Does not invoke the decomposition workflow or produce extraction regions",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "near-miss"]
+    },
+    {
+      "id": 4,
+      "name": "loads-region-review-for-ambiguous-fringes",
+      "prompt": "The source has pale glows, soft shadows, tiny petals, and a gently changing cream background. Decide how to author and review the region JSON before extracting anything.",
+      "expected_output": "Reads references/region-review.md, selects the quadratic background route, keeps per-region grouping and component decisions explicit, and describes a light/dark-background review loop without treating thresholds as universal constants.",
+      "assertions": [
+        {
+          "text": "Captured trace records a read of references/region-review.md before the region plan is finalized",
+          "type": "disclosure"
+        },
+        {
+          "text": "Uses symptom-led threshold tuning and explicit particle assignment from the review reference",
+          "type": "functional"
+        }
+      ],
+      "tags": ["disclosure", "edge", "review"]
+    },
+    {
+      "id": 5,
+      "name": "safe-rerun-and-process-evidence",
+      "prompt": "The output folder already exists from yesterday. Rerun the extraction safely and tell me exactly what proves the new files are complete and the source stayed unchanged.",
+      "expected_output": "Refuses the default clobber path, requires explicit overwrite intent, stages and verifies the complete replacement, checks the source hash, and reports manifest inventory, PNG hashes, dimensions, RGBA mode, and transparent-edge tightness.",
+      "assertions": [
+        {
+          "text": "Does not replace an existing output directory without the explicit overwrite flag",
+          "type": "negative"
+        },
+        {
+          "text": "Publishes only after staged verification and unchanged-source evidence",
+          "type": "verification"
+        },
+        {
+          "text": "Declares completion only after the independent verify command passes",
+          "type": "verification"
+        }
+      ],
+      "tags": ["verification", "process", "safety"]
+    },
+    {
+      "id": 6,
+      "name": "occluded-sprite-limit",
+      "prompt": "Two characters overlap in this flattened sheet. Separate both and reconstruct the covered arm and leg so each becomes a complete animation cel.",
+      "expected_output": "Explains that extraction can preserve only visible pixels, refuses to claim hidden-pixel recovery, and offers reviewed visible-region extraction if that reduced result is useful.",
+      "assertions": [
+        {
+          "text": "States that hidden pixels cannot be recovered from the flattened source",
+          "type": "functional"
+        },
+        {
+          "text": "Does not fabricate the covered anatomy or call the result a complete reconstruction",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "disclosure", "limits"]
+    }
+  ]
+}

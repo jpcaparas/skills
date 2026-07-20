@@ -1,0 +1,22 @@
+[
+  {
+    "query": "Split this sprite sheet into separate transparent PNGs, keep the touching kiwi slices together, and write a bounds manifest.",
+    "should_trigger": true
+  },
+  {
+    "query": "This cream-background image contains dozens of little illustrations. Save each logical object as its own tightly trimmed image and use my labels as filenames.",
+    "should_trigger": true
+  },
+  {
+    "query": "Generate a brand-new set of pixel-art characters with transparent backgrounds.",
+    "should_trigger": false
+  },
+  {
+    "query": "Pack these separate PNG files into one texture atlas and return the frame coordinates.",
+    "should_trigger": false
+  },
+  {
+    "query": "Remove the background from this one product photo and keep it as a single image.",
+    "should_trigger": false
+  }
+]

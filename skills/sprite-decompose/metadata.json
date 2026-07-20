@@ -1,0 +1,16 @@
+{
+  "name": "sprite-decompose",
+  "display_name": "Sprite Decompose",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Separate an existing multi-illustration raster into reviewed, tightly cropped transparent PNGs with stable names and a validated extraction manifest.",
+  "tags": [
+    "image-processing",
+    "sprites",
+    "background-removal",
+    "png",
+    "manifest",
+    "deterministic-workflow"
+  ]
+}

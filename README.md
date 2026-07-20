@@ -404,6 +404,16 @@ Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quo
 
 Production-grade skill creator and library curator with precise invocation, branch-driven disclosure, release validation, lifecycle synchronization, and path-aware placement.
 
+### `sprite-decompose`
+
+`npx skills add jpcaparas/skills --skill sprite-decompose`
+
+<p align="center">
+  <img src="skills/sprite-decompose/skill-card.png" alt="16-bit side-scrolling pixel art badge for sprite-decompose" width="480">
+</p>
+
+Production skill for separating an existing sprite sheet or illustration contact sheet into reviewed, alpha-tight transparent PNGs with stable filenames and a validated extraction manifest.
+
 ### `strong-types`
 
 `npx skills add jpcaparas/skills --skill strong-types`
