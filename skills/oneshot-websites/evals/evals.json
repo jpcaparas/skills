@@ -44,13 +44,13 @@
       "id": 4,
       "name": "fresh-leads-for-multiple-briefs",
       "prompt": "Make two independent experiences: a storm-chasing field notebook and a playful reef survey. Compare Model A and Model B in Harness X.",
-      "expected_output": "Reserves one collision-free model/harness/experiment/run namespace for every requested matrix cell and dispatches one distinct fresh lead for each artifact.",
+      "expected_output": "Reserves one collision-free timestamped directory directly under the selected output root for every requested matrix cell and dispatches one distinct fresh lead for each artifact.",
       "assertions": [
         {"text": "Does not combine multiple artifacts into one worker", "type": "negative"},
-        {"text": "Keeps model, harness, experiment, and run identity in that order", "type": "structural"},
+        {"text": "Places every run directly under the selected output root and keeps model, harness, and experiment identity in run.json", "type": "structural"},
         {"text": "Creates exactly four isolated runs owned by four distinct fresh leads for the two briefs across two models", "type": "structural"}
       ],
-      "tags": ["multiple", "fresh-leads", "namespace"]
+      "tags": ["multiple", "fresh-leads", "run-layout"]
     },
     {
       "id": 5,
@@ -78,12 +78,13 @@
       "id": 7,
       "name": "collision-free-identities",
       "prompt": "Run the same harbour experience under model names 'Model One' and 'Model-One'.",
-      "expected_output": "Derives readable identity keys with exact-name digests, produces distinct paths for the two normalized-similar names, and creates a new run ID for every execution.",
+      "expected_output": "Creates distinct timestamped paths directly beneath the output root, adds a numeric suffix when reservations share a second, and records both normalized-similar raw model names with distinct digest keys in their run.json files.",
       "assertions": [
         {"text": "Never overwrites an existing run", "type": "negative"},
-        {"text": "Records raw names and derived keys in run.json", "type": "structural"}
+        {"text": "Records raw names and derived keys in run.json", "type": "structural"},
+        {"text": "Uses -02, -03, and later suffixes for atomic same-second collisions without adding model, harness, or experiment directories", "type": "verification"}
       ],
-      "tags": ["namespace", "collision", "rerun"]
+      "tags": ["run-layout", "collision", "rerun", "edge"]
     },
     {
       "id": 8,
@@ -112,7 +113,7 @@
       "id": 10,
       "name": "artifact-validation",
       "prompt": "Explain the oneshot-websites validation workflow you would apply before publishing an output root. Assume one successful run was built from a framework workspace and exported as static files.",
-      "expected_output": "Routes to the catalogue validator and explains that it checks namespace, the independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace and would report any missing successful entrypoint or unsafe final artifact.",
+      "expected_output": "Routes to the catalogue validator and explains that it checks the flat timestamped run layout, the independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace and supported legacy nested runs, and would report any missing successful entrypoint or unsafe final artifact.",
       "assertions": [
         {"text": "Identifies artifact/PROMPT.md and artifact/index.html as validation targets", "type": "functional"},
         {"text": "Does not impose a vanilla or single-file implementation rule", "type": "negative"}
@@ -339,7 +340,7 @@
       "expected_output": "Preserves genuine Unicode characters as exact UTF-8 bytes in the lead dispatch and artifact/PROMPT.md. Before reserving or dispatching the run, rejects replacement characters, stray C1 controls, and recognizable mojibake with a correction that points back to the prepared source. It does not silently transcode ambiguous prose or flatten intended characters to ASCII.",
       "assertions": [
         {"text": "Em dashes, curly punctuation, emoji, Japanese, and Arabic survive byte-for-byte in artifact/PROMPT.md", "type": "verification"},
-        {"text": "A recognizable mojibake prompt is rejected before a run namespace is reserved or a lead is dispatched", "type": "functional"},
+        {"text": "A recognizable mojibake prompt is rejected before a run directory is reserved or a lead is dispatched", "type": "functional"},
         {"text": "The correction identifies the source prompt as the repair boundary", "type": "structural"},
         {"text": "Does not silently reinterpret arbitrary valid Unicode or replace it with ASCII", "type": "negative"}
       ],

@@ -11,7 +11,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - One fresh lead subagent per experiment, with recursive delegation allowed
 - A preserved `.tmp/` inside every unique run, with best-effort temp routing inherited by descendants and kept out of prompts and deployable artifacts
 - No skill-imposed time, stack, dependency, workflow, or source-project constraints
-- Collision-free model/harness/experiment namespaces
+- Flat, local-time run directories with atomic same-second collision suffixes
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
 - End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake
 - A conservative Cloudflare/Vercel Drop-ready `artifact/` with one root `index.html` entrypoint and any supporting asset tree the experience needs
@@ -22,7 +22,7 @@ Production skill for launching autonomous one-shot website experiments through f
 
 - `SKILL.md` - authoritative instructions
 - `assets/prompt-catalogue.json` - canonical prompt catalogue
-- `references/execution-protocol.md` - delegation and namespace contract
+- `references/execution-protocol.md` - delegation and flat run-layout contract
 - `agents/oneshot-lead.md` - isolated lead role
 - `scripts/list_prompts.py` - catalogue browser
 - `scripts/validate_catalog.py` - generated artifact checker

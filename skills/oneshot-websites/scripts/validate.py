@@ -36,7 +36,6 @@ REQUIRED_FILES = (
     "scripts/test_skill.py",
     "scripts/validate.py",
     "scripts/validate_catalog.py",
-    "templates/namespace-identity.json",
     "templates/run.json",
     "templates/worker-dispatch.md",
 )
@@ -156,14 +155,17 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
-        "model-harness-experiment namespace",
+        "flat timestamped run layout",
         re.compile(
-            r"^  <model-key>/\n(?: {4}[^\n]*\n)*?^    <harness-key>/\n"
-            r"(?: {6}[^\n]*\n)*?^      <experiment-key>/",
-            re.I | re.M,
+            r"^  <YYYY-MM-DD-HH-MM-SS>/\n.*?"
+            r"Create each run directly beneath.*?local timestamp.*?-02.*?-03",
+            re.I | re.M | re.S,
         ),
     ),
-    ("raw identity namespace markers", re.compile(r"\.oneshot-identity\.json.*?(?:raw name|raw identity|exact raw)", re.I | re.S)),
+    (
+        "raw identity metadata",
+        re.compile(r"exact model, harness, and experiment names.*?digest-bound keys.*?run\.json.*?receipt", re.I | re.S),
+    ),
     ("relevance-gated catalogue matching", re.compile(r"genuinely relevant.*?optional baselines.*?no meaningful match.*?without.*?catalogue", re.I | re.S)),
     ("artifact prompt", re.compile(r"artifact/PROMPT\.md")),
     ("artifact entrypoint", re.compile(r"artifact/index\.html")),
@@ -653,8 +655,8 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.5.0":
-        errors.append("metadata.json version must be 2.5.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != "2.6.0":
+        errors.append("metadata.json version must be 2.6.0")
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 

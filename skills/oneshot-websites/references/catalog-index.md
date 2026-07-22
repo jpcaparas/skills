@@ -20,7 +20,7 @@ Each run directory contains:
 
 The output root also contains one `.oneshot-provenance/<run-id>.json` receipt and one empty `.oneshot-provenance/<run-id>.commit` marker per dispatched run, kept outside the worker-owned run. The receipt records the prompt digest, identity, run relationship, run-schema version, and temporary-storage contract. That external schema anchor distinguishes genuine legacy runs from worker-edited current runs. The coordinator creates the commit marker last; bounded pre-dispatch residue without it, including an empty `.tmp/`, is recoverable, while committed runs remain part of the inventory. Receipt integrity depends on the dispatch contract giving workers write access only to their assigned run; it is not a cryptographic boundary when a worker can write the output root.
 
-Each model, harness, and experiment namespace contains an exact-case `.oneshot-identity.json` marker that binds its derived key to the exact raw name. The validator cross-checks these coordinator-owned markers against every run so distinct identities never silently share a namespace.
+Each current run sits directly beneath the output root in a `YYYY-MM-DD-HH-MM-SS` directory, with `-02`, `-03`, and later suffixes reserved atomically for same-second collisions. Exact model, harness, and experiment names and their digest-bound keys live in `run.json` and the external receipt rather than in directory names.
 
 The only website entrypoint is the exact-case path `artifact/index.html`; the preserved prompt is the exact-case path `artifact/PROMPT.md`. The sibling `.tmp/` is run evidence, not deployable website content. The artifact folder must be deployable as-is to a static folder host. It must not require `npm install`, a build, a framework development server, or a server-side runtime after the lead finishes.
 
@@ -57,7 +57,7 @@ The finished output root keeps this generated `index.html` as an exact-case, rea
 
 `ONESHOT_WEBSITES_PYTHON` follows the compatible Python 3.11-or-newer helper-runtime contract in `SKILL.md`; it is an executable path or command name, not a version pin or a constraint on the generated website.
 
-Validation checks namespace order, raw-name identity keys, globally unique run IDs, acyclic rerun links, one-to-one committed receipt inventory, prompt bytes and digest, the run-local `.tmp/` contract for current-schema runs, exact manifest paths and filename casing, status evidence, the current readable aggregate root index, the root `artifact/index.html`, provider-size bounds, local HTML and SVG resources, and transitive CSS resources. It accepts legacy 2.0 run records without retroactively requiring `.tmp/`. It accepts relative and root-relative browser resources against the deployed artifact root. It rejects `.tmp/`, project, cache, provider-filtered, source-only, and server state anywhere in the final folder while accepting any source framework, dependency, project shape, and build process in `workspace/`.
+Validation checks the flat timestamp layout, raw-name identity keys, globally unique run IDs, acyclic rerun links, one-to-one committed receipt inventory, prompt bytes and digest, the run-local `.tmp/` contract for current-schema runs, exact manifest paths and filename casing, status evidence, the current readable aggregate root index, the root `artifact/index.html`, provider-size bounds, local HTML and SVG resources, and transitive CSS resources. It continues to read legacy nested 2.0 and 2.1 output roots, without retroactively requiring `.tmp/` for 2.0 records. It accepts relative and root-relative browser resources against the deployed artifact root. It rejects `.tmp/`, project, cache, provider-filtered, source-only, and server state anywhere in the final folder while accepting any source framework, dependency, project shape, and build process in `workspace/`.
 
 A passing structural check does not prove visual quality, JavaScript module graphs, every dynamic request, or runtime correctness. Successful current-schema runs must record whether temporary routing was applied; a `false` result requires at least one concrete external exception. They must also carry concrete worker verification evidence with a `kind`, passed `result`, and non-empty `evidence`; any explicit failed check invalidates `OK`. Inspect or replay that evidence when runtime confidence matters.
 
@@ -71,5 +71,5 @@ Keep partial and failed runs visible. Honest failure evidence is more useful tha
 
 ## See Also
 
-- `references/execution-protocol.md` — namespace and delegation rules
+- `references/execution-protocol.md` — run layout and delegation rules
 - `templates/run.json` — initial manifest shape

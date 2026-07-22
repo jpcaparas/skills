@@ -72,7 +72,7 @@ Also record the raw model name, harness name, and experiment name. Use the activ
 
 This step is complete when the stored bytes, digest, and text prepared for dispatch agree exactly.
 
-## 2. Reserve a Collision-Free Namespace
+## 2. Reserve a Flat Collision-Free Run
 
 Create the run before starting workers:
 
@@ -82,25 +82,19 @@ Create the run before starting workers:
   .oneshot-provenance/
     <run-id>.json
     <run-id>.commit
-  <model-key>/
-    .oneshot-identity.json
-    <harness-key>/
-      .oneshot-identity.json
-      <experiment-key>/
-        .oneshot-identity.json
-        <run-id>/
-          run.json
-          worker-report.json
-          .tmp/
-          workspace/
-          artifact/
-            PROMPT.md
-            index.html
-            ...
+  <YYYY-MM-DD-HH-MM-SS>/
+    run.json
+    worker-report.json
+    .tmp/
+    workspace/
+    artifact/
+      PROMPT.md
+      index.html
+      ...
   index.html
 ```
 
-Model comes first, harness second, experiment third. Each readable key also contains a strong digest prefix of its raw name, and each namespace level has a coordinator-owned `.oneshot-identity.json` marker binding that key to the exact raw name. A marker mismatch fails closed instead of co-mingling distinct identities. Every execution receives a new run ID. Existing runs are never reused or overwritten.
+Create each run directly beneath the caller-selected output root. Name it with the local timestamp `YYYY-MM-DD-HH-MM-SS`; if another reservation wins that same second, atomically reserve `-02`, `-03`, and so on. Keep the exact model, harness, and experiment names and their digest-bound keys in `run.json` and the coordinator receipt instead of repeating them as directories. Existing runs are never reused or overwritten.
 
 When Python is available, use:
 
@@ -113,11 +107,11 @@ When Python is available, use:
   --prompt-file "<actual-prompt-file>"
 ```
 
-On Windows, use a compatible `python.exe` or `py -3` launcher as described above. Choose a short output root and enable Win32 long-path support for deep source workspaces; the script and namespace rules are otherwise identical.
+On Windows, use a compatible `python.exe` or `py -3` launcher as described above. Set `--output-root` to the folder where the user started the benchmark; do not add model, harness, or experiment wrapper directories. Enable Win32 long-path support only when the lead’s own source workspace needs it.
 
-Read `references/execution-protocol.md` when planning multiple experiments, reproducing the namespace manually, recording a rerun, or adapting the contract to another harness.
+Read `references/execution-protocol.md` when planning multiple experiments, reproducing the run layout manually, recording a rerun, or adapting the contract to another harness.
 
-The hidden receipt and its empty `.commit` marker are coordinator-owned. The marker is created last and atomically distinguishes a fully prepared dispatch from recoverable process-crash residue. Give the lead write authority only to its assigned run, never to the output root or receipt inventory. This is an ownership boundary, not a cryptographic one: if a harness cannot enforce path-scoped writes, the receipt is not tamper-proof against a worker with output-root access. `.tmp/` is preserved run-local scratch space, `workspace/` is the lead’s unrestricted durable source and build area, and `artifact/` is the final deployment root. This step is complete when every experiment has a distinct pre-created run directory with its own `.tmp/`, `artifact/PROMPT.md` matches the dispatched prompt and receipt, the commit marker exists, and no worker paths overlap.
+The hidden receipt and its empty `.commit` marker are coordinator-owned. The marker is created last and atomically distinguishes a fully prepared dispatch from recoverable process-crash residue. Give the lead write authority only to its assigned timestamped run, never to the output root or receipt inventory. This is an ownership boundary, not a cryptographic one: if a harness cannot enforce path-scoped writes, the receipt is not tamper-proof against a worker with output-root access. `.tmp/` is preserved run-local scratch space, `workspace/` is the lead’s unrestricted durable source and build area, and `artifact/` is the final deployment root. This step is complete when every experiment has a distinct pre-created run directory directly under the selected output root, with its own `.tmp/`, matching `artifact/PROMPT.md` and receipt, and final commit marker.
 
 ## 3. Dispatch Fresh Lead Subagents
 
@@ -172,7 +166,7 @@ After all leads finish:
 
 The index is a provenance and navigation surface. It links to each run’s `artifact/index.html` and `artifact/PROMPT.md` without assuming how the source project was built. Its artifact link identifies the entrypoint; it is not a substitute deployment origin for sites that use root-relative URLs. Concurrent index builders serialize the complete render-and-publish operation, so an older snapshot cannot overwrite a newer one. Validation requires the exact, current, readable root `index.html`, then cross-checks the coordinator receipt inventory, exact handoff paths and filename casing, conservative Drop envelope, local resources, excluded project state, and the lead’s recorded verification evidence. It is still a structural gate rather than a substitute for inspecting the deployed experience in a browser.
 
-This step is complete when prompts and artifacts remain inspectable under the required namespace, successful artifacts can be deployed by dropping the `artifact/` folder onto a static host, statuses are honest, `artifact/index.html` resolves, and no run was overwritten.
+This step is complete when prompts and artifacts remain inspectable under their timestamped run directories, successful artifacts can be deployed by dropping the `artifact/` folder onto a static host, statuses are honest, `artifact/index.html` resolves, and no run was overwritten.
 
 ## Reading Guide
 
@@ -180,7 +174,7 @@ This step is complete when prompts and artifacts remain inspectable under the re
 | --- | --- |
 | Show, search, or filter the current templates | Run `scripts/list_prompts.py`; the canonical data is `assets/prompt-catalogue.json` |
 | Add future templates safely | `references/catalogue-authoring.md` |
-| Dispatch workers, namespace runs, or handle reruns | `references/execution-protocol.md` |
+| Dispatch workers, reserve flat runs, or handle reruns | `references/execution-protocol.md` |
 | Build or validate the artifact index | `references/catalog-index.md` |
 | Understand the research behind the breadth and provenance rules | `references/research-notes.md` |
 | Give a lead its isolated role | `agents/oneshot-lead.md` |

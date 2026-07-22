@@ -18,10 +18,13 @@ from urllib.parse import unquote, urljoin, urlsplit
 from build_catalog_index import (
     CATALOGUE_LOCK,
     CatalogueBuildError,
+    FLAT_RUN_ID_RE,
+    LEGACY_RUN_ID_RE,
     NAMESPACE_TEMP_RE,
-    RUN_ID_RE,
     STALE_INDEX_RE,
     build_html,
+    is_supported_run_id,
+    parse_flat_run_id,
 )
 from runtime_contract import (
     BoundedReadError,
@@ -1023,17 +1026,22 @@ def validate_provenance_receipt(
     if receipt is None:
         return False
     receipt_schema = receipt.get("schemaVersion")
-    if receipt_schema not in {"1.0", "1.1"}:
-        errors.append(f"{receipt_path}: schemaVersion must be 1.0 or 1.1")
-    current_temporary_contract = receipt_schema == "1.1"
-    expected_run_schema = "2.1" if current_temporary_contract else "2.0"
+    receipt_contracts = {
+        "1.0": ("2.0", False),
+        "1.1": ("2.1", True),
+        "2.0": ("3.0", True),
+    }
+    receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
+    if receipt_contract is None:
+        errors.append(f"{receipt_path}: schemaVersion must be 1.0, 1.1, or 2.0")
+    expected_run_schema, current_temporary_contract = receipt_contract or (None, False)
     if run.get("schemaVersion") != expected_run_schema:
         errors.append(
             f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
         )
-    if current_temporary_contract:
-        if receipt.get("runSchemaVersion") != "2.1":
-            errors.append(f"{receipt_path}: runSchemaVersion must be exactly 2.1")
+    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0"}:
+        if receipt.get("runSchemaVersion") != expected_run_schema:
+            errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
         receipt_temporary = object_value(receipt.get("temporary"))
         expected_temporary = {
             "path": ".tmp/",
@@ -1069,9 +1077,20 @@ def validate_run(
     errors: list[str],
     warnings: list[str],
 ) -> None:
-    """Validate one run against its immutable namespace and artifact contract."""
+    """Validate one flat or legacy run against its identity and artifact contract."""
     relative = run_path.relative_to(root)
-    model_key, harness_key, experiment_key, run_id, _ = relative.parts
+    directory_parts = relative.parts[:-1]
+    if len(directory_parts) == 1:
+        layout = "flat"
+        run_id = directory_parts[0]
+        legacy_keys: tuple[str, ...] = ()
+    elif len(directory_parts) == 4:
+        layout = "legacy"
+        *legacy_identity_keys, run_id = directory_parts
+        legacy_keys = tuple(legacy_identity_keys)
+    else:
+        errors.append(f"{run_path}: run must use one timestamp directory or the legacy four-level layout")
+        return
     if not is_regular_file_within(run_path, root, "run manifest", errors):
         return
     run = load_object(run_path, errors)
@@ -1079,22 +1098,26 @@ def validate_run(
         return
 
     schema_version = run.get("schemaVersion")
-    if schema_version not in {"2.0", "2.1"}:
-        errors.append(f"{run_path}: schemaVersion must be 2.0 or 2.1")
+    expected_schemas = {"3.0"} if layout == "flat" else {"2.0", "2.1"}
+    if not isinstance(schema_version, str) or schema_version not in expected_schemas:
+        errors.append(
+            f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
+        )
+    if layout == "flat" and parse_flat_run_id(run_id) is None:
+        errors.append(
+            f"{run_path}: flat run directory must use a real YYYY-MM-DD-HH-MM-SS timestamp "
+            "with no suffix or a canonical collision suffix of -02 or later"
+        )
+    if layout == "legacy" and LEGACY_RUN_ID_RE.fullmatch(run_id) is None:
+        errors.append(f"{run_path}: legacy run directory does not use the supported UTC-and-UUID format")
 
     identity = object_value(run.get("identity"))
-    for field, expected, namespace_directory in (
-        ("model", model_key, run_path.parents[3]),
-        ("harness", harness_key, run_path.parents[2]),
-        ("experiment", experiment_key, run_path.parents[1]),
-    ):
+    for index, field in enumerate(("model", "harness", "experiment")):
         identity_part = object_value(identity.get(field))
         key_value = identity_part.get("key")
         name_value = identity_part.get("name")
         key = key_value if isinstance(key_value, str) and key_value else None
         name = name_value if isinstance(name_value, str) and name_value.strip() else None
-        if key != expected:
-            errors.append(f"{run_path}: identity.{field}.key must match namespace segment {expected!r}")
         if name is None:
             errors.append(f"{run_path}: identity.{field}.name must be a non-empty raw name")
         else:
@@ -1105,17 +1128,22 @@ def validate_run(
             else:
                 if key != expected_key:
                     errors.append(f"{run_path}: identity.{field}.key does not match the raw-name digest")
-        marker_path = exact_child(namespace_directory, IDENTITY_MARKER)
-        if marker_path is None:
-            errors.append(f"{namespace_directory}: missing exact-case {IDENTITY_MARKER}")
-        elif is_regular_file_within(marker_path, root, f"{field} namespace identity marker", errors):
-            marker = load_object(marker_path, errors)
-            if marker is not None:
-                expected_marker = {"schemaVersion": "1.0", "name": name_value, "key": key_value}
-                if marker != expected_marker:
-                    errors.append(f"{marker_path}: marker does not match run identity.{field}")
+        if layout == "legacy":
+            expected_key = legacy_keys[index]
+            namespace_directory = run_path.parents[3 - index]
+            if key != expected_key:
+                errors.append(f"{run_path}: identity.{field}.key must match namespace segment {expected_key!r}")
+            marker_path = exact_child(namespace_directory, IDENTITY_MARKER)
+            if marker_path is None:
+                errors.append(f"{namespace_directory}: missing exact-case {IDENTITY_MARKER}")
+            elif is_regular_file_within(marker_path, root, f"{field} namespace identity marker", errors):
+                marker = load_object(marker_path, errors)
+                if marker is not None:
+                    expected_marker = {"schemaVersion": "1.0", "name": name_value, "key": key_value}
+                    if marker != expected_marker:
+                        errors.append(f"{marker_path}: marker does not match run identity.{field}")
     if text_value(run.get("runId")) != run_id:
-        errors.append(f"{run_path}: runId must match namespace segment {run_id!r}")
+        errors.append(f"{run_path}: runId must match run directory {run_id!r}")
 
     status = text_value(run.get("status"))
     if status not in STATUSES:
@@ -1130,8 +1158,8 @@ def validate_run(
     if classification in {"rerun", "curated-attempt"}:
         if not is_safe_relative_path(prior_run):
             errors.append(f"{run_path}: {classification} must declare a safe priorRun path")
-        elif len(PurePosixPath(str(prior_run)).parts) != 4:
-            errors.append(f"{run_path}: priorRun must use model/harness/experiment/run order")
+        elif len(PurePosixPath(str(prior_run)).parts) not in {1, 4}:
+            errors.append(f"{run_path}: priorRun must use one timestamp directory or the legacy four-level order")
         elif str(prior_run) == run_path.parent.relative_to(root).as_posix():
             errors.append(f"{run_path}: priorRun must not point to the current run")
         elif str(prior_run) not in canonical_runs:
@@ -1317,7 +1345,7 @@ def validate_prior_graph(root: Path, run_paths: list[Path], errors: list[str]) -
 
 
 def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
-    """Enumerate the exact namespace without silently skipping unreadable subtrees."""
+    """Enumerate flat and legacy runs without silently skipping unreadable subtrees."""
 
     run_paths: list[Path] = []
 
@@ -1396,7 +1424,7 @@ def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
                 continue
             if not is_directory:
                 if entry.name == "run.json":
-                    errors.append(f"{path}: run.json is outside the model/harness/experiment/run namespace")
+                    errors.append(f"{path}: run.json is outside a timestamped or legacy run directory")
                 else:
                     errors.append(f"{path}: unexpected file outside a run, receipt inventory, or root catalogue")
                 continue
@@ -1407,11 +1435,23 @@ def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
                 continue
             if not directory_has_read_and_traverse_mode(directory_mode):
                 errors.append(f"{path}: namespace directory must have a readable and traversable mode")
-            if depth < 3:
+            is_flat_candidate = depth == 0 and FLAT_RUN_ID_RE.fullmatch(entry.name) is not None
+            is_flat_run = depth == 0 and parse_flat_run_id(entry.name) is not None
+            if is_flat_candidate and not is_flat_run:
+                errors.append(
+                    f"{path}: invalid flat run directory name; expected a real YYYY-MM-DD-HH-MM-SS "
+                    "timestamp with no suffix or a canonical collision suffix of -02 or later"
+                )
+                is_flat_run = True
+            is_legacy_run = depth == 3
+            if not is_flat_run and not is_legacy_run and depth < 3:
                 walk(path, depth + 1)
                 continue
+            if not is_flat_run and not is_legacy_run:
+                errors.append(f"{path}: unexpected directory outside a run")
+                continue
             commit_path = root / ".oneshot-provenance" / f"{path.name}.commit"
-            if RUN_ID_RE.fullmatch(path.name) is not None and is_abandoned_run_reservation(path, commit_path):
+            if is_supported_run_id(path.name) and is_abandoned_run_reservation(path, commit_path):
                 continue
             manifest = exact_child(path, "run.json")
             if manifest is None:
@@ -1501,7 +1541,7 @@ def validate_receipt_inventory(root: Path, run_paths: list[Path], errors: list[s
             errors.append(f"{entry}: provenance inventory may contain only regular receipt and commit files")
             continue
         run_id = entry.stem
-        if RUN_ID_RE.fullmatch(run_id) is None or entry.suffix not in {".json", ".commit"}:
+        if not is_supported_run_id(run_id) or entry.suffix not in {".json", ".commit"}:
             errors.append(f"{entry}: unexpected file in provenance inventory")
             continue
         if entry.suffix == ".json":
@@ -1544,7 +1584,7 @@ def validate(root: Path) -> dict[str, Any]:
     warnings: list[str] = []
     run_paths = discover_run_paths(root, errors)
     if not run_paths:
-        errors.append("no run.json files found at the expected namespace depth")
+        errors.append("no run.json files found in a timestamped or legacy run directory")
 
     canonical_runs = {run_path.parent.relative_to(root).as_posix() for run_path in run_paths}
     seen_paths: set[str] = set()

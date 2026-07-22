@@ -8,28 +8,22 @@ One-shot means the coordinator gives one actual prompt to one fresh owning lead.
 
 This boundary prevents coordinator context and sibling artifacts from biasing the experiment while preserving the capabilities of long-running agents.
 
-## Identity and Namespace
+## Identity and Run Directory
 
-The path order is always:
+Create each run directly below the caller-selected output root:
 
 ```text
-<output-root>/<model-key>/<harness-key>/<experiment-key>/<run-id>/
+<output-root>/<YYYY-MM-DD-HH-MM-SS>/
 ```
 
-`scripts/prepare_run.py` derives each identity key from:
+The timestamp uses the coordinator’s local time so the directory is easy to recognize where the benchmark was launched. `scripts/prepare_run.py` reserves it atomically. When two preparations land in the same second, the first keeps the plain timestamp and later reservations use `-02`, `-03`, and so on. No reservation reuses or overwrites an existing path.
+
+`scripts/prepare_run.py` still derives each recorded identity key from:
 
 1. a readable slug made from the normalized raw name
 2. a SHA-256 prefix made from the exact raw UTF-8 name
 
-The readable portion is not the identity. The digest distinguishes names that normalize to the same slug. A new UTC-and-random run ID prevents reruns from colliding, and atomic directory creation prevents overwrites.
-
-Every model, harness, and experiment directory also contains a coordinator-owned `.oneshot-identity.json` marker:
-
-```json
-{"schemaVersion":"1.0","name":"<exact raw name>","key":"<derived directory key>"}
-```
-
-The coordinator writes each marker inside a private temporary namespace directory, then atomically publishes the complete directory. Concurrent preparers for the same exact identity verify the winning directory; an existing unmarked namespace is refused rather than adopted. This portable directory-rename protocol does not require hard-link support and turns even a digest-prefix collision into a classified reservation failure instead of shared storage. Published namespace markers are never rolled back—an empty, bound namespace is harmless, while deleting a shared parent marker during concurrent preparation is not. Workers receive write access only to their run directory, not to these markers. `templates/namespace-identity.json` documents the portable shape.
+The readable portion is not the identity. The digest distinguishes raw names that normalize to the same slug. Store the exact model, harness, and experiment names and their derived keys in `run.json` and the external receipt; they are provenance, not path segments.
 
 `run.json` preserves the raw names, derived keys, exact actual-prompt digest, run classification, run-local temporary path, and relative artifact path. `artifact/PROMPT.md` preserves the prepared prompt bytes passed to the lead—including any faithful custom-brief refinement—and travels with the deployable site. Keep the prompt Unicode end to end and encode every file boundary as UTF-8 so dashes, curly punctuation, emoji, and non-Latin scripts survive unchanged.
 
@@ -37,7 +31,7 @@ Before reservation, inspect the decoded actual prompt for Unicode replacement ch
 
 Before dispatch, the coordinator also writes `.oneshot-provenance/<run-id>.json` under the output root. That receipt records the run path, identities, classification, prior-run relationship, run-schema and temporary-storage contract, prompt digest, and byte count outside the worker-owned run. This external anchor prevents worker edits from disguising a current run as a legacy one to bypass `.tmp/` validation. After every initial run file and the receipt are closed, the coordinator atomically creates an empty `.oneshot-provenance/<run-id>.commit` marker. A run without that final marker was never ready for dispatch; the builder and validator can ignore its bounded initialization residue, including an empty `.tmp/` or a partial receipt, so a killed preparation process does not poison later experiments. A committed run remains strict and visible even when its worker later damages or removes files.
 
-Give the lead only its run path; do not include the receipt directory in its writable scope. The validator requires a one-to-one committed receipt and run inventory. This is a logical ownership boundary unless the harness enforces path-scoped writes; it is not tamper-proof against a worker with output-root access. When another harness reproduces the namespace without `prepare_run.py`, it must reproduce all three identity markers, the receipt, and the final empty commit marker.
+Give the lead only its run path; do not include the receipt directory in its writable scope. The validator requires a one-to-one committed receipt and run inventory. This is a logical ownership boundary unless the harness enforces path-scoped writes; it is not tamper-proof against a worker with output-root access. When another harness reproduces the layout without `prepare_run.py`, it must use the same flat timestamp reservation rule, write the complete receipt, and create the final empty commit marker last.
 
 ## Dispatch Envelope
 
@@ -75,7 +69,7 @@ Plan all experiment identities and reserve all run paths before dispatch. Then c
 - A model-by-harness matrix produces one experiment run for every requested cell.
 - Every lead may create its own internal team. Descendants inherit only their lead’s experiment scope, run-local temporary routing, and paths, and write only inside that experiment’s run wherever the harness permits.
 
-The plan is valid when the number of distinct lead owners equals the number of experiment runs and all namespace paths are disjoint.
+The plan is valid when the number of distinct lead owners equals the number of experiment runs and all timestamped run paths are disjoint.
 
 ## Harness Capability Boundary
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reserve a collision-free namespace for one isolated oneshot-websites run."""
+"""Reserve a flat collision-free directory for one isolated oneshot-websites run."""
 
 from __future__ import annotations
 
@@ -7,13 +7,12 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import shutil
 import stat
 import sys
-import tempfile
-import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
@@ -28,9 +27,9 @@ from runtime_contract import (
 
 
 CLASSIFICATIONS = ("autonomous-one-shot", "rerun", "curated-attempt")
-IDENTITY_MARKER = ".oneshot-identity.json"
 METADATA_MAX_BYTES = 1024 * 1024
 PROMPT_MAX_BYTES = 5 * 1024 * 1024
+RUN_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$")
 
 
 class RunPreparationError(ValueError):
@@ -226,8 +225,10 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
             except (OSError, ValueError) as error:
                 raise RunPreparationError(f"prior run must stay within output root: {root}") from error
             raise RunPreparationError("prior run could not be mapped to exact output-root path components")
-    if len(relative.parts) != 4 or any(part in {"", ".", ".."} for part in relative.parts):
-        raise RunPreparationError("prior run must use exact model/harness/experiment/run path components")
+    if len(relative.parts) not in {1, 4} or any(part in {"", ".", ".."} for part in relative.parts):
+        raise RunPreparationError(
+            "prior run must use one timestamp directory or exact legacy model/harness/experiment/run components"
+        )
     prior = root
     for part in relative.parts:
         stored_part = exact_child(prior, part)
@@ -241,7 +242,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
     require_within_root(prior, root, "prior run")
     run_manifest = exact_child(prior, "run.json")
     if run_manifest is None or not run_manifest.is_file() or run_manifest.is_symlink():
-        raise RunPreparationError("prior run must be a model/harness/experiment/run directory containing run.json")
+        raise RunPreparationError("prior run must be a timestamped or legacy run directory containing run.json")
 
     # A run is dispatch-ready only after its coordinator-owned receipt and
     # final empty commit marker exist outside the worker-writable directory.
@@ -262,7 +263,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1"}
+        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -293,91 +294,30 @@ def validate_run_relationship(classification: str, prior_run: Optional[str]) -> 
 
 
 def make_run_id() -> str:
-    """Return a UTC timestamp plus random UUID so independent attempts never share a name."""
+    """Return the human-readable local timestamp used as a run-directory base."""
 
-    timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    return f"{timestamp}-{uuid.uuid4()}"
+    return datetime.now().astimezone().strftime("%Y-%m-%d-%H-%M-%S")
 
 
-def reserve_paths(root: Path, model: Identity, harness: Identity, experiment: Identity, run_id: str) -> RunPaths:
-    """Atomically reserve the final run directory without reusing an existing path."""
+def reserve_paths(root: Path, run_id: str) -> RunPaths:
+    """Atomically reserve a flat timestamped run, suffixing same-second collisions."""
 
-    parent = root
-    try:
-        for identity in (model, harness, experiment):
-            candidate = parent / identity.key
-            stored_candidate = exact_child(parent, identity.key)
-            if stored_candidate is None:
-                try:
-                    case_collision = next(
-                        (
-                            entry
-                            for entry in parent.iterdir()
-                            if entry.name.casefold() == identity.key.casefold()
-                        ),
-                        None,
-                    )
-                except OSError as error:
-                    raise RunPreparationError(f"unable to inspect namespace parent: {parent}: {error}") from error
-                if case_collision is not None:
-                    if case_collision.name != identity.key:
-                        raise RunPreparationError(f"namespace directory name must use exact casing: {candidate}")
-                    stored_candidate = case_collision
+    if RUN_NAME_RE.fullmatch(run_id) is None:
+        raise RunPreparationError(f"run ID must use YYYY-MM-DD-HH-MM-SS format: {run_id!r}")
 
-                if stored_candidate is None:
-                    temporary_namespace = Path(
-                        tempfile.mkdtemp(prefix=".oneshot-namespace-", suffix=".tmp", dir=parent)
-                    )
-                    publication_error: Optional[OSError] = None
-                    try:
-                        write_json(
-                            temporary_namespace / IDENTITY_MARKER,
-                            {"schemaVersion": "1.0", "name": identity.name, "key": identity.key},
-                        )
-                        try:
-                            temporary_namespace.rename(candidate)
-                        except OSError as error:
-                            publication_error = error
-                    finally:
-                        if temporary_namespace.exists():
-                            try:
-                                shutil.rmtree(temporary_namespace)
-                            except OSError:
-                                pass
-                    stored_candidate = exact_child(parent, identity.key)
-                    if stored_candidate is None:
-                        if publication_error is not None:
-                            raise RunPreparationError(
-                                f"unable to publish namespace directory: {candidate}: {publication_error}"
-                            ) from publication_error
-                        raise RunPreparationError(f"namespace directory name must use exact casing: {candidate}")
-            parent = stored_candidate
-            if parent.is_symlink():
-                raise RunPreparationError(f"namespace directory must not be a symbolic link: {parent}")
-            if not parent.is_dir():
-                raise RunPreparationError(f"namespace path must be a directory: {parent}")
-            require_within_root(parent, root, "namespace directory")
-
-            expected_marker = {"schemaVersion": "1.0", "name": identity.name, "key": identity.key}
-            marker_path = exact_child(parent, IDENTITY_MARKER)
-            if marker_path is None:
-                raise RunPreparationError(f"namespace directory is missing {IDENTITY_MARKER}: {parent}")
-            marker = read_json_object_bounded(marker_path, "namespace identity marker")
-            if marker != expected_marker:
-                raise RunPreparationError(
-                    f"namespace identity collision or marker mismatch for {identity.name!r}: {parent}"
-                )
-
-        run = parent / run_id
+    collision_number = 1
+    while True:
+        directory_name = run_id if collision_number == 1 else f"{run_id}-{collision_number:02d}"
+        run = root / directory_name
         require_within_root(run, root, "derived run path")
         try:
             run.mkdir(exist_ok=False)
-        except FileExistsError as error:
-            raise RunPreparationError(f"run path already exists and will not be overwritten: {run}") from error
-    except (OSError, RunPreparationError) as error:
-        if isinstance(error, RunPreparationError):
-            raise
-        raise RunPreparationError(f"unable to reserve namespace: {error}") from error
+            break
+        except FileExistsError:
+            collision_number += 1
+        except OSError as error:
+            raise RunPreparationError(f"unable to reserve run directory: {error}") from error
+
     return RunPaths(
         root=root,
         run=run,
@@ -450,7 +390,7 @@ def run_document(
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "2.1",
+        "schemaVersion": "3.0",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -489,10 +429,10 @@ def provenance_receipt(
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
     return {
-        "schemaVersion": "1.1",
+        "schemaVersion": "2.0",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "2.1",
+        "runSchemaVersion": "3.0",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -538,8 +478,8 @@ def create_run(arguments: argparse.Namespace) -> Path:
     prior_run = prior_run_path(arguments.prior_run, root)
     validate_run_relationship(arguments.classification, prior_run)
     receipt_directory = prepare_provenance_directory(root)
-    run_id = make_run_id()
-    paths = reserve_paths(root, model, harness, experiment, run_id)
+    paths = reserve_paths(root, make_run_id())
+    run_id = paths.run.name
     prompt_digest = hashlib.sha256(prompt).hexdigest()
     receipt_relative = Path(".oneshot-provenance") / f"{run_id}.json"
     receipt_path = receipt_directory / f"{run_id}.json"

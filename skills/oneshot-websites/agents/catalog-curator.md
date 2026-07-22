@@ -2,7 +2,7 @@
 
 Index completed experiment runs without rewriting their artifacts.
 
-1. Discover `run.json` and `worker-report.json` files under the model/harness/experiment/run namespace.
+1. Discover `run.json` and `worker-report.json` files in flat timestamped runs and supported legacy nested runs.
 2. Confirm successful runs contain the exact-case `artifact/PROMPT.md` and a built exact-case root `artifact/index.html`.
 3. Preserve partial, blocked, and failed runs with honest statuses.
 4. Build the root `index.html` with links to each prompt and website.

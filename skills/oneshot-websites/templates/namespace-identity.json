@@ -1,5 +1,0 @@
-{
-  "schemaVersion": "1.0",
-  "name": "{{RAW_IDENTITY_NAME}}",
-  "key": "{{IDENTITY_KEY}}"
-}

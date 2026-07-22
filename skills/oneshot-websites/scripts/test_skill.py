@@ -24,8 +24,8 @@ from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence
 from unittest.mock import patch
 
 import validate_catalog as catalog_validator
+from build_catalog_index import CATALOGUE_LOCK, parse_flat_run_id
 from prepare_run import RunPreparationError, build_identity, make_run_id, reserve_paths
-from build_catalog_index import CATALOGUE_LOCK
 from runtime_contract import (
     enforce_json_nesting_limit,
     find_likely_mojibake,
@@ -346,9 +346,94 @@ def mark_successful_static_artifact(run_path: Path) -> None:
         {"kind": "static-browser-smoke", "result": "passed", "evidence": "Opened the built root entrypoint"}
     ]
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
-    built = rebuild_catalog_index(run_path.parents[3])
+    built = rebuild_catalog_index(run_path.parent)
     if built.returncode != 0:
         raise RuntimeError("could not rebuild successful fixture catalogue: {}".format(built.stderr or built.stdout))
+
+
+def convert_to_legacy_run(output_root: Path, run_path: Path, run_schema: str) -> Path:
+    """Move a prepared flat run into a historical nested layout for compatibility coverage."""
+
+    if run_schema not in {"2.0", "2.1"}:
+        raise ValueError(f"unsupported legacy run schema: {run_schema}")
+
+    legacy_run_id = "20260718T120000Z-00000000-0000-4000-8000-000000000001"
+    manifest_path = run_path / "run.json"
+    report_path = run_path / "worker-report.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    identity = manifest["identity"]
+
+    namespace = output_root
+    for field in ("model", "harness", "experiment"):
+        part = identity[field]
+        namespace = namespace / part["key"]
+        namespace.mkdir()
+        (namespace / ".oneshot-identity.json").write_text(
+            json.dumps({"schemaVersion": "1.0", "name": part["name"], "key": part["key"]}) + "\n",
+            encoding="utf-8",
+        )
+    legacy_run = namespace / legacy_run_id
+
+    old_run_id = run_path.name
+    old_receipt_path = output_root / ".oneshot-provenance" / f"{old_run_id}.json"
+    old_commit_path = output_root / ".oneshot-provenance" / f"{old_run_id}.commit"
+    receipt = json.loads(old_receipt_path.read_text(encoding="utf-8"))
+    legacy_relative = legacy_run.relative_to(output_root).as_posix()
+
+    manifest["schemaVersion"] = run_schema
+    manifest["runId"] = legacy_run_id
+    manifest["provenanceReceipt"] = f".oneshot-provenance/{legacy_run_id}.json"
+    report["runId"] = legacy_run_id
+    receipt["schemaVersion"] = "1.0" if run_schema == "2.0" else "1.1"
+    receipt["runId"] = legacy_run_id
+    receipt["runPath"] = legacy_relative
+    if run_schema == "2.0":
+        manifest.pop("temporary", None)
+        report.pop("temporary", None)
+        receipt.pop("runSchemaVersion", None)
+        receipt.pop("temporary", None)
+    else:
+        receipt["runSchemaVersion"] = "2.1"
+
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    old_receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    if run_schema == "2.0":
+        shutil.rmtree(run_path / ".tmp")
+    run_path.rename(legacy_run)
+    old_receipt_path.rename(output_root / ".oneshot-provenance" / f"{legacy_run_id}.json")
+    old_commit_path.rename(output_root / ".oneshot-provenance" / f"{legacy_run_id}.commit")
+    return legacy_run
+
+
+def rewrite_prepared_run_id(output_root: Path, run_path: Path, new_run_id: str) -> Path:
+    """Make a prepared fixture internally consistent after assigning an invalid run ID."""
+
+    old_run_id = run_path.name
+    manifest_path = run_path / "run.json"
+    report_path = run_path / "worker-report.json"
+    receipt_directory = output_root / ".oneshot-provenance"
+    old_receipt_path = receipt_directory / f"{old_run_id}.json"
+    old_commit_path = receipt_directory / f"{old_run_id}.commit"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    receipt = json.loads(old_receipt_path.read_text(encoding="utf-8"))
+
+    manifest["runId"] = new_run_id
+    manifest["provenanceReceipt"] = f".oneshot-provenance/{new_run_id}.json"
+    report["runId"] = new_run_id
+    receipt["runId"] = new_run_id
+    receipt["runPath"] = new_run_id
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    old_receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+
+    rewritten_run_path = output_root / new_run_id
+    run_path.rename(rewritten_run_path)
+    old_receipt_path.rename(receipt_directory / f"{new_run_id}.json")
+    old_commit_path.rename(receipt_directory / f"{new_run_id}.commit")
+    return rewritten_run_path
 
 
 def write_appledouble(path: Path) -> None:
@@ -634,40 +719,27 @@ def exercise_adversarial_contract(
         assert_ok(
             unwritable_result.returncode == 2
             and "writable file mode" in unwritable_result.stderr
-            and not list(unwritable_root.glob("*/*/*/*")),
+            and not [child for child in unwritable_root.iterdir() if not child.name.startswith(".")],
             "prepare_run.py left an unreceipted run after initialization failure",
             errors,
         )
         os.chmod(unwritable_receipts, 0o700)
 
-    linked_namespace_root = temporary / "linked-namespace-root"
-    linked_namespace_root.mkdir()
-    linked_namespace_target = linked_namespace_root / "shared-target"
-    linked_namespace_target.mkdir()
+    linked_run_root = temporary / "linked-run-root"
+    linked_run_root.mkdir()
+    linked_run_root = linked_run_root.resolve()
+    linked_run_target = linked_run_root / "shared-target"
+    linked_run_target.mkdir()
+    linked_run_id = make_run_id()
     try:
-        (linked_namespace_root / identity_key("Model")).symlink_to(linked_namespace_target, target_is_directory=True)
+        (linked_run_root / linked_run_id).symlink_to(linked_run_target, target_is_directory=True)
     except OSError:
         pass
     else:
-        linked_namespace_result = run(
-            [
-                sys.executable,
-                str(skill / "scripts" / "prepare_run.py"),
-                "--output-root",
-                str(linked_namespace_root),
-                "--model",
-                "Model",
-                "--harness",
-                "Harness",
-                "--experiment",
-                "Linked Namespace",
-                "--prompt-file",
-                str(prompt),
-            ]
-        )
+        linked_run = reserve_paths(linked_run_root, linked_run_id).run
         assert_ok(
-            linked_namespace_result.returncode != 0 and "namespace directory must not be a symbolic link" in linked_namespace_result.stderr,
-            "prepare_run.py followed a symlinked namespace directory",
+            linked_run.name == f"{linked_run_id}-02" and not any(linked_run_target.iterdir()),
+            "flat reservation followed or reused a symlinked timestamp path",
             errors,
         )
 
@@ -705,62 +777,6 @@ def exercise_adversarial_contract(
         assert_ok(
             linked_prior_result.returncode != 0 and "symbolic links" in linked_prior_result.stderr,
             "prepare_run.py followed a symlinked prior-run component",
-            errors,
-        )
-
-    case_namespace_root = temporary / "case-namespace-root"
-    case_namespace_root.mkdir()
-    model_key = identity_key("Model")
-    (case_namespace_root / model_key.upper()).mkdir()
-    if (case_namespace_root / model_key).exists():
-        case_namespace_result = run(
-            [
-                sys.executable,
-                str(skill / "scripts" / "prepare_run.py"),
-                "--output-root",
-                str(case_namespace_root),
-                "--model",
-                "Model",
-                "--harness",
-                "Harness",
-                "--experiment",
-                "Case Namespace",
-                "--prompt-file",
-                str(prompt),
-            ]
-        )
-        assert_ok(
-            case_namespace_result.returncode != 0 and "namespace directory name must use exact casing" in case_namespace_result.stderr,
-            "prepare_run.py reused a wrong-case namespace directory",
-            errors,
-        )
-
-    marker_root = temporary / "marker-root"
-    marker_run = prepare_run(skill, marker_root, "Marker Model", "Harness", "Marker", prompt, errors)
-    if marker_run is not None:
-        marker_path = marker_run.parents[2] / ".oneshot-identity.json"
-        marker = json.loads(marker_path.read_text(encoding="utf-8"))
-        marker["name"] = "Different Model"
-        marker_path.write_text(json.dumps(marker), encoding="utf-8")
-        marker_result = run(
-            [
-                sys.executable,
-                str(skill / "scripts" / "prepare_run.py"),
-                "--output-root",
-                str(marker_root),
-                "--model",
-                "Marker Model",
-                "--harness",
-                "Harness",
-                "--experiment",
-                "Marker",
-                "--prompt-file",
-                str(prompt),
-            ]
-        )
-        assert_ok(
-            marker_result.returncode == 2 and "marker mismatch" in marker_result.stderr,
-            "prepare_run.py reused a namespace with a mismatched raw-identity marker",
             errors,
         )
 
@@ -1394,7 +1410,7 @@ def exercise_adversarial_contract(
         rogue = namespace_root / "rogue"
         rogue.mkdir()
         (rogue / "run.json").write_text("{}\n", encoding="utf-8")
-        assert_invalid_catalog(validator, namespace_root, "outside the model/harness/experiment/run namespace", "wrong-depth run manifest", errors)
+        assert_invalid_catalog(validator, namespace_root, "outside a timestamped or legacy run directory", "wrong-depth run manifest", errors)
 
     missing_manifest_root = temporary / "missing-manifest-root"
     missing_manifest_run = prepare_run(skill, missing_manifest_root, "Model", "Harness", "Kept Run", prompt, errors)
@@ -1407,8 +1423,8 @@ def exercise_adversarial_contract(
     worker_damage_run = prepare_run(skill, worker_damage_root, "Model", "Harness", "Worker Damage", prompt, errors)
     if worker_damage_run is not None:
         experiment_directory = worker_damage_run.parent
-        damaged_run_id = make_run_id()
-        damaged_run = experiment_directory / damaged_run_id
+        damaged_run = reserve_paths(experiment_directory, make_run_id()).run
+        damaged_run_id = damaged_run.name
         (damaged_run / "artifact").mkdir(parents=True)
         (damaged_run / "artifact" / "unexpected.txt").write_text("worker residue\n", encoding="utf-8")
         damaged_build = rebuild_catalog_index(worker_damage_root)
@@ -1435,22 +1451,18 @@ def exercise_adversarial_contract(
         )
 
         malformed_variants: List[Path] = []
-        directory_manifest_run = experiment_directory / make_run_id()
-        directory_manifest_run.mkdir()
+        directory_manifest_run = reserve_paths(experiment_directory, make_run_id()).run
         (directory_manifest_run / "run.json").mkdir()
         malformed_variants.append(directory_manifest_run)
         if os.name == "posix":
-            fifo_manifest_run = experiment_directory / make_run_id()
-            fifo_manifest_run.mkdir()
+            fifo_manifest_run = reserve_paths(experiment_directory, make_run_id()).run
             os.mkfifo(fifo_manifest_run / "run.json")
             malformed_variants.append(fifo_manifest_run)
-            unreadable_manifest_run = experiment_directory / make_run_id()
-            unreadable_manifest_run.mkdir()
+            unreadable_manifest_run = reserve_paths(experiment_directory, make_run_id()).run
             (unreadable_manifest_run / "run.json").write_text("{}\n", encoding="utf-8")
             os.chmod(unreadable_manifest_run / "run.json", 0o000)
             malformed_variants.append(unreadable_manifest_run)
-            unreadable_run_directory = experiment_directory / make_run_id()
-            unreadable_run_directory.mkdir()
+            unreadable_run_directory = reserve_paths(experiment_directory, make_run_id()).run
             os.chmod(unreadable_run_directory, 0o000)
             malformed_variants.append(unreadable_run_directory)
         for malformed_variant in malformed_variants:
@@ -1512,6 +1524,48 @@ def exercise_adversarial_contract(
             )
             and "Traceback" not in duplicate_validation.stderr,
             "duplicate JSON members escaped provenance, run, or report parsing",
+            errors,
+        )
+
+    structured_schema_root = temporary / "structured-schema-root"
+    structured_schema_run = prepare_run(
+        skill,
+        structured_schema_root,
+        "Model",
+        "Harness",
+        "Structured Schema",
+        prompt,
+        errors,
+    )
+    if structured_schema_run is not None:
+        structured_manifest_path = structured_schema_run / "run.json"
+        structured_receipt_path = (
+            structured_schema_root / ".oneshot-provenance" / f"{structured_schema_run.name}.json"
+        )
+        structured_manifest = json.loads(structured_manifest_path.read_text(encoding="utf-8"))
+        structured_receipt = json.loads(structured_receipt_path.read_text(encoding="utf-8"))
+        structured_manifest["schemaVersion"] = []
+        structured_receipt["schemaVersion"] = {"unexpected": True}
+        structured_manifest_path.write_text(
+            json.dumps(structured_manifest, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        structured_receipt_path.write_text(
+            json.dumps(structured_receipt, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        structured_build = rebuild_catalog_index(structured_schema_root)
+        structured_validation = run([sys.executable, str(validator), str(structured_schema_root)])
+        assert_ok(
+            structured_build.returncode == 0
+            and structured_validation.returncode != 0
+            and "flat run schemaVersion must be one of" in structured_validation.stdout
+            and "schemaVersion must be 1.0, 1.1, or 2.0" in structured_validation.stdout
+            and "Traceback" not in structured_validation.stderr,
+            "structured schema versions escaped validation or caused a crash: {}{}".format(
+                structured_validation.stdout,
+                structured_validation.stderr,
+            ),
             errors,
         )
 
@@ -1912,22 +1966,12 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         reservation_count = 32
         barrier = threading.Barrier(reservation_count)
 
-        def reserve_concurrently(index: int) -> tuple[str, Path]:
+        def reserve_concurrently(_index: int) -> Path:
             barrier.wait()
-            run_id = "20260718T120000Z-{:08x}-0000-4000-8000-{:012x}".format(index, index)
-            return (
-                run_id,
-                reserve_paths(
-                    concurrent_root,
-                    build_identity("Shared Model", "model"),
-                    build_identity("Shared Harness", "harness"),
-                    build_identity("Shared Experiment", "experiment"),
-                    run_id,
-                ).run,
-            )
+            return reserve_paths(concurrent_root, "2026-07-18-12-00-00").run
 
         concurrent_failures: List[str] = []
-        concurrent_reservations: List[tuple[str, Path]] = []
+        concurrent_reservations: List[Path] = []
         with ThreadPoolExecutor(max_workers=reservation_count) as executor:
             futures = [executor.submit(reserve_concurrently, index) for index in range(reservation_count)]
             for future in futures:
@@ -1942,18 +1986,40 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             len(concurrent_reservations) == reservation_count
-            and len({path for _, path in concurrent_reservations}) == reservation_count
+            and len(set(concurrent_reservations)) == reservation_count
             and all(
                 path.is_dir()
-                and path.name == run_id
-                and path.parents[3] == concurrent_root
-                and all(
-                    (owner / ".oneshot-identity.json").is_file()
-                    for owner in (path.parent, path.parents[1], path.parents[2])
-                )
-                for run_id, path in concurrent_reservations
+                and path.parent == concurrent_root
+                and parse_flat_run_id(path.name) is not None
+                for path in concurrent_reservations
             ),
-            "concurrent namespace reservation did not return distinct, rooted, owned run paths",
+            "concurrent flat reservation did not return distinct timestamped run paths",
+            errors,
+        )
+        assert_ok(
+            all(
+                parse_flat_run_id(run_id) is not None
+                for run_id in (
+                    "2026-07-18-12-00-00",
+                    "2026-07-18-12-00-00-02",
+                    "2026-07-18-12-00-00-99",
+                    "2026-07-18-12-00-00-100",
+                )
+            ),
+            "flat run-ID parser rejected a valid timestamp or canonical collision suffix",
+            errors,
+        )
+        invalid_flat_run_ids = (
+            "2026-07-18-12-00-00-00",
+            "2026-07-18-12-00-00-01",
+            "2026-07-18-12-00-00-002",
+            "2026-02-30-12-00-00",
+            "2026-07-18-24-00-00",
+            "2026-7-18-12-00-00",
+        )
+        assert_ok(
+            all(parse_flat_run_id(run_id) is None for run_id in invalid_flat_run_ids),
+            "flat run-ID parser accepted a non-canonical suffix or impossible timestamp",
             errors,
         )
 
@@ -2110,6 +2176,17 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         collision_run = prepare_run(skill, output_root, "Model-One", "Harness / Alpha", "Harbor Station", prompt, errors)
         if first_run is None or collision_run is None:
             return
+        assert_ok(
+            first_run.parent == output_root.resolve()
+            and collision_run.parent == output_root.resolve()
+            and all(
+                re.fullmatch(r"\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}(?:-\d{2,})?", run_path.name)
+                is not None
+                for run_path in (first_run, collision_run)
+            ),
+            "prepare_run.py did not place timestamped runs directly under the selected output root",
+            errors,
+        )
         prior_receipt = output_root / ".oneshot-provenance" / (first_run.name + ".json")
         prior_commit = output_root / ".oneshot-provenance" / (first_run.name + ".commit")
         prior_link_command = [
@@ -2163,16 +2240,15 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         if rerun_path is None:
             return
 
-        abandoned_reservation = first_run.parent / make_run_id()
-        abandoned_reservation.mkdir()
-        temporary_only_reservation = first_run.parent / make_run_id()
+        abandoned_reservation = reserve_paths(first_run.parent, make_run_id()).run
+        temporary_only_reservation = reserve_paths(first_run.parent, make_run_id()).run
         (temporary_only_reservation / ".tmp").mkdir(parents=True)
-        interrupted_reservation = first_run.parent / make_run_id()
+        interrupted_reservation = reserve_paths(first_run.parent, make_run_id()).run
         (interrupted_reservation / ".tmp").mkdir(parents=True)
         (interrupted_reservation / "workspace").mkdir(parents=True)
         (interrupted_reservation / "artifact").mkdir()
         (interrupted_reservation / "artifact" / "PROMPT.md").write_bytes(prompt_bytes)
-        interrupted_metadata_run = first_run.parent / make_run_id()
+        interrupted_metadata_run = reserve_paths(first_run.parent, make_run_id()).run
         (interrupted_metadata_run / ".tmp").mkdir(parents=True)
         (interrupted_metadata_run / "workspace").mkdir(parents=True)
         (interrupted_metadata_run / "artifact").mkdir()
@@ -2240,7 +2316,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             )
         if isinstance(first_manifest, Mapping):
             assert_ok(
-                first_manifest.get("schemaVersion") == "2.1",
+                first_manifest.get("schemaVersion") == "3.0",
                 "prepare_run.py did not emit the current run schema",
                 errors,
             )
@@ -2252,8 +2328,8 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             receipt = read_json(receipt_path, errors, "pre-dispatch provenance receipt") if isinstance(receipt_value, str) else None
             assert_ok(
                 isinstance(receipt, Mapping)
-                and receipt.get("schemaVersion") == "1.1"
-                and receipt.get("runSchemaVersion") == "2.1"
+                and receipt.get("schemaVersion") == "2.0"
+                and receipt.get("runSchemaVersion") == "3.0"
                 and receipt.get("prompt", {}).get("sha256") == expected_hash
                 and receipt.get("prompt", {}).get("bytes") == len(prompt_bytes),
                 "prepare_run.py did not anchor prompt provenance outside the worker run",
@@ -2382,7 +2458,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         assert_invalid_catalog(
             scripts[3],
             output_root,
-            "receipt schema '1.1' requires run schema 2.1",
+            "receipt schema '2.0' requires run schema 3.0",
             "new run downgraded through worker-writable metadata",
             errors,
         )
@@ -2392,38 +2468,64 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         rebuilt_after_downgrade_restore = rebuild_catalog_index(output_root)
         assert_ok(
             rebuilt_after_downgrade_restore.returncode == 0,
-            "catalogue builder failed after restoring an anchored 2.1 run: {}".format(
+            "catalogue builder failed after restoring an anchored 3.0 run: {}".format(
                 rebuilt_after_downgrade_restore.stderr or rebuilt_after_downgrade_restore.stdout
             ),
             errors,
         )
 
-        legacy_root = Path(temporary) / "legacy-runs"
-        legacy_run = prepare_run(skill, legacy_root, "Legacy Model", "Harness", "Legacy Run", prompt, errors)
-        if legacy_run is not None:
-            legacy_manifest_path = legacy_run / "run.json"
-            legacy_manifest = json.loads(legacy_manifest_path.read_text(encoding="utf-8"))
-            legacy_manifest["schemaVersion"] = "2.0"
-            legacy_manifest.pop("temporary", None)
-            legacy_manifest_path.write_text(json.dumps(legacy_manifest, indent=2) + "\n", encoding="utf-8")
-            legacy_report_path = legacy_run / "worker-report.json"
-            legacy_report = json.loads(legacy_report_path.read_text(encoding="utf-8"))
-            legacy_report.pop("temporary", None)
-            legacy_report_path.write_text(json.dumps(legacy_report, indent=2) + "\n", encoding="utf-8")
-            legacy_receipt_path = legacy_root / ".oneshot-provenance" / (legacy_run.name + ".json")
-            legacy_receipt = json.loads(legacy_receipt_path.read_text(encoding="utf-8"))
-            legacy_receipt["schemaVersion"] = "1.0"
-            legacy_receipt.pop("runSchemaVersion", None)
-            legacy_receipt.pop("temporary", None)
-            legacy_receipt_path.write_text(json.dumps(legacy_receipt, indent=2) + "\n", encoding="utf-8")
-            shutil.rmtree(legacy_run / ".tmp")
-            legacy_build = rebuild_catalog_index(legacy_root)
-            legacy_validation = run([sys.executable, str(scripts[3]), str(legacy_root)])
+        for legacy_schema in ("2.0", "2.1"):
+            legacy_root = Path(temporary) / f"legacy-{legacy_schema.replace('.', '-')}-runs"
+            legacy_run = prepare_run(
+                skill,
+                legacy_root,
+                "Legacy Model",
+                "Harness",
+                f"Legacy {legacy_schema} Run",
+                prompt,
+                errors,
+            )
+            if legacy_run is not None:
+                legacy_run = convert_to_legacy_run(legacy_root, legacy_run, legacy_schema)
+                legacy_build = rebuild_catalog_index(legacy_root)
+                legacy_validation = run([sys.executable, str(scripts[3]), str(legacy_root)])
+                assert_ok(
+                    legacy_build.returncode == 0 and legacy_validation.returncode == 0,
+                    "validator rejected a legacy {} run: {}{}".format(
+                        legacy_schema,
+                        legacy_build.stderr or legacy_build.stdout,
+                        legacy_validation.stdout,
+                    ),
+                    errors,
+                )
+
+        for invalid_index, invalid_run_id in enumerate(invalid_flat_run_ids):
+            invalid_root = Path(temporary) / f"invalid-flat-run-{invalid_index}"
+            invalid_run = prepare_run(
+                skill,
+                invalid_root,
+                "Invalid ID Model",
+                "Harness",
+                f"Invalid Run ID {invalid_index}",
+                prompt,
+                errors,
+            )
+            if invalid_run is None:
+                continue
+            rewrite_prepared_run_id(invalid_root, invalid_run, invalid_run_id)
+            invalid_build = rebuild_catalog_index(invalid_root)
+            invalid_validation = run([sys.executable, str(scripts[3]), str(invalid_root)])
             assert_ok(
-                legacy_build.returncode == 0 and legacy_validation.returncode == 0,
-                "validator rejected a legacy 2.0 run without retroactive .tmp/ state: {}{}".format(
-                    legacy_build.stderr or legacy_build.stdout,
-                    legacy_validation.stdout,
+                invalid_build.returncode != 0
+                and invalid_validation.returncode != 0
+                and "Traceback" not in invalid_build.stderr
+                and "Traceback" not in invalid_validation.stdout
+                and "Traceback" not in invalid_validation.stderr,
+                "catalogue tools accepted or crashed on invalid flat run ID {!r}: {}{}{}".format(
+                    invalid_run_id,
+                    invalid_build.stderr or invalid_build.stdout,
+                    invalid_validation.stdout,
+                    invalid_validation.stderr,
                 ),
                 errors,
             )
@@ -2498,13 +2600,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         receipt_name = "{}.json".format(first_run.name)
         appledouble_paths = [
             output_root / "._.oneshot-provenance",
-            output_root / "._{}".format(first_run.parents[2].name),
-            first_run.parents[2] / "._.oneshot-identity.json",
-            first_run.parents[2] / "._{}".format(first_run.parents[1].name),
-            first_run.parents[1] / "._.oneshot-identity.json",
-            first_run.parents[1] / "._{}".format(first_run.parent.name),
-            first_run.parent / "._.oneshot-identity.json",
-            first_run.parent / "._{}".format(first_run.name),
+            output_root / "._{}".format(first_run.name),
             output_root / ".oneshot-provenance" / "._{}".format(receipt_name),
             first_run / "._run.json",
             first_run / "artifact" / "._PROMPT.md",
@@ -2984,8 +3080,8 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
 
         flattened_namespace = original_skill.replace(
-            "    <harness-key>/",
-            "  <harness-key>/",
+            "  <YYYY-MM-DD-HH-MM-SS>/",
+            "  <run-id>/",
             1,
         )
         skill_path.write_text(flattened_namespace, encoding="utf-8")
@@ -2994,9 +3090,9 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             flattened_namespace_result.returncode != 0
-            and "SKILL.md runtime contract missing model-harness-experiment namespace"
+            and "SKILL.md runtime contract missing flat timestamped run layout"
             in flattened_namespace_result.stdout,
-            "package validator accepted a flattened model/harness/experiment namespace",
+            "package validator accepted a non-timestamped run layout",
             errors,
         )
         skill_path.write_text(original_skill, encoding="utf-8")
