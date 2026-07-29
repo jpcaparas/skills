@@ -73,6 +73,7 @@ SKILL_SCENES = {
     "secure-ai-agent-coding": "a guarded agent workbench behind shields, permission gates, and safe tool lanes",
     "seo-analysis": "a crawl-path garden where sitemap nodes glow under search spotlights",
     "skill-creator-advanced": "a skill forge crafting a reusable instruction cartridge from blank parts and test gems",
+    "simplified-technical-english": "a precision language workshop where tangled instruction paths pass through a calibration gate into short clear action rails, with terminology gems, a hazard shield, and separate procedure and description lanes",
     "sprite-decompose": "a luminous illustrated mosaic passing through a precision cutting gate and separating into several clean transparent sprite gems, with exact crop rails and a small manifest crystal",
     "strong-types": "a foundry casting loose shape-shifting blobs into crisp interlocking typed blocks along guarded connector rails with shield gates rejecting misfit pieces",
     "synthetic-search": "a zero-retention radar scanning the web through clean privacy lanes",

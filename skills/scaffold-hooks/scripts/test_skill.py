@@ -551,7 +551,12 @@ def test_skill(skill_path: Path) -> dict:
         results["errors"].append("scripts/scaffold_all_hooks.sh must be executable")
         results["passed"] = False
 
-    with tempfile.TemporaryDirectory(prefix="scaffold-hooks-test-") as tmp:
+    # The integration suite executes copied harness scripts. Keep its temporary
+    # tree on the skill filesystem so it also works when system temp is noexec.
+    with tempfile.TemporaryDirectory(
+        prefix=".scaffold-hooks-test-",
+        dir=skill_path,
+    ) as tmp:
         temp_root = Path(tmp)
         results["integration_checks"]["total"] += 1
         invalid_plan_errors = harness_plan_validation_errors(skill_path, temp_root)

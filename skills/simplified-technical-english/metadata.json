@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "July 2026",
+  "abstract": "Production skill for rewriting and auditing selected technical procedures, descriptions, and safety instructions using ASD-STE100 Issue 9 constraints. It separates full and scoped reference-backed review from provisional Issue 9-oriented rewriting, preserves technical meaning and protected literals, governs technical terminology, provides text-type-specific workflows, and prevents unsupported certification or approval claims.",
+  "references": [
+    "https://www.asd-ste100.org/",
+    "https://www.asd-ste100.org/about_STE.html",
+    "https://www.asd-ste100.org/STE_faq.html",
+    "https://www.asd-ste100.org/STEsoftware.html",
+    "https://www.asd-ste100.org/STE_downloads.html",
+    "https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf",
+    "https://www.asd-europe.org/news-media/news-events/news/simplified-technical-english-asd-ste100-issue-9/"
+  ],
+  "tags": [
+    "ASD-STE100",
+    "Simplified Technical English",
+    "controlled language",
+    "technical documentation",
+    "maintenance procedures",
+    "safety instructions"
+  ]
+}

@@ -404,6 +404,16 @@ Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quo
 
 Production-grade skill creator and library curator with precise invocation, branch-driven disclosure, release validation, lifecycle synchronization, and path-aware placement.
 
+### `simplified-technical-english`
+
+`npx skills add jpcaparas/skills --skill simplified-technical-english`
+
+<p align="center">
+  <img src="skills/simplified-technical-english/skill-card.png" alt="16-bit side-scrolling pixel art badge for simplified-technical-english" width="480">
+</p>
+
+Production skill for reference-backed or clearly bounded ASD-STE100 Issue 9 rewrites and audits of technical procedures, descriptions, and safety instructions, with terminology governance, protected-literal fidelity, and no unsupported certification claims.
+
 ### `sprite-decompose`
 
 `npx skills add jpcaparas/skills --skill sprite-decompose`

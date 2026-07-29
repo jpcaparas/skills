@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Final
 
@@ -28,6 +30,19 @@ ACT_MACOS_COMMAND: Final = "bash scripts/validate-ci-with-act.sh --macos"
 CANONICAL_PRE_PUSH: Final = (
     'exec "$(dirname -- "$0")/../scripts/run-pnpm.sh" run validate'
 )
+
+
+@contextmanager
+def executable_temporary_directory(prefix: str) -> Iterator[Path]:
+    """Create executable fixtures even when the system temp mount is noexec."""
+
+    repository_root = SCRIPT_DIR.parent
+    with tempfile.TemporaryDirectory(
+        prefix=f".{prefix}",
+        dir=repository_root,
+    ) as temp_dir:
+        yield Path(temp_dir)
+
 
 VALID_WORKFLOW: Final = f"""\
 name: Validate Skills
@@ -724,6 +739,10 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
         scripts_dir = root / "scripts"
         scripts_dir.mkdir(parents=True)
         shutil.copy2(CANONICAL_VALIDATOR_SOURCE, scripts_dir / "validate-all-skills.sh")
+        (scripts_dir / "test-executable-temp-dir.sh").write_text(
+            "#!/usr/bin/env bash\nexit 0\n",
+            encoding="utf-8",
+        )
         (scripts_dir / "test-validate-ci-with-act.sh").write_text(
             "#!/usr/bin/env bash\n"
             "set -euo pipefail\n"
@@ -836,8 +855,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
         )
 
     def test_explicit_python_override_wins_over_repository_venv(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             venv_python = root / ".venv" / "bin" / "python3"
             override_python = root / "override" / "bin" / "python3"
@@ -857,8 +875,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             self.assertNotIn(str(venv_python), invocations)
 
     def test_repository_venv_wins_over_path_python(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             venv_python = root / ".venv" / "bin" / "python3"
             path_python = root / "path" / "bin" / "python3"
@@ -873,8 +890,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             self.assertNotIn(str(path_python), invocations)
 
     def test_python_older_than_311_is_rejected(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "path" / "bin" / "python3"
             self.create_fake_python(python)
@@ -885,8 +901,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             self.assertIn("requires Python 3.11 or newer", result.stderr)
 
     def test_missing_python_packages_are_rejected(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "path" / "bin" / "python3"
             self.create_fake_python(python)
@@ -897,8 +912,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             self.assertIn("requires the pinned Python packages", result.stderr)
 
     def test_child_python3_uses_the_selected_environment(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "selected" / "bin" / "python3"
             self.create_fake_python(python)
@@ -912,8 +926,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             )
 
     def test_versioned_only_python_override_is_exposed_to_children(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             path_python = root / "path" / "bin" / "python3"
             versioned_python = root / "selected" / "bin" / "python3.13"
@@ -934,8 +947,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             )
 
     def test_missing_bun_fails_before_skill_validation(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "path" / "bin" / "python3"
             self.create_fake_python(python, include_bun=False)
@@ -946,8 +958,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             self.assertIn("requires Bun for the scaffold-hooks probes", result.stderr)
 
     def test_standard_bun_install_is_added_to_child_path(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "path" / "bin" / "python3"
             standard_bun = root / "home" / ".bun" / "bin" / "bun"
@@ -963,8 +974,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             )
 
     def test_missing_npx_fails_before_skill_validation(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "path" / "bin" / "python3"
             self.create_fake_python(python, include_npx=False)
@@ -975,8 +985,7 @@ class ValidationToolchainSelectionTests(unittest.TestCase):
             self.assertIn("requires npx for the skills discovery probe", result.stderr)
 
     def test_explicit_npx_override_uses_its_sibling_node(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="validation-toolchain-test.") as temp_dir:
-            root = Path(temp_dir)
+        with executable_temporary_directory("validation-toolchain-test.") as root:
             log = self.create_fixture(root)
             python = root / "path" / "bin" / "python3"
             npx = root / "node-toolchain" / "bin" / "npx"

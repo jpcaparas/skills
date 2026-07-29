@@ -237,7 +237,7 @@ def test_skill(skill_path: Path) -> dict:
             results["errors"].append(f"Script is not executable: {rel_path}")
             results["passed"] = False
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=skill_path) as tmpdir:
         tmp = Path(tmpdir)
         project = tmp / "project"
         project.mkdir()

@@ -7,9 +7,14 @@ unset GREP_OPTIONS
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_WRAPPER="$SCRIPT_DIR/validate-ci-with-act.sh"
-TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/validate-ci-with-act-test.XXXXXX")"
-TEST_ROOT="$(cd "$TEST_ROOT" && pwd -P)"
-trap 'rm -rf "$TEST_ROOT"' EXIT
+# shellcheck source=executable-temp-dir.sh
+source "$SCRIPT_DIR/executable-temp-dir.sh"
+TEST_ROOT="$(create_executable_temp_dir "$SCRIPT_DIR/.." "validate-ci-with-act-test")"
+
+cleanup() {
+    cleanup_executable_temp_dir "$TEST_ROOT"
+}
+trap cleanup EXIT
 
 FIXTURE_ROOT="$TEST_ROOT/repo"
 FAKE_BIN="$TEST_ROOT/bin"

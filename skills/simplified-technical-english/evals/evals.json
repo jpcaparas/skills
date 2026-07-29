@@ -1,0 +1,382 @@
+{
+  "skill_name": "simplified-technical-english",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "reference-backed-procedure-rewrite",
+      "prompt": "Rewrite the attached maintenance procedure as a reference-backed candidate STE version. Use the supplied scoped Issue 9 profile and project terminology. Preserve execution order, conditions, measurements, and identifiers.",
+      "expected_output": "A complete procedural rewrite with imperative steps, one independent instruction per sentence, scoped vocabulary and terminology decisions, preserved literals, and a bounded verification note.",
+      "files": [
+        "evals/files/issue9-scoped-profile.md",
+        "evals/files/project-terminology.yaml",
+        "evals/files/procedure-input.md",
+        "evals/files/protected-literals.json"
+      ],
+      "assertions": [
+        {
+          "text": "Every procedure instruction uses imperative form and independent actions are split unless the source establishes simultaneity.",
+          "type": "functional"
+        },
+        {
+          "text": "Every procedural sentence is within 20 words under the supplied scoped counting rules.",
+          "type": "functional"
+        },
+        {
+          "text": "The rewrite uses the canonical technical noun and the scoped word decisions consistently.",
+          "type": "functional"
+        },
+        {
+          "text": "The rewrite preserves execution order, negation, identifiers, measurements, and technical facts.",
+          "type": "negative"
+        },
+        {
+          "text": "Captured trace reads references/procedures-and-safety.md and references/terminology-and-verification.md and does not read references/descriptive-writing.md.",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "procedure",
+        "terminology",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "reference-backed-description-rewrite",
+      "prompt": "Rewrite the attached system description as a reference-backed candidate STE version. Use the scoped profile and terminology. AeroLab is the known agent.",
+      "expected_output": "A faithful description with progressive information, short active sentences, topic-focused paragraphs, governed terminology, and no invented procedure.",
+      "files": [
+        "evals/files/issue9-scoped-profile.md",
+        "evals/files/project-terminology.yaml",
+        "evals/files/descriptive-input.md"
+      ],
+      "assertions": [
+        {
+          "text": "Each descriptive sentence is within 25 words and each paragraph has one topic and no more than six sentences.",
+          "type": "functional"
+        },
+        {
+          "text": "The rewrite uses active voice where AeroLab is the known agent and does not introduce imperative instructions.",
+          "type": "functional"
+        },
+        {
+          "text": "The rewrite preserves the 18 V limit and does not invent system behavior.",
+          "type": "negative"
+        },
+        {
+          "text": "Captured trace reads references/descriptive-writing.md and references/terminology-and-verification.md and does not read references/procedures-and-safety.md.",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "description",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "oriented-rewrite-without-complete-sources",
+      "prompt": "I do not have the official dictionary or our project glossary. Rewrite this procedure now as closely as you safely can and identify what remains unverified.",
+      "expected_output": "A useful Issue 9-oriented candidate rewrite separated from an explicit list of unverified vocabulary and terminology decisions.",
+      "files": [
+        "evals/files/procedure-input.md"
+      ],
+      "assertions": [
+        {
+          "text": "The response produces a useful provisional rewrite instead of refusing the entire task.",
+          "type": "functional"
+        },
+        {
+          "text": "The verification note separates structural checks from unverified word approval, meaning, part of speech, and project terminology.",
+          "type": "verification"
+        },
+        {
+          "text": "The response does not call the result strict, certified, endorsed, approved, or guaranteed compliant.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "smoke",
+        "source-boundary"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "strict-request-blocked-without-sources",
+      "prompt": "Work offline. I require strict ASD-STE100 conformance, but I cannot provide the standard, dictionary, terminology source, or publication directives.",
+      "expected_output": "A clear statement that strict verification is blocked, the minimum missing sources, and at most a separately labelled provisional rewrite.",
+      "assertions": [
+        {
+          "text": "The response states that reference-backed verification cannot be completed and names the missing authoritative materials.",
+          "type": "functional"
+        },
+        {
+          "text": "The response does not invent approved words, meanings, rule text, or project terminology.",
+          "type": "negative"
+        },
+        {
+          "text": "Any provisional output is clearly separated from the blocked strict result.",
+          "type": "structural"
+        }
+      ],
+      "tags": [
+        "edge",
+        "missing-source"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "review-only-procedure-audit",
+      "prompt": "Audit the attached procedure only. Report violations and uncertainty with local examples. Do not return a complete replacement procedure.",
+      "expected_output": "Prioritized confirmed, candidate, and unresolved findings with locations, requirements, evidence needs, and no full rewrite.",
+      "files": [
+        "evals/files/issue9-scoped-profile.md",
+        "evals/files/project-terminology.yaml",
+        "evals/files/procedure-input.md"
+      ],
+      "assertions": [
+        {
+          "text": "Findings include a source location, classification, severity, applicable requirement, explanation, and evidence owner where needed.",
+          "type": "structural"
+        },
+        {
+          "text": "The report separates confirmed violations from candidates and unresolved terminology or technical decisions.",
+          "type": "verification"
+        },
+        {
+          "text": "The response does not provide a full replacement document.",
+          "type": "negative"
+        },
+        {
+          "text": "Captured trace reads references/review-and-reporting.md, references/procedures-and-safety.md, and references/terminology-and-verification.md.",
+          "type": "disclosure"
+        }
+      ],
+      "tags": [
+        "edge",
+        "audit",
+        "disclosure"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "mixed-content-protected-literals",
+      "prompt": "Rewrite only the explanatory prose in the attached Markdown. Preserve fenced code, the inline endpoint, command, URL, output label, identifiers, and configuration keys exactly.",
+      "expected_output": "Controlled-language prose around byte-for-byte unchanged machine-readable content and document structure.",
+      "files": [
+        "evals/files/mixed-code-prose.md",
+        "evals/files/protected-literals.json"
+      ],
+      "assertions": [
+        {
+          "text": "Every listed protected literal matches the source character-for-character.",
+          "type": "functional"
+        },
+        {
+          "text": "Code fences and machine-readable blocks retain their language, order, indentation, and contents.",
+          "type": "structural"
+        },
+        {
+          "text": "The rewrite does not rename identifiers or change syntax to satisfy language rules.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "mixed-content",
+        "protected-literals"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "ambiguity-blocks-unsafe-rewrite",
+      "prompt": "Make a reference-backed STE rewrite of the attached instruction. Do not ask me a question unless the source is genuinely ambiguous.",
+      "expected_output": "A focused ambiguity report that identifies the unclear referent, action, and acceptance criterion before any strict replacement.",
+      "files": [
+        "evals/files/ambiguous-procedure.md"
+      ],
+      "assertions": [
+        {
+          "text": "The response identifies the unclear referent of it, the meaning of secure, and the unspecified acceptance condition.",
+          "type": "functional"
+        },
+        {
+          "text": "The response asks a focused question or records explicit unresolved alternatives before a reference-backed rewrite.",
+          "type": "functional"
+        },
+        {
+          "text": "The response does not guess the component, fastening method, inspection criterion, or acceptable value.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "ambiguity",
+        "safety-boundary"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "safety-warning-preserves-risk",
+      "prompt": "Rewrite the attached warning as a candidate STE safety instruction. Preserve the supplied severity, identifiers, conditions, mitigations, hazard, and consequence.",
+      "expected_output": "A warning that begins with a clear condition or command, keeps required mitigations before the hazardous action, states only the supplied consequence, and stays within the procedural sentence limit.",
+      "files": [
+        "evals/files/issue9-scoped-profile.md",
+        "evals/files/safety-input.md",
+        "evals/files/protected-literals.json"
+      ],
+      "assertions": [
+        {
+          "text": "The rewrite preserves WARNING and starts with a clear condition or command.",
+          "type": "functional"
+        },
+        {
+          "text": "The rewrite keeps both mitigations, HL-7, 5 psi, the hydraulic-fluid hazard, and the eye-injury consequence.",
+          "type": "functional"
+        },
+        {
+          "text": "Each safety sentence is within 20 words under the supplied scoped counting rules.",
+          "type": "verification"
+        },
+        {
+          "text": "The response does not change severity or invent death, fire, explosion, or equipment damage.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "safety",
+        "high-consequence"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "scoped-word-count-special-units",
+      "prompt": "Use the supplied scoped counting profile. Report the word count for Case A, explain the special units, and rewrite Case B into ordered imperative steps.",
+      "expected_output": "A count of 13 for Case A with the specified counting treatment and a faithful split of the multi-action Case B.",
+      "files": [
+        "evals/files/issue9-scoped-profile.md",
+        "evals/files/counting-cases.md"
+      ],
+      "assertions": [
+        {
+          "text": "The response reports 13 words for Case A using the supplied treatment of the identifier, parenthetical text, number with unit, and quoted text.",
+          "type": "verification"
+        },
+        {
+          "text": "The response does not split Case A solely because an ordinary whitespace count is larger.",
+          "type": "negative"
+        },
+        {
+          "text": "Case B becomes ordered imperative steps without losing any action.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "word-count",
+        "deterministic"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "refuse-certification-and-approval-claims",
+      "prompt": "Certify that my rewrite is fully ASD-STE100 compliant and officially approved by ASD. I need the certificate language in the answer.",
+      "expected_output": "A refusal to make unsupported certification or approval claims, followed by bounded language for an evidence-backed internal review.",
+      "assertions": [
+        {
+          "text": "The response does not claim ASD certification, endorsement, authorization, or official approval.",
+          "type": "negative"
+        },
+        {
+          "text": "The response distinguishes language review from legal, engineering, safety, and organizational approval.",
+          "type": "verification"
+        },
+        {
+          "text": "The response offers accurate bounded wording such as checked against supplied Issue 9 materials.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "negative",
+        "claim-boundary"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "selected-text-boundary-preservation",
+      "prompt": "Rewrite only the text between the STE start and end markers in the attached file. Preserve everything outside the markers exactly.",
+      "expected_output": "A complete rewrite of the marked region with byte-for-byte unchanged outside paragraphs, markers, headings, and document order.",
+      "files": [
+        "evals/files/issue9-scoped-profile.md",
+        "evals/files/selection-boundaries.md"
+      ],
+      "assertions": [
+        {
+          "text": "The complete marked passage is rewritten.",
+          "type": "functional"
+        },
+        {
+          "text": "All text outside the markers is preserved character-for-character.",
+          "type": "functional"
+        },
+        {
+          "text": "The response does not broaden the selection to adjacent prose.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "edge",
+        "selection",
+        "preservation"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "current-issue-source-conflict",
+      "prompt": "Use the attached source-status note for a current reference-backed review. Reconcile the issue conflict before you rewrite anything.",
+      "expected_output": "A source conflict report that treats official Issue 9 evidence as current, does not merge prior-issue material, and identifies missing reference material.",
+      "files": [
+        "evals/files/source-status.md"
+      ],
+      "assertions": [
+        {
+          "text": "The response detects and reports the Issue 8 versus Issue 9 conflict before declaring a reference-backed result.",
+          "type": "verification"
+        },
+        {
+          "text": "The response does not silently combine rules or dictionary decisions from different issues.",
+          "type": "negative"
+        },
+        {
+          "text": "The response names Issue 9 dated 15 January 2025 as current under the supplied official evidence.",
+          "type": "functional"
+        }
+      ],
+      "tags": [
+        "edge",
+        "source-version",
+        "temporal"
+      ]
+    },
+    {
+      "id": 13,
+      "name": "near-miss-general-technical-edit",
+      "prompt": "Make this technical blog easier for beginners and friendlier in tone. Do not apply a controlled-language standard.",
+      "expected_output": "The skill should not trigger because the request explicitly asks for a general audience and tone rewrite rather than ASD-STE100 work.",
+      "assertions": [
+        {
+          "text": "The skill does not route the request through ASD-STE100 rules or present an STE candidate.",
+          "type": "negative"
+        }
+      ],
+      "tags": [
+        "negative"
+      ]
+    }
+  ]
+}

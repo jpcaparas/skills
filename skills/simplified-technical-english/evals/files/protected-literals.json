@@ -1,0 +1,16 @@
+{
+  "literals": [
+    "BAV-44",
+    "J12",
+    "TorqueCheck",
+    "TR-908",
+    "25 psi",
+    "POST /v1/jobs/{job_id}/retry",
+    "retry_after_ms",
+    "MAX_RETRY_COUNT",
+    "curl -fsS",
+    "HL-7",
+    "5 psi",
+    "SYSTEM READY FOR OPERATION"
+  ]
+}

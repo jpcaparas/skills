@@ -92,7 +92,7 @@ def run(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = No
 
 
 def bun_build_check(entry_path: Path, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=entry_path.parent) as tmpdir:
         outfile = Path(tmpdir) / "syntax-check.js"
         return run(
             [
@@ -267,7 +267,7 @@ def test_skill(skill_path: Path) -> dict:
         results["passed"] = False
         return results
 
-    with tempfile.TemporaryDirectory() as tmpdir:
+    with tempfile.TemporaryDirectory(dir=skill_path) as tmpdir:
         tmp = Path(tmpdir)
         home = tmp / "home"
         home.mkdir()

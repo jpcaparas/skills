@@ -1,0 +1,82 @@
+[
+  {
+    "query": "Use /simplified-technical-english to rewrite this maintenance procedure in strict ASD-STE100 Issue 9 form.",
+    "should_trigger": true
+  },
+  {
+    "query": "Convert the selected service-bulletin steps to ASD Simplified Technical English and preserve all part numbers.",
+    "should_trigger": true
+  },
+  {
+    "query": "Review this warning for ASD-STE100 violations only; give rule-based findings, not a replacement.",
+    "should_trigger": true
+  },
+  {
+    "query": "I do not have our terminology database. Make a best-effort STE version and show what you could not verify.",
+    "should_trigger": true
+  },
+  {
+    "query": "Rewrite these S1000D maintenance steps in controlled technical English: imperative form, one action per sentence, 20-word maximum.",
+    "should_trigger": true
+  },
+  {
+    "query": "Audit this procedure for approved-word meaning, part of speech, consistent technical nouns, and STE sentence limits.",
+    "should_trigger": true
+  },
+  {
+    "query": "Rewrite only the marked paragraphs into controlled English for international maintenance technicians; keep our project terms exact.",
+    "should_trigger": true
+  },
+  {
+    "query": "Turn this multi-action safety step into STE commands without changing the warning level or hazard.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make this technical blog easier for beginners and friendlier in tone.",
+    "should_trigger": false
+  },
+  {
+    "query": "Rewrite these API docs in plain English; there is no controlled-language standard.",
+    "should_trigger": false
+  },
+  {
+    "query": "Teach an English lesson for aircraft mechanics who speak English as a second language.",
+    "should_trigger": false
+  },
+  {
+    "query": "What is ASD-STE100? Summarize its history; do not rewrite any text.",
+    "should_trigger": false
+  },
+  {
+    "query": "Create an STE curriculum covering science, technology, and engineering for year 8.",
+    "should_trigger": false
+  },
+  {
+    "query": "Translate this maintenance manual from English to German.",
+    "should_trigger": false
+  },
+  {
+    "query": "Check whether 60 psi is a safe operating pressure and cite engineering sources.",
+    "should_trigger": false
+  },
+  {
+    "query": "Rename these TypeScript identifiers so they are easier to understand.",
+    "should_trigger": false
+  },
+  {
+    "query": "Apply a product UI style guide to these labels.",
+    "should_trigger": false
+  },
+  {
+    "query": "Rewrite this contract in a generic controlled natural language, not ASD-STE100.",
+    "should_trigger": false
+  },
+  {
+    "query": "Proofread this memo for spelling and punctuation only.",
+    "should_trigger": false
+  },
+  {
+    "query": "Count the words in this paragraph using an ordinary whitespace count.",
+    "should_trigger": false
+  }
+]

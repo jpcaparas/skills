@@ -8,12 +8,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SOURCE_SCRIPT="$SCRIPT_DIR/agent-stop-checks.sh"
 SOURCE_SESSION_CONTEXT_SCRIPT="$SCRIPT_DIR/agent-session-context.sh"
 SOURCE_SNAPSHOT_SCRIPT="$SCRIPT_DIR/agent-repo-snapshot.sh"
-TEST_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/agent-stop-checks-test.XXXXXX")"
+# shellcheck source=executable-temp-dir.sh
+source "$SCRIPT_DIR/executable-temp-dir.sh"
+TEST_ROOT="$(create_executable_temp_dir "$SCRIPT_DIR/.." "agent-stop-checks-test")"
 TEST_REPO="$TEST_ROOT/repo"
 COUNT_FILE="$TEST_ROOT/validation-count"
 
 cleanup() {
-    rm -rf "$TEST_ROOT"
+    cleanup_executable_temp_dir "$TEST_ROOT"
 }
 trap cleanup EXIT
 

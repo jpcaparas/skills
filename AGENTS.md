@@ -11,6 +11,7 @@ This repository is a public source for installable agent skills.
 - Treat `README.md`, `AGENTS.md`, and `metadata.json` beside a skill as thin packaging wrappers, not alternate sources of truth.
 - Prefer repo-agnostic instructions. Do not hard-code a single workspace or machine path unless the user explicitly requires it.
 - When a skill creates other skills, detect whether the best destination is repo-local or global before writing files.
+- Install missing validation binaries as needed with a platform-appropriate, user-local method. Use the documented compatible version ranges and executable overrides, preserve the Ubuntu and macOS matrix, and never weaken or skip a check to compensate for missing local tooling.
 
 ## Validation
 
@@ -27,6 +28,8 @@ python -m pip install -r requirements-validation.txt
 ```
 
 Native validation also requires Bun, Node.js with `npx`, Git, `jq`, and ripgrep (`rg`). Put compatible executables on `PATH`, or select non-standard installations with `SKILLS_VALIDATION_PYTHON`, `SKILLS_VALIDATION_BUN`, `SKILLS_VALIDATION_NODE`, and `SKILLS_VALIDATION_NPX`. These userland runtimes intentionally accept compatible versions; the hosted workflow remains deterministic and currently pins Python 3.11, Node.js 24, and Bun 1.3.11.
+
+Tests that execute temporary tool doubles use `scripts/executable-temp-dir.sh`. The helper probes the normal temporary filesystem and falls back to the repository filesystem when the host mounts its temporary directory with `noexec`. Set `SKILLS_EXECUTABLE_TMPDIR` to an existing writable, executable directory to select a different location explicitly.
 
 For any skill that ships scripts, run its local validators and confirm repository discovery still works:
 

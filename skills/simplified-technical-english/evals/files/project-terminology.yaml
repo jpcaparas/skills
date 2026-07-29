@@ -1,0 +1,19 @@
+revision: "2026-07-01"
+technical_nouns:
+  - term: "bleed-air isolation valve"
+    abbreviation: "BAV"
+    introduce_abbreviation_after_first_full_use: true
+    prohibited_aliases:
+      - "bleed valve"
+      - "air valve"
+  - term: "forward equipment bay"
+    abbreviation: null
+    introduce_abbreviation_after_first_full_use: false
+    prohibited_aliases:
+      - "front bay"
+technical_verbs:
+  - term: "power-cycle"
+    meaning: "remove electrical power and then supply electrical power again"
+protected_labels:
+  - "TorqueCheck"
+  - "SYSTEM READY FOR OPERATION"

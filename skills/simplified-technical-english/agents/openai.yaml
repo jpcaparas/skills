@@ -1,0 +1,4 @@
+interface:
+  display_name: "Simplified Technical English"
+  short_description: "Rewrite or audit technical text with ASD-STE100 constraints"
+  default_prompt: "Rewrite the selected technical text as a candidate ASD-STE100 Issue 9 version while preserving technical meaning, sequence, safety information, terminology, and protected literals."

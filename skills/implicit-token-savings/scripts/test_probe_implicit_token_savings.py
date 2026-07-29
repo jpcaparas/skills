@@ -22,7 +22,12 @@ class DockerProbeTests(unittest.TestCase):
     """Distinguish an unavailable daemon from malformed command output."""
 
     def run_fake_docker(self, script_body: str) -> dict[str, object]:
-        with tempfile.TemporaryDirectory(prefix="docker-probe-regression.") as temp_dir:
+        # Keep the controlled executable off hardened system temp mounts that
+        # use noexec, while retaining automatic cleanup on macOS and Ubuntu.
+        with tempfile.TemporaryDirectory(
+            prefix=".docker-probe-regression.",
+            dir=SCRIPT_DIR.parent,
+        ) as temp_dir:
             fake_bin = Path(temp_dir)
             docker_path = fake_bin / "docker"
             docker_path.write_text(

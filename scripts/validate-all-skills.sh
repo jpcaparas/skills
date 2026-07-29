@@ -162,6 +162,9 @@ echo "Checking local and CI validation entrypoint parity"
 "$VALIDATION_PYTHON" scripts/test-validation-entrypoint-parity.py
 "$VALIDATION_PYTHON" scripts/check-validation-entrypoint-parity.py
 
+echo "Checking executable temporary-directory selection"
+bash scripts/test-executable-temp-dir.sh
+
 echo "Checking the local act matrix wrapper"
 bash scripts/test-validate-ci-with-act.sh
 
