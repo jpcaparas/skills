@@ -1,6 +1,6 @@
 ---
 name: codex-subagents
-description: "Codex CLI/App only passive delegation policy. Use in Codex when the user asks for subagents, delegation, parallel agents, one-agent-per-point reviews, multi-agent plans, or custom Codex agents. Spawn bounded subagents when useful; do NOT use outside Codex CLI/App, without explicit subagent/parallel-agent authorization, for trivial tasks, or as a fixed-model policy."
+description: "Coordinate bounded Codex subagents only when the user requests delegation, parallel agents, per-point reviews, multi-agent plans, or custom agents. Skip other harnesses, trivial work, and requests without delegation authority."
 compatibility: "Requires Codex CLI or Codex app with subagent workflows available. No fixed model requirement. Optional helper scripts require python3."
 metadata:
   version: "1.0.0"

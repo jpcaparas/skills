@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Tideglass Harbor Ops</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="mobile-header">
+      <button id="nav-toggle" class="icon-button" aria-expanded="false" aria-controls="sidebar">
+        <span aria-hidden="true">☰</span>
+        <span class="sr-only">Toggle navigation</span>
+      </button>
+      <span class="mobile-brand">Tideglass</span>
+      <span class="status-dot" aria-label="All systems operational"></span>
+    </header>
+
+    <aside id="sidebar" class="sidebar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Tideglass</span>
+      </div>
+      <nav aria-label="Primary navigation">
+        <a class="nav-link active" href="#overview">Overview</a>
+        <a class="nav-link" href="#berths">Berths</a>
+        <a class="nav-link" href="#arrivals">Arrivals</a>
+        <a class="nav-link" href="#weather">Weather</a>
+      </nav>
+      <div class="shift-card">
+        <span class="eyebrow">CURRENT SHIFT</span>
+        <strong>06:00–14:00</strong>
+        <span>Harbourmaster Maia R.</span>
+      </div>
+    </aside>
+
+    <main id="overview" class="main">
+      <section class="page-heading">
+        <div>
+          <p class="eyebrow">THURSDAY · 24 JULY</p>
+          <h1>Good morning, Maia.</h1>
+          <p>Three arrivals need attention before the tide turns at 10:42.</p>
+        </div>
+        <button id="open-log" class="primary-button">Log harbour event</button>
+      </section>
+
+      <section class="metric-grid" aria-label="Harbor metrics">
+        <article class="metric-card accent">
+          <span class="metric-label">Berth occupancy</span>
+          <strong>18 / 24</strong>
+          <span class="metric-note">75% · steady since 07:10</span>
+        </article>
+        <article class="metric-card">
+          <span class="metric-label">Wind at breakwater</span>
+          <strong>17 kn</strong>
+          <span class="metric-note">NW · gusting to 23 kn</span>
+        </article>
+        <article class="metric-card warning">
+          <span class="metric-label">Needs review</span>
+          <strong>3</strong>
+          <span class="metric-note">1 delayed · 2 unassigned</span>
+        </article>
+      </section>
+
+      <section id="arrivals" class="panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">LIVE QUEUE</p>
+            <h2>Incoming vessels</h2>
+          </div>
+          <label class="filter-label">
+            Show
+            <select id="arrival-filter">
+              <option value="all">All arrivals</option>
+              <option value="delayed">Delayed only</option>
+              <option value="clear">No flagged arrivals</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="arrival-list" class="arrival-list">
+          <article class="arrival-row" data-state="delayed">
+            <div class="vessel-icon" aria-hidden="true">K</div>
+            <div>
+              <strong>Kōwhai Star</strong>
+              <span>Coastal cargo · 92 m</span>
+            </div>
+            <span class="arrival-time">09:20</span>
+            <span class="status-pill delayed">Delayed 35 min</span>
+            <button class="ghost-button">Assign berth</button>
+          </article>
+          <article class="arrival-row" data-state="ready">
+            <div class="vessel-icon" aria-hidden="true">A</div>
+            <div>
+              <strong>Aurora Bay</strong>
+              <span>Passenger ferry · 48 m</span>
+            </div>
+            <span class="arrival-time">09:45</span>
+            <span class="status-pill ready">Berth 07 ready</span>
+            <button class="ghost-button">View plan</button>
+          </article>
+          <article class="arrival-row" data-state="ready">
+            <div class="vessel-icon" aria-hidden="true">M</div>
+            <div>
+              <strong>Mistral II</strong>
+              <span>Research vessel · 61 m</span>
+            </div>
+            <span class="arrival-time">10:05</span>
+            <span class="status-pill pending">Awaiting pilot</span>
+            <button class="ghost-button">Contact crew</button>
+          </article>
+        </div>
+
+        <div id="empty-state" class="empty-state" hidden>
+          <span class="empty-icon" aria-hidden="true">≈</span>
+          <h3>The approach is clear</h3>
+          <p>No arrivals match this view. Change the filter to restore the live queue.</p>
+          <button id="reset-filter" class="secondary-button">Show all arrivals</button>
+        </div>
+      </section>
+
+      <section id="weather" class="weather-strip">
+        <div>
+          <p class="eyebrow">NEXT TIDE</p>
+          <strong>High at 10:42 · 2.8 m</strong>
+        </div>
+        <div class="weather-hours" aria-label="Hourly weather">
+          <span><b>09</b> 16°</span>
+          <span><b>10</b> 17°</span>
+          <span><b>11</b> 17°</span>
+          <span><b>12</b> 18°</span>
+        </div>
+      </section>
+    </main>
+
+    <dialog id="event-dialog">
+      <form id="event-form" method="dialog" novalidate>
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">SHIFT RECORD</p>
+            <h2>Log harbour event</h2>
+          </div>
+          <button id="close-log" class="icon-button" type="button" aria-label="Close">×</button>
+        </div>
+        <label>
+          Event title
+          <input id="event-title" name="title" placeholder="e.g. Tug requested for Kōwhai Star">
+        </label>
+        <label>
+          Severity
+          <select name="severity">
+            <option>Routine</option>
+            <option>Attention</option>
+            <option>Critical</option>
+          </select>
+        </label>
+        <p id="form-error" class="form-error" role="alert" hidden>Enter a short title before saving.</p>
+        <p id="form-success" class="form-success" role="status" hidden>Event added to the 06:00–14:00 shift log.</p>
+        <div class="dialog-actions">
+          <button id="cancel-log" class="secondary-button" type="button">Cancel</button>
+          <button class="primary-button" type="submit">Save event</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="app.js"></script>
+  </body>
+</html>

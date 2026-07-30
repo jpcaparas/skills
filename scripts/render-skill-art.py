@@ -62,6 +62,7 @@ SKILL_SCENES = {
     "mockable-code": "a testing workbench with interchangeable dependency cartridges, stub blocks, fake service gems, and clean adapter rails",
     "namethatui": "a field-guide scanner comparing an unknown floating interface shape with clear button, menu, panel, and dialog silhouette gems connected to trusted reference beacons",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
+    "oneshot-prompt-generator": "a precision prism scanner combining visual, motion, structure, and interaction reference gems into one bright handoff beam that enters a fresh empty world portal",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
     "product-question": "a side-scrolling path of user-flow tiles and glowing inquiry gems leading toward a code city skyline, with simple unlabeled connectors and no screens or papers",
     "reading-notes": "a reading desk collecting bookmarks, highlight bars, and task gems around a glowing source",

@@ -284,6 +284,16 @@ Production skill for naming unfamiliar UI components from descriptions, screensh
 
 Production skill for Nano Banana 2 infographic prompting and verification covering low-noise prompt variants, default `16:9` review sets, terse in-image copy rules, and live Gemini image API probes for executive and editorial visuals.
 
+### `oneshot-prompt-generator`
+
+`npx skills add jpcaparas/skills --skill oneshot-prompt-generator`
+
+<p align="center">
+  <img src="skills/oneshot-prompt-generator/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-prompt-generator" width="480">
+</p>
+
+Production skill for dissecting websites, apps, visuals, media, documents, code, and mixed references into one self-contained raw replication prompt, with a web-product default, explicit target overrides, and evidence-aware fidelity.
+
 ### `oneshot-websites`
 
 `npx skills add jpcaparas/skills --skill oneshot-websites`

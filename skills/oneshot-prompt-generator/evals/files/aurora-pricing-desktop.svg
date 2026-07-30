@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#11112d"/>
+      <stop offset="1" stop-color="#29134a"/>
+    </linearGradient>
+    <linearGradient id="card" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#432a6c"/>
+      <stop offset="1" stop-color="#221536"/>
+    </linearGradient>
+  </defs>
+  <rect width="1440" height="900" fill="url(#bg)"/>
+  <circle cx="1240" cy="90" r="280" fill="#ae65ff" opacity=".15"/>
+  <circle cx="210" cy="780" r="250" fill="#47d7c5" opacity=".10"/>
+  <g font-family="Verdana" fill="#f8f4ff">
+    <text x="90" y="78" font-size="24" font-weight="700">AURORA KIOSK</text>
+    <text x="1160" y="78" font-size="15" fill="#c7bad8">HOW IT WORKS</text>
+    <text x="1300" y="78" font-size="15" fill="#c7bad8">SIGN IN</text>
+    <text x="720" y="190" text-anchor="middle" font-size="15" fill="#a98fc7" letter-spacing="4">CHOOSE YOUR NIGHT</text>
+    <text x="720" y="264" text-anchor="middle" font-size="64" font-weight="700">One pass. Every wonder.</text>
+    <text x="720" y="314" text-anchor="middle" font-size="21" fill="#cfc2de">After-dark access to the observatory, sky trail, and live dome sessions.</text>
+  </g>
+  <g transform="translate(210 385)">
+    <rect width="310" height="370" rx="26" fill="#18142c" stroke="#58416f"/>
+    <text x="30" y="52" font-family="Verdana" font-size="16" fill="#9f8bb6">TWILIGHT</text>
+    <text x="30" y="115" font-family="Verdana" font-size="38" font-weight="700" fill="#fff">$18</text>
+    <text x="30" y="155" font-family="Verdana" font-size="16" fill="#c8bcd7">Sky trail + sunset lookout</text>
+    <circle cx="38" cy="205" r="5" fill="#6fddcc"/><text x="55" y="211" font-family="Verdana" font-size="15" fill="#ddd3e7">Entry from 5:30 pm</text>
+    <circle cx="38" cy="245" r="5" fill="#6fddcc"/><text x="55" y="251" font-family="Verdana" font-size="15" fill="#ddd3e7">Guided constellation walk</text>
+    <rect x="30" y="300" width="250" height="48" rx="24" fill="#302541"/>
+    <text x="155" y="331" text-anchor="middle" font-family="Verdana" font-size="15" font-weight="700" fill="#fff">SELECT TWILIGHT</text>
+  </g>
+  <g transform="translate(565 350)">
+    <rect width="310" height="440" rx="26" fill="url(#card)" stroke="#bd88ff" stroke-width="2"/>
+    <rect x="85" y="-17" width="140" height="34" rx="17" fill="#d5a4ff"/>
+    <text x="155" y="5" text-anchor="middle" font-family="Verdana" font-size="12" font-weight="700" fill="#29133b">MOST POPULAR</text>
+    <text x="30" y="68" font-family="Verdana" font-size="16" fill="#d6c5e7">KŌWHAI PASS</text>
+    <text x="30" y="131" font-family="Verdana" font-size="38" font-weight="700" fill="#fff">$29</text>
+    <text x="30" y="171" font-family="Verdana" font-size="16" fill="#e2d8eb">The complete night experience</text>
+    <circle cx="38" cy="221" r="5" fill="#73f0d5"/><text x="55" y="227" font-family="Verdana" font-size="15" fill="#f0e9f6">All Twilight access</text>
+    <circle cx="38" cy="261" r="5" fill="#73f0d5"/><text x="55" y="267" font-family="Verdana" font-size="15" fill="#f0e9f6">One live dome session</text>
+    <circle cx="38" cy="301" r="5" fill="#73f0d5"/><text x="55" y="307" font-family="Verdana" font-size="15" fill="#f0e9f6">Hot kawakawa tea</text>
+    <rect x="30" y="360" width="250" height="52" rx="26" fill="#d7a5ff"/>
+    <text x="155" y="393" text-anchor="middle" font-family="Verdana" font-size="15" font-weight="700" fill="#271237">SELECT KŌWHAI</text>
+  </g>
+  <g transform="translate(920 385)">
+    <rect width="310" height="370" rx="26" fill="#18142c" stroke="#58416f"/>
+    <text x="30" y="52" font-family="Verdana" font-size="16" fill="#9f8bb6">DOME ONLY</text>
+    <text x="30" y="115" font-family="Verdana" font-size="38" font-weight="700" fill="#fff">$14</text>
+    <text x="30" y="155" font-family="Verdana" font-size="16" fill="#c8bcd7">A focused 45-minute session</text>
+    <circle cx="38" cy="205" r="5" fill="#6fddcc"/><text x="55" y="211" font-family="Verdana" font-size="15" fill="#ddd3e7">Reserved dome seat</text>
+    <circle cx="38" cy="245" r="5" fill="#6fddcc"/><text x="55" y="251" font-family="Verdana" font-size="15" fill="#ddd3e7">Live astronomer Q&amp;A</text>
+    <rect x="30" y="300" width="250" height="48" rx="24" fill="#302541"/>
+    <text x="155" y="331" text-anchor="middle" font-family="Verdana" font-size="15" font-weight="700" fill="#fff">SELECT DOME</text>
+  </g>
+  <text x="720" y="850" text-anchor="middle" font-family="Verdana" font-size="14" fill="#8f80a3">Free cancellation until 4 pm on the day of your visit.</text>
+</svg>

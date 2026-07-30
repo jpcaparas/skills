@@ -1,0 +1,90 @@
+[
+  {
+    "query": "Dissect this website and give me only a self-contained prompt I can paste into a fresh session to recreate it.",
+    "should_trigger": true
+  },
+  {
+    "query": "Here are desktop and mobile screenshots. Reverse-engineer the full experience into a raw reconstruction brief for another coding agent.",
+    "should_trigger": true
+  },
+  {
+    "query": "Watch this product screen recording and write the standalone prompt that would let a new session rebuild its UI, states, motion, and smallest interactions.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use this audio piece as the reference and turn it into a detailed fresh-session prompt for an interactive web archive.",
+    "should_trigger": true
+  },
+  {
+    "query": "Read this PDF and make the handoff prompt for recreating its information as a responsive web product. Do not build it yet.",
+    "should_trigger": true
+  },
+  {
+    "query": "Inspect this local source repository as evidence, then give me one raw prompt that specifies the product without prescribing its current stack.",
+    "should_trigger": true
+  },
+  {
+    "query": "Combine this URL, screenshot set, and storyboard into one self-contained replication prompt for a fresh session.",
+    "should_trigger": true
+  },
+  {
+    "query": "Use oneshot-prompt-generator on this Figma export and return a prompt for a native iOS recreation.",
+    "should_trigger": true
+  },
+  {
+    "query": "I need a reverse spec from this app reference. Default the end result sensibly and make the output copy-paste ready for a new agent.",
+    "should_trigger": true
+  },
+  {
+    "query": "Analyze this poster in full and write the raw prompt another image session would need to recreate it faithfully.",
+    "should_trigger": true
+  },
+  {
+    "query": "Build this screenshot as a React app now, run it, and add Playwright tests. I do not want a prose prompt.",
+    "should_trigger": false
+  },
+  {
+    "query": "Launch three one-shot website experiments from this brief using fresh isolated subagents and compare the artifacts.",
+    "should_trigger": false
+  },
+  {
+    "query": "Convert this mockup into one unstyled semantic HTML and JSX block.",
+    "should_trigger": false
+  },
+  {
+    "query": "What is the name of the floating panel anchored below an avatar? Give me component aliases and official links.",
+    "should_trigger": false
+  },
+  {
+    "query": "Summarize this book into topics, research leads, open questions, and homework.",
+    "should_trigger": false
+  },
+  {
+    "query": "Download every image and font from this public landing page into an assets folder.",
+    "should_trigger": false
+  },
+  {
+    "query": "Turn this tweet into a deterministic local MP4 and GIF with frozen assets.",
+    "should_trigger": false
+  },
+  {
+    "query": "Polish this prompt I already wrote. There is no reference resource to inspect.",
+    "should_trigger": false
+  },
+  {
+    "query": "Generate the finished watercolor illustration now; do not give me instructions.",
+    "should_trigger": false
+  },
+  {
+    "query": "Fix the broken modal state in our existing application and update the tests.",
+    "should_trigger": false
+  },
+  {
+    "query": "Audit the accessibility of this checkout flow and report the defects; I am not asking for a replication brief.",
+    "should_trigger": false
+  },
+  {
+    "query": "Extract each sprite from this sprite sheet into tightly cropped transparent PNG files.",
+    "should_trigger": false
+  }
+]

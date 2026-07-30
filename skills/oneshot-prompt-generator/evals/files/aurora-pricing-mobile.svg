@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="390" height="844" viewBox="0 0 390 844">
+  <defs>
+    <linearGradient id="mbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#11112d"/>
+      <stop offset="1" stop-color="#29134a"/>
+    </linearGradient>
+  </defs>
+  <rect width="390" height="844" fill="url(#mbg)"/>
+  <g font-family="Verdana" fill="#f8f4ff">
+    <text x="24" y="48" font-size="18" font-weight="700">AURORA KIOSK</text>
+    <circle cx="345" cy="42" r="18" fill="#302541"/>
+    <path d="M336 36h18M336 42h18M336 48h18" stroke="#f8f4ff" stroke-width="2"/>
+    <text x="24" y="110" font-size="12" fill="#a98fc7" letter-spacing="3">CHOOSE YOUR NIGHT</text>
+    <text x="24" y="156" font-size="38" font-weight="700">One pass.</text>
+    <text x="24" y="196" font-size="38" font-weight="700">Every wonder.</text>
+    <text x="24" y="230" font-size="15" fill="#cfc2de">Observatory, sky trail, and live dome sessions.</text>
+  </g>
+  <g transform="translate(18 275)">
+    <rect width="354" height="352" rx="24" fill="#432a6c" stroke="#bd88ff" stroke-width="2"/>
+    <rect x="190" y="22" width="136" height="30" rx="15" fill="#d5a4ff"/>
+    <text x="258" y="42" text-anchor="middle" font-family="Verdana" font-size="11" font-weight="700" fill="#29133b">MOST POPULAR</text>
+    <text x="24" y="65" font-family="Verdana" font-size="14" fill="#d6c5e7">KŌWHAI PASS</text>
+    <text x="24" y="120" font-family="Verdana" font-size="36" font-weight="700" fill="#fff">$29</text>
+    <text x="24" y="154" font-family="Verdana" font-size="15" fill="#e2d8eb">The complete night experience</text>
+    <circle cx="30" cy="198" r="4" fill="#73f0d5"/><text x="46" y="204" font-family="Verdana" font-size="14" fill="#f0e9f6">All Twilight access</text>
+    <circle cx="30" cy="232" r="4" fill="#73f0d5"/><text x="46" y="238" font-family="Verdana" font-size="14" fill="#f0e9f6">One live dome session</text>
+    <circle cx="30" cy="266" r="4" fill="#73f0d5"/><text x="46" y="272" font-family="Verdana" font-size="14" fill="#f0e9f6">Hot kawakawa tea</text>
+    <rect x="24" y="292" width="306" height="44" rx="22" fill="#d7a5ff"/>
+    <text x="177" y="320" text-anchor="middle" font-family="Verdana" font-size="14" font-weight="700" fill="#271237">SELECT KŌWHAI</text>
+  </g>
+  <g transform="translate(18 650)">
+    <rect width="354" height="104" rx="18" fill="#18142c" stroke="#58416f"/>
+    <text x="22" y="35" font-family="Verdana" font-size="13" fill="#9f8bb6">OTHER PASSES</text>
+    <text x="22" y="73" font-family="Verdana" font-size="17" font-weight="700" fill="#fff">Twilight $18</text>
+    <text x="220" y="73" font-family="Verdana" font-size="17" font-weight="700" fill="#fff">Dome $14</text>
+  </g>
+  <text x="195" y="810" text-anchor="middle" font-family="Verdana" font-size="12" fill="#8f80a3">Free cancellation until 4 pm.</text>
+</svg>

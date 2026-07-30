@@ -1,6 +1,6 @@
 ---
 name: sprite-decompose
-description: "Decompose sprite sheets, sprite atlases, and illustration contact sheets on flat or gently varying backgrounds into one tightly cropped transparent PNG per reviewed logical sprite, plus a bounds/grouping manifest and validation evidence. Use for separating existing multi-asset images; not for generating new sprites, packing an atlas, or reconstructing hidden pixels."
+description: "Decompose existing sprite sheets or illustration contact sheets on flat or gently varying backgrounds into cropped transparent PNGs with reviewed grouping, bounds manifest, and validation. Skip generation, atlas packing, and hidden-pixel reconstruction."
 compatibility: "Requires Python 3.11+, Pillow, and NumPy. Native image inspection is required for region and grouping decisions."
 metadata:
   version: "1.0.0"

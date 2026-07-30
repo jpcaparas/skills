@@ -1,0 +1,4 @@
+interface:
+  display_name: "Oneshot Prompt Generator"
+  short_description: "Turn references into copy-ready replication prompts"
+  default_prompt: "Use $oneshot-prompt-generator to dissect this resource and return one standalone replication prompt."
