@@ -302,7 +302,7 @@ Production skill for dissecting websites, apps, visuals, media, documents, code,
   <img src="skills/oneshot-websites/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-websites" width="480">
 </p>
 
-Production skill for launching unrestricted one-shot website experiments through fresh isolated subagents, with a catalogue seeded with 100 prompts, recursive delegation, coordinator-recorded prompt provenance, flat timestamped run directories, and drop-ready static artifacts.
+Production skill for launching unrestricted one-shot website experiments through fresh isolated subagents, with a catalogue seeded with 100 prompts, lead-owned builder/critic quality gauntlets, coordinator-recorded prompt provenance, flat timestamped run directories, and drop-ready static artifacts.
 
 ### `product-question`
 

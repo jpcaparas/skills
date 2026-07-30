@@ -9,6 +9,8 @@ Production skill for launching autonomous one-shot website experiments through f
 - Silent visual and interaction-first guidance for crafting each finished brief without leaking generic boilerplate into `PROMPT.md`
 - A universal subject-adapted completion mandate in every finished prompt: no shortcuts, no cookie-cutter approximations, no skill-imposed token budget, and full interaction depth
 - One fresh lead subagent per experiment, with recursive delegation allowed
+- A lead-owned quality gauntlet with concrete bars, fresh read-only critics, real-artifact comparison, highest-leverage fixes, and evidence-based stopping
+- Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
 - A preserved `.tmp/` inside every unique run, with best-effort temp routing inherited by descendants and kept out of prompts and deployable artifacts
 - No skill-imposed time, stack, dependency, workflow, or source-project constraints
 - Flat, local-time run directories with atomic same-second collision suffixes
@@ -24,5 +26,6 @@ Production skill for launching autonomous one-shot website experiments through f
 - `assets/prompt-catalogue.json` - canonical prompt catalogue
 - `references/execution-protocol.md` - delegation and flat run-layout contract
 - `agents/oneshot-lead.md` - isolated lead role
+- `agents/oneshot-critic.md` - fresh read-only artifact critic
 - `scripts/list_prompts.py` - catalogue browser
 - `scripts/validate_catalog.py` - generated artifact checker

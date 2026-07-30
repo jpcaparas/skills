@@ -263,7 +263,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0"}
+        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -390,7 +390,7 @@ def run_document(
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "3.0",
+        "schemaVersion": "3.1",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -429,10 +429,10 @@ def provenance_receipt(
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
     return {
-        "schemaVersion": "2.0",
+        "schemaVersion": "2.1",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "3.0",
+        "runSchemaVersion": "3.1",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -442,6 +442,11 @@ def provenance_receipt(
         "priorRun": prior_run,
         "prompt": {"sha256": prompt_digest, "bytes": prompt_bytes},
         "temporary": {"path": ".tmp/", "routing": "best-effort-run-local", "preservation": "retain"},
+        "qualityGauntlet": {
+            "required": True,
+            "contractVersion": "1.0",
+            "reportSchemaVersion": "2.1",
+        },
     }
 
 
@@ -449,7 +454,7 @@ def initial_worker_report(run_id: str) -> dict[str, Any]:
     """Reserve an honest, editable report without inventing worker telemetry."""
 
     return {
-        "schemaVersion": "2.0",
+        "schemaVersion": "2.1",
         "runId": run_id,
         "status": "PLANNED",
         "summary": None,
@@ -462,6 +467,19 @@ def initial_worker_report(run_id: str) -> dict[str, Any]:
         "technologies": [],
         "dependencies": [],
         "build": {"command": None},
+        "qualityGauntlet": {
+            "applicability": None,
+            "notRequiredReason": None,
+            "bar": None,
+            "referenceProvenance": [],
+            "barValidation": {"result": None, "evidence": None},
+            "barRevisions": [],
+            "freshCriticAvailable": None,
+            "rounds": [],
+            "integrationPass": {"required": None, "result": None, "evidence": None},
+            "fallbackEvidence": None,
+            "stopReason": None,
+        },
         "verification": [],
         "observations": {"startedAt": None, "completedAt": None, "usage": None, "duration": None, "cost": None},
     }

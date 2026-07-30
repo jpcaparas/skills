@@ -1,8 +1,8 @@
 {
-  "version": "2.6.0",
+  "version": "2.7.0",
   "organization": "JP Caparas",
   "date": "July 2026",
-  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with 100 plainly labelled catalogue options, full-depth no-shortcuts prompts with no skill-imposed token budget, recursive delegation, flat timestamped run directories with atomic collision protection, preserved run-local temporary state, end-to-end UTF-8 prompt integrity with mojibake detection, coordinator-recorded prompt provenance, and drop-ready multi-file static artifacts.",
+  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with 100 plainly labelled catalogue options, full-depth no-shortcuts prompts, lead-owned builder/critic quality gauntlets, evidence-based stopping, coupling-aware delegation, flat timestamped run directories, preserved run-local temporary state, prompt provenance, and drop-ready multi-file static artifacts.",
   "references": [
     "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
     "https://x.com/mweinbach/status/2077827886149439547",
@@ -15,6 +15,8 @@
     "https://arxiv.org/abs/2505.03733",
     "https://github.com/NoviScl/Design2Code",
     "https://github.com/Tencent-Hunyuan/ArtifactsBenchmark",
+    "https://somethingbig.ai/gauntlet-loop",
+    "https://github.com/mshumer/Claude-of-Duty",
     "https://www.cloudflare.com/drop/",
     "https://developers.cloudflare.com/workers/platform/claim-deployments/#supported-resources",
     "https://vercel.com/drop",

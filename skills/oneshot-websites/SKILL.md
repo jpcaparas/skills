@@ -9,6 +9,8 @@ Give each experiment to a fresh lead subagent, pass it the actual prompt, and le
 
 “One-shot” describes the delegation boundary: one initial task prompt and one owning lead subagent per experiment. It does not mean one model call, a short turn, a fixed stack, or a restricted workflow. The lead may work for as long as the task needs, use any suitable tools or dependencies, revise its own work, and create its own subagents. The build process is open; the final handoff is a static folder with one root `index.html` entrypoint and as many supporting asset files and directories as the experience needs.
 
+For a non-trivial artifact, the lead also owns an internal quality gauntlet: establish an inspectable bar, build, give a fresh critic the real rendered result rather than a builder summary, fix the highest-leverage remaining gap, and repeat until evidence supports stopping. These are internal revisions by the same lead inside the same one-shot run, not coordinator follow-ups or new experiments.
+
 ## Choose a Compatible Helper Runtime
 
 The shipped coordinator helpers support Python 3.11 or newer; they do not require one exact minor release. In POSIX shells, set `ONESHOT_WEBSITES_PYTHON` to any compatible executable path or command name when `python3` is not the right interpreter. Every helper command below uses the same override:
@@ -119,7 +121,7 @@ Actual generation belongs to subagents:
 
 1. Create one fresh lead subagent for every experiment. The coordinator must not generate the artifact itself.
 2. Create the lead with the harness's no-history isolation primitive so it inherits none of the coordinator conversation. In Codex, call `spawn_agent` with `fork_turns: "none"`; never rely on its history-inheriting default. Use the equivalent empty-context option in another harness.
-3. Strictly decode the pre-created `artifact/PROMPT.md` as UTF-8, then give the lead that exact actual prompt verbatim alongside `agents/oneshot-lead.md`, its assigned run and `.tmp/` paths, the operational temporary-file envelope, and only its experiment metadata in the initial dispatch. An empty inherited history does not replace the explicit role and prompt. The envelope is coordinator/lead runtime guidance and must never be folded into the actual prompt or `artifact/PROMPT.md`.
+3. Strictly decode the pre-created `artifact/PROMPT.md` as UTF-8, then give the lead that exact actual prompt verbatim alongside `agents/oneshot-lead.md`, the critic role from `agents/oneshot-critic.md`, its assigned run and `.tmp/` paths, the operational temporary-file envelope, and only its experiment metadata in the initial dispatch. Include the critic role as operational material so the empty-history lead can pass it to fresh descendants without depending on ambient package discovery. An empty inherited history does not replace the explicit roles and prompt. The envelope and role material are coordinator/lead runtime guidance and must never be folded into the actual prompt or `artifact/PROMPT.md`.
 4. Keep coordinator history, sibling prompts, instructions, workspaces, artifacts, and outcomes out of its context.
 5. Dispatch multiple requested experiments to multiple leads, concurrently whenever the harness has capacity. If capacity requires batches, retain one distinct fresh lead per experiment.
 6. Let each lead create and coordinate its own subagents when the harness supports recursive delegation. Every descendant receives the same run-local temporary path and supported temporary-environment routing, then stays inside the lead’s experiment scope and namespace wherever the harness permits.
@@ -133,6 +135,14 @@ This step is complete when each experiment has exactly one distinct lead owner a
 On the lead’s work, the skill imposes no time, token, step, tool-call, dependency, source-file-count, framework, language, asset-source, browser-tool, testing-strategy, iteration, subagent-count, or subagent-depth budget. It does not require goal mode or any equivalent harness feature. The only fixed boundary is the deployable handoff described below.
 
 Each lead may choose any architecture, libraries, services, generated assets, build system, collaboration pattern, verification workflow, and source-project shape that serve the actual prompt and the authority available in the environment. It may research, install dependencies, inspect screenshots, run the result, test interactions, and revise its implementation.
+
+For every non-trivial build, the lead establishes a concrete, inspectable quality bar before judging completion. Prefer the user’s supplied reference, source artifact, screenshots, recordings, or acceptance criteria. When the prompt has no direct reference, the lead researches suitable category examples or defines measurable, subject-specific acceptance evidence as part of the work. Generic aspirations such as “excellent,” “polished,” or “production quality” are not a bar. Before scoring the artifact, when fresh recursive criticism is available, the fresh critic checks that the proposed bar is relevant, available, comparable, and at least as demanding as the prompt; it rejects a convenient or materially weaker proxy such as “an index file exists” for an ambitious simulator. Freeze the accepted bar for subsequent rounds. If evidence requires a legitimate change, record the prior bar, revised bar, and reason before continuing.
+
+The lead decomposes work only along concerns that can be improved and judged independently. It may parallelize truly independent concerns, but keeps tightly coupled visual, behavioral, state, or integration concerns under one sequential owner. After merging parallel work, it performs an integration and consistency pass before judging the whole artifact.
+
+When the harness supports fresh recursive subagents, every non-trivial build receives at least one separate critic pass using `agents/oneshot-critic.md`. Start each critic with empty inherited builder history. Give it the actual prompt, quality bar and references, relevant constraints, the built artifact, and any captures or test evidence needed to inspect the real result. Do not give it the builder’s rationale, progress narrative, self-assessment, or a summary in place of the artifact. The critic compares directly with the bar, uses blinded A/B ordering when feasible, and returns a verdict plus the single highest-leverage remaining gap with concrete evidence. It records representative inspection conditions such as viewport, pixel ratio, state, data, timing, input path, or seed when they affect comparability. The critic is read-only: the lead or its builder owns every edit.
+
+If a critic finds a material gap, the lead fixes it and sends the changed artifact to a new fresh critic. There is no skill-imposed number of rounds. Stop only when the latest evidence shows the bar is met, no remaining gap is materially actionable without trading away a stronger quality, a genuine blocker prevents further progress, or the user stops the run. Never stop merely because a lead- or skill-chosen predetermined round count has elapsed; an explicit user-requested stopping rule remains authoritative. When fresh recursive delegation is unavailable, use the strongest artifact-grounded browser, screenshot, interaction, test, or comparison evidence available to challenge both the bar and the artifact, and record that a fresh critic was unavailable; do not claim independent critic verification.
 
 Keep disposable working state inside the run’s `.tmp/` wherever the harness and tools permit. When a harness supports process-environment configuration, point `TMPDIR`, `TMP`, and `TEMP` at the absolute run-local `.tmp/` before the lead starts; otherwise the lead sets those variables before launching local processes and passes the same routing to descendants. Use supported tool-specific temporary or cache overrides when they represent disposable scratch. Preserve `.tmp/` at handoff so the run remains inspectable. Because some tools create state before dispatch or ignore overrides, treat containment as best effort and record known exceptions rather than inspecting, moving, or deleting unrelated external paths. Durable project files belong in `workspace/`; `.tmp/` never belongs in the deployable artifact. This operational guidance must stay out of the authored actual prompt and `artifact/PROMPT.md`.
 
@@ -151,9 +161,11 @@ Preserve each outcome, including partial or failed ones. Complete `run.json` and
 - lead and descendant worker identifiers when exposed by the harness
 - chosen tools, dependencies, and architecture
 - whether run-local temporary routing was applied and any known external exceptions
-- build choices, verification, and the fixed `artifact/index.html` entrypoint
+- build choices, quality-gauntlet applicability, quality bar, critic rounds or capability fallback, integration pass, final verification, and the fixed `artifact/index.html` entrypoint
 - status, blocker, and verification evidence
 - timestamps, usage, duration, and cost only when the harness exposes them; these are observations, never limits
+
+Record historical critic rounds in `worker-report.json.qualityGauntlet`, including the exact artifact revision, capture set, or digest each critic inspected. Keep the report’s `verification` array for final checks: an earlier `NOT_READY` verdict may remain honest gauntlet history without becoming a failed final verification on a later `OK` artifact. For a genuinely trivial artifact, record gauntlet applicability as `not-required` with a concrete reason instead of inventing rounds.
 
 An internal revision by the same owning lead remains part of its autonomous one-shot. A separately dispatched rerun receives a new run ID and is labelled as a rerun or curated attempt; it never overwrites the original.
 
@@ -178,6 +190,7 @@ This step is complete when prompts and artifacts remain inspectable under their 
 | Build or validate the artifact index | `references/catalog-index.md` |
 | Understand the research behind the breadth and provenance rules | `references/research-notes.md` |
 | Give a lead its isolated role | `agents/oneshot-lead.md` |
+| Give a fresh descendant its read-only critic role | `agents/oneshot-critic.md` |
 
 ## Package Validation
 

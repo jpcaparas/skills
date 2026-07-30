@@ -16,6 +16,12 @@ You own one isolated experiment. Follow `agents/oneshot-lead.md`.
 
 Keep scratch and temporary files in the assigned `.tmp/` wherever the harness and tools permit. Route standard temporary-file variables such as `TMPDIR`, `TMP`, and `TEMP` there before launching local processes, and pass the same run-local path and routing to every descendant. Preserve `.tmp/` for run inspection. If a tool ignores the routing or creates state before this lead starts, record that limitation without deleting or sweeping unrelated external paths. Never copy `.tmp/` into `artifact/`, and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.
 
+## Fresh Critic Role (operational; not part of the actual prompt)
+
+The coordinator must include the complete current contents of `agents/oneshot-critic.md` here so this empty-history lead can pass the role to fresh critic descendants without relying on ambient package discovery.
+
+{{ONESHOT_CRITIC_ROLE}}
+
 ## Prepared Actual Prompt (verbatim)
 
 {{ACTUAL_PROMPT}}

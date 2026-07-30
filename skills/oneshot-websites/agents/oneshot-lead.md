@@ -22,6 +22,20 @@ You may create and coordinate subagents when the harness supports it. Give desce
 
 You remain accountable for integrating and verifying their work. Recursive delegation does not split ownership of the experiment.
 
+## Quality Gauntlet
+
+Before treating a non-trivial artifact as complete:
+
+1. Establish an inspectable quality bar from the user’s supplied source, screenshots, recordings, examples, or acceptance criteria. If none exists, research suitable category examples or define measurable subject-specific acceptance evidence. Do not substitute vague praise such as “polished” or “world class.” Before scoring the artifact, when fresh recursive criticism is available, have the fresh critic reject any bar that is vague, unavailable, non-comparable, irrelevant, or materially weaker than the prepared prompt. Freeze the accepted bar; if later evidence requires a legitimate revision, record the old bar, new bar, and reason.
+2. Decompose only along concerns that can be improved and judged independently. Parallelize independent work when useful, but keep coupled visual, behavioral, state, and integration concerns under one sequential owner. After parallel work merges, smooth the integrated artifact before whole-artifact review.
+3. Build and exercise the actual result. Capture rendered states, interaction traces, test results, or other evidence a critic can inspect. Record representative viewport, pixel ratio, state, data, timing, input path, and seed whenever they affect a fair comparison.
+4. When fresh recursive subagents are available, create a critic with empty inherited builder history and the supplied `agents/oneshot-critic.md` role. Give it the actual prompt, quality bar and references, relevant constraints, built artifact, the exact artifact revision, capture set, or digest under review, and inspectable evidence. Do not send the builder’s rationale, progress story, self-assessment, or a prose summary instead of the artifact.
+5. Fix the critic’s highest-leverage material gap, then use a new fresh critic on the changed artifact. Do not ask the critic to edit files or let the builder grade its own work.
+
+There is no fixed critic-round budget. Stop when current evidence shows the bar is met, no remaining gap is materially actionable without weakening a stronger quality, a genuine blocker prevents progress, or the user stops the run. A lead- or skill-chosen predetermined round count is never sufficient reason to stop; follow an explicit user-requested stopping rule.
+
+If fresh recursive delegation is unavailable, use the strongest artifact-grounded browser, screenshot, interaction, test, or comparison evidence the harness supports to challenge both the proposed bar and the artifact. Record the missing capability and never claim that an independent critic reviewed the artifact.
+
 ## Temporary-File Discipline
 
 Keep scratch files, transient downloads, generated intermediates, tool logs, and other disposable working state in the assigned run’s `.tmp/` wherever the harness and each tool permit. Before launching local processes, route standard temporary-file variables such as `TMPDIR`, `TMP`, and `TEMP` to the absolute assigned `.tmp/` path. Apply supported tool-specific temporary or cache overrides when they represent disposable scratch, and pass the same run-local path and environment routing to every descendant.
@@ -45,4 +59,10 @@ Work freely in `workspace/`, using `.tmp/` for disposable run-local state. Befor
 
 Framework projects are welcome. For example, a React source tree may live in `workspace/` and its production `dist` contents may become `artifact/`. The final handoff is the built site, not the source-only project.
 
-Write `worker-report.json` beside the artifact. Record status, summary or blocker, chosen technologies, build command, concrete verification evidence, lead and descendant IDs when exposed, the fixed `artifact/index.html` entrypoint, whether run-local temporary routing was applied, and any known tool or harness exceptions. Each verification item records a `kind`, a passed `result`, and concrete `evidence`. Set `artifact.staticDeploymentVerified` only after the built folder itself passes that check; an explicit failed check is incompatible with `OK`. Do not invent unavailable telemetry.
+Write `worker-report.json` beside the artifact. Record status, summary or blocker, chosen technologies, build command, quality-gauntlet applicability, quality bar, critic rounds or capability fallback, integration pass, concrete final verification evidence, lead and descendant IDs when exposed, the fixed `artifact/index.html` entrypoint, whether run-local temporary routing was applied, and any known tool or harness exceptions.
+
+Use `qualityGauntlet` for gauntlet history. Mark it `required` for non-trivial builds; a genuinely trivial artifact may use `not-required` only with a concrete reason. Record exposed critics in descendant IDs. Every critic round records the exact artifact revision, capture set, or digest inspected, verdict, evidence, highest-leverage gap, applied fix, and recheck. Historical `NOT_READY` rounds remain here even when a later critic returns `READY`.
+
+For a required gauntlet, fill the prepared report shape exactly. Record `bar`, non-empty `referenceProvenance`, and `barValidation` with concrete evidence. Use `accepted` when a fresh critic accepts the original bar, `revised` plus non-empty `barRevisions` when the bar changed, or `fallback-reviewed` when fresh critics were unavailable. Set `freshCriticAvailable` honestly. A successful critic-backed run ends with a recorded `READY` round; a successful fallback has no invented rounds and records `fallbackEvidence`. Record whether the integration pass was required and use a passed result with evidence when it was. For an `OK` run, use `bar-met` or `no-material-actionable-gap` as the evidence-backed `stopReason`.
+
+Keep `verification` for final checks only. Each verification item records a `kind`, a passed `result`, and concrete `evidence`; an explicit failed final check is incompatible with `OK`. Set `artifact.staticDeploymentVerified` only after the built folder itself passes that check. Do not invent unavailable telemetry.

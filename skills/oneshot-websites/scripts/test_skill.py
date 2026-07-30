@@ -342,6 +342,23 @@ def mark_successful_static_artifact(run_path: Path) -> None:
     report["status"] = "OK"
     report["temporary"]["routingApplied"] = True
     report["artifact"]["staticDeploymentVerified"] = True
+    report["qualityGauntlet"] = {
+        "applicability": "not-required",
+        "notRequiredReason": "This helper creates only a structural static-handoff fixture.",
+        "bar": None,
+        "referenceProvenance": [],
+        "barValidation": {"result": None, "evidence": None},
+        "barRevisions": [],
+        "freshCriticAvailable": None,
+        "rounds": [],
+        "integrationPass": {
+            "required": False,
+            "result": "not-required",
+            "evidence": "The fixture has one source owner and no merged workstreams.",
+        },
+        "fallbackEvidence": None,
+        "stopReason": "not-required",
+    }
     report["verification"] = [
         {"kind": "static-browser-smoke", "result": "passed", "evidence": "Opened the built root entrypoint"}
     ]
@@ -384,10 +401,13 @@ def convert_to_legacy_run(output_root: Path, run_path: Path, run_schema: str) ->
     manifest["schemaVersion"] = run_schema
     manifest["runId"] = legacy_run_id
     manifest["provenanceReceipt"] = f".oneshot-provenance/{legacy_run_id}.json"
+    report["schemaVersion"] = "2.0"
     report["runId"] = legacy_run_id
+    report.pop("qualityGauntlet", None)
     receipt["schemaVersion"] = "1.0" if run_schema == "2.0" else "1.1"
     receipt["runId"] = legacy_run_id
     receipt["runPath"] = legacy_relative
+    receipt.pop("qualityGauntlet", None)
     if run_schema == "2.0":
         manifest.pop("temporary", None)
         report.pop("temporary", None)
@@ -405,6 +425,28 @@ def convert_to_legacy_run(output_root: Path, run_path: Path, run_schema: str) ->
     old_receipt_path.rename(output_root / ".oneshot-provenance" / f"{legacy_run_id}.json")
     old_commit_path.rename(output_root / ".oneshot-provenance" / f"{legacy_run_id}.commit")
     return legacy_run
+
+
+def convert_to_flat_3_0_run(output_root: Path, run_path: Path) -> None:
+    """Downgrade a prepared run to the prior flat contract for migration coverage."""
+
+    manifest_path = run_path / "run.json"
+    report_path = run_path / "worker-report.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    receipt_path = output_root / str(manifest["provenanceReceipt"])
+    receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+
+    manifest["schemaVersion"] = "3.0"
+    report["schemaVersion"] = "2.0"
+    report.pop("qualityGauntlet", None)
+    receipt["schemaVersion"] = "2.0"
+    receipt["runSchemaVersion"] = "3.0"
+    receipt.pop("qualityGauntlet", None)
+
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
 
 
 def rewrite_prepared_run_id(output_root: Path, run_path: Path, new_run_id: str) -> Path:
@@ -1274,6 +1316,139 @@ def exercise_adversarial_contract(
         report_path.write_text(json.dumps(report), encoding="utf-8")
         assert_invalid_catalog(validator, evidence_root, "must not contain failed verification evidence", "mixed failed OK evidence", errors)
 
+    gauntlet_root = temporary / "gauntlet-root"
+    gauntlet_run = prepare_run(
+        skill,
+        gauntlet_root,
+        "Model",
+        "Harness",
+        "Gauntlet History",
+        prompt,
+        errors,
+    )
+    if gauntlet_run is not None:
+        mark_successful_static_artifact(gauntlet_run)
+        manifest_path = gauntlet_run / "run.json"
+        report_path = gauntlet_run / "worker-report.json"
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        critic_ids = ["critic-before", "critic-after"]
+        manifest["execution"]["descendantWorkerIds"] = critic_ids
+        report["descendantWorkerIds"] = critic_ids
+        report["qualityGauntlet"] = {
+            "applicability": "required",
+            "notRequiredReason": None,
+            "bar": "The rendered route transition matches the supplied walkthrough at the reference viewport.",
+            "referenceProvenance": ["supplied museum walkthrough"],
+            "barValidation": {
+                "result": "accepted",
+                "evidence": "Fresh critic confirmed the bar covers the prompt's transition requirement.",
+            },
+            "barRevisions": [],
+            "freshCriticAvailable": True,
+            "rounds": [
+                {
+                    "criticWorkerId": "critic-before",
+                    "artifactRevision": "sha256:before-fix",
+                    "verdict": "NOT_READY",
+                    "inspected": "artifact/index.html route from lobby to gallery",
+                    "evidence": "The built transition cuts before the reference camera settles.",
+                    "highestLeverageGap": "Match the reference transition timing and camera settle.",
+                    "fix": "Adjusted transition duration and camera easing.",
+                    "recheck": "Replay the same route at the reference viewport.",
+                },
+                {
+                    "criticWorkerId": "critic-after",
+                    "artifactRevision": "sha256:after-fix",
+                    "verdict": "READY",
+                    "inspected": "artifact/index.html route from lobby to gallery",
+                    "evidence": "The replay matches the reference timing and final camera state.",
+                    "highestLeverageGap": None,
+                    "fix": None,
+                    "recheck": "Replay remained stable across three isolated sessions.",
+                },
+            ],
+            "integrationPass": {
+                "required": False,
+                "result": "not-required",
+                "evidence": "One sequential owner changed the coupled transition.",
+            },
+            "fallbackEvidence": None,
+            "stopReason": "bar-met",
+        }
+        manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        gauntlet_build = rebuild_catalog_index(gauntlet_root)
+        gauntlet_validation = run([sys.executable, str(validator), str(gauntlet_root)])
+        assert_ok(
+            gauntlet_build.returncode == 0 and gauntlet_validation.returncode == 0,
+            "validator rejected honest NOT_READY-to-READY gauntlet history: {}".format(
+                gauntlet_validation.stdout
+            ),
+            errors,
+        )
+
+        report["qualityGauntlet"]["rounds"][1].pop("artifactRevision")
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(
+            validator,
+            gauntlet_root,
+            "artifactRevision must be a non-blank string",
+            "critic round without artifact revision",
+            errors,
+        )
+
+        report["qualityGauntlet"]["rounds"][1]["artifactRevision"] = "sha256:after-fix"
+        report["qualityGauntlet"]["barValidation"] = {"result": None, "evidence": None}
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(
+            validator,
+            gauntlet_root,
+            "must record barValidation.result",
+            "required gauntlet without independent bar validation",
+            errors,
+        )
+
+        report["qualityGauntlet"]["barValidation"] = {
+            "result": "revised",
+            "evidence": "The first proposed bar was materially weaker than the prompt.",
+        }
+        report["qualityGauntlet"]["barRevisions"] = []
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(
+            validator,
+            gauntlet_root,
+            "revised quality bar must record barRevisions",
+            "revised gauntlet bar without revision provenance",
+            errors,
+        )
+
+        report["qualityGauntlet"] = {
+            "applicability": "not-required",
+            "notRequiredReason": None,
+            "bar": None,
+            "referenceProvenance": [],
+            "barValidation": {"result": None, "evidence": None},
+            "barRevisions": [],
+            "freshCriticAvailable": None,
+            "rounds": [],
+            "integrationPass": {
+                "required": False,
+                "result": "not-required",
+                "evidence": "No merged workstreams.",
+            },
+            "fallbackEvidence": None,
+            "stopReason": "not-required",
+        }
+        report_path.write_text(json.dumps(report), encoding="utf-8")
+        assert_invalid_catalog(
+            validator,
+            gauntlet_root,
+            "must record a concrete reason",
+            "not-required gauntlet without applicability reason",
+            errors,
+        )
+
     size_root = temporary / "size-root"
     size_run = prepare_run(skill, size_root, "Model", "Harness", "Size", prompt, errors)
     if size_run is not None:
@@ -1560,7 +1735,7 @@ def exercise_adversarial_contract(
             structured_build.returncode == 0
             and structured_validation.returncode != 0
             and "flat run schemaVersion must be one of" in structured_validation.stdout
-            and "schemaVersion must be 1.0, 1.1, or 2.0" in structured_validation.stdout
+            and "schemaVersion must be 1.0, 1.1, 2.0, or 2.1" in structured_validation.stdout
             and "Traceback" not in structured_validation.stderr,
             "structured schema versions escaped validation or caused a crash: {}{}".format(
                 structured_validation.stdout,
@@ -2316,7 +2491,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             )
         if isinstance(first_manifest, Mapping):
             assert_ok(
-                first_manifest.get("schemaVersion") == "3.0",
+                first_manifest.get("schemaVersion") == "3.1",
                 "prepare_run.py did not emit the current run schema",
                 errors,
             )
@@ -2328,11 +2503,22 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             receipt = read_json(receipt_path, errors, "pre-dispatch provenance receipt") if isinstance(receipt_value, str) else None
             assert_ok(
                 isinstance(receipt, Mapping)
-                and receipt.get("schemaVersion") == "2.0"
-                and receipt.get("runSchemaVersion") == "3.0"
+                and receipt.get("schemaVersion") == "2.1"
+                and receipt.get("runSchemaVersion") == "3.1"
                 and receipt.get("prompt", {}).get("sha256") == expected_hash
                 and receipt.get("prompt", {}).get("bytes") == len(prompt_bytes),
                 "prepare_run.py did not anchor prompt provenance outside the worker run",
+                errors,
+            )
+            assert_ok(
+                isinstance(receipt, Mapping)
+                and receipt.get("qualityGauntlet")
+                == {
+                    "required": True,
+                    "contractVersion": "1.0",
+                    "reportSchemaVersion": "2.1",
+                },
+                "prepare_run.py did not anchor the quality-gauntlet report contract",
                 errors,
             )
             assert_ok(
@@ -2363,6 +2549,12 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
 
         first_report = read_json(first_run / "worker-report.json", errors, "prepared worker report")
         if isinstance(first_report, Mapping):
+            assert_ok(
+                first_report.get("schemaVersion") == "2.1"
+                and isinstance(first_report.get("qualityGauntlet"), Mapping),
+                "prepare_run.py did not initialize the current quality-gauntlet report",
+                errors,
+            )
             temporary_report = first_report.get("temporary")
             assert_ok(
                 isinstance(temporary_report, Mapping)
@@ -2372,6 +2564,23 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 "prepare_run.py did not initialize temporary-routing observations",
                 errors,
             )
+
+        current_report_path = first_run / "worker-report.json"
+        current_report_bytes = current_report_path.read_bytes()
+        current_report_without_gauntlet = json.loads(current_report_bytes)
+        current_report_without_gauntlet.pop("qualityGauntlet", None)
+        current_report_path.write_text(
+            json.dumps(current_report_without_gauntlet, indent=2) + "\n",
+            encoding="utf-8",
+        )
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "current run is missing required qualityGauntlet",
+            "current worker report with deleted quality-gauntlet contract",
+            errors,
+        )
+        current_report_path.write_bytes(current_report_bytes)
 
         original_prompt_bytes = preserved_prompt.read_bytes()
         original_manifest_bytes = (first_run / "run.json").read_bytes()
@@ -2458,7 +2667,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         assert_invalid_catalog(
             scripts[3],
             output_root,
-            "receipt schema '2.0' requires run schema 3.0",
+            "receipt schema '2.1' requires run schema 3.1",
             "new run downgraded through worker-writable metadata",
             errors,
         )
@@ -2468,11 +2677,38 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         rebuilt_after_downgrade_restore = rebuild_catalog_index(output_root)
         assert_ok(
             rebuilt_after_downgrade_restore.returncode == 0,
-            "catalogue builder failed after restoring an anchored 3.0 run: {}".format(
+            "catalogue builder failed after restoring an anchored 3.1 run: {}".format(
                 rebuilt_after_downgrade_restore.stderr or rebuilt_after_downgrade_restore.stdout
             ),
             errors,
         )
+
+        flat_3_0_root = Path(temporary) / "flat-3-0-runs"
+        flat_3_0_run = prepare_run(
+            skill,
+            flat_3_0_root,
+            "Prior Flat Model",
+            "Harness",
+            "Prior Flat 3.0 Run",
+            prompt,
+            errors,
+        )
+        if flat_3_0_run is not None:
+            mark_successful_static_artifact(flat_3_0_run)
+            convert_to_flat_3_0_run(flat_3_0_root, flat_3_0_run)
+            flat_3_0_build = rebuild_catalog_index(flat_3_0_root)
+            flat_3_0_validation = run(
+                [sys.executable, str(scripts[3]), str(flat_3_0_root)]
+            )
+            assert_ok(
+                flat_3_0_build.returncode == 0
+                and flat_3_0_validation.returncode == 0,
+                "validator rejected a prior flat 3.0 OK run: {}{}".format(
+                    flat_3_0_build.stderr or flat_3_0_build.stdout,
+                    flat_3_0_validation.stdout,
+                ),
+                errors,
+            )
 
         for legacy_schema in ("2.0", "2.1"):
             legacy_root = Path(temporary) / f"legacy-{legacy_schema.replace('.', '-')}-runs"
@@ -2883,6 +3119,81 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         skill_path = copied_skill / "SKILL.md"
         original_skill = skill_path.read_text(encoding="utf-8")
 
+        critic_path = copied_skill / "agents" / "oneshot-critic.md"
+        original_critic = critic_path.read_bytes()
+        critic_path.unlink()
+        missing_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_critic_result.returncode != 0
+            and "missing file: agents/oneshot-critic.md" in missing_critic_result.stdout,
+            "package validator accepted a skill without the fresh critic role",
+            errors,
+        )
+        critic_path.write_bytes(original_critic)
+
+        skill_without_quality_bar = original_skill.replace(
+            'Generic aspirations such as “excellent,” “polished,” or “production quality” are not a bar.',
+            "Use your own quality judgement.",
+            1,
+        )
+        skill_path.write_text(skill_without_quality_bar, encoding="utf-8")
+        missing_quality_bar_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_quality_bar_result.returncode != 0
+            and "SKILL.md runtime contract missing inspectable quality bar"
+            in missing_quality_bar_result.stdout,
+            "package validator accepted a vague, non-inspectable quality bar",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        original_critic_text = critic_path.read_text(encoding="utf-8")
+        critic_path.write_text(
+            original_critic_text.replace(
+                "Never accept a prose summary in place of opening, rendering, exercising, or otherwise inspecting the actual artifact.",
+                "Judge the builder's supplied summary.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        summary_only_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            summary_only_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing fresh read-only critic contract"
+            in summary_only_critic_result.stdout,
+            "package validator accepted a critic that could grade a builder summary",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
+        lead_path = copied_skill / "agents" / "oneshot-lead.md"
+        original_lead = lead_path.read_text(encoding="utf-8")
+        lead_path.write_text(
+            original_lead.replace(
+                "There is no fixed critic-round budget.",
+                "Run exactly three critic rounds.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        fixed_round_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            fixed_round_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead-owned quality gauntlet"
+            in fixed_round_result.stdout,
+            "package validator accepted a fixed critic-round budget",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
         skill_without_temporary_contract = re.sub(
             r"(?m)^Keep disposable working state inside the run’s `\.tmp/`.*\n\n",
             "",
@@ -2920,6 +3231,27 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         dispatch_path = copied_skill / "templates" / "worker-dispatch.md"
         original_dispatch = dispatch_path.read_text(encoding="utf-8")
+        dispatch_path.write_text(
+            re.sub(
+                r"(?s)## Fresh Critic Role.*?\{\{ONESHOT_CRITIC_ROLE\}\}\n\n",
+                "",
+                original_dispatch,
+                count=1,
+            ),
+            encoding="utf-8",
+        )
+        missing_critic_dispatch_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_critic_dispatch_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing embedded fresh critic role"
+            in missing_critic_dispatch_result.stdout,
+            "package validator accepted an empty-history dispatch without the critic role",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
         dispatch_path.write_text(
             original_dispatch.replace(
                 "and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.",

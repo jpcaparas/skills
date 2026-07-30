@@ -39,6 +39,16 @@ from runtime_contract import (
 
 STATUSES = {"PLANNED", "RUNNING", "OK", "PARTIAL", "BLOCKED", "ERROR"}
 CLASSIFICATIONS = {"autonomous-one-shot", "rerun", "curated-attempt"}
+GAUNTLET_VERDICTS = {"NOT_READY", "READY", "BLOCKED"}
+GAUNTLET_STOP_REASONS = {
+    "bar-met",
+    "no-material-actionable-gap",
+    "genuine-blocker",
+    "not-required",
+    "user-stopped",
+}
+SUCCESSFUL_GAUNTLET_STOP_REASONS = {"bar-met", "no-material-actionable-gap"}
+GAUNTLET_BAR_VALIDATION_RESULTS = {"accepted", "revised", "fallback-reviewed"}
 IDENTITY_MARKER = ".oneshot-identity.json"
 DROP_MAX_FILES = 1_000
 DROP_MAX_FILE_BYTES = 5 * 1024 * 1024
@@ -158,6 +168,35 @@ class WorkerIdentity:
 
     lead: Optional[str]
     descendants: tuple[str, ...]
+
+
+@dataclass(frozen=True)
+class QualityGauntletEvidence:
+    """Normalized fields needed to validate a successful gauntlet record."""
+
+    applicability: Optional[str]
+    not_required_reason: Optional[str]
+    bar: Optional[str]
+    provenance: tuple[str, ...]
+    bar_validation_result: Optional[str]
+    bar_validation_evidence: Optional[str]
+    bar_revisions: tuple[str, ...]
+    fresh_critic_available: Optional[bool]
+    round_count: int
+    verdicts: tuple[str, ...]
+    integration_required: Optional[bool]
+    integration_result: Optional[str]
+    integration_evidence: Optional[str]
+    fallback_evidence: Optional[str]
+    stop_reason: Optional[str]
+
+
+@dataclass(frozen=True)
+class PreparedRunContracts:
+    """Coordinator-anchored contracts that worker-owned files cannot downgrade."""
+
+    temporary: bool
+    quality_gauntlet: bool
 
 
 class LocalReferenceParser(HTMLParser):
@@ -384,6 +423,390 @@ def is_failed_verification(value: object) -> bool:
         return False
     result = text_value(value.get("result"))
     return result is not None and result.casefold() in {"error", "fail", "failed", "failure"}
+
+
+def optional_gauntlet_text(
+    record: dict[str, Any],
+    field: str,
+    prefix: str,
+    errors: list[str],
+) -> Optional[str]:
+    """Parse one nullable non-blank string from gauntlet metadata."""
+
+    raw_value = record.get(field)
+    value = text_value(raw_value)
+    if raw_value is not None and value is None:
+        errors.append(f"{prefix}.{field} must be null or a non-blank string")
+    return value
+
+
+def gauntlet_string_list(
+    record: dict[str, Any],
+    field: str,
+    prefix: str,
+    errors: list[str],
+) -> tuple[str, ...]:
+    """Parse a JSON array whose entries must all be meaningful strings."""
+
+    value = record.get(field)
+    if not isinstance(value, list) or not all(
+        isinstance(item, str) and bool(item.strip()) for item in value
+    ):
+        errors.append(f"{prefix}.{field} must be an array of non-blank strings")
+        return ()
+    return tuple(value)
+
+
+def parse_gauntlet_rounds(
+    value: object,
+    report_path: Path,
+    status: Optional[str],
+    worker_identity: Optional[WorkerIdentity],
+    errors: list[str],
+) -> tuple[int, tuple[str, ...]]:
+    """Validate ordered critic rounds and return their count and valid verdicts."""
+
+    prefix = f"{report_path}: qualityGauntlet"
+    if not isinstance(value, list):
+        errors.append(f"{prefix}.rounds must be an array")
+        return 0, ()
+
+    descendants = (
+        {worker_id.strip() for worker_id in worker_identity.descendants}
+        if worker_identity is not None
+        else set()
+    )
+    verdicts: list[str] = []
+    for index, round_value in enumerate(value):
+        round_prefix = f"{prefix}.rounds[{index}]"
+        if not isinstance(round_value, dict):
+            errors.append(f"{round_prefix} must be an object")
+            continue
+
+        critic_worker_id = optional_gauntlet_text(
+            round_value,
+            "criticWorkerId",
+            round_prefix,
+            errors,
+        )
+        if (
+            critic_worker_id is not None
+            and worker_identity is not None
+            and critic_worker_id not in descendants
+        ):
+            errors.append(
+                f"{round_prefix}.criticWorkerId must appear in descendantWorkerIds"
+            )
+
+        verdict = text_value(round_value.get("verdict"))
+        if verdict not in GAUNTLET_VERDICTS:
+            errors.append(
+                f"{round_prefix}.verdict must be one of {sorted(GAUNTLET_VERDICTS)}"
+            )
+        else:
+            verdicts.append(verdict)
+
+        for field in ("artifactRevision", "inspected", "evidence", "recheck"):
+            if text_value(round_value.get(field)) is None:
+                errors.append(f"{round_prefix}.{field} must be a non-blank string")
+
+        gap = optional_gauntlet_text(
+            round_value,
+            "highestLeverageGap",
+            round_prefix,
+            errors,
+        )
+        if verdict in {"NOT_READY", "BLOCKED"} and gap is None:
+            errors.append(
+                f"{round_prefix}.highestLeverageGap is required for {verdict}"
+            )
+
+        fix = optional_gauntlet_text(round_value, "fix", round_prefix, errors)
+        if status == "OK" and verdict == "NOT_READY" and fix is None:
+            errors.append(
+                f"{round_prefix}.fix is required for a historical NOT_READY round in an OK run"
+            )
+
+    return len(value), tuple(verdicts)
+
+
+def parse_gauntlet_integration(
+    value: object,
+    report_path: Path,
+    errors: list[str],
+) -> tuple[Optional[bool], Optional[str], Optional[str]]:
+    """Validate the whole-artifact integration-pass record."""
+
+    prefix = f"{report_path}: qualityGauntlet.integrationPass"
+    if not isinstance(value, dict):
+        errors.append(f"{prefix} must be an object")
+        return None, None, None
+
+    required_value = value.get("required")
+    required = required_value if isinstance(required_value, bool) else None
+    if required_value is not None and required is None:
+        errors.append(f"{prefix}.required must be true, false, or null")
+    result = optional_gauntlet_text(value, "result", prefix, errors)
+    evidence = optional_gauntlet_text(value, "evidence", prefix, errors)
+    return required, result, evidence
+
+
+def parse_quality_gauntlet(
+    value: dict[str, Any],
+    report_path: Path,
+    status: Optional[str],
+    worker_identity: Optional[WorkerIdentity],
+    errors: list[str],
+) -> QualityGauntletEvidence:
+    """Normalize a gauntlet record while reporting malformed fields."""
+
+    prefix = f"{report_path}: qualityGauntlet"
+    applicability = text_value(value.get("applicability"))
+    if value.get("applicability") is not None and applicability not in {
+        "required",
+        "not-required",
+    }:
+        errors.append(
+            f"{prefix}.applicability must be required, not-required, or null"
+        )
+    not_required_reason = optional_gauntlet_text(
+        value,
+        "notRequiredReason",
+        prefix,
+        errors,
+    )
+    bar = optional_gauntlet_text(value, "bar", prefix, errors)
+    provenance = gauntlet_string_list(
+        value,
+        "referenceProvenance",
+        prefix,
+        errors,
+    )
+
+    bar_validation_value = value.get("barValidation")
+    if not isinstance(bar_validation_value, dict):
+        errors.append(f"{prefix}.barValidation must be an object")
+        bar_validation_value = {}
+    bar_validation_result = optional_gauntlet_text(
+        bar_validation_value,
+        "result",
+        f"{prefix}.barValidation",
+        errors,
+    )
+    if (
+        bar_validation_result is not None
+        and bar_validation_result not in GAUNTLET_BAR_VALIDATION_RESULTS
+    ):
+        errors.append(
+            f"{prefix}.barValidation.result must be one of "
+            f"{sorted(GAUNTLET_BAR_VALIDATION_RESULTS)} or null"
+        )
+    bar_validation_evidence = optional_gauntlet_text(
+        bar_validation_value,
+        "evidence",
+        f"{prefix}.barValidation",
+        errors,
+    )
+    bar_revisions = gauntlet_string_list(value, "barRevisions", prefix, errors)
+
+    fresh_critic_value = value.get("freshCriticAvailable")
+    fresh_critic_available = (
+        fresh_critic_value if isinstance(fresh_critic_value, bool) else None
+    )
+    if fresh_critic_value is not None and fresh_critic_available is None:
+        errors.append(f"{prefix}.freshCriticAvailable must be true, false, or null")
+    fallback_evidence = optional_gauntlet_text(
+        value,
+        "fallbackEvidence",
+        prefix,
+        errors,
+    )
+    round_count, verdicts = parse_gauntlet_rounds(
+        value.get("rounds"),
+        report_path,
+        status,
+        worker_identity,
+        errors,
+    )
+    (
+        integration_required,
+        integration_result,
+        integration_evidence,
+    ) = parse_gauntlet_integration(
+        value.get("integrationPass"),
+        report_path,
+        errors,
+    )
+
+    stop_reason = optional_gauntlet_text(value, "stopReason", prefix, errors)
+    if stop_reason is not None and stop_reason not in GAUNTLET_STOP_REASONS:
+        errors.append(
+            f"{prefix}.stopReason must be one of "
+            f"{sorted(GAUNTLET_STOP_REASONS)} or null"
+        )
+
+    return QualityGauntletEvidence(
+        applicability=applicability,
+        not_required_reason=not_required_reason,
+        bar=bar,
+        provenance=provenance,
+        bar_validation_result=bar_validation_result,
+        bar_validation_evidence=bar_validation_evidence,
+        bar_revisions=bar_revisions,
+        fresh_critic_available=fresh_critic_available,
+        round_count=round_count,
+        verdicts=verdicts,
+        integration_required=integration_required,
+        integration_result=integration_result,
+        integration_evidence=integration_evidence,
+        fallback_evidence=fallback_evidence,
+        stop_reason=stop_reason,
+    )
+
+
+def validate_required_gauntlet(
+    evidence: QualityGauntletEvidence,
+    report_path: Path,
+    errors: list[str],
+) -> None:
+    """Apply successful-run requirements to one non-trivial artifact."""
+
+    if evidence.bar is None:
+        errors.append(
+            f"{report_path}: successful run qualityGauntlet must record a concrete bar"
+        )
+    if not evidence.provenance:
+        errors.append(
+            f"{report_path}: required qualityGauntlet must record referenceProvenance"
+        )
+    if evidence.bar_validation_result not in GAUNTLET_BAR_VALIDATION_RESULTS:
+        errors.append(
+            f"{report_path}: required qualityGauntlet must record barValidation.result"
+        )
+    if evidence.bar_validation_evidence is None:
+        errors.append(
+            f"{report_path}: required qualityGauntlet must record barValidation.evidence"
+        )
+    if (
+        evidence.bar_validation_result == "revised"
+        and not evidence.bar_revisions
+    ):
+        errors.append(f"{report_path}: revised quality bar must record barRevisions")
+
+    if evidence.fresh_critic_available is None:
+        errors.append(
+            f"{report_path}: successful run qualityGauntlet must record freshCriticAvailable"
+        )
+    elif evidence.fresh_critic_available:
+        if evidence.bar_validation_result not in {"accepted", "revised"}:
+            errors.append(
+                f"{report_path}: fresh critic runs must validate the quality bar independently"
+            )
+        if not evidence.verdicts:
+            errors.append(
+                f"{report_path}: successful run with fresh critics must record at least one critic round"
+            )
+        elif evidence.verdicts[-1] != "READY":
+            errors.append(
+                f"{report_path}: successful run's final critic verdict must be READY"
+            )
+    else:
+        if evidence.bar_validation_result != "fallback-reviewed":
+            errors.append(
+                f"{report_path}: no-critic fallback must use barValidation result fallback-reviewed"
+            )
+        if evidence.round_count:
+            errors.append(
+                f"{report_path}: run without fresh critic capability must not invent critic rounds"
+            )
+        if evidence.fallback_evidence is None:
+            errors.append(
+                f"{report_path}: run without fresh critic capability must record fallbackEvidence"
+            )
+
+    if evidence.integration_required is None:
+        errors.append(
+            f"{report_path}: successful run must record whether an integration pass was required"
+        )
+    elif evidence.integration_required:
+        if (
+            evidence.integration_result is None
+            or evidence.integration_result.casefold() not in {"ok", "passed", "success"}
+        ):
+            errors.append(
+                f"{report_path}: required integration pass must record a passed result"
+            )
+        if evidence.integration_evidence is None:
+            errors.append(
+                f"{report_path}: required integration pass must record concrete evidence"
+            )
+    elif evidence.integration_result != "not-required":
+        errors.append(
+            f"{report_path}: unnecessary integration pass must use result not-required"
+        )
+
+    if evidence.stop_reason not in SUCCESSFUL_GAUNTLET_STOP_REASONS:
+        errors.append(
+            f"{report_path}: successful run must stop on bar-met or no-material-actionable-gap"
+        )
+
+
+def validate_quality_gauntlet(
+    value: object,
+    report_path: Path,
+    status: Optional[str],
+    worker_identity: Optional[WorkerIdentity],
+    errors: list[str],
+) -> None:
+    """Validate optional critic history separately from final passing checks."""
+
+    if value is None:
+        return
+    if not isinstance(value, dict):
+        errors.append(f"{report_path}: qualityGauntlet must be an object when present")
+        return
+
+    evidence = parse_quality_gauntlet(
+        value,
+        report_path,
+        status,
+        worker_identity,
+        errors,
+    )
+    if status != "OK":
+        return
+    if evidence.applicability not in {"required", "not-required"}:
+        errors.append(
+            f"{report_path}: successful run qualityGauntlet must record applicability"
+        )
+        return
+    if evidence.applicability == "required":
+        validate_required_gauntlet(evidence, report_path, errors)
+        return
+
+    if evidence.not_required_reason is None:
+        errors.append(
+            f"{report_path}: not-required qualityGauntlet must record a concrete reason"
+        )
+    if evidence.round_count:
+        errors.append(
+            f"{report_path}: not-required qualityGauntlet must not contain critic rounds"
+        )
+    if evidence.fresh_critic_available is not None:
+        errors.append(
+            f"{report_path}: not-required qualityGauntlet must leave freshCriticAvailable null"
+        )
+    if (
+        evidence.integration_required is not False
+        or evidence.integration_result != "not-required"
+    ):
+        errors.append(
+            f"{report_path}: not-required qualityGauntlet must mark integration pass not-required"
+        )
+    if evidence.stop_reason != "not-required":
+        errors.append(
+            f"{report_path}: not-required qualityGauntlet must use stopReason not-required"
+        )
 
 
 def load_object(path: Path, errors: list[str]) -> Optional[dict[str, Any]]:
@@ -1005,7 +1428,7 @@ def validate_provenance_receipt(
     run: dict[str, Any],
     prompt_bytes: Optional[bytes],
     errors: list[str],
-) -> bool:
+) -> PreparedRunContracts:
     """Compare worker-writable metadata with its pre-dispatch coordinator receipt."""
 
     run_id = run_path.parent.name
@@ -1021,25 +1444,30 @@ def validate_provenance_receipt(
             errors.append(f"{commit_path}: unable to inspect provenance commit marker: {error}")
     receipt_path = root / expected_relative
     if not is_regular_file_within(receipt_path, root, "provenance receipt", errors):
-        return False
+        return PreparedRunContracts(temporary=False, quality_gauntlet=False)
     receipt = load_object(receipt_path, errors)
     if receipt is None:
-        return False
+        return PreparedRunContracts(temporary=False, quality_gauntlet=False)
     receipt_schema = receipt.get("schemaVersion")
     receipt_contracts = {
-        "1.0": ("2.0", False),
-        "1.1": ("2.1", True),
-        "2.0": ("3.0", True),
+        "1.0": ("2.0", False, False),
+        "1.1": ("2.1", True, False),
+        "2.0": ("3.0", True, False),
+        "2.1": ("3.1", True, True),
     }
     receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
     if receipt_contract is None:
-        errors.append(f"{receipt_path}: schemaVersion must be 1.0, 1.1, or 2.0")
-    expected_run_schema, current_temporary_contract = receipt_contract or (None, False)
+        errors.append(f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, or 2.1")
+    (
+        expected_run_schema,
+        current_temporary_contract,
+        current_quality_gauntlet_contract,
+    ) = receipt_contract or (None, False, False)
     if run.get("schemaVersion") != expected_run_schema:
         errors.append(
             f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
         )
-    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0"}:
+    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1"}:
         if receipt.get("runSchemaVersion") != expected_run_schema:
             errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
         receipt_temporary = object_value(receipt.get("temporary"))
@@ -1050,6 +1478,16 @@ def validate_provenance_receipt(
         }
         if receipt_temporary != expected_temporary:
             errors.append(f"{receipt_path}: temporary contract does not match the prepared run")
+    if current_quality_gauntlet_contract:
+        expected_quality_gauntlet = {
+            "required": True,
+            "contractVersion": "1.0",
+            "reportSchemaVersion": "2.1",
+        }
+        if receipt.get("qualityGauntlet") != expected_quality_gauntlet:
+            errors.append(
+                f"{receipt_path}: qualityGauntlet contract does not match the prepared run"
+            )
     expected_run_path = run_path.parent.relative_to(root).as_posix()
     if receipt.get("runId") != run_id:
         errors.append(f"{receipt_path}: runId must match {run_id!r}")
@@ -1067,7 +1505,10 @@ def validate_provenance_receipt(
             errors.append(f"{receipt_path}: artifact/PROMPT.md differs from the pre-dispatch prompt")
         if receipt_prompt.get("bytes") != len(prompt_bytes):
             errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
-    return current_temporary_contract
+    return PreparedRunContracts(
+        temporary=current_temporary_contract,
+        quality_gauntlet=current_quality_gauntlet_contract,
+    )
 
 
 def validate_run(
@@ -1098,7 +1539,7 @@ def validate_run(
         return
 
     schema_version = run.get("schemaVersion")
-    expected_schemas = {"3.0"} if layout == "flat" else {"2.0", "2.1"}
+    expected_schemas = {"3.0", "3.1"} if layout == "flat" else {"2.0", "2.1"}
     if not isinstance(schema_version, str) or schema_version not in expected_schemas:
         errors.append(
             f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
@@ -1208,16 +1649,16 @@ def validate_run(
     else:
         errors.append(f"{run_path}: run is missing exact-case artifact/PROMPT.md")
 
-    current_temporary_contract = validate_provenance_receipt(
+    prepared_contracts = validate_provenance_receipt(
         root,
         run_path,
         run,
         prompt_bytes,
         errors,
     )
-    validate_manifest_paths(run_path, run, current_temporary_contract, errors)
+    validate_manifest_paths(run_path, run, prepared_contracts.temporary, errors)
     temporary_directory = exact_child(run_path.parent, ".tmp")
-    if current_temporary_contract and (
+    if prepared_contracts.temporary and (
         temporary_directory is None
         or not temporary_directory.is_dir()
         or temporary_directory.is_symlink()
@@ -1241,8 +1682,13 @@ def validate_run(
         if status == "OK":
             errors.append(f"{run_path}: successful run is missing worker-report.json")
     else:
-        if report.get("schemaVersion") != "2.0":
-            errors.append(f"{report_path}: schemaVersion must be exactly 2.0")
+        expected_report_schema = (
+            "2.1" if prepared_contracts.quality_gauntlet else "2.0"
+        )
+        if report.get("schemaVersion") != expected_report_schema:
+            errors.append(
+                f"{report_path}: schemaVersion must be exactly {expected_report_schema}"
+            )
         if text_value(report.get("runId")) != run_id:
             errors.append(f"{report_path}: runId must match namespace segment {run_id!r}")
         report_worker_identity = parse_worker_identity(report, report_path, "", errors)
@@ -1259,7 +1705,7 @@ def validate_run(
             errors.append(f"{report_path}: status must be one of {sorted(STATUSES)}")
         elif status in STATUSES and report_status != status:
             errors.append(f"{report_path}: status must match run.json status {status!r}")
-        if current_temporary_contract:
+        if prepared_contracts.temporary:
             report_temporary = object_value(report.get("temporary"))
             if report_temporary.get("path") != ".tmp/":
                 errors.append(f"{report_path}: temporary.path must be exactly .tmp/")
@@ -1283,6 +1729,21 @@ def validate_run(
             errors.append(f"{report_path}: artifact.entrypoint must be exactly artifact/index.html")
         if status == "OK" and report_artifact.get("staticDeploymentVerified") is not True:
             errors.append(f"{report_path}: successful run must set artifact.staticDeploymentVerified to true")
+        if (
+            prepared_contracts.quality_gauntlet
+            and "qualityGauntlet" not in report
+        ):
+            errors.append(
+                f"{report_path}: current run is missing required qualityGauntlet"
+            )
+        else:
+            validate_quality_gauntlet(
+                report.get("qualityGauntlet"),
+                report_path,
+                report_status,
+                report_worker_identity,
+                errors,
+            )
         verification = report.get("verification")
         if status == "OK" and (
             not isinstance(verification, list)

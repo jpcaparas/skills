@@ -20,6 +20,7 @@ REQUIRED_FILES = (
     "SKILL.md",
     "metadata.json",
     "agents/catalog-curator.md",
+    "agents/oneshot-critic.md",
     "agents/oneshot-lead.md",
     "assets/prompt-catalogue.json",
     "evals/evals.json",
@@ -49,6 +50,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
+PACKAGE_VERSION = "2.7.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -133,6 +135,77 @@ RUNTIME_CONTRACTS = (
     ("one fresh lead per experiment", re.compile(r"(?:one|each|every)\s+(?:fresh\s+)?lead.*?(?:each|every|one).*?experiment|fresh\s+lead\s+subagent", re.I | re.S)),
     ("no inherited coordinator history", re.compile(r"no-history.*?fork_turns.*?none|fork_turns.*?none.*?(?:coordinator|history|conversation)", re.I | re.S)),
     ("recursive subagent delegation", re.compile(r"recursive\s+(?:subagent\s+)?delegation|(?:lead|subagents?).*?create.*?subagents", re.I | re.S)),
+    (
+        "inspectable quality bar",
+        re.compile(
+            r"concrete, inspectable quality bar.*?supplied reference.*?"
+            r"no direct reference.*?(?:researches suitable category examples|measurable, subject-specific acceptance evidence).*?"
+            r"Generic aspirations.*?not a bar",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "independently validated quality bar",
+        re.compile(
+            r"fresh critic checks.*?relevant.*?available.*?comparable.*?at least as demanding.*?"
+            r"rejects.*?materially weaker proxy.*?Freeze the accepted bar.*?"
+            r"record the prior bar, revised bar, and reason",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "coupling-aware decomposition",
+        re.compile(
+            r"decomposes work only along concerns.*?improved and judged independently.*?"
+            r"parallelize truly independent concerns.*?tightly coupled.*?sequential owner.*?"
+            r"integration and consistency pass",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "fresh real-artifact critic",
+        re.compile(
+            r"fresh recursive subagents.*?separate critic pass.*?empty inherited builder history.*?"
+            r"actual prompt.*?quality bar.*?built artifact.*?"
+            r"Do not give it the builder’s rationale.*?summary in place of the artifact.*?"
+            r"single highest-leverage remaining gap",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "evidence-based critic stopping",
+        re.compile(
+            r"new fresh critic.*?no skill-imposed number of rounds.*?"
+            r"Stop only when.*?bar is met.*?materially actionable.*?genuine blocker.*?user stops.*?"
+            r"Never stop merely because.*?predetermined round count",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "honest no-critic fallback",
+        re.compile(
+            r"fresh recursive delegation is unavailable.*?strongest artifact-grounded.*?"
+            r"record that a fresh critic was unavailable.*?do not claim independent critic verification",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "quality revisions stay in one run",
+        re.compile(
+            r"internal quality gauntlet.*?internal revisions.*?same one-shot run.*?"
+            r"not coordinator follow-ups or new experiments",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "gauntlet history separated from final verification",
+        re.compile(
+            r"worker-report\.json\.qualityGauntlet.*?artifact revision.*?"
+            r"verification.*?final checks.*?NOT_READY.*?gauntlet history.*?"
+            r"failed final verification.*?later `OK` artifact",
+            re.I | re.S,
+        ),
+    ),
     ("no skill-imposed time, token, and tool limits", re.compile(r"no\s+skill-imposed.*?(?:time|token).*?(?:tool|tool-call)|no\s+(?:time|token).*?(?:tool|tool-call).*?(?:limit|budget)", re.I | re.S)),
     ("no goal-mode requirement", re.compile(r"goal[ -]?mode.*?(?:not|required|forbidden)|(?:not|required|forbidden).*?goal[ -]?mode", re.I | re.S)),
     (
@@ -212,12 +285,45 @@ GUIDANCE_CLAUSE_BOUNDARY = re.compile(r"[.!?;:\n—–]+|\b(?:but|however|instea
 
 FILE_RUNTIME_CONTRACTS = (
     (
+        "agents/oneshot-critic.md",
+        "fresh read-only critic contract",
+        re.compile(
+            r"independent, read-only critic.*?without inherited builder conversation.*?"
+            r"Never accept a prose summary in place of.*?actual artifact.*?"
+            r"single highest-leverage material gap.*?NOT_READY.*?READY.*?BLOCKED.*?"
+            r"Do not edit the workspace or artifact",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead-owned quality gauntlet",
+        re.compile(
+            r"Quality Gauntlet.*?inspectable quality bar.*?"
+            r"keep coupled.*?under one sequential owner.*?"
+            r"create a critic with empty inherited builder history.*?"
+            r"new fresh critic.*?no fixed critic-round budget.*?"
+            r"never claim that an independent critic reviewed",
+            re.I | re.S,
+        ),
+    ),
+    (
         "agents/oneshot-lead.md",
         "lead temporary-file discipline",
         re.compile(
             r"Temporary-File Discipline.*?assigned run’s `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
             r"every descendant.*?best-effort containment.*?Preserve `\.tmp/`.*?"
             r"never copy `\.tmp/` into `artifact/`.*?Never add it.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
+        "embedded fresh critic role",
+        re.compile(
+            r"Fresh Critic Role.*?complete current contents of `agents/oneshot-critic\.md`.*?"
+            r"empty-history lead.*?without relying on ambient package discovery.*?"
+            r"\{\{ONESHOT_CRITIC_ROLE\}\}",
             re.I | re.S,
         ),
     ),
@@ -655,8 +761,8 @@ def main() -> int:
             json_data[json_file] = data
 
     metadata = json_data.get(root / "metadata.json")
-    if isinstance(metadata, Mapping) and metadata.get("version") != "2.6.0":
-        errors.append("metadata.json version must be 2.6.0")
+    if isinstance(metadata, Mapping) and metadata.get("version") != PACKAGE_VERSION:
+        errors.append("metadata.json version must be {}".format(PACKAGE_VERSION))
     elif metadata is not None and not isinstance(metadata, Mapping):
         errors.append("metadata.json must contain an object")
 

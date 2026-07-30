@@ -40,6 +40,7 @@ Create the lead with no inherited coordinator conversation. This must be an expl
 The initial lead dispatch contains only:
 
 - `agents/oneshot-lead.md`
+- `agents/oneshot-critic.md`, included as operational role material for descendants rather than relying on ambient package discovery
 - the actual prompt as literal text
 - raw and derived experiment identity
 - the assigned run, `.tmp/`, workspace, and artifact paths
@@ -79,6 +80,18 @@ If no-history subagents are unavailable, report `UNSUPPORTED_NO_FRESH_SUBAGENT` 
 
 Never add a goal-mode requirement, timeout, token cap, step limit, tool-call limit, or subagent limit to compensate for a harness difference. Record exposed runtime observations after completion without turning them into budgets.
 
+## Lead-Owned Quality Gauntlet
+
+Quality iteration stays inside the one fresh lead’s existing run. It does not create a new experiment, change the prepared prompt, or let the coordinator curate the artifact between rounds.
+
+For non-trivial builds, the lead first turns the prompt and supplied references into a concrete, inspectable bar. When no direct reference exists, finding suitable category examples or defining subject-specific acceptance evidence is part of the work. Before artifact scoring, when available, a fresh critic rejects a bar that is vague, unavailable, non-comparable, irrelevant, or materially weaker than the prompt. Freeze the accepted bar across rounds; if evidence requires a legitimate revision, preserve the prior bar, revised bar, and reason. The lead owns decomposition: parallel work is appropriate only when concerns can be improved and judged independently. Coupled visual, interaction, state, and integration concerns stay with one sequential owner, and merged work receives a whole-artifact smoothing pass.
+
+When recursive fresh descendants are supported, the lead creates a separate no-history critic from `agents/oneshot-critic.md`. The critic receives the actual prompt, bar, relevant constraints, real built artifact, and inspectable captures or tests, but no builder explanation or history. It inspects the artifact directly under representative comparable conditions, compares it with the bar, and returns a verdict plus one highest-leverage material gap. The critic never edits; the lead or its builder applies the change and gives the changed artifact to a new fresh critic.
+
+No lead- or skill-chosen fixed critic-round count is a completion condition. The loop ends only when evidence shows the bar is met, further differences are immaterial or trade away a stronger quality, a genuine blocker prevents progress, or the user stops the run. An explicit user-requested stopping rule remains authoritative. If fresh recursive descendants are unavailable, the lead uses the strongest artifact-grounded browser, screenshot, interaction, test, or comparison evidence the harness supports to challenge both the bar and the artifact, and records the missing critic capability without claiming independent review.
+
+Store critic history in the versioned structured `worker-report.json.qualityGauntlet` block, separate from final verification. The coordinator-owned receipt binds current run schema `3.1` to worker-report schema `2.1` and requires that block, so a worker cannot delete the gauntlet record and masquerade as an older run. Every round identifies the artifact revision, capture set, or digest actually inspected. Historical `NOT_READY` verdicts remain honest evidence even if the repaired artifact later reaches `READY`; they do not become failed items in the final-only `verification` array. Mark the gauntlet `required` for non-trivial builds. A genuinely trivial artifact may use `not-required` only with a concrete reason.
+
 ## Completion and Reruns
 
 The lead owns all implementation iteration inside its run. The coordinator may resume that same lead after an infrastructure pause, but does not inject sibling comparisons or post-process the artifact.
@@ -106,7 +119,7 @@ When the harness exposes the information, `worker-report.json` records:
 - source build commands, the fixed artifact entrypoint, and static-deployment verification
 - chosen technologies and external dependencies
 - whether run-local temporary routing was applied and any known external exceptions
-- verification performed
+- quality-gauntlet applicability, concrete bar, artifact revision per critic round, capability fallback, integration pass, and final verification performed
 - artifact file digests
 - start and completion observations
 
