@@ -18,6 +18,7 @@ from typing import Any, Optional, Sequence
 
 from runtime_contract import (
     BoundedReadError,
+    experiment_slug,
     find_likely_mojibake,
     identity_key,
     parse_json_bounded,
@@ -29,7 +30,10 @@ from runtime_contract import (
 CLASSIFICATIONS = ("autonomous-one-shot", "rerun", "curated-attempt")
 METADATA_MAX_BYTES = 1024 * 1024
 PROMPT_MAX_BYTES = 5 * 1024 * 1024
-RUN_NAME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}$")
+RUN_NAME_RE = re.compile(
+    r"^(?P<timestamp>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})-"
+    r"(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)$"
+)
 
 
 class RunPreparationError(ValueError):
@@ -263,7 +267,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1"}
+        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -293,21 +297,33 @@ def validate_run_relationship(classification: str, prior_run: Optional[str]) -> 
         raise RunPreparationError(f"{classification} runs must declare --prior-run")
 
 
-def make_run_id() -> str:
-    """Return the human-readable local timestamp used as a run-directory base."""
+def make_run_id(experiment_name: str) -> str:
+    """Return a local timestamp and readable experiment slug for a run base."""
 
-    return datetime.now().astimezone().strftime("%Y-%m-%d-%H-%M-%S")
+    timestamp = datetime.now().astimezone().strftime("%Y-%m-%d-%H-%M-%S")
+    return f"{timestamp}-{experiment_slug(experiment_name)}"
 
 
 def reserve_paths(root: Path, run_id: str) -> RunPaths:
-    """Atomically reserve a flat timestamped run, suffixing same-second collisions."""
+    """Atomically reserve a slugged timestamp run, suffixing collisions."""
 
-    if RUN_NAME_RE.fullmatch(run_id) is None:
-        raise RunPreparationError(f"run ID must use YYYY-MM-DD-HH-MM-SS format: {run_id!r}")
+    match = RUN_NAME_RE.fullmatch(run_id)
+    if match is None:
+        raise RunPreparationError(
+            "run ID must use YYYY-MM-DD-HH-MM-SS-experiment-slug format: "
+            f"{run_id!r}"
+        )
+    timestamp_text = match.group("timestamp")
+    try:
+        parsed_timestamp = datetime.strptime(timestamp_text, "%Y-%m-%d-%H-%M-%S")
+    except ValueError as error:
+        raise RunPreparationError(f"run ID contains an invalid local timestamp: {run_id!r}") from error
+    if parsed_timestamp.strftime("%Y-%m-%d-%H-%M-%S") != timestamp_text:
+        raise RunPreparationError(f"run ID contains an invalid local timestamp: {run_id!r}")
 
     collision_number = 1
     while True:
-        directory_name = run_id if collision_number == 1 else f"{run_id}-{collision_number:02d}"
+        directory_name = run_id if collision_number == 1 else f"{run_id}--{collision_number:02d}"
         run = root / directory_name
         require_within_root(run, root, "derived run path")
         try:
@@ -390,7 +406,7 @@ def run_document(
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "3.1",
+        "schemaVersion": "3.2",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -429,10 +445,10 @@ def provenance_receipt(
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
     return {
-        "schemaVersion": "2.1",
+        "schemaVersion": "2.2",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "3.1",
+        "runSchemaVersion": "3.2",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -496,7 +512,7 @@ def create_run(arguments: argparse.Namespace) -> Path:
     prior_run = prior_run_path(arguments.prior_run, root)
     validate_run_relationship(arguments.classification, prior_run)
     receipt_directory = prepare_provenance_directory(root)
-    paths = reserve_paths(root, make_run_id())
+    paths = reserve_paths(root, make_run_id(experiment.name))
     run_id = paths.run.name
     prompt_digest = hashlib.sha256(prompt).hexdigest()
     receipt_relative = Path(".oneshot-provenance") / f"{run_id}.json"

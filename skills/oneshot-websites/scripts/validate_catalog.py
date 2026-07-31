@@ -28,6 +28,7 @@ from build_catalog_index import (
 )
 from runtime_contract import (
     BoundedReadError,
+    experiment_slug,
     find_likely_mojibake,
     identity_key,
     is_abandoned_run_reservation,
@@ -1454,10 +1455,11 @@ def validate_provenance_receipt(
         "1.1": ("2.1", True, False),
         "2.0": ("3.0", True, False),
         "2.1": ("3.1", True, True),
+        "2.2": ("3.2", True, True),
     }
     receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
     if receipt_contract is None:
-        errors.append(f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, or 2.1")
+        errors.append(f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, or 2.2")
     (
         expected_run_schema,
         current_temporary_contract,
@@ -1467,7 +1469,7 @@ def validate_provenance_receipt(
         errors.append(
             f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
         )
-    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1"}:
+    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2"}:
         if receipt.get("runSchemaVersion") != expected_run_schema:
             errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
         receipt_temporary = object_value(receipt.get("temporary"))
@@ -1539,26 +1541,30 @@ def validate_run(
         return
 
     schema_version = run.get("schemaVersion")
-    expected_schemas = {"3.0", "3.1"} if layout == "flat" else {"2.0", "2.1"}
+    expected_schemas = {"3.0", "3.1", "3.2"} if layout == "flat" else {"2.0", "2.1"}
     if not isinstance(schema_version, str) or schema_version not in expected_schemas:
         errors.append(
             f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
         )
-    if layout == "flat" and parse_flat_run_id(run_id) is None:
+    parsed_flat_run_id = parse_flat_run_id(run_id) if layout == "flat" else None
+    if layout == "flat" and parsed_flat_run_id is None:
         errors.append(
             f"{run_path}: flat run directory must use a real YYYY-MM-DD-HH-MM-SS timestamp "
-            "with no suffix or a canonical collision suffix of -02 or later"
+            "with a canonical experiment slug and optional --02 collision suffix, or a supported historical form"
         )
     if layout == "legacy" and LEGACY_RUN_ID_RE.fullmatch(run_id) is None:
         errors.append(f"{run_path}: legacy run directory does not use the supported UTC-and-UUID format")
 
     identity = object_value(run.get("identity"))
+    experiment_name: Optional[str] = None
     for index, field in enumerate(("model", "harness", "experiment")):
         identity_part = object_value(identity.get(field))
         key_value = identity_part.get("key")
         name_value = identity_part.get("name")
         key = key_value if isinstance(key_value, str) and key_value else None
         name = name_value if isinstance(name_value, str) and name_value.strip() else None
+        if field == "experiment":
+            experiment_name = name
         if name is None:
             errors.append(f"{run_path}: identity.{field}.name must be a non-empty raw name")
         else:
@@ -1583,6 +1589,24 @@ def validate_run(
                     expected_marker = {"schemaVersion": "1.0", "name": name_value, "key": key_value}
                     if marker != expected_marker:
                         errors.append(f"{marker_path}: marker does not match run identity.{field}")
+    if layout == "flat" and parsed_flat_run_id is not None:
+        if schema_version == "3.2":
+            try:
+                expected_slug = experiment_slug(experiment_name) if experiment_name is not None else None
+            except UnicodeEncodeError:
+                expected_slug = None
+            if parsed_flat_run_id.slug is None:
+                errors.append(f"{run_path}: run schema 3.2 requires an experiment slug in the run directory")
+            elif expected_slug is not None and parsed_flat_run_id.slug != expected_slug:
+                errors.append(
+                    f"{run_path}: run-directory slug must match experiment name as {expected_slug!r}"
+                )
+        elif (
+            isinstance(schema_version, str)
+            and schema_version in {"3.0", "3.1"}
+            and parsed_flat_run_id.slug is not None
+        ):
+            errors.append(f"{run_path}: historical flat run schema {schema_version} requires a timestamp-only run ID")
     if text_value(run.get("runId")) != run_id:
         errors.append(f"{run_path}: runId must match run directory {run_id!r}")
 
@@ -1901,7 +1925,8 @@ def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
             if is_flat_candidate and not is_flat_run:
                 errors.append(
                     f"{path}: invalid flat run directory name; expected a real YYYY-MM-DD-HH-MM-SS "
-                    "timestamp with no suffix or a canonical collision suffix of -02 or later"
+                    "timestamp with a canonical experiment slug and optional --02 collision suffix, "
+                    "or a supported historical form"
                 )
                 is_flat_run = True
             is_legacy_run = depth == 3

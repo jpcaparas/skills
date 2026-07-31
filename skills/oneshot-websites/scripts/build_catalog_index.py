@@ -19,6 +19,7 @@ from typing import Any, Iterator, Optional, Tuple
 
 from runtime_contract import (
     BoundedReadError,
+    EXPERIMENT_SLUG_MAX_CHARS,
     is_abandoned_run_reservation,
     is_appledouble_sidecar,
     parse_json_bounded,
@@ -36,7 +37,9 @@ LEGACY_RUN_ID_RE = re.compile(
     re.IGNORECASE,
 )
 FLAT_RUN_ID_RE = re.compile(
-    r"^(?P<timestamp>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})(?:-(?P<collision>\d+))?$"
+    r"^(?P<timestamp>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})"
+    r"(?:(?:-(?P<legacy_collision>\d+))|"
+    r"(?:-(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)(?:--(?P<slug_collision>\d+))?))?$"
 )
 IDENTITY_MARKER = ".oneshot-identity.json"
 CATALOGUE_LOCK = ".oneshot-catalogue.lock"
@@ -58,8 +61,17 @@ class RunCandidate:
     discovery_error: Optional[str] = None
 
 
-def parse_flat_run_id(value: str) -> Optional[Tuple[datetime, Optional[int]]]:
-    """Parse a real local timestamp and its canonical optional collision suffix."""
+@dataclass(frozen=True)
+class FlatRunId:
+    """Parsed current or historical flat run-directory identity."""
+
+    timestamp: datetime
+    slug: Optional[str]
+    collision: Optional[int]
+
+
+def parse_flat_run_id(value: str) -> Optional[FlatRunId]:
+    """Parse a real timestamp with a historical or slugged collision suffix."""
 
     match = FLAT_RUN_ID_RE.fullmatch(value)
     if match is None:
@@ -71,13 +83,16 @@ def parse_flat_run_id(value: str) -> Optional[Tuple[datetime, Optional[int]]]:
         return None
     if timestamp.strftime("%Y-%m-%d-%H-%M-%S") != timestamp_text:
         return None
-    collision_text = match.group("collision")
+    slug = match.group("slug")
+    if slug is not None and len(slug) > EXPERIMENT_SLUG_MAX_CHARS:
+        return None
+    collision_text = match.group("legacy_collision") or match.group("slug_collision")
     if collision_text is None:
-        return timestamp, None
+        return FlatRunId(timestamp=timestamp, slug=slug, collision=None)
     collision = int(collision_text)
     if collision < 2 or collision_text != f"{collision:02d}":
         return None
-    return timestamp, collision
+    return FlatRunId(timestamp=timestamp, slug=slug, collision=collision)
 
 
 def is_supported_run_id(value: str) -> bool:

@@ -50,7 +50,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.7.0"
+PACKAGE_VERSION = "2.8.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -133,6 +133,24 @@ RUNTIME_CONTRACTS = (
     ),
     ("coordinator prompt receipt", re.compile(r"(?:coordinator-owned|pre-dispatch).*?(?:receipt|provenance).*?(?:outside|worker-owned)|\.oneshot-provenance", re.I | re.S)),
     ("one fresh lead per experiment", re.compile(r"(?:one|each|every)\s+(?:fresh\s+)?lead.*?(?:each|every|one).*?experiment|fresh\s+lead\s+subagent", re.I | re.S)),
+    (
+        "explicit outer experiment fan-out",
+        re.compile(
+            r"multiple lead subagents.*?multiple workspaces.*?multiple replicas.*?top-level experiment fan-out.*?"
+            r"stated count.*?authoritative.*?only “multiple,” create two.*?fresh lead.*?separate run directory.*?"
+            r"Do not reinterpret.*?descendants inside one lead.*?folders inside one run",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "byte-identical replica prompts",
+        re.compile(
+            r"multiple replicas of the same brief.*?repeated single-brief fan-out.*?craft and seal.*?once.*?same prompt file.*?"
+            r"digests and byte counts match.*?exact same decoded string.*?(?:do not add|without) replica labels.*?"
+            r"autonomous-one-shot.*?priorRun: null.*?not reruns",
+            re.I | re.S,
+        ),
+    ),
     ("no inherited coordinator history", re.compile(r"no-history.*?fork_turns.*?none|fork_turns.*?none.*?(?:coordinator|history|conversation)", re.I | re.S)),
     ("recursive subagent delegation", re.compile(r"recursive\s+(?:subagent\s+)?delegation|(?:lead|subagents?).*?create.*?subagents", re.I | re.S)),
     (
@@ -228,16 +246,17 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
-        "flat timestamped run layout",
+        "flat slugged timestamp run layout",
         re.compile(
-            r"^  <YYYY-MM-DD-HH-MM-SS>/\n.*?"
-            r"Create each run directly beneath.*?local timestamp.*?-02.*?-03",
+            r"^  <YYYY-MM-DD-HH-MM-SS>-<experiment-slug>/\n.*?"
+            r"Create each run directly beneath.*?local timestamp plus.*?experiment-slug.*?"
+            r"LibreOffice Writer.*?libreoffice-writer.*?--02.*?--03",
             re.I | re.M | re.S,
         ),
     ),
     (
         "raw identity metadata",
-        re.compile(r"exact model, harness, and experiment names.*?digest-bound keys.*?run\.json.*?receipt", re.I | re.S),
+        re.compile(r"exact model, harness, and experiment names.*?digest-bound (?:identity )?keys.*?run\.json.*?receipt", re.I | re.S),
     ),
     ("relevance-gated catalogue matching", re.compile(r"genuinely relevant.*?optional baselines.*?no meaningful match.*?without.*?catalogue", re.I | re.S)),
     ("artifact prompt", re.compile(r"artifact/PROMPT\.md")),

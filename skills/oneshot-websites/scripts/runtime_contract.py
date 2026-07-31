@@ -17,6 +17,7 @@ from pathlib import Path
 APPLEDOUBLE_MAGIC = b"\x00\x05\x16\x07"
 JSON_NESTING_MAX = 256
 JSON_NUMBER_TOKEN_MAX_CHARS = 256
+EXPERIMENT_SLUG_MAX_CHARS = 64
 
 _UTF8_LEAD_BYTES_DECODED_AS_CP1252 = frozenset("\u00c2\u00c3\u00e2\u00ef\u00f0")
 
@@ -344,6 +345,24 @@ def safe_slug(name: str) -> str:
     ascii_name = normalized.encode("ascii", "ignore").decode("ascii")
     slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.casefold()).strip("-._ ")
     return slug[:12].strip("-") or "unnamed"
+
+
+def experiment_slug(name: str) -> str:
+    """Derive a readable, bounded run-directory slug from an experiment name."""
+
+    normalized = unicodedata.normalize("NFKD", name)
+    ascii_name = normalized.encode("ascii", "ignore").decode("ascii")
+    slug = re.sub(r"[^a-z0-9]+", "-", ascii_name.casefold()).strip("-")
+    digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:8]
+    if not slug:
+        return f"experiment-{digest}"
+    if slug.isdigit():
+        slug = f"experiment-{slug}"
+    if len(slug) <= EXPERIMENT_SLUG_MAX_CHARS:
+        return slug
+    prefix_length = EXPERIMENT_SLUG_MAX_CHARS - len(digest) - 1
+    prefix = slug[:prefix_length].rstrip("-")
+    return f"{prefix}-{digest}"
 
 
 def identity_key(name: str) -> str:

@@ -13,10 +13,10 @@ This boundary prevents coordinator context and sibling artifacts from biasing th
 Create each run directly below the caller-selected output root:
 
 ```text
-<output-root>/<YYYY-MM-DD-HH-MM-SS>/
+<output-root>/<YYYY-MM-DD-HH-MM-SS>-<experiment-slug>/
 ```
 
-The timestamp uses the coordinator’s local time so the directory is easy to recognize where the benchmark was launched. `scripts/prepare_run.py` reserves it atomically. When two preparations land in the same second, the first keeps the plain timestamp and later reservations use `-02`, `-03`, and so on. No reservation reuses or overwrites an existing path.
+The timestamp uses the coordinator’s local time, followed by a readable lowercase ASCII slug derived from the concise experiment name. `LibreOffice Writer`, for example, yields a run name such as `2026-07-31-20-05-46-libreoffice-writer`. `scripts/prepare_run.py` reserves the path atomically. When two preparations with the same slug land in the same second, the first keeps the base name and later reservations use `--02`, `--03`, and so on. The double hyphen keeps collision numbers unambiguous when a subject slug ends in a number, such as `windows-11`. No reservation reuses or overwrites an existing path. Historical flat 3.0 and 3.1 directories keep their timestamp-only names and remain supported.
 
 `scripts/prepare_run.py` still derives each recorded identity key from:
 
@@ -31,7 +31,7 @@ Before reservation, inspect the decoded actual prompt for Unicode replacement ch
 
 Before dispatch, the coordinator also writes `.oneshot-provenance/<run-id>.json` under the output root. That receipt records the run path, identities, classification, prior-run relationship, run-schema and temporary-storage contract, prompt digest, and byte count outside the worker-owned run. This external anchor prevents worker edits from disguising a current run as a legacy one to bypass `.tmp/` validation. After every initial run file and the receipt are closed, the coordinator atomically creates an empty `.oneshot-provenance/<run-id>.commit` marker. A run without that final marker was never ready for dispatch; the builder and validator can ignore its bounded initialization residue, including an empty `.tmp/` or a partial receipt, so a killed preparation process does not poison later experiments. A committed run remains strict and visible even when its worker later damages or removes files.
 
-Give the lead only its run path; do not include the receipt directory in its writable scope. The validator requires a one-to-one committed receipt and run inventory. This is a logical ownership boundary unless the harness enforces path-scoped writes; it is not tamper-proof against a worker with output-root access. When another harness reproduces the layout without `prepare_run.py`, it must use the same flat timestamp reservation rule, write the complete receipt, and create the final empty commit marker last.
+Give the lead only its run path; do not include the receipt directory in its writable scope. The validator requires a one-to-one committed receipt and run inventory. This is a logical ownership boundary unless the harness enforces path-scoped writes; it is not tamper-proof against a worker with output-root access. When another harness reproduces the layout without `prepare_run.py`, it must use the same slugged timestamp reservation rule, write the complete receipt, and create the final empty commit marker last.
 
 ## Dispatch Envelope
 
@@ -55,6 +55,8 @@ Never fold the `.tmp/` path, temporary environment variables, or this operationa
 
 When a catalogue baseline accompanies user context, preserve both sources while crafting one cohesive, fully developed actual prompt. Keep every explicit user constraint, use the catalogue goal only as the accepted baseline, and translate any useful visual or interaction posture into concrete details native to that experience. Do not impose a paragraph ceiling; six paragraphs is acceptable, and a brief may be longer when its substance requires it.
 
+When the user fans out one brief without explicitly requesting variations—whether as multiple replicas, lead subagents, or workspaces—craft this actual prompt exactly once and seal one UTF-8 byte sequence. Prepare every instance from that same source, require matching SHA-256 digests and byte counts, and dispatch the same decoded prompt string without replica labels, variant guidance, or lead-specific amendments. The runs remain separate `autonomous-one-shot` attempts with no `priorRun`; simultaneous peers are not reruns.
+
 `experienceDirection` is coordinator-only crafting guidance. Never include its literal value, a labelled `EXPERIENCE DIRECTION` block, or a generic paraphrase in the actual prompt, lead dispatch, or `PROMPT.md`. Provenance belongs in `run.json` and the coordinator receipt; the deployable prompt should read as the finished brief, not as an assembly of internal instructions.
 
 For an unmatched custom request, the actual prompt is a faithful, fully developed refinement, not the rough input copied blindly. Preserve the user’s constraints and exact wording requirements, clarify the core experience, and add only experience-level guidance that follows from the request. Do not borrow from the catalogue when there is no genuine match, and do not compress the prompt to an arbitrary paragraph or token target. Store and dispatch that refined text exactly. When the user requires their entire source brief to remain verbatim, preserve it byte-for-byte as the opening block and append only the subject-adapted completion mandate. If they prohibit even that required addition, report the incompatible constraint and stop before dispatch rather than weakening the prompt contract.
@@ -65,12 +67,15 @@ Every prepared actual prompt carries the catalogue’s `completionMandate` in su
 
 Plan all experiment identities and reserve all run paths before dispatch. Then create one fresh lead for each experiment.
 
+- Treat the user’s explicit “multiple lead subagents,” “multiple workspaces,” or “multiple replicas” language as an outer experiment count, never as inner delegation. Use the stated count, or two when “multiple” has no number.
+- Each outer instance receives a sibling run directly under the output root, with its own `.tmp/`, `workspace/`, `artifact/`, receipt, commit marker, and fresh lead. Do not place several requested workspaces inside one run.
+- Every repeated single-brief fan-out uses byte-identical prepared prompts and independent runs unless the user explicitly requests variations; peers do not receive invented variant labels or compare with one another.
 - Dispatch all leads concurrently when the harness has enough isolated capacity.
 - When capacity is lower than the experiment count, use batches without merging experiments or reusing lead contexts.
 - A model-by-harness matrix produces one experiment run for every requested cell.
 - Every lead may create its own internal team. Descendants inherit only their lead’s experiment scope, run-local temporary routing, and paths, and write only inside that experiment’s run wherever the harness permits.
 
-The plan is valid when the number of distinct lead owners equals the number of experiment runs and all timestamped run paths are disjoint.
+The plan is valid when the number of distinct top-level lead owners equals the number of requested experiment instances, all slugged timestamp run paths are disjoint, and every same-brief replica has the same prompt digest and byte count.
 
 ## Harness Capability Boundary
 
@@ -90,7 +95,7 @@ When recursive fresh descendants are supported, the lead creates a separate no-h
 
 No lead- or skill-chosen fixed critic-round count is a completion condition. The loop ends only when evidence shows the bar is met, further differences are immaterial or trade away a stronger quality, a genuine blocker prevents progress, or the user stops the run. An explicit user-requested stopping rule remains authoritative. If fresh recursive descendants are unavailable, the lead uses the strongest artifact-grounded browser, screenshot, interaction, test, or comparison evidence the harness supports to challenge both the bar and the artifact, and records the missing critic capability without claiming independent review.
 
-Store critic history in the versioned structured `worker-report.json.qualityGauntlet` block, separate from final verification. The coordinator-owned receipt binds current run schema `3.1` to worker-report schema `2.1` and requires that block, so a worker cannot delete the gauntlet record and masquerade as an older run. Every round identifies the artifact revision, capture set, or digest actually inspected. Historical `NOT_READY` verdicts remain honest evidence even if the repaired artifact later reaches `READY`; they do not become failed items in the final-only `verification` array. Mark the gauntlet `required` for non-trivial builds. A genuinely trivial artifact may use `not-required` only with a concrete reason.
+Store critic history in the versioned structured `worker-report.json.qualityGauntlet` block, separate from final verification. The coordinator-owned receipt binds current run schema `3.2` to worker-report schema `2.1` and requires that block, so a worker cannot delete the gauntlet record and masquerade as an older run. Every round identifies the artifact revision, capture set, or digest actually inspected. Historical `NOT_READY` verdicts remain honest evidence even if the repaired artifact later reaches `READY`; they do not become failed items in the final-only `verification` array. Mark the gauntlet `required` for non-trivial builds. A genuinely trivial artifact may use `not-required` only with a concrete reason.
 
 ## Completion and Reruns
 

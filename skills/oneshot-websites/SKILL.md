@@ -27,10 +27,11 @@ The override names one executable and contains no flags. On Windows, select any 
 - **Exploratory context:** search the catalogue and offer only genuinely relevant matches as optional baselines. Keep a custom brief equally available. If there is no meaningful match, say so briefly and refine the user’s own guidance without blending in catalogue material.
 - **A clear or highly custom build brief:** prepare a faithful, fully developed actual prompt from the brief. Use as many paragraphs as clarity and ambition require; six paragraphs is entirely acceptable, and the skill imposes no token or paragraph budget. When a catalogue item is materially relevant, offer it as an optional baseline, but keep the custom route independent unless the user accepts that match. If there is no real match, start the one-shot from a clean refinement of the user’s guidance without forcing, mashing, or borrowing from a template; mere proximity is not relevance.
 - **Several briefs, templates, models, or harnesses:** define one experiment per requested artifact. Never merge several one-shots into one worker.
+- **Explicit parallel leads, workspaces, or replicas:** treat “multiple lead subagents,” “multiple workspaces,” and “multiple replicas” as requests for top-level experiment fan-out. A stated count is authoritative; when the user says only “multiple,” create two. Every instance gets a fresh lead, a separate run directory, its own `.tmp/`, `workspace/`, `artifact/`, receipt, and commit marker. Do not reinterpret these phrases as several descendants inside one lead or several folders inside one run. Whenever one brief fans out without explicitly requested variations—including multiple replicas—prepare one actual prompt once and preserve identical prompt bytes for every instance; do not add replica labels, variant instructions, or lead-specific refinements.
 - **Catalogue expansion:** read `references/catalogue-authoring.md`; append entries without changing existing IDs or imposing an implementation stack.
 - **Artifact validation or indexing:** read `references/catalog-index.md`; validate provenance and the built root entrypoint without judging the chosen technology.
 
-This routing step is complete when every requested artifact has one actual prompt and one experiment name, or the undecided user has the complete namespace-grouped catalogue in front of them. A response that merely explains how to request the catalogue or waits for an unknown slug is incomplete.
+This routing step is complete when every requested artifact instance has one actual prompt and one concise, subject-specific experiment name, or the undecided user has the complete namespace-grouped catalogue in front of them. Name the subject itself—such as `LibreOffice Writer`—rather than restating the full instruction, because the experiment name also supplies the readable run-directory slug. A response that merely explains how to request the catalogue or waits for an unknown slug is incomplete.
 
 ## 1. Prepare and Preserve the Actual Prompt
 
@@ -66,6 +67,8 @@ For example, refine `Windows XP clone on a web interface` into something like:
 
 The finished refinement—not the catalogue source text or internal crafting guidance—is the actual prompt. Record it before dispatch as the artifact’s `PROMPT.md`; preserve those exact UTF-8 bytes and their SHA-256 digest from that point onward. Also write the pre-dispatch digest to the coordinator-owned provenance receipt outside the worker’s run. Pass the same actual text in the lead’s initial message, not merely a summary, rough source brief, or file path. The copy that travels with the artifact must therefore reflect every refinement the lead received.
 
+For multiple replicas of the same brief, or any repeated single-brief fan-out without explicitly requested variations, craft and seal that finished prompt once. Use the same prompt file as the preparation source for every instance, verify that all prompt digests and byte counts match, and dispatch the exact same decoded string to every fresh lead without replica labels, variant guidance, or lead-specific amendments. Instance identity belongs in the separate run and receipt, never in prompt text. Simultaneously requested peers are independent `autonomous-one-shot` runs with `priorRun: null`; they are not reruns of one another.
+
 Before sealing the actual prompt, inspect it as Unicode and write it as UTF-8 at every file and harness boundary. Preserve intended special characters—including curly punctuation, dashes, emoji, and non-Latin scripts—instead of replacing them with ASCII. Treat Unicode replacement characters, stray C1 controls, and recognizable mojibake as corruption rather than valid prompt prose. `prepare_run.py` rejects those high-confidence markers before reserving a run; correct the prepared prompt at its source and rerun instead of transcoding already-corrupted bytes or weakening the wording.
 
 After `prepare_run.py` succeeds, use the sealed `artifact/PROMPT.md` as the dispatch source. Strictly decode its bytes as UTF-8 and use that exact string for the lead dispatch. Never retype, rebuild, or independently reserialize the prompt from another copy. When a harness exposes its serialized payload bytes, compare their SHA-256 digest with the sealed prompt receipt before starting the lead.
@@ -84,7 +87,7 @@ Create the run before starting workers:
   .oneshot-provenance/
     <run-id>.json
     <run-id>.commit
-  <YYYY-MM-DD-HH-MM-SS>/
+  <YYYY-MM-DD-HH-MM-SS>-<experiment-slug>/
     run.json
     worker-report.json
     .tmp/
@@ -96,7 +99,7 @@ Create the run before starting workers:
   index.html
 ```
 
-Create each run directly beneath the caller-selected output root. Name it with the local timestamp `YYYY-MM-DD-HH-MM-SS`; if another reservation wins that same second, atomically reserve `-02`, `-03`, and so on. Keep the exact model, harness, and experiment names and their digest-bound keys in `run.json` and the coordinator receipt instead of repeating them as directories. Existing runs are never reused or overwritten.
+Create each run directly beneath the caller-selected output root. Name it with the local timestamp plus a readable lowercase ASCII slug derived from the concise experiment name: `YYYY-MM-DD-HH-MM-SS-<experiment-slug>`. For example, `LibreOffice Writer` becomes `2026-07-31-20-05-46-libreoffice-writer`. If another reservation for that slug wins the same second, atomically reserve `--02`, `--03`, and so on. Keep the exact model, harness, and experiment names and their digest-bound identity keys in `run.json` and the coordinator receipt; the slug is for recognition, not identity. Existing runs are never reused or overwritten. Historical timestamp-only 3.0 and 3.1 runs remain readable.
 
 When Python is available, use:
 
@@ -123,7 +126,7 @@ Actual generation belongs to subagents:
 2. Create the lead with the harness's no-history isolation primitive so it inherits none of the coordinator conversation. In Codex, call `spawn_agent` with `fork_turns: "none"`; never rely on its history-inheriting default. Use the equivalent empty-context option in another harness.
 3. Strictly decode the pre-created `artifact/PROMPT.md` as UTF-8, then give the lead that exact actual prompt verbatim alongside `agents/oneshot-lead.md`, the critic role from `agents/oneshot-critic.md`, its assigned run and `.tmp/` paths, the operational temporary-file envelope, and only its experiment metadata in the initial dispatch. Include the critic role as operational material so the empty-history lead can pass it to fresh descendants without depending on ambient package discovery. An empty inherited history does not replace the explicit roles and prompt. The envelope and role material are coordinator/lead runtime guidance and must never be folded into the actual prompt or `artifact/PROMPT.md`.
 4. Keep coordinator history, sibling prompts, instructions, workspaces, artifacts, and outcomes out of its context.
-5. Dispatch multiple requested experiments to multiple leads, concurrently whenever the harness has capacity. If capacity requires batches, retain one distinct fresh lead per experiment.
+5. Dispatch multiple requested experiments or replicas to multiple top-level leads, concurrently whenever the harness has capacity. If capacity requires batches, retain one distinct fresh lead and run per experiment instance. Lead-owned builders and critics are descendants inside that one run; they never satisfy a request for multiple leads, workspaces, or replicas.
 6. Let each lead create and coordinate its own subagents when the harness supports recursive delegation. Every descendant receives the same run-local temporary path and supported temporary-environment routing, then stays inside the lead’s experiment scope and namespace wherever the harness permits.
 
 Fresh, no-history subagent support is a hard dependency. If the harness cannot create a subagent without inherited coordinator conversation, stop before generating the artifact, report `UNSUPPORTED_NO_FRESH_SUBAGENT`, and explain that this harness cannot satisfy the one-shot isolation contract. Do not substitute the coordinator or a sequential same-context imitation.

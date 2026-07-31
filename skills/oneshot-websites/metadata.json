@@ -1,8 +1,8 @@
 {
-  "version": "2.7.0",
+  "version": "2.8.0",
   "organization": "JP Caparas",
   "date": "July 2026",
-  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with 100 plainly labelled catalogue options, full-depth no-shortcuts prompts, lead-owned builder/critic quality gauntlets, evidence-based stopping, coupling-aware delegation, flat timestamped run directories, preserved run-local temporary state, prompt provenance, and drop-ready multi-file static artifacts.",
+  "abstract": "Launch unrestricted autonomous website experiments through fresh isolated subagents, with explicit multi-lead and same-prompt replica fan-out, 100 plainly labelled catalogue options, full-depth no-shortcuts prompts, lead-owned builder/critic quality gauntlets, evidence-based stopping, coupling-aware delegation, slugged timestamp run directories, preserved run-local temporary state, prompt provenance, and drop-ready multi-file static artifacts.",
   "references": [
     "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
     "https://x.com/mweinbach/status/2077827886149439547",

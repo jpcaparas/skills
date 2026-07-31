@@ -113,7 +113,7 @@
       "id": 10,
       "name": "artifact-validation",
       "prompt": "Explain the oneshot-websites validation workflow you would apply before publishing an output root. Assume one successful run was built from a framework workspace and exported as static files.",
-      "expected_output": "Routes to the catalogue validator and explains that it checks the flat timestamped run layout, the independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace and supported legacy nested runs, and would report any missing successful entrypoint or unsafe final artifact.",
+      "expected_output": "Routes to the catalogue validator and explains that it checks the current flat slugged-timestamp run layout, independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace and supported historical runs, and would report any missing successful entrypoint or unsafe final artifact.",
       "assertions": [
         {"text": "Identifies artifact/PROMPT.md and artifact/index.html as validation targets", "type": "functional"},
         {"text": "Does not impose a vanilla or single-file implementation rule", "type": "negative"}
@@ -577,6 +577,68 @@
         {"text": "Reserves not-required for a genuinely trivial artifact and requires a concrete recorded reason", "type": "structural"}
       ],
       "tags": ["gauntlet", "applicability", "not-required", "adversarial", "negative"]
+    },
+    {
+      "id": 48,
+      "name": "three-identical-libreoffice-replicas",
+      "prompt": "Create three replicas of LibreOffice Writer in the browser with multiple lead subagents. Use the same brief for all three.",
+      "expected_output": "Crafts and seals one actual prompt, reserves three separate slugged timestamp runs, and dispatches three fresh top-level leads. All three autonomous-one-shot runs preserve byte-identical PROMPT.md content, matching digests and byte counts, and null priorRun values without replica labels or variant instructions.",
+      "assertions": [
+        {"text": "Creates three distinct top-level runs and three fresh lead owners", "type": "structural"},
+        {"text": "Uses one exact prompt byte sequence and matching digest for every replica", "type": "verification"},
+        {"text": "Does not turn the replicas into descendants, variants, or reruns", "type": "negative"}
+      ],
+      "tags": ["multiple", "replicas", "prompt-provenance", "isolation", "regression"]
+    },
+    {
+      "id": 49,
+      "name": "multiple-leads-defaults-to-two",
+      "prompt": "Build a browser-based terminal emulator with multiple lead subagents.",
+      "expected_output": "Interprets the unnumbered word multiple as two independent experiment instances, seals the one terminal-emulator prompt once for both, reserves two sibling runs, and dispatches two fresh top-level leads. Inner builders or critics do not count toward the requested lead total.",
+      "assertions": [
+        {"text": "Defaults the explicit but unnumbered outer lead count to two", "type": "functional"},
+        {"text": "Uses matching sealed prompt bytes and digests because no variants were requested", "type": "verification"},
+        {"text": "Gives each lead its own run, workspace, temporary directory, artifact, and receipt", "type": "structural"},
+        {"text": "Does not satisfy the request with descendants inside one owning lead", "type": "negative"}
+      ],
+      "tags": ["multiple", "leads", "count", "isolation", "edge"]
+    },
+    {
+      "id": 50,
+      "name": "multiple-workspaces-mean-sibling-runs",
+      "prompt": "Make multiple workspaces for independent replicas of a browser-based paint application.",
+      "expected_output": "Creates two sibling run directories directly beneath the selected output root, each with one workspace and one fresh lead. It does not create workspace/a and workspace/b inside a shared run, and it keeps the replica prompt bytes identical.",
+      "assertions": [
+        {"text": "Maps multiple workspaces to two top-level experiment runs", "type": "functional"},
+        {"text": "Preserves byte-identical prompts across the repeated single brief", "type": "verification"},
+        {"text": "Keeps each workspace inside its own sibling run", "type": "structural"},
+        {"text": "Does not nest several requested workspaces beneath one run", "type": "negative"}
+      ],
+      "tags": ["multiple", "workspaces", "replicas", "layout", "regression"]
+    },
+    {
+      "id": 51,
+      "name": "slugged-same-second-collisions",
+      "prompt": "Prepare three LibreOffice Writer experiments during the same local second.",
+      "expected_output": "Reserves recognizable sibling run names ending in libreoffice-writer, libreoffice-writer--02, and libreoffice-writer--03. The double-hyphen collision suffix is atomic and distinct from numeric content inside an experiment slug.",
+      "assertions": [
+        {"text": "Derives the readable experiment slug libreoffice-writer", "type": "functional"},
+        {"text": "Uses canonical --02 and --03 collision suffixes without overwriting", "type": "structural"},
+        {"text": "Does not fall back to timestamp-only current run names", "type": "negative"}
+      ],
+      "tags": ["run-id", "slug", "collision", "concurrency", "regression"]
+    },
+    {
+      "id": 52,
+      "name": "unicode-experiment-slug-fallback",
+      "prompt": "Prepare a one-shot named 文書作成 and preserve that exact experiment name in provenance.",
+      "expected_output": "Preserves the raw Unicode experiment name and digest-bound identity key in metadata while deriving a deterministic bounded ASCII experiment slug for the run directory. The run remains valid and does not replace or corrupt the source name.",
+      "assertions": [
+        {"text": "Keeps the exact Unicode experiment name in run and receipt metadata", "type": "verification"},
+        {"text": "Uses a deterministic lowercase ASCII fallback slug in the run directory", "type": "structural"},
+        {"text": "Does not treat the readable slug as the experiment identity", "type": "negative"}
+      ],
+      "tags": ["run-id", "slug", "unicode", "identity", "edge"]
     }
   ]
 }
