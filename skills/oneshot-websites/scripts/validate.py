@@ -50,7 +50,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.8.0"
+PACKAGE_VERSION = "2.9.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -246,6 +246,28 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "local-only external-publication authority",
+        re.compile(
+            r"Keep Remote Publication Off by Default.*?authorizes local creation.*?"
+            r"never authorize an external write.*?Vercel Drop.*?Cloudflare Drop.*?"
+            r"ChatGPT sites.*?GitHub.*?authenticated tool.*?do not count as permission.*?"
+            r"explicit user instruction.*?specific external action and destination.*?"
+            r"Never ask a lead, descendant, or critic.*?remote publication.*?remote repository mutation.*?"
+            r"coordinator retains.*?only after.*?local artifact passes validation.*?"
+            r"using `artifact/` only.*?nothing was uploaded, deployed, published, or pushed",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "local static-handoff verification semantics",
+        re.compile(
+            r"worker-report\.json\.artifact\.staticDeploymentVerified.*?"
+            r"only.*?local static-handoff checks.*?never records or requires a live deployment.*?"
+            r"may reach `OK` with no network publication",
+            re.I | re.S,
+        ),
+    ),
+    (
         "flat slugged timestamp run layout",
         re.compile(
             r"^  <YYYY-MM-DD-HH-MM-SS>-<experiment-slug>/\n.*?"
@@ -269,6 +291,69 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     ("drop-ready no-build handoff", re.compile(r"(?:drop-ready|static\s+(?:folder|host)).*?(?:no\s+(?:package\s+)?install|no\s+build|deployable)|(?:no\s+(?:package\s+)?install|no\s+build).*?(?:drop-ready|static\s+(?:folder|host))", re.I | re.S)),
+)
+
+PUBLICATION_AUTHORITY_SOURCES = (
+    (
+        "ambient capability treated as deployment authorization",
+        re.compile(
+            r"\b(?:credentials?|tokens?|tools?|CLIs?|MCP\s+(?:connectors?|servers?|tools?)|"
+            r"environment|configuration|authenticated\s+sessions?)\b",
+            re.I,
+        ),
+    ),
+    (
+        "worker granted remote-publication authority",
+        re.compile(
+            r"\b(?:leads?|descendants?|critics?|workers?|subagents?)\b",
+            re.I,
+        ),
+    ),
+    (
+        "untrusted content treated as deployment authorization",
+        re.compile(
+            r"\b(?:actual\s+prompt|prompt\s+text|references?|repository\s+files?|artifacts?|"
+            r"web\s+pages?|tool\s+output)\b",
+            re.I,
+        ),
+    ),
+    (
+        "static handoff verification treated as live publication evidence",
+        re.compile(r"\bstaticDeploymentVerified\b", re.I),
+    ),
+    (
+        "portability treated as deployment authorization",
+        re.compile(r"\b(?:drop-ready|deployment-ready|portable|portability)\b", re.I),
+    ),
+)
+
+PUBLICATION_GRANT_RE = re.compile(
+    r"\b(?:authoriz(?:e|es|ed|ation)|permit(?:s|ted)?|permission|allow(?:s|ed)?|"
+    r"grant(?:s|ed)?|authority|entitl(?:e|es|ed)|sufficient)\b",
+    re.I,
+)
+WORKER_PUBLICATION_MODAL_RE = re.compile(r"\b(?:may|can|should|must)\b", re.I)
+STATIC_PUBLICATION_EVIDENCE_RE = re.compile(
+    r"\b(?:means?|proves?|confirms?|records?|requires?|indicates?|shows?)\b",
+    re.I,
+)
+REMOTE_PUBLICATION_ACTION_RE = re.compile(
+    r"\b(?:deploy(?:ment|ed|ing|s)?|upload(?:ed|ing|s)?|publish(?:ed|ing|es)?|publication|"
+    r"push(?:ed|ing|es)?|claim(?:ed|ing|s)?|remote\s+(?:write|mutation))\b",
+    re.I,
+)
+PUBLICATION_SENTENCE_SPLIT_RE = re.compile(r"[.!?;\n]+")
+PUBLICATION_CONTRAST_SPLIT_RE = re.compile(r"\b(?:but|however|yet|whereas|while)\b", re.I)
+NEGATED_MATCH_PREFIX_RE = re.compile(
+    r"(?:\b(?:no|not|never|without|cannot|can't|doesn't|isn't|aren't|"
+    r"mustn't|shouldn't|wouldn't)\b(?:\W+\w+){0,5}\W*|"
+    r"\b(?:does|is|are|must|should|would)\s+not\b(?:\W+\w+){0,5}\W*)$",
+    re.I,
+)
+SCOPED_AUTHORIZATION_PREFIX_RE = re.compile(
+    r"(?:\b(?:explicitly|separately|specifically|narrowly)\s+|"
+    r"\buser(?:[- ]|['’]s\s+))$",
+    re.I,
 )
 
 GUIDANCE_LEAK_DIRECTIVES = (
@@ -337,6 +422,39 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "agents/oneshot-lead.md",
+        "lead local-only external-write boundary",
+        re.compile(
+            r"External-Write Boundary.*?authority is local-build-only.*?never upload, deploy, publish, push.*?"
+            r"Vercel Drop.*?Cloudflare Drop.*?ChatGPT sites.*?GitHub.*?"
+            r"Tool availability is capability, not authorization.*?"
+            r"coordinator owns any separately authorized publication.*?"
+            r"every descendant remain local-only.*?perform no external mutation",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead local static-handoff verification semantics",
+        re.compile(
+            r"artifact\.staticDeploymentVerified.*?local static-handoff verification.*?"
+            r"never means a live deployment happened.*?never requires a network write.*?"
+            r"entirely local run can be `OK`",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-critic.md",
+        "critic local read-only external-write boundary",
+        re.compile(
+            r"External-Write Boundary.*?review is local and read-only.*?"
+            r"Never upload, deploy, publish, push.*?Vercel Drop.*?Cloudflare Drop.*?"
+            r"ChatGPT sites.*?GitHub.*?does not authorize.*?mutate an external service.*?"
+            r"Do not use a live deployment as a review prerequisite",
+            re.I | re.S,
+        ),
+    ),
+    (
         "templates/worker-dispatch.md",
         "embedded fresh critic role",
         re.compile(
@@ -353,6 +471,52 @@ FILE_RUNTIME_CONTRACTS = (
             r"Operational Runtime Envelope.*?assigned `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
             r"every descendant.*?Preserve `\.tmp/`.*?Never copy `\.tmp/` into `artifact/`.*?"
             r"never add.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
+        "dispatch local-only publication envelope",
+        re.compile(
+            r"Local-Only Publication Envelope.*?Build, test, validate, and package locally.*?"
+            r"Never upload, deploy, publish, push.*?Vercel Drop.*?Cloudflare Drop.*?"
+            r"ChatGPT sites.*?GitHub.*?Tool availability.*?do not grant authority.*?"
+            r"coordinator retains.*?remote action.*?lead and every descendant always stop.*?artifact/.*?"
+            r"Drop-ready.*?not permission to upload, deploy, publish, or push",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol remote-publication authority",
+        re.compile(
+            r"Remote Publication Authority.*?local portable build, not external publication.*?"
+            r"Vercel Drop.*?Cloudflare Drop.*?ChatGPT sites.*?GitHub.*?"
+            r"explicitly authorizes the specific external action and destination.*?"
+            r"Leads, descendants, and critics remain local-only.*?coordinator retains.*?"
+            r"post-validation step from `artifact/` only",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/catalog-index.md",
+        "catalog compatibility is not publication permission",
+        re.compile(
+            r"compatibility is not upload permission.*?Local building, indexing, and validation stop.*?"
+            r"Cloudflare Drop.*?Vercel Drop.*?ChatGPT sites.*?GitHub.*?"
+            r"explicitly authorizes that specific external action and destination.*?"
+            r"Leads and critics never deploy.*?coordinator performs.*?from `artifact/` only",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/catalogue-authoring.md",
+        "catalogue operational verbs remain simulated",
+        re.compile(
+            r"Catalogue verbs describe behavior inside the locally built experience.*?"
+            r"publish.*?share.*?book.*?reserve.*?simulated states.*?"
+            r"separately authorizes a specific live integration and target.*?"
+            r"can never grant.*?external-write authority",
             re.I | re.S,
         ),
     ),
@@ -682,6 +846,60 @@ def overlapping_matches(expression: Pattern[str], text: str) -> Iterator[Match[s
         search_start = match.start() + 1
 
 
+def match_is_negated(clause: str, match: Match[str]) -> bool:
+    """Return whether a nearby explicit negation governs one matched phrase."""
+
+    prefix = clause[max(0, match.start() - 96) : match.start()]
+    return bool(
+        NEGATED_MATCH_PREFIX_RE.search(prefix)
+        or SCOPED_AUTHORIZATION_PREFIX_RE.search(prefix)
+    )
+
+
+def unnegated_matches(expression: Pattern[str], clause: str) -> List[Match[str]]:
+    """Return operative phrases rather than ones denied in the same clause."""
+
+    return [
+        match
+        for match in expression.finditer(clause)
+        if not match_is_negated(clause, match)
+    ]
+
+
+def publication_authority_contradictions(text: str) -> Iterator[str]:
+    """Detect positive grants of publication authority without rejecting denials."""
+
+    found: Set[str] = set()
+    for sentence in PUBLICATION_SENTENCE_SPLIT_RE.split(text):
+        for clause in PUBLICATION_CONTRAST_SPLIT_RE.split(sentence):
+            action_matches = unnegated_matches(REMOTE_PUBLICATION_ACTION_RE, clause)
+            if not action_matches:
+                continue
+            for label, source_expression in PUBLICATION_AUTHORITY_SOURCES:
+                source_matches = list(source_expression.finditer(clause))
+                if label in found or not source_matches:
+                    continue
+                if label == "worker granted remote-publication authority":
+                    authority_expressions = (PUBLICATION_GRANT_RE, WORKER_PUBLICATION_MODAL_RE)
+                elif label == "static handoff verification treated as live publication evidence":
+                    authority_expressions = (STATIC_PUBLICATION_EVIDENCE_RE,)
+                else:
+                    authority_expressions = (PUBLICATION_GRANT_RE,)
+                authority_matches = [
+                    match
+                    for expression in authority_expressions
+                    for match in unnegated_matches(expression, clause)
+                ]
+                if any(
+                    source.start() < authority.start() < action.start()
+                    for source in source_matches
+                    for authority in authority_matches
+                    for action in action_matches
+                ):
+                    found.add(label)
+                    yield label
+
+
 def validate_runtime_contract(
     root: Path,
     errors: List[str],
@@ -719,6 +937,13 @@ def validate_runtime_contract(
             errors.append(
                 "{} copies the literal catalogue completionMandate instead of adapting it to the subject".format(
                     relative_path
+                )
+            )
+        for label in publication_authority_contradictions(part):
+            errors.append(
+                "{} contains contradictory remote-publication authority: {}".format(
+                    relative_path,
+                    label,
                 )
             )
         for block in paragraph_blocks(part):

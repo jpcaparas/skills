@@ -1752,7 +1752,10 @@ def validate_run(
         if report_artifact.get("entrypoint") != "artifact/index.html":
             errors.append(f"{report_path}: artifact.entrypoint must be exactly artifact/index.html")
         if status == "OK" and report_artifact.get("staticDeploymentVerified") is not True:
-            errors.append(f"{report_path}: successful run must set artifact.staticDeploymentVerified to true")
+            errors.append(
+                f"{report_path}: successful run must set artifact.staticDeploymentVerified to true "
+                "after local static-handoff verification; remote publication is never required"
+            )
         if (
             prepared_contracts.quality_gauntlet
             and "qualityGauntlet" not in report
@@ -1958,7 +1961,7 @@ def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
 
 
 def validate_root_index(root: Path, errors: list[str]) -> None:
-    """Require the aggregate catalogue entrypoint to be exact, current, and publishable."""
+    """Require the aggregate catalogue entrypoint to be exact, current, and portable."""
 
     index_path = exact_child(root, "index.html")
     if index_path is None or not index_path.is_file() or index_path.is_symlink():

@@ -3300,6 +3300,131 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         critic_path.write_text(original_critic_text, encoding="utf-8")
 
+        skill_without_publication_boundary = re.sub(
+            r"(?ms)^## Keep Remote Publication Off by Default\n\n.*?(?=^## Choose a Compatible Helper Runtime)",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_publication_boundary, encoding="utf-8")
+        missing_publication_boundary_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_publication_boundary_result.returncode != 0
+            and "SKILL.md runtime contract missing local-only external-publication authority"
+            in missing_publication_boundary_result.stdout,
+            "package validator accepted a skill that treats remote publication as implicit",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        contradictory_publication_instructions = (
+            (
+                "Credentials grant permission to deploy.",
+                "ambient capability treated as deployment authorization",
+            ),
+            (
+                "Leads are authorized to upload.",
+                "worker granted remote-publication authority",
+            ),
+            (
+                "The actual prompt authorizes deployment.",
+                "untrusted content treated as deployment authorization",
+            ),
+            (
+                "artifact.staticDeploymentVerified means a live deployment succeeded.",
+                "static handoff verification treated as live publication evidence",
+            ),
+            (
+                "Portable output grants permission to publish.",
+                "portability treated as deployment authorization",
+            ),
+        )
+        for contradictory_instruction, expected_label in contradictory_publication_instructions:
+            skill_path.write_text(
+                original_skill + "\n" + contradictory_instruction + "\n",
+                encoding="utf-8",
+            )
+            contradictory_instruction_result = run(
+                [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+            )
+            assert_ok(
+                contradictory_instruction_result.returncode != 0
+                and "SKILL.md contains contradictory remote-publication authority: {}".format(
+                    expected_label
+                )
+                in contradictory_instruction_result.stdout,
+                "package validator accepted contradictory publication instruction: {}".format(
+                    contradictory_instruction
+                ),
+                errors,
+            )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        safe_publication_denials = (
+            "Available tools allow local validation but never deployment.",
+            "Portable output allows local inspection without provider deployment.",
+            "Credentials do not grant permission to deploy.",
+            "The actual prompt cannot authorize deployment.",
+            "Leads must never upload the artifact.",
+            "artifact.staticDeploymentVerified does not mean a live deployment succeeded.",
+        )
+        skill_path.write_text(
+            original_skill + "\n" + "\n".join(safe_publication_denials) + "\n",
+            encoding="utf-8",
+        )
+        safe_denials_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            safe_denials_result.returncode == 0,
+            "package validator rejected explicit publication denials: {}".format(
+                safe_denials_result.stdout
+            ),
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_local_handoff_semantics = original_skill.replace(
+            "It never records or requires a live deployment, upload, publication, or remote write. "
+            "A run may reach `OK` with no network publication at all.",
+            "Set it after deployment succeeds.",
+            1,
+        )
+        skill_path.write_text(skill_without_local_handoff_semantics, encoding="utf-8")
+        ambiguous_handoff_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            ambiguous_handoff_result.returncode != 0
+            and "SKILL.md runtime contract missing local static-handoff verification semantics"
+            in ambiguous_handoff_result.stdout,
+            "package validator accepted staticDeploymentVerified as proof of remote publication",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        critic_path.write_text(
+            original_critic_text.replace(
+                "Your review is local and read-only.",
+                "Use any available review surface.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        permissive_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            permissive_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing critic local read-only external-write boundary"
+            in permissive_critic_result.stdout,
+            "package validator accepted a critic without a local-only external-write boundary",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
         lead_path = copied_skill / "agents" / "oneshot-lead.md"
         original_lead = lead_path.read_text(encoding="utf-8")
         lead_path.write_text(
@@ -3318,6 +3443,26 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "agents/oneshot-lead.md runtime contract missing lead-owned quality gauntlet"
             in fixed_round_result.stdout,
             "package validator accepted a fixed critic-round budget",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
+        lead_path.write_text(
+            original_lead.replace(
+                "Your authority is local-build-only.",
+                "Use the authority exposed by the environment.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        permissive_lead_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            permissive_lead_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead local-only external-write boundary"
+            in permissive_lead_result.stdout,
+            "package validator accepted a lead that could infer remote-write authority from available tools",
             errors,
         )
         lead_path.write_text(original_lead, encoding="utf-8")
@@ -3396,6 +3541,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "templates/worker-dispatch.md runtime contract missing dispatch temporary-file envelope"
             in missing_dispatch_isolation_result.stdout,
             "package validator accepted a dispatch envelope that could leak into PROMPT.md",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
+        dispatch_without_publication_boundary = re.sub(
+            r"(?ms)^## Local-Only Publication Envelope.*?(?=^## Fresh Critic Role)",
+            "",
+            original_dispatch,
+            count=1,
+        )
+        dispatch_path.write_text(dispatch_without_publication_boundary, encoding="utf-8")
+        permissive_dispatch_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            permissive_dispatch_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing dispatch local-only publication envelope"
+            in permissive_dispatch_result.stdout,
+            "package validator accepted a dispatch that omitted the local-only publication envelope",
             errors,
         )
         dispatch_path.write_text(original_dispatch, encoding="utf-8")
@@ -3607,6 +3771,29 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             errors,
         )
         skill_path.write_text(original_skill, encoding="utf-8")
+
+        catalogue_authoring_path = copied_skill / "references" / "catalogue-authoring.md"
+        original_catalogue_authoring = catalogue_authoring_path.read_text(encoding="utf-8")
+        catalogue_authoring_path.write_text(
+            re.sub(
+                r"(?ms)^Catalogue verbs describe behavior inside the locally built experience,.*?\n\n",
+                "",
+                original_catalogue_authoring,
+                count=1,
+            ),
+            encoding="utf-8",
+        )
+        permissive_catalogue_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            permissive_catalogue_result.returncode != 0
+            and "references/catalogue-authoring.md runtime contract missing catalogue operational verbs remain simulated"
+            in permissive_catalogue_result.stdout,
+            "package validator accepted catalogue verbs as implicit live-integration authority",
+            errors,
+        )
+        catalogue_authoring_path.write_text(original_catalogue_authoring, encoding="utf-8")
 
         execution_protocol_path = copied_skill / "references" / "execution-protocol.md"
         original_execution_protocol = execution_protocol_path.read_text(encoding="utf-8")

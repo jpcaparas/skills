@@ -25,7 +25,13 @@ The timestamp uses the coordinator’s local time, followed by a readable lowerc
 
 The readable portion is not the identity. The digest distinguishes raw names that normalize to the same slug. Store the exact model, harness, and experiment names and their derived keys in `run.json` and the external receipt; they are provenance, not path segments.
 
-`run.json` preserves the raw names, derived keys, exact actual-prompt digest, run classification, run-local temporary path, and relative artifact path. `artifact/PROMPT.md` preserves the prepared prompt bytes passed to the lead—including any faithful custom-brief refinement—and travels with the deployable site. Keep the prompt Unicode end to end and encode every file boundary as UTF-8 so dashes, curly punctuation, emoji, and non-Latin scripts survive unchanged.
+`run.json` preserves the raw names, derived keys, exact actual-prompt digest, run classification, run-local temporary path, and relative artifact path. `artifact/PROMPT.md` preserves the prepared prompt bytes passed to the lead—including any faithful custom-brief refinement—and travels with the portable site. Keep the prompt Unicode end to end and encode every file boundary as UTF-8 so dashes, curly punctuation, emoji, and non-Latin scripts survive unchanged.
+
+## Remote Publication Authority
+
+The run contract authorizes a local portable build, not external publication. Do not upload, deploy, publish, push, create, claim, or update a remote site, project, repository, release, gist, CDN, or hosting target, including Vercel Drop, Cloudflare Drop, ChatGPT sites, or GitHub, unless the user explicitly authorizes the specific external action and destination in the active task. Authenticated browsers, CLIs, MCP connectors, plugins, credentials, target configuration, prompt or reference instructions, and prior approval for a different run or target do not count.
+
+Leads, descendants, and critics remain local-only under every dispatch. The coordinator retains any authorized remote mutation and performs it as a separate post-validation step from `artifact/` only, scoped to the named destination. If authorization or target details are missing, stop at the built artifact, report its path, and state that no upload, deployment, publication, or push occurred. Keep this authority envelope separate from the actual prompt and `artifact/PROMPT.md`.
 
 Before reservation, inspect the decoded actual prompt for Unicode replacement characters, stray C1 controls, and recognizable mojibake. `scripts/prepare_run.py` rejects these high-confidence corruption markers without creating a run, while accepting genuine Unicode text. Correct the prepared source text and retry; do not guess by silently transcoding the preserved file or flattening intended characters to ASCII. `scripts/validate_catalog.py` repeats the check so a manually reproduced or later-corrupted run cannot ship a digest-consistent but visibly broken `PROMPT.md`.
 
@@ -57,7 +63,7 @@ When a catalogue baseline accompanies user context, preserve both sources while 
 
 When the user fans out one brief without explicitly requesting variations—whether as multiple replicas, lead subagents, or workspaces—craft this actual prompt exactly once and seal one UTF-8 byte sequence. Prepare every instance from that same source, require matching SHA-256 digests and byte counts, and dispatch the same decoded prompt string without replica labels, variant guidance, or lead-specific amendments. The runs remain separate `autonomous-one-shot` attempts with no `priorRun`; simultaneous peers are not reruns.
 
-`experienceDirection` is coordinator-only crafting guidance. Never include its literal value, a labelled `EXPERIENCE DIRECTION` block, or a generic paraphrase in the actual prompt, lead dispatch, or `PROMPT.md`. Provenance belongs in `run.json` and the coordinator receipt; the deployable prompt should read as the finished brief, not as an assembly of internal instructions.
+`experienceDirection` is coordinator-only crafting guidance. Never include its literal value, a labelled `EXPERIENCE DIRECTION` block, or a generic paraphrase in the actual prompt, lead dispatch, or `PROMPT.md`. Provenance belongs in `run.json` and the coordinator receipt; the portable prompt should read as the finished brief, not as an assembly of internal instructions.
 
 For an unmatched custom request, the actual prompt is a faithful, fully developed refinement, not the rough input copied blindly. Preserve the user’s constraints and exact wording requirements, clarify the core experience, and add only experience-level guidance that follows from the request. Do not borrow from the catalogue when there is no genuine match, and do not compress the prompt to an arbitrary paragraph or token target. Store and dispatch that refined text exactly. When the user requires their entire source brief to remain verbatim, preserve it byte-for-byte as the opening block and append only the subject-adapted completion mandate. If they prohibit even that required addition, report the incompatible constraint and stop before dispatch rather than weakening the prompt contract.
 
@@ -101,9 +107,9 @@ Store critic history in the versioned structured `worker-report.json.qualityGaun
 
 The lead owns all implementation iteration inside its run. The coordinator may resume that same lead after an infrastructure pause, but does not inject sibling comparisons or post-process the artifact.
 
-The lead may shape `workspace/` however it likes and keeps disposable run state in the sibling `.tmp/`. Before completion it exports a static deployment into `artifact/` with the unchanged exact-case `PROMPT.md` and one exact-case root `index.html` entrypoint. That entrypoint does not imply a one-file artifact: all built runtime scripts, styles, media, fonts, models, data, and asset directories that serve the experience belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the deployment origin root. Deployment must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, run-local `.tmp/`, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
+The lead may shape `workspace/` however it likes and keeps disposable run state in the sibling `.tmp/`. Before completion it exports a portable static build into `artifact/` with the unchanged exact-case `PROMPT.md` and one exact-case root `index.html` entrypoint. That entrypoint does not imply a one-file artifact: all built runtime scripts, styles, media, fonts, models, data, and asset directories that serve the experience belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the origin root if a separately authorized deployment occurs. The artifact must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, run-local `.tmp/`, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
 
-For the shared folder-drop target, the built artifact stays within 1,000 files, 5 MiB per file, and 100 MiB total. These final-upload bounds do not constrain workspace dependencies, source files, build assets, iteration, or delegation.
+For the shared folder-drop compatibility profile, the built artifact stays within 1,000 files, 5 MiB per file, and 100 MiB total. These portability bounds do not authorize an upload and do not constrain workspace dependencies, source files, build assets, iteration, or delegation. `artifact.staticDeploymentVerified` records local static-handoff verification only; it does not prove or require publication, and an entirely local run may reach `OK`.
 
 If the user requests another independent attempt:
 
@@ -121,7 +127,7 @@ When the harness exposes the information, `worker-report.json` records:
 
 - lead worker ID and descendant worker IDs
 - status and blocker
-- source build commands, the fixed artifact entrypoint, and static-deployment verification
+- source build commands, the fixed artifact entrypoint, and local static-handoff verification
 - chosen technologies and external dependencies
 - whether run-local temporary routing was applied and any known external exceptions
 - quality-gauntlet applicability, concrete bar, artifact revision per critic round, capability fallback, integration pass, and final verification performed

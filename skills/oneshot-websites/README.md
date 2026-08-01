@@ -18,6 +18,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
 - End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake
 - A conservative Cloudflare/Vercel Drop-ready `artifact/` with one root `index.html` entrypoint and any supporting asset tree the experience needs
+- A local-only default: Drop compatibility never authorizes Vercel, Cloudflare, ChatGPT, GitHub, or other remote writes; explicit action-and-destination permission is required and retained by the coordinator
 - A coordinator-owned receipt-and-commit inventory outside each worker run, with crash recovery and an explicit path-isolation trust boundary
 - Provenance-aware indexing and validation
 

@@ -491,7 +491,7 @@ def build_html(root: Path, out_path: Path) -> str:
 
 @contextmanager
 def catalogue_lock(root: Path) -> Iterator[None]:
-    """Serialize render-and-publish so an older snapshot cannot win last."""
+    """Serialize local render-and-write so an older snapshot cannot win last."""
 
     lock_path = root / CATALOGUE_LOCK
     try:
@@ -565,7 +565,7 @@ def catalogue_lock(root: Path) -> Iterator[None]:
 
 
 def publish_catalogue(root: Path, out_path: Path) -> None:
-    """Validate, render, and atomically publish one locked catalogue snapshot."""
+    """Validate, render, and atomically write one local catalogue snapshot."""
 
     stored_output = exact_child(root, "index.html")
     if stored_output is not None:
@@ -611,7 +611,7 @@ def publish_catalogue(root: Path, out_path: Path) -> None:
         os.replace(temporary_path, out_path)
         fsync_directory(root)
     except OSError as error:
-        raise CatalogueBuildError(f"unable to publish root catalogue: {error}") from error
+        raise CatalogueBuildError(f"unable to write root catalogue: {error}") from error
     finally:
         if temporary_path is not None and temporary_path.exists():
             try:
@@ -637,7 +637,7 @@ def main() -> int:
     except OSError as error:
         raise SystemExit(f"unable to inspect output root: {error}") from error
     if root_mode & 0o222 == 0:
-        raise SystemExit("output root must have a writable directory mode for atomic catalogue publication")
+        raise SystemExit("output root must have a writable directory mode for atomic catalogue writing")
     try:
         out_path = resolve_existing_or_new(Path(args.out))
     except (OSError, RuntimeError) as error:
