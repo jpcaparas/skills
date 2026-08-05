@@ -30,6 +30,7 @@ REQUIRED_FILES = (
     "references/catalogue-authoring.md",
     "references/execution-protocol.md",
     "references/research-notes.md",
+    "references/wasm-selection.md",
     "scripts/build_catalog_index.py",
     "scripts/list_prompts.py",
     "scripts/prepare_run.py",
@@ -50,7 +51,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.9.0"
+PACKAGE_VERSION = "2.10.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -153,6 +154,17 @@ RUNTIME_CONTRACTS = (
     ),
     ("no inherited coordinator history", re.compile(r"no-history.*?fork_turns.*?none|fork_turns.*?none.*?(?:coordinator|history|conversation)", re.I | re.S)),
     ("recursive subagent delegation", re.compile(r"recursive\s+(?:subagent\s+)?delegation|(?:lead|subagents?).*?create.*?subagents", re.I | re.S)),
+    (
+        "earned WebAssembly selection",
+        re.compile(
+            r"Keep implementation-selection guidance outside.*?do not add WebAssembly.*?artifact/PROMPT\.md.*?"
+            r"Treat WebAssembly as an earned implementation choice.*?bounded spike.*?"
+            r"DOM work.*?normal web stack.*?words.*?fast.*?3D.*?complex.*?written in Rust.*?"
+            r"When WASM is selected.*?main thread.*?fallbacks.*?portable static-handoff.*?"
+            r"references/wasm-selection\.md",
+            re.I | re.S,
+        ),
+    ),
     (
         "inspectable quality bar",
         re.compile(
@@ -413,6 +425,17 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "agents/oneshot-lead.md",
+        "lead WebAssembly decision gate",
+        re.compile(
+            r"WebAssembly Decision.*?earned implementation choice.*?proven native library.*?"
+            r"simplest credible JavaScript or TypeScript baseline.*?cold start.*?boundary-copy cost.*?"
+            r"Keep DOM behavior.*?web layer.*?Worker.*?portable static envelope.*?"
+            r"Never add.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
         "lead temporary-file discipline",
         re.compile(
             r"Temporary-File Discipline.*?assigned run’s `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
@@ -483,6 +506,28 @@ FILE_RUNTIME_CONTRACTS = (
             r"ChatGPT sites.*?GitHub.*?Tool availability.*?do not grant authority.*?"
             r"coordinator retains.*?remote action.*?lead and every descendant always stop.*?artifact/.*?"
             r"Drop-ready.*?not permission to upload, deploy, publish, or push",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
+        "conditional dispatch WebAssembly guidance",
+        re.compile(
+            r"Conditional WebAssembly Guidance.*?complete current contents of `references/wasm-selection\.md`.*?"
+            r"justified narrow WASM core.*?bounded representative spike.*?ordinary web stack.*?"
+            r"no plausible boundary.*?agents/oneshot-lead\.md.*?"
+            r"Never append.*?artifact/PROMPT\.md.*?\{\{WASM_SELECTION_GUIDANCE\}\}",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/wasm-selection.md",
+        "WebAssembly scenarios and static-artifact contract",
+        re.compile(
+            r"operational lead guidance only.*?Never append.*?artifact/PROMPT\.md.*?"
+            r"Decision Gate.*?bounded spike.*?representative data.*?"
+            r"Lead Contract When WASM Fits.*?Worker.*?5 MiB per-file limit.*?"
+            r"Sample Scenarios.*?SQLite.*?Rust backend.*?prepared actual prompt remains unchanged",
             re.I | re.S,
         ),
     ),

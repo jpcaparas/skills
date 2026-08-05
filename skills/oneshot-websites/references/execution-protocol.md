@@ -51,11 +51,14 @@ The initial lead dispatch contains only:
 - raw and derived experiment identity
 - the assigned run, `.tmp/`, workspace, and artifact paths
 - the operational temporary-file envelope from `templates/worker-dispatch.md`
+- the complete `references/wasm-selection.md` guidance when the request or supplied source presents a plausible compiled engine, codec, parser, database, emulator, simulation core, numerical hot path, or offline local-processing boundary
 - any user-supplied inputs that belong to this experiment
 
 Pass actual text even when it is also stored on disk. Populate that dispatch field by strictly decoding the sealed `artifact/PROMPT.md` bytes as UTF-8 after `prepare_run.py` succeeds; do not retype or rebuild it from a parallel string. When the harness exposes the serialized payload bytes, compare their SHA-256 digest with the prompt receipt before starting the lead. A path-only dispatch makes the benchmark dependent on an extra interpretation step. Do not include the aggregate manifest, sibling names, sibling prompts, sibling output paths, sibling artifacts, or sibling results.
 
 The temporary-file envelope is lead-operational metadata, not part of the actual prompt. The coordinator creates `.tmp/` inside the unique run directory before dispatch. When the harness supports process-environment configuration, point `TMPDIR`, `TMP`, and `TEMP` at that absolute path for the lead; otherwise the lead applies those variables before launching local processes. The lead passes the same run-local path and supported overrides to descendants, preserves `.tmp/` for inspection, keeps durable source in `workspace/`, and never copies `.tmp/` into `artifact/`. Tools may ignore overrides or create state before dispatch, so containment is explicitly best effort: record known exceptions instead of sweeping, moving, or deleting unrelated external paths.
+
+WebAssembly selection guidance is also operational metadata. Include it only for a plausible WASM boundary, and let the owning lead decide among a justified narrow module, a bounded representative spike, and the ordinary web stack. The lead role retains a compact decision gate for evidence discovered after dispatch. Never add generic WASM instructions to the actual prompt or mutate `artifact/PROMPT.md`; preserve an explicit user-authored WASM requirement normally when it is already part of the brief.
 
 Never fold the `.tmp/` path, temporary environment variables, or this operational envelope into the actual prompt or `artifact/PROMPT.md`. Prompt provenance covers only the finished website brief.
 

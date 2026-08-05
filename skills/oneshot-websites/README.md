@@ -14,6 +14,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
 - A preserved `.tmp/` inside every unique run, with best-effort temp routing inherited by descendants and kept out of prompts and deployable artifacts
 - No skill-imposed time, stack, dependency, workflow, or source-project constraints
+- Evidence-gated WebAssembly selection: reuse proven compiled cores when justified, benchmark uncertain hot paths, and keep ordinary web work in the web stack
 - Flat `timestamp-experiment-slug` run directories with atomic `--02` collision suffixes
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
 - End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake
@@ -27,6 +28,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - `SKILL.md` - authoritative instructions
 - `assets/prompt-catalogue.json` - canonical prompt catalogue
 - `references/execution-protocol.md` - delegation and flat run-layout contract
+- `references/wasm-selection.md` - conditional WASM decision gate, measurements, artifact rules, and sample scenarios
 - `agents/oneshot-lead.md` - isolated lead role
 - `agents/oneshot-critic.md` - fresh read-only artifact critic
 - `scripts/list_prompts.py` - catalogue browser

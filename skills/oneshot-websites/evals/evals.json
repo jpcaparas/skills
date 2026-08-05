@@ -735,6 +735,69 @@
         {"text": "Does not deploy sibling replicas or drift from staging to a provider default", "type": "negative"}
       ],
       "tags": ["security", "authorization", "replicas", "isolation", "vercel"]
+    },
+    {
+      "id": 61,
+      "name": "native-raw-decoder-earns-narrow-wasm-core",
+      "prompt": "Build a browser photo lab from the supplied project. Its tested C++ RAW decoder and batch colour pipeline are the source of truth; the rest of the product is a conventional accessible web interface.",
+      "expected_output": "The owning lead keeps the sealed experience prompt unchanged, reuses the proven decoder and batch pixel pipeline as a narrow WASM core, keeps UI and browser orchestration in TypeScript, uses coarse image-buffer operations in a Worker, and verifies parity, startup, memory, and representative batch latency inside the portable artifact envelope.",
+      "assertions": [
+        {"text": "Selects WASM because a proven native engine and exact output behavior justify reuse", "type": "functional"},
+        {"text": "Keeps DOM, accessibility, controls, previews, and export orchestration outside the WASM module", "type": "structural"},
+        {"text": "Verifies decoder parity plus cold start, memory, boundary, and batch-performance evidence on the built artifact", "type": "verification"},
+        {"text": "Does not append generic WASM implementation prose to artifact/PROMPT.md", "type": "negative"}
+      ],
+      "tags": ["wasm", "native-core", "worker", "artifact", "verification"]
+    },
+    {
+      "id": 62,
+      "name": "unproven-route-optimizer-requires-bounded-wasm-spike",
+      "prompt": "Create an offline route-planning simulator that can compare about 150,000 candidate paths. There is no existing native engine, and nobody has profiled a browser implementation yet.",
+      "expected_output": "The lead starts with the simplest credible typed JavaScript or TypeScript baseline, profiles representative data, and spikes only one stable numeric kernel if profiling isolates it. The decision records cold start, size, initialization, throughput, memory, responsiveness, and boundary cost, then removes WASM unless the evidence shows a material benefit.",
+      "assertions": [
+        {"text": "Does not assume WASM is required before a representative baseline and profile exist", "type": "negative"},
+        {"text": "Bounds any spike to one coarse numeric kernel and defines an explicit keep-or-remove decision", "type": "functional"},
+        {"text": "Compares startup, binary size, initialization, throughput, peak memory, responsiveness, and boundary-copy cost", "type": "verification"},
+        {"text": "Keeps the sealed prompt identical whether the implementation decision is WASM or TypeScript", "type": "structural"}
+      ],
+      "tags": ["wasm", "spike", "performance", "edge", "prompt-isolation"]
+    },
+    {
+      "id": 63,
+      "name": "rust-backend-crud-does-not-force-wasm",
+      "prompt": "Build a responsive CRUD dashboard for our Rust API. It has forms, filters, tables, authentication, and remote requests; there is no browser-local compute engine or binary processing.",
+      "expected_output": "The lead uses the ordinary web stack and treats the Rust server as irrelevant to browser WASM selection. It focuses verification on product behavior, accessibility, rendering, and network states rather than inventing a compiled browser module.",
+      "assertions": [
+        {"text": "Explicitly rejects the backend language as sufficient evidence for browser WASM", "type": "functional"},
+        {"text": "Keeps forms, tables, filters, authentication, routing, and request state in the normal web stack", "type": "structural"},
+        {"text": "Does not create or benchmark a speculative WASM module without a browser-local boundary", "type": "negative"}
+      ],
+      "tags": ["wasm", "negative", "crud", "rust", "web-stack"]
+    },
+    {
+      "id": 64,
+      "name": "offline-sqlite-archive-earns-supported-wasm-engine",
+      "prompt": "Create an offline research archive that opens an existing SQLite database in the browser, preserves its SQL semantics, and remains a portable static artifact with no server runtime.",
+      "expected_output": "The lead uses the supported SQLite WASM distribution through an appropriate Worker-backed persistence route, keeps queries coarse and UI concerns in the web layer, bundles every runtime asset locally, and verifies migration, persistence, concurrency, recovery, unsupported capability, and static loading behavior.",
+      "assertions": [
+        {"text": "Chooses SQLite WASM because exact SQLite semantics and browser-local offline persistence are explicit requirements", "type": "functional"},
+        {"text": "Keeps the database engine Worker-backed and the accessible interface in the ordinary web layer", "type": "structural"},
+        {"text": "Tests migration, persistence, concurrency, recovery, capability fallback, and local static loading", "type": "verification"},
+        {"text": "Does not add a server runtime or treat a tiny settings store as equivalent justification", "type": "negative"}
+      ],
+      "tags": ["wasm", "sqlite", "offline", "persistence", "static-handoff"]
+    },
+    {
+      "id": 65,
+      "name": "elaborate-marketing-motion-remains-web-native",
+      "prompt": "Build an elaborate portfolio with scroll choreography, particle transitions, shader-backed visuals, and responsive typography. There is no existing compiled engine or identified CPU-bound workload.",
+      "expected_output": "The lead keeps the experience web-native, selecting CSS, Canvas, WebGL, or WebGPU as the visuals warrant. It does not add WASM merely because the animation is elaborate, and it validates fidelity, responsiveness, accessibility, and performance through the actual rendered artifact.",
+      "assertions": [
+        {"text": "Uses browser-native visual technologies appropriate to the rendered experience", "type": "functional"},
+        {"text": "Does not equate visual complexity, shaders, particles, or 3D with a WASM requirement", "type": "negative"},
+        {"text": "Verifies rendered fidelity, responsiveness, accessibility, and representative interaction performance", "type": "verification"}
+      ],
+      "tags": ["wasm", "negative", "motion", "webgl", "performance"]
     }
   ]
 }

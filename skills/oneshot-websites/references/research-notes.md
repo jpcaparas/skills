@@ -40,9 +40,18 @@ Across the examples, the strongest artifact has a recognisable subject and one l
 
 These are July 2026 provider observations, not timeless benchmark rules. Keep the final compatibility constants easy to revise and recheck first-party sources when maintaining the skill.
 
+## WebAssembly Selection Research
+
+- The [WebAssembly FAQ](https://webassembly.org/docs/faq/) positions WASM as a complement to JavaScript and the wider web platform. This supports a hybrid boundary rather than replacing DOM, accessibility, and ordinary application orchestration.
+- [MDN’s WebAssembly concepts guide](https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Concepts) documents the browser integration and JavaScript interface that make compiled modules useful for narrow compute or library-reuse boundaries.
+- [Emscripten’s porting guide](https://emscripten.org/docs/porting/index.html) provides the established path for bringing C and C++ code to the web, which supports the existing-native-engine scenarios without implying that every web application needs a compiled core.
+- The official [SQLite WASM documentation](https://sqlite.org/wasm/doc/trunk/index.md) supports the offline database scenario while making browser persistence and Worker choices explicit enough to require dedicated verification.
+
+These sources support candidate boundaries, not automatic architecture decisions. Representative product evidence still determines whether the extra binary, startup, memory, tooling, and JavaScript/WASM crossing costs are justified.
+
 ## Package Consequences
 
-The research led to six durable choices:
+The research led to seven durable choices:
 
 1. Preserve the actual prompt and run identity instead of reconstructing them afterward.
 2. Separate fresh lead contexts so sibling results cannot bias one another.
@@ -50,6 +59,7 @@ The research led to six durable choices:
 4. Standardize only the handoff: exact `PROMPT.md` plus a built root `index.html` in a drop-ready static folder.
 5. Keep the prompt catalogue broad and appendable, with deterministic checks for identity and accidental implementation constraints.
 6. Put evidence-driven builder/critic iteration inside the owning lead’s run: use a concrete bar, inspect the real artifact, keep coupled work sequential, and stop on evidence rather than a round count.
+7. Treat WebAssembly as an earned narrow-core option: reuse established compiled engines when that preserves semantics or portability, benchmark uncertain hot paths, and leave ordinary web work in the ordinary web stack.
 
 ## See Also
 

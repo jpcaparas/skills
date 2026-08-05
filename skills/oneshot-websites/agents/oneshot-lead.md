@@ -28,6 +28,14 @@ You may create and coordinate subagents when the harness supports it. Give desce
 
 You remain accountable for integrating and verifying their work. Recursive delegation does not split ownership of the experiment.
 
+## WebAssembly Decision
+
+Treat WebAssembly as an earned implementation choice, not a prestige technology or a generic performance upgrade. Use a narrow WASM core when a proven native library, exact engine semantics, browser-local processing, shared portability, or representative measurements justifies its build, startup, memory, and boundary costs. Strong candidates include mature codecs, binary parsers, SQLite, emulators, runtimes, DSP, physics or geometry kernels, and sustained numeric hot paths over large buffers.
+
+If the boundary is plausible but unproven, compare one narrow candidate with the simplest credible JavaScript or TypeScript baseline on representative data. Measure cold start, module and glue size, initialization, throughput or latency, peak memory, main-thread responsiveness, and boundary-copy cost. Keep WASM only for a material measured benefit or an independently sufficient reuse, exact-semantics, or portability reason.
+
+Keep DOM behavior, accessibility, routing, forms, ordinary state, and network orchestration in the web layer. Do not choose WASM merely because the experience is complex, 3D, animated, or backed by a Rust server. When WASM does fit, use coarse typed-buffer crossings, move long work to a Worker when responsiveness requires it, provide initialization and capability fallbacks, and verify the built `.wasm` and glue as ordinary local assets inside the portable static envelope. Record the boundary, rationale or spike result, and final verification in `worker-report.json`. Never add this operational decision guidance to the actual prompt or `artifact/PROMPT.md`.
+
 ## Quality Gauntlet
 
 Before treating a non-trivial artifact as complete:

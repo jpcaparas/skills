@@ -210,6 +210,35 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             tags = item.get("tags")
             assert_ok(isinstance(tags, list) and all(isinstance(tag, str) for tag in tags), "eval {} needs string tags".format(index), errors)
 
+        names = {
+            item.get("name")
+            for item in entries
+            if isinstance(item, Mapping) and isinstance(item.get("name"), str)
+        }
+        required_wasm_evals = {
+            "native-raw-decoder-earns-narrow-wasm-core",
+            "unproven-route-optimizer-requires-bounded-wasm-spike",
+            "rust-backend-crud-does-not-force-wasm",
+            "offline-sqlite-archive-earns-supported-wasm-engine",
+            "elaborate-marketing-motion-remains-web-native",
+        }
+        assert_ok(
+            required_wasm_evals.issubset(names),
+            "evals must cover strong-fit, spike-first, SQLite, and non-fit WebAssembly decisions",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "wasm" in item["tags"]
+                for item in entries
+                if isinstance(item, Mapping) and item.get("name") in required_wasm_evals
+            ),
+            "WebAssembly decision evals must carry the wasm tag",
+            errors,
+        )
+
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
     trigger_values = set()
@@ -3447,6 +3476,44 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         lead_path.write_text(original_lead, encoding="utf-8")
 
+        skill_without_wasm_contract = re.sub(
+            r"(?ms)^Treat WebAssembly as an earned implementation choice.*?(?=^For every non-trivial build,)",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_wasm_contract, encoding="utf-8")
+        missing_wasm_contract_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_wasm_contract_result.returncode != 0
+            and "SKILL.md runtime contract missing earned WebAssembly selection"
+            in missing_wasm_contract_result.stdout,
+            "package validator accepted a skill without evidence-gated WebAssembly selection",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        lead_without_wasm_gate = re.sub(
+            r"(?ms)^## WebAssembly Decision\n\n.*?(?=^## Quality Gauntlet)",
+            "",
+            original_lead,
+            count=1,
+        )
+        lead_path.write_text(lead_without_wasm_gate, encoding="utf-8")
+        missing_lead_wasm_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_lead_wasm_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead WebAssembly decision gate"
+            in missing_lead_wasm_result.stdout,
+            "package validator accepted a lead role without the WebAssembly decision gate",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
         lead_path.write_text(
             original_lead.replace(
                 "Your authority is local-build-only.",
@@ -3521,6 +3588,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "templates/worker-dispatch.md runtime contract missing embedded fresh critic role"
             in missing_critic_dispatch_result.stdout,
             "package validator accepted an empty-history dispatch without the critic role",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
+        dispatch_without_wasm_guidance = re.sub(
+            r"(?ms)^## Conditional WebAssembly Guidance.*?(?=^## Fresh Critic Role)",
+            "",
+            original_dispatch,
+            count=1,
+        )
+        dispatch_path.write_text(dispatch_without_wasm_guidance, encoding="utf-8")
+        missing_dispatch_wasm_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_dispatch_wasm_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing conditional dispatch WebAssembly guidance"
+            in missing_dispatch_wasm_result.stdout,
+            "package validator accepted an empty-history dispatch without conditional WebAssembly guidance",
             errors,
         )
         dispatch_path.write_text(original_dispatch, encoding="utf-8")
