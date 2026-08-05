@@ -4,4 +4,6 @@ Production skill for dissecting websites, apps, images, media, documents, code, 
 
 It defaults the requested replica to a website or web app unless the user names another target, and it stops at the raw prompt rather than building the artifact.
 
+When a resource genuinely earns a compiled browser core, it can also specify a bounded, testable WebAssembly role without forcing WASM onto ordinary web work.
+
 Canonical instructions live in `SKILL.md`.

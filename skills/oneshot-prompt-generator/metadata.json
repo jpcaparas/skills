@@ -1,7 +1,12 @@
 {
-  "version": "1.0.0",
+  "version": "1.1.0",
   "organization": "JP Caparas",
-  "date": "July 2026",
-  "abstract": "Production skill for fully dissecting supplied websites, applications, visuals, time-based media, documents, datasets, and code into a self-contained raw prompt for a fresh session, with evidence-aware fidelity, target overrides, and prompt-only handoff boundaries.",
-  "references": []
+  "date": "August 2026",
+  "abstract": "Production skill for fully dissecting supplied websites, applications, visuals, time-based media, documents, datasets, and code into a self-contained raw prompt for a fresh session, with evidence-aware fidelity, target overrides, justified WebAssembly selection, and prompt-only handoff boundaries.",
+  "references": [
+    "https://webassembly.org/docs/faq/",
+    "https://developer.mozilla.org/en-US/docs/WebAssembly/Guides/Concepts",
+    "https://emscripten.org/docs/porting/index.html",
+    "https://sqlite.org/wasm/doc/trunk/index.md"
+  ]
 }

@@ -23,6 +23,7 @@ REQUIRED_FILES: Final[tuple[str, ...]] = (
     "references/still-visuals.md",
     "references/time-based-media.md",
     "references/documents-and-code.md",
+    "references/wasm-selection.md",
     "evals/evals.json",
     "evals/trigger-evals.json",
     "evals/files/reference-site/index.html",
@@ -42,7 +43,7 @@ REQUIRED_FILES: Final[tuple[str, ...]] = (
     "skill-card.prompt.md",
 )
 REQUIRED_EVAL_TAGS: Final[frozenset[str]] = frozenset(
-    {"smoke", "edge", "negative", "disclosure"}
+    {"smoke", "edge", "negative", "disclosure", "wasm"}
 )
 ALLOWED_ASSERTION_TYPES: Final[frozenset[str]] = frozenset(
     {"functional", "structural", "disclosure", "negative", "verification"}
@@ -211,6 +212,7 @@ def validate_frontmatter(root: Path, report: ValidationReport) -> None:
         "native image capability",
         "Return only the raw paste-ready prompt",
         "Do not build, render, dispatch a worker",
+        "Treat WebAssembly as an earned implementation choice",
     )
     for phrase in required_phrases:
         if phrase not in content:

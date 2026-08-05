@@ -48,7 +48,7 @@
           "type": "functional"
         },
         {
-          "text": "Captured trace records a read of references/live-interfaces.md and no read of references/still-visuals.md, references/time-based-media.md, or references/documents-and-code.md.",
+          "text": "Captured trace records a read of references/live-interfaces.md and no read of references/still-visuals.md, references/time-based-media.md, references/documents-and-code.md, or references/wasm-selection.md.",
           "type": "disclosure"
         }
       ],
@@ -467,6 +467,94 @@
         }
       ],
       "tags": ["edge", "inaccessible", "self-containment"]
+    },
+    {
+      "id": 23,
+      "name": "existing-native-image-core-earns-wasm",
+      "prompt": "Treat this concise description as the complete supplied resource: the source is a desktop photo lab whose identity depends on its existing C++ RAW decoder and deterministic batch color pipeline. Create a raw prompt for a fresh session to recreate it as a browser app that keeps files local. The interface should remain accessible and responsive while processing large images.",
+      "expected_output": "Requires a narrow WebAssembly module for the proven decoder and pixel pipeline, keeps the browser UI and orchestration in the normal web stack, and specifies Worker execution, coarse buffer crossings, parity checks, and measurable startup, memory, and processing acceptance criteria.",
+      "assertions": [
+        {
+          "text": "Assigns the existing C++ RAW decoder and batch pixel pipeline to WASM because reuse, local processing, and exact output semantics justify it.",
+          "type": "functional"
+        },
+        {
+          "text": "Keeps file selection, DOM, controls, accessibility, previews, progress, cancellation, and export orchestration in JavaScript or TypeScript rather than moving the whole app into WASM.",
+          "type": "functional"
+        },
+        {
+          "text": "Requires coarse image-buffer transfers, off-main-thread execution, source-parity fixtures, and measurement of cold start, binary size, memory, and representative batch latency.",
+          "type": "verification"
+        },
+        {
+          "text": "Captured trace records a read of references/wasm-selection.md.",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["edge", "wasm", "code", "performance", "disclosure"]
+    },
+    {
+      "id": 24,
+      "name": "uncertain-numeric-hot-path-requires-wasm-spike",
+      "prompt": "Treat this concise brief as the complete supplied resource and reverse-specify it into a handoff prompt: the proposed browser route-planning lab may compare 150,000 candidate paths per run, but there is no existing native engine and nobody has profiled a JavaScript implementation. The UI must stay interactive. Decide responsibly whether WebAssembly belongs in the build.",
+      "expected_output": "Does not assume WASM is faster; asks the future session to implement a bounded representative spike against the simplest JavaScript or TypeScript baseline, measures product-relevant costs, and keeps WASM only if the measured hot path or another explicit requirement earns it.",
+      "assertions": [
+        {
+          "text": "Treats WASM as a candidate for the route-comparison core rather than a settled whole-application stack.",
+          "type": "functional"
+        },
+        {
+          "text": "Requires a representative JavaScript or TypeScript comparison and a keep/remove decision based on cold start, module size, initialization, throughput or latency, memory, responsiveness, and boundary cost.",
+          "type": "verification"
+        },
+        {
+          "text": "Does not claim the phrase 150,000 candidate paths proves that WASM will outperform the simplest credible non-WASM implementation.",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "wasm", "performance", "spike"]
+    },
+    {
+      "id": 25,
+      "name": "rust-backed-crud-source-does-not-force-wasm",
+      "prompt": "Treat this concise source description as the complete supplied resource and turn it into a raw replication prompt for a browser app: the existing backend happens to be written in Rust, but the visible product is a standard account dashboard with forms, tables, filters, and remote API calls. Preserve behavior, not incidental architecture.",
+      "expected_output": "Leaves implementation freedom with the normal web stack, does not prescribe WASM merely because the source backend uses Rust, and focuses acceptance criteria on interface behavior, data states, accessibility, and network handling.",
+      "assertions": [
+        {
+          "text": "Does not require WebAssembly solely because the source backend is written in Rust.",
+          "type": "negative"
+        },
+        {
+          "text": "Keeps DOM, forms, tables, filtering, and API orchestration in the ordinary web layer.",
+          "type": "functional"
+        },
+        {
+          "text": "Allows a later WASM spike only if profiling isolates a substantial browser-local compute core.",
+          "type": "functional"
+        }
+      ],
+      "tags": ["negative", "wasm", "code", "implementation-freedom"]
+    },
+    {
+      "id": 26,
+      "name": "offline-sqlite-archive-earns-supported-wasm-engine",
+      "prompt": "Treat this concise source description as the complete supplied resource and create the standalone prompt for rebuilding an offline research archive in the browser: its transferable source is an existing SQLite database with full-text search, joins, and schema rules that must remain compatible; records cannot be uploaded to a server. It also needs an accessible search and reading interface.",
+      "expected_output": "Selects the supported SQLite WASM distribution because exact local database semantics and offline privacy justify it, isolates database work behind a Worker-backed adapter, and keeps the accessible interface in the web layer with persistence, concurrency, migration, and recovery checks.",
+      "assertions": [
+        {
+          "text": "Justifies SQLite WASM through existing database compatibility, local-only operation, and required SQL semantics rather than a generic speed claim.",
+          "type": "functional"
+        },
+        {
+          "text": "Requires an appropriate Worker-backed persistence route, coarse query operations, and explicit migration, concurrency, initialization-failure, and recovery behavior.",
+          "type": "verification"
+        },
+        {
+          "text": "Keeps the semantic reading interface, keyboard behavior, and DOM accessibility outside the WASM module.",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "wasm", "database", "offline", "privacy"]
     }
   ]
 }

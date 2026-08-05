@@ -248,6 +248,76 @@ def check_branch_disclosure(root: Path) -> CheckResult:
     )
 
 
+def check_wasm_selection_contract(root: Path) -> CheckResult:
+    """WASM guidance must prove fit, non-fit, and uncertain-workload decisions."""
+
+    skill = (root / "SKILL.md").read_text(encoding="utf-8")
+    guide = (root / "references" / "wasm-selection.md").read_text(
+        encoding="utf-8"
+    )
+    raw = read_json(root / "evals" / "evals.json")
+    mapping = as_string_mapping(raw)
+    eval_values = mapping.get("evals") if mapping is not None else None
+    eval_names: set[str] = set()
+    if isinstance(eval_values, list):
+        for raw_eval in eval_values:
+            eval_item = as_string_mapping(raw_eval)
+            name = eval_item.get("name") if eval_item is not None else None
+            if isinstance(name, str):
+                eval_names.add(name)
+
+    required_skill_fragments = (
+        "references/wasm-selection.md",
+        "Treat WebAssembly as an earned implementation choice",
+        "request a representative spike",
+    )
+    required_guide_fragments = (
+        "WebAssembly complements the web layer; it does not replace it.",
+        "Ask the future session to run a bounded WASM spike",
+        "Prefer JavaScript or TypeScript",
+        "Keep crossings coarse.",
+        "## Sample Scenarios",
+        "existing C++ RAW decoder",
+        "existing SQLite database",
+        "Analytics dashboard",
+    )
+    required_eval_names = {
+        "existing-native-image-core-earns-wasm",
+        "uncertain-numeric-hot-path-requires-wasm-spike",
+        "rust-backed-crud-source-does-not-force-wasm",
+        "offline-sqlite-archive-earns-supported-wasm-engine",
+    }
+
+    missing_skill = [
+        fragment for fragment in required_skill_fragments if fragment not in skill
+    ]
+    missing_guide = [
+        fragment for fragment in required_guide_fragments if fragment not in guide
+    ]
+    missing_evals = sorted(required_eval_names - eval_names)
+    passed = not missing_skill and not missing_guide and not missing_evals
+
+    evidence_parts: list[str] = []
+    if missing_skill:
+        evidence_parts.append(
+            "missing SKILL.md contract: " + ", ".join(missing_skill)
+        )
+    if missing_guide:
+        evidence_parts.append("missing guide coverage: " + ", ".join(missing_guide))
+    if missing_evals:
+        evidence_parts.append("missing evals: " + ", ".join(missing_evals))
+
+    return CheckResult(
+        name="gates WebAssembly on evidence and representative measurement",
+        passed=passed,
+        evidence=(
+            "fit, spike, non-fit, hybrid-boundary, and local-engine cases are covered"
+            if passed
+            else "; ".join(evidence_parts)
+        ),
+    )
+
+
 def run_checks(root: Path) -> list[CheckResult]:
     """Run semantic checks in stable, human-readable order."""
 
@@ -259,6 +329,7 @@ def run_checks(root: Path) -> list[CheckResult]:
         check_secondary_state_fixture,
         check_trigger_boundaries,
         check_branch_disclosure,
+        check_wasm_selection_contract,
     )
     return [check(root) for check in checks]
 

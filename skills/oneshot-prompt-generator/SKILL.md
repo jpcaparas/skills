@@ -99,13 +99,15 @@ Shape the prompt around the source rather than pasting a generic checklist. Incl
 5. **Implementation freedom and constraints** — preserve explicit stack or platform requirements; otherwise let the fresh session choose suitable tools. Do not prescribe a framework merely because one is familiar.
 6. **Verification and completion** — require comparison against the reference, coverage of secondary and edge states, and correction of mismatches before handoff.
 
+Treat WebAssembly as an earned implementation choice, not a generic performance upgrade. When the source or target includes a reusable compiled core, sustained browser-local computation, a specialized binary/media pipeline, an emulator or simulation, or another plausible WASM boundary, read `references/wasm-selection.md`; use it to decide whether the handoff prompt should require WASM, request a representative spike, or keep the implementation in the normal web stack. Do not present WASM as source-faithful unless the user required it or the inspected source proves it.
+
 Translate evidence labels into natural instructions. Do not litter the prompt with confidence tags when clear wording such as “the screenshot shows,” “the recording suggests,” or “choose a coherent mobile behavior because it was not observable” preserves the distinction.
 
 Demand subject-specific depth. Tell the fresh session not to stop at a recognizable shell, generic template, single hero screen, or happy path. Require the smallest meaningful interactions and details the source earns. Do not impose an arbitrary token, file-count, framework, or iteration budget.
 
 Preserve exact copy and literals when fidelity depends on them. When the source contains more text or data than the prompt can reproduce responsibly, require extraction or transcription only if the fresh session is confirmed to retain access. If access will not carry over, embed the material needed for a self-contained result. When that is not feasible, stop and ask once for a transferable source artifact or permission to narrow the required content; never direct the fresh session to open evidence it will not have.
 
-**Complete when:** the prompt can stand alone, preserves the evidence boundary, and gives the future session observable completion criteria rather than adjectives alone.
+**Complete when:** the prompt can stand alone, preserves the evidence boundary, gives the future session observable completion criteria rather than adjectives alone, and justifies any prescribed WASM boundary with evidence or a bounded spike.
 
 ## 5. Run the Replication Audit
 
