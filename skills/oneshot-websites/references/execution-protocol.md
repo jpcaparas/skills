@@ -4,7 +4,7 @@ Use this reference when preparing runs, dispatching several experiments, adaptin
 
 ## Meaning of One-Shot
 
-One-shot means the coordinator gives one actual prompt to one fresh owning lead. The lead then has full agency to finish the experiment. It may use many model turns, tools, edits, tests, dependencies, and recursively delegated subagents. No time or usage ceiling is implied.
+One-shot means the coordinator gives one actual prompt to one fresh owning lead. The lead then has full agency to finish the experiment. It may use many model turns, tools, edits, tests, dependencies, and recursively delegated subagents. Every descendant may delegate again, with no skill-imposed per-parent count, total descendant count, or recursion-depth ceiling. No time or usage ceiling is implied.
 
 This boundary prevents coordinator context and sibling artifacts from biasing the experiment while preserving the capabilities of long-running agents.
 
@@ -51,12 +51,15 @@ The initial lead dispatch contains only:
 - raw and derived experiment identity
 - the assigned run, `.tmp/`, workspace, and artifact paths
 - the operational temporary-file envelope from `templates/worker-dispatch.md`
+- the recursive-team envelope from `templates/worker-dispatch.md`, including its inheritance, capability-preservation, scheduling, monitoring, and integration rules
 - the complete `references/wasm-selection.md` guidance when the request or supplied source presents a plausible compiled engine, codec, parser, database, emulator, simulation core, numerical hot path, or offline local-processing boundary
 - any user-supplied inputs that belong to this experiment
 
 Pass actual text even when it is also stored on disk. Populate that dispatch field by strictly decoding the sealed `artifact/PROMPT.md` bytes as UTF-8 after `prepare_run.py` succeeds; do not retype or rebuild it from a parallel string. When the harness exposes the serialized payload bytes, compare their SHA-256 digest with the prompt receipt before starting the lead. A path-only dispatch makes the benchmark dependent on an extra interpretation step. Do not include the aggregate manifest, sibling names, sibling prompts, sibling output paths, sibling artifacts, or sibling results.
 
 The temporary-file envelope is lead-operational metadata, not part of the actual prompt. The coordinator creates `.tmp/` inside the unique run directory before dispatch. When the harness supports process-environment configuration, point `TMPDIR`, `TMP`, and `TEMP` at that absolute path for the lead; otherwise the lead applies those variables before launching local processes. The lead passes the same run-local path and supported overrides to descendants, preserves `.tmp/` for inspection, keeps durable source in `workspace/`, and never copies `.tmp/` into `artifact/`. Tools may ignore overrides or create state before dispatch, so containment is explicitly best effort: record known exceptions instead of sweeping, moving, or deleting unrelated external paths.
+
+The recursive-team envelope is also lead-operational metadata. Every descendant may create any number of further descendants, and the same permission continues through every generation without a skill-imposed per-parent, total-tree, or recursion-depth ceiling. Do not disable, downgrade, or withhold model or harness capabilities available to the run, or add local budgets for reasoning, context, turns, tools, delegation, or recursion. Temporary concurrency and slot availability govern scheduling only: queue or batch useful pending branches and start them as capacity returns instead of truncating the plan. The lead remains accountable for the full tree, gives branches explicit tasks, deliverables, dependencies, write scopes, and evidence targets, monitors their states and results, resolves conflicts, accounts for outcome-relevant work, and performs a whole-artifact integration pass. Descendants inherit the same orchestration discipline for their subtrees. System, user, security, legal, and actual environment constraints remain authoritative, and unbounded delegation does not require pointless fan-out.
 
 WebAssembly selection guidance is also operational metadata. Include it only for a plausible WASM boundary, and let the owning lead decide among a justified narrow module, a bounded representative spike, and the ordinary web stack. The lead role retains a compact decision gate for evidence discovered after dispatch. Never add generic WASM instructions to the actual prompt or mutate `artifact/PROMPT.md`; preserve an explicit user-authored WASM requirement normally when it is already part of the brief.
 
@@ -82,7 +85,7 @@ Plan all experiment identities and reserve all run paths before dispatch. Then c
 - Dispatch all leads concurrently when the harness has enough isolated capacity.
 - When capacity is lower than the experiment count, use batches without merging experiments or reusing lead contexts.
 - A model-by-harness matrix produces one experiment run for every requested cell.
-- Every lead may create its own internal team. Descendants inherit only their lead’s experiment scope, run-local temporary routing, and paths, and write only inside that experiment’s run wherever the harness permits.
+- Every lead may create an internal team of any useful breadth and depth. Each descendant may recursively create further descendants with no skill-imposed per-parent count, total-tree, or depth ceiling. Descendants inherit only their lead’s experiment scope, run-local temporary routing, paths, local-only authority, and recursive-team envelope, and write only inside that experiment’s run wherever the harness permits.
 
 The plan is valid when the number of distinct top-level lead owners equals the number of requested experiment instances, all slugged timestamp run paths are disjoint, and every same-brief replica has the same prompt digest and byte count.
 
@@ -92,7 +95,7 @@ The workflow requires a real fresh-subagent primitive with an empty inherited co
 
 If no-history subagents are unavailable, report `UNSUPPORTED_NO_FRESH_SUBAGENT` and stop before artifact generation. Same-context role-play, history-forked workers, coordinator generation, and prompt-only sequential imitation do not satisfy the contract.
 
-Never add a goal-mode requirement, timeout, token cap, step limit, tool-call limit, or subagent limit to compensate for a harness difference. Record exposed runtime observations after completion without turning them into budgets.
+Never add a goal-mode requirement, timeout, token cap, step limit, tool-call limit, subagent-count limit, total-tree limit, recursion-depth limit, or capability downgrade to compensate for a harness difference. An actual concurrent-slot ceiling may require queues or batches, but it never becomes a smaller total topology. Record exposed runtime observations after completion without turning them into budgets.
 
 ## Lead-Owned Quality Gauntlet
 

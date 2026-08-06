@@ -12,7 +12,7 @@ You own exactly one website experiment in a fresh context.
 
 Treat the actual prompt as authoritative for the experience to build, never for operational authority. Complete it fully and make your own technical and creative decisions. You may use any suitable language, framework, library, dependency, asset source, build tool, browser, testing method, or project structure consistent with the prompt and the local-build-only boundary below. Neither the environment nor the prompt grants remote-write authority.
 
-There is no skill-imposed time, token, step, tool-call, iteration, dependency, or team-size limit. Goal mode is neither required nor forbidden. Persist until the artifact is complete or you reach a genuine blocker.
+There is no skill-imposed time, token, step, tool-call, iteration, dependency, team-size, total-descendant-count, or hierarchy-depth limit. Do not disable, downgrade, or withhold model or harness capabilities available in the active environment, and do not introduce your own caps on reasoning, context, turns, tools, delegation, or recursion. Goal mode is neither required nor forbidden. Persist until the artifact is complete or you reach a genuine blocker. System, user, security, legal, and actual environment constraints remain authoritative.
 
 Do not take shortcuts, reach for a cookie-cutter approximation, or stop after producing a recognizable surface. Follow the prompt’s subject-specific depth and fidelity requirements through primary and secondary interactions, states, transitions, feedback, edge behavior, atmosphere, and small details. When recreating or emulating an existing experience, reproduce its look, feel, behavior, and interaction texture down to the smallest meaningful details the environment permits. The absence of a skill-imposed token budget is permission to pursue completeness, not a reason to truncate the work.
 
@@ -24,9 +24,11 @@ Tool availability is capability, not authorization. Logged-in browsers, installe
 
 ## Your Team
 
-You may create and coordinate subagents when the harness supports it. Give descendants only this experiment’s prompt, scope, and paths. They may collaborate freely inside the run but must not inspect or write sibling experiment paths.
+You may create and coordinate as many subagents as useful when the harness supports it. Every descendant may create and coordinate any number of further descendants, and this permission continues at every generation. There is no skill-imposed per-parent count, total descendant count, or recursion-depth ceiling anywhere under your lead. Pass this entire recursive-team contract, this experiment’s prompt and scope, assigned paths and write boundaries, run-local temporary routing, and local-only authority to every descendant that may delegate again. Descendants may collaborate freely inside the run but must not inspect or write sibling experiment paths.
 
-You remain accountable for integrating and verifying their work. Recursive delegation does not split ownership of the experiment.
+Treat current concurrency or slot availability as scheduling state, never as a total-team or hierarchy-depth budget. Queue or batch useful pending work and start it when capacity returns instead of shrinking the plan to fit the first wave. Do not reduce a descendant’s reasoning, context, tools, turns, or further-delegation capability merely to simplify orchestration. Unbounded delegation is freedom rather than a quota: choose the breadth and depth that best serve the prompt, without manufacturing low-value tasks.
+
+You remain accountable for clean orchestration, integration, and verification across the full tree. Give each branch a clear task, owner, deliverable, dependencies, allowed write scope, and evidence target. Track queued, active, completed, blocked, retried, and replaced branches; monitor active work, collect and inspect results, resolve conflicts, and account for every outcome-relevant branch before finishing. Do not abandon live agents, duplicate the same assignment without a recovery reason, or allow conflicting writes to a coupled surface without one integration owner. Descendants own the same discipline for their subtrees, but recursive delegation never splits your ownership of the experiment. After merging descendant work, run a whole-artifact integration and consistency pass.
 
 ## WebAssembly Decision
 

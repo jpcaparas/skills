@@ -51,7 +51,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.10.0"
+PACKAGE_VERSION = "2.11.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -155,6 +155,38 @@ RUNTIME_CONTRACTS = (
     ("no inherited coordinator history", re.compile(r"no-history.*?fork_turns.*?none|fork_turns.*?none.*?(?:coordinator|history|conversation)", re.I | re.S)),
     ("recursive subagent delegation", re.compile(r"recursive\s+(?:subagent\s+)?delegation|(?:lead|subagents?).*?create.*?subagents", re.I | re.S)),
     (
+        "unbounded recursive descendant teams",
+        re.compile(
+            r"Every descendant may create and coordinate any number of further descendants.*?"
+            r"permission continues at every generation.*?no skill-imposed per-parent count.*?"
+            r"total descendant count.*?recursion-depth ceiling.*?"
+            r"current concurrency or slot availability only as scheduling state.*?"
+            r"never converts.*?temporary slot count.*?total-team.*?hierarchy-depth.*?capability budget",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "model and harness capability preservation",
+        re.compile(
+            r"Do not disable, downgrade, or withhold any model or harness capability.*?"
+            r"do not introduce local caps on reasoning.*?context.*?turns.*?tools.*?"
+            r"delegation.*?recursion.*?system.*?user.*?security.*?legal.*?"
+            r"actual environment constraints remain authoritative",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "clean recursive-team orchestration and monitoring",
+        re.compile(
+            r"owns the orchestration and monitoring of its entire recursive team.*?"
+            r"task, owner, deliverable, dependencies, allowed write scope, and completion evidence.*?"
+            r"Track queued, active, completed, blocked, retried, and replaced work.*?"
+            r"account for every outcome-relevant branch.*?"
+            r"integration and consistency pass across the whole artifact",
+            re.I | re.S,
+        ),
+    ),
+    (
         "earned WebAssembly selection",
         re.compile(
             r"Keep implementation-selection guidance outside.*?do not add WebAssembly.*?artifact/PROMPT\.md.*?"
@@ -186,7 +218,7 @@ RUNTIME_CONTRACTS = (
     (
         "coupling-aware decomposition",
         re.compile(
-            r"decomposes work only along concerns.*?improved and judged independently.*?"
+            r"decompos(?:e|es) work only along concerns.*?improved and judged independently.*?"
             r"parallelize truly independent concerns.*?tightly coupled.*?sequential owner.*?"
             r"integration and consistency pass",
             re.I | re.S,
@@ -425,6 +457,32 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "agents/oneshot-lead.md",
+        "lead unbounded recursive-team capability contract",
+        re.compile(
+            r"Your Team.*?as many subagents as useful.*?"
+            r"Every descendant may create and coordinate any number of further descendants.*?"
+            r"permission continues at every generation.*?no skill-imposed per-parent count.*?"
+            r"total descendant count.*?recursion-depth ceiling.*?"
+            r"current concurrency or slot availability as scheduling state.*?"
+            r"Do not reduce a descendant’s reasoning.*?context.*?tools.*?turns.*?"
+            r"further-delegation capability",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead recursive-team orchestration and monitoring",
+        re.compile(
+            r"accountable for clean orchestration, integration, and verification across the full tree.*?"
+            r"clear task, owner, deliverable, dependencies, allowed write scope, and evidence target.*?"
+            r"Track queued, active, completed, blocked, retried, and replaced branches.*?"
+            r"account for every outcome-relevant branch.*?"
+            r"whole-artifact integration and consistency pass",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
         "lead WebAssembly decision gate",
         re.compile(
             r"WebAssembly Decision.*?earned implementation choice.*?proven native library.*?"
@@ -499,6 +557,20 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "templates/worker-dispatch.md",
+        "dispatch recursive-team envelope",
+        re.compile(
+            r"Recursive Team Envelope.*?as many descendant subagents.*?"
+            r"Every descendant may create any number of further descendants.*?"
+            r"no skill-imposed per-parent count.*?total descendant count.*?recursion-depth ceiling.*?"
+            r"Do not disable, downgrade, or withhold available model or harness capabilities.*?"
+            r"Current concurrency or slot availability affects scheduling only.*?"
+            r"monitor queued, active, completed, blocked, retried, and replaced branches.*?"
+            r"whole-artifact integration pass.*?Keep this recursive-team material out.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
         "dispatch local-only publication envelope",
         re.compile(
             r"Local-Only Publication Envelope.*?Build, test, validate, and package locally.*?"
@@ -540,6 +612,20 @@ FILE_RUNTIME_CONTRACTS = (
             r"explicitly authorizes the specific external action and destination.*?"
             r"Leads, descendants, and critics remain local-only.*?coordinator retains.*?"
             r"post-validation step from `artifact/` only",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol unbounded recursive-team scheduling and accountability",
+        re.compile(
+            r"recursive-team envelope is also lead-operational metadata.*?"
+            r"Every descendant may create any number of further descendants.*?"
+            r"without a skill-imposed per-parent, total-tree, or recursion-depth ceiling.*?"
+            r"Do not disable, downgrade, or withhold model or harness capabilities.*?"
+            r"Temporary concurrency and slot availability govern scheduling only.*?"
+            r"monitors their states and results.*?accounts for outcome-relevant work.*?"
+            r"whole-artifact integration pass",
             re.I | re.S,
         ),
     ),

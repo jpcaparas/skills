@@ -238,6 +238,30 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "WebAssembly decision evals must carry the wasm tag",
             errors,
         )
+        required_recursive_team_evals = {
+            "recursive-descendants-have-no-generation-ceiling",
+            "concurrency-capacity-does-not-cap-total-team",
+            "recursive-team-ownership-prevents-conflicting-writes",
+            "available-capabilities-are-not-downgraded-for-orchestration",
+            "recursive-team-completion-accounts-for-every-branch",
+        }
+        assert_ok(
+            required_recursive_team_evals.issubset(names),
+            "evals must cover recursive depth, capacity scheduling, ownership, capability preservation, and completion accounting",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "subagents" in item["tags"]
+                for item in entries
+                if isinstance(item, Mapping)
+                and item.get("name") in required_recursive_team_evals
+            ),
+            "recursive-team evals must carry the subagents tag",
+            errors,
+        )
 
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
@@ -3476,6 +3500,101 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         lead_path.write_text(original_lead, encoding="utf-8")
 
+        skill_with_capped_recursive_tree = original_skill.replace(
+            "Every descendant may create and coordinate any number of further descendants, and that permission "
+            "continues at every generation with no skill-imposed per-parent count, total descendant count, or "
+            "recursion-depth ceiling.",
+            "Each lead may create at most three children in one descendant generation.",
+            1,
+        )
+        skill_path.write_text(skill_with_capped_recursive_tree, encoding="utf-8")
+        capped_recursive_tree_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            capped_recursive_tree_result.returncode != 0
+            and "SKILL.md runtime contract missing unbounded recursive descendant teams"
+            in capped_recursive_tree_result.stdout,
+            "package validator accepted a per-parent and recursion-depth ceiling",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_with_downgraded_capabilities = original_skill.replace(
+            "Do not disable, downgrade, or withhold any model or harness capability the active environment makes "
+            "available, and do not introduce local caps on reasoning, context, turns, tools, delegation, or "
+            "recursion to make the run easier to manage.",
+            "Use a reduced model and harness capability profile to simplify the run.",
+            1,
+        )
+        skill_path.write_text(skill_with_downgraded_capabilities, encoding="utf-8")
+        downgraded_capabilities_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            downgraded_capabilities_result.returncode != 0
+            and "SKILL.md runtime contract missing model and harness capability preservation"
+            in downgraded_capabilities_result.stdout,
+            "package validator accepted skill-local model and harness capability downgrades",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_recursive_monitoring = original_skill.replace(
+            "The lead owns the orchestration and monitoring of its entire recursive team.",
+            "The lead may delegate work.",
+            1,
+        )
+        skill_path.write_text(skill_without_recursive_monitoring, encoding="utf-8")
+        missing_recursive_monitoring_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_recursive_monitoring_result.returncode != 0
+            and "SKILL.md runtime contract missing clean recursive-team orchestration and monitoring"
+            in missing_recursive_monitoring_result.stdout,
+            "package validator accepted recursive delegation without lead monitoring accountability",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        lead_with_capped_descendants = original_lead.replace(
+            "Every descendant may create and coordinate any number of further descendants, and this permission "
+            "continues at every generation.",
+            "Descendants may not create further descendants.",
+            1,
+        )
+        lead_path.write_text(lead_with_capped_descendants, encoding="utf-8")
+        capped_lead_descendants_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            capped_lead_descendants_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead unbounded recursive-team capability contract"
+            in capped_lead_descendants_result.stdout,
+            "package validator accepted a lead role that stops delegation at one generation",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
+        lead_without_recursive_monitoring = original_lead.replace(
+            "You remain accountable for clean orchestration, integration, and verification across the full tree.",
+            "You remain accountable for the final result.",
+            1,
+        )
+        lead_path.write_text(lead_without_recursive_monitoring, encoding="utf-8")
+        missing_lead_recursive_monitoring_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_lead_recursive_monitoring_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead recursive-team orchestration and monitoring"
+            in missing_lead_recursive_monitoring_result.stdout,
+            "package validator accepted a lead role without full-tree monitoring accountability",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
         skill_without_wasm_contract = re.sub(
             r"(?ms)^Treat WebAssembly as an earned implementation choice.*?(?=^For every non-trivial build,)",
             "",
@@ -3571,6 +3690,46 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         dispatch_path = copied_skill / "templates" / "worker-dispatch.md"
         original_dispatch = dispatch_path.read_text(encoding="utf-8")
+        dispatch_without_recursive_team_envelope = re.sub(
+            r"(?ms)^## Recursive Team Envelope.*?(?=^## Local-Only Publication Envelope)",
+            "",
+            original_dispatch,
+            count=1,
+        )
+        dispatch_path.write_text(dispatch_without_recursive_team_envelope, encoding="utf-8")
+        missing_recursive_team_dispatch_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_recursive_team_dispatch_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing dispatch recursive-team envelope"
+            in missing_recursive_team_dispatch_result.stdout,
+            "package validator accepted a lead dispatch without the recursive-team envelope",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
+        protocol_path = copied_skill / "references" / "execution-protocol.md"
+        original_protocol = protocol_path.read_text(encoding="utf-8")
+        protocol_without_recursive_team_contract = re.sub(
+            r"(?m)^The recursive-team envelope is also lead-operational metadata\..*\n\n",
+            "",
+            original_protocol,
+            count=1,
+        )
+        protocol_path.write_text(protocol_without_recursive_team_contract, encoding="utf-8")
+        missing_recursive_team_protocol_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_recursive_team_protocol_result.returncode != 0
+            and "references/execution-protocol.md runtime contract missing protocol unbounded recursive-team scheduling and accountability"
+            in missing_recursive_team_protocol_result.stdout,
+            "package validator accepted an execution protocol without recursive-team scheduling and accountability",
+            errors,
+        )
+        protocol_path.write_text(original_protocol, encoding="utf-8")
+
         dispatch_path.write_text(
             re.sub(
                 r"(?s)## Fresh Critic Role.*?\{\{ONESHOT_CRITIC_ROLE\}\}\n\n",

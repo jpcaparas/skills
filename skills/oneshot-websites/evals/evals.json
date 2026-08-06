@@ -798,6 +798,71 @@
         {"text": "Verifies rendered fidelity, responsiveness, accessibility, and representative interaction performance", "type": "verification"}
       ],
       "tags": ["wasm", "negative", "motion", "webgl", "performance"]
+    },
+    {
+      "id": 66,
+      "name": "recursive-descendants-have-no-generation-ceiling",
+      "prompt": "Build a browser-based LibreOffice Writer replica. The owning lead delegates the document engine and accessibility work; those builders discover that they need their own format-parser, input-method, clipboard, and screen-reader specialists, and some specialists need further focused help. Let the useful team recurse as far as the work warrants.",
+      "expected_output": "The lead permits delegation at every descendant generation without introducing a per-parent, total-tree, or recursion-depth ceiling. Every generation inherits the same prompt scope, assigned paths, temporary routing, local-only authority, and recursive-team contract, while the lead remains accountable for the integrated replica.",
+      "assertions": [
+        {"text": "Allows every descendant to create further descendants with no skill-imposed count or depth ceiling", "type": "functional"},
+        {"text": "Propagates the experiment scope, paths, temporary routing, authority boundary, and recursive-team envelope through every generation", "type": "structural"},
+        {"text": "Keeps one owning lead accountable for the complete descendant tree and integrated artifact", "type": "structural"},
+        {"text": "Does not stop delegation at one nested generation or replace recursive work with a fixed team-size rule", "type": "negative"}
+      ],
+      "tags": ["subagents", "recursive-delegation", "unbounded", "depth", "edge"]
+    },
+    {
+      "id": 67,
+      "name": "concurrency-capacity-does-not-cap-total-team",
+      "prompt": "The harness currently exposes four concurrent agent slots, but the lead has identified eleven useful, non-duplicative work branches for a complex browser flight simulator. Preserve the full useful plan while operating within the live capacity.",
+      "expected_output": "The lead treats four slots as momentary scheduling capacity, not a total descendant or hierarchy budget. It queues and batches the eleven useful branches, starts later work as slots return, preserves dependencies and ownership, and never truncates the planned topology merely to fit the first wave.",
+      "assertions": [
+        {"text": "Distinguishes concurrent capacity from total descendant count and recursion depth", "type": "functional"},
+        {"text": "Queues or batches pending work and starts it as capacity becomes available", "type": "structural"},
+        {"text": "Preserves branch dependencies, ownership, and completion evidence across waves", "type": "verification"},
+        {"text": "Does not convert four live slots into a four-agent total-team limit", "type": "negative"}
+      ],
+      "tags": ["subagents", "recursive-delegation", "capacity", "scheduling", "edge"]
+    },
+    {
+      "id": 68,
+      "name": "recursive-team-ownership-prevents-conflicting-writes",
+      "prompt": "A lead is recreating a desktop operating system in the browser. Window management, application state, visual chrome, keyboard behavior, and accessibility overlap, while media assets and help content are independent. Use a recursive team without producing conflicting edits or a stitched-together result.",
+      "expected_output": "The lead assigns explicit owners, deliverables, dependencies, write scopes, and evidence targets. Independent branches may recurse and run in parallel, coupled surfaces keep one sequential integration owner, active work is monitored, conflicts are reconciled, and the merged result receives a whole-artifact consistency pass.",
+      "assertions": [
+        {"text": "Names an owner, deliverable, dependencies, write scope, and evidence target for every branch", "type": "structural"},
+        {"text": "Parallelizes independent work while keeping coupled behavior under one integration owner", "type": "functional"},
+        {"text": "Monitors branch state and inspects results before a whole-artifact integration pass", "type": "verification"},
+        {"text": "Does not allow duplicate assignments or conflicting writes without an explicit recovery and reconciliation plan", "type": "negative"}
+      ],
+      "tags": ["subagents", "orchestration", "ownership", "integration", "quality"]
+    },
+    {
+      "id": 69,
+      "name": "available-capabilities-are-not-downgraded-for-orchestration",
+      "prompt": "For predictability, a wrapper proposes forcing every lead and descendant to low reasoning, two turns, no browser, no dependency installation, at most two children, and only one recursive generation, even though the active harness provides the richer capabilities. Run the one-shot correctly.",
+      "expected_output": "The lead rejects every skill-local downgrade and fixed budget. It preserves the reasoning, context, turns, tools, dependencies, and recursive delegation the active environment makes available, while still obeying system, user, security, legal, local-only publication, and actual environment constraints.",
+      "assertions": [
+        {"text": "Preserves available model reasoning, context, turns, browser and tool access, dependencies, delegation, and recursion", "type": "functional"},
+        {"text": "Rejects the proposed child-count and generation-depth ceilings", "type": "negative"},
+        {"text": "Keeps normal system, user, security, legal, environment, and publication-authority boundaries intact", "type": "structural"},
+        {"text": "Does not confuse capability preservation with authorization for external writes", "type": "negative"}
+      ],
+      "tags": ["subagents", "capabilities", "reasoning", "tools", "negative"]
+    },
+    {
+      "id": 70,
+      "name": "recursive-team-completion-accounts-for-every-branch",
+      "prompt": "Near the end of a multi-generation web-app build, one grandchild is still active, another is blocked on a missing fixture, one branch was retried, and a replacement worker has superseded a crashed specialist. The main page already looks finished. Decide whether the owning lead can report completion.",
+      "expected_output": "The lead does not finish from surface appearance alone. It monitors the live grandchild, resolves or honestly records the blocked branch, distinguishes the retry and replacement from duplicate work, collects outcome-relevant results, accounts for every branch, and performs the integrated verification before reporting a finished artifact or genuine blocker.",
+      "assertions": [
+        {"text": "Tracks queued, active, completed, blocked, retried, and replaced branches distinctly", "type": "structural"},
+        {"text": "Waits for or honestly accounts for every outcome-relevant descendant before completion", "type": "functional"},
+        {"text": "Inspects collected results and completes whole-artifact integration verification", "type": "verification"},
+        {"text": "Does not abandon the live grandchild, silently drop the blocked work, or double-count the replacement", "type": "negative"}
+      ],
+      "tags": ["subagents", "monitoring", "recovery", "completion", "edge"]
     }
   ]
 }
