@@ -51,7 +51,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.11.0"
+PACKAGE_VERSION = "2.12.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -166,11 +166,14 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
-        "model and harness capability preservation",
+        "unrestricted build-agent capability allocation",
         re.compile(
-            r"Do not disable, downgrade, or withhold any model or harness capability.*?"
-            r"do not introduce local caps on reasoning.*?context.*?turns.*?tools.*?"
-            r"delegation.*?recursion.*?system.*?user.*?security.*?legal.*?"
+            r"On the lead’s work and every build-related descendant.*?"
+            r"Protect the lead and build-related descendants from arbitrary economy settings.*?"
+            r"do not disable, downgrade, or withhold model or harness capabilities.*?"
+            r"do not introduce local caps on their reasoning.*?context.*?turns.*?tools.*?"
+            r"delegation.*?recursion.*?Critic descendants follow the adaptive allocation policy.*?"
+            r"system.*?user.*?security.*?legal.*?"
             r"actual environment constraints remain authoritative",
             re.I | re.S,
         ),
@@ -231,6 +234,30 @@ RUNTIME_CONTRACTS = (
             r"actual prompt.*?quality bar.*?built artifact.*?"
             r"Do not give it the builder’s rationale.*?summary in place of the artifact.*?"
             r"single highest-leverage remaining gap",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "adaptive token-efficient critic allocation",
+        re.compile(
+            r"Use a quick, token-efficient critic configuration by default.*?"
+            r"Reserve expansive reasoning.*?context.*?turns.*?tool breadth.*?token investment.*?"
+            r"lead and build-related descendants.*?Give an ordinary critic only.*?"
+            r"enough tools and context to inspect the real artifact directly.*?"
+            r"concise verdict.*?concrete evidence.*?one highest-leverage gap.*?"
+            r"Do not spend critic turns on implementation.*?open-ended redesign.*?broad exploratory research.*?"
+            r"generating the fix",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "warranted critic escalation without review degradation",
+        re.compile(
+            r"Critic efficiency is an adaptive default.*?not a universal numeric token, turn, or model cap.*?"
+            r"Escalate a critic’s model capability.*?only when a concrete review need warrants it.*?"
+            r"large coupled state space.*?subtle reference comparison.*?accessibility.*?security.*?correctness.*?"
+            r"conflicting evidence.*?inconclusive quick review.*?inspection format.*?Record the escalation reason.*?"
+            r"cannot inspect the actual artifact.*?escalate.*?`BLOCKED`.*?never substitute a summary.*?lower the bar",
             re.I | re.S,
         ),
     ),
@@ -444,6 +471,19 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "agents/oneshot-critic.md",
+        "adaptive token-efficient critic role",
+        re.compile(
+            r"Resource and Output Discipline.*?quick, token-efficient critic by default.*?"
+            r"fastest capable configuration.*?smallest sufficient reasoning depth.*?context.*?tool set.*?"
+            r"inspect the real artifact directly.*?one review pass and one decision.*?"
+            r"implementation.*?broad exploration.*?open-ended redesign.*?build-related descendants.*?"
+            r"adaptive, not a fixed numeric token, turn, or model cap.*?"
+            r"deeper critic is warranted.*?return `BLOCKED`.*?rather than grading a summary or lowering the bar",
+            re.I | re.S,
+        ),
+    ),
+    (
         "agents/oneshot-lead.md",
         "lead-owned quality gauntlet",
         re.compile(
@@ -464,8 +504,22 @@ FILE_RUNTIME_CONTRACTS = (
             r"permission continues at every generation.*?no skill-imposed per-parent count.*?"
             r"total descendant count.*?recursion-depth ceiling.*?"
             r"current concurrency or slot availability as scheduling state.*?"
-            r"Do not reduce a descendant’s reasoning.*?context.*?tools.*?turns.*?"
-            r"further-delegation capability",
+            r"Do not reduce a build-related descendant’s reasoning.*?context.*?tools.*?turns.*?"
+            r"further-delegation capability.*?Assign critics by the focused, token-efficient default.*?"
+            r"escalate them when evidence warrants it",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead adaptive critic resource allocation",
+        re.compile(
+            r"Quality Gauntlet.*?quick, token-efficient critic configuration by default.*?"
+            r"Reserve expansive reasoning.*?token investment for build-related descendants.*?"
+            r"concise verdict.*?one highest-leverage gap.*?adaptive allocation policy.*?"
+            r"not a fixed token, turn, or model cap.*?Escalate critic capability.*?"
+            r"only for a concrete review need.*?Record why escalation was warranted.*?"
+            r"cannot directly inspect.*?escalate.*?`BLOCKED`.*?never grade a summary or weaken the bar",
             re.I | re.S,
         ),
     ),
@@ -562,10 +616,25 @@ FILE_RUNTIME_CONTRACTS = (
             r"Recursive Team Envelope.*?as many descendant subagents.*?"
             r"Every descendant may create any number of further descendants.*?"
             r"no skill-imposed per-parent count.*?total descendant count.*?recursion-depth ceiling.*?"
-            r"Do not disable, downgrade, or withhold available model or harness capabilities.*?"
+            r"Protect the lead and build-related descendants from arbitrary economy settings.*?"
+            r"do not disable, downgrade, or withhold available model or harness capabilities.*?"
+            r"Critic descendants follow the adaptive critic allocation envelope.*?"
             r"Current concurrency or slot availability affects scheduling only.*?"
             r"monitor queued, active, completed, blocked, retried, and replaced branches.*?"
             r"whole-artifact integration pass.*?Keep this recursive-team material out.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
+        "dispatch adaptive critic allocation envelope",
+        re.compile(
+            r"Critic Allocation Envelope.*?quick, token-efficient critic configuration by default.*?"
+            r"reserve expansive reasoning.*?token investment for build-related descendants.*?"
+            r"inspect the real artifact directly.*?concise verdict.*?one highest-leverage gap.*?"
+            r"Escalate critic capability.*?only when a concrete review need warrants it.*?"
+            r"adaptive allocation rather than a fixed numeric cap.*?escalate or return `BLOCKED`.*?"
+            r"Never trade away artifact-grounded review merely to save tokens.*?artifact/PROMPT\.md",
             re.I | re.S,
         ),
     ),
@@ -622,10 +691,25 @@ FILE_RUNTIME_CONTRACTS = (
             r"recursive-team envelope is also lead-operational metadata.*?"
             r"Every descendant may create any number of further descendants.*?"
             r"without a skill-imposed per-parent, total-tree, or recursion-depth ceiling.*?"
-            r"Do not disable, downgrade, or withhold model or harness capabilities.*?"
+            r"Protect the lead and build-related descendants from arbitrary economy settings.*?"
+            r"do not disable, downgrade, or withhold model or harness capabilities.*?"
+            r"Critic descendants use the adaptive allocation policy.*?"
             r"Temporary concurrency and slot availability govern scheduling only.*?"
             r"monitors their states and results.*?accounts for outcome-relevant work.*?"
             r"whole-artifact integration pass",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol adaptive critic resource allocation",
+        re.compile(
+            r"Lead-Owned Quality Gauntlet.*?Default to a quick, token-efficient critic.*?"
+            r"reserve expansive reasoning.*?token investment for build-related descendants.*?"
+            r"adaptive allocation, not a fixed numeric token, turn, or model cap.*?"
+            r"Escalate.*?only for a concrete review need.*?record the reason.*?"
+            r"cannot inspect the actual artifact directly.*?escalate or return `BLOCKED`.*?"
+            r"rather than grading a summary or weakening the bar",
             re.I | re.S,
         ),
     ),

@@ -9,12 +9,12 @@ Production skill for launching autonomous one-shot website experiments through f
 - Silent visual and interaction-first guidance for crafting each finished brief without leaking generic boilerplate into `PROMPT.md`
 - A universal subject-adapted completion mandate in every finished prompt: no shortcuts, no cookie-cutter approximations, no skill-imposed token budget, and full interaction depth
 - One fresh lead subagent per experiment, with no skill-imposed ceiling on descendant count or recursive depth
-- Lead-owned recursive-team orchestration with capability preservation, capacity-aware scheduling, explicit branch ownership, active monitoring, and whole-artifact integration
+- Lead-owned recursive-team orchestration with unrestricted build-agent capability, capacity-aware scheduling, explicit branch ownership, active monitoring, and whole-artifact integration
 - Explicit outer fan-out for multiple leads, workspaces, and same-prompt replicas
-- A lead-owned quality gauntlet with concrete bars, fresh read-only critics, real-artifact comparison, highest-leverage fixes, and evidence-based stopping
+- A lead-owned quality gauntlet with concrete bars, quick token-efficient critics by default, warranted escalation, real-artifact comparison, highest-leverage fixes, and evidence-based stopping
 - Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
 - A preserved `.tmp/` inside every unique run, with best-effort temp routing inherited by descendants and kept out of prompts and deployable artifacts
-- No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints
+- No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints on lead and build work; critics use an adaptive focused profile
 - Evidence-gated WebAssembly selection: reuse proven compiled cores when justified, benchmark uncertain hot paths, and keep ordinary web work in the web stack
 - Flat `timestamp-experiment-slug` run directories with atomic `--02` collision suffixes
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`

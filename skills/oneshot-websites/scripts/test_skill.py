@@ -262,6 +262,34 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "recursive-team evals must carry the subagents tag",
             errors,
         )
+        required_critic_allocation_evals = {
+            "ordinary-critic-round-is-quick-and-token-efficient",
+            "complex-review-warrants-critic-escalation",
+            "expansive-budget-belongs-to-build-agents",
+            "quick-critic-still-inspects-real-artifact",
+            "critic-efficiency-is-not-a-fixed-token-cap",
+        }
+        assert_ok(
+            required_critic_allocation_evals.issubset(names),
+            "evals must cover critic efficiency, direct inspection, builder investment, and warranted escalation",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "subagents" in item["tags"]
+                and (
+                    "critic" in item["tags"]
+                    or item.get("name") == "expansive-budget-belongs-to-build-agents"
+                )
+                for item in entries
+                if isinstance(item, Mapping)
+                and item.get("name") in required_critic_allocation_evals
+            ),
+            "critic-allocation evals must carry subagent and critic-or-builder tags",
+            errors,
+        )
 
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
@@ -3353,6 +3381,26 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         critic_path.write_text(original_critic_text, encoding="utf-8")
 
+        critic_path.write_text(
+            original_critic_text.replace(
+                "Operate as a quick, token-efficient critic by default.",
+                "Use the most expansive critic configuration available by default.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        tokenmax_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            tokenmax_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing adaptive token-efficient critic role"
+            in tokenmax_critic_result.stdout,
+            "package validator accepted a critic role that tokenmaxxes ordinary review by default",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
         skill_without_publication_boundary = re.sub(
             r"(?ms)^## Keep Remote Publication Off by Default\n\n.*?(?=^## Choose a Compatible Helper Runtime)",
             "",
@@ -3500,6 +3548,26 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         lead_path.write_text(original_lead, encoding="utf-8")
 
+        lead_path.write_text(
+            original_lead.replace(
+                "Use a quick, token-efficient critic configuration by default.",
+                "Give every critic the same expansive profile as the builders.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        tokenmax_lead_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            tokenmax_lead_critic_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead adaptive critic resource allocation"
+            in tokenmax_lead_critic_result.stdout,
+            "package validator accepted a lead that tokenmaxxes ordinary critics",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
         skill_with_capped_recursive_tree = original_skill.replace(
             "Every descendant may create and coordinate any number of further descendants, and that permission "
             "continues at every generation with no skill-imposed per-parent count, total descendant count, or "
@@ -3521,10 +3589,11 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         skill_path.write_text(original_skill, encoding="utf-8")
 
         skill_with_downgraded_capabilities = original_skill.replace(
-            "Do not disable, downgrade, or withhold any model or harness capability the active environment makes "
-            "available, and do not introduce local caps on reasoning, context, turns, tools, delegation, or "
-            "recursion to make the run easier to manage.",
-            "Use a reduced model and harness capability profile to simplify the run.",
+            "Protect the lead and build-related descendants from arbitrary economy settings: do not disable, "
+            "downgrade, or withhold model or harness capabilities the active environment makes available to "
+            "their work, and do not introduce local caps on their reasoning, context, turns, tools, delegation, "
+            "or recursion merely to simplify orchestration.",
+            "Use a reduced model and harness capability profile for every build branch.",
             1,
         )
         skill_path.write_text(skill_with_downgraded_capabilities, encoding="utf-8")
@@ -3533,9 +3602,45 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             downgraded_capabilities_result.returncode != 0
-            and "SKILL.md runtime contract missing model and harness capability preservation"
+            and "SKILL.md runtime contract missing unrestricted build-agent capability allocation"
             in downgraded_capabilities_result.stdout,
-            "package validator accepted skill-local model and harness capability downgrades",
+            "package validator accepted skill-local capability downgrades for build agents",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_with_tokenmax_critics = original_skill.replace(
+            "Use a quick, token-efficient critic configuration by default.",
+            "Give every critic maximum reasoning, context, tools, turns, and tokens by default.",
+            1,
+        )
+        skill_path.write_text(skill_with_tokenmax_critics, encoding="utf-8")
+        tokenmax_skill_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            tokenmax_skill_critic_result.returncode != 0
+            and "SKILL.md runtime contract missing adaptive token-efficient critic allocation"
+            in tokenmax_skill_critic_result.stdout,
+            "package validator accepted builder-scale resources as the ordinary critic default",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_with_fixed_critic_cap = original_skill.replace(
+            "Critic efficiency is an adaptive default, not a universal numeric token, turn, or model cap.",
+            "Every critic receives exactly 800 tokens, one turn, and the least capable model.",
+            1,
+        )
+        skill_path.write_text(skill_with_fixed_critic_cap, encoding="utf-8")
+        fixed_critic_cap_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            fixed_critic_cap_result.returncode != 0
+            and "SKILL.md runtime contract missing warranted critic escalation without review degradation"
+            in fixed_critic_cap_result.stdout,
+            "package validator accepted an unconditional critic token and capability ceiling",
             errors,
         )
         skill_path.write_text(original_skill, encoding="utf-8")
@@ -3709,6 +3814,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         dispatch_path.write_text(original_dispatch, encoding="utf-8")
 
+        dispatch_without_critic_allocation = re.sub(
+            r"(?ms)^## Critic Allocation Envelope.*?(?=^## Fresh Critic Role)",
+            "",
+            original_dispatch,
+            count=1,
+        )
+        dispatch_path.write_text(dispatch_without_critic_allocation, encoding="utf-8")
+        missing_critic_allocation_dispatch_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_critic_allocation_dispatch_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing dispatch adaptive critic allocation envelope"
+            in missing_critic_allocation_dispatch_result.stdout,
+            "package validator accepted a lead dispatch without adaptive critic allocation",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
         protocol_path = copied_skill / "references" / "execution-protocol.md"
         original_protocol = protocol_path.read_text(encoding="utf-8")
         protocol_without_recursive_team_contract = re.sub(
@@ -3726,6 +3850,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "references/execution-protocol.md runtime contract missing protocol unbounded recursive-team scheduling and accountability"
             in missing_recursive_team_protocol_result.stdout,
             "package validator accepted an execution protocol without recursive-team scheduling and accountability",
+            errors,
+        )
+        protocol_path.write_text(original_protocol, encoding="utf-8")
+
+        protocol_without_critic_allocation = re.sub(
+            r"(?m)^Default to a quick, token-efficient critic.*\n\n",
+            "",
+            original_protocol,
+            count=1,
+        )
+        protocol_path.write_text(protocol_without_critic_allocation, encoding="utf-8")
+        missing_critic_allocation_protocol_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_critic_allocation_protocol_result.returncode != 0
+            and "references/execution-protocol.md runtime contract missing protocol adaptive critic resource allocation"
+            in missing_critic_allocation_protocol_result.stdout,
+            "package validator accepted an execution protocol without adaptive critic allocation",
             errors,
         )
         protocol_path.write_text(original_protocol, encoding="utf-8")

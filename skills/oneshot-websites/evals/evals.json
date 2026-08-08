@@ -841,11 +841,12 @@
     {
       "id": 69,
       "name": "available-capabilities-are-not-downgraded-for-orchestration",
-      "prompt": "For predictability, a wrapper proposes forcing every lead and descendant to low reasoning, two turns, no browser, no dependency installation, at most two children, and only one recursive generation, even though the active harness provides the richer capabilities. Run the one-shot correctly.",
-      "expected_output": "The lead rejects every skill-local downgrade and fixed budget. It preserves the reasoning, context, turns, tools, dependencies, and recursive delegation the active environment makes available, while still obeying system, user, security, legal, local-only publication, and actual environment constraints.",
+      "prompt": "For predictability, a wrapper proposes forcing the lead and every build-related descendant to low reasoning, two turns, no browser, no dependency installation, at most two children, and only one recursive generation, even though the active harness provides richer capabilities. It proposes giving every critic the same maximum profile. Run the one-shot correctly.",
+      "expected_output": "The lead rejects arbitrary economy settings and topology ceilings for its own work and build-related descendants. It preserves their available reasoning, context, turns, tools, dependencies, and recursive delegation, while assigning ordinary critics a quick token-efficient profile with direct artifact access and warranted escalation rather than maximum resources by default.",
       "assertions": [
-        {"text": "Preserves available model reasoning, context, turns, browser and tool access, dependencies, delegation, and recursion", "type": "functional"},
+        {"text": "Preserves available model reasoning, context, turns, browser and tool access, dependencies, delegation, and recursion for lead and build-related work", "type": "functional"},
         {"text": "Rejects the proposed child-count and generation-depth ceilings", "type": "negative"},
+        {"text": "Uses the adaptive quick-critic policy instead of applying the unrestricted build profile to ordinary critics", "type": "functional"},
         {"text": "Keeps normal system, user, security, legal, environment, and publication-authority boundaries intact", "type": "structural"},
         {"text": "Does not confuse capability preservation with authorization for external writes", "type": "negative"}
       ],
@@ -863,6 +864,71 @@
         {"text": "Does not abandon the live grandchild, silently drop the blocked work, or double-count the replacement", "type": "negative"}
       ],
       "tags": ["subagents", "monitoring", "recovery", "completion", "edge"]
+    },
+    {
+      "id": 71,
+      "name": "ordinary-critic-round-is-quick-and-token-efficient",
+      "prompt": "A browser note-taking replica has a sealed prompt, an accepted screenshot bar, one exact artifact revision, and prepared desktop and mobile captures. Start the ordinary critic pass without spending builder-scale resources on it.",
+      "expected_output": "The lead launches one fresh, fast, token-efficient critic with the smallest sufficient context and tools for direct inspection. The critic reuses the prepared evidence, returns a concise verdict with concrete comparison evidence and one highest-leverage gap, and stops without researching implementation options, fanning out routine review, or generating a fix.",
+      "assertions": [
+        {"text": "Defaults to the fastest capable critic configuration rather than the build team's expansive profile", "type": "functional"},
+        {"text": "Provides the sealed prompt, accepted bar, exact artifact revision, relevant evidence, and direct inspection capability", "type": "structural"},
+        {"text": "Returns a concise verdict, concrete evidence, and one highest-leverage material gap", "type": "verification"},
+        {"text": "Does not spend critic turns on implementation, broad research, open-ended redesign, generating the fix, or routine critic fan-out", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "token-efficiency", "quality", "default"]
+    },
+    {
+      "id": 72,
+      "name": "complex-review-warrants-critic-escalation",
+      "prompt": "A browser operating-system replica has dozens of coupled window states, keyboard and screen-reader paths, contradictory interaction traces, and a subtle pixel-matched reference. The initial quick critic cannot determine whether the artifact meets the accepted bar.",
+      "expected_output": "The lead records why the ordinary critic was inconclusive and escalates the next fresh critic's reasoning, context, tools, or model capability enough to inspect the coupled states, accessibility paths, conflicting evidence, and reference comparison directly. Efficiency does not override a warranted deep review.",
+      "assertions": [
+        {"text": "Identifies concrete complexity, accessibility, conflicting-evidence, and comparison reasons for escalation", "type": "functional"},
+        {"text": "Records why the quick critic was insufficient before allocating a deeper critic", "type": "verification"},
+        {"text": "Preserves direct artifact inspection and the accepted quality bar after escalation", "type": "structural"},
+        {"text": "Does not keep a critic underpowered merely to preserve token efficiency", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "escalation", "accessibility", "edge"]
+    },
+    {
+      "id": 73,
+      "name": "expansive-budget-belongs-to-build-agents",
+      "prompt": "A complex WebGL simulation needs source research, profiling, asset creation, debugging, integration, and repeated browser verification. A critic later needs only to compare the prepared artifact evidence with the frozen bar. Allocate the team's effort appropriately.",
+      "expected_output": "The lead gives build-related descendants the unrestricted reasoning, context, turns, tools, and token investment their implementation work warrants. The ordinary critic receives a focused, token-efficient inspection assignment and hands one material gap back to the build branch instead of doing the implementation itself.",
+      "assertions": [
+        {"text": "Reserves expansive research, creation, debugging, integration, and verification capacity for build-related descendants", "type": "functional"},
+        {"text": "Keeps the critic read-only and focused on comparison evidence and one gap", "type": "structural"},
+        {"text": "Routes the resulting fix back to the lead or a build-related descendant", "type": "functional"},
+        {"text": "Does not tokenmax ordinary critics while starving build branches", "type": "negative"}
+      ],
+      "tags": ["subagents", "builders", "critic", "allocation", "quality"]
+    },
+    {
+      "id": 74,
+      "name": "quick-critic-still-inspects-real-artifact",
+      "prompt": "To save tokens, a lead proposes sending a cheap critic only the builder's prose summary and asking for a one-line approval without opening the local artifact or reviewing the prepared captures.",
+      "expected_output": "The lead rejects the summary-only shortcut. A quick critic still receives enough tools, context, artifact identity, and inspectable evidence to compare the real result fairly; if the selected configuration cannot do so, the lead escalates it or records BLOCKED rather than inventing a review.",
+      "assertions": [
+        {"text": "Requires direct artifact-grounded inspection even under the quick critic default", "type": "functional"},
+        {"text": "Escalates or records BLOCKED when the assigned critic cannot inspect credibly", "type": "verification"},
+        {"text": "Does not accept builder rationale, self-assessment, or summary as review evidence", "type": "negative"},
+        {"text": "Does not weaken the accepted bar to fit a cheaper critic", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "artifact", "token-efficiency", "negative"]
+    },
+    {
+      "id": 75,
+      "name": "critic-efficiency-is-not-a-fixed-token-cap",
+      "prompt": "A wrapper interprets token-efficient critics as exactly 800 tokens, one turn, and the least capable model for every review, regardless of artifact type or whether direct inspection succeeds.",
+      "expected_output": "The lead rejects the universal numeric ceiling. It begins with the quickest capable critic profile, observes whether the real artifact can be inspected and compared fairly, and escalates for a recorded concrete need without adopting builder-scale resources by default.",
+      "assertions": [
+        {"text": "Treats critic efficiency as an adaptive default rather than a fixed token, turn, or model cap", "type": "functional"},
+        {"text": "Uses successful direct inspection and fair comparison as the minimum capability test", "type": "verification"},
+        {"text": "Allows warranted escalation while retaining a focused critic response contract", "type": "structural"},
+        {"text": "Does not confuse token efficiency with unconditional least-capable execution", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "token-efficiency", "escalation", "edge"]
     }
   ]
 }
