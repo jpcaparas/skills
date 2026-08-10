@@ -38,6 +38,7 @@ The override names one executable and contains no flags. On Windows, select any 
 - **A clear or highly custom build brief:** prepare a faithful, fully developed actual prompt from the brief. Use as many paragraphs as clarity and ambition require; six paragraphs is entirely acceptable, and the skill imposes no token or paragraph budget. When a catalogue item is materially relevant, offer it as an optional baseline, but keep the custom route independent unless the user accepts that match. If there is no real match, start the one-shot from a clean refinement of the user’s guidance without forcing, mashing, or borrowing from a template; mere proximity is not relevance.
 - **Several briefs, templates, models, or harnesses:** define one experiment per requested artifact. Never merge several one-shots into one worker.
 - **Explicit parallel leads, workspaces, or replicas:** treat “multiple lead subagents,” “multiple workspaces,” and “multiple replicas” as requests for top-level experiment fan-out. A stated count is authoritative; when the user says only “multiple,” create two. Every instance gets a fresh lead, a separate run directory, its own `.tmp/`, `workspace/`, `artifact/`, receipt, and commit marker. Do not reinterpret these phrases as several descendants inside one lead or several folders inside one run. Whenever one brief fans out without explicitly requested variations—including multiple replicas—prepare one actual prompt once and preserve identical prompt bytes for every instance; do not add replica labels, variant instructions, or lead-specific refinements.
+- **Reconnects, steering, and side comments:** treat a timeout, transport reconnect, environment interruption, status follow-up, correction, steering message, or side comment about an ongoing experiment as a continuation by default. Reattach to the matching existing task, lead, run directory, workspace, and namespace instead of preparing another run. Only an explicit request for a fresh workspace, new independent attempt, additional replica, or rerun changes that default.
 - **Catalogue expansion:** read `references/catalogue-authoring.md`; append entries without changing existing IDs or imposing an implementation stack.
 - **Artifact validation or indexing:** read `references/catalog-index.md`; validate provenance and the built root entrypoint without judging the chosen technology.
 
@@ -89,7 +90,7 @@ Also record the raw model name, harness name, and experiment name. Use the activ
 
 This step is complete when the stored bytes, digest, and text prepared for dispatch agree exactly.
 
-## 2. Reserve a Flat Collision-Free Run
+## 2. Recover the Current Run or Reserve a New One
 
 Create the run before starting workers:
 
@@ -111,7 +112,15 @@ Create the run before starting workers:
   index.html
 ```
 
-Create each run directly beneath the caller-selected output root. Name it with the local timestamp plus a readable lowercase ASCII slug derived from the concise experiment name: `YYYY-MM-DD-HH-MM-SS-<experiment-slug>`. For example, `LibreOffice Writer` becomes `2026-07-31-20-05-46-libreoffice-writer`. If another reservation for that slug wins the same second, atomically reserve `--02`, `--03`, and so on. Keep the exact model, harness, and experiment names and their digest-bound identity keys in `run.json` and the coordinator receipt; the slug is for recognition, not identity. Existing runs are never reused or overwritten. Historical timestamp-only 3.0 and 3.1 runs remain readable.
+Before reserving anything, decide whether this is a genuinely new experiment or a continuation of one already in progress. A reconnect after a timeout or environment failure, a status follow-up, steering, a correction, and a side comment all default to continuation. Inspect the harness task inventory and the caller-selected output root for the current experiment’s existing lead, run, workspace, and namespace. If one is discovered, attempt same-run recovery before invoking `prepare_run.py`; an infrastructure interruption alone is never a reason to spend another run or discard completed work.
+
+Reuse only a candidate whose identity is proven. Require its coordinator receipt and final empty `.commit` marker, and cross-check the receipt’s run ID, exact run path, classification, raw and derived experiment identity, prompt SHA-256 digest, and byte count against `run.json`, the exact bytes of `artifact/PROMPT.md`, and the active task. Confirm that the recorded `.tmp/`, `workspace/`, and `artifact/` paths resolve inside that run. Prefer a known harness task or lead ID over name-based inference. If no candidate matches, more than one candidate remains plausible, the prompt or receipt differs, a path escapes the run, or the committed metadata is incomplete, do not guess, merge, overwrite, or silently reserve a replacement; report `RECOVERY_UNAVAILABLE` or `RECOVERY_AMBIGUOUS` and ask whether the user wants an explicitly fresh workspace.
+
+For a proven continuation, resume the same harness task and owning lead first, keeping the identical run ID, run directory, `.tmp/`, `workspace/`, `artifact/`, and prompt. Deliver steering and side comments to that existing lead namespace rather than spawning a parallel owner. Preserve `artifact/PROMPT.md` byte-for-byte: later user messages are supplemental continuation instructions, not a rewrite of the sealed initial prompt. Record the supplemental instruction and exposed timing or task identity in the existing task history and `worker-report.json` without inventing telemetry.
+
+If the harness proves that the prior owning lead has terminated and cannot be resumed while the committed run remains intact, one fresh no-history recovery lead may take over that same run. Give it the original dispatch material, the exact sealed prompt, the existing paths and state, the supplemental continuation instruction, and the predecessor identity and failure reason when exposed. It must inspect and continue the current workspace before editing; it must not reinitialize, clear, copy, or fork the run. Update the current lead ID and record the sequential ownership change under `worker-report.json.observations.recovery`. Never start a replacement while the prior owner may still be active: one experiment namespace has exactly one active lead writer at a time.
+
+For a genuinely new experiment—or when the user explicitly asks for a fresh workspace, new independent attempt, additional replica, or rerun—create a new run directly beneath the caller-selected output root. Name it with the local timestamp plus a readable lowercase ASCII slug derived from the concise experiment name: `YYYY-MM-DD-HH-MM-SS-<experiment-slug>`. For example, `LibreOffice Writer` becomes `2026-07-31-20-05-46-libreoffice-writer`. If another reservation for that slug wins the same second, atomically reserve `--02`, `--03`, and so on. Keep the exact model, harness, and experiment names and their digest-bound identity keys in `run.json` and the coordinator receipt; the slug is for recognition, not identity. Existing unrelated or completed runs are never overwritten, and an explicit fresh attempt never reuses an old namespace. Historical timestamp-only 3.0 and 3.1 runs remain readable.
 
 When Python is available, use:
 
@@ -126,13 +135,13 @@ When Python is available, use:
 
 On Windows, use a compatible `python.exe` or `py -3` launcher as described above. Set `--output-root` to the folder where the user started the benchmark; do not add model, harness, or experiment wrapper directories. Enable Win32 long-path support only when the lead’s own source workspace needs it.
 
-Read `references/execution-protocol.md` when planning multiple experiments, reproducing the run layout manually, recording a rerun, or adapting the contract to another harness.
+Read `references/execution-protocol.md` when reconnecting, steering, recovering an interrupted workspace, planning multiple experiments, reproducing the run layout manually, recording a rerun, or adapting the contract to another harness.
 
-The hidden receipt and its empty `.commit` marker are coordinator-owned. The marker is created last and atomically distinguishes a fully prepared dispatch from recoverable process-crash residue. Give the lead write authority only to its assigned timestamped run, never to the output root or receipt inventory. This is an ownership boundary, not a cryptographic one: if a harness cannot enforce path-scoped writes, the receipt is not tamper-proof against a worker with output-root access. `.tmp/` is preserved run-local scratch space, `workspace/` is the lead’s unrestricted durable source and build area, and `artifact/` is the final portable handoff root. This step is complete when every experiment has a distinct pre-created run directory directly under the selected output root, with its own `.tmp/`, matching `artifact/PROMPT.md` and receipt, and final commit marker.
+The hidden receipt and its empty `.commit` marker are coordinator-owned. The marker is created last and atomically distinguishes a fully prepared dispatch from recoverable process-crash residue. Give the lead write authority only to its assigned timestamped run, never to the output root or receipt inventory. This is an ownership boundary, not a cryptographic one: if a harness cannot enforce path-scoped writes, the receipt is not tamper-proof against a worker with output-root access. `.tmp/` is preserved run-local scratch space, `workspace/` is the lead’s unrestricted durable source and build area, and `artifact/` is the final portable handoff root. This step is complete when every new experiment has a distinct pre-created run or every continuation has one identity-verified existing run, with its own `.tmp/`, matching `artifact/PROMPT.md` and receipt, final commit marker, and exactly one active lead writer.
 
 ## 3. Dispatch Fresh Lead Subagents
 
-Actual generation belongs to subagents:
+Actual generation belongs to subagents. For a new experiment, follow this initial-dispatch sequence:
 
 1. Create one fresh lead subagent for every experiment. The coordinator must not generate the artifact itself.
 2. Create the lead with the harness's no-history isolation primitive so it inherits none of the coordinator conversation. In Codex, call `spawn_agent` with `fork_turns: "none"`; never rely on its history-inheriting default. Use the equivalent empty-context option in another harness.
@@ -144,7 +153,9 @@ Actual generation belongs to subagents:
 
 Fresh, no-history subagent support is a hard dependency. If the harness cannot create a subagent without inherited coordinator conversation, stop before generating the artifact, report `UNSUPPORTED_NO_FRESH_SUBAGENT`, and explain that this harness cannot satisfy the one-shot isolation contract. Do not substitute the coordinator or a sequential same-context imitation.
 
-This step is complete when each experiment has exactly one distinct lead owner, every lead’s initial dispatch contains the exact assigned prompt, and the recursive-team envelope reaches every descendant generation the lead creates.
+For a continuation, do not repeat the initial-dispatch sequence or create a new run. Send steering or side comments through the existing task to the current owning lead. After a reconnect, resume that same lead whenever the harness can do so. Only the confirmed-terminated recovery case in Step 2 permits a fresh replacement lead in the existing namespace; its dispatch remains no-history and includes the recovery envelope from `templates/worker-dispatch.md` in addition to the original experiment material.
+
+This step is complete when each experiment has exactly one active lead owner, every new or replacement lead’s initial dispatch contains the exact assigned prompt, any sequential replacement is documented, and the recursive-team envelope reaches every descendant generation the lead creates.
 
 ## 4. Let the Leads Rip
 
@@ -178,7 +189,7 @@ Before finishing, the lead builds or exports the result into `artifact/`. That f
 
 The final folder, not the workspace, follows the conservative shared Drop envelope: at most 1,000 files, no file larger than 5 MiB, and no more than 100 MiB total. These are portability constraints derived from the supported static-host handoff shape, not permission to upload and not limits on how the lead works or what it may use.
 
-The coordinator waits for the owning lead and does not steer it with sibling results or rewrite its artifact afterward. If the harness pauses a long-running worker, resume the same lead when possible rather than replacing it. Normal system, user, security, legal, and environment rules still apply; this skill adds no implementation restrictions of its own.
+The coordinator waits for the owning lead and does not steer it with sibling results or rewrite its artifact afterward. User steering, corrections, and side comments for the ongoing experiment are different: deliver them to the same lead, task, workspace, and run namespace by default. If the harness pauses or loses transport to a long-running worker, rediscover and resume that same task and lead before considering recovery replacement. Never create a parallel owner merely because status polling timed out. Normal system, user, security, legal, and environment rules still apply; this skill adds no implementation restrictions of its own.
 
 This step is complete when each lead reports a finished drop-ready artifact or a genuine blocker, all outcome-relevant descendant branches are finished or honestly accounted for, the integrated result has been checked, and all descendants and writes remain within the assigned experiment.
 
@@ -195,7 +206,7 @@ Preserve each outcome, including partial or failed ones. Complete `run.json` and
 
 Record historical critic rounds in `worker-report.json.qualityGauntlet`, including the exact artifact revision, capture set, or digest each critic inspected. Keep the report’s `verification` array for final checks: an earlier `NOT_READY` verdict may remain honest gauntlet history without becoming a failed final verification on a later `OK` artifact. For a genuinely trivial artifact, record gauntlet applicability as `not-required` with a concrete reason instead of inventing rounds.
 
-An internal revision by the same owning lead remains part of its autonomous one-shot. A separately dispatched rerun receives a new run ID and is labelled as a rerun or curated attempt; it never overwrites the original.
+An internal revision, reconnect, or user-steered continuation by the same owning lead remains part of its autonomous one-shot and keeps the same run. A sequential recovery lead also keeps that run when the prior owner is confirmed terminated and the ownership change is recorded. A new run is created only for a genuinely new experiment or an explicit user request for a fresh workspace, new independent attempt, additional replica, or rerun. Such a rerun receives a new run ID, is labelled as a rerun or curated attempt, links to the prior run, and never overwrites the original.
 
 After all leads finish:
 
@@ -214,7 +225,7 @@ This step is complete when prompts and artifacts remain inspectable under their 
 | --- | --- |
 | Show, search, or filter the current templates | Run `scripts/list_prompts.py`; the canonical data is `assets/prompt-catalogue.json` |
 | Add future templates safely | `references/catalogue-authoring.md` |
-| Dispatch workers, reserve flat runs, or handle reruns | `references/execution-protocol.md` |
+| Reconnect, steer, recover workspaces, dispatch workers, reserve flat runs, or handle reruns | `references/execution-protocol.md` |
 | Decide whether a lead should use, spike, or reject WebAssembly | `references/wasm-selection.md` |
 | Build or validate the artifact index | `references/catalog-index.md` |
 | Understand the research behind the breadth and provenance rules | `references/research-notes.md` |

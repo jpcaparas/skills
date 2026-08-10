@@ -51,7 +51,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.12.0"
+PACKAGE_VERSION = "2.13.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -140,6 +140,38 @@ RUNTIME_CONTRACTS = (
             r"multiple lead subagents.*?multiple workspaces.*?multiple replicas.*?top-level experiment fan-out.*?"
             r"stated count.*?authoritative.*?only “multiple,” create two.*?fresh lead.*?separate run directory.*?"
             r"Do not reinterpret.*?descendants inside one lead.*?folders inside one run",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "same-run reconnect and steering default",
+        re.compile(
+            r"Reconnects, steering, and side comments.*?timeout.*?environment interruption.*?"
+            r"side comment.*?continuation by default.*?Reattach to the matching existing task.*?"
+            r"lead.*?run directory.*?workspace.*?namespace instead of preparing another run.*?"
+            r"Only an explicit request for a fresh workspace.*?new independent attempt.*?"
+            r"additional replica.*?rerun changes that default",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "identity-gated recovery without guessing",
+        re.compile(
+            r"Reuse only a candidate whose identity is proven.*?coordinator receipt.*?`\.commit` marker.*?"
+            r"run ID.*?exact run path.*?classification.*?experiment identity.*?prompt SHA-256 digest.*?"
+            r"byte count.*?artifact/PROMPT\.md.*?active task.*?\.tmp/.*?workspace/.*?artifact/.*?"
+            r"do not guess.*?silently reserve a replacement.*?RECOVERY_UNAVAILABLE.*?RECOVERY_AMBIGUOUS",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "single-owner same-run recovery",
+        re.compile(
+            r"For a proven continuation, resume the same harness task and owning lead first.*?"
+            r"identical run ID.*?workspace.*?Deliver steering and side comments to that existing lead namespace.*?"
+            r"prior owning lead has terminated and cannot be resumed.*?fresh no-history recovery lead.*?same run.*?"
+            r"inspect and continue the current workspace.*?Never start a replacement while the prior owner may still be active.*?"
+            r"exactly one active lead writer at a time",
             re.I | re.S,
         ),
     ),
@@ -342,7 +374,7 @@ RUNTIME_CONTRACTS = (
         "flat slugged timestamp run layout",
         re.compile(
             r"^  <YYYY-MM-DD-HH-MM-SS>-<experiment-slug>/\n.*?"
-            r"Create each run directly beneath.*?local timestamp plus.*?experiment-slug.*?"
+            r"(?:Create each run|create a new run) directly beneath.*?local timestamp plus.*?experiment-slug.*?"
             r"LibreOffice Writer.*?libreoffice-writer.*?--02.*?--03",
             re.I | re.M | re.S,
         ),
@@ -497,6 +529,19 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "agents/oneshot-lead.md",
+        "lead same-run continuation and recovery",
+        re.compile(
+            r"Continuation and Recovery.*?timeout.*?steering message.*?side comment.*?same experiment.*?"
+            r"keep the current run ID.*?workspace.*?artifact.*?accumulated work.*?"
+            r"preserve `artifact/PROMPT\.md` byte-for-byte.*?"
+            r"replacement recovery lead.*?proved.*?previous owner terminated.*?"
+            r"Read the existing `run\.json`.*?workspace/.*?artifact/.*?before editing.*?"
+            r"only active lead writer.*?make no edits.*?RECOVERY_AMBIGUOUS.*?RECOVERY_OWNER_ACTIVE",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
         "lead unbounded recursive-team capability contract",
         re.compile(
             r"Your Team.*?as many subagents as useful.*?"
@@ -601,6 +646,19 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "templates/worker-dispatch.md",
+        "dispatch same-run recovery envelope",
+        re.compile(
+            r"Dispatch and Recovery Mode.*?Do not create a new dispatch for a resumable existing lead.*?"
+            r"steering.*?side comments.*?current harness task.*?"
+            r"replacement.*?prove that the prior owner terminated.*?committed receipt.*?prompt digest and byte count.*?"
+            r"inspect and continue `workspace/`.*?must not clear, reinitialize, copy, or fork the run.*?"
+            r"Never dispatch a replacement while another lead may still be active.*?"
+            r"out of `artifact/PROMPT\.md`.*?\{\{RECOVERY_ENVELOPE\}\}",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
         "dispatch temporary-file envelope",
         re.compile(
             r"Operational Runtime Envelope.*?assigned `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
@@ -681,6 +739,20 @@ FILE_RUNTIME_CONTRACTS = (
             r"explicitly authorizes the specific external action and destination.*?"
             r"Leads, descendants, and critics remain local-only.*?coordinator retains.*?"
             r"post-validation step from `artifact/` only",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol identity-safe same-run recovery",
+        re.compile(
+            r"Reconnect, Steering, and Same-Run Recovery.*?continuation by default.*?"
+            r"reuse the existing harness task.*?run ID.*?workspace.*?do not call `scripts/prepare_run\.py`.*?"
+            r"identity anchors agree.*?receipt.*?`\.commit` marker.*?prompt digest.*?byte count.*?"
+            r"known task, lead, or run ID outranks.*?RECOVERY_AMBIGUOUS.*?"
+            r"Resume the same harness task and owning lead whenever possible.*?"
+            r"prior lead has terminated.*?single fresh no-history recovery lead.*?same namespace.*?"
+            r"Only one lead may write an experiment namespace at a time.*?retry must be idempotent",
             re.I | re.S,
         ),
     ),

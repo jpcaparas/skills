@@ -16,7 +16,7 @@ Create each run directly below the caller-selected output root:
 <output-root>/<YYYY-MM-DD-HH-MM-SS>-<experiment-slug>/
 ```
 
-The timestamp uses the coordinator’s local time, followed by a readable lowercase ASCII slug derived from the concise experiment name. `LibreOffice Writer`, for example, yields a run name such as `2026-07-31-20-05-46-libreoffice-writer`. `scripts/prepare_run.py` reserves the path atomically. When two preparations with the same slug land in the same second, the first keeps the base name and later reservations use `--02`, `--03`, and so on. The double hyphen keeps collision numbers unambiguous when a subject slug ends in a number, such as `windows-11`. No reservation reuses or overwrites an existing path. Historical flat 3.0 and 3.1 directories keep their timestamp-only names and remain supported.
+The timestamp uses the coordinator’s local time, followed by a readable lowercase ASCII slug derived from the concise experiment name. `LibreOffice Writer`, for example, yields a run name such as `2026-07-31-20-05-46-libreoffice-writer`. `scripts/prepare_run.py` reserves the path atomically. When two preparations with the same slug land in the same second, the first keeps the base name and later reservations use `--02`, `--03`, and so on. The double hyphen keeps collision numbers unambiguous when a subject slug ends in a number, such as `windows-11`. A new reservation never reuses or overwrites an existing path; a verified continuation resumes the already reserved path without calling the preparation helper. Historical flat 3.0 and 3.1 directories keep their timestamp-only names and remain supported.
 
 `scripts/prepare_run.py` still derives each recorded identity key from:
 
@@ -39,9 +39,29 @@ Before dispatch, the coordinator also writes `.oneshot-provenance/<run-id>.json`
 
 Give the lead only its run path; do not include the receipt directory in its writable scope. The validator requires a one-to-one committed receipt and run inventory. This is a logical ownership boundary unless the harness enforces path-scoped writes; it is not tamper-proof against a worker with output-root access. When another harness reproduces the layout without `prepare_run.py`, it must use the same slugged timestamp reservation rule, write the complete receipt, and create the final empty commit marker last.
 
+## Reconnect, Steering, and Same-Run Recovery
+
+Classify the invocation before reserving a path. A new brief or an explicit request for a fresh workspace, new independent attempt, additional replica, or rerun is a new experiment. A timeout, dropped transport, environment restart, reconnect, status follow-up, correction, steering message, or side comment about an ongoing experiment is a continuation by default. Continuations reuse the existing harness task, lead namespace, run ID, run directory, `.tmp/`, `workspace/`, and `artifact/`; they do not call `scripts/prepare_run.py` merely because the coordinator reconnected.
+
+Search the harness task inventory first, then the caller-selected output root. Accept a recovery candidate only when all available identity anchors agree:
+
+1. the coordinator-owned `.oneshot-provenance/<run-id>.json` receipt exists with its final empty `.commit` marker
+2. receipt and `run.json` agree on the run ID, exact run path, classification, raw and derived identity, prompt digest, and declared paths
+3. the receipt byte count and digest match the exact UTF-8 bytes of `artifact/PROMPT.md`
+4. the task’s known run, experiment, prompt, harness, model, and lead identifiers agree wherever the harness exposes them
+5. `.tmp/`, `workspace/`, and `artifact/` resolve inside that one canonical run
+
+A known task, lead, or run ID outranks a name or slug match. A readable slug is never sufficient identity. If the candidate is corrupt, incomplete, path-escaping, prompt-mismatched, or one of several plausible runs, stop with `RECOVERY_UNAVAILABLE` or `RECOVERY_AMBIGUOUS`. Do not guess, combine runs, overwrite either candidate, or quietly create a fresh workspace; ask whether the user explicitly wants one.
+
+Resume the same harness task and owning lead whenever possible. Send user steering, corrections, and side comments to that task rather than creating a sibling task or lead. Keep the sealed `artifact/PROMPT.md` unchanged: the initial actual prompt remains the provenance baseline, while later messages are supplemental continuation instructions. Preserve those messages in the existing harness history and, when the format permits, record their exact text plus exposed timing and task identity in `worker-report.json`; do not invent missing telemetry.
+
+If the harness proves that the prior lead has terminated and cannot be resumed, but the committed run passes every identity check, a single fresh no-history recovery lead may continue in that same namespace. Before dispatch, confirm that no prior owner is active. Give the replacement the original lead and critic roles, exact sealed prompt, existing paths and state, current supplemental instruction, and exposed predecessor identity and interruption reason. It inspects the current workspace and artifact before changing anything and must not initialize, clear, copy, or fork the run. Set the current lead ID and record the predecessor, replacement, reason, and handoff under `worker-report.json.observations.recovery`. This is sequential ownership, not a second concurrent owner.
+
+Only one lead may write an experiment namespace at a time. If the harness cannot prove the previous owner inactive, wait or report the recovery blocker. A transport retry must be idempotent: rediscovering the same committed run or task produces another resume attempt, not another run or replacement lead.
+
 ## Dispatch Envelope
 
-Create the lead with no inherited coordinator conversation. This must be an explicit harness setting, not an assumption about the word “fresh”: in Codex use `spawn_agent` with `fork_turns: "none"`; in another harness use its equivalent empty-history mode. A default that copies or forks the current conversation does not satisfy the isolation contract.
+Create every initial or replacement lead with no inherited coordinator conversation. This must be an explicit harness setting, not an assumption about the word “fresh”: in Codex use `spawn_agent` with `fork_turns: "none"`; in another harness use its equivalent empty-history mode. A default that copies or forks the current conversation does not satisfy the isolation contract. Resuming the same existing lead is not a new dispatch and retains that lead’s own task history.
 
 The initial lead dispatch contains only:
 
@@ -54,6 +74,8 @@ The initial lead dispatch contains only:
 - the recursive-team envelope from `templates/worker-dispatch.md`, including its inheritance, capability-preservation, scheduling, monitoring, and integration rules
 - the complete `references/wasm-selection.md` guidance when the request or supplied source presents a plausible compiled engine, codec, parser, database, emulator, simulation core, numerical hot path, or offline local-processing boundary
 - any user-supplied inputs that belong to this experiment
+
+A replacement recovery dispatch adds only the operational recovery envelope from `templates/worker-dispatch.md`: the continuation mode, same verified paths, current supplemental instruction, exposed predecessor identity, interruption reason, and instruction to inspect existing state before editing. It does not create or alter the actual prompt. Ordinary steering to a resumable lead is sent directly through the existing task and does not replay this initial dispatch.
 
 Pass actual text even when it is also stored on disk. Populate that dispatch field by strictly decoding the sealed `artifact/PROMPT.md` bytes as UTF-8 after `prepare_run.py` succeeds; do not retype or rebuild it from a parallel string. When the harness exposes the serialized payload bytes, compare their SHA-256 digest with the prompt receipt before starting the lead. A path-only dispatch makes the benchmark dependent on an extra interpretation step. Do not include the aggregate manifest, sibling names, sibling prompts, sibling output paths, sibling artifacts, or sibling results.
 
@@ -113,13 +135,13 @@ Store critic history in the versioned structured `worker-report.json.qualityGaun
 
 ## Completion and Reruns
 
-The lead owns all implementation iteration inside its run. The coordinator may resume that same lead after an infrastructure pause, but does not inject sibling comparisons or post-process the artifact.
+The lead owns all implementation iteration inside its run. After an infrastructure pause or reconnect, the coordinator first rediscovers and resumes that same task, lead, workspace, and run. User steering and side comments stay in that namespace; sibling comparisons remain excluded, and the coordinator does not post-process the artifact.
 
 The lead may shape `workspace/` however it likes and keeps disposable run state in the sibling `.tmp/`. Before completion it exports a portable static build into `artifact/` with the unchanged exact-case `PROMPT.md` and one exact-case root `index.html` entrypoint. That entrypoint does not imply a one-file artifact: all built runtime scripts, styles, media, fonts, models, data, and asset directories that serve the experience belong in the artifact tree. Local resources may use relative or root-relative URLs, their casing matches stored filenames, and `artifact/` is the origin root if a separately authorized deployment occurs. The artifact must not require an install, build, or application server step. Package manifests, source-only components, build or provider configuration, dependency and cache directories, run-local `.tmp/`, server functions, secrets, and provider-filtered build state remain outside the entire artifact tree.
 
 For the shared folder-drop compatibility profile, the built artifact stays within 1,000 files, 5 MiB per file, and 100 MiB total. These portability bounds do not authorize an upload and do not constrain workspace dependencies, source files, build assets, iteration, or delegation. `artifact.staticDeploymentVerified` records local static-handoff verification only; it does not prove or require publication, and an entirely local run may reach `OK`.
 
-If the user requests another independent attempt:
+If the user explicitly requests another independent attempt, fresh workspace, additional replica, or rerun:
 
 1. preserve the original run unchanged
 2. create a new run ID and fresh lead
@@ -127,7 +149,7 @@ If the user requests another independent attempt:
 4. set `classification` to `rerun` or `curated-attempt`
 5. link the new run to the prior run in `run.json`
 
-Transport recovery that resumes the same worker and workspace is not a rerun. Replacing the lead or starting a new artifact is.
+Transport recovery that resumes the same worker and workspace is not a rerun. A sequential recovery lead in the same verified run is also not a rerun when the prior owner is proven terminated and the ownership change is recorded. Creating a new run, namespace, or independent artifact is a rerun and requires the user’s explicit fresh-attempt intent when an interrupted run already exists.
 
 ## Worker Report
 

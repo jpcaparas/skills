@@ -929,6 +929,84 @@
         {"text": "Does not confuse token efficiency with unconditional least-capable execution", "type": "negative"}
       ],
       "tags": ["subagents", "critic", "token-efficiency", "escalation", "edge"]
+    },
+    {
+      "id": 76,
+      "name": "timeout-reconnect-resumes-existing-run",
+      "prompt": "The coordinator timed out while a LibreOffice Writer browser replica was still building. After reconnecting, it discovers the committed run, the original harness task, and a populated workspace. Continue the experiment.",
+      "expected_output": "The coordinator validates the discovered receipt, commit marker, run metadata, prompt bytes, identities, and assigned paths, then resumes the same harness task and lead in the same run. It preserves the run ID, workspace, temporary state, artifact, and accumulated context instead of calling prepare_run.py or creating a sibling timestamped run.",
+      "assertions": [
+        {"text": "Cross-checks the receipt, commit marker, run ID and path, prompt digest and byte count, identities, and run-local paths", "type": "verification"},
+        {"text": "Resumes the original harness task and owning lead with the same run, workspace, artifact, and temporary namespace", "type": "functional"},
+        {"text": "Does not create a new run merely because transport or coordinator polling timed out", "type": "negative"},
+        {"text": "Preserves the sealed artifact/PROMPT.md and existing work", "type": "structural"}
+      ],
+      "tags": ["recovery", "timeout", "reconnect", "workspace", "default"]
+    },
+    {
+      "id": 77,
+      "name": "steering-and-side-comments-stay-in-current-namespace",
+      "prompt": "While the existing one-shot is running, I add: make the toolbar denser, and please keep the document ruler visible on mobile. This is a side comment, not a request for another replica.",
+      "expected_output": "The coordinator sends the supplemental instruction to the current owning lead through the existing task and run namespace. It does not spawn another lead or workspace, preserves the original prompt bytes, and records the steering in existing task or report evidence when the harness exposes it.",
+      "assertions": [
+        {"text": "Routes the side comment to the existing lead, task, run, and workspace", "type": "functional"},
+        {"text": "Treats the message as supplemental continuation input rather than rewriting the sealed initial prompt", "type": "structural"},
+        {"text": "Does not create another lead, run, namespace, or replica", "type": "negative"},
+        {"text": "Records only exposed steering timing or task identity and does not invent telemetry", "type": "verification"}
+      ],
+      "tags": ["recovery", "steering", "side-comment", "prompt-provenance", "default"]
+    },
+    {
+      "id": 78,
+      "name": "explicit-fresh-workspace-overrides-reuse-default",
+      "prompt": "The current replica is still recoverable, but abandon that direction and start a fresh independent workspace and new attempt. Preserve the old run for comparison.",
+      "expected_output": "The coordinator recognizes explicit fresh-attempt intent, preserves the old run unchanged, reserves a new slugged run and fresh no-history lead, records the new classification and prior-run relationship when applicable, and does not reuse or overwrite the old namespace.",
+      "assertions": [
+        {"text": "Treats explicit fresh workspace and independent attempt wording as authorization for a new run", "type": "functional"},
+        {"text": "Preserves the prior run unchanged and links the new attempt when classified as a rerun or curated attempt", "type": "structural"},
+        {"text": "Uses a fresh no-history lead and distinct run namespace", "type": "functional"},
+        {"text": "Does not overwrite, clear, or repurpose the recoverable old workspace", "type": "negative"}
+      ],
+      "tags": ["recovery", "fresh-workspace", "rerun", "override", "provenance"]
+    },
+    {
+      "id": 79,
+      "name": "ambiguous-recovery-does-not-guess-or-spend-new-run",
+      "prompt": "After reconnecting, two committed LibreOffice Writer runs have similar slugs and matching experiment names. The harness no longer exposes the original task ID, and their prompt digests differ. Pick up where we left off.",
+      "expected_output": "The coordinator returns RECOVERY_AMBIGUOUS, explains the conflicting identity anchors, and asks whether the user can identify the run or explicitly wants a fresh workspace. It neither guesses between candidates nor silently creates a third run.",
+      "assertions": [
+        {"text": "Treats prompt mismatch and multiple plausible runs as ambiguous recovery", "type": "verification"},
+        {"text": "Reports RECOVERY_AMBIGUOUS and identifies the missing discriminator", "type": "disclosure"},
+        {"text": "Does not choose by slug, modification time, or name alone", "type": "negative"},
+        {"text": "Does not create a fresh third run without explicit user intent", "type": "negative"}
+      ],
+      "tags": ["recovery", "ambiguity", "identity", "negative", "edge"]
+    },
+    {
+      "id": 80,
+      "name": "terminated-lead-uses-sequential-same-run-replacement",
+      "prompt": "The committed run and workspace are intact, but the harness proves the owning lead terminated during an environment restart and cannot be resumed. Continue without wasting the build already completed.",
+      "expected_output": "After validating the run and proving the old owner inactive, the coordinator creates one fresh no-history recovery lead in the same run namespace. The replacement receives the sealed prompt, existing state, supplemental instruction, predecessor identity, and interruption reason, inspects the workspace before editing, and records the sequential ownership handoff.",
+      "assertions": [
+        {"text": "Requires proof that the previous lead terminated before assigning a replacement", "type": "verification"},
+        {"text": "Uses the same run ID, workspace, artifact, temporary state, and sealed prompt", "type": "structural"},
+        {"text": "Records predecessor, replacement, reason, and handoff under recovery observations", "type": "verification"},
+        {"text": "Never allows two active lead writers or reinitializes the recovered workspace", "type": "negative"}
+      ],
+      "tags": ["recovery", "replacement", "single-owner", "workspace", "edge"]
+    },
+    {
+      "id": 81,
+      "name": "unconfirmed-owner-blocks-replacement",
+      "prompt": "The coordinator lost contact with the lead, but the harness cannot tell whether it is still running. The run is valid and the workspace is visible. Spawn a recovery lead immediately so work can continue.",
+      "expected_output": "The coordinator refuses concurrent ownership, reports RECOVERY_OWNER_ACTIVE or an equivalent blocker, and waits for authoritative task state or explicit termination. It does not spawn a replacement or create another run while the original lead may still be writing.",
+      "assertions": [
+        {"text": "Distinguishes loss of contact from proof that the owning lead terminated", "type": "verification"},
+        {"text": "Maintains exactly one active lead writer for the namespace", "type": "structural"},
+        {"text": "Does not spawn a replacement that could race with the original owner", "type": "negative"},
+        {"text": "Does not evade the ownership uncertainty by silently creating a fresh run", "type": "negative"}
+      ],
+      "tags": ["recovery", "ownership", "race", "negative", "edge"]
     }
   ]
 }

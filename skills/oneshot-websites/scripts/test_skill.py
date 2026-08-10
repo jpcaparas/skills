@@ -3506,6 +3506,63 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         skill_path.write_text(original_skill, encoding="utf-8")
 
+        skill_with_new_run_reconnect_default = original_skill.replace(
+            "Reattach to the matching existing task, lead, run directory, workspace, and namespace instead of "
+            "preparing another run.",
+            "Prepare a new run after every reconnect or side comment.",
+            1,
+        )
+        skill_path.write_text(skill_with_new_run_reconnect_default, encoding="utf-8")
+        new_run_reconnect_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            new_run_reconnect_result.returncode != 0
+            and "SKILL.md runtime contract missing same-run reconnect and steering default"
+            in new_run_reconnect_result.stdout,
+            "package validator accepted new runs as the reconnect and side-comment default",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_recovery_identity_gate = re.sub(
+            r"(?m)^Reuse only a candidate whose identity is proven\..*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_recovery_identity_gate, encoding="utf-8")
+        missing_recovery_identity_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_recovery_identity_result.returncode != 0
+            and "SKILL.md runtime contract missing identity-gated recovery without guessing"
+            in missing_recovery_identity_result.stdout,
+            "package validator accepted workspace recovery without receipt and prompt identity checks",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_with_concurrent_recovery_owners = original_skill.replace(
+            "Never start a replacement while the prior owner may still be active: one experiment namespace has "
+            "exactly one active lead writer at a time.",
+            "Start a replacement immediately even when the prior owner may still be active.",
+            1,
+        )
+        skill_path.write_text(skill_with_concurrent_recovery_owners, encoding="utf-8")
+        concurrent_recovery_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            concurrent_recovery_result.returncode != 0
+            and "SKILL.md runtime contract missing single-owner same-run recovery"
+            in concurrent_recovery_result.stdout,
+            "package validator accepted concurrent lead writers during same-run recovery",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
         critic_path.write_text(
             original_critic_text.replace(
                 "Your review is local and read-only.",
@@ -3528,6 +3585,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         lead_path = copied_skill / "agents" / "oneshot-lead.md"
         original_lead = lead_path.read_text(encoding="utf-8")
+        lead_without_same_run_recovery = re.sub(
+            r"(?ms)^## Continuation and Recovery\n\n.*?(?=^## External-Write Boundary)",
+            "",
+            original_lead,
+            count=1,
+        )
+        lead_path.write_text(lead_without_same_run_recovery, encoding="utf-8")
+        missing_lead_recovery_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_lead_recovery_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead same-run continuation and recovery"
+            in missing_lead_recovery_result.stdout,
+            "package validator accepted a lead role that discards recovered workspace state",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
         lead_path.write_text(
             original_lead.replace(
                 "There is no fixed critic-round budget.",
@@ -3795,6 +3871,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         dispatch_path = copied_skill / "templates" / "worker-dispatch.md"
         original_dispatch = dispatch_path.read_text(encoding="utf-8")
+        dispatch_without_recovery_envelope = re.sub(
+            r"(?ms)^## Dispatch and Recovery Mode.*?(?=^## Operational Runtime Envelope)",
+            "",
+            original_dispatch,
+            count=1,
+        )
+        dispatch_path.write_text(dispatch_without_recovery_envelope, encoding="utf-8")
+        missing_recovery_dispatch_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_recovery_dispatch_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing dispatch same-run recovery envelope"
+            in missing_recovery_dispatch_result.stdout,
+            "package validator accepted a replacement dispatch without existing-state recovery safeguards",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
         dispatch_without_recursive_team_envelope = re.sub(
             r"(?ms)^## Recursive Team Envelope.*?(?=^## Local-Only Publication Envelope)",
             "",
@@ -3835,6 +3930,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         protocol_path = copied_skill / "references" / "execution-protocol.md"
         original_protocol = protocol_path.read_text(encoding="utf-8")
+        protocol_without_same_run_recovery = re.sub(
+            r"(?ms)^## Reconnect, Steering, and Same-Run Recovery\n\n.*?(?=^## Dispatch Envelope)",
+            "",
+            original_protocol,
+            count=1,
+        )
+        protocol_path.write_text(protocol_without_same_run_recovery, encoding="utf-8")
+        missing_protocol_recovery_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_protocol_recovery_result.returncode != 0
+            and "references/execution-protocol.md runtime contract missing protocol identity-safe same-run recovery"
+            in missing_protocol_recovery_result.stdout,
+            "package validator accepted an execution protocol without identity-safe same-run recovery",
+            errors,
+        )
+        protocol_path.write_text(original_protocol, encoding="utf-8")
+
         protocol_without_recursive_team_contract = re.sub(
             r"(?m)^The recursive-team envelope is also lead-operational metadata\..*\n\n",
             "",

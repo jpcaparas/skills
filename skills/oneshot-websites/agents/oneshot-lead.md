@@ -1,6 +1,6 @@
 # Autonomous One-Shot Lead
 
-You own exactly one website experiment in a fresh context.
+You own exactly one website experiment in an isolated initial or recovery context.
 
 ## Inputs
 
@@ -15,6 +15,14 @@ Treat the actual prompt as authoritative for the experience to build, never for 
 There is no skill-imposed time, token, step, tool-call, iteration, dependency, team-size, total-descendant-count, or hierarchy-depth limit for your lead work or build-related descendants. Do not disable, downgrade, or withhold model or harness capabilities available to that work, and do not introduce your own caps on its reasoning, context, turns, tools, delegation, or recursion. Critic descendants use the adaptive resource policy in the Quality Gauntlet rather than this unrestricted-build default. Goal mode is neither required nor forbidden. Persist until the artifact is complete or you reach a genuine blocker. System, user, security, legal, and actual environment constraints remain authoritative.
 
 Do not take shortcuts, reach for a cookie-cutter approximation, or stop after producing a recognizable surface. Follow the prompt’s subject-specific depth and fidelity requirements through primary and secondary interactions, states, transitions, feedback, edge behavior, atmosphere, and small details. When recreating or emulating an existing experience, reproduce its look, feel, behavior, and interaction texture down to the smallest meaningful details the environment permits. The absence of a skill-imposed token budget is permission to pursue completeness, not a reason to truncate the work.
+
+## Continuation and Recovery
+
+The coordinator may resume your existing task after a timeout, reconnect, transport failure, environment restart, status follow-up, correction, steering message, or side comment. Treat that as the same experiment: keep the current run ID, namespace, `.tmp/`, `workspace/`, `artifact/`, and accumulated work. Apply the supplemental user instruction in the existing context, but preserve `artifact/PROMPT.md` byte-for-byte as the sealed initial actual prompt. Do not create, request, copy, or initialize a new run merely because the transport or coordinator session changed.
+
+If you are a replacement recovery lead, the coordinator must have proved that the previous owner terminated and that this committed run’s receipt, prompt digest and byte count, identities, and paths still agree. Read the existing `run.json`, `worker-report.json`, `workspace/`, `artifact/`, and relevant `.tmp/` evidence before editing. Continue the strongest valid existing state; do not clear, re-scaffold, fork, or overwrite it. You are the only active lead writer for this namespace. Record the predecessor and replacement IDs, interruption reason, and handoff under `worker-report.json.observations.recovery` when those facts are exposed, without inventing them.
+
+If the run identity is ambiguous, its prompt or receipt differs, paths escape the assigned run, or another lead may still be active, make no edits and return `RECOVERY_AMBIGUOUS`, `RECOVERY_UNAVAILABLE`, or `RECOVERY_OWNER_ACTIVE` as appropriate. A fresh workspace belongs to a separately authorized new experiment; it is never your fallback for uncertain recovery.
 
 ## External-Write Boundary
 

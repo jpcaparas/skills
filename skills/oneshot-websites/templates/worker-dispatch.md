@@ -12,6 +12,14 @@ You own one isolated experiment. Follow `agents/oneshot-lead.md`.
 - Workspace: `{{RUN_PATH}}/workspace/`
 - Static artifact: `{{RUN_PATH}}/artifact/`
 
+## Dispatch and Recovery Mode (not part of the actual prompt)
+
+Use this complete template for an initial lead or a confirmed replacement recovery lead. Do not create a new dispatch for a resumable existing lead: send steering, corrections, side comments, and reconnect instructions through that lead’s current harness task so it retains its context and namespace.
+
+For an initial lead, set the recovery envelope below to `INITIAL: this is a newly reserved run.` For a replacement, first prove that the prior owner terminated and that the committed receipt, run metadata, exact prompt digest and byte count, identities, and assigned paths all match. Then provide the same run ID and paths, the exact supplemental continuation instruction, and exposed predecessor identity and interruption reason. The replacement must inspect and continue `workspace/`, `artifact/`, `worker-report.json`, and relevant `.tmp/` state before editing; it must not clear, reinitialize, copy, or fork the run. Never dispatch a replacement while another lead may still be active. Keep this envelope and all later steering out of `artifact/PROMPT.md`.
+
+{{RECOVERY_ENVELOPE}}
+
 ## Operational Runtime Envelope (not part of the actual prompt)
 
 Keep scratch and temporary files in the assigned `.tmp/` wherever the harness and tools permit. Route standard temporary-file variables such as `TMPDIR`, `TMP`, and `TEMP` there before launching local processes, and pass the same run-local path and routing to every descendant. Preserve `.tmp/` for run inspection. If a tool ignores the routing or creates state before this lead starts, record that limitation without deleting or sweeping unrelated external paths. Never copy `.tmp/` into `artifact/`, and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.
