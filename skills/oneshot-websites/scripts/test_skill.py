@@ -268,10 +268,17 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "expansive-budget-belongs-to-build-agents",
             "quick-critic-still-inspects-real-artifact",
             "critic-efficiency-is-not-a-fixed-token-cap",
+            "ready-verdict-is-terminal",
+            "not-ready-batches-blockers-for-targeted-recheck",
+            "broad-fix-warrants-new-fresh-critic",
+            "bar-and-artifact-review-are-consolidated",
+            "final-checks-reuse-one-evidence-bundle",
+            "smallest-sufficient-evidence-avoids-capture-sprawl",
+            "explicit-exhaustive-review-can-go-deeper",
         }
         assert_ok(
             required_critic_allocation_evals.issubset(names),
-            "evals must cover critic efficiency, direct inspection, builder investment, and warranted escalation",
+            "evals must cover lean critic consolidation, evidence reuse, direct inspection, builder investment, and warranted escalation",
             errors,
         )
         assert_ok(
@@ -1424,7 +1431,7 @@ def exercise_adversarial_contract(
         report_path = gauntlet_run / "worker-report.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         report = json.loads(report_path.read_text(encoding="utf-8"))
-        critic_ids = ["critic-before", "critic-after"]
+        critic_ids = ["critic-main"]
         manifest["execution"]["descendantWorkerIds"] = critic_ids
         report["descendantWorkerIds"] = critic_ids
         report["qualityGauntlet"] = {
@@ -1440,7 +1447,7 @@ def exercise_adversarial_contract(
             "freshCriticAvailable": True,
             "rounds": [
                 {
-                    "criticWorkerId": "critic-before",
+                    "criticWorkerId": "critic-main",
                     "artifactRevision": "sha256:before-fix",
                     "verdict": "NOT_READY",
                     "inspected": "artifact/index.html route from lobby to gallery",
@@ -1450,7 +1457,7 @@ def exercise_adversarial_contract(
                     "recheck": "Replay the same route at the reference viewport.",
                 },
                 {
-                    "criticWorkerId": "critic-after",
+                    "criticWorkerId": "critic-main",
                     "artifactRevision": "sha256:after-fix",
                     "verdict": "READY",
                     "inspected": "artifact/index.html route from lobby to gallery",
@@ -3383,6 +3390,26 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         critic_path.write_text(
             original_critic_text.replace(
+                "If the result is not ready, identify the smallest coherent batch of material, co-fixable blockers.",
+                "If the result is not ready, identify only one material gap per review.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        serial_gap_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            serial_gap_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing fresh read-only critic contract"
+            in serial_gap_critic_result.stdout,
+            "package validator accepted serial one-gap critic reviews",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
+        critic_path.write_text(
+            original_critic_text.replace(
                 "Operate as a quick, token-efficient critic by default.",
                 "Use the most expansive critic configuration available by default.",
                 1,
@@ -3397,6 +3424,26 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "agents/oneshot-critic.md runtime contract missing adaptive token-efficient critic role"
             in tokenmax_critic_result.stdout,
             "package validator accepted a critic role that tokenmaxxes ordinary review by default",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
+        critic_path.write_text(
+            original_critic_text.replace(
+                "On a follow-up, inspect only the changed revision’s affected states and proportionate regression evidence; do not repeat the full review unless the change or evidence invalidates it.",
+                "On every follow-up, repeat the full review and recreate all evidence.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        repeated_full_review_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            repeated_full_review_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing adaptive token-efficient critic role"
+            in repeated_full_review_result.stdout,
+            "package validator accepted full duplicate reviews after every fix",
             errors,
         )
         critic_path.write_text(original_critic_text, encoding="utf-8")
@@ -3606,7 +3653,27 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         lead_path.write_text(
             original_lead.replace(
-                "There is no fixed critic-round budget.",
+                "Treat `READY` as terminal for the inspected revision.",
+                "After `READY`, fix every minor observation and start another critic.",
+                1,
+            ),
+            encoding="utf-8",
+        )
+        nonterminal_ready_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            nonterminal_ready_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead-owned quality gauntlet"
+            in nonterminal_ready_result.stdout,
+            "package validator accepted polish rounds after a READY verdict",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
+        lead_path.write_text(
+            original_lead.replace(
+                "There is no fixed critic-round budget, and the lean path is not a hard cap.",
                 "Run exactly three critic rounds.",
                 1,
             ),
@@ -3681,6 +3748,44 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "SKILL.md runtime contract missing unrestricted build-agent capability allocation"
             in downgraded_capabilities_result.stdout,
             "package validator accepted skill-local capability downgrades for build agents",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_evidence_reuse = original_skill.replace(
+            "The final integrated browser exercise may also supply the critic, static-handoff, and final-verification "
+            "evidence when it inspects the same artifact revision under the needed conditions; reference that "
+            "evidence instead of relaunching the browser or recapturing equivalent states for each reporting field.",
+            "Run separate browser and capture passes for the critic, handoff, and final report.",
+            1,
+        )
+        skill_path.write_text(skill_without_evidence_reuse, encoding="utf-8")
+        duplicate_evidence_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            duplicate_evidence_result.returncode != 0
+            and "SKILL.md runtime contract missing smallest sufficient evidence reuse"
+            in duplicate_evidence_result.stdout,
+            "package validator accepted duplicate evidence passes as the default",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_with_nonterminal_ready = original_skill.replace(
+            "Treat `READY` as terminal for the inspected revision.",
+            "Treat `READY` as an invitation to fix every non-blocking note and review again.",
+            1,
+        )
+        skill_path.write_text(skill_with_nonterminal_ready, encoding="utf-8")
+        nonterminal_skill_ready_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            nonterminal_skill_ready_result.returncode != 0
+            and "SKILL.md runtime contract missing evidence-based critic stopping"
+            in nonterminal_skill_ready_result.stdout,
+            "package validator accepted non-terminal READY verdicts",
             errors,
         )
         skill_path.write_text(original_skill, encoding="utf-8")

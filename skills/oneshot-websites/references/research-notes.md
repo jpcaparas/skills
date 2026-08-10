@@ -29,7 +29,7 @@ Across the examples, the strongest artifact has a recognisable subject and one l
 
 ## Gauntlet Loop Lessons
 
-- [The Gauntlet Loop](https://somethingbig.ai/gauntlet-loop) makes the quality bar concrete: a lead decomposes the goal into independently improvable concerns, a separate fresh critic compares the real artifact with an inspectable reference, and the builder fixes the largest remaining gap before another review. The useful mechanism is fresh evidence, not a prescribed architecture or fixed number of rounds.
+- [The Gauntlet Loop](https://somethingbig.ai/gauntlet-loop) makes the quality bar concrete: a lead decomposes the goal into independently improvable concerns, and a separate fresh critic compares the real artifact with an inspectable reference. The useful mechanism is independent artifact evidence, not a prescribed architecture, a fixed number of rounds, or a requirement to reveal and re-review one gap at a time. This package therefore consolidates the initial bar and artifact review, batches co-fixable material blockers, and narrows follow-up inspection while preserving escalation for changed risk.
 - [Claude of Duty](https://github.com/mshumer/Claude-of-Duty) is the source implementation behind the article. Its published process notes show why this skill does not copy parallel fan-out mechanically: repeated parallel directory-owner passes improved the measured result only slightly and introduced new defects, while later sequential single-owner passes on coupled concerns produced a larger gain. The same notes emphasize reproducible rendered evidence, image differences, percentile-based diagnostics, and overriding a critic’s requested fix when measurements identify a different root cause.
 - The source also reports that its final artifact still lost a blind A/B comparison against the original. That limitation matters: a critic loop raises the quality floor but does not prove parity. This skill therefore requires honest verdict evidence and never treats the existence or count of critic rounds as success.
 
@@ -58,7 +58,7 @@ The research led to seven durable choices:
 3. Record the workflow honestly without imposing a time, model-call, framework, dependency, or source-project-shape limit.
 4. Standardize only the handoff: exact `PROMPT.md` plus a built root `index.html` in a drop-ready static folder.
 5. Keep the prompt catalogue broad and appendable, with deterministic checks for identity and accidental implementation constraints.
-6. Put evidence-driven builder/critic iteration inside the owning lead’s run: use a concrete bar, inspect the real artifact, keep coupled work sequential, and stop on evidence rather than a round count.
+6. Put evidence-driven builder/critic iteration inside the owning lead’s run: use a concrete bar, inspect the real artifact, keep coupled work sequential, treat `READY` as terminal, batch material blockers, reuse targeted evidence, and stop on evidence rather than a round count.
 7. Treat WebAssembly as an earned narrow-core option: reuse established compiled engines when that preserves semantics or portability, benchmark uncertain hot paths, and leave ordinary web work in the ordinary web stack.
 
 ## See Also

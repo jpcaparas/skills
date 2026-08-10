@@ -51,7 +51,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.13.0"
+PACKAGE_VERSION = "2.14.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -260,12 +260,23 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "smallest sufficient evidence reuse",
+        re.compile(
+            r"smallest representative evidence bundle.*?deterministic interaction traces and tests.*?"
+            r"screenshots or recordings only.*?final integrated browser exercise.*?critic.*?"
+            r"static-handoff.*?final-verification evidence.*?same artifact revision.*?"
+            r"instead of relaunching the browser or recapturing equivalent states",
+            re.I | re.S,
+        ),
+    ),
+    (
         "fresh real-artifact critic",
         re.compile(
             r"fresh recursive subagents.*?separate critic pass.*?empty inherited builder history.*?"
             r"actual prompt.*?quality bar.*?built artifact.*?"
             r"Do not give it the builder’s rationale.*?summary in place of the artifact.*?"
-            r"single highest-leverage remaining gap",
+            r"one consolidated pass.*?validates the proposed bar.*?compares the artifact.*?"
+            r"smallest coherent batch of material, co-fixable blockers",
             re.I | re.S,
         ),
     ),
@@ -276,7 +287,8 @@ RUNTIME_CONTRACTS = (
             r"Reserve expansive reasoning.*?context.*?turns.*?tool breadth.*?token investment.*?"
             r"lead and build-related descendants.*?Give an ordinary critic only.*?"
             r"enough tools and context to inspect the real artifact directly.*?"
-            r"concise verdict.*?concrete evidence.*?one highest-leverage gap.*?"
+            r"validate the bar and artifact together.*?concise verdict.*?concrete evidence.*?"
+            r"one coherent material blocker batch.*?"
             r"Do not spend critic turns on implementation.*?open-ended redesign.*?broad exploratory research.*?"
             r"generating the fix",
             re.I | re.S,
@@ -296,9 +308,13 @@ RUNTIME_CONTRACTS = (
     (
         "evidence-based critic stopping",
         re.compile(
-            r"new fresh critic.*?no skill-imposed number of rounds.*?"
-            r"Stop only when.*?bar is met.*?materially actionable.*?genuine blocker.*?user stops.*?"
-            r"Never stop merely because.*?predetermined round count",
+            r"Treat `READY` as terminal.*?non-blocking observations.*?do not fix them.*?"
+            r"request a recheck.*?new material evidence invalidates it.*?"
+            r"critic returns `NOT_READY`.*?fixes the coherent blocker batch in one build pass.*?"
+            r"same critic task.*?narrow recheck.*?new fresh critic only when.*?"
+            r"broad or coupled.*?bar legitimately changes.*?evidence conflicts.*?high-risk.*?"
+            r"no skill-imposed number of rounds.*?Never stop merely because.*?predetermined round count.*?"
+            r"never continue merely to fill a round count",
             re.I | re.S,
         ),
     ),
@@ -322,8 +338,11 @@ RUNTIME_CONTRACTS = (
         "gauntlet history separated from final verification",
         re.compile(
             r"worker-report\.json\.qualityGauntlet.*?artifact revision.*?"
+            r"same (?:exposed )?critic worker ID.*?recheck entries.*?"
             r"verification.*?final checks.*?NOT_READY.*?gauntlet history.*?"
-            r"failed final verification.*?later `OK` artifact",
+            r"failed final verification.*?later `OK` artifact.*?Evidence references may be shared.*?"
+            r"integration pass.*?static-handoff check.*?final verification.*?same revision.*?"
+            r"do not rerun equivalent checks",
             re.I | re.S,
         ),
     ),
@@ -497,7 +516,7 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"independent, read-only critic.*?without inherited builder conversation.*?"
             r"Never accept a prose summary in place of.*?actual artifact.*?"
-            r"single highest-leverage material gap.*?NOT_READY.*?READY.*?BLOCKED.*?"
+            r"smallest coherent batch of material, co-fixable blockers.*?NOT_READY.*?READY.*?terminal.*?BLOCKED.*?"
             r"Do not edit the workspace or artifact",
             re.I | re.S,
         ),
@@ -508,7 +527,8 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Resource and Output Discipline.*?quick, token-efficient critic by default.*?"
             r"fastest capable configuration.*?smallest sufficient reasoning depth.*?context.*?tool set.*?"
-            r"inspect the real artifact directly.*?one review pass and one decision.*?"
+            r"inspect the real artifact directly.*?validate the proposed bar and artifact in one consolidated pass.*?"
+            r"follow-up.*?only the changed revision’s affected states.*?do not repeat the full review.*?"
             r"implementation.*?broad exploration.*?open-ended redesign.*?build-related descendants.*?"
             r"adaptive, not a fixed numeric token, turn, or model cap.*?"
             r"deeper critic is warranted.*?return `BLOCKED`.*?rather than grading a summary or lowering the bar",
@@ -521,8 +541,10 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Quality Gauntlet.*?inspectable quality bar.*?"
             r"keep coupled.*?under one sequential owner.*?"
-            r"create a critic with empty inherited builder history.*?"
-            r"new fresh critic.*?no fixed critic-round budget.*?"
+            r"create (?:a|one) critic with empty inherited builder history.*?"
+            r"validate the bar and artifact in one consolidated pass.*?"
+            r"Treat `READY` as terminal.*?same critic task.*?targeted recheck.*?"
+            r"no fixed critic-round budget.*?new fresh critic only when.*?"
             r"never claim that an independent critic reviewed",
             re.I | re.S,
         ),
@@ -561,7 +583,7 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Quality Gauntlet.*?quick, token-efficient critic configuration by default.*?"
             r"Reserve expansive reasoning.*?token investment for build-related descendants.*?"
-            r"concise verdict.*?one highest-leverage gap.*?adaptive allocation policy.*?"
+            r"concise verdict.*?one coherent material blocker batch.*?adaptive allocation policy.*?"
             r"not a fixed token, turn, or model cap.*?Escalate critic capability.*?"
             r"only for a concrete review need.*?Record why escalation was warranted.*?"
             r"cannot directly inspect.*?escalate.*?`BLOCKED`.*?never grade a summary or weaken the bar",
@@ -689,8 +711,9 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Critic Allocation Envelope.*?quick, token-efficient critic configuration by default.*?"
             r"reserve expansive reasoning.*?token investment for build-related descendants.*?"
-            r"inspect the real artifact directly.*?concise verdict.*?one highest-leverage gap.*?"
-            r"Escalate critic capability.*?only when a concrete review need warrants it.*?"
+            r"inspect the real artifact directly.*?validate the proposed bar and artifact in one consolidated pass.*?"
+            r"coherent batch of material blockers.*?Treat `READY` as terminal.*?"
+            r"same critic task.*?targeted.*?recheck.*?Start another fresh or specialist critic only.*?"
             r"adaptive allocation rather than a fixed numeric cap.*?escalate or return `BLOCKED`.*?"
             r"Never trade away artifact-grounded review merely to save tokens.*?artifact/PROMPT\.md",
             re.I | re.S,
@@ -778,8 +801,9 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Lead-Owned Quality Gauntlet.*?Default to a quick, token-efficient critic.*?"
             r"reserve expansive reasoning.*?token investment for build-related descendants.*?"
+            r"reuse prepared evidence and the prior critic task for targeted rechecks.*?"
             r"adaptive allocation, not a fixed numeric token, turn, or model cap.*?"
-            r"Escalate.*?only for a concrete review need.*?record the reason.*?"
+            r"new fresh or specialist critic only for a concrete review need.*?record the reason.*?"
             r"cannot inspect the actual artifact directly.*?escalate or return `BLOCKED`.*?"
             r"rather than grading a summary or weakening the bar",
             re.I | re.S,

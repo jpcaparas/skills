@@ -350,12 +350,12 @@
       "id": 29,
       "name": "fresh-critic-inspects-real-artifact",
       "prompt": "Launch a one-shot recreation of the supplied desktop reference. After the lead builds it, the builder says the result is pixel-perfect and sends a detailed implementation summary. The harness supports fresh recursive subagents.",
-      "expected_output": "Keeps the build inside the owning lead's run and starts a separate critic with empty inherited builder history. The critic receives the prepared prompt, supplied reference, concrete comparison bar, actual built entrypoint, and rendered or interaction evidence, but not the builder's rationale or self-assessment. It opens and judges the real artifact before returning a verdict and highest-leverage gap.",
+      "expected_output": "Keeps the build inside the owning lead's run and starts a separate critic with empty inherited builder history. The critic receives the prepared prompt, supplied reference, proposed comparison bar, actual built entrypoint, and the smallest sufficient rendered, interaction, and test evidence, but not the builder's rationale or self-assessment. It validates the bar and judges the real artifact in one consolidated pass before returning a verdict and either none or a coherent material blocker batch.",
       "assertions": [
         {"text": "Uses a fresh no-history critic rather than the builder or lead's self-assessment", "type": "functional"},
         {"text": "The critic inspects the real built artifact and relevant rendered or interaction states against the supplied reference", "type": "verification"},
         {"text": "Does not substitute the builder's summary, rationale, or pixel-perfect claim for artifact inspection", "type": "negative"},
-        {"text": "The critic is read-only and returns a verdict plus one highest-leverage material gap", "type": "structural"}
+        {"text": "The critic is read-only and returns a verdict plus either none or one coherent batch of material co-fixable blockers", "type": "structural"}
       ],
       "tags": ["gauntlet", "critic", "artifact", "isolation", "smoke"]
     },
@@ -388,9 +388,9 @@
       "id": 32,
       "name": "critic-loop-has-evidence-stop-condition",
       "prompt": "The first critic finds that the museum map's room transitions do not match the supplied walkthrough. The lead's draft plan says it will always do exactly three critic rounds, whether or not the artifact is ready. Fix the gap and use the skill's proper stop condition.",
-      "expected_output": "The lead fixes the highest-leverage transition gap and sends the changed artifact to a new fresh critic. It rejects its own arbitrary three-round completion rule: it continues while a material actionable gap remains and stops only when current evidence meets the bar, remaining differences are immaterial or trade away a stronger quality, a genuine blocker exists, or the user stops.",
+      "expected_output": "The lead fixes the critic's coherent transition-blocker batch once and returns the changed artifact to the same critic task for a narrow recheck of the affected route and regression evidence. It rejects its arbitrary three-round rule: READY is terminal, while a material NOT_READY batch is fixed and rechecked until current evidence meets the bar, a genuine blocker exists, or the user stops. A new fresh critic is reserved for a broad or coupled change, revised bar, conflicting evidence, or high-risk concern.",
       "assertions": [
-        {"text": "Applies the critic's highest-leverage material fix and rechecks the changed artifact with a new fresh critic", "type": "functional"},
+        {"text": "Applies the coherent material blocker batch once and rechecks the changed artifact with the same critic task", "type": "functional"},
         {"text": "Uses evidence about the current artifact as the stop condition", "type": "verification"},
         {"text": "Does not stop merely because its planned three rounds elapsed or continue merely to reach its planned count", "type": "negative"}
       ],
@@ -412,7 +412,7 @@
       "id": 34,
       "name": "parallel-build-receives-whole-artifact-review",
       "prompt": "For a large browser observatory, delegate independent instrument panels and the star catalogue in parallel, then deliver one cohesive experience.",
-      "expected_output": "The lead may parallelize the independently judgeable panels and catalogue, but remains the sole experiment owner. After integration it performs a smoothing pass across shared navigation, state, styling, motion, and feedback, then gives the whole built artifact to a fresh critic rather than accepting component-level passes as proof of system quality.",
+      "expected_output": "The lead may parallelize the independently judgeable panels and catalogue, but remains the sole experiment owner. After integration it performs one smoothing and browser pass across shared navigation, state, styling, motion, and feedback, then reuses that evidence bundle for whole-artifact criticism, static-handoff verification, and final reporting rather than accepting component-level passes or repeating equivalent checks.",
       "assertions": [
         {"text": "Keeps one owning lead while allowing independent component builders", "type": "structural"},
         {"text": "Runs an integration and consistency pass after parallel work merges", "type": "functional"},
@@ -425,7 +425,7 @@
       "id": 35,
       "name": "gauntlet-revisions-remain-one-shot",
       "prompt": "The lead uses two builder passes and three fresh critics before the artifact meets its reference bar. Record the run without changing the one-shot benchmark structure.",
-      "expected_output": "Treats every builder and critic pass as internal work by the same owning lead in the original autonomous-one-shot run. It preserves the original prompt and run ID, records exposed critic IDs as descendants and structured bar, gap, fix, and final-recheck evidence in worker-report.json, and does not create rerun directories or let the coordinator rewrite the artifact.",
+      "expected_output": "Treats every builder pass, critic pass, and targeted recheck as internal work by the same owning lead in the original autonomous-one-shot run. It preserves the original prompt and run ID, records exposed critic IDs as descendants and structured bar, blocker-batch, fix, and recheck evidence in worker-report.json, permits one critic ID to span targeted rechecks, and does not create rerun directories or let the coordinator rewrite the artifact.",
       "assertions": [
         {"text": "Preserves one lead owner, one run ID, one classification, and the unchanged artifact/PROMPT.md", "type": "structural"},
         {"text": "Records exposed critics as descendant workers and gauntlet history in qualityGauntlet, including the artifact revision each critic inspected", "type": "verification"},
@@ -486,7 +486,7 @@
       "id": 40,
       "name": "behavioral-failure-blocks-screenshot-pass",
       "prompt": "The replica matches the supplied screenshot closely, but keyboard navigation skips the main action, loading never resolves on a slow response, and a saved preference disappears after reload.",
-      "expected_output": "The critic refuses a visual-only READY verdict. It inspects keyboard flow, loading behavior, and persistence as material prompt states, identifies the highest-leverage failure, and requires the changed artifact to pass behavioral rechecks before completion.",
+      "expected_output": "The critic refuses a visual-only READY verdict. It inspects keyboard flow, loading behavior, and persistence as material prompt states, returns them as one coherent material blocker batch when they can be fixed together, and requires a targeted behavioral and regression recheck before completion.",
       "assertions": [
         {"text": "Treats keyboard flow, loading state, and persistence as real artifact evidence", "type": "functional"},
         {"text": "Does not certify the artifact from screenshot similarity alone", "type": "negative"},
@@ -510,7 +510,7 @@
       "id": 42,
       "name": "evidence-can-overrule-critic-diagnosis",
       "prompt": "Two critics say the sculpture looks untextured and ask for a new texture. Browser measurements and controlled captures show the texture is loaded; the object is unreadable because the key light is behind it.",
-      "expected_output": "The owning lead preserves the critics' observed symptom but follows the stronger root-cause evidence, fixes the lighting rather than blindly replacing the texture, and asks a new critic to recheck the changed artifact against the original bar.",
+      "expected_output": "The owning lead preserves the critics' observed symptom but follows the stronger root-cause evidence, fixes the lighting rather than blindly replacing the texture, and returns to the same critic task for a targeted recheck against the original bar unless the lighting change is broad enough to warrant recorded fresh independence.",
       "assertions": [
         {"text": "Distinguishes the observed visual symptom from the critics' proposed implementation fix", "type": "functional"},
         {"text": "Uses measurements and controlled captures to choose the evidenced lighting fix", "type": "verification"},
@@ -522,7 +522,7 @@
       "id": 43,
       "name": "whole-artifact-regression-prevents-ready",
       "prompt": "Aesthetic refinements improve the hero view, but they lower text contrast, break the mobile menu, and push p95 interaction latency above the accepted bar.",
-      "expected_output": "The whole-artifact critic catches the accessibility, responsive, and tail-latency regressions. The lead keeps the gauntlet open, fixes or rebalances the change, and does not declare READY because one visual state improved.",
+      "expected_output": "The whole-artifact critic catches the accessibility, responsive, and tail-latency regressions as a coherent material blocker batch. The lead fixes or rebalances them together and uses a targeted recheck plus proportionate whole-artifact regression evidence; it does not declare READY because one visual state improved.",
       "assertions": [
         {"text": "Rechecks accessibility, responsive behavior, and p95 performance after the aesthetic change", "type": "verification"},
         {"text": "Treats cross-quality regressions as material whole-artifact gaps", "type": "functional"},
@@ -869,11 +869,11 @@
       "id": 71,
       "name": "ordinary-critic-round-is-quick-and-token-efficient",
       "prompt": "A browser note-taking replica has a sealed prompt, an accepted screenshot bar, one exact artifact revision, and prepared desktop and mobile captures. Start the ordinary critic pass without spending builder-scale resources on it.",
-      "expected_output": "The lead launches one fresh, fast, token-efficient critic with the smallest sufficient context and tools for direct inspection. The critic reuses the prepared evidence, returns a concise verdict with concrete comparison evidence and one highest-leverage gap, and stops without researching implementation options, fanning out routine review, or generating a fix.",
+      "expected_output": "The lead launches one fresh, fast, token-efficient critic with the smallest sufficient context and tools for direct inspection. The critic validates the accepted bar and artifact together, reuses the prepared evidence, returns a concise verdict with concrete comparison evidence and one coherent material blocker batch or none, and stops without researching implementation options, fanning out routine review, or generating a fix.",
       "assertions": [
         {"text": "Defaults to the fastest capable critic configuration rather than the build team's expansive profile", "type": "functional"},
         {"text": "Provides the sealed prompt, accepted bar, exact artifact revision, relevant evidence, and direct inspection capability", "type": "structural"},
-        {"text": "Returns a concise verdict, concrete evidence, and one highest-leverage material gap", "type": "verification"},
+        {"text": "Returns a concise verdict, concrete evidence, and one coherent material blocker batch or none", "type": "verification"},
         {"text": "Does not spend critic turns on implementation, broad research, open-ended redesign, generating the fix, or routine critic fan-out", "type": "negative"}
       ],
       "tags": ["subagents", "critic", "token-efficiency", "quality", "default"]
@@ -882,7 +882,7 @@
       "id": 72,
       "name": "complex-review-warrants-critic-escalation",
       "prompt": "A browser operating-system replica has dozens of coupled window states, keyboard and screen-reader paths, contradictory interaction traces, and a subtle pixel-matched reference. The initial quick critic cannot determine whether the artifact meets the accepted bar.",
-      "expected_output": "The lead records why the ordinary critic was inconclusive and escalates the next fresh critic's reasoning, context, tools, or model capability enough to inspect the coupled states, accessibility paths, conflicting evidence, and reference comparison directly. Efficiency does not override a warranted deep review.",
+      "expected_output": "The lead records why the ordinary critic was inconclusive and escalates a new fresh or specialist critic's reasoning, context, tools, or model capability enough to inspect the coupled states, accessibility paths, conflicting evidence, and reference comparison directly. Efficiency does not override a warranted deep review.",
       "assertions": [
         {"text": "Identifies concrete complexity, accessibility, conflicting-evidence, and comparison reasons for escalation", "type": "functional"},
         {"text": "Records why the quick critic was insufficient before allocating a deeper critic", "type": "verification"},
@@ -895,10 +895,10 @@
       "id": 73,
       "name": "expansive-budget-belongs-to-build-agents",
       "prompt": "A complex WebGL simulation needs source research, profiling, asset creation, debugging, integration, and repeated browser verification. A critic later needs only to compare the prepared artifact evidence with the frozen bar. Allocate the team's effort appropriately.",
-      "expected_output": "The lead gives build-related descendants the unrestricted reasoning, context, turns, tools, and token investment their implementation work warrants. The ordinary critic receives a focused, token-efficient inspection assignment and hands one material gap back to the build branch instead of doing the implementation itself.",
+      "expected_output": "The lead gives build-related descendants the unrestricted reasoning, context, turns, tools, and token investment their implementation work warrants. The ordinary critic receives a focused, token-efficient inspection assignment and hands one coherent material blocker batch back to the build branch instead of doing the implementation itself.",
       "assertions": [
         {"text": "Reserves expansive research, creation, debugging, integration, and verification capacity for build-related descendants", "type": "functional"},
-        {"text": "Keeps the critic read-only and focused on comparison evidence and one gap", "type": "structural"},
+        {"text": "Keeps the critic read-only and focused on comparison evidence and one coherent blocker batch", "type": "structural"},
         {"text": "Routes the resulting fix back to the lead or a build-related descendant", "type": "functional"},
         {"text": "Does not tokenmax ordinary critics while starving build branches", "type": "negative"}
       ],
@@ -1007,6 +1007,90 @@
         {"text": "Does not evade the ownership uncertainty by silently creating a fresh run", "type": "negative"}
       ],
       "tags": ["recovery", "ownership", "race", "negative", "edge"]
+    },
+    {
+      "id": 82,
+      "name": "ready-verdict-is-terminal",
+      "prompt": "The fresh critic returns READY for a browser spreadsheet replica and mentions two minor spacing preferences that do not affect the accepted bar. The lead wants to tweak both and launch another critic to be safe.",
+      "expected_output": "The lead stops the gauntlet for that artifact revision. It records the minor preferences as non-blocking observations, makes no polish-only fix, and starts no recheck or new critic unless new material evidence later invalidates READY.",
+      "assertions": [
+        {"text": "Treats READY as terminal for the inspected artifact revision", "type": "functional"},
+        {"text": "Records immaterial preferences without turning them into required work", "type": "verification"},
+        {"text": "Does not spend build or critic work on a polish-only round", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "gauntlet", "terminal", "token-efficiency"]
+    },
+    {
+      "id": 83,
+      "name": "not-ready-batches-blockers-for-targeted-recheck",
+      "prompt": "A fresh critic finds that the same stale state causes broken undo, save status, and reload persistence in a browser document editor. Organize the fix and recheck efficiently.",
+      "expected_output": "The critic reports undo, save status, and reload persistence as one coherent material blocker batch tied to the shared stale-state root cause. The build branch fixes the batch once, then the same critic task rechecks those affected flows and proportionate regression evidence without repeating the full visual review.",
+      "assertions": [
+        {"text": "Batches co-fixable material blockers around their shared root cause", "type": "functional"},
+        {"text": "Uses one build pass followed by the same critic task's targeted recheck", "type": "structural"},
+        {"text": "Reuses valid evidence and avoids serial one-gap or full-review repetition", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "gauntlet", "batching", "recheck"]
+    },
+    {
+      "id": 84,
+      "name": "broad-fix-warrants-new-fresh-critic",
+      "prompt": "A NOT_READY verdict leads the builder to replace the shared rendering engine, rewrite keyboard focus management, and revise the accepted accessibility bar. Decide whether the original critic context is enough.",
+      "expected_output": "The lead records that the coupled rendering and focus rewrite plus legitimate bar revision materially changed the review surface, then launches a new fresh critic with the revised bar and real artifact. It does not force a narrow same-critic recheck when renewed independence is warranted.",
+      "assertions": [
+        {"text": "Recognizes broad coupled changes and a bar revision as concrete fresh-review triggers", "type": "functional"},
+        {"text": "Records the escalation reason and gives the new critic the revised inspectable evidence", "type": "verification"},
+        {"text": "Does not treat the lean default as a hard ban on fresh or specialist review", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "escalation", "freshness", "risk"]
+    },
+    {
+      "id": 85,
+      "name": "bar-and-artifact-review-are-consolidated",
+      "prompt": "The lead has a proposed reference-derived bar and a built browser music workstation. It plans one fresh critic to approve the bar and a second fresh critic to inspect the artifact.",
+      "expected_output": "The lead gives one fresh no-history critic the prompt, proposed bar, provenance, real artifact, and smallest sufficient evidence. That critic validates the bar and scores the artifact in one consolidated pass instead of creating separate bar-only and artifact-only sessions.",
+      "assertions": [
+        {"text": "Combines initial bar validation and artifact comparison in one critic pass", "type": "functional"},
+        {"text": "Preserves independent direct inspection and reference provenance", "type": "verification"},
+        {"text": "Does not launch a second routine critic solely to split the two decisions", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "gauntlet", "consolidation", "default"]
+    },
+    {
+      "id": 86,
+      "name": "final-checks-reuse-one-evidence-bundle",
+      "prompt": "The integrated artifact already passed one local browser exercise covering navigation, responsive states, static asset loading, and the primary interaction. Populate the gauntlet, integration, static-handoff, and final verification honestly.",
+      "expected_output": "The lead records the exact artifact revision and cites the same qualifying browser evidence bundle for integration, critic context, static-handoff, and final verification where it proves each claim. It does not relaunch the browser or recapture identical states merely because the report has separate fields.",
+      "assertions": [
+        {"text": "Reuses one qualifying evidence bundle across compatible report claims for the same revision", "type": "functional"},
+        {"text": "Keeps each report field explicit about what the shared evidence proves", "type": "verification"},
+        {"text": "Does not manufacture separate sessions or duplicate captures for paperwork", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "evidence", "integration", "token-efficiency"]
+    },
+    {
+      "id": 87,
+      "name": "smallest-sufficient-evidence-avoids-capture-sprawl",
+      "prompt": "A multi-state calendar replica has deterministic interaction tests for twenty state transitions, while only three layouts need visual comparison. The lead proposes screenshots for every state at every viewport.",
+      "expected_output": "The lead uses deterministic tests or traces for the state matrix and captures only the three representative layouts at the viewports needed by the visual bar. The critic receives enough evidence for direct inspection without a redundant screenshot explosion.",
+      "assertions": [
+        {"text": "Matches evidence type to the requirement being proved", "type": "functional"},
+        {"text": "Uses deterministic state evidence plus a minimal representative visual set", "type": "verification"},
+        {"text": "Does not equate capture count with review quality", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "evidence", "captures", "token-efficiency"]
+    },
+    {
+      "id": 88,
+      "name": "explicit-exhaustive-review-can-go-deeper",
+      "prompt": "For this safety-critical evacuation simulator, explicitly run an exhaustive accessibility and correctness review across every defined emergency state, even if the ordinary visual bar is already met.",
+      "expected_output": "The lead honors the explicit exhaustive scope and records the accessibility and correctness risk that warrants deeper or specialist criticism. It still reuses valid evidence and avoids unrelated polish, but does not use the lean default to undercut the user's review requirement.",
+      "assertions": [
+        {"text": "Honors the explicit exhaustive review requirement and high-risk scope", "type": "functional"},
+        {"text": "Records why deeper or specialist critic capability is warranted", "type": "verification"},
+        {"text": "Does not misapply the lean default as a universal review cap", "type": "negative"}
+      ],
+      "tags": ["subagents", "critic", "accessibility", "correctness", "escalation"]
     }
   ]
 }
