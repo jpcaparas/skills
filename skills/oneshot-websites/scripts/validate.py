@@ -32,6 +32,7 @@ REQUIRED_FILES = (
     "references/research-notes.md",
     "references/wasm-selection.md",
     "scripts/build_catalog_index.py",
+    "scripts/cleanup_run_tmp.py",
     "scripts/list_prompts.py",
     "scripts/prepare_run.py",
     "scripts/runtime_contract.py",
@@ -51,7 +52,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.14.0"
+PACKAGE_VERSION = "2.15.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -159,7 +160,7 @@ RUNTIME_CONTRACTS = (
         re.compile(
             r"Reuse only a candidate whose identity is proven.*?coordinator receipt.*?`\.commit` marker.*?"
             r"run ID.*?exact run path.*?classification.*?experiment identity.*?prompt SHA-256 digest.*?"
-            r"byte count.*?artifact/PROMPT\.md.*?active task.*?\.tmp/.*?workspace/.*?artifact/.*?"
+            r"byte count.*?artifact/PROMPT\.md.*?active task.*?workspace/.*?artifact/.*?\.tmp/.*?"
             r"do not guess.*?silently reserve a replacement.*?RECOVERY_UNAVAILABLE.*?RECOVERY_AMBIGUOUS",
             re.I | re.S,
         ),
@@ -352,7 +353,18 @@ RUNTIME_CONTRACTS = (
         "run-local temporary containment",
         re.compile(
             r"Keep disposable working state.*?run’s `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
-            r"Preserve `\.tmp/`.*?best effort.*?Durable project files.*?workspace/.*?never belongs.*?artifact",
+            r"Retain `\.tmp/`.*?active work.*?recovery.*?non-successful terminal state.*?"
+            r"best effort.*?Durable project files.*?workspace/.*?never belongs.*?artifact",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "completion-only temporary cleanup",
+        re.compile(
+            r"For a successful finalization.*?stop or await every descendant and process.*?"
+            r"promote all required evidence out of `\.tmp/`.*?no final check depends on scratch state.*?"
+            r"cleanup_run_tmp\.py.*?--confirm-finalized.*?Only after it succeeds.*?`OK`.*?"
+            r"cleanup.*?fails.*?non-`OK`.*?`PARTIAL`.*?`BLOCKED`.*?`ERROR`.*?retain `\.tmp/`",
             re.I | re.S,
         ),
     ),
@@ -618,8 +630,11 @@ FILE_RUNTIME_CONTRACTS = (
         "lead temporary-file discipline",
         re.compile(
             r"Temporary-File Discipline.*?assigned run’s `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
-            r"every descendant.*?best-effort containment.*?Preserve `\.tmp/`.*?"
-            r"never copy `\.tmp/` into `artifact/`.*?Never add it.*?artifact/PROMPT\.md",
+            r"every descendant.*?best-effort containment.*?Retain `\.tmp/`.*?`PARTIAL`.*?`BLOCKED`.*?`ERROR`.*?"
+            r"never copy `\.tmp/` into `artifact/`.*?successful finalization.*?"
+            r"stop or await every descendant.*?cleanup_run_tmp\.py.*?--confirm-finalized.*?"
+            r"only then set both status records to `OK`.*?successful handoff has no `\.tmp/`.*?"
+            r"Never add it.*?artifact/PROMPT\.md",
             re.I | re.S,
         ),
     ),
@@ -684,8 +699,10 @@ FILE_RUNTIME_CONTRACTS = (
         "dispatch temporary-file envelope",
         re.compile(
             r"Operational Runtime Envelope.*?assigned `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
-            r"every descendant.*?Preserve `\.tmp/`.*?Never copy `\.tmp/` into `artifact/`.*?"
-            r"never add.*?artifact/PROMPT\.md",
+            r"every descendant.*?Retain `\.tmp/`.*?non-`OK`.*?Never copy `\.tmp/` into `artifact/`.*?"
+            r"never add.*?artifact/PROMPT\.md.*?successful finalization only.*?"
+            r"TEMP_CLEANUP_HELPER.*?--confirm-finalized.*?Set both statuses to `OK` only after.*?"
+            r"`PARTIAL`.*?`BLOCKED`.*?`ERROR`.*?keep `\.tmp/` intact",
             re.I | re.S,
         ),
     ),

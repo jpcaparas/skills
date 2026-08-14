@@ -312,12 +312,12 @@
       "id": 26,
       "name": "run-local-temporary-isolation",
       "prompt": "Launch two one-shots for an interactive aquarium and a browser-based train simulator. Keep each lead's temporary work contained without changing either authored website prompt.",
-      "expected_output": "Prepares two disjoint run directories, creates a preserved .tmp/ sibling beside workspace/ and artifact/ inside each unique run, and passes only that run's absolute temporary path through the operational dispatch envelope. It routes supported TMPDIR, TMP, and TEMP values to that directory for the lead and its descendants. Neither actual prompt nor artifact/PROMPT.md contains the temporary-file envelope, and .tmp/ is never copied into either deployable artifact.",
+      "expected_output": "Prepares two disjoint run directories, creates a recoverable .tmp/ sibling beside workspace/ and artifact/ inside each unique run, and passes only that run's absolute temporary path through the operational dispatch envelope. It routes supported TMPDIR, TMP, and TEMP values to that directory for the lead and its descendants. Neither actual prompt nor artifact/PROMPT.md contains the temporary-file envelope. After each lead stops all descendants, promotes durable evidence, and passes local verification, its safe exact-path cleanup removes that run's .tmp/ in its entirety before the status becomes OK.",
       "assertions": [
-        {"text": "Every run has its own exact-case .tmp/ directory and run.json records it as retained best-effort run-local temporary storage", "type": "structural"},
+        {"text": "Every active run has its own exact-case .tmp/ directory and run.json records its retain-until-successful-finalization lifecycle", "type": "structural"},
         {"text": "Each lead and its descendants receive only their owning run's temporary path and supported environment routing", "type": "functional"},
         {"text": "The actual prompts and artifact/PROMPT.md files contain the finished website briefs but no temporary-file operational guidance", "type": "negative"},
-        {"text": "The preserved .tmp/ directories remain siblings of, rather than children of, artifact/", "type": "verification"}
+        {"text": "Each OK run has no .tmp/ directory after scoped recursive cleanup, while neither artifact ever contains temporary state", "type": "verification"}
       ],
       "tags": ["dispatch", "temporary-files", "isolation", "recursive-delegation", "exact-prompt", "artifact"]
     },
@@ -325,11 +325,11 @@
       "id": 27,
       "name": "temporary-routing-tool-exception",
       "prompt": "The selected build tool ignores TMPDIR and writes one cache file before the lead can configure it. Finish the one-shot and account for that limitation safely.",
-      "expected_output": "Keeps all controllable scratch work in the run-local .tmp/, preserves that directory, and records the known tool or harness exception in worker-report.json. It does not claim perfect containment, sweep or delete unrelated external temporary paths, copy .tmp/ into artifact/, or add operational temporary-file instructions to the actual prompt or artifact/PROMPT.md.",
+      "expected_output": "Keeps all controllable scratch work in the run-local .tmp/ and records the known tool or harness exception in worker-report.json. Once the one-shot is otherwise complete, it stops writers, promotes durable evidence, and deletes only the exact run-local .tmp/ through the safe completion helper. It does not claim perfect containment, delete the tool's unrelated external cache, copy .tmp/ into artifact/, or add operational temporary-file instructions to the actual prompt or artifact/PROMPT.md.",
       "assertions": [
         {"text": "Treats temporary containment as best effort and records the known external exception honestly", "type": "functional"},
         {"text": "Does not inspect, move, or delete unrelated paths outside the assigned run", "type": "negative"},
-        {"text": "Preserves run-local scratch evidence while keeping the static artifact and PROMPT.md clean", "type": "verification"}
+        {"text": "Deletes the finalized run's exact .tmp/ while leaving the recorded external exception path untouched", "type": "verification"}
       ],
       "tags": ["temporary-files", "tool-limitation", "worker-report", "prompt-isolation", "negative"]
     },
@@ -1091,6 +1091,42 @@
         {"text": "Does not misapply the lean default as a universal review cap", "type": "negative"}
       ],
       "tags": ["subagents", "critic", "accessibility", "correctness", "escalation"]
+    },
+    {
+      "id": 89,
+      "name": "interrupted-run-retains-recovery-scratch",
+      "prompt": "The browser replica lead lost transport while two descendant builders were still active. The run is committed but not complete. Finalize whatever is safe and clean up temporary files.",
+      "expected_output": "Treats the transport loss as a continuation, reattaches to the existing run when possible, and keeps the exact run-local .tmp/ intact while writers may still be active or recovery evidence may depend on it. It does not invoke successful-finalization cleanup or claim OK; it resumes, waits, or records a non-OK blocker in the same namespace.",
+      "assertions": [
+        {"text": "Reuses the committed run and existing lead namespace instead of creating a replacement run", "type": "functional"},
+        {"text": "Retains the exact .tmp/ while descendants, processes, or recovery evidence may still depend on it", "type": "verification"},
+        {"text": "Does not pass the finalization confirmation or claim OK during an interrupted active state", "type": "negative"}
+      ],
+      "tags": ["temporary-files", "recovery", "continuation", "negative"]
+    },
+    {
+      "id": 90,
+      "name": "successful-run-deletes-temporary-tree",
+      "prompt": "The spreadsheet clone is finished, all descendant tasks and local servers have stopped, required traces are recorded durably, and final local checks pass. Complete the run and hand it off.",
+      "expected_output": "Keeps both status records RUNNING while it invokes the supplied safe cleanup helper with the exact run path and explicit finalization confirmation. The helper recursively removes nested scratch in .tmp/, verifies absence, and only then permits both statuses to become OK and final catalog validation to pass.",
+      "assertions": [
+        {"text": "Stops all writers and promotes required evidence before cleanup", "type": "functional"},
+        {"text": "Uses the supplied exact-path cleanup helper and verifies the entire .tmp/ tree is absent", "type": "verification"},
+        {"text": "Sets OK only after cleanup succeeds and final validation no longer depends on scratch state", "type": "structural"}
+      ],
+      "tags": ["temporary-files", "finalization", "cleanup", "verification"]
+    },
+    {
+      "id": 91,
+      "name": "unsafe-temporary-target-blocks-completion",
+      "prompt": "The apparent run-local .tmp path is a symlink to a shared cache outside the run, but the website itself passes. Finish the run and remove the scratch directory.",
+      "expected_output": "Refuses to follow or recursively delete the symlink, performs no broad sweep, leaves the external cache untouched, and does not claim OK. It reports a cleanup blocker so a coordinator can repair the exact in-run temporary boundary safely.",
+      "assertions": [
+        {"text": "Rejects a symlinked, wrong-case, escaped, or otherwise ambiguous .tmp target", "type": "functional"},
+        {"text": "Leaves the shared external cache unchanged", "type": "verification"},
+        {"text": "Does not use a broad recursive deletion or report successful completion", "type": "negative"}
+      ],
+      "tags": ["temporary-files", "path-safety", "cleanup", "negative"]
     }
   ]
 }

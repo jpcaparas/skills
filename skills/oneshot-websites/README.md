@@ -14,7 +14,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - Same-run reconnect and steering recovery that resumes the existing lead and namespace by default, verifies receipt and prompt identity, and permits only one active owner
 - A lean lead-owned quality gauntlet with consolidated bar-and-artifact review, terminal `READY`, batched material blockers, same-critic targeted rechecks, evidence reuse, and warranted fresh escalation
 - Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
-- A preserved `.tmp/` inside every unique run, with best-effort temp routing inherited by descendants and kept out of prompts and deployable artifacts
+- Recoverable `.tmp/` isolation during active and non-successful work, with safe exact-path recursive deletion after successful finalization
 - No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints on lead and build work; critics use an adaptive focused profile
 - Evidence-gated WebAssembly selection: reuse proven compiled cores when justified, benchmark uncertain hot paths, and keep ordinary web work in the web stack
 - Flat `timestamp-experiment-slug` run directories with atomic `--02` collision suffixes
@@ -34,4 +34,5 @@ Production skill for launching autonomous one-shot website experiments through f
 - `agents/oneshot-lead.md` - isolated lead role
 - `agents/oneshot-critic.md` - fresh read-only artifact critic
 - `scripts/list_prompts.py` - catalogue browser
+- `scripts/cleanup_run_tmp.py` - completion-gated exact run-local scratch cleanup
 - `scripts/validate_catalog.py` - generated artifact checker

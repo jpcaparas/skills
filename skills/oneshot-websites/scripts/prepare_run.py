@@ -267,7 +267,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2"}
+        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2", "2.3"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -406,7 +406,7 @@ def run_document(
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "3.2",
+        "schemaVersion": "3.3",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -416,7 +416,11 @@ def run_document(
         "classification": classification,
         "status": "PLANNED",
         "prompt": {"path": "artifact/PROMPT.md", "sha256": prompt_digest, "preservation": "verbatim"},
-        "temporary": {"path": ".tmp/", "routing": "best-effort-run-local", "preservation": "retain"},
+        "temporary": {
+            "path": ".tmp/",
+            "routing": "best-effort-run-local",
+            "lifecycle": "retain-until-successful-finalization",
+        },
         "workspace": {"path": "workspace/"},
         "artifact": {"path": "artifact/", "entrypoint": "artifact/index.html", "deployment": "static-folder"},
         "execution": {
@@ -445,10 +449,10 @@ def provenance_receipt(
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
     return {
-        "schemaVersion": "2.2",
+        "schemaVersion": "2.3",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "3.2",
+        "runSchemaVersion": "3.3",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -457,7 +461,11 @@ def provenance_receipt(
         "classification": classification,
         "priorRun": prior_run,
         "prompt": {"sha256": prompt_digest, "bytes": prompt_bytes},
-        "temporary": {"path": ".tmp/", "routing": "best-effort-run-local", "preservation": "retain"},
+        "temporary": {
+            "path": ".tmp/",
+            "routing": "best-effort-run-local",
+            "lifecycle": "retain-until-successful-finalization",
+        },
         "qualityGauntlet": {
             "required": True,
             "contractVersion": "1.0",

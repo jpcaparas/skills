@@ -25,6 +25,7 @@ from unittest.mock import patch
 
 import validate_catalog as catalog_validator
 from build_catalog_index import CATALOGUE_LOCK, parse_flat_run_id
+from cleanup_run_tmp import cleanup_run_temporary
 from prepare_run import RunPreparationError, build_identity, make_run_id, reserve_paths
 from runtime_contract import (
     enforce_json_nesting_limit,
@@ -297,6 +298,28 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "critic-allocation evals must carry subagent and critic-or-builder tags",
             errors,
         )
+        required_temporary_cleanup_evals = {
+            "interrupted-run-retains-recovery-scratch",
+            "successful-run-deletes-temporary-tree",
+            "unsafe-temporary-target-blocks-completion",
+        }
+        assert_ok(
+            required_temporary_cleanup_evals.issubset(names),
+            "evals must cover recoverable retention, successful recursive cleanup, and unsafe-target refusal",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "temporary-files" in item["tags"]
+                for item in entries
+                if isinstance(item, Mapping)
+                and item.get("name") in required_temporary_cleanup_evals
+            ),
+            "temporary cleanup evals must carry the temporary-files tag",
+            errors,
+        )
 
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
@@ -403,8 +426,8 @@ def prepare_run(
     return prepared
 
 
-def mark_successful_static_artifact(run_path: Path) -> None:
-    """Create a framework-shaped source workspace and its static export."""
+def prepare_finalizable_static_artifact(run_path: Path) -> None:
+    """Create a verified static export while keeping the run in its pre-cleanup state."""
     workspace = run_path / "workspace"
     workspace.mkdir(exist_ok=True)
     (workspace / "package.json").write_text(
@@ -424,11 +447,11 @@ def mark_successful_static_artifact(run_path: Path) -> None:
     )
     manifest_path = run_path / "run.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-    manifest["status"] = "OK"
+    manifest["status"] = "RUNNING"
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     report_path = run_path / "worker-report.json"
     report = json.loads(report_path.read_text(encoding="utf-8"))
-    report["status"] = "OK"
+    report["status"] = "RUNNING"
     report["temporary"]["routingApplied"] = True
     report["artifact"]["staticDeploymentVerified"] = True
     report["qualityGauntlet"] = {
@@ -451,6 +474,21 @@ def mark_successful_static_artifact(run_path: Path) -> None:
     report["verification"] = [
         {"kind": "static-browser-smoke", "result": "passed", "evidence": "Opened the built root entrypoint"}
     ]
+    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+
+
+def mark_successful_static_artifact(run_path: Path) -> None:
+    """Finalize a fixture only after safely removing its complete temporary tree."""
+
+    prepare_finalizable_static_artifact(run_path)
+    cleanup_run_temporary(run_path, confirmed_finalized=True)
+    manifest_path = run_path / "run.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    manifest["status"] = "OK"
+    manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
+    report_path = run_path / "worker-report.json"
+    report = json.loads(report_path.read_text(encoding="utf-8"))
+    report["status"] = "OK"
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     built = rebuild_catalog_index(run_path.parent)
     if built.returncode != 0:
@@ -504,6 +542,13 @@ def convert_to_legacy_run(output_root: Path, run_path: Path, run_schema: str) ->
         receipt.pop("temporary", None)
     else:
         receipt["runSchemaVersion"] = "2.1"
+        historical_temporary = {
+            "path": ".tmp/",
+            "routing": "best-effort-run-local",
+            "preservation": "retain",
+        }
+        manifest["temporary"] = historical_temporary
+        receipt["temporary"] = historical_temporary
 
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
@@ -534,6 +579,13 @@ def convert_to_historical_flat_run(output_root: Path, run_path: Path, run_schema
 
     manifest["schemaVersion"] = run_schema
     receipt["runSchemaVersion"] = run_schema
+    historical_temporary = {
+        "path": ".tmp/",
+        "routing": "best-effort-run-local",
+        "preservation": "retain",
+    }
+    manifest["temporary"] = historical_temporary
+    receipt["temporary"] = historical_temporary
     if run_schema == "3.0":
         report["schemaVersion"] = "2.0"
         report.pop("qualityGauntlet", None)
@@ -545,6 +597,7 @@ def convert_to_historical_flat_run(output_root: Path, run_path: Path, run_schema
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
     receipt_path.write_text(json.dumps(receipt, indent=2) + "\n", encoding="utf-8")
+    (run_path / ".tmp").mkdir(exist_ok=True)
     return run_path
 
 
@@ -1834,7 +1887,7 @@ def exercise_adversarial_contract(
             structured_build.returncode == 0
             and structured_validation.returncode != 0
             and "flat run schemaVersion must be one of" in structured_validation.stdout
-            and "schemaVersion must be 1.0, 1.1, 2.0, 2.1, or 2.2" in structured_validation.stdout
+            and "schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, or 2.3" in structured_validation.stdout
             and "Traceback" not in structured_validation.stderr,
             "structured schema versions escaped validation or caused a crash: {}{}".format(
                 structured_validation.stdout,
@@ -2012,6 +2065,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         skill / "scripts" / "prepare_run.py",
         skill / "scripts" / "build_catalog_index.py",
         skill / "scripts" / "validate_catalog.py",
+        skill / "scripts" / "cleanup_run_tmp.py",
     )
     if not all(path.is_file() for path in scripts):
         return
@@ -2171,6 +2225,224 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             "日本語, and العربية.\n"
         ).encode("utf-8")
         prompt.write_bytes(prompt_bytes)
+
+        cleanup_root = Path(temporary) / "completion-cleanup-runs"
+        cleanup_run = prepare_run(
+            skill,
+            cleanup_root,
+            "Cleanup Model",
+            "Harness",
+            "Nested Temporary Cleanup",
+            prompt,
+            errors,
+        )
+        if cleanup_run is not None:
+            prepare_finalizable_static_artifact(cleanup_run)
+            nested_scratch = cleanup_run / ".tmp" / "nested" / "deeper"
+            nested_scratch.mkdir(parents=True)
+            (nested_scratch / "scratch.log").write_text("disposable\n", encoding="utf-8")
+            external_sentinel = Path(temporary) / "external-sentinel.txt"
+            external_sentinel.write_text("keep\n", encoding="utf-8")
+            if os.name == "posix":
+                (cleanup_run / ".tmp" / "external-link").symlink_to(external_sentinel)
+
+            unconfirmed_cleanup = run(
+                [sys.executable, str(scripts[4]), "--run", str(cleanup_run)]
+            )
+            assert_ok(
+                unconfirmed_cleanup.returncode != 0
+                and "--confirm-finalized" in unconfirmed_cleanup.stderr
+                and (cleanup_run / ".tmp").is_dir(),
+                "temporary cleanup ran without explicit finalization confirmation",
+                errors,
+            )
+            confirmed_cleanup = run(
+                [
+                    sys.executable,
+                    str(scripts[4]),
+                    "--run",
+                    str(cleanup_run),
+                    "--confirm-finalized",
+                ]
+            )
+            assert_ok(
+                confirmed_cleanup.returncode == 0
+                and '"status": "deleted"' in confirmed_cleanup.stdout
+                and not os.path.lexists(cleanup_run / ".tmp")
+                and external_sentinel.read_text(encoding="utf-8") == "keep\n",
+                "temporary cleanup did not remove the entire exact tree while preserving external symlink targets",
+                errors,
+            )
+            repeated_cleanup = run(
+                [
+                    sys.executable,
+                    str(scripts[4]),
+                    "--run",
+                    str(cleanup_run),
+                    "--confirm-finalized",
+                ]
+            )
+            assert_ok(
+                repeated_cleanup.returncode == 0
+                and '"status": "already-absent"' in repeated_cleanup.stdout,
+                "temporary cleanup was not idempotent after verified deletion",
+                errors,
+            )
+            mark_successful_static_artifact(cleanup_run)
+            cleanup_validation = run([sys.executable, str(scripts[3]), str(cleanup_root)])
+            assert_ok(
+                cleanup_validation.returncode == 0 and not os.path.lexists(cleanup_run / ".tmp"),
+                "validator rejected a successful run whose temporary tree was deleted: {}".format(
+                    cleanup_validation.stdout
+                ),
+                errors,
+            )
+
+        previous_cleanup_root = Path(temporary) / "previous-schema-cleanup-runs"
+        previous_cleanup_run = prepare_run(
+            skill,
+            previous_cleanup_root,
+            "Cleanup Model",
+            "Harness",
+            "Recovered Previous Schema Cleanup",
+            prompt,
+            errors,
+        )
+        if previous_cleanup_run is not None:
+            prepare_finalizable_static_artifact(previous_cleanup_run)
+            historical_temporary = {
+                "path": ".tmp/",
+                "routing": "best-effort-run-local",
+                "preservation": "retain",
+            }
+            previous_manifest_path = previous_cleanup_run / "run.json"
+            previous_manifest = json.loads(previous_manifest_path.read_text(encoding="utf-8"))
+            previous_manifest["schemaVersion"] = "3.2"
+            previous_manifest["temporary"] = historical_temporary
+            previous_manifest_path.write_text(
+                json.dumps(previous_manifest, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            previous_receipt_path = (
+                previous_cleanup_root
+                / ".oneshot-provenance"
+                / f"{previous_cleanup_run.name}.json"
+            )
+            previous_receipt = json.loads(previous_receipt_path.read_text(encoding="utf-8"))
+            previous_receipt["schemaVersion"] = "2.2"
+            previous_receipt["runSchemaVersion"] = "3.2"
+            previous_receipt["temporary"] = historical_temporary
+            previous_receipt_path.write_text(
+                json.dumps(previous_receipt, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            previous_report_path = previous_cleanup_run / "worker-report.json"
+            previous_report = json.loads(previous_report_path.read_text(encoding="utf-8"))
+            previous_manifest["status"] = "OK"
+            previous_report["status"] = "OK"
+            previous_manifest_path.write_text(
+                json.dumps(previous_manifest, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            previous_report_path.write_text(
+                json.dumps(previous_report, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            retained_previous_build = rebuild_catalog_index(previous_cleanup_root)
+            retained_previous_validation = run(
+                [sys.executable, str(scripts[3]), str(previous_cleanup_root)]
+            )
+            assert_ok(
+                retained_previous_build.returncode == 0
+                and retained_previous_validation.returncode == 0,
+                "validator retroactively rejected a completed 3.2 run with retained scratch: {}".format(
+                    retained_previous_validation.stdout
+                ),
+                errors,
+            )
+            previous_manifest["status"] = "RUNNING"
+            previous_report["status"] = "RUNNING"
+            previous_manifest_path.write_text(
+                json.dumps(previous_manifest, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            previous_report_path.write_text(
+                json.dumps(previous_report, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            (previous_cleanup_run / ".tmp" / "recovered-scratch.txt").write_text(
+                "remove after recovery\n",
+                encoding="utf-8",
+            )
+            previous_cleanup = run(
+                [
+                    sys.executable,
+                    str(scripts[4]),
+                    "--run",
+                    str(previous_cleanup_run),
+                    "--confirm-finalized",
+                ]
+            )
+            previous_manifest["status"] = "OK"
+            previous_manifest_path.write_text(
+                json.dumps(previous_manifest, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            previous_report["status"] = "OK"
+            previous_report_path.write_text(
+                json.dumps(previous_report, indent=2) + "\n",
+                encoding="utf-8",
+            )
+            previous_build = rebuild_catalog_index(previous_cleanup_root)
+            previous_validation = run(
+                [sys.executable, str(scripts[3]), str(previous_cleanup_root)]
+            )
+            assert_ok(
+                previous_cleanup.returncode == 0
+                and not os.path.lexists(previous_cleanup_run / ".tmp")
+                and previous_build.returncode == 0
+                and previous_validation.returncode == 0,
+                "resumed 3.2 run could not opt into safe final cleanup: {}{}".format(
+                    previous_cleanup.stderr,
+                    previous_validation.stdout,
+                ),
+                errors,
+            )
+
+        symlink_cleanup_root = Path(temporary) / "symlink-cleanup-runs"
+        symlink_cleanup_run = prepare_run(
+            skill,
+            symlink_cleanup_root,
+            "Cleanup Model",
+            "Harness",
+            "Symlink Temporary Refusal",
+            prompt,
+            errors,
+        )
+        if symlink_cleanup_run is not None and os.name == "posix":
+            prepare_finalizable_static_artifact(symlink_cleanup_run)
+            outside_temporary = Path(temporary) / "shared-cache"
+            outside_temporary.mkdir()
+            outside_marker = outside_temporary / "marker.txt"
+            outside_marker.write_text("untouched\n", encoding="utf-8")
+            shutil.rmtree(symlink_cleanup_run / ".tmp")
+            (symlink_cleanup_run / ".tmp").symlink_to(outside_temporary, target_is_directory=True)
+            refused_cleanup = run(
+                [
+                    sys.executable,
+                    str(scripts[4]),
+                    "--run",
+                    str(symlink_cleanup_run),
+                    "--confirm-finalized",
+                ]
+            )
+            assert_ok(
+                refused_cleanup.returncode != 0
+                and "ordinary non-symlink directory" in refused_cleanup.stderr
+                and outside_marker.read_text(encoding="utf-8") == "untouched\n",
+                "temporary cleanup followed a symlinked target or damaged external state",
+                errors,
+            )
 
         mojibake_prompt = Path(temporary) / "mojibake-prompt.md"
         mojibake_prompt.write_text(
@@ -2630,7 +2902,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             )
         if isinstance(first_manifest, Mapping):
             assert_ok(
-                first_manifest.get("schemaVersion") == "3.2",
+                first_manifest.get("schemaVersion") == "3.3",
                 "prepare_run.py did not emit the current run schema",
                 errors,
             )
@@ -2642,8 +2914,8 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             receipt = read_json(receipt_path, errors, "pre-dispatch provenance receipt") if isinstance(receipt_value, str) else None
             assert_ok(
                 isinstance(receipt, Mapping)
-                and receipt.get("schemaVersion") == "2.2"
-                and receipt.get("runSchemaVersion") == "3.2"
+                and receipt.get("schemaVersion") == "2.3"
+                and receipt.get("runSchemaVersion") == "3.3"
                 and receipt.get("prompt", {}).get("sha256") == expected_hash
                 and receipt.get("prompt", {}).get("bytes") == len(prompt_bytes),
                 "prepare_run.py did not anchor prompt provenance outside the worker run",
@@ -2666,7 +2938,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 == {
                     "path": ".tmp/",
                     "routing": "best-effort-run-local",
-                    "preservation": "retain",
+                    "lifecycle": "retain-until-successful-finalization",
                 },
                 "prepare_run.py did not anchor the current temporary contract outside the worker run",
                 errors,
@@ -2681,7 +2953,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 isinstance(temporary_data, Mapping)
                 and temporary_data.get("path") == ".tmp/"
                 and temporary_data.get("routing") == "best-effort-run-local"
-                and temporary_data.get("preservation") == "retain",
+                and temporary_data.get("lifecycle") == "retain-until-successful-finalization",
                 "prepare_run.py did not record the run-local temporary contract",
                 errors,
             )
@@ -2806,7 +3078,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         assert_invalid_catalog(
             scripts[3],
             output_root,
-            "receipt schema '2.2' requires run schema 3.2",
+            "receipt schema '2.3' requires run schema 3.3",
             "new run downgraded through worker-writable metadata",
             errors,
         )
@@ -2816,7 +3088,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         rebuilt_after_downgrade_restore = rebuild_catalog_index(output_root)
         assert_ok(
             rebuilt_after_downgrade_restore.returncode == 0,
-            "catalogue builder failed after restoring an anchored 3.2 run: {}".format(
+            "catalogue builder failed after restoring an anchored 3.3 run: {}".format(
                 rebuilt_after_downgrade_restore.stderr or rebuilt_after_downgrade_restore.stdout
             ),
             errors,
@@ -2900,7 +3172,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             assert_invalid_catalog(
                 scripts[3],
                 bare_current_root,
-                "run schema 3.2 requires an experiment slug in the run directory",
+                "run schema 3.3 requires an experiment slug in the run directory",
                 "current run using a historical timestamp-only directory",
                 errors,
             )
@@ -2983,6 +3255,24 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             )
 
         mark_successful_static_artifact(first_run)
+        (first_run / ".tmp").mkdir()
+        (first_run / ".tmp" / "late-scratch.txt").write_text("late writer\n", encoding="utf-8")
+        assert_invalid_catalog(
+            scripts[3],
+            output_root,
+            "successful run must delete its run-local .tmp/ directory in its entirety",
+            "successful current run with retained temporary state",
+            errors,
+        )
+        shutil.rmtree(first_run / ".tmp")
+        rebuilt_after_success_cleanup = rebuild_catalog_index(output_root)
+        assert_ok(
+            rebuilt_after_success_cleanup.returncode == 0,
+            "catalogue builder failed after restoring successful temporary cleanup: {}".format(
+                rebuilt_after_success_cleanup.stderr or rebuilt_after_success_cleanup.stdout
+            ),
+            errors,
+        )
         (first_run / "artifact" / ".tmp").mkdir()
         (first_run / "artifact" / ".tmp" / "scratch.txt").write_text("temporary\n", encoding="utf-8")
         assert_invalid_catalog(
@@ -3954,6 +4244,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "SKILL.md runtime contract missing run-local temporary containment"
             in missing_temporary_contract_result.stdout,
             "package validator accepted a skill without run-local temporary containment",
+            errors,
+        )
+
+        skill_without_completion_cleanup = re.sub(
+            r"(?ms)^For a successful finalization, first stop or await every descendant and process.*?"
+            r"(?=^Before finishing, the lead builds or exports)",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_completion_cleanup, encoding="utf-8")
+        missing_completion_cleanup_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_completion_cleanup_result.returncode != 0
+            and "SKILL.md runtime contract missing completion-only temporary cleanup"
+            in missing_completion_cleanup_result.stdout,
+            "package validator accepted a skill that can report OK without deleting .tmp/",
             errors,
         )
 

@@ -9,6 +9,7 @@ You own one isolated experiment. Follow `agents/oneshot-lead.md`.
 - Experiment: {{EXPERIMENT_NAME}}
 - Run directory: `{{RUN_PATH}}`
 - Run-local temporary storage: `{{RUN_PATH}}/.tmp/`
+- Temporary cleanup helper: `{{TEMP_CLEANUP_HELPER}}`
 - Workspace: `{{RUN_PATH}}/workspace/`
 - Static artifact: `{{RUN_PATH}}/artifact/`
 
@@ -22,7 +23,9 @@ For an initial lead, set the recovery envelope below to `INITIAL: this is a newl
 
 ## Operational Runtime Envelope (not part of the actual prompt)
 
-Keep scratch and temporary files in the assigned `.tmp/` wherever the harness and tools permit. Route standard temporary-file variables such as `TMPDIR`, `TMP`, and `TEMP` there before launching local processes, and pass the same run-local path and routing to every descendant. Preserve `.tmp/` for run inspection. If a tool ignores the routing or creates state before this lead starts, record that limitation without deleting or sweeping unrelated external paths. Never copy `.tmp/` into `artifact/`, and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.
+Keep scratch and temporary files in the assigned `.tmp/` wherever the harness and tools permit. Route standard temporary-file variables such as `TMPDIR`, `TMP`, and `TEMP` there before launching local processes, and pass the same run-local path and routing to every descendant. Retain `.tmp/` throughout active work, interruptions, recovery, and every non-`OK` handoff. If a tool ignores the routing or creates state before this lead starts, record that limitation without deleting or sweeping unrelated external paths. Never copy `.tmp/` into `artifact/`, and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.
+
+For successful finalization only, stop or await every descendant and process that can write into the run, promote durable evidence out of `.tmp/`, finish all artifact checks, and keep both status records at `RUNNING`. Then run `"${ONESHOT_WEBSITES_PYTHON:-python3}" "{{TEMP_CLEANUP_HELPER}}" --run "{{RUN_PATH}}" --confirm-finalized`. The helper scopes and verifies the destructive target; do not replace it with a broad recursive command or delete outside the assigned run. Set both statuses to `OK` only after the helper reports success and `.tmp/` is absent. If cleanup fails, retain a non-`OK` status and report the blocker. `PARTIAL`, `BLOCKED`, `ERROR`, interrupted, and otherwise recoverable runs keep `.tmp/` intact.
 
 ## Recursive Team Envelope (not part of the actual prompt)
 

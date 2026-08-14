@@ -197,6 +197,8 @@ class PreparedRunContracts:
     """Coordinator-anchored contracts that worker-owned files cannot downgrade."""
 
     temporary: bool
+    temporary_cleanup_allowed_on_success: bool
+    temporary_cleanup_on_success: bool
     quality_gauntlet: bool
 
 
@@ -869,6 +871,7 @@ def validate_manifest_paths(
     run_path: Path,
     run: dict[str, Any],
     require_temporary: bool,
+    require_temporary_cleanup: bool,
     errors: list[str],
 ) -> None:
     """Enforce the fixed handoff paths without constraining the source project."""
@@ -884,7 +887,13 @@ def validate_manifest_paths(
             errors.append(f"{run_path}: temporary.path must be exactly .tmp/")
         if temporary.get("routing") != "best-effort-run-local":
             errors.append(f"{run_path}: temporary.routing must be exactly best-effort-run-local")
-        if temporary.get("preservation") != "retain":
+        if require_temporary_cleanup:
+            if temporary.get("lifecycle") != "retain-until-successful-finalization":
+                errors.append(
+                    f"{run_path}: temporary.lifecycle must be exactly "
+                    "retain-until-successful-finalization"
+                )
+        elif temporary.get("preservation") != "retain":
             errors.append(f"{run_path}: temporary.preservation must be exactly retain")
 
     workspace = object_value(run.get("workspace"))
@@ -1445,39 +1454,62 @@ def validate_provenance_receipt(
             errors.append(f"{commit_path}: unable to inspect provenance commit marker: {error}")
     receipt_path = root / expected_relative
     if not is_regular_file_within(receipt_path, root, "provenance receipt", errors):
-        return PreparedRunContracts(temporary=False, quality_gauntlet=False)
+        return PreparedRunContracts(
+            temporary=False,
+            temporary_cleanup_allowed_on_success=False,
+            temporary_cleanup_on_success=False,
+            quality_gauntlet=False,
+        )
     receipt = load_object(receipt_path, errors)
     if receipt is None:
-        return PreparedRunContracts(temporary=False, quality_gauntlet=False)
+        return PreparedRunContracts(
+            temporary=False,
+            temporary_cleanup_allowed_on_success=False,
+            temporary_cleanup_on_success=False,
+            quality_gauntlet=False,
+        )
     receipt_schema = receipt.get("schemaVersion")
     receipt_contracts = {
-        "1.0": ("2.0", False, False),
-        "1.1": ("2.1", True, False),
-        "2.0": ("3.0", True, False),
-        "2.1": ("3.1", True, True),
-        "2.2": ("3.2", True, True),
+        "1.0": ("2.0", False, False, False, False),
+        "1.1": ("2.1", True, False, False, False),
+        "2.0": ("3.0", True, False, False, False),
+        "2.1": ("3.1", True, False, False, True),
+        "2.2": ("3.2", True, True, False, True),
+        "2.3": ("3.3", True, True, True, True),
     }
     receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
     if receipt_contract is None:
-        errors.append(f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, or 2.2")
+        errors.append(
+            f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, or 2.3"
+        )
     (
         expected_run_schema,
         current_temporary_contract,
+        temporary_cleanup_allowed_on_success,
+        temporary_cleanup_on_success,
         current_quality_gauntlet_contract,
-    ) = receipt_contract or (None, False, False)
+    ) = receipt_contract or (None, False, False, False, False)
     if run.get("schemaVersion") != expected_run_schema:
         errors.append(
             f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
         )
-    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2"}:
+    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2", "2.3"}:
         if receipt.get("runSchemaVersion") != expected_run_schema:
             errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
         receipt_temporary = object_value(receipt.get("temporary"))
-        expected_temporary = {
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "preservation": "retain",
-        }
+        expected_temporary = (
+            {
+                "path": ".tmp/",
+                "routing": "best-effort-run-local",
+                "lifecycle": "retain-until-successful-finalization",
+            }
+            if temporary_cleanup_on_success
+            else {
+                "path": ".tmp/",
+                "routing": "best-effort-run-local",
+                "preservation": "retain",
+            }
+        )
         if receipt_temporary != expected_temporary:
             errors.append(f"{receipt_path}: temporary contract does not match the prepared run")
     if current_quality_gauntlet_contract:
@@ -1509,6 +1541,8 @@ def validate_provenance_receipt(
             errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
     return PreparedRunContracts(
         temporary=current_temporary_contract,
+        temporary_cleanup_allowed_on_success=temporary_cleanup_allowed_on_success,
+        temporary_cleanup_on_success=temporary_cleanup_on_success,
         quality_gauntlet=current_quality_gauntlet_contract,
     )
 
@@ -1541,7 +1575,7 @@ def validate_run(
         return
 
     schema_version = run.get("schemaVersion")
-    expected_schemas = {"3.0", "3.1", "3.2"} if layout == "flat" else {"2.0", "2.1"}
+    expected_schemas = {"3.0", "3.1", "3.2", "3.3"} if layout == "flat" else {"2.0", "2.1"}
     if not isinstance(schema_version, str) or schema_version not in expected_schemas:
         errors.append(
             f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
@@ -1590,13 +1624,15 @@ def validate_run(
                     if marker != expected_marker:
                         errors.append(f"{marker_path}: marker does not match run identity.{field}")
     if layout == "flat" and parsed_flat_run_id is not None:
-        if schema_version == "3.2":
+        if isinstance(schema_version, str) and schema_version in {"3.2", "3.3"}:
             try:
                 expected_slug = experiment_slug(experiment_name) if experiment_name is not None else None
             except UnicodeEncodeError:
                 expected_slug = None
             if parsed_flat_run_id.slug is None:
-                errors.append(f"{run_path}: run schema 3.2 requires an experiment slug in the run directory")
+                errors.append(
+                    f"{run_path}: run schema {schema_version} requires an experiment slug in the run directory"
+                )
             elif expected_slug is not None and parsed_flat_run_id.slug != expected_slug:
                 errors.append(
                     f"{run_path}: run-directory slug must match experiment name as {expected_slug!r}"
@@ -1680,14 +1716,42 @@ def validate_run(
         prompt_bytes,
         errors,
     )
-    validate_manifest_paths(run_path, run, prepared_contracts.temporary, errors)
+    validate_manifest_paths(
+        run_path,
+        run,
+        prepared_contracts.temporary,
+        prepared_contracts.temporary_cleanup_on_success,
+        errors,
+    )
     temporary_directory = exact_child(run_path.parent, ".tmp")
-    if prepared_contracts.temporary and (
-        temporary_directory is None
-        or not temporary_directory.is_dir()
-        or temporary_directory.is_symlink()
-    ):
-        errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
+    if prepared_contracts.temporary:
+        if prepared_contracts.temporary_cleanup_allowed_on_success and status == "OK":
+            try:
+                temporary_candidates = [
+                    entry for entry in run_path.parent.iterdir() if entry.name.casefold() == ".tmp"
+                ]
+            except OSError as error:
+                errors.append(f"{run_path}: unable to inspect run-local temporary state: {error}")
+            else:
+                if prepared_contracts.temporary_cleanup_on_success and temporary_candidates:
+                    errors.append(
+                        f"{run_path}: successful run must delete its run-local .tmp/ directory in its entirety"
+                    )
+                elif temporary_candidates and (
+                    len(temporary_candidates) != 1
+                    or temporary_directory is None
+                    or not temporary_directory.is_dir()
+                    or temporary_directory.is_symlink()
+                ):
+                    errors.append(
+                        f"{run_path}: retained historical .tmp/ must be one exact-case ordinary directory"
+                    )
+        elif (
+            temporary_directory is None
+            or not temporary_directory.is_dir()
+            or temporary_directory.is_symlink()
+        ):
+            errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
 
     execution = object_value(run.get("execution"))
     if execution.get("recursiveDelegation") != "allowed":

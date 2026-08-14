@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "3.2",
+  "schemaVersion": "3.3",
   "identity": {
     "model": {"name": "{{MODEL_NAME}}", "key": "{{MODEL_KEY}}"},
     "harness": {"name": "{{HARNESS_NAME}}", "key": "{{HARNESS_KEY}}"},
@@ -18,7 +18,7 @@
   "temporary": {
     "path": ".tmp/",
     "routing": "best-effort-run-local",
-    "preservation": "retain"
+    "lifecycle": "retain-until-successful-finalization"
   },
   "workspace": {"path": "workspace/"},
   "artifact": {
