@@ -522,13 +522,14 @@
       "id": 43,
       "name": "whole-artifact-regression-prevents-ready",
       "prompt": "Aesthetic refinements improve the hero view, but they lower text contrast, break the mobile menu, and push p95 interaction latency above the accepted bar.",
-      "expected_output": "The whole-artifact critic catches the accessibility, responsive, and tail-latency regressions as a coherent material blocker batch. The lead fixes or rebalances them together and uses a targeted recheck plus proportionate whole-artifact regression evidence; it does not declare READY because one visual state improved.",
+      "expected_output": "The whole-artifact critic catches the accessibility, mobile-friendliness, and tail-latency regressions as a coherent material blocker batch. It exercises a representative mobile viewport and verifies reflow, overflow, legibility, navigation, touch targets, and the primary interaction rather than inferring mobile quality from the desktop hero. The lead fixes or rebalances the regressions together and uses a targeted recheck plus proportionate whole-artifact regression evidence; it does not declare READY because one visual state improved.",
       "assertions": [
-        {"text": "Rechecks accessibility, responsive behavior, and p95 performance after the aesthetic change", "type": "verification"},
+        {"text": "Rechecks accessibility, representative mobile behavior, and p95 performance after the aesthetic change", "type": "verification"},
+        {"text": "Inspects mobile reflow, overflow, legibility, navigation, touch targets, and the primary interaction instead of relying on desktop evidence", "type": "structural"},
         {"text": "Treats cross-quality regressions as material whole-artifact gaps", "type": "functional"},
         {"text": "Does not optimize one hero screenshot at the expense of the accepted system bar", "type": "negative"}
       ],
-      "tags": ["gauntlet", "integration", "accessibility", "responsive", "performance"]
+      "tags": ["gauntlet", "integration", "accessibility", "mobile", "responsive", "performance"]
     },
     {
       "id": 44,

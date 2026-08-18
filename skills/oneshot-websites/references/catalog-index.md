@@ -39,10 +39,10 @@ Build a static index after the workers finish:
 The index lists:
 
 - model and harness
-- experiment and run ID
+- experiment
+- artifact entry and prompt links immediately after the experiment, before the wider provenance fields
+- run ID
 - status and classification
-- link to the preserved actual prompt
-- links to `artifact/index.html` and `artifact/PROMPT.md`
 - lead and descendant counts when known
 - summary or blocker
 

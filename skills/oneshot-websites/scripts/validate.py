@@ -52,7 +52,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.15.0"
+PACKAGE_VERSION = "2.16.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -267,6 +267,17 @@ RUNTIME_CONTRACTS = (
             r"screenshots or recordings only.*?final integrated browser exercise.*?critic.*?"
             r"static-handoff.*?final-verification evidence.*?same artifact revision.*?"
             r"instead of relaunching the browser or recapturing equivalent states",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "mobile-friendly gauntlet evidence",
+        re.compile(
+            r"Mobile friendliness is a required gauntlet check.*?representative mobile viewport.*?"
+            r"layout reflow.*?horizontal overflow or clipping.*?text legibility.*?navigation.*?"
+            r"control availability.*?touch-target usability.*?primary interaction path.*?"
+            r"desktop screenshot.*?media queries.*?does not prove.*?desktop-only.*?"
+            r"record that concrete reason.*?narrow-viewport behavior",
             re.I | re.S,
         ),
     ),
@@ -548,6 +559,18 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "agents/oneshot-critic.md",
+        "critic mobile-friendly inspection",
+        re.compile(
+            r"Review Method.*?mobile friendliness as a required gauntlet check.*?"
+            r"representative mobile viewport.*?reflow.*?horizontal overflow or clipping.*?"
+            r"text legibility.*?navigation.*?control availability.*?touch-target usability.*?"
+            r"primary interaction path.*?Desktop captures.*?media-query presence.*?not proof.*?"
+            r"desktop-only exception.*?reason is recorded.*?narrow-viewport behavior is intentional",
+            re.I | re.S,
+        ),
+    ),
+    (
         "agents/oneshot-lead.md",
         "lead-owned quality gauntlet",
         re.compile(
@@ -558,6 +581,19 @@ FILE_RUNTIME_CONTRACTS = (
             r"Treat `READY` as terminal.*?same critic task.*?targeted recheck.*?"
             r"no fixed critic-round budget.*?new fresh critic only when.*?"
             r"never claim that an independent critic reviewed",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead mobile-friendly gauntlet",
+        re.compile(
+            r"Quality Gauntlet.*?Mobile friendliness is a required check.*?"
+            r"representative mobile viewport.*?reflow.*?horizontal overflow or clipping.*?"
+            r"legibility.*?navigation.*?control availability.*?touch targets.*?"
+            r"primary interaction path.*?Desktop captures.*?media-query presence.*?"
+            r"not mobile evidence.*?desktop-only.*?record the concrete reason.*?"
+            r"narrow-viewport behavior",
             re.I | re.S,
         ),
     ),
@@ -823,6 +859,19 @@ FILE_RUNTIME_CONTRACTS = (
             r"new fresh or specialist critic only for a concrete review need.*?record the reason.*?"
             r"cannot inspect the actual artifact directly.*?escalate or return `BLOCKED`.*?"
             r"rather than grading a summary or weakening the bar",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol mobile-friendly gauntlet evidence",
+        re.compile(
+            r"Lead-Owned Quality Gauntlet.*?Mobile friendliness is part of the required gauntlet evidence.*?"
+            r"representative mobile viewport.*?reflow.*?horizontal overflow or clipping.*?"
+            r"legibility.*?navigation.*?control availability.*?touch targets.*?"
+            r"primary interaction path.*?Desktop captures.*?media-query presence.*?"
+            r"do not satisfy.*?desktop-only exception.*?concrete prompt or faithful-source reason.*?"
+            r"narrow-viewport behavior is intentional",
             re.I | re.S,
         ),
     ),

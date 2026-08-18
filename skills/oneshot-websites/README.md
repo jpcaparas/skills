@@ -12,7 +12,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - Lead-owned recursive-team orchestration with unrestricted build-agent capability, capacity-aware scheduling, explicit branch ownership, active monitoring, and whole-artifact integration
 - Explicit outer fan-out for multiple leads, workspaces, and same-prompt replicas
 - Same-run reconnect and steering recovery that resumes the existing lead and namespace by default, verifies receipt and prompt identity, and permits only one active owner
-- A lean lead-owned quality gauntlet with consolidated bar-and-artifact review, terminal `READY`, batched material blockers, same-critic targeted rechecks, evidence reuse, and warranted fresh escalation
+- A lean lead-owned quality gauntlet with explicit mobile-friendliness inspection, consolidated bar-and-artifact review, terminal `READY`, batched material blockers, same-critic targeted rechecks, evidence reuse, and warranted fresh escalation
 - Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
 - Recoverable `.tmp/` isolation during active and non-successful work, with safe exact-path recursive deletion after successful finalization
 - No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints on lead and build work; critics use an adaptive focused profile
@@ -23,7 +23,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - A conservative Cloudflare/Vercel Drop-ready `artifact/` with one root `index.html` entrypoint and any supporting asset tree the experience needs
 - A local-only default: Drop compatibility never authorizes Vercel, Cloudflare, ChatGPT, GitHub, or other remote writes; explicit action-and-destination permission is required and retained by the coordinator
 - A coordinator-owned receipt-and-commit inventory outside each worker run, with crash recovery and an explicit path-isolation trust boundary
-- Provenance-aware indexing and validation
+- Provenance-aware indexing and validation, with artifact and prompt links beside each experiment for faster access
 
 ## Key Files
 

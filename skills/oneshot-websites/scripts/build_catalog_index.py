@@ -452,13 +452,13 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
             f'          <td data-label="Model"><span class="identity">{esc(identity_name(model, legacy_fallbacks[0] if legacy_fallbacks else "Unknown model"))}</span></td>\n'
             f'          <td data-label="Harness"><span class="identity">{esc(identity_name(harness, legacy_fallbacks[1] if legacy_fallbacks else "Unknown harness"))}</span></td>\n'
             f'          <td data-label="Experiment"><span class="identity">{esc(identity_name(experiment, legacy_fallbacks[2] if legacy_fallbacks else "Unknown experiment"))}</span></td>\n'
+            f'          <td data-label="Artifact">{site_link}</td>\n'
+            f'          <td data-label="Prompt">{prompt_link}</td>\n'
             f'          <td data-label="Run"><code>{esc(bounded_text(run.get("runId"), run_dir.name, 128))}</code></td>\n'
             f'          <td data-label="Status"><span class="status {status_class(status)}">{esc(status)}</span></td>\n'
             f'          <td data-label="Classification"><code>{esc(classification)}</code></td>\n'
             f'          <td data-label="Workers" class="muted">{esc(worker_details(run, report))}</td>\n'
             f'          <td data-label="Summary or blocker" class="muted">{esc(outcome_text(run, report, row_error))}</td>\n'
-            f'          <td data-label="Artifact">{site_link}</td>\n'
-            f'          <td data-label="Prompt">{prompt_link}</td>\n'
             "        </tr>"
         )
     return "\n".join(rows), len(candidates)

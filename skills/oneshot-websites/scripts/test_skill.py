@@ -3338,6 +3338,23 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         catalogue_html = (output_root / "index.html").read_text(encoding="utf-8")
         assert_ok(str(output_root) not in catalogue_html, "catalogue index exposed its local absolute root", errors)
         assert_ok("Model One" in catalogue_html, "catalogue index omitted the raw model name", errors)
+        catalogue_headers = tuple(
+            re.findall(r'<th scope="col">([^<]+)</th>', catalogue_html)
+        )
+        assert_ok(
+            catalogue_headers[2:6] == ("Experiment", "Artifact", "Prompt", "Run"),
+            "catalogue did not place artifact and prompt headers immediately after experiment",
+            errors,
+        )
+        first_catalogue_row = catalogue_html.split("<tbody>", 1)[1].split("</tr>", 1)[0]
+        first_catalogue_row_labels = tuple(
+            re.findall(r'<td data-label="([^"]+)"', first_catalogue_row)
+        )
+        assert_ok(
+            first_catalogue_row_labels[2:6] == ("Experiment", "Artifact", "Prompt", "Run"),
+            "catalogue rows did not place artifact and prompt cells immediately after experiment",
+            errors,
+        )
 
         receipt_name = "{}.json".format(first_run.name)
         appledouble_paths = [
@@ -3657,6 +3674,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         skill_path.write_text(original_skill, encoding="utf-8")
 
+        skill_without_mobile_gauntlet = re.sub(
+            r"(?m)^Mobile friendliness is a required gauntlet check for browser artifacts\..*\n\n",
+            "Check responsive layouts.\n\n",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_mobile_gauntlet, encoding="utf-8")
+        missing_mobile_gauntlet_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_mobile_gauntlet_result.returncode != 0
+            and "SKILL.md runtime contract missing mobile-friendly gauntlet evidence"
+            in missing_mobile_gauntlet_result.stdout,
+            "package validator accepted a gauntlet without explicit mobile-friendliness evidence",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
         original_critic_text = critic_path.read_text(encoding="utf-8")
         critic_path.write_text(
             original_critic_text.replace(
@@ -3674,6 +3710,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "agents/oneshot-critic.md runtime contract missing fresh read-only critic contract"
             in summary_only_critic_result.stdout,
             "package validator accepted a critic that could grade a builder summary",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
+        critic_without_mobile_inspection = re.sub(
+            r"(?m)^2\. Treat mobile friendliness as a required gauntlet check\..*\n",
+            "2. Review the supplied desktop capture.\n",
+            original_critic_text,
+            count=1,
+        )
+        critic_path.write_text(critic_without_mobile_inspection, encoding="utf-8")
+        missing_mobile_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_mobile_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing critic mobile-friendly inspection"
+            in missing_mobile_critic_result.stdout,
+            "package validator accepted a critic that could skip mobile inspection",
             errors,
         )
         critic_path.write_text(original_critic_text, encoding="utf-8")
