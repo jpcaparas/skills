@@ -24,6 +24,9 @@
 
 As a [affected user or tester], I can [complete the affected workflow] without [defective behavior].
 
+- [Observable condition that proves the defect is fixed.]
+- [Meaningful regression, boundary, or failure condition when it defines done.]
+
 **Developer Notes**
 
 - [Relevant logs, suspected component, dependency, or missing diagnostic detail.]

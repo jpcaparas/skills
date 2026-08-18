@@ -166,5 +166,13 @@
   {
     "query": "Remove AI language from this Python source file but do not touch prose.",
     "should_trigger": false
+  },
+  {
+    "query": "Rewrite this developer wiki entry with sentence-case headings, context-first steps, descriptive links, and the commands preserved exactly.",
+    "should_trigger": true
+  },
+  {
+    "query": "What does the deployment wiki say about token expiry? Answer the factual question only.",
+    "should_trigger": false
   }
 ]

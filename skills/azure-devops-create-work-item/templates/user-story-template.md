@@ -16,6 +16,9 @@
 
 As a [user role], I can [complete the desired behavior] so that [user or business value].
 
+- [Observable condition that must be true.]
+- [Meaningful boundary, failure, or permission condition when it defines done.]
+
 **Developer Notes**
 
 - [Constraint, dependency, design note, or known unknown.]

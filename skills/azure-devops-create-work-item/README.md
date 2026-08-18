@@ -10,11 +10,13 @@ Production skill for drafting local Azure DevOps work item packets from loose co
 - Reusable per-type Markdown templates using the standard schema, with dedicated `Reproduction Steps` for bugs
 - Targeted manual QA scenario guidance for readable, risk-based test sections
 - Mixed-audience writing guidance for work item drafts
+- Adapted Google developer documentation principles for clear actors, conditions, procedures, terminology, links, and accessible verification without changing the Azure schema or local locale
 
 ## Key Files
 
 - `SKILL.md` - authoritative instructions
 - `references/official-primitives.md` - official Azure Boards type semantics and process notes
+- `references/writing-style.md` - mixed-audience field prose and style precedence
 - `references/output-packet.md` - folder layout and writing contract
 - `references/gotchas.md` - classification and formatting traps
 - `templates/*.md` - per-type work item templates

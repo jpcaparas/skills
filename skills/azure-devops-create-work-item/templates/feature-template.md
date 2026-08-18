@@ -18,6 +18,9 @@
 
 As a [role], I can [confirm or complete the expected behavior] so that [business, security, operational, or user outcome].
 
+- [Observable condition that must be true.]
+- [Meaningful boundary, failure, or permission condition when it defines done.]
+
 **Developer Notes**
 
 - [Implementation constraint, dependency, rollout note, environment note, or known unknown.]

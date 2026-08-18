@@ -16,6 +16,9 @@
 
 As a [stakeholder or team], I can [confirm the epic-level capability or outcome] so that [strategic result].
 
+- [Observable condition that must be true at epic completion.]
+- [Meaningful scope boundary or dependency condition when it defines done.]
+
 **Developer Notes**
 
 - [Major dependency, sequencing note, ownership note, or risk.]

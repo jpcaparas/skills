@@ -16,6 +16,9 @@
 
 As a [team member or stakeholder], I can [confirm the blocker is resolved or contained] so that [delivery impact is removed or reduced].
 
+- [Observable condition that proves the blocker is resolved or contained.]
+- [Meaningful dependency or escalation condition when it defines done.]
+
 **Developer Notes**
 
 - [Dependency, owner, deadline, escalation path, or unknown.]

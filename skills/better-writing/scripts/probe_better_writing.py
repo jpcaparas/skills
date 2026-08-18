@@ -26,7 +26,7 @@ PROSE_ACTIONS = (
 PROSE_SCOPE = (
     r"\b(?:prose|copy|microcopy|sentence|paragraph|comment|document|draft|blurb|message|reply|response|explanation|intro(?:duction)?|outro|heading|voice|tone|cadence|style|wording|phrasing|diction|language|words?|phrases?|tropes?|clich[eé]s?|tics?|mannerisms?|tells?|patterns?|slogan|tagline)\b",
     r"\b(?:announcement|notice|note|essay|poem|story|fiction|memo|email|cover\s+letter|newsletter|article|report|brief|proposal|policy|statement|post|caption|bio|release\s+note|product\s+spec|pull\s+request|landing[- ]page|launch[- ]page|homepage|pricing\s+page)\b",
-    r"\b(?:readme|guide|tutorial|how-to|runbook|walkthrough|documentation|docs|ui)\s+(?:draft|intro|section|copy|text|page)?\b",
+    r"\b(?:readme|guide|tutorial|how-to|runbook|walkthrough|documentation|docs|wiki|ui)\s+(?:entry|draft|intro|section|copy|text|page)?\b",
     WRITING_VERIFICATION,
 )
 NEGATED_PROSE_CLAUSES = (
@@ -41,7 +41,7 @@ CODE_ONLY = (
     r"\b(?:rewrite|rephrase|rename|replace|remove|strip|ban|avoid|humanise|humanize)\b.*\b(?:source\s+(?:code|file)|codebase|python\s+file|typescript\s+file|javascript\s+file|tsx\s+file|jsx\s+file)\b",
 )
 MIXED_PROSE_SCOPE = (
-    r"\b(?:prose|copy|microcopy|message|reply|response|error\s+message|notification|ui\s+copy|user-facing\s+text|explanation|documentation|docs|readme|guide|tutorial|article|report|memo|email)\b",
+    r"\b(?:prose|copy|microcopy|message|reply|response|error\s+message|notification|ui\s+copy|user-facing\s+text|explanation|documentation|docs|wiki|readme|guide|tutorial|article|report|memo|email)\b",
 )
 AUTHORSHIP_CLASSIFICATION = (
     r"\b(?:assess|classify|detect|determine|judge|review|verify)\b.{0,100}\b(?:authorship|written|authored|generated)\b.{0,60}\b(?:ai|bot|human|llm|model)\b",
@@ -52,8 +52,8 @@ FACT_CHECK_ONLY = (
     r"\b(?:is|are|was|were|does|do)\b.*\b(?:true|accurate|correct)\b",
 )
 DOCS_QUESTION = (
-    r"\b(?:where|how)\s+(?:is|are|do i find|can i find)\b.*\b(?:docs|documentation|readme)\b",
-    r"\b(?:what does|how does)\b.*\b(?:the docs|documentation|readme)\b",
+    r"\b(?:where|how)\s+(?:is|are|do i find|can i find)\b.*\b(?:docs|documentation|wiki|readme)\b",
+    r"\b(?:what does|how does)\b.*\b(?:the docs|documentation|wiki|readme)\b",
 )
 PUNCTUATION_TRANSFORM = (
     r"\b(?:replac(?:e|ing)|remov(?:e|ing)|recast(?:ing)?|limit(?:ing)?|standardis(?:e|ing)|standardiz(?:e|ing))\b.{0,80}\b(?:em[ -]?dash(?:es)?|semi-?colons?|colons?|punctuation)\b",
@@ -117,7 +117,14 @@ ROUTE_RULES = (
             r"\b(?:simon\s+willison|julia\s+evans|gergely|lenny|reuters|bloomberg|paul\s+graham)\b",
         ),
     ),
-    RouteRule("references/genre-modes.md", (r"\b(?:announcement|notice|guide|tutorial|how-to|docs?|readme|runbook|memo|brief|report|essay|article|landing[- ]page|launch[- ]page|homepage|pricing\s+page|email|walkthrough)\b",)),
+    RouteRule("references/genre-modes.md", (r"\b(?:announcement|notice|guide|tutorial|how-to|docs?|wiki|readme|runbook|memo|brief|report|essay|article|landing[- ]page|launch[- ]page|homepage|pricing\s+page|email|walkthrough)\b",)),
+    RouteRule(
+        "references/technical-documentation-and-wikis.md",
+        (
+            r"\b(?:developer|technical)\s+(?:documentation|docs?|guide|tutorial|wiki)\b",
+            r"\b(?:documentation|docs?|wiki|readme|runbook|quickstart|how-to|walkthrough)\s+(?:entry|draft|intro|section|copy|text|page)?\b",
+        ),
+    ),
     RouteRule(
         "references/quality-gates.md",
         (r"\b(?:final\s+(?:review|pass|check)|ready\s+to\s+publish|quality\s+check|sign[- ]?off)\b", WRITING_VERIFICATION),
@@ -319,6 +326,16 @@ TEST_CASES = (
         ),
         ("references/research-notes.md",),
     ),
+    TestCase(
+        "rewrite_developer_wiki",
+        "Rewrite this developer wiki entry with sentence-case headings, context-first steps, and descriptive links while preserving every command and identifier.",
+        (
+            "references/operating-contract.md",
+            "references/revision-pass-stack.md",
+            "references/genre-modes.md",
+            "references/technical-documentation-and-wikis.md",
+        ),
+    ),
     TestCase("code_only_rewrite", "Rewrite this Python function to remove a race condition.", (), ("references/operating-contract.md",)),
     TestCase(
         "code_identifier_renaming",
@@ -391,6 +408,12 @@ TEST_CASES = (
         ("references/research-notes.md",),
     ),
     TestCase("docs_question", "Where do I find the API documentation for this option?", (), ("references/genre-modes.md",)),
+    TestCase(
+        "wiki_question",
+        "What does the deployment wiki say about token expiry? Answer the factual question only.",
+        (),
+        ("references/genre-modes.md", "references/technical-documentation-and-wikis.md"),
+    ),
 )
 
 

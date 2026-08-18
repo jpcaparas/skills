@@ -1,8 +1,8 @@
 {
-  "version": "2.3.0",
+  "version": "2.4.0",
   "organization": "JP Caparas",
-  "date": "July 2026",
-  "abstract": "Production-grade general-purpose writing and revision system for drafting, rewriting, line editing, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, uses publication-informed original examples to improve natural structure and long-prose digestibility, restores individual voice without fabricated personality, includes relation-first punctuation and sentence-flow transformations, and provides a researched contextual catalogue that removes or rewrites formulaic language without treating ordinary words as authorship evidence.",
+  "date": "August 2026",
+  "abstract": "Production-grade general-purpose writing and revision system for drafting, rewriting, line editing, review, humanisation, and adaptation. It protects factual and literal fidelity, applies genre-aware staged revision, includes reader-first technical documentation and wiki guidance adapted from the Google developer documentation style guide, restores individual voice without fabricated personality, and removes or rewrites formulaic language without treating ordinary words as authorship evidence.",
   "references": [
     "https://doi.org/10.1126/sciadv.adn5290",
     "https://arxiv.org/abs/2406.07016",
@@ -36,6 +36,13 @@
     "https://www.ap.org/about/news-values-and-principles/telling-the-story/",
     "https://education.economist.com/blog/what-to-read/writing-with-style",
     "https://www.theguardian.com/sustainability/guardian-style-guide",
-    "https://reutersagency.com/about/standards-values/"
+    "https://reutersagency.com/about/standards-values/",
+    "https://developers.google.com/style/",
+    "https://developers.google.com/style/tone",
+    "https://developers.google.com/style/translation",
+    "https://developers.google.com/style/headings",
+    "https://developers.google.com/style/procedures",
+    "https://developers.google.com/style/cross-references",
+    "https://developers.google.com/style/accessibility"
   ]
 }

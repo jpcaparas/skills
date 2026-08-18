@@ -414,6 +414,23 @@
         {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, revision-pass-stack.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
       ],
       "tags": ["line-edit", "formulaic-language", "broad-ai-tropes", "support", "warmth", "contextual-exceptions", "protected-literals", "disclosure"]
+    },
+    {
+      "id": 30,
+      "name": "rewrite-developer-wiki-with-documentation-style",
+      "prompt": "Rewrite the attached developer wiki entry for operators. Apply project-first Google developer documentation conventions: sentence-case descriptive headings, a logical heading hierarchy, prerequisites before actions, context-first imperative steps, `Optional:` for optional work, and descriptive links. Preserve every command, identifier, URL, scope limit, approval condition, verification requirement, and missing-rollback warning exactly. Do not change the locale or invent platform behaviour.",
+      "expected_output": "A scannable operator wiki entry with a clear page contract, logical headings, executable steps, descriptive navigation, and an evidence-bound verification finish.",
+      "files": ["evals/files/developer-wiki.md"],
+      "assertions": [
+        {"text": "Uses sentence-case descriptive headings in a logical hierarchy without retaining numbered headings", "type": "structural"},
+        {"text": "Places change approval and `key-admin` prerequisites before the rotation steps and starts required steps with imperative verbs", "type": "functional"},
+        {"text": "Marks the optional `staging.env` action with `Optional:` and replaces directional or generic link language with a descriptive destination", "type": "functional"},
+        {"text": "Flags that the source does not provide the portal control's visible label instead of inventing one", "type": "negative"},
+        {"text": "Preserves `keyctl rotate --environment staging --change CHG-4821`, `kid`, `staging.env`, `environment=staging`, the URL, the staging-only scope, and every verification condition exactly", "type": "verification"},
+        {"text": "Does not invent a rollback command, production behaviour, owner, review date, approval, or successful execution", "type": "negative"},
+        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, genre-modes.md, and technical-documentation-and-wikis.md and excludes research-notes.md", "type": "disclosure"}
+      ],
+      "tags": ["rewrite", "technical-documentation", "wiki", "procedures", "accessibility", "preservation", "verification", "disclosure"]
     }
   ]
 }

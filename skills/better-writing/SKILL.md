@@ -1,9 +1,9 @@
 ---
 name: better-writing
-description: "Draft, rewrite, review, humanise, or adapt prose while preserving facts, intent, voice, and uncertainty. Use for technical, product, editorial, marketing, or personal writing, including stiff or AI-like drafts. Skip code-only tasks."
+description: "Draft, rewrite, review, humanise, or adapt prose without losing facts, voice, or uncertainty. Use for technical docs, wikis, product, editorial, marketing, personal, or AI-like writing. Skip code-only tasks."
 compatibility: "Core instructions are portable. Optional diagnostics and package checks require Python 3.10+."
 metadata:
-  version: "2.3.0"
+  version: "2.4.0"
 references:
   - operating-contract
   - revision-pass-stack
@@ -15,6 +15,7 @@ references:
   - ai-isms-and-humanisation
   - formulaic-language-catalogue
   - genre-modes
+  - technical-documentation-and-wikis
   - style-bundles
   - quality-gates
   - research-notes
@@ -41,6 +42,8 @@ Choose the job before touching the prose.
 Mixed requests can use more than one job. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill may revise the user-facing words but does not edit the surrounding source, syntax, or code behaviour. Never rename, rewrite, or reinterpret code constructs to satisfy a style or diction rule. In mixed documentation, edit only the natural-language prose and preserve machine-readable material exactly.
 
 For an explicit request to remove, replace, limit, or standardise em dashes, semicolons, or colons, read `references/punctuation-and-sentence-flow.md`. Load it conditionally; ordinary line editing and humanisation do not imply a punctuation ban.
+
+For technical documentation or wiki entries, read `references/technical-documentation-and-wikis.md` in addition to the applicable mode in `references/genre-modes.md`. Follow repository or organisation style, locale, exact terminology, and destination constraints before the adapted Google developer documentation guidance.
 
 Use another workflow for code-only implementation, standalone fact-checking, or authorship classification. This skill may rewrite prose produced alongside those tasks, but it does not perform them.
 
@@ -83,6 +86,8 @@ Preserve what already works. A good edit is not a demonstration that every sente
 ### 3. Fix shape before style
 
 Choose the page shape in `references/genre-modes.md`. Give each section and paragraph one job. Put the main point where that genre expects it. Order evidence so the reader never has to guess why it is present.
+
+For documentation and wikis, establish the reader, starting state, canonical terminology, and finish line before styling the page. Use the documentation reference for headings, procedures, links, accessibility, global-audience clarity, and maintenance boundaries.
 
 Read `references/natural-structure-and-digestibility.md` when the request calls for a substantial structural recast, a more natural flow, or repair of dense, wall-of-text, or over-chunked prose. Use its worked transformations to split at changes of job, not at arbitrary lengths.
 
@@ -142,6 +147,8 @@ Rewrite the thought, not just the flagged token. Preserve dialect, accessibility
 
 Apply the target genre, audience, locale, and house style. Check headings, lists, calls to action, examples, and ending shape. Keep formatting proportional to the material; not every paragraph wants a heading and not every thought wants a bullet.
 
+For documentation and wiki pages, run the documentation gate in `references/technical-documentation-and-wikis.md`. Do not replace an established locale or project convention with a Google-specific preference.
+
 **Complete when:** the artefact looks and sounds native to its destination without losing factual or personal identity.
 
 ### 8. Pass the quality gates and stop
@@ -184,6 +191,7 @@ Do not claim a passage was AI-written. Do not turn stylistic preference into an 
 | AI-like patterns, humanisation, false positives, and scanner use | `references/ai-isms-and-humanisation.md` |
 | Contextual avoid rules, phrase families, natural rewrites, and protected uses | `references/formulaic-language-catalogue.md` |
 | Docs, PRs, specs, memos, reports, essays, email, UI, and copy | `references/genre-modes.md` |
+| Technical documentation and wiki headings, procedures, links, accessibility, and maintenance | `references/technical-documentation-and-wikis.md` |
 | Personal voice sheets and style calibration | `references/style-bundles.md` |
 | Acceptance criteria and final proof | `references/quality-gates.md` |
 | Research basis and limits | `references/research-notes.md` |

@@ -19,6 +19,8 @@ Choose the page shape from the reader's task. Sentence style cannot rescue the w
 | Complete a small interaction | UI copy, error, or notification |
 | Respond or coordinate | email, update, or release note |
 
+For every technical documentation or wiki mode in this table, also read `references/technical-documentation-and-wikis.md`. It supplies the shared style hierarchy, heading, procedure, linking, accessibility, global-audience, and maintenance rules without forcing every page into the same shape.
+
 ## Guide, tutorial, or runbook
 
 Reader needs: a finish line, prerequisites, ordered steps, exact artefacts, and verification.
@@ -33,6 +35,8 @@ Shape:
 6. add recovery or troubleshooting for likely failures
 
 Protect commands, paths, identifiers, versions, and expected output. Never invent a missing step from convention.
+
+Use `references/technical-documentation-and-wikis.md` to put prerequisites and conditions before dependent actions, write imperative steps, and provide accessible, descriptive navigation.
 
 Ending: verified success, rollback or recovery, then the next useful action.
 
@@ -51,6 +55,8 @@ Shape:
 
 Do not turn reference into a tutorial. Keep examples exact and label pseudocode.
 
+Use `references/technical-documentation-and-wikis.md` for stable terminology, sentence-case navigation, descriptive links, literal formatting, and accessible tables or diagrams.
+
 Ending: usually none; add related references, not a ceremonial conclusion.
 
 ## Explanation or deep dive
@@ -67,6 +73,8 @@ Shape:
 6. end with the model's practical implication or boundary
 
 Red flags: tutorial steps mixed into conceptual explanation; fact dump without a through-line; analogy replacing mechanism.
+
+When the explanation lives in a wiki, use `references/technical-documentation-and-wikis.md` to name the canonical source, make time-sensitive status explicit, and avoid copied fragments that will drift.
 
 ## Pull request description
 

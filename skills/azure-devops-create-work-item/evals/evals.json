@@ -210,6 +210,51 @@
         "references/output-packet.md",
         "references/gotchas.md"
       ]
+    },
+    {
+      "id": 9,
+      "name": "style-mixed-audience-work-item-with-local-precedence",
+      "prompt": "Draft a Product Backlog Item from these notes: When an operator opens Billing > Retry queue after 2026-09-01 09:00 NZST, items with `awaiting_confirmation` are shown in red on the right and should be retried by the worker. See https://ops.example.test/runbook. The likely cause is `src/billing/retry_worker.ts`, but that is not confirmed. Apply the Google developer documentation style guide without changing our Azure section labels or NZ English QA conventions.",
+      "expected_output": "Produces the standard Azure packet with project-first style precedence, exact literals, a descriptive runbook link, the reported visual observation preserved, and the missing UI label, retry rule, verification surface, and suspected cause kept explicit rather than invented.",
+      "assertions": [
+        {
+          "text": "Keeps the exact Azure section labels and order instead of replacing them with Google-style headings",
+          "type": "structural"
+        },
+        {
+          "text": "Names the operator, Retry queue, reported visual state, and intended worker retry clearly without silently turning the date into a cutoff or eligibility rule",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves `awaiting_confirmation`, `src/billing/retry_worker.ts`, Billing > Retry queue, 2026-09-01 09:00 NZST, and the runbook URL exactly",
+          "type": "verification"
+        },
+        {
+          "text": "Uses descriptive link text and does not use red colour or right-side position as a procedural locator; records the missing visible label when a step needs it",
+          "type": "verification"
+        },
+        {
+          "text": "Does not present `src/billing/retry_worker.ts` as a confirmed cause, invent an eligibility rule, monitoring view, failure path, accessibility product requirement, or business impact, or replace the NZ English Manual QA contract with US English",
+          "type": "negative"
+        },
+        {
+          "text": "Adds only source-backed acceptance criteria and QA scenarios; records any missing retry signal or verification surface instead of inventing one",
+          "type": "verification"
+        }
+      ],
+      "tags": [
+        "style",
+        "mixed-audience",
+        "google-style",
+        "accessibility",
+        "preservation"
+      ],
+      "files": [
+        "SKILL.md",
+        "references/writing-style.md",
+        "references/output-packet.md",
+        "templates/product-backlog-item-template.md"
+      ]
     }
   ]
 }

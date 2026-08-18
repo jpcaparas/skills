@@ -709,6 +709,58 @@ def validate_package_paths(state: ValidationState) -> None:
         state.errors.append(f"Package path self-test failed: {', '.join(failures)}")
 
 
+def validate_documentation_style_guidance(state: ValidationState) -> None:
+    """Keep the documentation/wiki route and its project-first contract intact."""
+
+    required_snippets: dict[str, tuple[str, ...]] = {
+        "SKILL.md": (
+            "references/technical-documentation-and-wikis.md",
+            "technical documentation or wiki entries",
+            "repository or organisation style, locale, exact terminology",
+        ),
+        "references/technical-documentation-and-wikis.md": (
+            "## Apply the right style hierarchy",
+            "Use sentence case for page titles and headings",
+            "Put a condition before the action it governs",
+            "descriptive link text",
+            "Do not rely on colour, position, shape, sound, or an image",
+            "[confirm visible label]",
+            "invent a plausible label",
+            "Follow the requested locale and house spelling",
+            "https://developers.google.com/style/",
+        ),
+        "references/genre-modes.md": (
+            "references/technical-documentation-and-wikis.md",
+            "technical documentation or wiki mode",
+        ),
+        "scripts/probe_better_writing.py": (
+            '"references/technical-documentation-and-wikis.md"',
+            '"rewrite_developer_wiki"',
+            '"wiki_question"',
+        ),
+        "evals/evals.json": (
+            '"rewrite-developer-wiki-with-documentation-style"',
+            "technical-documentation-and-wikis.md",
+        ),
+        "evals/trigger-evals.json": (
+            "Rewrite this developer wiki entry",
+            "What does the deployment wiki say",
+        ),
+    }
+
+    for relative, snippets in required_snippets.items():
+        path = state.root / relative
+        if not path.is_file():
+            state.errors.append(f"Documentation-style guidance file missing: {relative}")
+            continue
+        content = path.read_text(encoding="utf-8")
+        for snippet in snippets:
+            if snippet not in content:
+                state.errors.append(
+                    f"Documentation-style guidance missing {snippet!r} in {relative}"
+                )
+
+
 def validate_skill(skill_path: str) -> dict[str, object]:
     root = Path(skill_path).resolve()
     state = ValidationState(
@@ -815,6 +867,7 @@ def validate_skill(skill_path: str) -> dict[str, object]:
     trigger_evals_path = root / "evals" / "trigger-evals.json"
     if trigger_evals_path.is_file():
         validate_trigger_evals(trigger_evals_path, state)
+    validate_documentation_style_guidance(state)
     validate_routes(state)
     validate_scanner(state)
     return {"valid": not state.errors, "errors": state.errors, "warnings": state.warnings, "metrics": state.metrics}

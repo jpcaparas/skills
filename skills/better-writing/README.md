@@ -8,6 +8,7 @@ It supports six jobs: drafting, rewriting, line editing, review, humanisation, a
 
 - a preservation contract for facts, uncertainty, quotations, commands, identifiers, citations, and voice anchors
 - genre-specific shapes for developers, writers, product owners, operators, and customer-facing teams
+- reader-first technical documentation and wiki guidance for style precedence, headings, procedures, links, accessibility, global audiences, and durable maintenance
 - publication-informed, original cross-genre examples for natural structure and digestible long prose
 - paragraph, sentence, evidence, voice, and humanisation passes with observable stop conditions
 - worked technical, editorial, memo, product, email, UI, and reflective rewrites that remove formulae by rebuilding the thought

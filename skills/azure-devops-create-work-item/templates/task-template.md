@@ -16,6 +16,9 @@
 
 As a developer, I can [confirm the task is complete] so that [supported work can proceed].
 
+- [Observable condition that must be true.]
+- [Meaningful handoff, failure, or environment condition when it defines done.]
+
 **Developer Notes**
 
 - [Dependency, assumption, handoff note, environment note, or known unknown.]

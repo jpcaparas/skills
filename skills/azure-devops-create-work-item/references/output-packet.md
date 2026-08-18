@@ -33,6 +33,7 @@ Each packet contains:
 
 ## Writing Contract
 
+- Apply the style precedence and field-level rules in `references/writing-style.md`. Azure Boards semantics, the exact packet schema, project terminology, requested locale, and exact literals override generic style preferences.
 - Do not use `#`, `##`, or `###` headings in `work-item.md` outside a detailed manual QA `Test Scenario` block.
 - Use bold section labels in `work-item.md`.
 - Use these exact labels for non-bug drafts, in this order:
@@ -45,7 +46,12 @@ Each packet contains:
   7. `**Test Scenario**`
 - For `Bug`, add `**Reproduction Steps**` between `**Problem**` and `**Action**`.
 - Prefer short paragraphs, bullets, and numbered lists.
+- Use sentence case for the free-form title and QA scenario titles when local style permits. Keep the exact bold section labels as a deliberate schema exception.
 - Write for technical and non-technical readers at the same time. The first paragraph should make sense without product or codebase trivia.
+- In `Problem`, name the affected role, workflow, service, or component; distinguish observed facts from suspected causes.
+- Put prerequisites and conditions before the actions that depend on them.
+- Make acceptance criteria observable and testable, but add only conditions supported by the source, repository evidence, or an explicit user decision. Use `must` for requirements, `can` for capabilities, and `might` for possibilities; avoid ambiguous `should` in pass-or-fail criteria.
+- Use backticks for code identifiers, file paths, commands, configuration keys, and API elements. Use descriptive Markdown link text when the renderer supports it.
 - Default unspecified work to `Product Backlog Item`; use `Bug`, `Feature`, `Task`, and other types only when specified or clearly required.
 - `Feature` drafts should keep `Problem` and `Outcome` to one or two short paragraphs each, with no more than five high-level actions.
 - `Bug` drafts must include simple numbered `**Reproduction Steps**` that QA, product, or developers can follow without interpreting dense prose.
@@ -62,15 +68,16 @@ For `work-item.md`, keep the existing `**Test Scenario**` section label and star
 
 Rules:
 
-1. Produce 4-6 targeted scenarios only. Include one happy path, then one scenario for each defect, guard, or regression risk the change introduces. Skip scenarios that do not verify touched behaviour.
+1. Produce 4-6 targeted scenarios only when the source supports a complete manual QA section. Include one happy path, then one scenario for each defect, guard, or regression risk the change introduces. Do not invent risks to reach the count; if fewer than four scenarios can be grounded, ask for the missing detail or record the gap instead of presenting the section as final.
 2. Write UI-driven steps in plain language. Say what a person does in the browser, such as "click Pay rapidly several times before the screen changes". Do not name methods, endpoints, database columns, queues, or flags unless staging genuinely needs developer support.
-3. Make scenario titles state the behaviour being protected. Use "Double-clicking Pay does not charge twice", not "Payment flow test 2".
+3. Make scenario titles state the behaviour being protected in sentence case. Use "Double-clicking Pay does not charge twice", not "Payment flow test 2".
 4. Give each scenario a short `**Steps:**` list and `**Expected:**` list. Expected outcomes must be observable: what the customer sees, what appears in an admin or third-party dashboard, what email arrives, or what a support screen shows. Bold the key observable, such as `exactly **one** charge appears in the Stripe dashboard`.
 5. Put verification aids first. Start with a short `Test environment notes:` block with concrete test data and the dashboards, admin pages, or log screens QA should keep open to confirm side effects.
-6. Be honest when the UI cannot create the required state. Put `(needs dev support)` in the scenario title, describe the staging in one sentence, and include the counter-check where relevant, such as confirming the guard still allows a fresh non-stale transaction.
+6. Be honest when the UI cannot create the required state. Put `(needs dev support)` in the scenario title, describe the condition and staging before the UI steps in one sentence, and include the counter-check where relevant, such as confirming the guard still allows a fresh non-stale transaction.
 7. Call out non-obvious verification traps. If pass and fail look identical on screen, tell QA where the real signal is.
-8. Use plain Markdown that pastes cleanly into Azure DevOps: `##` scenario headings, `---` separators, numbered steps, and bulleted expectations. Do not use HTML or nested tables.
-9. Use NZ English throughout, including spellings such as behaviour, authorised, cancelled, and enrolment where those words appear.
+8. Use only supplied or repository-backed verification surfaces. Do not invent an admin page, dashboard, log view, test clock, dependency failure, or recovery path. Mark the missing verification mechanism and request it when needed.
+9. Use plain Markdown that pastes cleanly into Azure DevOps: `##` scenario headings, `---` separators, numbered steps, and bulleted expectations. Do not use HTML or nested tables.
+10. Use NZ English throughout, including spellings such as behaviour, authorised, cancelled, and enrolment where those words appear.
 
 Trimmed example:
 

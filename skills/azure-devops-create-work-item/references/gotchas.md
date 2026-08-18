@@ -15,3 +15,5 @@
 13. Do not let manual QA become an exhaustive matrix. A good `**Test Scenario**` section has 4-6 targeted scenarios: one happy path, then the meaningful guards and regressions introduced by the change.
 14. Do not pretend there is a browser path for a staged failure state. If QA needs developer help to create stale, crashed, or partially-complete state, say `(needs dev support)` in the scenario title and describe the staging in one sentence.
 15. If the screen looks the same for pass and fail, call out the real verification signal in the scenario, such as the payment dashboard, admin audit trail, email inbox, or gateway request logs.
+16. Google-style preferences do not replace the Azure schema, project terminology, requested locale, or NZ English Manual QA contract. Use `references/writing-style.md` for the precedence rules.
+17. This skill does not create standalone wiki pages or general documentation. Route that work to a documentation-writing workflow.

@@ -161,6 +161,69 @@ def validate_manual_qa_guidance(skill_path: str, errors: list[str]) -> None:
                 )
 
 
+def validate_writing_style_guidance(skill_path: str, errors: list[str]) -> None:
+    """Keep project-first style guidance and observable acceptance criteria packaged together."""
+
+    required_snippets: dict[str, tuple[str, ...]] = {
+        "SKILL.md": (
+            "references/writing-style.md",
+            "Azure section labels and order",
+            "standalone wiki pages",
+        ),
+        os.path.join("references", "writing-style.md"): (
+            "## Style precedence",
+            "## Keep style separate from product scope",
+            "Use sentence case",
+            "observable and testable",
+            "Use `must` for a requirement, `can` for a capability or permission, and `might`",
+            "descriptive Markdown link text",
+            "NZ English contract",
+            "[confirm visible label]",
+            "record the gap; do not repeat the inaccessible locator or invent a label",
+            "Do not infer an eligibility rule",
+            "Every required behaviour, boundary, and verification surface",
+            "https://developers.google.com/style/",
+        ),
+        os.path.join("references", "output-packet.md"): (
+            "references/writing-style.md",
+            "prerequisites and conditions before the actions",
+            "acceptance criteria observable and testable",
+            "Do not invent risks to reach the count",
+            "Use only supplied or repository-backed verification surfaces",
+            "exact bold section labels as a deliberate schema exception",
+        ),
+        os.path.join("references", "gotchas.md"): (
+            "Google-style preferences do not replace the Azure schema",
+            "does not create standalone wiki pages",
+        ),
+        os.path.join("evals", "evals.json"): (
+            "style-mixed-audience-work-item-with-local-precedence",
+            "references/writing-style.md",
+        ),
+    }
+
+    for rel_path, snippets in required_snippets.items():
+        path = os.path.join(skill_path, rel_path)
+        if not os.path.isfile(path):
+            errors.append(f"Writing-style guidance file missing: {rel_path}")
+            continue
+        content = read_text_file(path)
+        for snippet in snippets:
+            if snippet not in content:
+                errors.append(f"Writing-style guidance missing '{snippet}' in {rel_path}")
+
+    templates_dir = os.path.join(skill_path, "templates")
+    if not os.path.isdir(templates_dir):
+        return
+    for fname in os.listdir(templates_dir):
+        if not fname.endswith(".md"):
+            continue
+        rel_path = os.path.join("templates", fname)
+        content = read_text_file(os.path.join(templates_dir, fname))
+        if "**Acceptance Criteria**" in content and "[Observable condition" not in content:
+            errors.append(f"Template Acceptance Criteria must include an observable condition: {rel_path}")
+
+
 def validate_skill(skill_path: str) -> dict:
     errors = []
     warnings = []
@@ -278,6 +341,7 @@ def validate_skill(skill_path: str) -> dict:
             errors.append(f"evals/evals.json is not valid JSON: {exc}")
 
     validate_manual_qa_guidance(skill_path, errors)
+    validate_writing_style_guidance(skill_path, errors)
 
     scripts_dir = os.path.join(skill_path, "scripts")
     if os.path.isdir(scripts_dir):
