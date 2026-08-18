@@ -1,8 +1,8 @@
 {
-  "version": "2.16.0",
+  "version": "2.16.1",
   "organization": "JP Caparas",
   "date": "August 2026",
-  "abstract": "Launch autonomous website experiments through fresh isolated subagents, with same-run reconnect and steering recovery, explicit multi-lead and same-prompt replica fan-out, unbounded recursive descendant teams, unrestricted build-agent capability, lean consolidated critics with explicit mobile-friendliness inspection, terminal READY, batched blockers, targeted rechecks, evidence reuse, and warranted escalation, clean lead orchestration and monitoring, 100 plainly labelled catalogue options, full-depth no-shortcuts prompts, evidence-based stopping, coupling-aware delegation, justified WebAssembly selection, slugged timestamp run directories, nearby artifact and prompt catalogue links, recoverable run-local temporary state with safe completion cleanup, prompt provenance, local-only publication safeguards, and drop-ready multi-file static artifacts.",
+  "abstract": "Launch autonomous website experiments through fresh isolated subagents, with same-run reconnect and steering recovery, explicit multi-lead and same-prompt replica fan-out, unbounded recursive descendant teams, unrestricted build-agent capability, lean consolidated critics with explicit mobile-friendliness inspection, terminal READY, batched blockers, targeted rechecks, evidence reuse, and warranted escalation, clean lead orchestration and monitoring, 100 plainly labelled catalogue options, full-depth no-shortcuts prompts, evidence-based stopping, coupling-aware delegation, justified WebAssembly selection, slugged timestamp run directories, nearby artifact and prompt catalogue links, clickable run IDs for portable artifact-folder access, recoverable run-local temporary state with safe completion cleanup, prompt provenance, local-only publication safeguards, and drop-ready multi-file static artifacts.",
   "references": [
     "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
     "https://x.com/mweinbach/status/2077827886149439547",

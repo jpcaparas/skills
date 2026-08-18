@@ -23,7 +23,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - A conservative Cloudflare/Vercel Drop-ready `artifact/` with one root `index.html` entrypoint and any supporting asset tree the experience needs
 - A local-only default: Drop compatibility never authorizes Vercel, Cloudflare, ChatGPT, GitHub, or other remote writes; explicit action-and-destination permission is required and retained by the coordinator
 - A coordinator-owned receipt-and-commit inventory outside each worker run, with crash recovery and an explicit path-isolation trust boundary
-- Provenance-aware indexing and validation, with artifact and prompt links beside each experiment for faster access
+- Provenance-aware indexing and validation, with artifact and prompt links beside each experiment plus clickable run IDs for portable artifact-folder access
 
 ## Key Files
 

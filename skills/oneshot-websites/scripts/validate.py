@@ -52,7 +52,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.16.0"
+PACKAGE_VERSION = "2.16.1"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a

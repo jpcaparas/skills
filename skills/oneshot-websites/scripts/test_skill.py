@@ -3355,6 +3355,15 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             "catalogue rows did not place artifact and prompt cells immediately after experiment",
             errors,
         )
+        expected_run_folder_link = (
+            f'<a href="{first_run.name}/artifact/" target="_blank" rel="noopener" '
+            f'aria-label="Open artifact folder for run {first_run.name}"><code>{first_run.name}</code></a>'
+        )
+        assert_ok(
+            expected_run_folder_link in catalogue_html,
+            "catalogue run IDs did not open their portable relative artifact folders in a new context",
+            errors,
+        )
 
         receipt_name = "{}.json".format(first_run.name)
         appledouble_paths = [

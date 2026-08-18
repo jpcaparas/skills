@@ -1,6 +1,6 @@
 # Oneshot Websites
 
-**Version 2.16.0**
+**Version 2.16.1**
 JP Caparas
 August 2026
 

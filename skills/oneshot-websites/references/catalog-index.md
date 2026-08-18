@@ -41,13 +41,13 @@ The index lists:
 - model and harness
 - experiment
 - artifact entry and prompt links immediately after the experiment, before the wider provenance fields
-- run ID
+- run ID linked to that run's exact `artifact/` directory in a new browser context
 - status and classification
 - lead and descendant counts when known
 - summary or blocker
 
 The builder reads `run.json` and `worker-report.json` files; it never rewrites artifacts. It serializes render and atomic local replacement through a coordinator-owned `.oneshot-catalogue.lock`, preventing a delayed older builder from replacing a newer snapshot.
-The finished output root keeps this generated `index.html` as an exact-case, readable file. Its “Artifact entry” links identify run entrypoints for provenance and inspection. They are not deployment-origin emulators: a site that uses root-relative URLs is expected to work when `artifact/` itself is dropped at a host root.
+The finished output root keeps this generated `index.html` as an exact-case, readable file. Its “Artifact entry” links identify run entrypoints for provenance and inspection. Each clickable run ID uses a portable relative directory URL rather than exposing a machine-specific absolute `file:` URL. Browser and operating-system policy decide how that directory opens: a static catalogue can request a new browsing context, but it cannot guarantee Finder, Nautilus, Explorer, or another native file manager. When an artifact directory has an `index.html` or the catalogue is served over HTTP, the browser may open the built site instead of a directory listing. These links are not deployment-origin emulators: a site that uses root-relative URLs is expected to work when `artifact/` itself is dropped at a host root.
 
 ## Validation
 

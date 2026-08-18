@@ -338,6 +338,28 @@ def file_link(out_path: Path, target: Path, label: str) -> str:
     return f'<a href="{esc(relative_href(out_path, target))}">{esc(label)}</a>'
 
 
+def artifact_directory_link(out_path: Path, target: Path, run_id: str) -> str:
+    """Link a run ID to its exact ordinary artifact directory using a portable URL."""
+    stored_target = exact_child(target.parent, target.name)
+    try:
+        is_linkable = (
+            stored_target is not None
+            and not stored_target.is_symlink()
+            and stored_target.is_dir()
+        )
+    except OSError:
+        is_linkable = False
+    if not is_linkable or stored_target is None:
+        return f"<code>{esc(run_id)}</code>"
+
+    href = f"{relative_href(out_path, stored_target).rstrip('/')}/"
+    aria_label = f"Open artifact folder for run {run_id}"
+    return (
+        f'<a href="{esc(href)}" target="_blank" rel="noopener" '
+        f'aria-label="{esc(aria_label)}"><code>{esc(run_id)}</code></a>'
+    )
+
+
 def replacement_mode(out_path: Path) -> int:
     """Preserve an existing catalogue mode or use a web-readable default."""
     try:
@@ -439,13 +461,16 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
             run.get("status"), "INVALID" if run_error else "UNKNOWN", 64
         ).upper()
         classification = bounded_text(run.get("classification"), "Unknown", 128)
+        run_id = bounded_text(run.get("runId"), run_dir.name, 128)
         row_error = run_error or report_error
         if candidate.discovery_error is None:
             site_link = file_link(out_path, run_dir / "artifact" / "index.html", "Artifact entry")
             prompt_link = file_link(out_path, run_dir / "artifact" / "PROMPT.md", "PROMPT.md")
+            run_link = artifact_directory_link(out_path, run_dir / "artifact", run_id)
         else:
             site_link = '<span class="muted">Unavailable</span>'
             prompt_link = '<span class="muted">Unavailable</span>'
+            run_link = f"<code>{esc(run_id)}</code>"
 
         rows.append(
             "        <tr>\n"
@@ -454,7 +479,7 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
             f'          <td data-label="Experiment"><span class="identity">{esc(identity_name(experiment, legacy_fallbacks[2] if legacy_fallbacks else "Unknown experiment"))}</span></td>\n'
             f'          <td data-label="Artifact">{site_link}</td>\n'
             f'          <td data-label="Prompt">{prompt_link}</td>\n'
-            f'          <td data-label="Run"><code>{esc(bounded_text(run.get("runId"), run_dir.name, 128))}</code></td>\n'
+            f'          <td data-label="Run">{run_link}</td>\n'
             f'          <td data-label="Status"><span class="status {status_class(status)}">{esc(status)}</span></td>\n'
             f'          <td data-label="Classification"><code>{esc(classification)}</code></td>\n'
             f'          <td data-label="Workers" class="muted">{esc(worker_details(run, report))}</td>\n'
