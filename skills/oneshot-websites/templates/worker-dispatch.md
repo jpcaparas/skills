@@ -21,6 +21,14 @@ For an initial lead, set the recovery envelope below to `INITIAL: this is a newl
 
 {{RECOVERY_ENVELOPE}}
 
+## Private Design Territory Envelope (operational; not part of the actual prompt)
+
+{{PRIVATE_DESIGN_TERRITORY}}
+
+For a multi-lead fan-out, the value above is only your own positive design direction. For a single lead, use `NOT_APPLICABLE: single lead.` This territory governs discretionary design choices only, never changes the sealed prompt bytes, and must remain outside the actual prompt and `artifact/PROMPT.md`.
+
+Do not inspect, enumerate, search for, request, infer, or compare any sibling workspace, artifact, report, capture, design territory, critic, or outcome, even if a parent directory is readable. Stay inside `{{RUN_PATH}}`. Pass only this territory to descendants and critics; never pass sibling context or seek cross-run comparison. Do not copy this envelope into the artifact/PROMPT.md file or any user-facing artifact content.
+
 ## Operational Runtime Envelope (not part of the actual prompt)
 
 Keep scratch and temporary files in the assigned `.tmp/` wherever the harness and tools permit. Route standard temporary-file variables such as `TMPDIR`, `TMP`, and `TEMP` there before launching local processes, and pass the same run-local path and routing to every descendant. Retain `.tmp/` throughout active work, interruptions, recovery, and every non-`OK` handoff. If a tool ignores the routing or creates state before this lead starts, record that limitation without deleting or sweeping unrelated external paths. Never copy `.tmp/` into `artifact/`, and never add this operational envelope to the prepared actual prompt or `artifact/PROMPT.md`.

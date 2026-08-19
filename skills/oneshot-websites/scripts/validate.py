@@ -52,7 +52,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.16.1"
+PACKAGE_VERSION = "2.17.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -182,6 +182,16 @@ RUNTIME_CONTRACTS = (
             r"multiple replicas of the same brief.*?repeated single-brief fan-out.*?craft and seal.*?once.*?same prompt file.*?"
             r"digests and byte counts match.*?exact same decoded string.*?(?:do not add|without) replica labels.*?"
             r"autonomous-one-shot.*?priorRun: null.*?not reruns",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "blind multi-lead design independence",
+        re.compile(
+            r"For every multi-lead fan-out.*?private design-diversity ledger.*?"
+            r"only its own positively stated design territory.*?same sealed prompt bytes.*?"
+            r"composition.*?navigation.*?typography.*?motion.*?"
+            r"Never expose.*?sibling.*?design.*?DIVERSITY_CONFLICT",
             re.I | re.S,
         ),
     ),
@@ -546,6 +556,16 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "agents/oneshot-critic.md",
+        "critic sibling-design blindness",
+        re.compile(
+            r"Experiment Isolation.*?only this experiment’s private design territory.*?"
+            r"Do not inspect.*?sibling.*?workspace.*?artifact.*?capture.*?critic.*?"
+            r"must not use cross-run comparison.*?own assigned territory",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-critic.md",
         "adaptive token-efficient critic role",
         re.compile(
             r"Resource and Output Discipline.*?quick, token-efficient critic by default.*?"
@@ -567,6 +587,18 @@ FILE_RUNTIME_CONTRACTS = (
             r"text legibility.*?navigation.*?control availability.*?touch-target usability.*?"
             r"primary interaction path.*?Desktop captures.*?media-query presence.*?not proof.*?"
             r"desktop-only exception.*?reason is recorded.*?narrow-viewport behavior is intentional",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead blind design independence",
+        re.compile(
+            r"Blind Design Independence.*?private design territory.*?"
+            r"must not inspect.*?sibling.*?workspace.*?artifact.*?report.*?capture.*?"
+            r"materially distinct.*?composition.*?navigation.*?typography.*?motion.*?"
+            r"source or prompt explicitly fixes.*?not a lead design choice.*?"
+            r"descendants.*?only your territory",
             re.I | re.S,
         ),
     ),
@@ -709,6 +741,17 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "templates/worker-dispatch.md",
+        "dispatch private design territory envelope",
+        re.compile(
+            r"Private Design Territory Envelope.*?not part of the actual prompt.*?"
+            r"PRIVATE_DESIGN_TERRITORY.*?only your own positive design direction.*?"
+            r"Do not inspect.*?sibling.*?workspace.*?artifact.*?report.*?"
+            r"Pass only this territory.*?descendants.*?critics.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
         "embedded fresh critic role",
         re.compile(
             r"Fresh Critic Role.*?complete current contents of `agents/oneshot-critic\.md`.*?"
@@ -803,6 +846,17 @@ FILE_RUNTIME_CONTRACTS = (
             r"Decision Gate.*?bounded spike.*?representative data.*?"
             r"Lead Contract When WASM Fits.*?Worker.*?5 MiB per-file limit.*?"
             r"Sample Scenarios.*?SQLite.*?Rust backend.*?prepared actual prompt remains unchanged",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol blind multi-lead design diversity",
+        re.compile(
+            r"Blind Design Diversity.*?private design-diversity ledger.*?"
+            r"same sealed prompt.*?mutually exclusive.*?design territories.*?"
+            r"only its own.*?sibling.*?workspace.*?artifact.*?critic.*?"
+            r"fixed source.*?DIVERSITY_CONFLICT.*?recovery.*?same private territory",
             re.I | re.S,
         ),
     ),

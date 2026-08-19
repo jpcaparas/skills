@@ -547,11 +547,11 @@
       "id": 45,
       "name": "gauntlet-descendants-remain-experiment-isolated",
       "prompt": "Run two one-shots at once: a lunar greenhouse and a harbour control room. Each lead uses builders and critics. Do not let either result bias the other.",
-      "expected_output": "Each experiment keeps one fresh owning lead and an isolated descendant tree. Builders and critics receive only their own prepared prompt, references, bar, run paths, artifact, and evidence; no sibling prompt, artifact, quality score, or critic result enters the other run.",
+      "expected_output": "Each experiment keeps one fresh owning lead and an isolated descendant tree. The coordinator privately assigns mutually exclusive design territories, and builders and critics receive only their own prepared prompt, territory, references, bar, run paths, artifact, and evidence; no sibling design direction, prompt, artifact, quality score, or critic result enters the other run.",
       "assertions": [
         {"text": "Maintains two disjoint lead-owned descendant trees and run namespaces", "type": "structural"},
-        {"text": "Critics inspect only their assigned experiment's artifact and bar", "type": "functional"},
-        {"text": "Does not use sibling outcomes as hidden comparison evidence or coordinator steering", "type": "negative"}
+        {"text": "Critics inspect only their assigned experiment's territory, artifact, and bar", "type": "functional"},
+        {"text": "Does not expose sibling territories or use sibling outcomes as hidden comparison evidence or coordinator steering", "type": "negative"}
       ],
       "tags": ["gauntlet", "isolation", "multiple", "siblings", "regression"]
     },
@@ -583,11 +583,12 @@
       "id": 48,
       "name": "three-identical-libreoffice-replicas",
       "prompt": "Create three replicas of LibreOffice Writer in the browser with multiple lead subagents. Use the same brief for all three.",
-      "expected_output": "Crafts and seals one actual prompt, reserves three separate slugged timestamp runs, and dispatches three fresh top-level leads. All three autonomous-one-shot runs preserve byte-identical PROMPT.md content, matching digests and byte counts, and null priorRun values without replica labels or variant instructions.",
+      "expected_output": "Crafts and seals one actual prompt, reserves three separate slugged timestamp runs, and dispatches three fresh top-level leads. All three autonomous-one-shot runs preserve byte-identical PROMPT.md content, matching digests and byte counts, and null priorRun values. Each lead privately receives a mutually exclusive positive territory for discretionary design choices while LibreOffice traits fixed by the source remain shared fidelity constraints.",
       "assertions": [
         {"text": "Creates three distinct top-level runs and three fresh lead owners", "type": "structural"},
         {"text": "Uses one exact prompt byte sequence and matching digest for every replica", "type": "verification"},
-        {"text": "Does not turn the replicas into descendants, variants, or reruns", "type": "negative"}
+        {"text": "Assigns each lead only its own private design territory without leaking sibling choices", "type": "functional"},
+        {"text": "Does not turn the replicas into descendants, prompt variants, or reruns", "type": "negative"}
       ],
       "tags": ["multiple", "replicas", "prompt-provenance", "isolation", "regression"]
     },
@@ -595,11 +596,12 @@
       "id": 49,
       "name": "multiple-leads-defaults-to-two",
       "prompt": "Build a browser-based terminal emulator with multiple lead subagents.",
-      "expected_output": "Interprets the unnumbered word multiple as two independent experiment instances, seals the one terminal-emulator prompt once for both, reserves two sibling runs, and dispatches two fresh top-level leads. Inner builders or critics do not count toward the requested lead total.",
+      "expected_output": "Interprets the unnumbered word multiple as two independent experiment instances, seals the one terminal-emulator prompt once for both, assigns two private mutually exclusive design territories, reserves two sibling runs, and dispatches two fresh top-level leads. Inner builders or critics do not count toward the requested lead total.",
       "assertions": [
         {"text": "Defaults the explicit but unnumbered outer lead count to two", "type": "functional"},
         {"text": "Uses matching sealed prompt bytes and digests because no variants were requested", "type": "verification"},
-        {"text": "Gives each lead its own run, workspace, temporary directory, artifact, and receipt", "type": "structural"},
+        {"text": "Gives each lead its own run, workspace, temporary directory, artifact, receipt, and private design territory", "type": "structural"},
+        {"text": "Keeps each lead blind to the other's territory, workspace, artifact, critic, and outcome", "type": "negative"},
         {"text": "Does not satisfy the request with descendants inside one owning lead", "type": "negative"}
       ],
       "tags": ["multiple", "leads", "count", "isolation", "edge"]
@@ -608,11 +610,12 @@
       "id": 50,
       "name": "multiple-workspaces-mean-sibling-runs",
       "prompt": "Make multiple workspaces for independent replicas of a browser-based paint application.",
-      "expected_output": "Creates two sibling run directories directly beneath the selected output root, each with one workspace and one fresh lead. It does not create workspace/a and workspace/b inside a shared run, and it keeps the replica prompt bytes identical.",
+      "expected_output": "Creates two sibling run directories directly beneath the selected output root, each with one workspace, one fresh lead, and one private mutually exclusive design territory. It does not create workspace/a and workspace/b inside a shared run, and it keeps the replica prompt bytes identical while keeping sibling design context hidden.",
       "assertions": [
         {"text": "Maps multiple workspaces to two top-level experiment runs", "type": "functional"},
         {"text": "Preserves byte-identical prompts across the repeated single brief", "type": "verification"},
-        {"text": "Keeps each workspace inside its own sibling run", "type": "structural"},
+        {"text": "Keeps each workspace and private design territory inside its own sibling run", "type": "structural"},
+        {"text": "Produces material separation across discretionary composition, navigation, typography, and motion choices", "type": "functional"},
         {"text": "Does not nest several requested workspaces beneath one run", "type": "negative"}
       ],
       "tags": ["multiple", "workspaces", "replicas", "layout", "regression"]
@@ -1128,6 +1131,31 @@
         {"text": "Does not use a broad recursive deletion or report successful completion", "type": "negative"}
       ],
       "tags": ["temporary-files", "path-safety", "cleanup", "negative"]
+    },
+    {
+      "id": 92,
+      "name": "blind-three-way-original-design-diversity",
+      "prompt": "Use three lead subagents to build independent browser-based field journals from the same prompt. I want genuinely different design directions, but do not let the leads see each other's work.",
+      "expected_output": "Seals one byte-identical prompt for three disjoint runs, then creates a coordinator-only ledger with three mutually exclusive positive territories spanning composition, navigation, typography and colour, and motion and feedback. Each no-history lead receives only its own territory and run, passes only that territory to descendants and critics, and never sees sibling identity, design direction, files, evidence, or outcomes. The three artifacts are materially distinct in discretionary design without cross-run comparison.",
+      "assertions": [
+        {"text": "Preserves the same prompt bytes and digest across all three runs", "type": "verification"},
+        {"text": "Assigns three mutually exclusive positive territories covering multiple design axes", "type": "functional"},
+        {"text": "Keeps every lead, descendant, and critic blind to all sibling design context and files", "type": "negative"},
+        {"text": "Reuses each run's original private territory unchanged during continuation or recovery", "type": "structural"}
+      ],
+      "tags": ["multiple", "design-diversity", "blindness", "same-prompt", "regression"]
+    },
+    {
+      "id": 93,
+      "name": "fixed-source-diversity-conflict",
+      "prompt": "Create three pixel-exact replicas of this single fixed screenshot. Every visible detail must match, but every lead must also produce a completely different visual design.",
+      "expected_output": "Detects that pixel-exact fidelity fixes the discretionary visual design space and stops before reserving or dispatching leads with DIVERSITY_CONFLICT. It explains that source-mandated similarities are fidelity constraints rather than copied lead choices and asks the user to relax either exact fidelity or the material-diversity requirement instead of weakening either silently.",
+      "assertions": [
+        {"text": "Returns DIVERSITY_CONFLICT before any lead dispatch", "type": "functional"},
+        {"text": "Identifies the exact-source constraint as the reason material visual diversity is impossible", "type": "verification"},
+        {"text": "Does not fabricate uniqueness, leak sibling designs, or weaken pixel fidelity without permission", "type": "negative"}
+      ],
+      "tags": ["multiple", "design-diversity", "fidelity", "conflict", "negative"]
     }
   ]
 }

@@ -505,7 +505,14 @@ def initial_worker_report(run_id: str) -> dict[str, Any]:
             "stopReason": None,
         },
         "verification": [],
-        "observations": {"startedAt": None, "completedAt": None, "usage": None, "duration": None, "cost": None},
+        "observations": {
+            "startedAt": None,
+            "completedAt": None,
+            "usage": None,
+            "duration": None,
+            "cost": None,
+            "designTerritory": None,
+        },
     }
 
 

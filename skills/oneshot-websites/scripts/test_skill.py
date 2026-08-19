@@ -2975,6 +2975,14 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 "prepare_run.py did not initialize temporary-routing observations",
                 errors,
             )
+            report_observations = first_report.get("observations")
+            assert_ok(
+                isinstance(report_observations, Mapping)
+                and "designTerritory" in report_observations
+                and report_observations.get("designTerritory") is None,
+                "prepare_run.py did not initialize the private design-territory observation",
+                errors,
+            )
 
         current_report_path = first_run / "worker-report.json"
         current_report_bytes = current_report_path.read_bytes()
@@ -4486,6 +4494,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         dispatch_path.write_text(original_dispatch, encoding="utf-8")
 
+        dispatch_without_private_design_territory = re.sub(
+            r"(?ms)^## Private Design Territory Envelope.*?(?=^## Operational Runtime Envelope)",
+            "",
+            original_dispatch,
+            count=1,
+        )
+        dispatch_path.write_text(dispatch_without_private_design_territory, encoding="utf-8")
+        missing_private_design_territory_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_private_design_territory_result.returncode != 0
+            and "templates/worker-dispatch.md runtime contract missing dispatch private design territory envelope"
+            in missing_private_design_territory_result.stdout,
+            "package validator accepted a multi-lead dispatch without a private design territory",
+            errors,
+        )
+        dispatch_path.write_text(original_dispatch, encoding="utf-8")
+
         dispatch_without_wasm_guidance = re.sub(
             r"(?ms)^## Conditional WebAssembly Guidance.*?(?=^## Fresh Critic Role)",
             "",
@@ -4544,6 +4571,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         dispatch_path.write_text(original_dispatch, encoding="utf-8")
 
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_blind_design_independence = re.sub(
+            r"(?ms)^For every multi-lead fan-out, build a private design-diversity ledger.*?\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_blind_design_independence, encoding="utf-8")
+        missing_blind_design_independence_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_blind_design_independence_result.returncode != 0
+            and "SKILL.md runtime contract missing blind multi-lead design independence"
+            in missing_blind_design_independence_result.stdout,
+            "package validator accepted multi-lead fan-out without blind design independence",
+            errors,
+        )
         skill_path.write_text(original_skill, encoding="utf-8")
 
         skill_without_unicode_contract = re.sub(

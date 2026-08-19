@@ -10,7 +10,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - A universal subject-adapted completion mandate in every finished prompt: no shortcuts, no cookie-cutter approximations, no skill-imposed token budget, and full interaction depth
 - One fresh lead subagent per experiment, with no skill-imposed ceiling on descendant count or recursive depth
 - Lead-owned recursive-team orchestration with unrestricted build-agent capability, capacity-aware scheduling, explicit branch ownership, active monitoring, and whole-artifact integration
-- Explicit outer fan-out for multiple leads, workspaces, and same-prompt replicas
+- Explicit outer fan-out for multiple leads, workspaces, and same-prompt replicas, with coordinator-private mutually exclusive design territories and strict sibling blindness
 - Same-run reconnect and steering recovery that resumes the existing lead and namespace by default, verifies receipt and prompt identity, and permits only one active owner
 - A lean lead-owned quality gauntlet with explicit mobile-friendliness inspection, consolidated bar-and-artifact review, terminal `READY`, batched material blockers, same-critic targeted rechecks, evidence reuse, and warranted fresh escalation
 - Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
