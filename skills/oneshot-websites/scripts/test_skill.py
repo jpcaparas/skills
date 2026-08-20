@@ -320,6 +320,30 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "temporary cleanup evals must carry the temporary-files tag",
             errors,
         )
+        required_public_get_fallback_evals = {
+            "permissive-cors-public-get-still-bundles-snapshot",
+            "public-get-fallback-survives-network-and-payload-failures",
+            "large-volatile-public-feed-keeps-bounded-snapshot",
+            "private-or-sensitive-get-data-is-not-snapshotted",
+        }
+        assert_ok(
+            required_public_get_fallback_evals.issubset(names),
+            "evals must cover permissive CORS, runtime failures, large volatile feeds, and protected-data exclusions",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "public-api" in item["tags"]
+                and "snapshot-fallback" in item["tags"]
+                for item in entries
+                if isinstance(item, Mapping)
+                and item.get("name") in required_public_get_fallback_evals
+            ),
+            "public GET fallback evals must carry public-api and snapshot-fallback tags",
+            errors,
+        )
 
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
@@ -3710,6 +3734,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         skill_path.write_text(original_skill, encoding="utf-8")
 
+        skill_without_public_get_snapshot = re.sub(
+            r"(?m)^When the requested shell or interface will issue unauthenticated HTTP `GET` requests.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_public_get_snapshot, encoding="utf-8")
+        missing_public_get_snapshot_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_public_get_snapshot_result.returncode != 0
+            and "SKILL.md runtime contract missing public GET snapshot prompt fallback"
+            in missing_public_get_snapshot_result.stdout,
+            "package validator accepted public GET prompts without a bundled snapshot fallback",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
         original_critic_text = critic_path.read_text(encoding="utf-8")
         critic_path.write_text(
             original_critic_text.replace(
@@ -3727,6 +3770,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "agents/oneshot-critic.md runtime contract missing fresh read-only critic contract"
             in summary_only_critic_result.stdout,
             "package validator accepted a critic that could grade a builder summary",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
+        critic_without_public_get_fallback = re.sub(
+            r"(?m)^3\. When the artifact uses unauthenticated public HTTP `GET` data,.*\n",
+            "3. Review the live API response.\n",
+            original_critic_text,
+            count=1,
+        )
+        critic_path.write_text(critic_without_public_get_fallback, encoding="utf-8")
+        missing_public_get_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_public_get_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing critic public GET snapshot fallback inspection"
+            in missing_public_get_critic_result.stdout,
+            "package validator accepted a critic that never exercises the bundled public GET fallback",
             errors,
         )
         critic_path.write_text(original_critic_text, encoding="utf-8")
@@ -3994,6 +4056,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         lead_path = copied_skill / "agents" / "oneshot-lead.md"
         original_lead = lead_path.read_text(encoding="utf-8")
+        lead_without_public_get_fallback = re.sub(
+            r"(?ms)^## Public GET Snapshot Fallback\n\n.*?(?=^## Quality Gauntlet)",
+            "",
+            original_lead,
+            count=1,
+        )
+        lead_path.write_text(lead_without_public_get_fallback, encoding="utf-8")
+        missing_public_get_lead_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_public_get_lead_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead public GET snapshot fallback"
+            in missing_public_get_lead_result.stdout,
+            "package validator accepted a lead that omits public GET snapshot resilience",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
         lead_without_same_run_recovery = re.sub(
             r"(?ms)^## Continuation and Recovery\n\n.*?(?=^## External-Write Boundary)",
             "",
@@ -4435,6 +4516,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         protocol_path.write_text(original_protocol, encoding="utf-8")
 
+        protocol_without_public_get_fallback = re.sub(
+            r"(?m)^If the experience depends on unauthenticated public HTTP `GET` data,.*\n\n",
+            "",
+            original_protocol,
+            count=1,
+        )
+        protocol_path.write_text(protocol_without_public_get_fallback, encoding="utf-8")
+        missing_public_get_protocol_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_public_get_protocol_result.returncode != 0
+            and "references/execution-protocol.md runtime contract missing protocol public GET snapshot prompt fallback"
+            in missing_public_get_protocol_result.stdout,
+            "package validator accepted an execution protocol that omits public GET fallback prompt crafting",
+            errors,
+        )
+        protocol_path.write_text(original_protocol, encoding="utf-8")
+
         protocol_without_recursive_team_contract = re.sub(
             r"(?m)^The recursive-team envelope is also lead-operational metadata\..*\n\n",
             "",
@@ -4650,7 +4750,8 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         skill_without_verbatim_conflict = original_skill.replace(
             " If the user also forbids any appended text, stop before dispatch and report that the "
-            "request conflicts with this skill’s mandatory prompt contract; never silently omit the mandate.",
+            "request conflicts with this skill’s mandatory prompt contract; never silently omit either "
+            "applicable requirement.",
             "",
         )
         skill_path.write_text(skill_without_verbatim_conflict, encoding="utf-8")

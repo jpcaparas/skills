@@ -17,6 +17,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - Recoverable `.tmp/` isolation during active and non-successful work, with safe exact-path recursive deletion after successful finalization
 - No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints on lead and build work; critics use an adaptive focused profile
 - Evidence-gated WebAssembly selection: reuse proven compiled cores when justified, benchmark uncertain hot paths, and keep ordinary web work in the web stack
+- Live-first public `GET` interfaces with bundled build-time snapshots, explicit freshness states, and tested network, CORS, payload, and schema fallbacks
 - Flat `timestamp-experiment-slug` run directories with atomic `--02` collision suffixes
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
 - End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake

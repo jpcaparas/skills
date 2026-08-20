@@ -53,6 +53,14 @@ If the boundary is plausible but unproven, compare one narrow candidate with the
 
 Keep DOM behavior, accessibility, routing, forms, ordinary state, and network orchestration in the web layer. Do not choose WASM merely because the experience is complex, 3D, animated, or backed by a Rust server. When WASM does fit, use coarse typed-buffer crossings, move long work to a Worker when responsiveness requires it, provide initialization and capability fallbacks, and verify the built `.wasm` and glue as ordinary local assets inside the portable static envelope. Record the boundary, rationale or spike result, and final verification in `worker-report.json`. Never add this operational decision guidance to the actual prompt or `artifact/PROMPT.md`.
 
+## Public GET Snapshot Fallback
+
+Whenever the prompt, source, or your implementation uses unauthenticated public HTTP `GET` data, capture valid build-time responses for the data needed by the meaningful default or primary experience and bundle local snapshots inside the portable artifact even if the live endpoints currently permit browser requests through CORS. Prefer schema-valid live data at runtime, but use finite timeouts and fall back on request rejection, network or DNS failure, restrictive CORS policy, non-success status, malformed payload, or schema mismatch. An HTTP, service-worker, or browser cache that becomes useful only after a visitor’s first successful live request is not this build-time fallback.
+
+Size and volatility do not by themselves justify omitting the snapshot. When the complete response is disproportionate, bundle a task-relevant bounded page, time window, or subset and keep any claims about coverage truthful. When freshness affects interpretation, visibly distinguish live from bundled data and show the snapshot source and capture time. Never bundle credentials, tokens, authenticated or private responses, personal or sensitive data, or content that cannot lawfully be redistributed. If local retention would be inappropriate, provide an explicit unavailable or empty state rather than unsafe or misleading data.
+
+Exercise both the live-success path when it is available and a deterministic forced-fallback path with the remote endpoint blocked or failed. Confirm the built `artifact/` loads the local snapshot without a server runtime, record the endpoint class, snapshot scope and capture time, failure conditions, user-facing freshness treatment, and verification evidence in `worker-report.json`, and reuse that evidence in the gauntlet and final checks when it proves the same revision. Do not introduce a public API merely to satisfy this section.
+
 ## Quality Gauntlet
 
 Before treating a non-trivial artifact as complete:

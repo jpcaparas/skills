@@ -52,7 +52,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.17.0"
+PACKAGE_VERSION = "2.18.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -101,7 +101,8 @@ RUNTIME_CONTRACTS = (
         re.compile(
             r"^- \*\*Custom brief:\*\*.*?refine.*?fully developed.*?"
             r"no skill-imposed paragraph or token budget.*?completionMandate.*?"
-            r"forbids any appended text.*?stop before dispatch.*?never silently omit the mandate.*?$",
+            r"public `GET`.*?local-snapshot fallback.*?forbids any appended text.*?"
+            r"stop before dispatch.*?never silently omit either applicable requirement.*?$",
             re.I | re.M,
         ),
     ),
@@ -120,6 +121,21 @@ RUNTIME_CONTRACTS = (
             r"every prepared actual prompt.*?shortcuts.*?cookie-cutter.*?no token budget limit.*?"
             r"complete subject-specific depth.*?For a replica, clone, or emulator, require.*?"
             r"smallest meaningful interactions.*?For an original experience, demand equivalent depth.*?$",
+            re.I | re.M,
+        ),
+    ),
+    (
+        "public GET snapshot prompt fallback",
+        re.compile(
+            r"^When the requested shell or interface.*?unauthenticated HTTP `GET` requests.*?"
+            r"prepared actual prompt.*?build-time local snapshots.*?meaningful default or primary experience.*?"
+            r"even when.*?CORS.*?"
+            r"prefer valid live data.*?timeout.*?network or DNS failure.*?restrictive CORS policy.*?"
+            r"non-success response.*?malformed payload.*?incompatible schema.*?browser cache.*?first successful request.*?"
+            r"source and capture time.*?live-success and forced-fallback paths.*?"
+            r"size or volatility alone is not an exemption.*?task-relevant bounded slice.*?"
+            r"credentials.*?authenticated or private responses.*?personal or sensitive data.*?lawfully.*?"
+            r"only when a public `GET` dependency exists.*?do not invent a network dependency.*?$",
             re.I | re.M,
         ),
     ),
@@ -591,6 +607,19 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "agents/oneshot-critic.md",
+        "critic public GET snapshot fallback inspection",
+        re.compile(
+            r"Review Method.*?artifact uses unauthenticated public HTTP `GET` data.*?"
+            r"bundled local snapshot.*?remote endpoint blocked or failed.*?without a server runtime.*?"
+            r"timeout.*?request rejection.*?restrictive CORS policy.*?non-success response.*?"
+            r"malformed payload.*?schema mismatch.*?live and snapshot states are not confused.*?"
+            r"source.*?capture time.*?scope.*?staleness.*?credentials.*?authenticated or private responses.*?"
+            r"personal or sensitive data.*?unlawfully redistributed content.*?Reuse.*?qualifying failure trace",
+            re.I | re.S,
+        ),
+    ),
+    (
         "agents/oneshot-lead.md",
         "lead blind design independence",
         re.compile(
@@ -690,6 +719,21 @@ FILE_RUNTIME_CONTRACTS = (
             r"simplest credible JavaScript or TypeScript baseline.*?cold start.*?boundary-copy cost.*?"
             r"Keep DOM behavior.*?web layer.*?Worker.*?portable static envelope.*?"
             r"Never add.*?artifact/PROMPT\.md",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead public GET snapshot fallback",
+        re.compile(
+            r"Public GET Snapshot Fallback.*?unauthenticated public HTTP `GET` data.*?"
+            r"build-time responses.*?meaningful default or primary experience.*?local snapshots.*?even if.*?CORS.*?"
+            r"Prefer schema-valid live data.*?finite timeouts.*?network or DNS failure.*?restrictive CORS policy.*?"
+            r"non-success status.*?malformed payload.*?schema mismatch.*?cache.*?first successful live request.*?"
+            r"Size and volatility do not.*?omitting the snapshot.*?task-relevant bounded.*?"
+            r"source and capture time.*?credentials.*?authenticated or private responses.*?"
+            r"personal or sensitive data.*?lawfully.*?live-success path.*?forced-fallback path.*?"
+            r"without a server runtime.*?worker-report\.json.*?Do not introduce a public API",
             re.I | re.S,
         ),
     ),
@@ -869,6 +913,22 @@ FILE_RUNTIME_CONTRACTS = (
             r"explicitly authorizes the specific external action and destination.*?"
             r"Leads, descendants, and critics remain local-only.*?coordinator retains.*?"
             r"post-validation step from `artifact/` only",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol public GET snapshot prompt fallback",
+        re.compile(
+            r"experience depends on unauthenticated public HTTP `GET` data.*?"
+            r"finished actual prompt.*?build-time local snapshots.*?meaningful default or primary experience.*?"
+            r"even when live CORS works.*?"
+            r"schema-valid live data.*?timeout.*?network or DNS failure.*?restrictive CORS policy.*?"
+            r"non-success response.*?malformed payload.*?schema mismatch.*?first-visit.*?cache.*?"
+            r"source and capture-time disclosure.*?live-success plus forced-fallback verification.*?"
+            r"Large and volatile feeds still qualify.*?task-relevant bounded slice.*?"
+            r"secrets.*?authenticated or private responses.*?personal or sensitive data.*?redistribution rights.*?"
+            r"no public `GET` dependency",
             re.I | re.S,
         ),
     ),

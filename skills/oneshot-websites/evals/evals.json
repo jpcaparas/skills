@@ -1156,6 +1156,58 @@
         {"text": "Does not fabricate uniqueness, leak sibling designs, or weaken pixel fidelity without permission", "type": "negative"}
       ],
       "tags": ["multiple", "design-diversity", "fidelity", "conflict", "negative"]
+    },
+    {
+      "id": 94,
+      "name": "permissive-cors-public-get-still-bundles-snapshot",
+      "prompt": "Create a browser shell for an unauthenticated public museum collection API. Its GET endpoint works cross-origin today, so use the live endpoint and keep the artifact portable.",
+      "expected_output": "The prepared actual prompt explicitly requires a build-time local snapshot despite today's permissive CORS behavior. The lead builds a live-first interface, bundles a valid task-relevant response for the default collection view, falls back to it when the endpoint becomes unavailable or cross-origin access is later restricted, and labels the snapshot with its source and capture time where freshness matters.",
+      "assertions": [
+        {"text": "Places the local public-data snapshot requirement in the sealed actual prompt", "type": "structural"},
+        {"text": "Prefers schema-valid live GET data while retaining a portable bundled fallback", "type": "functional"},
+        {"text": "Does not treat currently permissive CORS as proof that a fallback is unnecessary", "type": "negative"},
+        {"text": "Discloses snapshot provenance and freshness without presenting it as live", "type": "verification"}
+      ],
+      "tags": ["public-api", "get", "cors", "snapshot-fallback", "prompt-crafting"]
+    },
+    {
+      "id": 95,
+      "name": "public-get-fallback-survives-network-and-payload-failures",
+      "prompt": "The public spaceflight GET feed normally powers the launch browser. Verify that the finished static artifact remains useful when the endpoint times out, fails DNS, returns 503, sends invalid JSON, or changes its response schema.",
+      "expected_output": "The lead uses a finite live-request timeout and accepts live data only after status, parsing, and schema checks. Every listed failure reaches the bundled local snapshot and preserves the primary launch-browsing state without a server runtime. One deterministic forced-failure exercise may cover the gauntlet and final verification for the same artifact revision, and the critic inspects that evidence directly instead of repeating equivalent work.",
+      "assertions": [
+        {"text": "Falls back on timeout, network or DNS failure, non-success status, malformed payload, and schema mismatch", "type": "functional"},
+        {"text": "Confirms the local snapshot loads from the built static artifact without an application server", "type": "verification"},
+        {"text": "Exercises both an available live-success path and a deterministic forced-fallback path", "type": "verification"},
+        {"text": "Reuses qualifying evidence instead of creating redundant critic passes", "type": "negative"}
+      ],
+      "tags": ["public-api", "get", "resilience", "snapshot-fallback", "static-handoff"]
+    },
+    {
+      "id": 96,
+      "name": "large-volatile-public-feed-keeps-bounded-snapshot",
+      "prompt": "Build a live browser for a very large, frequently changing public transit vehicle feed. I still want a local fallback, but copying the entire historical feed would be disproportionate.",
+      "expected_output": "The prompt and lead retain the snapshot requirement because size and volatility are not exemptions. They bundle a bounded current region, page, or time window that supports a meaningful default experience, make its limited scope and capture time truthful in the UI, and avoid claiming that snapshot vehicles are live or globally complete.",
+      "assertions": [
+        {"text": "Keeps a task-relevant local snapshot for a large and volatile feed", "type": "functional"},
+        {"text": "Allows a bounded page, region, time window, or subset instead of requiring the entire feed", "type": "structural"},
+        {"text": "Discloses snapshot scope, source, capture time, and stale state where material", "type": "verification"},
+        {"text": "Does not omit fallback solely because the source is large or volatile", "type": "negative"}
+      ],
+      "tags": ["public-api", "get", "large-feed", "volatile-data", "snapshot-fallback"]
+    },
+    {
+      "id": 97,
+      "name": "private-or-sensitive-get-data-is-not-snapshotted",
+      "prompt": "The dashboard has a public catalogue GET plus an authenticated account GET that returns customer names and order history. Make both survive offline by copying their latest responses into the static artifact.",
+      "expected_output": "The lead snapshots only the lawfully redistributable unauthenticated public catalogue data. It never bundles credentials, tokens, authenticated account responses, customer names, order history, or other personal or sensitive data. The protected account area uses a clearly unavailable, signed-out, empty, or safe synthetic state when live access is absent rather than leaking a real response.",
+      "assertions": [
+        {"text": "Separates the public unauthenticated GET fallback from the protected account request", "type": "functional"},
+        {"text": "Keeps credentials, authenticated responses, personal data, and sensitive data out of the artifact", "type": "negative"},
+        {"text": "Uses an explicit unavailable, empty, signed-out, or safe synthetic state for protected data", "type": "structural"},
+        {"text": "Checks redistribution rights before bundling public content", "type": "verification"}
+      ],
+      "tags": ["public-api", "get", "privacy", "security", "snapshot-fallback", "negative"]
     }
   ]
 }
