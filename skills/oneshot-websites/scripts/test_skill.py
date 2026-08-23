@@ -344,6 +344,30 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "public GET fallback evals must carry public-api and snapshot-fallback tags",
             errors,
         )
+        required_directional_control_evals = {
+            "wasd-and-arrow-pairs-share-semantic-directions",
+            "rotated-camera-and-mirrored-model-preserve-direction",
+            "mouse-and-keyboard-complete-the-primary-game-loop",
+            "faithful-custom-controls-remain-explicit-and-usable",
+        }
+        assert_ok(
+            required_directional_control_evals.issubset(names),
+            "evals must cover paired keys, transformed frames, mouse-and-keyboard play, and explicit faithful mappings",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "directional-controls" in item["tags"]
+                and "mouse-and-keyboard" in item["tags"]
+                for item in entries
+                if isinstance(item, Mapping)
+                and item.get("name") in required_directional_control_evals
+            ),
+            "directional-control evals must carry directional-controls and mouse-and-keyboard tags",
+            errors,
+        )
 
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
@@ -3753,6 +3777,44 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         skill_path.write_text(original_skill, encoding="utf-8")
 
+        skill_without_directional_prompt = re.sub(
+            r"(?m)^Every requested game or simulation must be usable through a friendly mouse-and-keyboard path.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_directional_prompt, encoding="utf-8")
+        missing_directional_prompt_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_directional_prompt_result.returncode != 0
+            and "SKILL.md runtime contract missing mouse-and-keyboard directional prompt semantics"
+            in missing_directional_prompt_result.stdout,
+            "package validator accepted game prompts without mouse-and-keyboard directional semantics",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_directional_gauntlet = re.sub(
+            r"(?m)^For any game or simulation, mouse-and-keyboard usability is required gauntlet evidence:.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_directional_gauntlet, encoding="utf-8")
+        missing_directional_gauntlet_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_directional_gauntlet_result.returncode != 0
+            and "SKILL.md runtime contract missing mouse-and-keyboard directional gauntlet evidence"
+            in missing_directional_gauntlet_result.stdout,
+            "package validator accepted a game gauntlet without observed directional controls",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
         original_critic_text = critic_path.read_text(encoding="utf-8")
         critic_path.write_text(
             original_critic_text.replace(
@@ -3770,6 +3832,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "agents/oneshot-critic.md runtime contract missing fresh read-only critic contract"
             in summary_only_critic_result.stdout,
             "package validator accepted a critic that could grade a builder summary",
+            errors,
+        )
+        critic_path.write_text(original_critic_text, encoding="utf-8")
+
+        critic_without_directional_inspection = re.sub(
+            r"(?m)^4\. For every game or simulation, complete a representative primary interaction path.*\n",
+            "4. Inspect the source key map.\n",
+            original_critic_text,
+            count=1,
+        )
+        critic_path.write_text(critic_without_directional_inspection, encoding="utf-8")
+        missing_directional_critic_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_directional_critic_result.returncode != 0
+            and "agents/oneshot-critic.md runtime contract missing critic mouse-and-keyboard directional inspection"
+            in missing_directional_critic_result.stdout,
+            "package validator accepted a critic that never observes paired directional controls",
             errors,
         )
         critic_path.write_text(original_critic_text, encoding="utf-8")
@@ -4071,6 +4152,25 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "agents/oneshot-lead.md runtime contract missing lead public GET snapshot fallback"
             in missing_public_get_lead_result.stdout,
             "package validator accepted a lead that omits public GET snapshot resilience",
+            errors,
+        )
+        lead_path.write_text(original_lead, encoding="utf-8")
+
+        lead_without_directional_semantics = re.sub(
+            r"(?ms)^## Directional Control Semantics\n\n.*?(?=^## Quality Gauntlet)",
+            "",
+            original_lead,
+            count=1,
+        )
+        lead_path.write_text(lead_without_directional_semantics, encoding="utf-8")
+        missing_directional_lead_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_directional_lead_result.returncode != 0
+            and "agents/oneshot-lead.md runtime contract missing lead mouse-and-keyboard directional semantics"
+            in missing_directional_lead_result.stdout,
+            "package validator accepted a lead without observed directional-control semantics",
             errors,
         )
         lead_path.write_text(original_lead, encoding="utf-8")
@@ -4516,6 +4616,44 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         protocol_path.write_text(original_protocol, encoding="utf-8")
 
+        protocol_without_directional_prompt = re.sub(
+            r"(?m)^Every game or simulation must have a practical mouse-and-keyboard path.*\n\n",
+            "",
+            original_protocol,
+            count=1,
+        )
+        protocol_path.write_text(protocol_without_directional_prompt, encoding="utf-8")
+        missing_directional_protocol_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_directional_protocol_result.returncode != 0
+            and "references/execution-protocol.md runtime contract missing protocol mouse-and-keyboard directional prompt semantics"
+            in missing_directional_protocol_result.stdout,
+            "package validator accepted a protocol without mouse-and-keyboard directional prompt crafting",
+            errors,
+        )
+        protocol_path.write_text(original_protocol, encoding="utf-8")
+
+        protocol_without_directional_gauntlet = re.sub(
+            r"(?m)^Mouse-and-keyboard usability is part of the required gauntlet evidence.*\n\n",
+            "",
+            original_protocol,
+            count=1,
+        )
+        protocol_path.write_text(protocol_without_directional_gauntlet, encoding="utf-8")
+        missing_directional_protocol_gauntlet_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_directional_protocol_gauntlet_result.returncode != 0
+            and "references/execution-protocol.md runtime contract missing protocol mouse-and-keyboard directional gauntlet evidence"
+            in missing_directional_protocol_gauntlet_result.stdout,
+            "package validator accepted a protocol without directional gauntlet evidence",
+            errors,
+        )
+        protocol_path.write_text(original_protocol, encoding="utf-8")
+
         protocol_without_public_get_fallback = re.sub(
             r"(?m)^If the experience depends on unauthenticated public HTTP `GET` data,.*\n\n",
             "",
@@ -4749,9 +4887,9 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
 
         skill_without_verbatim_conflict = original_skill.replace(
-            " If the user also forbids any appended text, stop before dispatch and report that the "
-            "request conflicts with this skill’s mandatory prompt contract; never silently omit either "
-            "applicable requirement.",
+            " If the user also forbids any applicable appended text, stop before dispatch and report "
+            "that the request conflicts with this skill’s mandatory prompt contract; never silently "
+            "omit an applicable requirement.",
             "",
         )
         skill_path.write_text(skill_without_verbatim_conflict, encoding="utf-8")

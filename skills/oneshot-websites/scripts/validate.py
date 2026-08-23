@@ -52,7 +52,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.18.0"
+PACKAGE_VERSION = "2.19.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -101,8 +101,9 @@ RUNTIME_CONTRACTS = (
         re.compile(
             r"^- \*\*Custom brief:\*\*.*?refine.*?fully developed.*?"
             r"no skill-imposed paragraph or token budget.*?completionMandate.*?"
-            r"public `GET`.*?local-snapshot fallback.*?forbids any appended text.*?"
-            r"stop before dispatch.*?never silently omit either applicable requirement.*?$",
+            r"public `GET`.*?local-snapshot fallback.*?games.*?simulations.*?3D.*?"
+            r"mouse-and-keyboard.*?directional-semantics.*?forbids any applicable appended text.*?"
+            r"stop before dispatch.*?never silently omit an applicable requirement.*?$",
             re.I | re.M,
         ),
     ),
@@ -136,6 +137,21 @@ RUNTIME_CONTRACTS = (
             r"size or volatility alone is not an exemption.*?task-relevant bounded slice.*?"
             r"credentials.*?authenticated or private responses.*?personal or sensitive data.*?lawfully.*?"
             r"only when a public `GET` dependency exists.*?do not invent a network dependency.*?$",
+            re.I | re.M,
+        ),
+    ),
+    (
+        "mouse-and-keyboard directional prompt semantics",
+        re.compile(
+            r"^Every requested game or simulation.*?friendly mouse-and-keyboard path.*?"
+            r"touch or a controller.*?only practical input.*?matching WASD and arrow-key bindings.*?"
+            r"`A` and `ArrowLeft`.*?observable left.*?`D` and `ArrowRight`.*?right.*?"
+            r"`W` and `ArrowUp`.*?forward or upward.*?`S` and `ArrowDown`.*?backward or downward.*?"
+            r"visible.*?touch.*?pointer.*?controller.*?active player-.*?camera-.*?character-.*?vehicle-.*?mode-relative frame.*?"
+            r"world-axis signs.*?rotations.*?parent transforms.*?mirrored models or negative scales.*?control-mode changes.*?"
+            r"rendered movement.*?same seeded state.*?mouse interaction.*?complete keyboard set.*?"
+            r"faithful source.*?nonstandard mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
+            r"3D experience.*?only when it actually exposes those controls.*?$",
             re.I | re.M,
         ),
     ),
@@ -304,6 +320,19 @@ RUNTIME_CONTRACTS = (
             r"control availability.*?touch-target usability.*?primary interaction path.*?"
             r"desktop screenshot.*?media queries.*?does not prove.*?desktop-only.*?"
             r"record that concrete reason.*?narrow-viewport behavior",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "mouse-and-keyboard directional gauntlet evidence",
+        re.compile(
+            r"For any game or simulation.*?mouse-and-keyboard usability is required gauntlet evidence.*?"
+            r"primary interaction path.*?without relying on touch or a controller.*?"
+            r"same deterministic state.*?`A` with `ArrowLeft`.*?`D` with `ArrowRight`.*?"
+            r"`W` with `ArrowUp`.*?`S` with `ArrowDown`.*?active player-.*?camera-.*?"
+            r"character-.*?vehicle-.*?mode-relative frame.*?rotated camera.*?mirrored model.*?alternate control mode.*?"
+            r"pointer.*?touch.*?controller aliases.*?visible labels.*?key-map assertions.*?vector-sign tests.*?"
+            r"cannot replace observing.*?nonstandard source mapping.*?inversion.*?non-game 3D artifact",
             re.I | re.S,
         ),
     ),
@@ -620,6 +649,21 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "agents/oneshot-critic.md",
+        "critic mouse-and-keyboard directional inspection",
+        re.compile(
+            r"Review Method.*?For every game or simulation.*?primary interaction path.*?"
+            r"ordinary mouse and keyboard.*?touch or controller success alone is insufficient.*?"
+            r"`A` with `ArrowLeft`.*?`D` with `ArrowRight`.*?`W` with `ArrowUp`.*?`S` with `ArrowDown`.*?"
+            r"observable movement.*?active player-.*?camera-.*?character-.*?vehicle-.*?mode-relative frame.*?"
+            r"rotation.*?parent transform.*?mirrored model or negative scale.*?alternate control mode.*?"
+            r"pointer.*?touch.*?controller aliases.*?visible labels.*?Key-map inspection.*?vector-sign assertions.*?"
+            r"not sufficient.*?nonstandard mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
+            r"non-game 3D artifact",
+            re.I | re.S,
+        ),
+    ),
+    (
         "agents/oneshot-lead.md",
         "lead blind design independence",
         re.compile(
@@ -734,6 +778,22 @@ FILE_RUNTIME_CONTRACTS = (
             r"source and capture time.*?credentials.*?authenticated or private responses.*?"
             r"personal or sensitive data.*?lawfully.*?live-success path.*?forced-fallback path.*?"
             r"without a server runtime.*?worker-report\.json.*?Do not introduce a public API",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead mouse-and-keyboard directional semantics",
+        re.compile(
+            r"Directional Control Semantics.*?Every game or simulation.*?practical mouse-and-keyboard path.*?"
+            r"touch and controller.*?cannot be the only practical route.*?paired WASD and arrow-key bindings.*?"
+            r"`A` and `ArrowLeft`.*?left.*?`D` and `ArrowRight`.*?rightward.*?"
+            r"`W` and `ArrowUp`.*?forward or upward.*?`S` and `ArrowDown`.*?backward or downward.*?"
+            r"visible.*?touch.*?pointer.*?controller.*?player-.*?camera-.*?character-.*?vehicle-.*?mode-relative frame.*?"
+            r"deterministic state.*?representative primary path.*?mouse and keyboard.*?"
+            r"each WASD and arrow-key pair.*?rotations.*?parent transforms.*?mirrored models or negative scales.*?"
+            r"alternate control modes.*?inversion option.*?faithful nonstandard source mapping.*?"
+            r"practical mouse-and-keyboard path.*?durable verification evidence",
             re.I | re.S,
         ),
     ),
@@ -934,6 +994,22 @@ FILE_RUNTIME_CONTRACTS = (
     ),
     (
         "references/execution-protocol.md",
+        "protocol mouse-and-keyboard directional prompt semantics",
+        re.compile(
+            r"Every game or simulation.*?practical mouse-and-keyboard path.*?"
+            r"touch or controller input.*?only practical route.*?paired WASD and arrow-key bindings.*?"
+            r"`A` with `ArrowLeft`.*?left.*?`D` with `ArrowRight`.*?right.*?"
+            r"`W` with `ArrowUp`.*?forward or upward.*?`S` with `ArrowDown`.*?backward or downward.*?"
+            r"visible.*?touch.*?pointer.*?controller.*?active player-.*?camera-.*?character-.*?vehicle-.*?mode-relative frame.*?"
+            r"world-axis signs.*?rotations.*?parent transforms.*?mirrored models or negative scales.*?control-mode changes.*?"
+            r"rendered movement.*?same seeded state.*?ordinary mouse.*?complete keyboard input.*?"
+            r"nonstandard source mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
+            r"non-game 3D experience.*?only when it actually exposes those controls",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
         "protocol identity-safe same-run recovery",
         re.compile(
             r"Reconnect, Steering, and Same-Run Recovery.*?continuation by default.*?"
@@ -986,6 +1062,20 @@ FILE_RUNTIME_CONTRACTS = (
             r"primary interaction path.*?Desktop captures.*?media-query presence.*?"
             r"do not satisfy.*?desktop-only exception.*?concrete prompt or faithful-source reason.*?"
             r"narrow-viewport behavior is intentional",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol mouse-and-keyboard directional gauntlet evidence",
+        re.compile(
+            r"Lead-Owned Quality Gauntlet.*?Mouse-and-keyboard usability.*?required gauntlet evidence.*?"
+            r"every game or simulation.*?representative primary path.*?without relying on touch or a controller.*?"
+            r"WASD and arrow-key pair.*?rendered movement.*?active control frame.*?"
+            r"rotation.*?parent transform.*?mirrored model or negative scale.*?alternate mode.*?"
+            r"pointer.*?touch.*?controller aliases.*?visible labels.*?key maps.*?vector-sign assertions.*?"
+            r"supporting evidence rather than proof.*?nonstandard mapping.*?inversion option.*?"
+            r"practical mouse-and-keyboard path",
             re.I | re.S,
         ),
     ),

@@ -1208,6 +1208,58 @@
         {"text": "Checks redistribution rights before bundling public content", "type": "verification"}
       ],
       "tags": ["public-api", "get", "privacy", "security", "snapshot-fallback", "negative"]
+    },
+    {
+      "id": 98,
+      "name": "wasd-and-arrow-pairs-share-semantic-directions",
+      "prompt": "Build a browser top-down exploration game with movement controls. The on-screen arrows already work, and I also expect keyboard play.",
+      "expected_output": "The prepared prompt requires a practical mouse-and-keyboard play path and paired WASD plus arrow-key movement. The lead verifies from the same reset state that A and ArrowLeft both move the avatar visibly left, D and ArrowRight both move right, W and ArrowUp both move forward or up, and S and ArrowDown both move backward or down. The critic observes rendered results rather than accepting a key-map assertion.",
+      "assertions": [
+        {"text": "Places mouse-and-keyboard usability and paired WASD plus arrow controls in the sealed prompt", "type": "structural"},
+        {"text": "Exercises every paired direction from the same deterministic reset state", "type": "verification"},
+        {"text": "Confirms observable movement rather than only handler names or vector signs", "type": "functional"},
+        {"text": "Does not make touch or controller input the only practical play path", "type": "negative"}
+      ],
+      "tags": ["games", "directional-controls", "mouse-and-keyboard", "wasd", "arrow-keys"]
+    },
+    {
+      "id": 99,
+      "name": "rotated-camera-and-mirrored-model-preserve-direction",
+      "prompt": "Create a third-person 3D driving simulation. A and left arrow sometimes steer screen-right after the camera rotates, and a vehicle skin uses a mirrored parent transform. Prevent that inversion.",
+      "expected_output": "The lead defines steering left and right in the active vehicle or camera control frame rather than as a hard-coded world-axis sign. It resets a deterministic scene, verifies A and ArrowLeft visibly steer left and D and ArrowRight visibly steer right, then repeats after representative camera rotation and the mirrored parent transform. W or ArrowUp and S or ArrowDown retain their documented forward and reverse semantics, and the critic rejects internal vector tests without observed vehicle behavior.",
+      "assertions": [
+        {"text": "Defines direction relative to the active vehicle or camera frame", "type": "functional"},
+        {"text": "Repeats rendered control checks after camera rotation and a mirrored parent transform", "type": "verification"},
+        {"text": "Keeps paired WASD and arrow inputs semantically aligned", "type": "structural"},
+        {"text": "Does not infer correctness from a universal coordinate sign", "type": "negative"}
+      ],
+      "tags": ["3d", "simulations", "directional-controls", "mouse-and-keyboard", "transforms", "regression"]
+    },
+    {
+      "id": 100,
+      "name": "mouse-and-keyboard-complete-the-primary-game-loop",
+      "prompt": "Make a small browser arena game whose existing prototype is mostly touch-first. It has a virtual stick, tap-to-fire, and controller support.",
+      "expected_output": "The finished game retains useful touch and controller input while adding a practical mouse-and-keyboard route through the representative primary loop. WASD and arrow keys provide paired directional actions, the mouse can operate the appropriate aiming, firing, menus, or pointer controls, visible instructions match reality, and the gauntlet completes a representative play path without touch or a controller before accepting the artifact.",
+      "assertions": [
+        {"text": "Makes the primary game loop practically usable with ordinary mouse and keyboard input", "type": "functional"},
+        {"text": "Provides paired WASD and arrow-key directional controls", "type": "structural"},
+        {"text": "Checks the actual input path and visible control guidance", "type": "verification"},
+        {"text": "Does not remove optional touch or controller support or count it as desktop proof", "type": "negative"}
+      ],
+      "tags": ["games", "directional-controls", "mouse-and-keyboard", "touch", "controller", "gauntlet"]
+    },
+    {
+      "id": 101,
+      "name": "faithful-custom-controls-remain-explicit-and-usable",
+      "prompt": "Faithfully recreate a vintage browser flight simulator whose manual uses Q/E for banking and offers an optional inverted mouse-look setting. Preserve that identity but keep it usable on a modern desktop.",
+      "expected_output": "The prompt and lead preserve the source-required Q/E banking and documented optional inverted mouse look instead of silently rewriting the faithful contract. They expose the mapping clearly and retain a practical mouse-and-keyboard primary path; where directional movement is not source-fixed, paired WASD and arrows remain the default. The critic distinguishes intentional look inversion from accidental left/right reversal and verifies rendered behavior for every presented control.",
+      "assertions": [
+        {"text": "Preserves and clearly labels the faithful source's explicit nonstandard controls", "type": "functional"},
+        {"text": "Keeps a practical modern mouse-and-keyboard path through the primary simulation loop", "type": "verification"},
+        {"text": "Uses paired WASD and arrows for directional actions not fixed by the source", "type": "structural"},
+        {"text": "Does not excuse an accidental direction swap as an inversion preference", "type": "negative"}
+      ],
+      "tags": ["simulations", "directional-controls", "mouse-and-keyboard", "fidelity", "inversion", "regression"]
     }
   ]
 }
