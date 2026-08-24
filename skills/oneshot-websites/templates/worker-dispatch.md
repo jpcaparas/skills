@@ -51,6 +51,12 @@ When the request or supplied source presents a plausible WebAssembly boundary, t
 
 {{WASM_SELECTION_GUIDANCE}}
 
+## Executable Directional-Control Guidance (operational; delivery requirement is already in the actual prompt)
+
+When `run.json.interaction.directionalControls.required` is true, the coordinator must include the complete current contents of `references/directional-controls.md` here. Implement its production-state adapter in the final built artifact and exercise it during build verification. The coordinator—not this lead—writes the authoritative digest-bound result outside the run after finalization. When the prepared contract is not required, use `NOT_APPLICABLE: no prepared directional-control browser gate.` Never append this detailed schema or coordinator sequence to `artifact/PROMPT.md`; the sealed prompt already contains the subject-adapted delivery requirement when applicable.
+
+{{DIRECTIONAL_CONTROL_GUIDANCE}}
+
 ## Critic Allocation Envelope (operational; not part of the actual prompt)
 
 Use a quick, token-efficient critic configuration by default and reserve expansive reasoning, context, turns, tool breadth, and token investment for build-related descendants. Give one ordinary fresh critic enough capability to inspect the real artifact directly, validate the proposed bar and artifact in one consolidated pass, and return a concise verdict, concrete evidence, and one coherent batch of material blockers rather than a serial one-gap queue. Reuse the smallest sufficient prepared evidence. Treat `READY` as terminal and record non-blocking notes without launching a polish round. After `NOT_READY`, fix the batch once and reuse the same critic task for a targeted affected-state and regression recheck. Start another fresh or specialist critic only for a broad or coupled change, a legitimate bar revision, conflicting or inconclusive evidence, or a high-risk accessibility, security, or correctness concern; record the reason. This is adaptive allocation rather than a fixed numeric cap; if the quick configuration cannot inspect fairly, escalate or return `BLOCKED`. Never trade away artifact-grounded review merely to save tokens. Keep this envelope out of the prepared actual prompt and `artifact/PROMPT.md`.

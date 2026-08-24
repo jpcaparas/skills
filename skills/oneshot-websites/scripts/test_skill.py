@@ -26,6 +26,12 @@ from unittest.mock import patch
 import validate_catalog as catalog_validator
 from build_catalog_index import CATALOGUE_LOCK, parse_flat_run_id
 from cleanup_run_tmp import cleanup_run_temporary
+from directional_controls import (
+    directional_response,
+    infer_directional_control_requirement,
+    parse_directional_sample,
+    response_matches_direction,
+)
 from prepare_run import RunPreparationError, build_identity, make_run_id, reserve_paths
 from runtime_contract import (
     enforce_json_nesting_limit,
@@ -2114,6 +2120,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         skill / "scripts" / "build_catalog_index.py",
         skill / "scripts" / "validate_catalog.py",
         skill / "scripts" / "cleanup_run_tmp.py",
+        skill / "scripts" / "verify_directional_controls.py",
     )
     if not all(path.is_file() for path in scripts):
         return
@@ -2273,6 +2280,262 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             "日本語, and العربية.\n"
         ).encode("utf-8")
         prompt.write_bytes(prompt_bytes)
+
+        passive_requirement = infer_directional_control_requirement(
+            "Product Model Gallery",
+            "Create a passive 3D product gallery with no orbit or movement controls.",
+        )
+        racing_requirement = infer_directional_control_requirement(
+            "Pod Racing Game",
+            "Create a browser racing game with vehicle steering and keyboard controls.",
+        )
+        forced_requirement = infer_directional_control_requirement(
+            "Unusual Experience",
+            "Create the supplied interactive experience.",
+            force_required=True,
+        )
+        assert_ok(
+            not passive_requirement.required
+            and racing_requirement.required
+            and forced_requirement.required,
+            "directional-control applicability did not distinguish passive, racing, and forced runs",
+            errors,
+        )
+
+        heading_before = parse_directional_sample(
+            {
+                "frame": "rotated-vehicle",
+                "measurement": "heading",
+                "position": [10, 0, 20],
+                "forward": [1, 0, 0],
+                "right": [0, 0, 1],
+            }
+        )
+        heading_left = parse_directional_sample(
+            {
+                "frame": "rotated-vehicle",
+                "measurement": "heading",
+                "position": [10, 0, 20],
+                "forward": [0.98, 0, -0.2],
+                "right": [0.2, 0, 0.98],
+            }
+        )
+        heading_right = parse_directional_sample(
+            {
+                "frame": "rotated-vehicle",
+                "measurement": "heading",
+                "position": [10, 0, 20],
+                "forward": [0.98, 0, 0.2],
+                "right": [-0.2, 0, 0.98],
+            }
+        )
+        left_response = directional_response(heading_before, heading_left)
+        right_response = directional_response(heading_before, heading_right)
+        assert_ok(
+            response_matches_direction(left_response.value, "left")
+            and response_matches_direction(right_response.value, "right"),
+            "directional response math lost semantic signs in a rotated 3D basis",
+            errors,
+        )
+
+        missing_gate_prompt = Path(temporary) / "missing-directional-gate-prompt.md"
+        missing_gate_prompt.write_text(
+            "Create a browser racing game with a controllable vehicle, steering, WASD, and arrow keys.\n",
+            encoding="utf-8",
+        )
+        missing_gate_root = Path(temporary) / "missing-directional-gate-runs"
+        missing_gate_result = run(
+            [
+                sys.executable,
+                str(scripts[1]),
+                "--output-root",
+                str(missing_gate_root),
+                "--model",
+                "Directional Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Pod Racing Game",
+                "--prompt-file",
+                str(missing_gate_prompt),
+            ]
+        )
+        assert_ok(
+            missing_gate_result.returncode != 0
+            and "applicable directional prompt is missing its lead-facing executable gate contract"
+            in missing_gate_result.stderr
+            and not missing_gate_root.exists(),
+            "prepare_run.py sealed an applicable racing prompt without telling the lead about the browser gate",
+            errors,
+        )
+
+        directional_root = Path(temporary) / "directional-control-runs"
+        directional_prompt = Path(temporary) / "directional-racing-prompt.md"
+        directional_prompt.write_text(
+            "Create a browser racing game with a controllable vehicle, steering, WASD, and arrow keys. "
+            "A with ArrowLeft must steer left, while D with ArrowRight must steer right. The finished "
+            "artifact must expose a production-state directional-control probe that resets the same "
+            "deterministic race state and reports its real position, forward vector, and active-frame "
+            "right basis for browser-level verification.\n",
+            encoding="utf-8",
+        )
+        directional_run = prepare_run(
+            skill,
+            directional_root,
+            "Directional Model",
+            "Harness",
+            "Pod Racing Game",
+            directional_prompt,
+            errors,
+        )
+        if directional_run is not None:
+            directional_manifest = json.loads(
+                (directional_run / "run.json").read_text(encoding="utf-8")
+            )
+            directional_contract = directional_manifest.get("interaction", {}).get(
+                "directionalControls", {}
+            )
+            assert_ok(
+                directional_contract.get("required") is True
+                and directional_contract.get("evidencePath")
+                == f".oneshot-provenance/{directional_run.name}.directional-controls.json",
+                "prepare_run.py did not anchor the racing directional-control gate",
+                errors,
+            )
+            mark_successful_static_artifact(directional_run)
+            correct_fixture = (
+                skill / "evals" / "files" / "directional-controls" / "correct" / "index.html"
+            )
+            inverted_fixture = (
+                skill / "evals" / "files" / "directional-controls" / "inverted" / "index.html"
+            )
+            shutil.copyfile(correct_fixture, directional_run / "artifact" / "index.html")
+            rebuild_catalog_index(directional_root)
+
+            missing_directional_evidence = run(
+                [sys.executable, str(scripts[3]), str(directional_root)]
+            )
+            assert_ok(
+                missing_directional_evidence.returncode != 0
+                and "successful directional run requires passing browser evidence"
+                in missing_directional_evidence.stdout,
+                "catalog validator accepted an applicable racing artifact without browser evidence",
+                errors,
+            )
+
+            passing_directional = run(
+                [sys.executable, str(scripts[5]), "--run", str(directional_run)]
+            )
+            passing_data = invocation_json(
+                passing_directional,
+                errors,
+                "verify_directional_controls.py passing fixture",
+            )
+            passing_checks = passing_data.get("checks") if passing_data is not None else None
+            assert_ok(
+                passing_directional.returncode == 0
+                and passing_data is not None
+                and passing_data.get("status") == "passed"
+                and isinstance(passing_checks, list)
+                and {check.get("code") for check in passing_checks if isinstance(check, Mapping)}
+                == {"KeyA", "ArrowLeft", "KeyD", "ArrowRight"},
+                "browser gate rejected the correctly mapped directional fixture: {}{}".format(
+                    passing_directional.stdout,
+                    passing_directional.stderr,
+                ),
+                errors,
+            )
+            passing_validation = run(
+                [sys.executable, str(scripts[3]), str(directional_root)]
+            )
+            assert_ok(
+                passing_validation.returncode == 0,
+                "catalog validator rejected passing digest-bound directional evidence: {}".format(
+                    passing_validation.stdout
+                ),
+                errors,
+            )
+
+            shutil.copyfile(inverted_fixture, directional_run / "artifact" / "index.html")
+            rebuild_catalog_index(directional_root)
+            stale_validation = run(
+                [sys.executable, str(scripts[3]), str(directional_root)]
+            )
+            assert_ok(
+                stale_validation.returncode != 0
+                and "browser evidence does not match the current artifact revision"
+                in stale_validation.stdout,
+                "catalog validator accepted evidence from an older artifact revision",
+                errors,
+            )
+
+            inverted_directional = run(
+                [sys.executable, str(scripts[5]), "--run", str(directional_run)]
+            )
+            try:
+                parsed_inverted_data = json.loads(inverted_directional.stdout)
+            except json.JSONDecodeError as error:
+                errors.append(
+                    "verify_directional_controls.py inverted fixture returned invalid JSON: {}".format(
+                        error
+                    )
+                )
+                inverted_data = None
+            else:
+                inverted_data = (
+                    parsed_inverted_data if isinstance(parsed_inverted_data, Mapping) else None
+                )
+                if inverted_data is None:
+                    errors.append(
+                        "verify_directional_controls.py inverted fixture returned a non-object"
+                    )
+            inverted_checks = inverted_data.get("checks") if inverted_data is not None else None
+            inverted_by_code = {
+                str(check.get("code")): check
+                for check in (inverted_checks if isinstance(inverted_checks, list) else [])
+                if isinstance(check, Mapping)
+            }
+            assert_ok(
+                inverted_directional.returncode == 1
+                and inverted_data is not None
+                and inverted_data.get("status") == "failed"
+                and inverted_by_code.get("KeyA", {}).get("response", 0) > 0
+                and inverted_by_code.get("KeyD", {}).get("response", 0) < 0
+                and all(check.get("passed") is False for check in inverted_by_code.values()),
+                "browser gate did not reject the deliberately inverted A/D racing fixture: {}{}".format(
+                    inverted_directional.stdout,
+                    inverted_directional.stderr,
+                ),
+                errors,
+            )
+            inverted_validation = run(
+                [sys.executable, str(scripts[3]), str(directional_root)]
+            )
+            assert_ok(
+                inverted_validation.returncode != 0
+                and "directional-control browser verification did not pass"
+                in inverted_validation.stdout,
+                "catalog validator accepted failed inverted-direction evidence",
+                errors,
+            )
+
+            shutil.copyfile(correct_fixture, directional_run / "artifact" / "index.html")
+            rebuild_catalog_index(directional_root)
+            repaired_directional = run(
+                [sys.executable, str(scripts[5]), "--run", str(directional_run)]
+            )
+            repaired_validation = run(
+                [sys.executable, str(scripts[3]), str(directional_root)]
+            )
+            assert_ok(
+                repaired_directional.returncode == 0 and repaired_validation.returncode == 0,
+                "same-run repair could not replace failed evidence with a passing artifact-bound result: {}{}{}".format(
+                    repaired_directional.stdout,
+                    repaired_directional.stderr,
+                    repaired_validation.stdout,
+                ),
+                errors,
+            )
 
         cleanup_root = Path(temporary) / "completion-cleanup-runs"
         cleanup_run = prepare_run(

@@ -18,7 +18,7 @@ Production skill for launching autonomous one-shot website experiments through f
 - No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints on lead and build work; critics use an adaptive focused profile
 - Evidence-gated WebAssembly selection: reuse proven compiled cores when justified, benchmark uncertain hot paths, and keep ordinary web work in the web stack
 - Live-first public `GET` interfaces with bundled build-time snapshots, explicit freshness states, and tested network, CORS, payload, and schema fallbacks
-- Mouse-and-keyboard-friendly games and simulations with paired WASD and arrow controls, semantic direction checks, transformed-viewpoint verification, and pointer, touch, and controller parity
+- Mouse-and-keyboard-friendly games and simulations with paired WASD and arrow controls, subject-adapted probe requirements in applicable sealed prompts, production-state adapters, transformed-viewpoint checks, and coordinator-owned browser evidence that rejects inverted A/left or D/right behavior
 - Flat `timestamp-experiment-slug` run directories with atomic `--02` collision suffixes
 - Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
 - End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake
@@ -32,9 +32,11 @@ Production skill for launching autonomous one-shot website experiments through f
 - `SKILL.md` - authoritative instructions
 - `assets/prompt-catalogue.json` - canonical prompt catalogue
 - `references/execution-protocol.md` - delegation and flat run-layout contract
+- `references/directional-controls.md` - applicable production-state adapter and browser-level control gate
 - `references/wasm-selection.md` - conditional WASM decision gate, measurements, artifact rules, and sample scenarios
 - `agents/oneshot-lead.md` - isolated lead role
 - `agents/oneshot-critic.md` - fresh read-only artifact critic
 - `scripts/list_prompts.py` - catalogue browser
 - `scripts/cleanup_run_tmp.py` - completion-gated exact run-local scratch cleanup
+- `scripts/verify_directional_controls.py` - digest-bound Chromium input verification for applicable runs
 - `scripts/validate_catalog.py` - generated artifact checker

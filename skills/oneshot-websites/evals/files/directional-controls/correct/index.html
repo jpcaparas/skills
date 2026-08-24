@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Correct directional-control fixture</title>
+    <style>
+      body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #102234; color: white; }
+      #track { position: relative; width: 320px; height: 100px; border: 2px solid #8fd3ff; overflow: hidden; }
+      #vehicle { position: absolute; left: 150px; top: 35px; width: 20px; height: 30px; background: #ffcc47; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p>A/Left moves left. D/Right moves right.</p>
+      <div id="track"><div id="vehicle"></div></div>
+    </main>
+    <script>
+      const state = { x: 0 };
+      const vehicle = document.querySelector("#vehicle");
+      const render = () => { vehicle.style.transform = `translateX(${state.x}px)`; };
+      window.addEventListener("keydown", (event) => {
+        if (event.code === "KeyA" || event.code === "ArrowLeft") state.x -= 12;
+        if (event.code === "KeyD" || event.code === "ArrowRight") state.x += 12;
+        render();
+      });
+      window.__ONESHOT_DIRECTIONAL_CONTROL_PROBE__ = {
+        schemaVersion: "1.0",
+        reset() { state.x = 0; render(); },
+        sample() {
+          return {
+            frame: "screen-lane",
+            measurement: "position",
+            position: [state.x, 0],
+            forward: [0, -1],
+            right: [1, 0]
+          };
+        }
+      };
+      render();
+    </script>
+  </body>
+</html>

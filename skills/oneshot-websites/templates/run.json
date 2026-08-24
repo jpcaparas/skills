@@ -31,5 +31,14 @@
     "descendantWorkerIds": [],
     "recursiveDelegation": "allowed",
     "skillImposedLimits": "none"
+  },
+  "interaction": {
+    "directionalControls": {
+      "required": false,
+      "contractVersion": "1.0",
+      "basis": "prepared-prompt-analysis",
+      "signals": [],
+      "evidencePath": null
+    }
   }
 }

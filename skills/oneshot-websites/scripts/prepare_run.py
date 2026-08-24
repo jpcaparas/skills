@@ -16,6 +16,12 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Optional, Sequence
 
+from directional_controls import (
+    DirectionalControlError,
+    directional_control_contract,
+    infer_directional_control_requirement,
+    validate_directional_prompt_contract,
+)
 from runtime_contract import (
     BoundedReadError,
     experiment_slug,
@@ -78,6 +84,12 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
         "--prior-run",
         type=Path,
         help="Existing prior run directory under --output-root, used for reruns and curated attempts",
+    )
+    parser.add_argument(
+        "--directional-controls",
+        choices=("auto", "required"),
+        default="auto",
+        help="Infer the browser control gate from the prompt, or explicitly require it",
     )
     return parser.parse_args(argv)
 
@@ -402,6 +414,7 @@ def run_document(
     prompt_digest: str,
     prior_run: Optional[str],
     receipt_path: str,
+    directional_controls: dict[str, Any],
 ) -> dict[str, Any]:
     """Build the durable run metadata, following templates/run.json's contract."""
 
@@ -429,6 +442,7 @@ def run_document(
             "recursiveDelegation": "allowed",
             "skillImposedLimits": "none",
         },
+        "interaction": {"directionalControls": directional_controls},
         "priorRun": prior_run,
         "provenanceReceipt": receipt_path,
     }
@@ -445,6 +459,7 @@ def provenance_receipt(
     prompt_digest: str,
     prompt_bytes: int,
     prior_run: Optional[str],
+    directional_controls: dict[str, Any],
 ) -> dict[str, Any]:
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
@@ -471,6 +486,7 @@ def provenance_receipt(
             "contractVersion": "1.0",
             "reportSchemaVersion": "2.1",
         },
+        "directionalControls": directional_controls,
     }
 
 
@@ -524,12 +540,23 @@ def create_run(arguments: argparse.Namespace) -> Path:
     model = build_identity(arguments.model, "model")
     harness = build_identity(arguments.harness, "harness")
     experiment = build_identity(arguments.experiment, "experiment")
+    directional_requirement = infer_directional_control_requirement(
+        experiment.name,
+        prompt.decode("utf-8"),
+        force_required=arguments.directional_controls == "required",
+    )
+    if directional_requirement.required:
+        try:
+            validate_directional_prompt_contract(prompt.decode("utf-8"))
+        except DirectionalControlError as error:
+            raise RunPreparationError(str(error)) from error
     prior_run = prior_run_path(arguments.prior_run, root)
     validate_run_relationship(arguments.classification, prior_run)
     receipt_directory = prepare_provenance_directory(root)
     paths = reserve_paths(root, make_run_id(experiment.name))
     run_id = paths.run.name
     prompt_digest = hashlib.sha256(prompt).hexdigest()
+    directional_controls = directional_control_contract(directional_requirement, run_id)
     receipt_relative = Path(".oneshot-provenance") / f"{run_id}.json"
     receipt_path = receipt_directory / f"{run_id}.json"
     commit_path = receipt_directory / f"{run_id}.commit"
@@ -552,6 +579,7 @@ def create_run(arguments: argparse.Namespace) -> Path:
                 prompt_digest,
                 prior_run,
                 receipt_relative.as_posix(),
+                directional_controls,
             ),
         )
         write_json(paths.run / "worker-report.json", initial_worker_report(run_id))
@@ -567,6 +595,7 @@ def create_run(arguments: argparse.Namespace) -> Path:
                 prompt_digest,
                 len(prompt),
                 prior_run,
+                directional_controls,
             ),
             owned_provenance_paths,
         )
@@ -586,7 +615,20 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     except RunPreparationError as error:
         print(f"error: {error}", file=sys.stderr)
         return 2
-    print(json.dumps({"runDirectory": str(run.resolve())}))
+    manifest = read_json_object_bounded(run / "run.json", "prepared run manifest")
+    directional_controls = (
+        manifest.get("interaction", {}).get("directionalControls", {})
+        if isinstance(manifest.get("interaction"), dict)
+        else {}
+    )
+    print(
+        json.dumps(
+            {
+                "runDirectory": str(run.resolve()),
+                "directionalControlsRequired": directional_controls.get("required") is True,
+            }
+        )
+    )
     return 0
 
 

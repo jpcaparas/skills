@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import re
 import stat
@@ -15,6 +16,14 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterator, Optional, Tuple
 from urllib.parse import unquote, urljoin, urlsplit
 
+from directional_controls import (
+    DIRECTIONAL_CONTROL_CONTRACT_VERSION,
+    DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA,
+    DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX,
+    DirectionalControlError,
+    artifact_tree_digest,
+    response_matches_direction,
+)
 from build_catalog_index import (
     CATALOGUE_LOCK,
     CatalogueBuildError,
@@ -200,6 +209,8 @@ class PreparedRunContracts:
     temporary_cleanup_allowed_on_success: bool
     temporary_cleanup_on_success: bool
     quality_gauntlet: bool
+    directional_controls_required: bool
+    directional_evidence_path: Optional[str]
 
 
 class LocalReferenceParser(HTMLParser):
@@ -1459,6 +1470,8 @@ def validate_provenance_receipt(
             temporary_cleanup_allowed_on_success=False,
             temporary_cleanup_on_success=False,
             quality_gauntlet=False,
+            directional_controls_required=False,
+            directional_evidence_path=None,
         )
     receipt = load_object(receipt_path, errors)
     if receipt is None:
@@ -1467,6 +1480,8 @@ def validate_provenance_receipt(
             temporary_cleanup_allowed_on_success=False,
             temporary_cleanup_on_success=False,
             quality_gauntlet=False,
+            directional_controls_required=False,
+            directional_evidence_path=None,
         )
     receipt_schema = receipt.get("schemaVersion")
     receipt_contracts = {
@@ -1539,12 +1554,163 @@ def validate_provenance_receipt(
             errors.append(f"{receipt_path}: artifact/PROMPT.md differs from the pre-dispatch prompt")
         if receipt_prompt.get("bytes") != len(prompt_bytes):
             errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
+    directional_controls_required = False
+    directional_evidence_path: Optional[str] = None
+    receipt_directional = receipt.get("directionalControls")
+    if receipt_directional is not None:
+        if not isinstance(receipt_directional, dict):
+            errors.append(f"{receipt_path}: directionalControls must be an object")
+        else:
+            required = receipt_directional.get("required")
+            basis = receipt_directional.get("basis")
+            signals = receipt_directional.get("signals")
+            evidence_path = receipt_directional.get("evidencePath")
+            if not isinstance(required, bool):
+                errors.append(f"{receipt_path}: directionalControls.required must be true or false")
+            else:
+                directional_controls_required = required
+            if receipt_directional.get("contractVersion") != DIRECTIONAL_CONTROL_CONTRACT_VERSION:
+                errors.append(
+                    f"{receipt_path}: directionalControls.contractVersion must be exactly "
+                    f"{DIRECTIONAL_CONTROL_CONTRACT_VERSION}"
+                )
+            if basis not in {"prepared-prompt-analysis", "coordinator-required"}:
+                errors.append(f"{receipt_path}: directionalControls.basis is invalid")
+            if not isinstance(signals, list) or not all(
+                isinstance(signal, str) and bool(signal.strip()) for signal in signals
+            ):
+                errors.append(
+                    f"{receipt_path}: directionalControls.signals must be an array of non-blank strings"
+                )
+            expected_evidence = (
+                f".oneshot-provenance/{run_id}{DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX}"
+                if required is True
+                else None
+            )
+            if evidence_path != expected_evidence:
+                errors.append(
+                    f"{receipt_path}: directionalControls.evidencePath must be {expected_evidence!r}"
+                )
+            elif isinstance(evidence_path, str):
+                directional_evidence_path = evidence_path
+            interaction = object_value(run.get("interaction"))
+            if interaction.get("directionalControls") != receipt_directional:
+                errors.append(
+                    f"{run_path}: interaction.directionalControls must match the coordinator receipt"
+                )
     return PreparedRunContracts(
         temporary=current_temporary_contract,
         temporary_cleanup_allowed_on_success=temporary_cleanup_allowed_on_success,
         temporary_cleanup_on_success=temporary_cleanup_on_success,
         quality_gauntlet=current_quality_gauntlet_contract,
+        directional_controls_required=directional_controls_required,
+        directional_evidence_path=directional_evidence_path,
     )
+
+
+def validate_directional_control_evidence(
+    root: Path,
+    run_path: Path,
+    artifact_directory: Optional[Path],
+    status: Optional[str],
+    contracts: PreparedRunContracts,
+    errors: list[str],
+) -> None:
+    """Require a passing coordinator-owned browser receipt for applicable final runs."""
+
+    if not contracts.directional_controls_required or status != "OK":
+        return
+    if contracts.directional_evidence_path is None:
+        errors.append(f"{run_path}: directional-control verification evidence path is missing")
+        return
+    evidence_path = root / contracts.directional_evidence_path
+    if not is_regular_file_within(
+        evidence_path,
+        root,
+        "directional-control browser evidence",
+        errors,
+    ):
+        errors.append(
+            f"{run_path}: successful directional run requires passing browser evidence from "
+            "scripts/verify_directional_controls.py"
+        )
+        return
+    evidence = load_object(evidence_path, errors)
+    if evidence is None:
+        return
+    run_id = run_path.parent.name
+    if evidence.get("schemaVersion") != DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA:
+        errors.append(
+            f"{evidence_path}: schemaVersion must be exactly {DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA}"
+        )
+    if evidence.get("contractVersion") != DIRECTIONAL_CONTROL_CONTRACT_VERSION:
+        errors.append(
+            f"{evidence_path}: contractVersion must be exactly {DIRECTIONAL_CONTROL_CONTRACT_VERSION}"
+        )
+    if evidence.get("runId") != run_id:
+        errors.append(f"{evidence_path}: runId must match {run_id!r}")
+    if evidence.get("passed") is not True or evidence.get("error") is not None:
+        errors.append(f"{evidence_path}: directional-control browser verification did not pass")
+
+    browser = object_value(evidence.get("browser"))
+    if browser.get("kind") != "chromium-cdp":
+        errors.append(f"{evidence_path}: browser.kind must be exactly chromium-cdp")
+    if not isinstance(browser.get("version"), str) or not browser.get("version", "").strip():
+        errors.append(f"{evidence_path}: browser.version must be a non-blank string")
+    input_evidence = object_value(evidence.get("input"))
+    if input_evidence.get("transport") != "Chrome DevTools Protocol Input.dispatchKeyEvent":
+        errors.append(f"{evidence_path}: input transport must use Chrome DevTools Protocol key events")
+
+    expected_directions = {
+        "KeyA": "left",
+        "ArrowLeft": "left",
+        "KeyD": "right",
+        "ArrowRight": "right",
+    }
+    checks = evidence.get("checks")
+    observed: dict[str, dict[str, Any]] = {}
+    if not isinstance(checks, list):
+        errors.append(f"{evidence_path}: checks must be an array")
+    else:
+        for check in checks:
+            if not isinstance(check, dict):
+                errors.append(f"{evidence_path}: every check must be an object")
+                continue
+            code = check.get("code")
+            if not isinstance(code, str) or code not in expected_directions or code in observed:
+                errors.append(f"{evidence_path}: checks contain an unknown or duplicate key code")
+                continue
+            observed[code] = check
+            response = check.get("response")
+            if isinstance(response, bool) or not isinstance(response, (int, float)) or not math.isfinite(response):
+                errors.append(f"{evidence_path}: {code} response must be a finite number")
+            elif not response_matches_direction(float(response), expected_directions[code]):
+                errors.append(f"{evidence_path}: {code} response has the wrong semantic sign")
+            if check.get("expected") != expected_directions[code] or check.get("passed") is not True:
+                errors.append(f"{evidence_path}: {code} did not pass its semantic direction")
+            if check.get("measurement") not in {"position", "heading"}:
+                errors.append(f"{evidence_path}: {code} measurement must be position or heading")
+            if not isinstance(check.get("frame"), str) or not check.get("frame", "").strip():
+                errors.append(f"{evidence_path}: {code} frame must be a non-blank string")
+    if set(observed) != set(expected_directions):
+        errors.append(f"{evidence_path}: checks must cover A/Left and D/Right independently")
+
+    if artifact_directory is None:
+        return
+    try:
+        actual_digest = artifact_tree_digest(artifact_directory)
+    except DirectionalControlError as error:
+        errors.append(f"{evidence_path}: unable to bind evidence to artifact: {error}")
+        return
+    artifact = object_value(evidence.get("artifact"))
+    if artifact.get("digestAlgorithm") != "oneshot-artifact-tree-v1":
+        errors.append(f"{evidence_path}: artifact.digestAlgorithm is invalid")
+    if (
+        artifact.get("sha256") != actual_digest.sha256
+        or artifact.get("files") != actual_digest.files
+        or artifact.get("bytes") != actual_digest.bytes
+    ):
+        errors.append(f"{evidence_path}: browser evidence does not match the current artifact revision")
 
 
 def validate_run(
@@ -1862,6 +2028,14 @@ def validate_run(
         errors.append(f"{run_path}: successful run is missing exact-case artifact/index.html")
     if is_index_file and artifact_tree_valid:
         validate_local_assets(index_path, errors)
+    validate_directional_control_evidence(
+        root,
+        run_path,
+        artifact_directory,
+        status,
+        prepared_contracts,
+        errors,
+    )
 
 
 def validate_prior_graph(root: Path, run_paths: list[Path], errors: list[str]) -> None:
@@ -2084,6 +2258,7 @@ def validate_receipt_inventory(root: Path, run_paths: list[Path], errors: list[s
     expected = {run_path.parent.name: run_path for run_path in run_paths}
     receipts: dict[str, Path] = {}
     commits: dict[str, Path] = {}
+    directional_evidence: dict[str, Path] = {}
     for entry in entries:
         if is_appledouble_sidecar(entry):
             continue
@@ -2092,6 +2267,16 @@ def validate_receipt_inventory(root: Path, run_paths: list[Path], errors: list[s
             continue
         if not entry.is_file():
             errors.append(f"{entry}: provenance inventory may contain only regular receipt and commit files")
+            continue
+        if entry.name.endswith(DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX):
+            run_id = entry.name[: -len(DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX)]
+            if not is_supported_run_id(run_id):
+                errors.append(f"{entry}: unexpected file in provenance inventory")
+                continue
+            if run_id in directional_evidence:
+                errors.append(f"{entry}: duplicate directional-control evidence")
+                continue
+            directional_evidence[run_id] = entry
             continue
         run_id = entry.stem
         if not is_supported_run_id(run_id) or entry.suffix not in {".json", ".commit"}:
@@ -2129,6 +2314,10 @@ def validate_receipt_inventory(root: Path, run_paths: list[Path], errors: list[s
             run_path = text_value(receipt.get("runPath"))
             if run_path:
                 errors.append(f"{orphan_path}: recorded run path is absent: {run_path}")
+    for orphan_id in sorted(set(directional_evidence) - set(expected)):
+        errors.append(
+            f"{directional_evidence[orphan_id]}: directional-control evidence has no matching run manifest"
+        )
 
 
 def validate(root: Path) -> dict[str, Any]:

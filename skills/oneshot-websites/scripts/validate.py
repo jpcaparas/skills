@@ -28,17 +28,20 @@ REQUIRED_FILES = (
     "references/README.md",
     "references/catalog-index.md",
     "references/catalogue-authoring.md",
+    "references/directional-controls.md",
     "references/execution-protocol.md",
     "references/research-notes.md",
     "references/wasm-selection.md",
     "scripts/build_catalog_index.py",
     "scripts/cleanup_run_tmp.py",
+    "scripts/directional_controls.py",
     "scripts/list_prompts.py",
     "scripts/prepare_run.py",
     "scripts/runtime_contract.py",
     "scripts/test_skill.py",
     "scripts/validate.py",
     "scripts/validate_catalog.py",
+    "scripts/verify_directional_controls.py",
     "templates/run.json",
     "templates/worker-dispatch.md",
 )
@@ -52,7 +55,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.19.0"
+PACKAGE_VERSION = "2.20.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -153,6 +156,19 @@ RUNTIME_CONTRACTS = (
             r"faithful source.*?nonstandard mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
             r"3D experience.*?only when it actually exposes those controls.*?$",
             re.I | re.M,
+        ),
+    ),
+    (
+        "applicable prompt-backed executable directional gate",
+        re.compile(
+            r"Every requested game or simulation.*?finished actual prompt.*?"
+            r"`A` and `ArrowLeft`.*?`D` and `ArrowRight`.*?"
+            r"For every applicable directional game.*?state in the sealed actual prompt.*?"
+            r"production-state browser probe.*?reset a deterministic real state.*?"
+            r"position.*?forward.*?active-frame right basis.*?"
+            r"reject missing, zero, or inverted responses.*?"
+            r"never append it to a passive scene or unrelated website",
+            re.I | re.S,
         ),
     ),
     ("exact prompt preservation", re.compile(r"(?:byte-for-byte|exact\s+(?:UTF-8\s+)?bytes|verbatim).*?(?:prompt|PROMPT\.md)", re.I | re.S)),
@@ -664,6 +680,17 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "agents/oneshot-critic.md",
+        "critic production-state directional adapter inspection",
+        re.compile(
+            r"prepared run requires the executable directional-control contract.*?"
+            r"__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.*?same production state and keyboard path.*?"
+            r"reject a parallel test state.*?hard-coded answer.*?sample-only sign correction.*?missing adapter.*?"
+            r"coordinator’s later digest-bound browser gate.*?not a reason to skip.*?rendered checks",
+            re.I | re.S,
+        ),
+    ),
+    (
         "agents/oneshot-lead.md",
         "lead blind design independence",
         re.compile(
@@ -794,6 +821,18 @@ FILE_RUNTIME_CONTRACTS = (
             r"each WASD and arrow-key pair.*?rotations.*?parent transforms.*?mirrored models or negative scales.*?"
             r"alternate control modes.*?inversion option.*?faithful nonstandard source mapping.*?"
             r"practical mouse-and-keyboard path.*?durable verification evidence",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead production-state directional adapter",
+        re.compile(
+            r"run\.json\.interaction\.directionalControls.*?required.*?"
+            r"references/directional-controls\.md.*?__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.*?"
+            r"real production player.*?vehicle.*?camera.*?orbit state.*?same keyboard listeners.*?"
+            r"parallel test-only state.*?hard-coded direction answer.*?sign correction.*?invalid.*?"
+            r"coordinator performs the authoritative browser-level input check.*?same run",
             re.I | re.S,
         ),
     ),
@@ -943,6 +982,34 @@ FILE_RUNTIME_CONTRACTS = (
         ),
     ),
     (
+        "templates/worker-dispatch.md",
+        "conditional executable directional-control guidance",
+        re.compile(
+            r"Executable Directional-Control Guidance.*?"
+            r"run\.json\.interaction\.directionalControls\.required.*?"
+            r"complete current contents of `references/directional-controls\.md`.*?"
+            r"production-state adapter.*?coordinator.*?digest-bound result.*?"
+            r"NOT_APPLICABLE.*?artifact/PROMPT\.md.*?"
+            r"\{\{DIRECTIONAL_CONTROL_GUIDANCE\}\}",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/directional-controls.md",
+        "directional-control adapter and browser evidence contract",
+        re.compile(
+            r"What the finished prompt must require.*?`A`.*?`ArrowLeft`.*?"
+            r"`D`.*?`ArrowRight`.*?production-state probe.*?"
+            r"parallel test-only simulation.*?not acceptable.*?Probe contract.*?"
+            r"__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.*?schemaVersion.*?reset\(\).*?sample\(\).*?"
+            r"measurement.*?position.*?heading.*?active semantic frame.*?"
+            r"DevTools input domain.*?fixed sign contract.*?Coordinator sequence.*?"
+            r"verify_directional_controls\.py.*?resume the existing lead and namespace.*?"
+            r"validate_catalog\.py.*?artifact digest",
+            re.I | re.S,
+        ),
+    ),
+    (
         "references/wasm-selection.md",
         "WebAssembly scenarios and static-artifact contract",
         re.compile(
@@ -1005,6 +1072,19 @@ FILE_RUNTIME_CONTRACTS = (
             r"rendered movement.*?same seeded state.*?ordinary mouse.*?complete keyboard input.*?"
             r"nonstandard source mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
             r"non-game 3D experience.*?only when it actually exposes those controls",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol prompt-backed executable directional gate",
+        re.compile(
+            r"Every game or simulation.*?finished actual prompt.*?"
+            r"production-state probe from `references/directional-controls\.md`.*?"
+            r"seeded real state.*?position.*?forward.*?active-frame right.*?"
+            r"browser-level input.*?After an applicable lead returns an `OK` artifact.*?"
+            r"verify_directional_controls\.py.*?KeyA.*?ArrowLeft.*?KeyD.*?ArrowRight.*?"
+            r"hashes the artifact tree.*?validate_catalog\.py.*?rejects.*?same lead and namespace",
             re.I | re.S,
         ),
     ),

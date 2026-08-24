@@ -1260,6 +1260,37 @@
         {"text": "Does not excuse an accidental direction swap as an inversion preference", "type": "negative"}
       ],
       "tags": ["simulations", "directional-controls", "mouse-and-keyboard", "fidelity", "inversion", "regression"]
+    },
+    {
+      "id": 102,
+      "name": "racing-prompt-and-runtime-gate-reject-inverted-controls",
+      "prompt": "Create a browser pod-racing game. Steering must work with A/D and the arrow keys, and I do not want A sending the racer right or D sending it left again.",
+      "expected_output": "The sealed prompt explicitly makes correct paired controls and the production-state browser probe delivery requirements. Preparation marks the run as requiring directional verification, the lead wires the probe to the real racer state and input listeners, and the coordinator sends browser-level A, Left, D, and Right events after finalization. The correct fixture passes; the deliberately inverted fixture fails and cannot validate as OK.",
+      "files": [
+        "evals/files/directional-controls/correct/index.html",
+        "evals/files/directional-controls/inverted/index.html"
+      ],
+      "assertions": [
+        {"text": "Tacks the subject-adapted production-state probe requirement onto the sealed racing prompt", "type": "structural"},
+        {"text": "Refuses to reserve an applicable racing run when the prepared prompt omits that lead-facing gate", "type": "negative"},
+        {"text": "Marks the prepared racing run as requiring coordinator-owned directional verification", "type": "verification"},
+        {"text": "Uses browser-level key events and real production vectors to pass the correct fixture", "type": "functional"},
+        {"text": "Rejects the deliberately inverted fixture and prevents an OK catalogue result", "type": "negative"},
+        {"text": "Binds passing evidence to the exact artifact-tree digest", "type": "verification"}
+      ],
+      "tags": ["games", "racing", "directional-controls", "browser-gate", "regression", "negative"]
+    },
+    {
+      "id": 103,
+      "name": "passive-three-dimensional-scene-does-not-earn-control-probe",
+      "prompt": "Build a passive 3D product gallery that slowly rotates a watch. Visitors can read the details, but there is no orbit, movement, steering, or camera control.",
+      "expected_output": "The coordinator does not invent directional bindings or append the executable control-probe requirement. Preparation records the gate as not required while ordinary responsive, mobile, and artifact checks still apply.",
+      "assertions": [
+        {"text": "Keeps the directional browser gate not required for a passive scene with no directional interaction", "type": "functional"},
+        {"text": "Does not append movement bindings or a production-state probe to the sealed prompt", "type": "negative"},
+        {"text": "Retains ordinary mobile, artifact, and quality checks", "type": "verification"}
+      ],
+      "tags": ["3d", "directional-controls", "near-miss", "negative"]
     }
   ]
 }
