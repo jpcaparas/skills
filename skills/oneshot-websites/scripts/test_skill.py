@@ -31,6 +31,7 @@ from directional_controls import (
     infer_directional_control_requirement,
     parse_directional_sample,
     response_matches_direction,
+    validate_directional_technical_prompt_contract,
 )
 from prepare_run import RunPreparationError, build_identity, make_run_id, reserve_paths
 from runtime_contract import (
@@ -374,6 +375,38 @@ def check_evals(skill: Path, errors: List[str]) -> None:
             "directional-control evals must carry directional-controls and mouse-and-keyboard tags",
             errors,
         )
+        required_prompt_separation_evals = {
+            "racing-prompt-and-runtime-gate-reject-inverted-controls",
+            "passive-three-dimensional-scene-does-not-earn-control-probe",
+            "public-prompt-remains-prose-while-technical-contract-is-transient",
+        }
+        assert_ok(
+            required_prompt_separation_evals.issubset(names),
+            "evals must cover applicable, non-applicable, and cleanup cases for transient technical prompts",
+            errors,
+        )
+        required_liveness_evals = {
+            "zombified-lead-is-detected-and-recovers-in-place",
+            "quiet-long-running-tool-is-not-misclassified-as-zombie",
+        }
+        assert_ok(
+            required_liveness_evals.issubset(names),
+            "evals must cover zombie recovery and long-running-tool false positives",
+            errors,
+        )
+        assert_ok(
+            all(
+                isinstance(item, Mapping)
+                and isinstance(item.get("tags"), list)
+                and "subagents" in item["tags"]
+                and "liveness" in item["tags"]
+                for item in entries
+                if isinstance(item, Mapping)
+                and item.get("name") in required_liveness_evals
+            ),
+            "lead-liveness evals must carry subagents and liveness tags",
+            errors,
+        )
 
     assert_ok(bool(triggers), "trigger evals need a non-empty raw array", errors)
     seen_queries = set()
@@ -586,6 +619,11 @@ def convert_to_legacy_run(output_root: Path, run_path: Path, run_schema: str) ->
     report["runId"] = legacy_run_id
     report.pop("qualityGauntlet", None)
     receipt["schemaVersion"] = "1.0" if run_schema == "2.0" else "1.1"
+    historical_directional = dict(receipt.get("directionalControls", {}))
+    historical_directional["contractVersion"] = "1.0"
+    historical_directional.pop("technicalPrompt", None)
+    receipt["directionalControls"] = historical_directional
+    manifest.setdefault("interaction", {})["directionalControls"] = historical_directional
     receipt["runId"] = legacy_run_id
     receipt["runPath"] = legacy_relative
     receipt.pop("qualityGauntlet", None)
@@ -647,6 +685,11 @@ def convert_to_historical_flat_run(output_root: Path, run_path: Path, run_schema
         receipt.pop("qualityGauntlet", None)
     else:
         receipt["schemaVersion"] = "2.1"
+    historical_directional = dict(receipt.get("directionalControls", {}))
+    historical_directional["contractVersion"] = "1.0"
+    historical_directional.pop("technicalPrompt", None)
+    receipt["directionalControls"] = historical_directional
+    manifest.setdefault("interaction", {})["directionalControls"] = historical_directional
 
     manifest_path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
     report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
@@ -1941,7 +1984,7 @@ def exercise_adversarial_contract(
             structured_build.returncode == 0
             and structured_validation.returncode != 0
             and "flat run schemaVersion must be one of" in structured_validation.stdout
-            and "schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, or 2.3" in structured_validation.stdout
+            and "schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, or 2.4" in structured_validation.stdout
             and "Traceback" not in structured_validation.stderr,
             "structured schema versions escaped validation or caused a crash: {}{}".format(
                 structured_validation.stdout,
@@ -2338,18 +2381,18 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             errors,
         )
 
-        missing_gate_prompt = Path(temporary) / "missing-directional-gate-prompt.md"
-        missing_gate_prompt.write_text(
+        prose_directional_prompt = Path(temporary) / "prose-directional-prompt.md"
+        prose_directional_prompt.write_text(
             "Create a browser racing game with a controllable vehicle, steering, WASD, and arrow keys.\n",
             encoding="utf-8",
         )
-        missing_gate_root = Path(temporary) / "missing-directional-gate-runs"
-        missing_gate_result = run(
+        prose_directional_root = Path(temporary) / "prose-directional-runs"
+        prose_directional_result = run(
             [
                 sys.executable,
                 str(scripts[1]),
                 "--output-root",
-                str(missing_gate_root),
+                str(prose_directional_root),
                 "--model",
                 "Directional Model",
                 "--harness",
@@ -2357,15 +2400,58 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 "--experiment",
                 "Pod Racing Game",
                 "--prompt-file",
-                str(missing_gate_prompt),
+                str(prose_directional_prompt),
+            ]
+        )
+        prose_directional_data = invocation_json(
+            prose_directional_result,
+            errors,
+            "prepare_run.py prose directional prompt",
+        )
+        prose_directional_run = (
+            run_directory(prose_directional_data, errors, "prepare_run.py prose directional prompt")
+            if prose_directional_data is not None
+            else None
+        )
+        assert_ok(
+            prose_directional_result.returncode == 0
+            and prose_directional_run is not None
+            and (prose_directional_run / ".tmp" / "TECHNICAL_PROMPT.md").is_file()
+            and (prose_directional_run / "artifact" / "PROMPT.md").read_bytes()
+            == prose_directional_prompt.read_bytes()
+            and b"__ONESHOT_DIRECTIONAL_CONTROL_PROBE__"
+            not in (prose_directional_run / "artifact" / "PROMPT.md").read_bytes(),
+            "prepare_run.py did not separate the directional machine contract from the prose prompt",
+            errors,
+        )
+
+        leaked_contract_prompt = Path(temporary) / "leaked-directional-contract-prompt.md"
+        leaked_contract_prompt.write_text(
+            "Create a browser racing game. Expose window.__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.\n",
+            encoding="utf-8",
+        )
+        leaked_contract_root = Path(temporary) / "leaked-directional-contract-runs"
+        leaked_contract_result = run(
+            [
+                sys.executable,
+                str(scripts[1]),
+                "--output-root",
+                str(leaked_contract_root),
+                "--model",
+                "Directional Model",
+                "--harness",
+                "Harness",
+                "--experiment",
+                "Leaked Racing Prompt",
+                "--prompt-file",
+                str(leaked_contract_prompt),
             ]
         )
         assert_ok(
-            missing_gate_result.returncode != 0
-            and "applicable directional prompt is missing its lead-facing executable gate contract"
-            in missing_gate_result.stderr
-            and not missing_gate_root.exists(),
-            "prepare_run.py sealed an applicable racing prompt without telling the lead about the browser gate",
+            leaked_contract_result.returncode != 0
+            and "must remain a prose experience brief" in leaked_contract_result.stderr
+            and not leaked_contract_root.exists(),
+            "prepare_run.py accepted a leaked internal directional contract in artifact prompt prose",
             errors,
         )
 
@@ -2373,10 +2459,8 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         directional_prompt = Path(temporary) / "directional-racing-prompt.md"
         directional_prompt.write_text(
             "Create a browser racing game with a controllable vehicle, steering, WASD, and arrow keys. "
-            "A with ArrowLeft must steer left, while D with ArrowRight must steer right. The finished "
-            "artifact must expose a production-state directional-control probe that resets the same "
-            "deterministic race state and reports its real position, forward vector, and active-frame "
-            "right basis for browser-level verification.\n",
+            "A with ArrowLeft must steer left, while D with ArrowRight must steer right. Make the racing "
+            "feel responsive and natural from the player’s viewpoint.\n",
             encoding="utf-8",
         )
         directional_run = prepare_run(
@@ -2398,11 +2482,47 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             assert_ok(
                 directional_contract.get("required") is True
                 and directional_contract.get("evidencePath")
-                == f".oneshot-provenance/{directional_run.name}.directional-controls.json",
+                == f".oneshot-provenance/{directional_run.name}.directional-controls.json"
+                and directional_contract.get("technicalPrompt")
+                == {
+                    "path": ".tmp/TECHNICAL_PROMPT.md",
+                    "lifecycle": "delete-with-run-temporary-storage",
+                },
                 "prepare_run.py did not anchor the racing directional-control gate",
                 errors,
             )
+            directional_technical_prompt = directional_run / ".tmp" / "TECHNICAL_PROMPT.md"
+            try:
+                validate_directional_technical_prompt_contract(
+                    directional_technical_prompt.read_text(encoding="utf-8")
+                )
+            except (OSError, UnicodeDecodeError, ValueError) as error:
+                errors.append(f"prepared transient directional contract is invalid: {error}")
+            assert_ok(
+                b"__ONESHOT_DIRECTIONAL_CONTROL_PROBE__"
+                not in (directional_run / "artifact" / "PROMPT.md").read_bytes(),
+                "prepare_run.py leaked the directional probe into artifact/PROMPT.md",
+                errors,
+            )
+            hidden_technical_prompt = directional_run / ".tmp" / "TECHNICAL_PROMPT.hidden"
+            directional_technical_prompt.rename(hidden_technical_prompt)
+            missing_technical_validation = run(
+                [sys.executable, str(scripts[3]), str(directional_root)]
+            )
+            assert_ok(
+                missing_technical_validation.returncode != 0
+                and "requires exact-case .tmp/TECHNICAL_PROMPT.md"
+                in missing_technical_validation.stdout,
+                "catalog validator accepted an active applicable run without its technical prompt",
+                errors,
+            )
+            hidden_technical_prompt.rename(directional_technical_prompt)
             mark_successful_static_artifact(directional_run)
+            assert_ok(
+                not os.path.lexists(directional_run / ".tmp"),
+                "successful directional finalization retained TECHNICAL_PROMPT.md or .tmp/",
+                errors,
+            )
             correct_fixture = (
                 skill / "evals" / "files" / "directional-controls" / "correct" / "index.html"
             )
@@ -2643,6 +2763,13 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             previous_receipt["schemaVersion"] = "2.2"
             previous_receipt["runSchemaVersion"] = "3.2"
             previous_receipt["temporary"] = historical_temporary
+            historical_directional = dict(previous_receipt.get("directionalControls", {}))
+            historical_directional["contractVersion"] = "1.0"
+            historical_directional.pop("technicalPrompt", None)
+            previous_receipt["directionalControls"] = historical_directional
+            previous_manifest.setdefault("interaction", {})[
+                "directionalControls"
+            ] = historical_directional
             previous_receipt_path.write_text(
                 json.dumps(previous_receipt, indent=2) + "\n",
                 encoding="utf-8",
@@ -3213,7 +3340,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             )
         if isinstance(first_manifest, Mapping):
             assert_ok(
-                first_manifest.get("schemaVersion") == "3.3",
+                first_manifest.get("schemaVersion") == "3.4",
                 "prepare_run.py did not emit the current run schema",
                 errors,
             )
@@ -3225,8 +3352,8 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             receipt = read_json(receipt_path, errors, "pre-dispatch provenance receipt") if isinstance(receipt_value, str) else None
             assert_ok(
                 isinstance(receipt, Mapping)
-                and receipt.get("schemaVersion") == "2.3"
-                and receipt.get("runSchemaVersion") == "3.3"
+                and receipt.get("schemaVersion") == "2.4"
+                and receipt.get("runSchemaVersion") == "3.4"
                 and receipt.get("prompt", {}).get("sha256") == expected_hash
                 and receipt.get("prompt", {}).get("bytes") == len(prompt_bytes),
                 "prepare_run.py did not anchor prompt provenance outside the worker run",
@@ -3243,6 +3370,38 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 "prepare_run.py did not anchor the quality-gauntlet report contract",
                 errors,
             )
+            expected_monitoring_contract = {
+                "required": True,
+                "contractVersion": "1.0",
+                "mode": "bounded-periodic-liveness-checks",
+                "recovery": "same-run-single-owner",
+            }
+            assert_ok(
+                isinstance(receipt, Mapping)
+                and receipt.get("coordinatorMonitoring") == expected_monitoring_contract
+                and first_manifest.get("execution", {}).get("coordinatorMonitoring")
+                == expected_monitoring_contract,
+                "prepare_run.py did not anchor bounded coordinator monitoring",
+                errors,
+            )
+            if isinstance(receipt, dict):
+                receipt_bytes = receipt_path.read_bytes()
+                receipt["coordinatorMonitoring"] = {
+                    **expected_monitoring_contract,
+                    "mode": "one-unbounded-wait",
+                }
+                receipt_path.write_text(
+                    json.dumps(receipt, indent=2) + "\n",
+                    encoding="utf-8",
+                )
+                assert_invalid_catalog(
+                    scripts[3],
+                    output_root,
+                    "coordinatorMonitoring contract does not match the prepared run",
+                    "receipt with disabled bounded coordinator monitoring",
+                    errors,
+                )
+                receipt_path.write_bytes(receipt_bytes)
             assert_ok(
                 isinstance(receipt, Mapping)
                 and receipt.get("temporary")
@@ -3275,6 +3434,11 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
                 first_report.get("schemaVersion") == "2.1"
                 and isinstance(first_report.get("qualityGauntlet"), Mapping),
                 "prepare_run.py did not initialize the current quality-gauntlet report",
+                errors,
+            )
+            assert_ok(
+                first_report.get("observations", {}).get("livenessEvents") == [],
+                "prepare_run.py did not initialize material liveness observations",
                 errors,
             )
             temporary_report = first_report.get("temporary")
@@ -3397,7 +3561,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         assert_invalid_catalog(
             scripts[3],
             output_root,
-            "receipt schema '2.3' requires run schema 3.3",
+            "receipt schema '2.4' requires run schema 3.4",
             "new run downgraded through worker-writable metadata",
             errors,
         )
@@ -3407,7 +3571,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
         rebuilt_after_downgrade_restore = rebuild_catalog_index(output_root)
         assert_ok(
             rebuilt_after_downgrade_restore.returncode == 0,
-            "catalogue builder failed after restoring an anchored 3.3 run: {}".format(
+            "catalogue builder failed after restoring an anchored 3.4 run: {}".format(
                 rebuilt_after_downgrade_restore.stderr or rebuilt_after_downgrade_restore.stdout
             ),
             errors,
@@ -3491,7 +3655,7 @@ def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
             assert_invalid_catalog(
                 scripts[3],
                 bare_current_root,
-                "run schema 3.3 requires an experiment slug in the run directory",
+                "run schema 3.4 requires an experiment slug in the run directory",
                 "current run using a historical timestamp-only directory",
                 errors,
             )
@@ -4055,6 +4219,44 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             and "SKILL.md runtime contract missing mouse-and-keyboard directional prompt semantics"
             in missing_directional_prompt_result.stdout,
             "package validator accepted game prompts without mouse-and-keyboard directional semantics",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_prompt_surface = re.sub(
+            r"(?m)^The finished refinement—not the catalogue source text or internal crafting guidance—.*\n\n",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_prompt_surface, encoding="utf-8")
+        missing_prompt_surface_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_prompt_surface_result.returncode != 0
+            and "SKILL.md runtime contract missing human prose prompt surface"
+            in missing_prompt_surface_result.stdout,
+            "package validator accepted artifact prompts without the human-prose boundary",
+            errors,
+        )
+        skill_path.write_text(original_skill, encoding="utf-8")
+
+        skill_without_lead_liveness = re.sub(
+            r"(?ms)^The coordinator actively monitors every owning lead.*?(?=^Record only material liveness events)",
+            "",
+            original_skill,
+            count=1,
+        )
+        skill_path.write_text(skill_without_lead_liveness, encoding="utf-8")
+        missing_lead_liveness_result = run(
+            [sys.executable, str(copied_skill / "scripts" / "validate.py"), str(copied_skill)]
+        )
+        assert_ok(
+            missing_lead_liveness_result.returncode != 0
+            and "SKILL.md runtime contract missing bounded coordinator liveness and zombie recovery"
+            in missing_lead_liveness_result.stdout,
+            "package validator accepted an opaque unmonitored lead wait",
             errors,
         )
         skill_path.write_text(original_skill, encoding="utf-8")
@@ -5143,14 +5345,14 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             missing_completion_contract_result.returncode != 0
-            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_completion_contract_result.stdout,
             "package validator let reference prose substitute for the canonical completion mandate",
             errors,
         )
 
         skill_without_verbatim_conflict = original_skill.replace(
-            " If the user also forbids any applicable appended text, stop before dispatch and report "
+            " If the user also forbids any applicable experience-level addition, stop before dispatch and report "
             "that the request conflicts with this skill’s mandatory prompt contract; never silently "
             "omit an applicable requirement.",
             "",
@@ -5168,8 +5370,8 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
 
         skill_without_shortcuts_requirement = original_skill.replace(
-            "not to take shortcuts or produce a cookie-cutter approximation",
-            "not to produce a cookie-cutter approximation",
+            "must reject shortcuts and cookie-cutter approximation",
+            "must reject cookie-cutter approximation",
         )
         skill_path.write_text(skill_without_shortcuts_requirement, encoding="utf-8")
         missing_shortcuts_result = run(
@@ -5177,15 +5379,15 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             missing_shortcuts_result.returncode != 0
-            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_shortcuts_result.stdout,
             "package validator accepted a completion mandate without the explicit no-shortcuts requirement",
             errors,
         )
 
         skill_without_universal_depth = original_skill.replace(
-            "must demand complete subject-specific depth",
-            "must demand a polished result",
+            "asking for complete subject-specific depth",
+            "asking for a polished result",
         )
         skill_path.write_text(skill_without_universal_depth, encoding="utf-8")
         missing_universal_depth_result = run(
@@ -5193,7 +5395,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             missing_universal_depth_result.returncode != 0
-            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_universal_depth_result.stdout,
             "package validator accepted a completion mandate without universal subject-specific depth",
             errors,
@@ -5209,7 +5411,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             missing_replica_depth_result.returncode != 0
-            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_replica_depth_result.stdout,
             "package validator accepted a replica mandate without smallest-interaction fidelity",
             errors,
@@ -5225,7 +5427,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
         assert_ok(
             missing_original_depth_result.returncode != 0
-            and "SKILL.md runtime contract missing subject-adapted lead-facing completion mandate"
+            and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_original_depth_result.stdout,
             "package validator accepted a completion mandate without equivalent depth for original work",
             errors,
@@ -5482,8 +5684,8 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
 
         altered_mandate = json.loads(json.dumps(original_catalogue))
         altered_mandate["completionMandate"] = altered_mandate["completionMandate"].replace(
-            "no token budget limit",
-            "a concise token budget",
+            "Keep skill policy, token and delegation policy, technical schemas, tool commands, and workflow instructions in the separate operational envelope",
+            "Put skill policy and a concise token budget in the prompt",
         )
         catalogue_path.write_text(json.dumps(altered_mandate), encoding="utf-8")
         altered_mandate_result = run(
@@ -5492,7 +5694,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         assert_ok(
             altered_mandate_result.returncode != 0
             and "completionMandate differs from the canonical reviewed mandate" in altered_mandate_result.stdout
-            and "completionMandate is missing no skill-imposed token budget" in altered_mandate_result.stdout,
+            and "completionMandate is missing operational policy separation" in altered_mandate_result.stdout,
             "package validator accepted a completion mandate with a token budget",
             errors,
         )

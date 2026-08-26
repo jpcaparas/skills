@@ -7,20 +7,21 @@ Production skill for launching autonomous one-shot website experiments through f
 - A catalogue seeded with 100 prompts spanning interfaces, games, simulations, tools, motion, data, stories, commerce, science, and maps, each with a plain title and scan-friendly description
 - A catalogue-first no-argument response, grouped by namespace with a one-line explanation for every option
 - Silent visual and interaction-first guidance for crafting each finished brief without leaking generic boilerplate into `PROMPT.md`
-- A universal subject-adapted completion mandate in every finished prompt: no shortcuts, no cookie-cutter approximations, no skill-imposed token budget, and full interaction depth
+- A universal subject-adapted completion mandate in every finished prompt: no shortcuts, no cookie-cutter approximations, and full interaction depth, with orchestration policy kept out of the prose
 - One fresh lead subagent per experiment, with no skill-imposed ceiling on descendant count or recursive depth
 - Lead-owned recursive-team orchestration with unrestricted build-agent capability, capacity-aware scheduling, explicit branch ownership, active monitoring, and whole-artifact integration
 - Explicit outer fan-out for multiple leads, workspaces, and same-prompt replicas, with coordinator-private mutually exclusive design territories and strict sibling blindness
 - Same-run reconnect and steering recovery that resumes the existing lead and namespace by default, verifies receipt and prompt identity, and permits only one active owner
+- Bounded two-to-five-minute coordinator liveness checks that distinguish quiet long-running work from suspected zombies and recover only after single-owner safety is proved
 - A lean lead-owned quality gauntlet with explicit mobile-friendliness inspection, consolidated bar-and-artifact review, terminal `READY`, batched material blockers, same-critic targeted rechecks, evidence reuse, and warranted fresh escalation
 - Coupling-aware delegation that reserves parallel work for independently improvable concerns and smooths the integrated artifact before final review
 - Recoverable `.tmp/` isolation during active and non-successful work, with safe exact-path recursive deletion after successful finalization
 - No skill-imposed time, stack, dependency, workflow, source-project, reasoning, tool, or delegation constraints on lead and build work; critics use an adaptive focused profile
 - Evidence-gated WebAssembly selection: reuse proven compiled cores when justified, benchmark uncertain hot paths, and keep ordinary web work in the web stack
 - Live-first public `GET` interfaces with bundled build-time snapshots, explicit freshness states, and tested network, CORS, payload, and schema fallbacks
-- Mouse-and-keyboard-friendly games and simulations with paired WASD and arrow controls, subject-adapted probe requirements in applicable sealed prompts, production-state adapters, transformed-viewpoint checks, and coordinator-owned browser evidence that rejects inverted A/left or D/right behavior
+- Mouse-and-keyboard-friendly games and simulations with paired WASD and arrow controls, natural prose in the sealed prompt, transient run-only probe contracts, production-state adapters, transformed-viewpoint checks, and coordinator-owned browser evidence that rejects inverted A/left or D/right behavior
 - Flat `timestamp-experiment-slug` run directories with atomic `--02` collision suffixes
-- Faithful, fully developed prompt crafting for catalogue and custom briefs, with the complete refined brief preserved in `PROMPT.md`
+- Faithful, fully developed prompt crafting for catalogue and custom briefs, with only the cohesive human experience brief preserved in `PROMPT.md` and machine contracts kept in temporary run state
 - End-to-end UTF-8 preservation for intended punctuation, emoji, and non-Latin scripts, with fail-fast detection of recognizable mojibake
 - A conservative Cloudflare/Vercel Drop-ready `artifact/` with one root `index.html` entrypoint and any supporting asset tree the experience needs
 - A local-only default: Drop compatibility never authorizes Vercel, Cloudflare, ChatGPT, GitHub, or other remote writes; explicit action-and-destination permission is required and retained by the coordinator

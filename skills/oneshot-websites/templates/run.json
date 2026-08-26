@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "3.3",
+  "schemaVersion": "3.4",
   "identity": {
     "model": {"name": "{{MODEL_NAME}}", "key": "{{MODEL_KEY}}"},
     "harness": {"name": "{{HARNESS_NAME}}", "key": "{{HARNESS_KEY}}"},
@@ -30,7 +30,13 @@
     "leadWorkerId": null,
     "descendantWorkerIds": [],
     "recursiveDelegation": "allowed",
-    "skillImposedLimits": "none"
+    "skillImposedLimits": "none",
+    "coordinatorMonitoring": {
+      "required": true,
+      "contractVersion": "1.0",
+      "mode": "bounded-periodic-liveness-checks",
+      "recovery": "same-run-single-owner"
+    }
   },
   "interaction": {
     "directionalControls": {
@@ -38,7 +44,8 @@
       "contractVersion": "1.0",
       "basis": "prepared-prompt-analysis",
       "signals": [],
-      "evidencePath": null
+      "evidencePath": null,
+      "technicalPrompt": null
     }
   }
 }

@@ -20,9 +20,13 @@ from directional_controls import (
     DIRECTIONAL_CONTROL_CONTRACT_VERSION,
     DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA,
     DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX,
+    DIRECTIONAL_TECHNICAL_PROMPT_LIFECYCLE,
+    DIRECTIONAL_TECHNICAL_PROMPT_PATH,
     DirectionalControlError,
     artifact_tree_digest,
+    reject_internal_directional_contract_in_prompt,
     response_matches_direction,
+    validate_directional_technical_prompt_contract,
 )
 from build_catalog_index import (
     CATALOGUE_LOCK,
@@ -37,6 +41,7 @@ from build_catalog_index import (
 )
 from runtime_contract import (
     BoundedReadError,
+    COORDINATOR_MONITORING_CONTRACT,
     experiment_slug,
     find_likely_mojibake,
     identity_key,
@@ -209,7 +214,10 @@ class PreparedRunContracts:
     temporary_cleanup_allowed_on_success: bool
     temporary_cleanup_on_success: bool
     quality_gauntlet: bool
+    coordinator_monitoring: bool
     directional_controls_required: bool
+    directional_contract_version: str
+    directional_technical_prompt_required: bool
     directional_evidence_path: Optional[str]
 
 
@@ -1470,7 +1478,10 @@ def validate_provenance_receipt(
             temporary_cleanup_allowed_on_success=False,
             temporary_cleanup_on_success=False,
             quality_gauntlet=False,
+            coordinator_monitoring=False,
             directional_controls_required=False,
+            directional_contract_version="1.0",
+            directional_technical_prompt_required=False,
             directional_evidence_path=None,
         )
     receipt = load_object(receipt_path, errors)
@@ -1480,7 +1491,10 @@ def validate_provenance_receipt(
             temporary_cleanup_allowed_on_success=False,
             temporary_cleanup_on_success=False,
             quality_gauntlet=False,
+            coordinator_monitoring=False,
             directional_controls_required=False,
+            directional_contract_version="1.0",
+            directional_technical_prompt_required=False,
             directional_evidence_path=None,
         )
     receipt_schema = receipt.get("schemaVersion")
@@ -1491,11 +1505,12 @@ def validate_provenance_receipt(
         "2.1": ("3.1", True, False, False, True),
         "2.2": ("3.2", True, True, False, True),
         "2.3": ("3.3", True, True, True, True),
+        "2.4": ("3.4", True, True, True, True),
     }
     receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
     if receipt_contract is None:
         errors.append(
-            f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, or 2.3"
+            f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, or 2.4"
         )
     (
         expected_run_schema,
@@ -1508,7 +1523,7 @@ def validate_provenance_receipt(
         errors.append(
             f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
         )
-    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2", "2.3"}:
+    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2", "2.3", "2.4"}:
         if receipt.get("runSchemaVersion") != expected_run_schema:
             errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
         receipt_temporary = object_value(receipt.get("temporary"))
@@ -1537,6 +1552,17 @@ def validate_provenance_receipt(
             errors.append(
                 f"{receipt_path}: qualityGauntlet contract does not match the prepared run"
             )
+    current_coordinator_monitoring_contract = receipt_schema == "2.4"
+    if current_coordinator_monitoring_contract:
+        if receipt.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
+            errors.append(
+                f"{receipt_path}: coordinatorMonitoring contract does not match the prepared run"
+            )
+        execution = object_value(run.get("execution"))
+        if execution.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
+            errors.append(
+                f"{run_path}: execution.coordinatorMonitoring must match the coordinator receipt"
+            )
     expected_run_path = run_path.parent.relative_to(root).as_posix()
     if receipt.get("runId") != run_id:
         errors.append(f"{receipt_path}: runId must match {run_id!r}")
@@ -1555,8 +1581,14 @@ def validate_provenance_receipt(
         if receipt_prompt.get("bytes") != len(prompt_bytes):
             errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
     directional_controls_required = False
+    directional_technical_prompt_required = False
     directional_evidence_path: Optional[str] = None
+    expected_directional_contract_version = (
+        DIRECTIONAL_CONTROL_CONTRACT_VERSION if receipt_schema == "2.4" else "1.0"
+    )
     receipt_directional = receipt.get("directionalControls")
+    if receipt_schema == "2.4" and receipt_directional is None:
+        errors.append(f"{receipt_path}: current receipt is missing directionalControls")
     if receipt_directional is not None:
         if not isinstance(receipt_directional, dict):
             errors.append(f"{receipt_path}: directionalControls must be an object")
@@ -1569,10 +1601,10 @@ def validate_provenance_receipt(
                 errors.append(f"{receipt_path}: directionalControls.required must be true or false")
             else:
                 directional_controls_required = required
-            if receipt_directional.get("contractVersion") != DIRECTIONAL_CONTROL_CONTRACT_VERSION:
+            if receipt_directional.get("contractVersion") != expected_directional_contract_version:
                 errors.append(
                     f"{receipt_path}: directionalControls.contractVersion must be exactly "
-                    f"{DIRECTIONAL_CONTROL_CONTRACT_VERSION}"
+                    f"{expected_directional_contract_version}"
                 )
             if basis not in {"prepared-prompt-analysis", "coordinator-required"}:
                 errors.append(f"{receipt_path}: directionalControls.basis is invalid")
@@ -1593,6 +1625,20 @@ def validate_provenance_receipt(
                 )
             elif isinstance(evidence_path, str):
                 directional_evidence_path = evidence_path
+            if receipt_schema == "2.4":
+                expected_technical_prompt = (
+                    {
+                        "path": DIRECTIONAL_TECHNICAL_PROMPT_PATH,
+                        "lifecycle": DIRECTIONAL_TECHNICAL_PROMPT_LIFECYCLE,
+                    }
+                    if required is True
+                    else None
+                )
+                if receipt_directional.get("technicalPrompt") != expected_technical_prompt:
+                    errors.append(
+                        f"{receipt_path}: directionalControls.technicalPrompt does not match the prepared run"
+                    )
+                directional_technical_prompt_required = required is True
             interaction = object_value(run.get("interaction"))
             if interaction.get("directionalControls") != receipt_directional:
                 errors.append(
@@ -1603,7 +1649,10 @@ def validate_provenance_receipt(
         temporary_cleanup_allowed_on_success=temporary_cleanup_allowed_on_success,
         temporary_cleanup_on_success=temporary_cleanup_on_success,
         quality_gauntlet=current_quality_gauntlet_contract,
+        coordinator_monitoring=current_coordinator_monitoring_contract,
         directional_controls_required=directional_controls_required,
+        directional_contract_version=expected_directional_contract_version,
+        directional_technical_prompt_required=directional_technical_prompt_required,
         directional_evidence_path=directional_evidence_path,
     )
 
@@ -1643,9 +1692,9 @@ def validate_directional_control_evidence(
         errors.append(
             f"{evidence_path}: schemaVersion must be exactly {DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA}"
         )
-    if evidence.get("contractVersion") != DIRECTIONAL_CONTROL_CONTRACT_VERSION:
+    if evidence.get("contractVersion") != contracts.directional_contract_version:
         errors.append(
-            f"{evidence_path}: contractVersion must be exactly {DIRECTIONAL_CONTROL_CONTRACT_VERSION}"
+            f"{evidence_path}: contractVersion must be exactly {contracts.directional_contract_version}"
         )
     if evidence.get("runId") != run_id:
         errors.append(f"{evidence_path}: runId must match {run_id!r}")
@@ -1741,7 +1790,7 @@ def validate_run(
         return
 
     schema_version = run.get("schemaVersion")
-    expected_schemas = {"3.0", "3.1", "3.2", "3.3"} if layout == "flat" else {"2.0", "2.1"}
+    expected_schemas = {"3.0", "3.1", "3.2", "3.3", "3.4"} if layout == "flat" else {"2.0", "2.1"}
     if not isinstance(schema_version, str) or schema_version not in expected_schemas:
         errors.append(
             f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
@@ -1790,7 +1839,7 @@ def validate_run(
                     if marker != expected_marker:
                         errors.append(f"{marker_path}: marker does not match run identity.{field}")
     if layout == "flat" and parsed_flat_run_id is not None:
-        if isinstance(schema_version, str) and schema_version in {"3.2", "3.3"}:
+        if isinstance(schema_version, str) and schema_version in {"3.2", "3.3", "3.4"}:
             try:
                 expected_slug = experiment_slug(experiment_name) if experiment_name is not None else None
             except UnicodeEncodeError:
@@ -1861,6 +1910,11 @@ def validate_run(
             else:
                 if not decoded_prompt.strip():
                     errors.append(f"{prompt_path}: preserved prompt must not be blank")
+                if schema_version == "3.4":
+                    try:
+                        reject_internal_directional_contract_in_prompt(decoded_prompt)
+                    except DirectionalControlError as error:
+                        errors.append(f"{prompt_path}: {error}")
                 mojibake = find_likely_mojibake(decoded_prompt)
                 if mojibake is not None:
                     errors.append(
@@ -1919,11 +1973,45 @@ def validate_run(
         ):
             errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
 
+    if schema_version == "3.4" and status != "OK" and temporary_directory is not None:
+        technical_prompt_path = exact_child(temporary_directory, "TECHNICAL_PROMPT.md")
+        if prepared_contracts.directional_technical_prompt_required:
+            if technical_prompt_path is None or not is_regular_file_within(
+                technical_prompt_path,
+                run_path.parent,
+                "transient directional technical prompt",
+                errors,
+            ):
+                errors.append(
+                    f"{run_path}: applicable active run requires exact-case "
+                    ".tmp/TECHNICAL_PROMPT.md"
+                )
+            else:
+                try:
+                    technical_prompt_text = read_regular_file_bounded(
+                        technical_prompt_path,
+                        METADATA_MAX_BYTES,
+                    ).decode("utf-8")
+                    validate_directional_technical_prompt_contract(technical_prompt_text)
+                except (BoundedReadError, UnicodeDecodeError, DirectionalControlError) as error:
+                    errors.append(f"{technical_prompt_path}: {error}")
+        elif technical_prompt_path is not None:
+            errors.append(
+                f"{run_path}: non-applicable run must not create .tmp/TECHNICAL_PROMPT.md"
+            )
+
     execution = object_value(run.get("execution"))
     if execution.get("recursiveDelegation") != "allowed":
         errors.append(f"{run_path}: execution.recursiveDelegation must be exactly allowed")
     if execution.get("skillImposedLimits") != "none":
         errors.append(f"{run_path}: execution.skillImposedLimits must be exactly none")
+    if (
+        prepared_contracts.coordinator_monitoring
+        and execution.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT
+    ):
+        errors.append(
+            f"{run_path}: execution.coordinatorMonitoring must preserve the prepared contract"
+        )
     run_worker_identity = parse_worker_identity(execution, run_path, "execution", errors)
 
     report_path = exact_child(run_path.parent, "worker-report.json")
@@ -1959,6 +2047,14 @@ def validate_run(
             errors.append(f"{report_path}: status must be one of {sorted(STATUSES)}")
         elif status in STATUSES and report_status != status:
             errors.append(f"{report_path}: status must match run.json status {status!r}")
+        if prepared_contracts.coordinator_monitoring:
+            liveness_events = object_value(report.get("observations")).get("livenessEvents")
+            if not isinstance(liveness_events, list) or not all(
+                isinstance(event, dict) for event in liveness_events
+            ):
+                errors.append(
+                    f"{report_path}: observations.livenessEvents must be an array of objects"
+                )
         if prepared_contracts.temporary:
             report_temporary = object_value(report.get("temporary"))
             if report_temporary.get("path") != ".tmp/":

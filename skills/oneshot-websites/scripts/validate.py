@@ -54,8 +54,8 @@ SLUG_RE = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
-CANONICAL_COMPLETION_MANDATE_SHA256 = "48abbf161b35327af91d0761ed3cda54abc61ce68a91be32e5f598fb185bdd79"
-PACKAGE_VERSION = "2.20.0"
+CANONICAL_COMPLETION_MANDATE_SHA256 = "201992e157d431e5509729e26c06b2f6b07954125f5287d2157758f7689a061f"
+PACKAGE_VERSION = "2.21.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -103,9 +103,10 @@ RUNTIME_CONTRACTS = (
         "unbounded full-depth custom prompt refinement",
         re.compile(
             r"^- \*\*Custom brief:\*\*.*?refine.*?fully developed.*?"
-            r"no skill-imposed paragraph or token budget.*?completionMandate.*?"
+            r"no skill-imposed paragraph or token budget.*?complete depth and fidelity.*?"
             r"public `GET`.*?local-snapshot fallback.*?games.*?simulations.*?3D.*?"
-            r"mouse-and-keyboard.*?directional-semantics.*?forbids any applicable appended text.*?"
+            r"mouse-and-keyboard.*?directional-semantics.*?machine contracts out of the actual prompt.*?"
+            r"forbids any applicable experience-level addition.*?"
             r"stop before dispatch.*?never silently omit an applicable requirement.*?$",
             re.I | re.M,
         ),
@@ -119,12 +120,13 @@ RUNTIME_CONTRACTS = (
         ),
     ),
     (
-        "subject-adapted lead-facing completion mandate",
+        "subject-adapted prose completion mandate",
         re.compile(
             r"^The catalogue’s top-level `completionMandate` is different:.*?"
-            r"every prepared actual prompt.*?shortcuts.*?cookie-cutter.*?no token budget limit.*?"
+            r"every prepared actual prompt.*?natural language.*?shortcuts.*?cookie-cutter.*?"
             r"complete subject-specific depth.*?For a replica, clone, or emulator, require.*?"
-            r"smallest meaningful interactions.*?For an original experience, demand equivalent depth.*?$",
+            r"smallest meaningful interactions.*?For an original experience, demand equivalent depth.*?"
+            r"operational lead envelope.*?never add phrases such as.*?token budget limit.*?$",
             re.I | re.M,
         ),
     ),
@@ -147,27 +149,32 @@ RUNTIME_CONTRACTS = (
         "mouse-and-keyboard directional prompt semantics",
         re.compile(
             r"^Every requested game or simulation.*?friendly mouse-and-keyboard path.*?"
-            r"touch or a controller.*?only practical input.*?matching WASD and arrow-key bindings.*?"
-            r"`A` and `ArrowLeft`.*?observable left.*?`D` and `ArrowRight`.*?right.*?"
-            r"`W` and `ArrowUp`.*?forward or upward.*?`S` and `ArrowDown`.*?backward or downward.*?"
-            r"visible.*?touch.*?pointer.*?controller.*?active player-.*?camera-.*?character-.*?vehicle-.*?mode-relative frame.*?"
-            r"world-axis signs.*?rotations.*?parent transforms.*?mirrored models or negative scales.*?control-mode changes.*?"
-            r"rendered movement.*?same seeded state.*?mouse interaction.*?complete keyboard set.*?"
-            r"faithful source.*?nonstandard mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
+            r"`A` and left-arrow inputs.*?left.*?`D` and right-arrow.*?right.*?"
+            r"`W` with up-arrow.*?`S` with down-arrow.*?active player-.*?mode-relative frame.*?"
+            r"observable rendered correctness.*?complete mouse-and-keyboard primary path.*?"
             r"3D experience.*?only when it actually exposes those controls.*?$",
             re.I | re.M,
         ),
     ),
     (
-        "applicable prompt-backed executable directional gate",
+        "prose prompt and transient directional gate separation",
         re.compile(
-            r"Every requested game or simulation.*?finished actual prompt.*?"
-            r"`A` and `ArrowLeft`.*?`D` and `ArrowRight`.*?"
-            r"For every applicable directional game.*?state in the sealed actual prompt.*?"
-            r"production-state browser probe.*?reset a deterministic real state.*?"
-            r"position.*?forward.*?active-frame right basis.*?"
-            r"reject missing, zero, or inverted responses.*?"
-            r"never append it to a passive scene or unrelated website",
+            r"Every requested game or simulation.*?finished brief.*?"
+            r"without turning the brief into a test plan.*?"
+            r"Keep internal globals.*?query flags.*?interface definitions.*?vector schemas.*?"
+            r"browser-gate terminology out of the sealed actual prompt.*?"
+            r"prepare_run\.py.*?\.tmp/TECHNICAL_PROMPT\.md.*?applicable active run.*?"
+            r"do not invent movement bindings for a passive scene",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "human prose prompt surface",
+        re.compile(
+            r"finished refinement.*?cohesive human creative or product brief.*?not.*?coordinator runbook or machine contract.*?"
+            r"must not add internal identifiers.*?schemas.*?TypeScript interfaces.*?query flags.*?tool commands.*?"
+            r"temporary paths.*?role labels.*?mandatory delivery requirements.*?test-harness prose.*?"
+            r"artifact.*?PROMPT\.md.*?none of the separate operational envelope",
             re.I | re.S,
         ),
     ),
@@ -221,6 +228,17 @@ RUNTIME_CONTRACTS = (
             r"prior owning lead has terminated and cannot be resumed.*?fresh no-history recovery lead.*?same run.*?"
             r"inspect and continue the current workspace.*?Never start a replacement while the prior owner may still be active.*?"
             r"exactly one active lead writer at a time",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "bounded coordinator liveness and zombie recovery",
+        re.compile(
+            r"coordinator actively monitors every owning lead.*?bounded heartbeat interval.*?"
+            r"two to five minutes.*?five minutes.*?low-impact liveness request.*?"
+            r"two consecutive bounded checks.*?SUSPECTED_ZOMBIE.*?"
+            r"interrupt that exact lead once.*?proves it terminal or inactive.*?"
+            r"RECOVERY_OWNER_UNCERTAIN.*?never create a parallel writer",
             re.I | re.S,
         ),
     ),
@@ -829,10 +847,22 @@ FILE_RUNTIME_CONTRACTS = (
         "lead production-state directional adapter",
         re.compile(
             r"run\.json\.interaction\.directionalControls.*?required.*?"
-            r"references/directional-controls\.md.*?__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.*?"
+            r"\.tmp/TECHNICAL_PROMPT\.md.*?references/directional-controls\.md.*?"
+            r"__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.*?"
             r"real production player.*?vehicle.*?camera.*?orbit state.*?same keyboard listeners.*?"
             r"parallel test-only state.*?hard-coded direction answer.*?sign correction.*?invalid.*?"
+            r"probe identifier.*?interface.*?schema.*?query flag.*?temporary path out of `artifact/PROMPT\.md`.*?"
             r"coordinator performs the authoritative browser-level input check.*?same run",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-lead.md",
+        "lead liveness response contract",
+        re.compile(
+            r"low-impact liveness request.*?same task.*?current phase.*?last durable progress.*?"
+            r"active tool or concrete blocker.*?next action.*?continue the same run.*?"
+            r"heartbeat is not a new brief.*?duplicate work",
             re.I | re.S,
         ),
     ),
@@ -987,9 +1017,12 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Executable Directional-Control Guidance.*?"
             r"run\.json\.interaction\.directionalControls\.required.*?"
-            r"complete current contents of `references/directional-controls\.md`.*?"
+            r"exact current contents of `\.tmp/TECHNICAL_PROMPT\.md`.*?"
+            r"complete current `references/directional-controls\.md`.*?"
             r"production-state adapter.*?coordinator.*?digest-bound result.*?"
-            r"NOT_APPLICABLE.*?artifact/PROMPT\.md.*?"
+            r"NOT_APPLICABLE.*?Never append.*?probe global.*?query flag.*?interface.*?vector schema.*?"
+            r"artifact/PROMPT\.md.*?natural human experience brief.*?"
+            r"cleanup deletes the transient technical prompt.*?"
             r"\{\{DIRECTIONAL_CONTROL_GUIDANCE\}\}",
             re.I | re.S,
         ),
@@ -998,7 +1031,8 @@ FILE_RUNTIME_CONTRACTS = (
         "references/directional-controls.md",
         "directional-control adapter and browser evidence contract",
         re.compile(
-            r"What the finished prompt must require.*?`A`.*?`ArrowLeft`.*?"
+            r"Transient technical delivery contract.*?\.tmp/TECHNICAL_PROMPT\.md.*?"
+            r"artifact/PROMPT\.md.*?natural-language experience brief.*?`A`.*?`ArrowLeft`.*?"
             r"`D`.*?`ArrowRight`.*?production-state probe.*?"
             r"parallel test-only simulation.*?not acceptable.*?Probe contract.*?"
             r"__ONESHOT_DIRECTIONAL_CONTROL_PROBE__.*?schemaVersion.*?reset\(\).*?sample\(\).*?"
@@ -1064,27 +1098,35 @@ FILE_RUNTIME_CONTRACTS = (
         "protocol mouse-and-keyboard directional prompt semantics",
         re.compile(
             r"Every game or simulation.*?practical mouse-and-keyboard path.*?"
-            r"touch or controller input.*?only practical route.*?paired WASD and arrow-key bindings.*?"
-            r"`A` with `ArrowLeft`.*?left.*?`D` with `ArrowRight`.*?right.*?"
-            r"`W` with `ArrowUp`.*?forward or upward.*?`S` with `ArrowDown`.*?backward or downward.*?"
-            r"visible.*?touch.*?pointer.*?controller.*?active player-.*?camera-.*?character-.*?vehicle-.*?mode-relative frame.*?"
-            r"world-axis signs.*?rotations.*?parent transforms.*?mirrored models or negative scales.*?control-mode changes.*?"
-            r"rendered movement.*?same seeded state.*?ordinary mouse.*?complete keyboard input.*?"
-            r"nonstandard source mapping.*?inversion option.*?practical mouse-and-keyboard path.*?"
+            r"`A` and the left arrow.*?left.*?`D` and the right arrow.*?right.*?"
+            r"`W` with up-arrow.*?`S` with down-arrow.*?active player-.*?mode-relative frame.*?"
+            r"observable rendered correctness.*?complete mouse-and-keyboard usability.*?"
             r"non-game 3D experience.*?only when it actually exposes those controls",
             re.I | re.S,
         ),
     ),
     (
         "references/execution-protocol.md",
-        "protocol prompt-backed executable directional gate",
+        "protocol prose and transient directional gate separation",
         re.compile(
-            r"Every game or simulation.*?finished actual prompt.*?"
-            r"production-state probe from `references/directional-controls\.md`.*?"
-            r"seeded real state.*?position.*?forward.*?active-frame right.*?"
-            r"browser-level input.*?After an applicable lead returns an `OK` artifact.*?"
-            r"verify_directional_controls\.py.*?KeyA.*?ArrowLeft.*?KeyD.*?ArrowRight.*?"
-            r"hashes the artifact tree.*?validate_catalog\.py.*?rejects.*?same lead and namespace",
+            r"Every game or simulation.*?finished actual prompt in natural language.*?"
+            r"`A` and the left arrow.*?`D` and the right arrow.*?"
+            r"without embedding an acceptance-test procedure.*?"
+            r"\.tmp/TECHNICAL_PROMPT\.md.*?not the sealed actual prompt.*?"
+            r"production-state probe.*?reset.*?vector.*?query-flag.*?browser-verification contract",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "references/execution-protocol.md",
+        "protocol bounded coordinator liveness recovery",
+        re.compile(
+            r"Coordinator Liveness Monitoring.*?two to five minutes.*?five minutes.*?"
+            r"one quiet interval is not failure.*?low-impact liveness request.*?"
+            r"active long-running tool call.*?two consecutive bounded checks.*?SUSPECTED_ZOMBIE.*?"
+            r"safe interrupt or cancellation primitive.*?proves the old owner terminal or inactive.*?"
+            r"RECOVERY_OWNER_UNCERTAIN.*?never create a parallel writer or a fresh run.*?"
+            r"observations\.livenessEvents",
             re.I | re.S,
         ),
     ),
@@ -1317,7 +1359,10 @@ def validate_catalogue(data: Any, errors: List[str]) -> None:
         mandate_requirements = (
             ("an explicit no-shortcuts requirement", re.compile(r"\bshortcuts\b", re.I)),
             ("an explicit anti-cookie-cutter requirement", re.compile(r"\bcookie-cutter\b", re.I)),
-            ("no skill-imposed token budget", re.compile(r"\bno token budget limit\b", re.I)),
+            (
+                "operational policy separation",
+                re.compile(r"\bskill policy, token and delegation policy\b.*?\bseparate operational envelope\b", re.I),
+            ),
             ("replica, clone, and emulator coverage", re.compile(r"\breplicas?, clones?, and emulators?\b", re.I)),
             ("small-interaction fidelity", re.compile(r"\bsmallest meaningful interactions\b", re.I)),
             ("original-experience depth", re.compile(r"\boriginal experiences\b.*?\bequivalent depth\b", re.I)),

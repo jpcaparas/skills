@@ -31,6 +31,7 @@ from directional_controls import (
     DIRECTIONAL_CONTROL_CONTRACT_VERSION,
     DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA,
     DIRECTIONAL_CONTROL_PROBE_GLOBAL,
+    DIRECTIONAL_CONTROL_PROBE_SCHEMA,
     ArtifactTreeDigest,
     DirectionalControlError,
     artifact_tree_digest,
@@ -478,7 +479,7 @@ def reset_and_sample(session: CdpSession) -> object:
           return await probe.sample();
         })()
         """
-        % (DIRECTIONAL_CONTROL_PROBE_GLOBAL, json.dumps(DIRECTIONAL_CONTROL_CONTRACT_VERSION))
+        % (DIRECTIONAL_CONTROL_PROBE_GLOBAL, json.dumps(DIRECTIONAL_CONTROL_PROBE_SCHEMA))
     )
 
 

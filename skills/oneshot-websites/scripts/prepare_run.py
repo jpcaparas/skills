@@ -17,13 +17,16 @@ from pathlib import Path
 from typing import Any, Optional, Sequence
 
 from directional_controls import (
+    DIRECTIONAL_TECHNICAL_PROMPT_PATH,
     DirectionalControlError,
     directional_control_contract,
     infer_directional_control_requirement,
-    validate_directional_prompt_contract,
+    reject_internal_directional_contract_in_prompt,
+    validate_directional_technical_prompt_contract,
 )
 from runtime_contract import (
     BoundedReadError,
+    COORDINATOR_MONITORING_CONTRACT,
     experiment_slug,
     find_likely_mojibake,
     identity_key,
@@ -36,6 +39,7 @@ from runtime_contract import (
 CLASSIFICATIONS = ("autonomous-one-shot", "rerun", "curated-attempt")
 METADATA_MAX_BYTES = 1024 * 1024
 PROMPT_MAX_BYTES = 5 * 1024 * 1024
+TECHNICAL_PROMPT_MAX_BYTES = 1024 * 1024
 RUN_NAME_RE = re.compile(
     r"^(?P<timestamp>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})-"
     r"(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)$"
@@ -131,6 +135,24 @@ def read_prompt(path: Path) -> bytes:
             f"{mojibake.offset} ({mojibake.codepoints}): {path}; "
             "correct the prepared prompt at its source, write it as UTF-8, and retry"
         )
+    return prompt
+
+
+def read_directional_technical_prompt() -> bytes:
+    """Load and validate the package-owned transient directional contract."""
+
+    path = Path(__file__).resolve().parent.parent / "references" / "directional-controls.md"
+    try:
+        prompt = read_regular_file_bounded(path, TECHNICAL_PROMPT_MAX_BYTES)
+        decoded = prompt.decode("utf-8")
+    except (BoundedReadError, UnicodeDecodeError) as error:
+        raise RunPreparationError(
+            f"directional technical prompt is unreadable: {path}: {error}"
+        ) from error
+    try:
+        validate_directional_technical_prompt_contract(decoded)
+    except DirectionalControlError as error:
+        raise RunPreparationError(str(error)) from error
     return prompt
 
 
@@ -279,7 +301,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2", "2.3"}
+        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2", "2.3", "2.4"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -419,7 +441,7 @@ def run_document(
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "3.3",
+        "schemaVersion": "3.4",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -441,6 +463,7 @@ def run_document(
             "descendantWorkerIds": [],
             "recursiveDelegation": "allowed",
             "skillImposedLimits": "none",
+            "coordinatorMonitoring": dict(COORDINATOR_MONITORING_CONTRACT),
         },
         "interaction": {"directionalControls": directional_controls},
         "priorRun": prior_run,
@@ -464,10 +487,10 @@ def provenance_receipt(
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
     return {
-        "schemaVersion": "2.3",
+        "schemaVersion": "2.4",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "3.3",
+        "runSchemaVersion": "3.4",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -486,6 +509,7 @@ def provenance_receipt(
             "contractVersion": "1.0",
             "reportSchemaVersion": "2.1",
         },
+        "coordinatorMonitoring": dict(COORDINATOR_MONITORING_CONTRACT),
         "directionalControls": directional_controls,
     }
 
@@ -528,6 +552,7 @@ def initial_worker_report(run_id: str) -> dict[str, Any]:
             "duration": None,
             "cost": None,
             "designTerritory": None,
+            "livenessEvents": [],
         },
     }
 
@@ -545,11 +570,13 @@ def create_run(arguments: argparse.Namespace) -> Path:
         prompt.decode("utf-8"),
         force_required=arguments.directional_controls == "required",
     )
-    if directional_requirement.required:
-        try:
-            validate_directional_prompt_contract(prompt.decode("utf-8"))
-        except DirectionalControlError as error:
-            raise RunPreparationError(str(error)) from error
+    try:
+        reject_internal_directional_contract_in_prompt(prompt.decode("utf-8"))
+    except DirectionalControlError as error:
+        raise RunPreparationError(str(error)) from error
+    directional_technical_prompt = (
+        read_directional_technical_prompt() if directional_requirement.required else None
+    )
     prior_run = prior_run_path(arguments.prior_run, root)
     validate_run_relationship(arguments.classification, prior_run)
     receipt_directory = prepare_provenance_directory(root)
@@ -564,6 +591,10 @@ def create_run(arguments: argparse.Namespace) -> Path:
 
     try:
         paths.temporary.mkdir()
+        if directional_technical_prompt is not None:
+            technical_prompt_path = paths.run / DIRECTIONAL_TECHNICAL_PROMPT_PATH
+            with technical_prompt_path.open("xb") as technical_prompt_destination:
+                technical_prompt_destination.write(directional_technical_prompt)
         paths.workspace.mkdir()
         paths.artifact.mkdir()
         with (paths.artifact / "PROMPT.md").open("xb") as prompt_destination:
@@ -626,6 +657,12 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
             {
                 "runDirectory": str(run.resolve()),
                 "directionalControlsRequired": directional_controls.get("required") is True,
+                "technicalPromptPath": (
+                    str((run / DIRECTIONAL_TECHNICAL_PROMPT_PATH).resolve())
+                    if directional_controls.get("required") is True
+                    else None
+                ),
+                "coordinatorMonitoringRequired": True,
             }
         )
     )

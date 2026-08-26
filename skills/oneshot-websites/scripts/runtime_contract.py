@@ -18,6 +18,12 @@ APPLEDOUBLE_MAGIC = b"\x00\x05\x16\x07"
 JSON_NESTING_MAX = 256
 JSON_NUMBER_TOKEN_MAX_CHARS = 256
 EXPERIMENT_SLUG_MAX_CHARS = 64
+COORDINATOR_MONITORING_CONTRACT: dict[str, object] = {
+    "required": True,
+    "contractVersion": "1.0",
+    "mode": "bounded-periodic-liveness-checks",
+    "recovery": "same-run-single-owner",
+}
 
 _UTF8_LEAD_BYTES_DECODED_AS_CP1252 = frozenset("\u00c2\u00c3\u00e2\u00ef\u00f0")
 

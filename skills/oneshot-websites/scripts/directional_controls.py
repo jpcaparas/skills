@@ -14,10 +14,13 @@ from pathlib import Path
 from typing import Any, Iterable, Mapping, Sequence
 
 
-DIRECTIONAL_CONTROL_CONTRACT_VERSION = "1.0"
+DIRECTIONAL_CONTROL_CONTRACT_VERSION = "1.1"
+DIRECTIONAL_CONTROL_PROBE_SCHEMA = "1.0"
 DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA = "1.0"
 DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX = ".directional-controls.json"
 DIRECTIONAL_CONTROL_PROBE_GLOBAL = "__ONESHOT_DIRECTIONAL_CONTROL_PROBE__"
+DIRECTIONAL_TECHNICAL_PROMPT_PATH = ".tmp/TECHNICAL_PROMPT.md"
+DIRECTIONAL_TECHNICAL_PROMPT_LIFECYCLE = "delete-with-run-temporary-storage"
 DIRECTIONAL_RESPONSE_EPSILON = 1e-4
 
 _GAME_OR_SIMULATION_RE = re.compile(
@@ -149,13 +152,45 @@ def directional_control_contract(
         "basis": requirement.basis,
         "signals": list(requirement.signals),
         "evidencePath": evidence_path,
+        "technicalPrompt": (
+            {
+                "path": DIRECTIONAL_TECHNICAL_PROMPT_PATH,
+                "lifecycle": DIRECTIONAL_TECHNICAL_PROMPT_LIFECYCLE,
+            }
+            if requirement.required
+            else None
+        ),
     }
 
 
-def validate_directional_prompt_contract(prompt: str) -> None:
-    """Reject an applicable prompt that failed to tell the lead about the hard gate."""
+def reject_internal_directional_contract_in_prompt(prompt: str) -> None:
+    """Keep coordinator-only probe syntax out of the portable human prompt."""
+
+    leaked_markers = {
+        DIRECTIONAL_CONTROL_PROBE_GLOBAL,
+        "oneshot-directional-probe=1",
+        "OneshotDirectionalControlProbe",
+        "DirectionalControlSample",
+        "ONESHOT_DIRECTIONAL_CONTROL_PROBE",
+    }
+    leaked = sorted(marker for marker in leaked_markers if marker.casefold() in prompt.casefold())
+    if leaked:
+        raise DirectionalControlError(
+            "artifact/PROMPT.md must remain a prose experience brief and must not contain "
+            "the internal directional-control probe contract: "
+            + ", ".join(leaked)
+            + "; remove the machine contract from the actual prompt because preparation "
+            "creates .tmp/TECHNICAL_PROMPT.md for applicable runs"
+        )
+
+
+def validate_directional_technical_prompt_contract(prompt: str) -> None:
+    """Reject a transient technical prompt that cannot drive the browser gate."""
 
     required_patterns = {
+        "probe global": re.compile(re.escape(DIRECTIONAL_CONTROL_PROBE_GLOBAL)),
+        "query gate": re.compile(r"oneshot-directional-probe=1"),
+        "schema version": re.compile(r"schemaVersion.{0,20}1\.0", re.DOTALL),
         "production-state": re.compile(r"\bproduction[ -]state\b", re.IGNORECASE),
         "probe": re.compile(r"\bprobe\b", re.IGNORECASE),
         "deterministic reset": re.compile(r"\breset\w*\b", re.IGNORECASE),
@@ -172,9 +207,8 @@ def validate_directional_prompt_contract(prompt: str) -> None:
     missing = [label for label, expression in required_patterns.items() if not expression.search(prompt)]
     if missing:
         raise DirectionalControlError(
-            "applicable directional prompt is missing its lead-facing executable gate contract: "
+            "transient directional TECHNICAL_PROMPT.md is missing its executable gate contract: "
             + ", ".join(missing)
-            + "; add a subject-adapted production-state probe requirement before preparation"
         )
 
 

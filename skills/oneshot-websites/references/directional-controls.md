@@ -2,9 +2,11 @@
 
 Read this reference only when the prepared run records `interaction.directionalControls.required: true`. Use it to connect the artifact’s real production control state to the coordinator-owned browser gate. This contract supplements the rendered gauntlet; it does not replace mouse, complete-keyboard, pointer, touch, controller, rotation, transform, or visible-label checks.
 
-## What the finished prompt must require
+## Transient technical delivery contract
 
-The sealed actual prompt must tell the lead that the final artifact will be rejected unless all of these statements are true:
+`prepare_run.py` copies this contract to `.tmp/TECHNICAL_PROMPT.md` for an applicable active run. The coordinator gives that transient file and its contents to the lead separately from the sealed actual prompt. `artifact/PROMPT.md` stays a natural-language experience brief and must not contain this schema, its identifiers, its query flag, or coordinator verification commands.
+
+The lead must deliver all of these outcomes:
 
 - `A` and `ArrowLeft` independently produce observable left in the active control frame.
 - `D` and `ArrowRight` independently produce observable right in that same frame.
@@ -12,7 +14,7 @@ The sealed actual prompt must tell the lead that the final artifact will be reje
 - The probe reads the real player, vehicle, camera, or orbit state used by the rendered experience. A parallel test-only simulation, hard-coded answer, remapped sample, or direct invocation of movement functions is not acceptable.
 - The ordinary rendered gauntlet still checks `W`/`ArrowUp`, `S`/`ArrowDown`, the full mouse-and-keyboard primary path, transformed orientations, other exposed aliases, and visible instructions.
 
-State these requirements in language native to the requested game or 3D experience. Do not append them to passive 3D scenes or ordinary websites with no directional interaction.
+The prompt may still ask naturally for mouse-and-keyboard play and correct left/right behavior when those are product requirements. Keep the machine interface below in the transient technical prompt only. Do not create this file for passive 3D scenes or ordinary websites with no directional interaction.
 
 ## Probe contract
 
@@ -77,6 +79,8 @@ After the lead finalizes the run and removes its run-local `.tmp/`, run:
 Set `ONESHOT_WEBSITES_BROWSER` or pass `--browser` only when automatic Chromium-family discovery does not find the desired compatible executable. The helper launches an isolated loopback-only static server and browser profile, sends browser-level keyboard events, hashes the complete artifact tree, and writes the result to the coordinator-owned evidence path prepared in the receipt.
 
 If the helper fails, do not create another run. Resume the existing lead and namespace, move both statuses back to `RUNNING`, recreate only that run’s `.tmp/`, send the failed key evidence as a correction, and repeat normal finalization. Run the helper again on the repaired `OK` artifact. `scripts/validate_catalog.py` accepts an applicable successful run only when the passing evidence covers all four keys and its artifact digest, file count, and byte count still match.
+
+Successful finalization deletes `.tmp/` in its entirety, so `.tmp/TECHNICAL_PROMPT.md` disappears with the rest of the run-local scratch tree. Interrupted, blocked, and otherwise non-successful runs retain it for same-run recovery. If an identity-verified successful run is explicitly reopened, recreate `.tmp/TECHNICAL_PROMPT.md` from the current compatible contract before resuming work; never reconstruct it inside `artifact/PROMPT.md`.
 
 ## Non-applicable cases
 

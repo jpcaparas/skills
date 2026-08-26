@@ -42,6 +42,14 @@ FINALIZATION_CONTRACTS: Mapping[str, FinalizationContract] = {
             "lifecycle": "retain-until-successful-finalization",
         },
     ),
+    "3.4": FinalizationContract(
+        receipt_schema="2.4",
+        temporary={
+            "path": ".tmp/",
+            "routing": "best-effort-run-local",
+            "lifecycle": "retain-until-successful-finalization",
+        },
+    ),
 }
 
 

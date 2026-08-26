@@ -1265,14 +1265,14 @@
       "id": 102,
       "name": "racing-prompt-and-runtime-gate-reject-inverted-controls",
       "prompt": "Create a browser pod-racing game. Steering must work with A/D and the arrow keys, and I do not want A sending the racer right or D sending it left again.",
-      "expected_output": "The sealed prompt explicitly makes correct paired controls and the production-state browser probe delivery requirements. Preparation marks the run as requiring directional verification, the lead wires the probe to the real racer state and input listeners, and the coordinator sends browser-level A, Left, D, and Right events after finalization. The correct fixture passes; the deliberately inverted fixture fails and cannot validate as OK.",
+      "expected_output": "The sealed prompt describes correct paired controls naturally and contains no probe identifiers, schemas, interfaces, query flags, or test procedure. Preparation marks the run as requiring directional verification and creates .tmp/TECHNICAL_PROMPT.md for the machine contract. The lead wires that probe to the real racer state and input listeners, and the coordinator sends browser-level A, Left, D, and Right events after finalization. The correct fixture passes; the deliberately inverted fixture fails and cannot validate as OK.",
       "files": [
         "evals/files/directional-controls/correct/index.html",
         "evals/files/directional-controls/inverted/index.html"
       ],
       "assertions": [
-        {"text": "Tacks the subject-adapted production-state probe requirement onto the sealed racing prompt", "type": "structural"},
-        {"text": "Refuses to reserve an applicable racing run when the prepared prompt omits that lead-facing gate", "type": "negative"},
+        {"text": "Keeps the sealed racing prompt as natural product prose without internal probe syntax", "type": "structural"},
+        {"text": "Creates the exact transient .tmp/TECHNICAL_PROMPT.md contract for the applicable run", "type": "functional"},
         {"text": "Marks the prepared racing run as requiring coordinator-owned directional verification", "type": "verification"},
         {"text": "Uses browser-level key events and real production vectors to pass the correct fixture", "type": "functional"},
         {"text": "Rejects the deliberately inverted fixture and prevents an OK catalogue result", "type": "negative"},
@@ -1284,13 +1284,53 @@
       "id": 103,
       "name": "passive-three-dimensional-scene-does-not-earn-control-probe",
       "prompt": "Build a passive 3D product gallery that slowly rotates a watch. Visitors can read the details, but there is no orbit, movement, steering, or camera control.",
-      "expected_output": "The coordinator does not invent directional bindings or append the executable control-probe requirement. Preparation records the gate as not required while ordinary responsive, mobile, and artifact checks still apply.",
+      "expected_output": "The coordinator does not invent directional bindings, append an executable control-probe requirement, or create a transient technical prompt. Preparation records the gate as not required while ordinary responsive, mobile, and artifact checks still apply.",
       "assertions": [
         {"text": "Keeps the directional browser gate not required for a passive scene with no directional interaction", "type": "functional"},
         {"text": "Does not append movement bindings or a production-state probe to the sealed prompt", "type": "negative"},
+        {"text": "Does not create .tmp/TECHNICAL_PROMPT.md for the passive scene", "type": "negative"},
         {"text": "Retains ordinary mobile, artifact, and quality checks", "type": "verification"}
       ],
       "tags": ["3d", "directional-controls", "near-miss", "negative"]
+    },
+    {
+      "id": 104,
+      "name": "public-prompt-remains-prose-while-technical-contract-is-transient",
+      "prompt": "Create a browser racing experience with natural A/D and arrow-key steering. Preserve the final request as a readable PROMPT.md that could be handed to a designer.",
+      "expected_output": "The prepared artifact/PROMPT.md is one cohesive human creative brief. It may say naturally that A or left arrow steers left and D or right arrow steers right, but it contains no ONESHOT identifier, TypeScript interface, vector schema, query flag, coordinator command, temporary path, generic mandatory-delivery heading, or acceptance-test procedure. The applicable machine contract exists only at .tmp/TECHNICAL_PROMPT.md during active work and disappears with the entire .tmp directory after successful finalization; artifact/PROMPT.md survives byte-for-byte.",
+      "assertions": [
+        {"text": "Preserves a cohesive human creative or product brief in artifact/PROMPT.md", "type": "structural"},
+        {"text": "Keeps probe globals, schemas, TypeScript interfaces, query flags, commands, temporary paths, and test-harness prose out of the artifact prompt", "type": "negative"},
+        {"text": "Creates the transient technical contract only for the applicable active run", "type": "functional"},
+        {"text": "Deletes TECHNICAL_PROMPT.md with .tmp after successful finalization while preserving PROMPT.md exactly", "type": "verification"}
+      ],
+      "tags": ["prompts", "prose", "directional-controls", "temporary-files", "regression"]
+    },
+    {
+      "id": 105,
+      "name": "zombified-lead-is-detected-and-recovers-in-place",
+      "prompt": "An owning lead on a volatile provider stops changing state and stops responding while its run is still RUNNING. The coordinator itself remains active.",
+      "expected_output": "The coordinator checks the lead at a bounded two-to-five-minute cadence. The first unexplained quiet interval triggers one low-impact liveness request in the same task. After two consecutive checks show no state change, exposed activity, or response, it records SUSPECTED_ZOMBIE and re-queries task, terminal, tool, and owner state. It resumes the current owner when possible; otherwise it interrupts that exact lead once and creates one no-history replacement only after the harness proves the old owner inactive. Recovery continues the same run, prompt, workspace, artifact, and transient state without a parallel writer or fresh namespace.",
+      "assertions": [
+        {"text": "Checks every active owner at least once within the bounded two-to-five-minute cadence", "type": "verification"},
+        {"text": "Requires two quiet observations and one unanswered liveness request before SUSPECTED_ZOMBIE", "type": "structural"},
+        {"text": "Confirms the old owner is terminal or inactive before dispatching a replacement", "type": "negative"},
+        {"text": "Recovers in the same run and records only material exposed liveness events", "type": "functional"}
+      ],
+      "tags": ["subagents", "liveness", "recovery", "volatile-provider", "regression"]
+    },
+    {
+      "id": 106,
+      "name": "quiet-long-running-tool-is-not-misclassified-as-zombie",
+      "prompt": "A lead produces no prose update during a long browser or build command, but the harness still exposes that active tool call and the task remains active.",
+      "expected_output": "The coordinator treats the visible long-running tool as activity, resets or withholds zombie suspicion, and continues bounded monitoring. It does not flood the task with repeated probes, interrupt the build, dispatch a replacement, or spend a new run merely because one wait timed out. If the exposed activity later disappears and two consecutive checks plus one liveness request remain unanswered, the ordinary suspected-zombie sequence may begin.",
+      "assertions": [
+        {"text": "Treats an exposed active long-running tool call as liveness", "type": "functional"},
+        {"text": "Continues bounded monitoring without imposing a build deadline", "type": "verification"},
+        {"text": "Does not interrupt, duplicate, replace, or create a fresh run after one quiet interval", "type": "negative"},
+        {"text": "Uses the normal two-observation threshold only if exposed activity later disappears", "type": "structural"}
+      ],
+      "tags": ["subagents", "liveness", "long-running-tools", "false-positive", "negative"]
     }
   ]
 }

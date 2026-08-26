@@ -9,6 +9,7 @@ You own one isolated experiment. Follow `agents/oneshot-lead.md`.
 - Experiment: {{EXPERIMENT_NAME}}
 - Run directory: `{{RUN_PATH}}`
 - Run-local temporary storage: `{{RUN_PATH}}/.tmp/`
+- Transient technical prompt when applicable: `{{RUN_PATH}}/.tmp/TECHNICAL_PROMPT.md`
 - Temporary cleanup helper: `{{TEMP_CLEANUP_HELPER}}`
 - Workspace: `{{RUN_PATH}}/workspace/`
 - Static artifact: `{{RUN_PATH}}/artifact/`
@@ -51,9 +52,9 @@ When the request or supplied source presents a plausible WebAssembly boundary, t
 
 {{WASM_SELECTION_GUIDANCE}}
 
-## Executable Directional-Control Guidance (operational; delivery requirement is already in the actual prompt)
+## Executable Directional-Control Guidance (transient operational contract; not part of the actual prompt)
 
-When `run.json.interaction.directionalControls.required` is true, the coordinator must include the complete current contents of `references/directional-controls.md` here. Implement its production-state adapter in the final built artifact and exercise it during build verification. The coordinator—not this lead—writes the authoritative digest-bound result outside the run after finalization. When the prepared contract is not required, use `NOT_APPLICABLE: no prepared directional-control browser gate.` Never append this detailed schema or coordinator sequence to `artifact/PROMPT.md`; the sealed prompt already contains the subject-adapted delivery requirement when applicable.
+When `run.json.interaction.directionalControls.required` is true, the coordinator must include the exact current contents of `.tmp/TECHNICAL_PROMPT.md` and the complete current `references/directional-controls.md` contract here. Implement its production-state adapter in the final built artifact and exercise it during build verification. The coordinator—not this lead—writes the authoritative digest-bound result outside the run after finalization. When the prepared contract is not required, use `NOT_APPLICABLE: no prepared directional-control browser gate.` Never append, summarize, or paraphrase the probe global, query flag, interface, vector schema, reset sequence, browser test procedure, temporary path, or generic delivery heading into `artifact/PROMPT.md`; that file remains only the natural human experience brief. Successful cleanup deletes the transient technical prompt with the rest of `.tmp/`.
 
 {{DIRECTIONAL_CONTROL_GUIDANCE}}
 
