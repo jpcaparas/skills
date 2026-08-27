@@ -1,0 +1,46 @@
+[
+  {
+    "query": "Use devils-advocate to grill my plan to rewrite our stable billing service from scratch.",
+    "should_trigger": true
+  },
+  {
+    "query": "Play devil's advocate and make the strongest case against this acquisition proposal.",
+    "should_trigger": true
+  },
+  {
+    "query": "Grill this idea: move the whole company to a four-day week next month with no pilot.",
+    "should_trigger": true
+  },
+  {
+    "query": "Take the opposing side and debate me one exchange at a time about remote-only work.",
+    "should_trigger": true
+  },
+  {
+    "query": "Challenge this proposal as harshly as the evidence permits, but attack the idea rather than me.",
+    "should_trigger": true
+  },
+  {
+    "query": "I have an idea for a weekly release train. Help me make an implementation plan.",
+    "should_trigger": false
+  },
+  {
+    "query": "Is switching our API from REST to GraphQL a good idea? Give me balanced pros and cons.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this pull request critically for correctness, security, and missing tests.",
+    "should_trigger": false
+  },
+  {
+    "query": "What does the phrase devil's advocate mean, and where did it come from?",
+    "should_trigger": false
+  },
+  {
+    "query": "My coworker plays devil's advocate in every meeting and it is exhausting. How should I respond?",
+    "should_trigger": false
+  },
+  {
+    "query": "Fix the factual errors in this proposal and recommend the best option.",
+    "should_trigger": false
+  }
+]

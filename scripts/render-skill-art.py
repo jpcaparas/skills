@@ -46,6 +46,7 @@ SKILL_SCENES = {
     "claude-code-auto-advisor": "a coding cockpit with a main agent console, a glowing advisor beacon, shield gates, review lenses, and careful decision rails",
     "codex-subagents": "a command center splitting one bright task beam into several parallel agent lanes, each returning small summary gems to a central console",
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
+    "devils-advocate": "two opposing debate champions facing each other across a glowing balance arena, with one mirrored argument shield, pressure-test sparks, and a central evidence gem",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",
     "heuristic-to-deterministic": "a workshop converting fuzzy clue clouds into locked gears, check rails, and repeatable test gems",

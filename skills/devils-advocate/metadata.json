@@ -1,0 +1,17 @@
+{
+  "name": "devils-advocate",
+  "display_name": "Devil's Advocate",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Actively invoked debate skill that steelmans an idea, takes the strongest honest opposing position, cross-examines its assumptions, concedes successful rebuttals, and identifies the evidence that would settle the disagreement.",
+  "tags": [
+    "devils-advocate",
+    "debate",
+    "critical-thinking",
+    "decision-making",
+    "assumption-testing",
+    "steelman",
+    "argumentation"
+  ]
+}

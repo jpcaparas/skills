@@ -124,6 +124,16 @@ Codex CLI/App skill for using Codex subagents deliberately: explicit authorizati
 
 Production skill for turning git commits and diffs since an exact date into a feature-grouped, non-technical client update, with strict date handling and repository checks.
 
+### `devils-advocate`
+
+`npx skills add jpcaparas/skills --skill devils-advocate`
+
+<p align="center">
+  <img src="skills/devils-advocate/skill-card.png" alt="16-bit side-scrolling pixel art badge for devils-advocate" width="480">
+</p>
+
+Actively invoked devil's-advocate skill that steelmans an idea, argues the strongest honest opposing case, cross-examines assumptions, concedes successful rebuttals, and identifies the evidence that would settle the debate.
+
 ### `eli12`
 
 `npx skills add jpcaparas/skills --skill eli12`

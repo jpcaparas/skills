@@ -1,0 +1,6 @@
+interface:
+  display_name: "Devil's Advocate"
+  short_description: "Grill an idea from the strongest opposing position"
+  default_prompt: "Play devil's advocate: steelman my idea, make the strongest honest case against it, and pressure-test my rebuttals."
+policy:
+  allow_implicit_invocation: false
