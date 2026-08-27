@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 .venv/
+node_modules/
+.amp/portals/*
 
 # Override any user-global gitignore that hides skill metadata files.
 # Without these negations, files like AGENTS.md can exist locally yet be

@@ -1,0 +1,110 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_ROOT"
+
+step() {
+    local label="$1"
+    shift
+    local started=$SECONDS
+    printf '\n==> %s\n' "$label"
+    "$@"
+    printf '    completed in %ss\n' "$((SECONDS - started))"
+}
+
+install_missing_system_tools() {
+    local -a packages=()
+
+    command -v git >/dev/null 2>&1 || packages+=(git)
+    command -v jq >/dev/null 2>&1 || packages+=(jq)
+    command -v rg >/dev/null 2>&1 || packages+=(ripgrep)
+    command -v http >/dev/null 2>&1 || packages+=(httpie)
+
+    if [ "${#packages[@]}" -eq 0 ]; then
+        echo "Required system tools are already installed."
+        return
+    fi
+
+    sudo apt-get update
+    sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}"
+}
+
+ensure_chromium_browser() {
+    local candidate browser=""
+
+    for candidate in google-chrome google-chrome-stable chromium chromium-browser chrome; do
+        if command -v "$candidate" >/dev/null 2>&1 \
+            && "$candidate" --version >/dev/null 2>&1; then
+            echo "Chromium-family browser is already available as $candidate."
+            return
+        fi
+    done
+
+    for candidate in \
+        "${ONESHOT_WEBSITES_BROWSER:-}" \
+        "${AGENT_BROWSER_EXECUTABLE_PATH:-}" \
+        "$HOME"/.agent-browser/browsers/*/chrome; do
+        if [ -n "$candidate" ] && [ -x "$candidate" ]; then
+            browser="$candidate"
+            break
+        fi
+    done
+
+    if [ -z "$browser" ] && command -v agent-browser >/dev/null 2>&1; then
+        agent-browser install
+        for candidate in "$HOME"/.agent-browser/browsers/*/chrome; do
+            if [ -x "$candidate" ]; then
+                browser="$candidate"
+                break
+            fi
+        done
+    fi
+
+    if [ -z "$browser" ]; then
+        echo "A Chromium-family browser is required by the oneshot-websites validation suite." >&2
+        return 1
+    fi
+
+    sudo ln -sfn "$browser" /usr/local/bin/google-chrome
+    google-chrome --version
+}
+
+create_validation_venv() {
+    local validation_python="${SKILLS_VALIDATION_PYTHON:-python3}"
+
+    if ! command -v "$validation_python" >/dev/null 2>&1 \
+        || ! "$validation_python" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
+        echo "Python 3.11 or newer is required (set SKILLS_VALIDATION_PYTHON to override)." >&2
+        return 1
+    fi
+
+    if [ ! -x .venv/bin/python3 ]; then
+        if ! "$validation_python" -m venv .venv; then
+            rm -rf .venv
+            sudo apt-get update
+            sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-venv
+            "$validation_python" -m venv .venv
+        fi
+    fi
+
+    .venv/bin/python3 -m pip --disable-pip-version-check install -r requirements-validation.txt
+}
+
+install_node_dependencies() {
+    for command_name in node npm npx bun; do
+        if ! command -v "$command_name" >/dev/null 2>&1; then
+            echo "Required command is missing: $command_name" >&2
+            return 1
+        fi
+    done
+
+    scripts/run-pnpm.sh install --frozen-lockfile
+}
+
+step "Install missing system tools" install_missing_system_tools
+step "Make the orb browser available to validation" ensure_chromium_browser
+step "Create the Python validation environment" create_validation_venv
+step "Install locked Node.js dependencies" install_node_dependencies
+
+printf '\nOrb setup complete in %ss.\n' "$SECONDS"

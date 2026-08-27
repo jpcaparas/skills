@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# This repository has no services or authentication to restore after an orb wakes.
+echo "No orb resume steps are required."
