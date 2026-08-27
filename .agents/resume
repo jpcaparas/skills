@@ -1,5 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This repository has no services or authentication to restore after an orb wakes.
-echo "No orb resume steps are required."
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+GEMINI_CLI="${SKILLS_GEMINI_CLI:-gemini}"
+LINK_OUTPUT="$(mktemp)"
+trap 'rm -f "$LINK_OUTPUT"' EXIT
+
+if ! command -v "$GEMINI_CLI" >/dev/null 2>&1; then
+    echo "Gemini CLI is unavailable; rerun .agents/setup." >&2
+    exit 1
+fi
+
+if ! "$GEMINI_CLI" skills link "$REPO_ROOT/skills" --scope user --consent \
+    >"$LINK_OUTPUT" 2>&1; then
+    cat "$LINK_OUTPUT" >&2
+    exit 1
+fi
+echo "Gemini CLI agent skills are ready."

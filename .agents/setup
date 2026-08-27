@@ -102,9 +102,49 @@ install_node_dependencies() {
     scripts/run-pnpm.sh install --frozen-lockfile
 }
 
+install_gemini_cli() {
+    local gemini_cli="${SKILLS_GEMINI_CLI:-gemini}"
+
+    if ! node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 20 ? 0 : 1)'; then
+        echo "Gemini CLI requires Node.js 20 or newer." >&2
+        return 1
+    fi
+
+    if command -v "$gemini_cli" >/dev/null 2>&1 \
+        && "$gemini_cli" skills link --help >/dev/null 2>&1; then
+        "$gemini_cli" --version
+        return
+    fi
+
+    if [ "$gemini_cli" != "gemini" ]; then
+        echo "SKILLS_GEMINI_CLI does not point to a Gemini CLI with Agent Skills support: $gemini_cli" >&2
+        return 1
+    fi
+
+    npm install --global "${SKILLS_GEMINI_CLI_PACKAGE:-@google/gemini-cli@latest}"
+    gemini --version
+}
+
+link_gemini_skills() {
+    local gemini_cli="${SKILLS_GEMINI_CLI:-gemini}"
+    local link_output
+
+    link_output="$(mktemp)"
+    if ! "$gemini_cli" skills link "$REPO_ROOT/skills" --scope user --consent \
+        >"$link_output" 2>&1; then
+        cat "$link_output" >&2
+        rm -f "$link_output"
+        return 1
+    fi
+    rm -f "$link_output"
+    echo "Linked repository skills into Gemini CLI."
+}
+
 step "Install missing system tools" install_missing_system_tools
 step "Make the orb browser available to validation" ensure_chromium_browser
 step "Create the Python validation environment" create_validation_venv
 step "Install locked Node.js dependencies" install_node_dependencies
+step "Install Gemini CLI with Agent Skills support" install_gemini_cli
+step "Link repository skills into Gemini CLI" link_gemini_skills
 
 printf '\nOrb setup complete in %ss.\n' "$SECONDS"
