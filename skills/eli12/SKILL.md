@@ -1,6 +1,6 @@
 ---
 name: eli12
-description: "Explain a codebase, subsystem, feature flow, or file cluster in clear accessible language. Trigger on how does this work, walkthrough, architecture explained simply, eli12, or mental model requests. Do NOT use for bug triage, code review, or code-change tasks."
+description: "Explains codebases and feature flows in accessible language with grounded analogies. Use for simple walkthroughs or mental models; skip bug triage, code review, and code changes."
 compatibility: "Works best in repositories where you can inspect files, search symbols, trace call paths, and optionally fan out read-only subagents for broad questions."
 metadata:
   version: "1.0.0"

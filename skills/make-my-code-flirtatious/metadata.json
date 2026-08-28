@@ -1,0 +1,16 @@
+{
+  "name": "make-my-code-flirtatious",
+  "display_name": "Make My Code Flirtatious",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Fun code-explanation skill that adds a playful, sensual, flirtatious voice while preserving exact control flow, identifiers, side effects, uncertainty, and safety boundaries.",
+  "tags": [
+    "code-explanation",
+    "flirtatious",
+    "playful",
+    "sensual",
+    "technical-writing",
+    "humor"
+  ]
+}

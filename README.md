@@ -224,6 +224,16 @@ Production skill for preventing bloated web-page scaffolds by enforcing lean cop
 
 Fun production skill for deterministically translating plain English into exaggerated LinkedIn-speak parody, reversing bloated thought-leader posts back into blunt English, and generating Kagi comparison URLs for side-by-side checks.
 
+### `make-my-code-flirtatious`
+
+`npx skills add jpcaparas/skills --skill make-my-code-flirtatious`
+
+<p align="center">
+  <img src="skills/make-my-code-flirtatious/skill-card.png" alt="16-bit side-scrolling pixel art badge for make-my-code-flirtatious" width="480">
+</p>
+
+Fun skill for explaining code in a playful, sensual, flirtatious voice while preserving exact technical behavior, evidence boundaries, and a non-graphic code-only target.
+
 ### `markdown-new`
 
 `npx skills add jpcaparas/skills --skill markdown-new`

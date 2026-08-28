@@ -1,0 +1,54 @@
+[
+  {
+    "query": "Use make-my-code-flirtatious to explain this JavaScript closure.",
+    "should_trigger": true
+  },
+  {
+    "query": "Explain this function like the code is flirting, but keep every technical detail accurate.",
+    "should_trigger": true
+  },
+  {
+    "query": "Give me a sensual but non-explicit walkthrough of this authentication middleware.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make this code explanation saucy and tell me exactly where the early return happens.",
+    "should_trigger": true
+  },
+  {
+    "query": "I want a sultry explanation of how these two async functions interact.",
+    "should_trigger": true
+  },
+  {
+    "query": "Tell me what this regex does with playful chemistry metaphors.",
+    "should_trigger": true
+  },
+  {
+    "query": "Explain this function plainly for a junior developer.",
+    "should_trigger": false
+  },
+  {
+    "query": "Rewrite this anniversary message so it sounds more romantic and flirtatious.",
+    "should_trigger": false
+  },
+  {
+    "query": "Make this dashboard look sexy and modern with a dark theme.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this authentication code for vulnerabilities and missing tests.",
+    "should_trigger": false
+  },
+  {
+    "query": "Refactor this API into a clean, sexy interface with fewer methods.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write an explicit erotic story about two programmers.",
+    "should_trigger": false
+  },
+  {
+    "query": "Add playful comments and cheeky variable names directly to this source file.",
+    "should_trigger": false
+  }
+]

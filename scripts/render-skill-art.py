@@ -56,6 +56,7 @@ SKILL_SCENES = {
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
     "lean-text-scaffolding": "a compact layout workbench trimming bulky placeholder ribbons and blank tag blocks into a clean sparse interface panel",
     "linkedin-speak": "a megaphone transforming a small plain block into an overbright beam of geometric confetti",
+    "make-my-code-flirtatious": "two elegant code-block spirits circling a warm glowing heart-shaped logic core, with blush-pink chemistry sparks and precise connector rails",
     "maintainable-app": "a resilient app control room with queue rails, recovery beacons, heartbeat gems, observability signal towers, and shielded service paths",
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
