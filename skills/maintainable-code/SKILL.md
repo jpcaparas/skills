@@ -1,6 +1,6 @@
 ---
 name: maintainable-code
-description: "Passive guidance for maintainable code: decomposition, readable names, safe defaults, side-effect guardrails, compatibility, quality gates, and useful comments. Use when writing, editing, refactoring, reviewing, or planning production code, CI, scripts, configuration, tests, or technical debt. Skip non-code writing and disposable experiments."
+description: "Guide maintainable code with clear names, decomposition, safe defaults, side-effect guardrails, compatibility, comments, and quality gates. Use for production code, refactors, reviews, plans, CI, scripts, config, tests, or technical debt. Skip disposable work."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
   version: "1.1.0"

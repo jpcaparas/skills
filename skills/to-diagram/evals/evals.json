@@ -1,0 +1,208 @@
+{
+  "skill_name": "to-diagram",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "engineering-order-processing-with-retry-and-dead-letter-flow",
+      "prompt": "/to-diagram Turn this order-processing design into an overview for on-call engineers: API validates and stores an order, publishes OrderCreated, inventory and payment consume independently, payment retries transient gateway failures three times, permanent failures compensate inventory, exhausted messages go to a dead-letter queue, and fulfilment starts only after both reservations succeed. Write order-processing.md and order-processing.png.",
+      "expected_output": "Creates exactly order-processing.md and order-processing.png from one Mermaid flowchart. The overview makes the success path obvious while preserving asynchronous consumers, retry exhaustion, compensation, dead-letter handling, and the join before fulfilment.",
+      "assertions": [
+        {
+          "text": "Creates non-empty matching Markdown and PNG deliverables with no persisted .mmd or .svg sidecar",
+          "type": "structural"
+        },
+        {
+          "text": "Uses one flowchart with a clear dominant path and labeled retry, compensation, and dead-letter branches",
+          "type": "functional"
+        },
+        {
+          "text": "Does not incorrectly serialize inventory and payment consumers when the source says they run independently",
+          "type": "negative"
+        },
+        {
+          "text": "Runs Mermaid rendering and reports PNG verification before claiming completion",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "engineering", "export"]
+    },
+    {
+      "id": 2,
+      "name": "scientific-nitrogen-cycle-with-causal-and-uncertain-links",
+      "prompt": "Make a diagram for first-year biology students from these notes about the nitrogen cycle. Separate fixation, nitrification, plant uptake, consumption, ammonification, and denitrification. My notes call one proposed industrial runoff feedback 'likely' but do not establish causation. Export nitrogen-cycle.md and nitrogen-cycle.png.",
+      "expected_output": "Creates one readable cycle-oriented Mermaid flowchart plus matching PNG. It preserves the core transformations, labels the proposed runoff feedback as uncertain rather than causal fact, and explains that uncertainty below the diagram.",
+      "assertions": [
+        {
+          "text": "Represents the scientific cycle with short mechanism labels and a readable feedback path",
+          "type": "functional"
+        },
+        {
+          "text": "Marks the proposed runoff relationship as hypothesized or uncertain and explains it in assumptions",
+          "type": "functional"
+        },
+        {
+          "text": "Does not convert the supplied likely association into an established causal claim",
+          "type": "negative"
+        },
+        {
+          "text": "Produces both requested files from the same Mermaid source",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "scientific", "uncertainty"]
+    },
+    {
+      "id": 3,
+      "name": "general-community-grant-application-process",
+      "prompt": "Explain our community grant process visually for residents: eligibility check, optional pre-application clinic, submission, completeness review, one chance to cure missing documents, panel scoring, conflict recusal, funding decision, agreement, and payment. Keep legal detail in notes and make both Markdown and PNG files.",
+      "expected_output": "Creates a plain-language flowchart grouped into a few meaningful phases. Residents can follow the main route, missing-document loop, recusal handling, and funded/not-funded outcomes without legal paragraphs inside nodes.",
+      "assertions": [
+        {
+          "text": "Uses audience-appropriate language and moves legal detail outside diagram nodes",
+          "type": "functional"
+        },
+        {
+          "text": "Labels eligibility, cure, recusal, and funding outcomes without hiding unsuccessful terminal paths",
+          "type": "functional"
+        },
+        {
+          "text": "Creates exactly one Mermaid diagram represented in matching Markdown and PNG files",
+          "type": "structural"
+        }
+      ],
+      "tags": ["general", "process", "accessibility"]
+    },
+    {
+      "id": 4,
+      "name": "sequence-centered-oauth-device-authorization-flow",
+      "prompt": "Use to-diagram on this device authorization flow. The important thing is who talks to whom: device app requests a device code, user opens the verification URL on another device, authorization server authenticates and asks for consent, the app polls with the documented interval, pending and slow_down responses continue differently, denial stops, and success returns tokens. Export device-auth.md and PNG.",
+      "expected_output": "Chooses one sequenceDiagram because actor exchange and order are dominant. It shows polling responses and terminal denial/success without turning the interaction into a generic component architecture chart.",
+      "assertions": [
+        {
+          "text": "Chooses sequenceDiagram and names the participating actors clearly",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves pending, slow_down, denial, and success behavior in the interaction order",
+          "type": "functional"
+        },
+        {
+          "text": "Does not add undocumented endpoint names, timings, or token fields",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "engineering", "sequence"]
+    },
+    {
+      "id": 5,
+      "name": "state-centered-laboratory-sample-lifecycle",
+      "prompt": "/to-diagram Show the lifecycle of a laboratory sample: collected, labeled, accepted or rejected at accession, stored, checked out for testing, returned to storage, retained, and finally destroyed under policy. A rejected sample cannot re-enter without recollection. I need sample-lifecycle.md and sample-lifecycle.png.",
+      "expected_output": "Chooses one stateDiagram-v2 and preserves allowed transitions, the storage/testing loop, rejection finality, and policy-governed destruction. It produces the two matching files.",
+      "assertions": [
+        {
+          "text": "Uses stateDiagram-v2 because valid lifecycle transitions are the central question",
+          "type": "functional"
+        },
+        {
+          "text": "Shows the testing-to-storage return and does not allow rejected samples to re-enter",
+          "type": "functional"
+        },
+        {
+          "text": "Creates matching Markdown and rendered PNG outputs",
+          "type": "verification"
+        }
+      ],
+      "tags": ["edge", "scientific", "state"]
+    },
+    {
+      "id": 6,
+      "name": "compresses-a-forty-step-runbook-without-erasing-material-branches",
+      "prompt": "Turn this 40-step incident runbook into something executives can understand. Keep escalation, rollback, customer communication, and the declare-resolved gate, but collapse individual shell commands and ticket updates. Deliver incident-response.md and incident-response.png.",
+      "expected_output": "Builds a concise phase-level overview rather than forty nodes, preserves the named material branches and gate, and records collapsed command/ticket detail as an omission below the diagram.",
+      "assertions": [
+        {
+          "text": "Compresses the runbook into a small number of executive-level phases and nodes",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves escalation, rollback, customer communication, and resolution criteria",
+          "type": "functional"
+        },
+        {
+          "text": "Records omitted command and ticket detail rather than silently losing it",
+          "type": "structural"
+        }
+      ],
+      "tags": ["edge", "compression", "audience"]
+    },
+    {
+      "id": 7,
+      "name": "surfaces-material-ambiguity-before-drawing",
+      "prompt": "/to-diagram Diagram our approval flow. One document says security approval happens before legal review; another says legal must finish before security can start. That ordering determines who can work in parallel, and I have no source of truth.",
+      "expected_output": "Asks one focused clarification about the ordering or requests the authoritative source before creating files, because the alternatives materially change the graph. It does not pick an order and present it as established fact.",
+      "assertions": [
+        {
+          "text": "Identifies the security/legal ordering as materially diagram-changing",
+          "type": "functional"
+        },
+        {
+          "text": "Asks one focused clarification instead of a broad questionnaire",
+          "type": "structural"
+        },
+        {
+          "text": "Does not invent an ordering or export a misleading final PNG",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "ambiguity", "evidence"]
+    },
+    {
+      "id": 8,
+      "name": "fails-loudly-when-png-rendering-is-unavailable",
+      "prompt": "Use to-diagram in an environment with Python but no mmdc, node, or npx. I still require both outputs.",
+      "expected_output": "The renderer reports the missing Mermaid CLI routes with an actionable setup or override message. The agent does not claim a PNG was exported and does not substitute a screenshot or unrelated generated image.",
+      "assertions": [
+        {
+          "text": "Reports the missing mmdc/npx dependency and the explicit override route",
+          "type": "verification"
+        },
+        {
+          "text": "Does not claim completion or fabricate a PNG when rendering did not run",
+          "type": "negative"
+        },
+        {
+          "text": "Does not leave a zero-byte or partial PNG at the requested path",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "dependency", "export"]
+    },
+    {
+      "id": 9,
+      "name": "negative-data-chart-request",
+      "prompt": "Plot monthly revenue and churn for the last two years as a dual-axis line chart and export it as PNG.",
+      "expected_output": "The to-diagram skill does not own this request because it is quantitative charting rather than process or concept modeling.",
+      "assertions": [
+        {
+          "text": "Does not use Mermaid process modeling for a quantitative time-series chart",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "invocation", "chart"]
+    },
+    {
+      "id": 10,
+      "name": "negative-image-only-infographic-request",
+      "prompt": "Create a polished social-media infographic image about five healthy sleep habits. I do not want Markdown or Mermaid source.",
+      "expected_output": "The to-diagram skill does not own this image-only infographic request because the user explicitly rejects its Mermaid and Markdown deliverable contract.",
+      "assertions": [
+        {
+          "text": "Does not invoke to-diagram or force Mermaid output onto an image-only infographic request",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative", "invocation", "infographic"]
+    }
+  ]
+}

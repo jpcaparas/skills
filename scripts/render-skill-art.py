@@ -81,6 +81,7 @@ SKILL_SCENES = {
     "synthetic-search": "a zero-retention radar scanning the web through clean privacy lanes",
     "tarsier": "a tiny bicycle courier carrying an art packet through a pixel side-scroller lane",
     "temporal-awareness": "a numeral-free clock tower aligning blank date blocks and live verification beacons",
+    "to-diagram": "a tangled maze of process rails entering a clarity prism and emerging as one clean branching flow with phase gates and an image crystal",
     "travel-plan-spreadsheet-generator": "a travel desk arranging route tiles, luggage, blank tickets, and grid gems",
     "tweet-replicate": "a social portal frame being rebuilt into a local video reel, snapshot tile, and asset crate",
     "zoom-out": "a camera lifting above a code city to reveal modules, routes, and call paths",

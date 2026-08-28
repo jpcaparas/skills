@@ -1,0 +1,4 @@
+interface:
+  display_name: "To Diagram"
+  short_description: "Clarify a complex process as Mermaid and PNG"
+  default_prompt: "Use $to-diagram to turn this complex process or concept into one clear Mermaid diagram and export matching Markdown and PNG files: "

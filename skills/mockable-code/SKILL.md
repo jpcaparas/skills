@@ -1,6 +1,6 @@
 ---
 name: mockable-code
-description: "Passive coding-quality skill for mockable, stubbable, test-double-friendly code. Use whenever writing, editing, refactoring, reviewing, or planning code that touches dependencies, I/O, time, randomness, external services, configuration, or tests. Do NOT use for non-code writing, one-off shell commands, or deliberately throwaway prototypes."
+description: "Guide mockable, test-double-friendly code. Use for code or tests involving dependencies, I/O, time, randomness, configuration, or external services. Skip non-code writing and disposable prototypes."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
   version: "1.0.0"

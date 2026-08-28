@@ -1,6 +1,6 @@
 ---
 name: maintainable-tests
-description: "Passive guidance for maintainable tests that document behavior, isolate side effects, prove compatibility, and resist false positives. Use when writing, editing, refactoring, reviewing, or planning tests, fixtures, mocks, regression coverage, harnesses, edge cases, or testability changes. Skip non-code writing and disposable experiments."
+description: "Guide maintainable tests as behavior documentation with isolated side effects, compatibility coverage, and reliable assertions. Use for tests, fixtures, mocks, regressions, reviews, and testability changes. Skip disposable work."
 compatibility: "No external dependencies. Optional helper scripts require python3."
 metadata:
   version: "1.1.0"

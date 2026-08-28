@@ -474,6 +474,16 @@ Creative one-shot skill that generates a tarsier riding a bicycle as an SVG, a p
 
 Production skill for grounding a session in real system time and timezone, triaging whether a prompt needs live verification, converting relative dates into absolute dates, and avoiding stale-memory answers for models, prices, schedules, laws, and other volatile facts.
 
+### `to-diagram`
+
+`npx skills add jpcaparas/skills --skill to-diagram`
+
+<p align="center">
+  <img src="skills/to-diagram/skill-card.png" alt="16-bit side-scrolling pixel art badge for to-diagram" width="480">
+</p>
+
+General-purpose process-modeling skill that turns convoluted engineering, scientific, and everyday concepts into one clear Mermaid diagram with matching Markdown source and a verified PNG export.
+
 ### `travel-plan-spreadsheet-generator`
 
 `npx skills add jpcaparas/skills --skill travel-plan-spreadsheet-generator`

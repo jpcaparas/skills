@@ -1,0 +1,50 @@
+[
+  {
+    "query": "/to-diagram Explain our payment retry and compensation workflow from these notes and export Markdown plus PNG.",
+    "should_trigger": true
+  },
+  {
+    "query": "Turn this convoluted deployment process into a clear Mermaid diagram and give me both the source document and a PNG.",
+    "should_trigger": true
+  },
+  {
+    "query": "Can you visualize how these immune-response stages, branches, and feedback loops fit together? I need something editable and a raster export.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make this grant approval workflow understandable to non-technical applicants with a process diagram.",
+    "should_trigger": true
+  },
+  {
+    "query": "Map this object's lifecycle and valid transitions as Mermaid, then render it to PNG.",
+    "should_trigger": true
+  },
+  {
+    "query": "Show who talks to whom in this authentication exchange and in what order; save the diagram as Markdown and PNG.",
+    "should_trigger": true
+  },
+  {
+    "query": "Create a bar chart comparing benchmark scores across five models.",
+    "should_trigger": false
+  },
+  {
+    "query": "Generate a glossy infographic image for an executive presentation using Nano Banana.",
+    "should_trigger": false
+  },
+  {
+    "query": "Why does this existing Mermaid snippet fail to parse? Just fix the syntax in chat; do not create files.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write an Azure DevOps wiki page using ::: mermaid blocks and its platform-specific supported syntax.",
+    "should_trigger": false
+  },
+  {
+    "query": "Explain this function line by line without making a diagram.",
+    "should_trigger": false
+  },
+  {
+    "query": "Draw a logo for my workflow automation company and export a transparent PNG.",
+    "should_trigger": false
+  }
+]

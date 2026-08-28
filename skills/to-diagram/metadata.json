@@ -1,0 +1,27 @@
+{
+  "name": "to-diagram",
+  "display_name": "To Diagram",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Turns complex engineering, scientific, and general processes into one clear Mermaid diagram with matching Markdown and PNG deliverables.",
+  "category": "documentation",
+  "tags": [
+    "mermaid",
+    "diagram",
+    "process",
+    "workflow",
+    "engineering",
+    "science",
+    "visualization",
+    "png",
+    "markdown"
+  ],
+  "requires": {
+    "bins": [
+      "python3",
+      "node",
+      "npx"
+    ]
+  }
+}
