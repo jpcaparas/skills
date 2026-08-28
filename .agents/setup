@@ -102,6 +102,15 @@ install_node_dependencies() {
     scripts/run-pnpm.sh install --frozen-lockfile
 }
 
+install_amp_skills() {
+    npx --yes skills add "$REPO_ROOT" \
+        --global \
+        --agent amp \
+        --skill '*' \
+        --yes
+    echo "Installed repository skills into Amp."
+}
+
 install_gemini_cli() {
     local gemini_cli="${SKILLS_GEMINI_CLI:-gemini}"
 
@@ -144,6 +153,7 @@ step "Install missing system tools" install_missing_system_tools
 step "Make the orb browser available to validation" ensure_chromium_browser
 step "Create the Python validation environment" create_validation_venv
 step "Install locked Node.js dependencies" install_node_dependencies
+step "Install repository skills into Amp" install_amp_skills
 step "Install Gemini CLI with Agent Skills support" install_gemini_cli
 step "Link repository skills into Gemini CLI" link_gemini_skills
 
