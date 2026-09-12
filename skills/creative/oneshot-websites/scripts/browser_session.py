@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import AsyncIterator, Literal, Protocol
 
-from playwright.async_api import CDPSession, Page, async_playwright
+from playwright.async_api import Page, async_playwright
 
 
 CLOCK_EPOCH_SECONDS = 946684800  # 2000-01-01T00:00:00Z
@@ -28,7 +28,7 @@ class BrowserSession(Protocol):
     async def advance(self, milliseconds: int) -> None: ...
 
     async def dispatch_key(
-        self, code: str, key: str, virtual_key: int, event_type: Literal["keyDown", "keyUp"]
+        self, code: str, event_type: Literal["keyDown", "keyUp"]
     ) -> None: ...
 
 
@@ -41,9 +41,8 @@ async def default_browser_executable() -> Path:
 class PlaywrightSession:
     """Keep the vendor API and its async scheduling outside the direction rules."""
 
-    def __init__(self, page: Page, cdp: CDPSession) -> None:
+    def __init__(self, page: Page) -> None:
         self.page = page
-        self.cdp = cdp
 
     async def advance(self, milliseconds: int) -> None:
         # run_for fires every due timer/frame; fast_forward deliberately does not.
@@ -51,21 +50,17 @@ class PlaywrightSession:
             await self.page.clock.run_for(milliseconds)
 
     async def dispatch_key(
-        self, code: str, key: str, virtual_key: int, event_type: Literal["keyDown", "keyUp"]
+        self, code: str, event_type: Literal["keyDown", "keyUp"]
     ) -> None:
+        # Let the driver's keyboard map own CDP fields. A Windows VK passed as
+        # nativeVirtualKeyCode creates a different Cocoa key event on macOS.
+        # Playwright still sends trusted Input.dispatchKeyEvent, without that field:
+        # https://github.com/microsoft/playwright/blob/28e86763ac4218fa8602a845f8dec080346688a0/packages/playwright-core/src/server/chromium/crInput.ts
         async with asyncio.timeout(OPERATION_TIMEOUT_SECONDS):
-            await self.cdp.send(
-                "Input.dispatchKeyEvent",
-                {
-                    "type": event_type,
-                    "key": key,
-                    "code": code,
-                    "windowsVirtualKeyCode": virtual_key,
-                    "nativeVirtualKeyCode": virtual_key,
-                    "autoRepeat": False,
-                    "isKeypad": False,
-                },
-            )
+            if event_type == "keyDown":
+                await self.page.keyboard.down(code)
+            else:
+                await self.page.keyboard.up(code)
 
     async def evaluate(self, expression: str) -> object:
         # A reset/sample may await timers or animation frames. Register it before
@@ -131,8 +126,7 @@ async def open_browser_session(url: str, executable: Path) -> AsyncIterator[Brow
                 # https://playwright.dev/python/docs/clock
                 await page.clock.pause_at(CLOCK_EPOCH_SECONDS)
                 await page.goto(url, wait_until="load", timeout=OPERATION_TIMEOUT_SECONDS * 1000)
-                cdp = await context.new_cdp_session(page)
-            yield PlaywrightSession(page, cdp)
+            yield PlaywrightSession(page)
         finally:
             # Playwright owns graceful shutdown, forced recovery, and profile
             # cleanup, rather than deleting a profile while Chromium still writes.

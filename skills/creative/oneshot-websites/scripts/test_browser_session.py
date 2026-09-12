@@ -19,6 +19,7 @@ from verify_directional_controls import ArtifactServer, VerificationError, resol
 class BrowserClockTests(unittest.IsolatedAsyncioTestCase):
     executable: Path
     server: ArtifactServer
+    maxDiff = None
 
     @classmethod
     def setUpClass(cls) -> None:
@@ -60,9 +61,9 @@ class BrowserClockTests(unittest.IsolatedAsyncioTestCase):
                       setInterval(() => result.intervals.push(performance.now()), 20);
                       setTimeout(() => result.timer = performance.now(), 50);
                     })()""")
-                    await session.dispatch_key("KeyA", "a", 65, "keyDown")
+                    await session.dispatch_key("KeyA", "keyDown")
                     await session.advance(64)
-                    await session.dispatch_key("KeyA", "a", 65, "keyUp")
+                    await session.dispatch_key("KeyA", "keyUp")
                     await session.advance(16)
                     self.assertEqual(await session.evaluate("window.clockResult"), {
                         "frames": [16, 32, 48, 64, 80],

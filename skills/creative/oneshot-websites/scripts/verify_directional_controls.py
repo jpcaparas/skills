@@ -57,8 +57,6 @@ class KeyCheck:
     """One physical-key case and its required semantic response."""
 
     code: str
-    key: str
-    virtual_key: int
     expected: str
 
 
@@ -72,10 +70,10 @@ class BrowserInfo:
 
 
 KEY_CHECKS = (
-    KeyCheck("KeyA", "a", 65, "left"),
-    KeyCheck("ArrowLeft", "ArrowLeft", 37, "left"),
-    KeyCheck("KeyD", "d", 68, "right"),
-    KeyCheck("ArrowRight", "ArrowRight", 39, "right"),
+    KeyCheck("KeyA", "left"),
+    KeyCheck("ArrowLeft", "left"),
+    KeyCheck("KeyD", "right"),
+    KeyCheck("ArrowRight", "right"),
 )
 
 
@@ -247,11 +245,11 @@ async def exercise_keys(
         async with open_browser_session(url, executable) as session:
             await wait_for_probe(session)
             before = parse_directional_sample(await reset_and_sample(session))
-            await session.dispatch_key(check.code, check.key, check.virtual_key, "keyDown")
+            await session.dispatch_key(check.code, "keyDown")
             try:
                 await session.advance(hold_milliseconds)
             finally:
-                await session.dispatch_key(check.code, check.key, check.virtual_key, "keyUp")
+                await session.dispatch_key(check.code, "keyUp")
             after = parse_directional_sample(await current_sample(session))
             response = directional_response(before, after)
             results.append({
