@@ -18,7 +18,7 @@ import sys
 import tempfile
 import threading
 import time
-from contextlib import AbstractContextManager
+from contextlib import AbstractContextManager, ExitStack
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from functools import partial
@@ -272,7 +272,10 @@ class CdpSession:
             message["params"] = dict(params)
         self._transport.send_json(message)
         while True:
-            response = self._transport.receive_json()
+            try:
+                response = self._transport.receive_json()
+            except TimeoutError as error:
+                raise VerificationError(f"browser command {method} timed out") from error
             if response.get("id") != request_id:
                 continue
             if "error" in response:
@@ -511,6 +514,25 @@ def dispatch_key(session: CdpSession, check: KeyCheck, event_type: str) -> None:
     )
 
 
+def close_browser_gracefully(session: CdpSession, process: subprocess.Popen[bytes]) -> None:
+    """Await profile writers before the transport and temporary profile close."""
+    if process.poll() is not None:
+        return
+    # SIGTERM can leave Chromium workers writing into a profile during rmtree.
+    # Request normal shutdown while CDP is still connected, then await exit.
+    # https://chromedevtools.github.io/devtools-protocol/tot/Browser/#method-close
+    try:
+        session.call("Browser.close")
+    except (OSError, VerificationError):
+        # Chrome may close the socket before acknowledging its own shutdown.
+        pass
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        # exercise_browser's outer finally still owns terminate/kill recovery.
+        pass
+
+
 def exercise_browser(
     artifact: Path,
     browser: BrowserInfo,
@@ -547,8 +569,12 @@ def exercise_browser(
         try:
             port = wait_for_debug_port(profile, process)
             websocket_url = page_websocket(port, server.url)
-            with WebSocketTransport(websocket_url, CDP_CALL_TIMEOUT_SECONDS) as transport:
+            with (
+                WebSocketTransport(websocket_url, CDP_CALL_TIMEOUT_SECONDS) as transport,
+                ExitStack() as cleanup,
+            ):
                 session = CdpSession(transport)
+                cleanup.callback(close_browser_gracefully, session, process)
                 session.call("Runtime.enable")
                 session.call("Page.enable")
                 session.call("Page.bringToFront")

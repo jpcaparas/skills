@@ -21,9 +21,10 @@ from concurrent.futures import ThreadPoolExecutor
 from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import validate_catalog as catalog_validator
+import verify_directional_controls as browser_verifier
 from build_catalog_index import CATALOGUE_LOCK, parse_flat_run_id
 from cleanup_run_tmp import cleanup_run_temporary
 from directional_controls import (
@@ -2154,6 +2155,114 @@ def exercise_adversarial_contract(
         with (artifact / "total-overflow.bin").open("wb") as handle:
             handle.truncate(1)
         assert_invalid_catalog(validator, total_root, "exceeds the conservative 100 MiB", "100 MiB plus one byte", errors)
+
+
+def exercise_browser_shutdown(errors: List[str]) -> None:
+    """Shutdown must finish before removing the profile, even on probe failure."""
+    cases = (
+        ("graceful exit", None, 0),
+        ("socket closes before acknowledgement", OSError("socket closed"), 0),
+        ("unresponsive browser", browser_verifier.VerificationError("CDP timeout"), 2),
+    )
+    for label, close_error, wait_timeouts in cases:
+        events: list[str] = []
+        profiles: list[Path] = []
+        process = Mock(spec=subprocess.Popen)
+        process.poll.return_value = None
+        session = Mock(spec=browser_verifier.CdpSession)
+        waits = 0
+
+        def launch(command: Sequence[str], **_options: object) -> Mock:
+            profiles.append(
+                Path(
+                    next(
+                        part.split("=", 1)[1]
+                        for part in command
+                        if part.startswith("--user-data-dir=")
+                    )
+                )
+            )
+            return process
+
+        def command(method: str) -> Mapping[str, object]:
+            if method == "Browser.close":
+                events.append("close requested")
+                if close_error is not None:
+                    raise close_error
+            return {}
+
+        def wait(timeout: float) -> int:
+            nonlocal waits
+            waits += 1
+            assert_ok(profiles[0].is_dir(), f"{label}: profile removed before process exit", errors)
+            if waits <= wait_timeouts:
+                events.append("wait timed out")
+                raise subprocess.TimeoutExpired("chromium", timeout)
+            events.append("process exited")
+            process.poll.return_value = 0
+            return 0
+
+        session.call.side_effect = command
+        process.wait.side_effect = wait
+        process.terminate.side_effect = lambda: events.append("terminate")
+        process.kill.side_effect = lambda: events.append("kill")
+        with (
+            tempfile.TemporaryDirectory() as artifact_value,
+            patch.object(browser_verifier.subprocess, "Popen", side_effect=launch),
+            patch.object(browser_verifier, "wait_for_debug_port", return_value=12345),
+            patch.object(
+                browser_verifier, "page_websocket", return_value="ws://127.0.0.1:12345/page"
+            ),
+            patch.object(browser_verifier, "WebSocketTransport") as transport,
+            patch.object(browser_verifier, "CdpSession", return_value=session),
+            patch.object(
+                browser_verifier,
+                "wait_for_probe",
+                side_effect=browser_verifier.VerificationError("probe unavailable"),
+            ),
+        ):
+            transport.return_value.__exit__.side_effect = lambda *_args: events.append(
+                "transport closed"
+            )
+            try:
+                browser_verifier.exercise_browser(
+                    Path(artifact_value),
+                    browser_verifier.BrowserInfo(Path("fake-chromium"), "fixture", "1"),
+                    1,
+                )
+            except browser_verifier.VerificationError as error:
+                assert_ok(
+                    str(error) == "probe unavailable",
+                    f"{label}: cleanup masked the probe error",
+                    errors,
+                )
+            else:
+                errors.append(f"{label}: failed probe was accepted")
+
+        expected = ["close requested", "process exited", "transport closed"]
+        if wait_timeouts:
+            expected = [
+                "close requested",
+                "wait timed out",
+                "transport closed",
+                "terminate",
+                "wait timed out",
+                "kill",
+                "process exited",
+            ]
+        assert_ok(events == expected, f"{label}: unsafe browser shutdown order: {events}", errors)
+        assert_ok(not profiles[0].exists(), f"{label}: browser profile leaked", errors)
+
+    transport = Mock(spec=browser_verifier.WebSocketTransport)
+    transport.receive_json.side_effect = TimeoutError("socket timed out")
+    try:
+        browser_verifier.CdpSession(transport).call("Runtime.evaluate")
+    except browser_verifier.VerificationError as error:
+        assert_ok(
+            "Runtime.evaluate timed out" in str(error), "CDP timeout lost the command name", errors
+        )
+    else:
+        errors.append("CDP timeout did not fail verification")
 
 
 def exercise_runtime_scripts(skill: Path, errors: List[str]) -> None:
@@ -5989,6 +6098,7 @@ def main() -> int:
     skill = Path(sys.argv[1]).resolve()
     errors: List[str] = []
     check_evals(skill, errors)
+    exercise_browser_shutdown(errors)
     exercise_runtime_scripts(skill, errors)
     exercise_package_validator(skill, errors)
 
