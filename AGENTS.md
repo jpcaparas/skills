@@ -28,9 +28,13 @@ validation_python="${SKILLS_VALIDATION_PYTHON:-python3}"
 source .venv/bin/activate
 python -m pip install --upgrade pip
 python -m pip install -r requirements-validation.txt
+python -m playwright install chromium --no-shell
+scripts/run-pnpm.sh install --frozen-lockfile
 ```
 
 Native validation also requires Bun, Node.js with `npx`, Git, `jq`, and ripgrep (`rg`). Put compatible executables on `PATH`, or select non-standard installations with `SKILLS_VALIDATION_PYTHON`, `SKILLS_VALIDATION_BUN`, `SKILLS_VALIDATION_NODE`, and `SKILLS_VALIDATION_NPX`. These userland runtimes intentionally accept compatible versions; the hosted workflow remains deterministic and currently pins Python 3.11, Node.js 24, and Bun 1.3.11.
+
+The gauntlet uses the locked local skills installer and the Chromium revision belonging to the pinned Playwright package. It never downloads the latest installer during validation or discovers an arbitrary browser on `PATH`. On Linux, add `--with-deps` to the browser installation when system libraries are missing. The directional gate advances a paused clock explicitly; do not restore real-time sleeps or retry a failing fixture until it passes.
 
 Tests that execute temporary tool doubles use `scripts/executable-temp-dir.sh`. The helper probes the normal temporary filesystem and falls back to the repository filesystem when the host mounts its temporary directory with `noexec`. Set `SKILLS_EXECUTABLE_TMPDIR` to an existing writable, executable directory to select a different location explicitly.
 
@@ -77,7 +81,7 @@ Refresh prompt files without network access using `python3 scripts/render-skill-
 
 ## Amp orb lifecycle
 
-- `.agents/setup` prepares a new orb with required system tools, a Chromium-family browser, the Python validation environment, locked Node dependencies, repository skills, and Gemini CLI skill links.
+- `.agents/setup` prepares a new orb with required system tools, the pinned Playwright Chromium revision, the Python validation environment, locked Node dependencies, repository skills, and Gemini CLI skill links.
 - `.agents/resume` is intentionally lighter: it rechecks the repository skill links when a warm orb resumes.
 - `.amp/plugins/repository-hooks.ts` records the repository baseline on Amp `session.start` and runs the shared stop checker on successful `agent.end`. There is intentionally no second `SessionEnd` gate.
 - Changes to `.agents/setup` apply to future orbs only after they are published on the repository's default branch. Do not claim that publication, deployment, pushes, or CI occurred unless verified separately.

@@ -78,7 +78,7 @@ if [ -z "$VALIDATION_PYTHON" ] \
     exit 1
 fi
 
-if ! "$VALIDATION_PYTHON" -c 'import openpyxl, yaml' >/dev/null 2>&1; then
+if ! "$VALIDATION_PYTHON" -c 'import openpyxl, yaml, playwright.async_api' >/dev/null 2>&1; then
     {
         echo "ERROR: native validation requires the pinned Python packages."
         echo "Install them with: $VALIDATION_PYTHON -m pip install -r requirements-validation.txt"

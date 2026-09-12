@@ -46,7 +46,13 @@ if [ -n "$DISCOVERY_FIXTURE" ]; then
     fi
     cp "$DISCOVERY_FIXTURE" "$OUTPUT_FILE"
 else
-    if ! npx --yes skills add . --list >"$OUTPUT_FILE" 2>&1; then
+    # The real installer is locked with its transitive dependencies. Do not use
+    # npx's network/cache fallback: a new upstream release must not change a gate.
+    if [ ! -x "$REPO_ROOT/node_modules/.bin/skills" ]; then
+        echo "ERROR: install the locked discovery tool with scripts/run-pnpm.sh install --frozen-lockfile" >&2
+        exit 1
+    fi
+    if ! "$REPO_ROOT/node_modules/.bin/skills" add . --list >"$OUTPUT_FILE" 2>&1; then
         cat "$OUTPUT_FILE" >&2
         exit 1
     fi

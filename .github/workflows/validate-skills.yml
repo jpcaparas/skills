@@ -101,10 +101,21 @@ jobs:
 
       - name: Install Python Validation Packages
         if: ${{ !env.ACT || runner.os == 'Linux' }}
-        # Required by the workbook smoke tests and strict YAML validation.
+        # Includes the exact browser-driver version used by the directional gate.
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements-validation.txt
+
+      - name: Install Pinned Chromium
+        shell: bash
+        # Use Playwright's matching revision on both hosted OSes and act, never
+        # a changing runner image's Chrome. The gate uses the full Chromium binary.
+        run: python3 -m playwright install chromium --no-shell --with-deps
+
+      - name: Install Locked Node Validation Packages
+        shell: bash
+        # Includes the real skills installer and its transitive dependencies.
+        run: scripts/run-pnpm.sh install --frozen-lockfile
 
       - name: Print Validation Tool Versions
         shell: bash
@@ -118,7 +129,5 @@ jobs:
 
       - name: Validate Skills
         shell: bash
-        # CI validation is driven by the repository scripts directly; it does
-        # not depend on node_modules, so skip pnpm install and run the shared
-        # validator entrypoint that local validation uses too.
+        # Use the same entrypoint as native validation and the stop hooks.
         run: bash scripts/validate-all-skills.sh

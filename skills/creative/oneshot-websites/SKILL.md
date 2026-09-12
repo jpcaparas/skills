@@ -31,6 +31,8 @@ The shipped coordinator helpers support Python 3.11 or newer; they do not requir
 
 The override names one executable and contains no flags. On Windows, select any compatible `python.exe`, or invoke a launcher such as `py -3` directly in place of the quoted expression. This runtime choice belongs only to the coordinator utilities; it places no language, framework, runtime, or dependency constraint on the one-shot lead.
 
+The directional browser gate and package tests additionally require Playwright and its matching Chromium revision. Before running them, follow the environment setup in `references/directional-controls.md`; catalogue listing and preparation remain standard-library-only.
+
 ## Route the Invocation
 
 - **No brief or arguments:** catalogue-first is mandatory. Before asking a question, presenting a menu, requesting an ID or slug, or offering to choose for the user, run `scripts/list_prompts.py` with no filters and make its complete stdout the first substantive response content. The listing is grouped by namespace, explains every namespace, and gives every prompt a one-line description. Never make “list the catalogue” an option the user must request. If an undecided user says “let me choose,” “show me the options,” or that they do not know the IDs or slugs, show the complete unfiltered listing immediately.

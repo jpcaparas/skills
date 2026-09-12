@@ -30,46 +30,6 @@ install_missing_system_tools() {
     sudo DEBIAN_FRONTEND=noninteractive apt-get install -y "${packages[@]}"
 }
 
-ensure_chromium_browser() {
-    local candidate browser=""
-
-    for candidate in google-chrome google-chrome-stable chromium chromium-browser chrome; do
-        if command -v "$candidate" >/dev/null 2>&1 \
-            && "$candidate" --version >/dev/null 2>&1; then
-            echo "Chromium-family browser is already available as $candidate."
-            return
-        fi
-    done
-
-    for candidate in \
-        "${ONESHOT_WEBSITES_BROWSER:-}" \
-        "${AGENT_BROWSER_EXECUTABLE_PATH:-}" \
-        "$HOME"/.agent-browser/browsers/*/chrome; do
-        if [ -n "$candidate" ] && [ -x "$candidate" ]; then
-            browser="$candidate"
-            break
-        fi
-    done
-
-    if [ -z "$browser" ] && command -v agent-browser >/dev/null 2>&1; then
-        agent-browser install
-        for candidate in "$HOME"/.agent-browser/browsers/*/chrome; do
-            if [ -x "$candidate" ]; then
-                browser="$candidate"
-                break
-            fi
-        done
-    fi
-
-    if [ -z "$browser" ]; then
-        echo "A Chromium-family browser is required by the oneshot-websites validation suite." >&2
-        return 1
-    fi
-
-    sudo ln -sfn "$browser" /usr/local/bin/google-chrome
-    google-chrome --version
-}
-
 create_validation_venv() {
     local validation_python="${SKILLS_VALIDATION_PYTHON:-python3}"
 
@@ -103,7 +63,7 @@ install_node_dependencies() {
 }
 
 install_amp_skills() {
-    npx --yes skills add "$REPO_ROOT" \
+    "$REPO_ROOT/node_modules/.bin/skills" add "$REPO_ROOT" \
         --global \
         --agent amp \
         --skill '*' \
@@ -130,13 +90,17 @@ install_gemini_cli() {
         return 1
     fi
 
-    npm install --global "${SKILLS_GEMINI_CLI_PACKAGE:-@google/gemini-cli@latest}"
+    # A fresh orb installs the reviewed release; compatible preinstalled clients
+    # and explicit userland overrides remain supported.
+    npm install --global "${SKILLS_GEMINI_CLI_PACKAGE:-@google/gemini-cli@0.59.0}"
     gemini --version
 }
 
 step "Install missing system tools" install_missing_system_tools
-step "Make the orb browser available to validation" ensure_chromium_browser
 step "Create the Python validation environment" create_validation_venv
+# Playwright's pinned package selects the revision; its installer reuses a
+# matching cache. Never substitute whatever Chrome happens to be on PATH.
+step "Install the gauntlet's Chromium revision" .venv/bin/python3 -m playwright install chromium --no-shell
 step "Install locked Node.js dependencies" install_node_dependencies
 step "Install repository skills into Amp" install_amp_skills
 step "Install Gemini CLI with Agent Skills support" install_gemini_cli

@@ -116,6 +116,24 @@ assert_fails_with "duplicate discovery output" "$DUPLICATE_OUTPUT" \
 assert_fails_with "unexpected discovery output" "$UNEXPECTED_OUTPUT" \
     "unexpected skill names in discovery output"
 
+# A clean checkout without installed dependencies must fail with an install
+# command, not resolve a cached or remote npm package. Bash reads this copy;
+# no executable test double is needed on a potentially noexec temporary mount.
+mkdir -p "$TEST_ROOT/scripts"
+cp "$CHECK_SCRIPT" "$TEST_ROOT/scripts/"
+if missing_install_output="$(PATH="$FAKE_BIN:$PATH" \
+    SKILLS_DISCOVERY_OUTPUT_FILE= \
+    bash "$TEST_ROOT/scripts/check-codex-skills-context-budget.sh" 2>&1)"; then
+    fail "missing locked installer unexpectedly passed"
+fi
+case "$missing_install_output" in
+    *"install the locked discovery tool"*) ;;
+    *) fail "missing installer did not explain the frozen-lockfile repair: $missing_install_output" ;;
+esac
+case "$missing_install_output" in
+    *"unexpectedly invoked npx"*) fail "missing installer fell back to npx" ;;
+esac
+
 mkdir -p "$SKILLS_ROOT/testing/symlinked"
 ln -s "$SKILLS_ROOT/testing/alpha/SKILL.md" "$SKILLS_ROOT/testing/symlinked/SKILL.md"
 assert_fails_with "symlinked SKILL.md" "$VALID_OUTPUT" \

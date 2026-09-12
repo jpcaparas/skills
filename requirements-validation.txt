@@ -3,3 +3,10 @@ openpyxl==3.1.5
 PyYAML==6.0.3
 numpy==2.4.2
 Pillow==12.3.0
+# Owns the controlled clock and the exact Chromium revision used by the gauntlet.
+playwright==1.62.0
+# Pin the runtime dependency closure too; fresh CI must not resolve new versions.
+et_xmlfile==2.0.0
+greenlet==3.5.5
+pyee==13.0.1
+typing_extensions==4.16.0

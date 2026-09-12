@@ -69,6 +69,15 @@ Choose the single measurement that most directly represents the presented contro
 
 ## Coordinator sequence
 
+For an installed skill, prepare a Python 3.11+ environment once, from the skill directory:
+
+```bash
+"${ONESHOT_WEBSITES_PYTHON:-python3}" -m pip install -r requirements-browser.txt
+"${ONESHOT_WEBSITES_PYTHON:-python3}" -m playwright install chromium --no-shell
+```
+
+The package accepts the compatible Playwright range in `requirements-browser.txt`. Repository validation instead uses the exact release in the root `requirements-validation.txt` and its matching Chromium revision on both Ubuntu and macOS. On Linux, add `--with-deps` to the browser installation if system libraries are missing.
+
 After the lead finalizes the run and removes its run-local `.tmp/`, run:
 
 ```bash
@@ -76,7 +85,9 @@ After the lead finalizes the run and removes its run-local `.tmp/`, run:
   --run "<exact-run-directory>"
 ```
 
-Set `ONESHOT_WEBSITES_BROWSER` or pass `--browser` only when automatic Chromium-family discovery does not find the desired compatible executable. The helper launches an isolated loopback-only static server and browser profile, sends browser-level keyboard events, hashes the complete artifact tree, and writes the result to the coordinator-owned evidence path prepared in the receipt.
+The default browser is the revision belonging to the installed Playwright release, not a browser discovered on `PATH`. Set `ONESHOT_WEBSITES_BROWSER` or pass `--browser` to deliberately select a compatible Chromium executable; an invalid override fails rather than silently falling back. The helper launches an isolated loopback-only static server and a fresh browser context for every key, sends browser-level keyboard events, hashes the complete artifact tree, and writes the result to the coordinator-owned evidence path prepared in the receipt.
+
+The browser clock starts paused at 2000-01-01 UTC before navigation. Playwright's `run_for` advances every due timer and animation frame, including the exact `--hold-ms` interval (400 ms by default). Reset/sample promises are registered before advancing in 16 ms steps. No wall-clock sleep, native refresh-rate wait, skipped-frame fast-forward, or retry-until-green determines movement. Real-time deadlines are watchdog failures only. The probe must seed its own randomness and await any worker or asset readiness; the page clock does not make unrelated network responses, GPU rendering, or worker computations deterministic. Such work must not race the sampled production state. Clock configuration is recorded alongside keyboard input in the evidence. See the [Playwright clock contract](https://playwright.dev/python/docs/clock).
 
 If the helper fails, do not create another run. Resume the existing lead and namespace, move both statuses back to `RUNNING`, recreate only that run’s `.tmp/`, send the failed key evidence as a correction, and repeat normal finalization. Run the helper again on the repaired `OK` artifact. `scripts/validate_catalog.py` accepts an applicable successful run only when the passing evidence covers all four keys and its artifact digest, file count, and byte count still match.
 
