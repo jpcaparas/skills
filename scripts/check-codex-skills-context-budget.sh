@@ -80,34 +80,14 @@ LC_ALL=C sed -n -E 's/^│ {2,4}([a-z0-9][a-z0-9-]*)$/\1/p' "$PLAIN_FILE" \
 LC_ALL=C uniq "$DISCOVERED_NAMES_FILE" >"$DISCOVERED_UNIQUE_FILE"
 LC_ALL=C uniq -d "$DISCOVERED_NAMES_FILE" >"$DUPLICATE_NAMES_FILE"
 
-if [ ! -d "$SKILLS_ROOT" ]; then
-    echo "ERROR: skills root not found: $SKILLS_ROOT" >&2
-    exit 1
+# Capture directly: process substitution would mask a failed inventory reader
+# and could turn a partial or empty inventory into a successful discovery check.
+validation_python="${SKILLS_VALIDATION_PYTHON:-}"
+if [ -z "$validation_python" ] && [ -x "$REPO_ROOT/.venv/bin/python3" ]; then
+    validation_python="$REPO_ROOT/.venv/bin/python3"
 fi
-
-SYMLINKED_SKILL_MD="$({
-    find "$SKILLS_ROOT" -mindepth 2 -maxdepth 2 -type l -name SKILL.md -print -quit
-} 2>/dev/null)"
-if [ -n "$SYMLINKED_SKILL_MD" ]; then
-    echo "ERROR: installable SKILL.md must not be a symlink: $SYMLINKED_SKILL_MD" >&2
-    exit 1
-fi
-
-# Keep expected discovery aligned with the repository-wide validator: only
-# direct child directories containing a regular SKILL.md are installable.
-while IFS= read -r skill_dir; do
-    printf '%s\n' "${skill_dir##*/}"
-done < <(
-    find "$SKILLS_ROOT" -mindepth 1 -maxdepth 1 -type d \
-        -exec test -f "{}/SKILL.md" ';' \
-        -exec test ! -L "{}/SKILL.md" ';' -print \
-        | LC_ALL=C sort
-) >"$EXPECTED_NAMES_FILE"
-
-if [ ! -s "$EXPECTED_NAMES_FILE" ]; then
-    echo "ERROR: no installable skills found under $SKILLS_ROOT" >&2
-    exit 1
-fi
+"${validation_python:-python3}" "$SCRIPT_DIR/skill_catalog.py" \
+    --skills-root "$SKILLS_ROOT" --names >"$EXPECTED_NAMES_FILE"
 
 LC_ALL=C comm -23 "$EXPECTED_NAMES_FILE" "$DISCOVERED_UNIQUE_FILE" >"$MISSING_NAMES_FILE"
 LC_ALL=C comm -13 "$EXPECTED_NAMES_FILE" "$DISCOVERED_UNIQUE_FILE" >"$UNEXPECTED_NAMES_FILE"

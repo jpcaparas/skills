@@ -10,6 +10,7 @@ from pathlib import Path
 
 import yaml
 
+from skill_catalog import discover_skills
 from yaml_validation import load_unique_yaml
 
 
@@ -56,14 +57,11 @@ def parse_description(path: Path) -> str:
 def collect(repo_root: Path) -> list[SkillDescription]:
     skills_root = repo_root / "skills"
     descriptions: list[SkillDescription] = []
-    for skill_md in sorted(skills_root.glob("*/SKILL.md")):
-        if skill_md.is_symlink():
-            raise ValueError(
-                f"{skill_md.relative_to(repo_root)} must be a regular file, not a symlink"
-            )
+    for skill in discover_skills(skills_root):
+        skill_md = skill.directory / "SKILL.md"
         descriptions.append(
             SkillDescription(
-                name=skill_md.parent.name,
+                name=skill.name,
                 path=skill_md,
                 description=parse_description(skill_md),
             )

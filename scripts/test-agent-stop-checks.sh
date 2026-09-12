@@ -128,6 +128,9 @@ fi
 EOF
 
 git -C "$TEST_REPO" init -q
+# Fixture commits must not inherit a developer or CI runner's global signing
+# policy. Keep the override local to this disposable repository.
+git -C "$TEST_REPO" config commit.gpgSign false
 git -C "$TEST_REPO" config user.email "stop-checks-test@example.invalid"
 git -C "$TEST_REPO" config user.name "Stop Checks Test"
 printf 'baseline\n' >"$TEST_REPO/tracked.txt"

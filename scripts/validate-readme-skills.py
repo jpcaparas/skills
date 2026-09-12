@@ -7,6 +7,7 @@ import sys
 from pathlib import Path
 
 from readme_markdown import markdown_visible_text
+from skill_catalog import CATEGORIES, Skill, discover_skills
 
 
 REPO_SLUG = "jpcaparas/skills"
@@ -20,10 +21,11 @@ def fail(errors: list[str]) -> int:
     return 1
 
 
-def validate_readme_catalog(readme: str, skill_names: list[str]) -> list[str]:
+def validate_readme_catalog(readme: str, skills: list[Skill]) -> list[str]:
     """Return catalog errors for the README content visible to readers."""
 
     visible_readme = markdown_visible_text(readme)
+    skill_names = [skill.name for skill in skills]
     errors: list[str] = []
 
     available_match = re.search(
@@ -42,16 +44,43 @@ def validate_readme_catalog(readme: str, skill_names: list[str]) -> list[str]:
         )
 
     available_body = available_match.group("body")
+    category_pattern = re.compile(r"^### (?P<title>[^\n]+)$", re.MULTILINE)
+    categories = list(category_pattern.finditer(available_body))
+    expected_categories = [
+        category
+        for category in CATEGORIES
+        if any(skill.category == category for skill in skills)
+    ]
+    actual_categories = [match.group("title").lower() for match in categories]
+    if actual_categories != expected_categories:
+        errors.append(
+            "README.md category headings must match the inventory in order: "
+            + ", ".join(expected_categories)
+        )
+
     section_pattern = re.compile(
-        r"^### `(?P<name>[^`]+)`\s*$\n(?P<body>.*?)(?=^### `|^## |\Z)",
+        r"^#### `(?P<name>[^`]+)`\s*$\n(?P<body>.*?)(?=^#{2,4} |\Z)",
         re.MULTILINE | re.DOTALL,
     )
 
     seen: dict[str, str] = {}
+    skill_categories = {skill.name: skill.category for skill in skills}
     duplicates: list[str] = []
     for match in section_pattern.finditer(available_body):
         name = match.group("name")
         body = match.group("body")
+        category = next(
+            (
+                item.group("title").lower()
+                for item in reversed(categories)
+                if item.start() < match.start()
+            ),
+            None,
+        )
+        if name in skill_categories and category != skill_categories[name]:
+            errors.append(
+                f"Skill '{name}' must be under category '{skill_categories[name]}', not '{category}'."
+            )
         if name in seen:
             duplicates.append(name)
         else:
@@ -97,29 +126,19 @@ def main() -> int:
     readme_path = repo_root / "README.md"
     skills_root = repo_root / "skills"
 
-    readme = readme_path.read_text(encoding="utf-8")
-    skill_names = sorted(
-        path.parent.name
-        for path in skills_root.glob("*/SKILL.md")
-        if path.is_file() and not path.is_symlink()
-    )
-    errors = validate_readme_catalog(readme, skill_names)
-    symlinked_skill_files = sorted(
-        path.relative_to(repo_root)
-        for path in skills_root.glob("*/SKILL.md")
-        if path.is_symlink()
-    )
-    errors.extend(
-        f"Installable SKILL.md must not be a symlink: {path}"
-        for path in symlinked_skill_files
-    )
+    try:
+        skills = discover_skills(skills_root)
+        readme = readme_path.read_text(encoding="utf-8")
+    except (OSError, ValueError) as exc:
+        return fail([str(exc)])
+    errors = validate_readme_catalog(readme, skills)
 
     if errors:
         return fail(errors)
 
     print(
         "README.md references all "
-        f"{len(skill_names)} skills and includes the expected install commands."
+        f"{len(skills)} skills in their categories and includes the expected install commands."
     )
     return 0
 

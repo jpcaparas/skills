@@ -21,9 +21,16 @@ fail() {
 
 mkdir -p "$FAKE_BIN"
 for skill_name in alpha beta gamma; do
-    mkdir -p "$SKILLS_ROOT/$skill_name"
-    : >"$SKILLS_ROOT/$skill_name/SKILL.md"
+    mkdir -p "$SKILLS_ROOT/testing/$skill_name"
+    printf '%s\n' '---' "name: $skill_name" "description: Fixture skill." '---' \
+        >"$SKILLS_ROOT/testing/$skill_name/SKILL.md"
 done
+
+# A second category and a nested fixture distinguish namespace discovery from
+# either a flat glob or an unrestricted recursive SKILL.md search.
+mkdir -p "$SKILLS_ROOT/engineering" "$SKILLS_ROOT/testing/alpha/evals/fixture"
+mv "$SKILLS_ROOT/testing/gamma" "$SKILLS_ROOT/engineering/gamma"
+printf 'not an installable skill\n' >"$SKILLS_ROOT/testing/alpha/evals/fixture/SKILL.md"
 
 # Fixture-driven checks must never fall through to the network-capable npx
 # command. The fake makes that boundary fail loudly if the test seam regresses.
@@ -109,8 +116,8 @@ assert_fails_with "duplicate discovery output" "$DUPLICATE_OUTPUT" \
 assert_fails_with "unexpected discovery output" "$UNEXPECTED_OUTPUT" \
     "unexpected skill names in discovery output"
 
-mkdir -p "$SKILLS_ROOT/symlinked"
-ln -s "$SKILLS_ROOT/alpha/SKILL.md" "$SKILLS_ROOT/symlinked/SKILL.md"
+mkdir -p "$SKILLS_ROOT/testing/symlinked"
+ln -s "$SKILLS_ROOT/testing/alpha/SKILL.md" "$SKILLS_ROOT/testing/symlinked/SKILL.md"
 assert_fails_with "symlinked SKILL.md" "$VALID_OUTPUT" \
     "installable SKILL.md must not be a symlink"
 

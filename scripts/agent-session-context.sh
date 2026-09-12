@@ -96,7 +96,7 @@ session_context() {
 This repository is the public source for installable agent skills.
 
 Repository constraints:
-- Put every installable skill in skills/<skill-name>/.
+- Put every installable skill in skills/<category>/<skill-name>/, using an existing category from scripts/skill_catalog.py. Names remain globally unique; nested package fixtures are not installable skills.
 - Keep SKILL.md as the canonical instruction file; README.md, AGENTS.md, and metadata.json beside a skill are thin packaging wrappers.
 - Treat the root README.md as a public/generated catalog. Do not move agent working agreements or long-lived repository policy into it; keep those in AGENTS.md, SKILL.md, references, validators, or this session-start hook.
 - Prefer repo-agnostic instructions. Do not hard-code one workspace or machine path unless the user explicitly requires it.

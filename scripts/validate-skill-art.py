@@ -11,6 +11,7 @@ from typing import Protocol, cast
 
 from png_validation import PngValidationError, parse_png
 from readme_markdown import markdown_visible_text
+from skill_catalog import Skill, discover_skills
 
 
 CARD_FILENAME = "skill-card.png"
@@ -50,14 +51,6 @@ def fail(errors: list[str]) -> int:
     return 2
 
 
-def skill_names(skills_root: Path) -> list[str]:
-    return sorted(
-        path.parent.name
-        for path in skills_root.glob("*/SKILL.md")
-        if path.is_file() and not path.is_symlink()
-    )
-
-
 def validate_png(path: Path, errors: list[str]) -> None:
     if path.stat().st_size > MAX_CARD_BYTES:
         errors.append(
@@ -91,9 +84,11 @@ def validate_png(path: Path, errors: list[str]) -> None:
         errors.append(f"{path} is suspiciously small for a generated raster badge.")
 
 
-def validate_prompt(path: Path, skill_name: str, expected_prompt: str, errors: list[str]) -> None:
+def validate_prompt(
+    path: Path, skill_name: str, expected_prompt: str, errors: list[str]
+) -> None:
     if not path.is_file():
-        errors.append(f"Missing prompt harness file: skills/{skill_name}/{PROMPT_FILENAME}")
+        errors.append(f"Missing prompt harness file: {path}")
         return
 
     prompt = path.read_text(encoding="utf-8")
@@ -116,17 +111,17 @@ def validate_prompt(path: Path, skill_name: str, expected_prompt: str, errors: l
             errors.append(f"{path} must include prompt constraint: {fragment}")
 
 
-def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> None:
+def validate_readme_art(readme: str, skills: list[Skill], errors: list[str]) -> None:
     visible_readme = markdown_visible_text(readme)
     img_count = len(
         re.findall(
-            r"<img\s+src=\"skills/[^/]+/skill-card\.png\"",
+            r"<img\s+src=\"skills/[^\"]+/skill-card\.png\"",
             visible_readme,
         )
     )
-    if img_count != len(names):
+    if img_count != len(skills):
         errors.append(
-            f"README.md must contain exactly {len(names)} skill-card PNG images; found {img_count}."
+            f"README.md must contain exactly {len(skills)} skill-card PNG images; found {img_count}."
         )
 
     if "skill-card.svg" in visible_readme:
@@ -134,9 +129,9 @@ def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> Non
 
     old_placement = re.findall(
         r"<p align=\"center\">\n"
-        r"  <img src=\"skills/([^/]+)/skill-card\.png\"[^>]*>\n"
+        r"  <img src=\"skills/[^/]+/([^/]+)/skill-card\.png\"[^>]*>\n"
         r"</p>\n\n"
-        r"### `([^`]+)`",
+        r"#### `([^`]+)`",
         visible_readme,
     )
     if old_placement:
@@ -146,21 +141,22 @@ def validate_readme_art(readme: str, names: list[str], errors: list[str]) -> Non
             f"the section heading. Old-placement sections: {', '.join(misplaced)}"
         )
 
-    for name in names:
+    for skill in skills:
+        name = skill.name
         expected = (
-            f"### `{name}`\n\n"
+            f"#### `{name}`\n\n"
             f"`npx skills add jpcaparas/skills --skill {name}`\n\n"
             f'<p align="center">\n'
-            f'  <img src="skills/{name}/{CARD_FILENAME}" '
+            f'  <img src="{skill.repo_path}/{CARD_FILENAME}" '
             f'alt="16-bit side-scrolling pixel art badge for {name}" '
             f'width="{CARD_WIDTH}">\n'
-            f'</p>\n\n'
+            f"</p>\n\n"
         )
         if expected not in visible_readme:
             errors.append(
                 "README.md must place the constrained PNG skill card immediately "
                 f"after the install command for `{name}` with path "
-                f"skills/{name}/{CARD_FILENAME}."
+                f"{skill.repo_path}/{CARD_FILENAME}."
             )
 
 
@@ -170,41 +166,43 @@ def main() -> int:
     skills_root = repo_root / "skills"
     renderer = load_renderer(repo_root)
 
-    names = skill_names(skills_root)
-    readme = readme_path.read_text(encoding="utf-8")
+    try:
+        skills = discover_skills(skills_root)
+        readme = readme_path.read_text(encoding="utf-8")
+    except (OSError, ValueError) as exc:
+        return fail([str(exc)])
     errors: list[str] = []
 
-    symlinked_skill_files = sorted(
-        path.relative_to(repo_root)
-        for path in skills_root.glob("*/SKILL.md")
-        if path.is_symlink()
-    )
-    errors.extend(
-        f"Installable SKILL.md must not be a symlink: {path}"
-        for path in symlinked_skill_files
-    )
+    validate_readme_art(readme, skills, errors)
 
-    validate_readme_art(readme, names, errors)
-
-    for name in names:
-        skill_dir = skills_root / name
+    for skill in skills:
+        name = skill.name
+        skill_dir = skill.directory
         card_path = skill_dir / CARD_FILENAME
         if not card_path.is_file():
-            errors.append(f"Missing skill art file: skills/{name}/{CARD_FILENAME}")
+            errors.append(f"Missing skill art file: {skill.repo_path}/{CARD_FILENAME}")
         else:
             validate_png(card_path, errors)
-        validate_prompt(skill_dir / PROMPT_FILENAME, name, renderer.prompt_for_skill(name), errors)
+        validate_prompt(
+            skill_dir / PROMPT_FILENAME, name, renderer.prompt_for_skill(name), errors
+        )
 
-    svg_cards = sorted(skills_root.glob("*/skill-card.svg"))
+    svg_cards = sorted(
+        skill.directory / "skill-card.svg"
+        for skill in skills
+        if (skill.directory / "skill-card.svg").exists()
+    )
     for path in svg_cards:
-        errors.append(f"Remove SVG skill art file; generated raster is required: {path}")
+        errors.append(
+            f"Remove SVG skill art file; generated raster is required: {path}"
+        )
 
     if errors:
         return fail(errors)
 
     print(
         "README.md includes constrained Nano Banana PNG skill art cards for "
-        f"all {len(names)} skills."
+        f"all {len(skills)} skills."
     )
     return 0
 

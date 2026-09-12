@@ -18,6 +18,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 
+from skill_catalog import Skill, discover_skills
 
 CARD_FILENAME = "skill-card.png"
 PROMPT_FILENAME = "skill-card.prompt.md"
@@ -114,10 +115,6 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def skill_names(skills_root: Path) -> list[str]:
-    return sorted(path.parent.name for path in skills_root.glob("*/SKILL.md") if path.is_file())
-
-
 def prompt_for_skill(name: str) -> str:
     scene = SKILL_SCENES[name]
     blank_surface_subjects = (
@@ -143,18 +140,19 @@ Return only the image.
 """
 
 
-def readme_image_block(name: str) -> str:
+def readme_image_block(skill: Skill) -> str:
     return (
         '<p align="center">\n'
-        f'  <img src="skills/{name}/{CARD_FILENAME}" '
-        f'alt="16-bit side-scrolling pixel art badge for {name}" '
+        f'  <img src="{skill.repo_path}/{CARD_FILENAME}" '
+        f'alt="16-bit side-scrolling pixel art badge for {skill.name}" '
         f'width="{CARD_WIDTH}">\n'
         '</p>\n\n'
     )
 
 
-def update_readme_cards(readme_path: Path, names: list[str]) -> None:
+def update_readme_cards(readme_path: Path, skills: list[Skill]) -> None:
     readme = readme_path.read_text(encoding="utf-8")
+    by_name = {skill.name: skill for skill in skills}
     card_block_pattern = re.compile(
         r'<p align="center">\n'
         r'  <img src="skills/[^"]+/skill-card\.(?:svg|png)" '
@@ -166,7 +164,7 @@ def update_readme_cards(readme_path: Path, names: list[str]) -> None:
     readme = card_block_pattern.sub("", readme)
 
     section_pattern = re.compile(
-        r"(### `([^`]+)`\n\n"
+        r"(#### `([^`]+)`\n\n"
         r"`npx skills add jpcaparas/skills --skill ([^`]+)`\n\n)",
         re.MULTILINE,
     )
@@ -174,9 +172,9 @@ def update_readme_cards(readme_path: Path, names: list[str]) -> None:
     def replace(match: re.Match[str]) -> str:
         name = match.group(2)
         command_name = match.group(3)
-        if name not in names or command_name != name:
+        if name not in by_name or command_name != name:
             return match.group(0)
-        return match.group(1) + readme_image_block(name)
+        return match.group(1) + readme_image_block(by_name[name])
 
     updated = section_pattern.sub(replace, readme)
     readme_path.write_text(updated, encoding="utf-8")
@@ -260,10 +258,11 @@ def normalize_to_png(source_path: Path, mime_type: str, payload: bytes, target_p
     normalize_png(source_path, target_path)
 
 
-def normalize_existing_cards(repo_root: Path, names: list[str]) -> list[dict]:
+def normalize_existing_cards(skills: list[Skill]) -> list[dict]:
     results: list[dict] = []
-    for name in names:
-        target_path = repo_root / "skills" / name / CARD_FILENAME
+    for skill in skills:
+        name = skill.name
+        target_path = skill.directory / CARD_FILENAME
         if not target_path.is_file():
             results.append({"skill": name, "status": "missing", "image": str(target_path)})
             continue
@@ -274,9 +273,8 @@ def normalize_existing_cards(repo_root: Path, names: list[str]) -> list[dict]:
 
 def render_skill(
     *,
-    repo_root: Path,
+    skill: Skill,
     output_root: Path,
-    name: str,
     prompt: str,
     model: str,
     aspect_ratio: str,
@@ -285,7 +283,8 @@ def render_skill(
     force: bool,
     api_key: str,
 ) -> dict:
-    target_path = repo_root / "skills" / name / CARD_FILENAME
+    name = skill.name
+    target_path = skill.directory / CARD_FILENAME
     if target_path.is_file() and not force:
         normalize_png(target_path, target_path)
         return {"skill": name, "status": "normalized", "image": str(target_path)}
@@ -331,7 +330,13 @@ def main() -> int:
     args = parse_args()
     repo_root = Path(args.repo_root).resolve()
     skills_root = repo_root / "skills"
-    all_names = skill_names(skills_root)
+    try:
+        skills = discover_skills(skills_root)
+    except (OSError, ValueError) as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return 2
+    by_name = {skill.name: skill for skill in skills}
+    all_names = sorted(by_name)
     requested_names = sorted(set(args.skill))
     unknown = sorted(set(requested_names) - set(all_names))
     if unknown:
@@ -345,17 +350,17 @@ def main() -> int:
         return 2
 
     for name in names:
-        skill_dir = skills_root / name
+        skill_dir = by_name[name].directory
         (skill_dir / PROMPT_FILENAME).write_text(prompt_for_skill(name), encoding="utf-8")
 
-    update_readme_cards(repo_root / "README.md", all_names)
+    update_readme_cards(repo_root / "README.md", skills)
 
     if args.prompts_only:
         print(f"Wrote {len(names)} skill-card prompts and updated README.md.")
         return 0
 
     if args.normalize_only:
-        results = normalize_existing_cards(repo_root, names)
+        results = normalize_existing_cards([by_name[name] for name in names])
         for result in results:
             print(f"{result['skill']}: {result['status']}")
         failures = [result for result in results if result["status"] == "missing"]
@@ -378,9 +383,8 @@ def main() -> int:
         futures = [
             pool.submit(
                 render_skill,
-                repo_root=repo_root,
+                skill=by_name[name],
                 output_root=output_root,
-                name=name,
                 prompt=prompt_for_skill(name),
                 model=args.model,
                 aspect_ratio=args.aspect_ratio,

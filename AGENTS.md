@@ -4,7 +4,10 @@ This repository is a public source for installable agent skills.
 
 ## Conventions
 
-- Put every installable skill in `skills/<skill-name>/`.
+- Put every installable skill in `skills/<category>/<skill-name>/`, choosing the best existing primary category from `scripts/skill_catalog.py`.
+- Skill names are globally unique across categories. Categories organise source paths; they are not part of installation or invocation names.
+- Never put a `SKILL.md` directly in `skills/` or at category level. Nested `SKILL.md` files inside a package's eval fixtures are test data, not installable packages.
+- Treat `scripts/skill_catalog.py` as the source of truth for category order and package discovery. Update repository inventory surfaces from that helper rather than recursive `SKILL.md` scans.
 - This is a public repository used across many developer machines. Keep local and userland tooling requirements flexible: accept compatible version ranges and explicit executable overrides instead of pinning one exact Python, Node.js, Bun, or other runtime version unless compatibility truly requires it. Put deterministic exact pins at reproducible boundaries such as GitHub Actions, containers, and lockfiles, and document the distinction.
 - Treat this repository as the source of truth for existing skills. When modifying an existing skill, make the change in this repo first, not only in an installed copy under another skills directory.
 - Keep `SKILL.md` as the canonical instruction file for each skill.
@@ -34,8 +37,8 @@ Tests that execute temporary tool doubles use `scripts/executable-temp-dir.sh`. 
 For any skill that ships scripts, run its local validators and confirm repository discovery still works:
 
 ```bash
-python3 skills/<skill-name>/scripts/validate.py skills/<skill-name>
-python3 skills/<skill-name>/scripts/test_skill.py skills/<skill-name>
+python3 skills/<category>/<skill-name>/scripts/validate.py skills/<category>/<skill-name>
+python3 skills/<category>/<skill-name>/scripts/test_skill.py skills/<category>/<skill-name>
 npx --yes skills add . --list
 ```
 
@@ -67,3 +70,14 @@ The Ubuntu leg requires Docker. The macOS leg requires Apple Silicon macOS plus 
 The wrapper isolates project and XDG act configuration, rejects an active `$HOME/.actrc`, ignores act's default environment, input, secret, and variable files, and prevents automatic GitHub-token import. The macOS leg is not sandboxed: workflow commands inherit the invoking account's filesystem, process, and environment access. Run it only for trusted worktrees on a trusted Mac; use a disposable machine or virtual machine for untrusted pull-request code.
 
 Act is a preflight, not an exact reproduction of GitHub's runners. Treat the hosted `ubuntu-24.04` and `macos-15` workflow as the authoritative compatibility gate.
+
+## Skill artwork
+
+Refresh prompt files without network access using `python3 scripts/render-skill-art.py --prompts-only`. Regenerating a card is a paid network operation and requires both credentials and explicit authorization; when approved, target it with `python3 scripts/render-skill-art.py --skill <skill-name> --force`.
+
+## Amp orb lifecycle
+
+- `.agents/setup` prepares a new orb with required system tools, a Chromium-family browser, the Python validation environment, locked Node dependencies, repository skills, and Gemini CLI skill links.
+- `.agents/resume` is intentionally lighter: it rechecks the repository skill links when a warm orb resumes.
+- `.amp/plugins/repository-hooks.ts` records the repository baseline on Amp `session.start` and runs the shared stop checker on successful `agent.end`. There is intentionally no second `SessionEnd` gate.
+- Changes to `.agents/setup` apply to future orbs only after they are published on the repository's default branch. Do not claim that publication, deployment, pushes, or CI occurred unless verified separately.

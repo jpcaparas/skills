@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib.util
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -15,15 +16,19 @@ from types import ModuleType
 from typing import Protocol, cast
 
 from png_validation import PNG_SIGNATURE, parse_png
+from skill_catalog import Skill
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+EXAMPLE = Skill("example", "engineering", Path("skills/engineering/example"))
 
 
 class ReadmeValidator(Protocol):
     """Typed surface used from the hyphenated README validator script."""
 
-    def validate_readme_catalog(self, readme: str, skill_names: list[str]) -> list[str]: ...
+    def validate_readme_catalog(
+        self, readme: str, skills: list[Skill]
+    ) -> list[str]: ...
 
 
 class ArtValidator(Protocol):
@@ -34,7 +39,7 @@ class ArtValidator(Protocol):
     def validate_readme_art(
         self,
         readme: str,
-        names: list[str],
+        skills: list[Skill],
         errors: list[str],
     ) -> None: ...
 
@@ -96,10 +101,11 @@ def readme_skill_section(skill_name: str) -> str:
 
     return (
         "## Available Skills\n\n"
-        f"### `{skill_name}`\n\n"
+        "### Engineering\n\n"
+        f"#### `{skill_name}`\n\n"
         f"`npx skills add jpcaparas/skills --skill {skill_name}`\n\n"
         '<p align="center">\n'
-        f'  <img src="skills/{skill_name}/skill-card.png" '
+        f'  <img src="skills/engineering/{skill_name}/skill-card.png" '
         f'alt="16-bit side-scrolling pixel art badge for {skill_name}" '
         'width="480">\n'
         "</p>\n\n"
@@ -109,11 +115,7 @@ def readme_skill_section(skill_name: str) -> str:
 def readme_with_section(section: str) -> str:
     """Place a catalog section after the required visible global command."""
 
-    return (
-        "# Test skills\n\n"
-        "`npx skills add jpcaparas/skills`\n\n"
-        f"{section}"
-    )
+    return f"# Test skills\n\n`npx skills add jpcaparas/skills`\n\n{section}"
 
 
 def png_chunk(chunk_type: bytes, payload: bytes, *, valid_crc: bool = True) -> bytes:
@@ -121,7 +123,9 @@ def png_chunk(chunk_type: bytes, payload: bytes, *, valid_crc: bool = True) -> b
 
     crc = zlib.crc32(chunk_type)
     crc = zlib.crc32(payload, crc) & 0xFFFFFFFF if valid_crc else 0
-    return struct.pack(">I", len(payload)) + chunk_type + payload + struct.pack(">I", crc)
+    return (
+        struct.pack(">I", len(payload)) + chunk_type + payload + struct.pack(">I", crc)
+    )
 
 
 def rgb_png(width: int, height: int, compressed_scanlines: bytes) -> bytes:
@@ -147,9 +151,7 @@ def indexed_png(
     image_data = png_chunk(b"IDAT", zlib.compress(b"\x00\x00"))
     palette_chunk = png_chunk(b"PLTE", palette)
     body = (
-        image_data + palette_chunk
-        if palette_after_idat
-        else palette_chunk + image_data
+        image_data + palette_chunk if palette_after_idat else palette_chunk + image_data
     )
     return PNG_SIGNATURE + png_chunk(b"IHDR", ihdr) + body + png_chunk(b"IEND", b"")
 
@@ -160,9 +162,9 @@ class ReadmeCommentRegressionTests(unittest.TestCase):
     def test_visible_catalog_and_art_are_accepted(self) -> None:
         readme = readme_with_section(readme_skill_section("example"))
 
-        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, ["example"])
+        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, [EXAMPLE])
         art_errors: list[str] = []
-        ART_VALIDATOR.validate_readme_art(readme, ["example"], art_errors)
+        ART_VALIDATOR.validate_readme_art(readme, [EXAMPLE], art_errors)
 
         self.assertEqual([], catalog_errors)
         self.assertEqual([], art_errors)
@@ -171,16 +173,19 @@ class ReadmeCommentRegressionTests(unittest.TestCase):
         commented_section = f"<!--\n{readme_skill_section('example')}-->\n"
         readme = readme_with_section(commented_section)
 
-        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, ["example"])
+        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, [EXAMPLE])
         art_errors: list[str] = []
-        ART_VALIDATOR.validate_readme_art(readme, ["example"], art_errors)
+        ART_VALIDATOR.validate_readme_art(readme, [EXAMPLE], art_errors)
 
         self.assertEqual(
             ["README.md is missing a '## Available Skills' section."],
             catalog_errors,
         )
         self.assertTrue(
-            any("exactly 1 skill-card PNG images; found 0" in error for error in art_errors),
+            any(
+                "exactly 1 skill-card PNG images; found 0" in error
+                for error in art_errors
+            ),
             art_errors,
         )
 
@@ -188,16 +193,19 @@ class ReadmeCommentRegressionTests(unittest.TestCase):
         fenced_section = f"```markdown\n{readme_skill_section('example')}```\n"
         readme = readme_with_section(fenced_section)
 
-        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, ["example"])
+        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, [EXAMPLE])
         art_errors: list[str] = []
-        ART_VALIDATOR.validate_readme_art(readme, ["example"], art_errors)
+        ART_VALIDATOR.validate_readme_art(readme, [EXAMPLE], art_errors)
 
         self.assertEqual(
             ["README.md is missing a '## Available Skills' section."],
             catalog_errors,
         )
         self.assertTrue(
-            any("exactly 1 skill-card PNG images; found 0" in error for error in art_errors),
+            any(
+                "exactly 1 skill-card PNG images; found 0" in error
+                for error in art_errors
+            ),
             art_errors,
         )
 
@@ -205,16 +213,19 @@ class ReadmeCommentRegressionTests(unittest.TestCase):
         visible_section = readme_skill_section("example")
         readme = readme_with_section(
             visible_section.replace(
-                "### `example`",
-                "<!-- ### `example` -->",
+                "#### `example`",
+                "<!-- #### `example` -->",
                 1,
             )
         )
 
-        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, ["example"])
+        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, [EXAMPLE])
 
         self.assertTrue(
-            any("missing skill sections for: example" in error for error in catalog_errors),
+            any(
+                "missing skill sections for: example" in error
+                for error in catalog_errors
+            ),
             catalog_errors,
         )
 
@@ -222,7 +233,7 @@ class ReadmeCommentRegressionTests(unittest.TestCase):
         visible_section = readme_skill_section("example")
         card = (
             '<p align="center">\n'
-            '  <img src="skills/example/skill-card.png" '
+            '  <img src="skills/engineering/example/skill-card.png" '
             'alt="16-bit side-scrolling pixel art badge for example" '
             'width="480">\n'
             "</p>"
@@ -232,25 +243,153 @@ class ReadmeCommentRegressionTests(unittest.TestCase):
         )
         art_errors: list[str] = []
 
-        ART_VALIDATOR.validate_readme_art(readme, ["example"], art_errors)
+        ART_VALIDATOR.validate_readme_art(readme, [EXAMPLE], art_errors)
 
         self.assertTrue(
-            any("exactly 1 skill-card PNG images; found 0" in error for error in art_errors),
+            any(
+                "exactly 1 skill-card PNG images; found 0" in error
+                for error in art_errors
+            ),
             art_errors,
         )
 
     def test_html_comment_literal_in_fence_does_not_hide_visible_catalog(self) -> None:
         fenced_example = "```markdown\n<!-- example opener\n```\n\n"
-        readme = readme_with_section(
-            fenced_example + readme_skill_section("example")
-        )
+        readme = readme_with_section(fenced_example + readme_skill_section("example"))
 
-        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, ["example"])
+        catalog_errors = README_VALIDATOR.validate_readme_catalog(readme, [EXAMPLE])
         art_errors: list[str] = []
-        ART_VALIDATOR.validate_readme_art(readme, ["example"], art_errors)
+        ART_VALIDATOR.validate_readme_art(readme, [EXAMPLE], art_errors)
 
         self.assertEqual([], catalog_errors)
         self.assertEqual([], art_errors)
+
+
+class NamespacedCatalogRegressionTests(unittest.TestCase):
+    def test_correct_names_under_the_wrong_category_are_rejected(self) -> None:
+        testing = Skill(
+            "boundary-checks", "testing", Path("skills/testing/boundary-checks")
+        )
+        section = readme_skill_section("example")
+        section += readme_skill_section("boundary-checks").split(
+            "### Engineering\n\n", 1
+        )[1]
+        section += "### Testing\n\n"
+        errors = README_VALIDATOR.validate_readme_catalog(
+            readme_with_section(section), [EXAMPLE, testing]
+        )
+        self.assertTrue(
+            any(
+                "'boundary-checks' must be under category 'testing'" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_duplicate_and_missing_entries_and_wrong_install_commands_still_fail(
+        self,
+    ) -> None:
+        section = readme_skill_section("example")
+        cases = (
+            (
+                section + section.split("### Engineering\n\n", 1)[1],
+                "duplicate skill headers",
+            ),
+            (
+                section.replace("#### `example`", "#### `other`"),
+                "missing skill sections for: example",
+            ),
+            (
+                section.replace("--skill example", "--skill engineering/example"),
+                "first non-empty line",
+            ),
+        )
+        for content, diagnostic in cases:
+            with self.subTest(diagnostic=diagnostic):
+                errors = README_VALIDATOR.validate_readme_catalog(
+                    readme_with_section(content), [EXAMPLE]
+                )
+                self.assertTrue(any(diagnostic in error for error in errors), errors)
+
+    def test_card_in_another_category_cannot_satisfy_the_art_check(self) -> None:
+        readme = readme_with_section(readme_skill_section("example")).replace(
+            "skills/engineering/example/skill-card.png",
+            "skills/testing/example/skill-card.png",
+        )
+        errors: list[str] = []
+        ART_VALIDATOR.validate_readme_art(readme, [EXAMPLE], errors)
+        self.assertTrue(
+            any(
+                "with path skills/engineering/example/skill-card.png" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_offline_art_refresh_preserves_images_and_copy_and_uses_namespace_paths(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory(prefix="art refresh ") as directory:
+            root = Path(directory)
+            selected = root / "skills/engineering/maintainable-code"
+            other = root / "skills/fun/tarsier"
+            for package in (selected, other):
+                package.mkdir(parents=True)
+                (package / "SKILL.md").write_text(
+                    f"---\nname: {package.name}\ndescription: Test.\n---\n",
+                    encoding="utf-8",
+                )
+                (package / "skill-card.png").write_bytes(b"preserve existing artwork")
+                (package / "skill-card.prompt.md").write_text(
+                    "original prompt", encoding="utf-8"
+                )
+            fixture = selected / "evals/broken"
+            fixture.mkdir(parents=True)
+            (fixture / "SKILL.md").write_text(
+                "not an installable package", encoding="utf-8"
+            )
+            readme = readme_with_section(readme_skill_section("maintainable-code"))
+            readme += "Editorial description that must survive.\n\n### Fun\n\n"
+            readme += readme_skill_section("tarsier").split("### Engineering\n\n", 1)[1]
+            readme_path = root / "README.md"
+            readme_path.write_text(readme, encoding="utf-8")
+
+            command = [
+                sys.executable,
+                str(SCRIPT_DIR / "render-skill-art.py"),
+                "--repo-root",
+                str(root),
+                "--prompts-only",
+                "--skill",
+                "maintainable-code",
+            ]
+            result = subprocess.run(
+                command, text=True, capture_output=True, check=False
+            )
+
+            self.assertEqual(0, result.returncode, result.stderr)
+            updated = readme_path.read_text(encoding="utf-8")
+            self.assertIn("Editorial description that must survive.", updated)
+            self.assertIn('src="skills/fun/tarsier/skill-card.png"', updated)
+            self.assertNotIn('src="skills/engineering/tarsier/skill-card.png"', updated)
+            self.assertEqual(2, updated.count('<img src="skills/'))
+            self.assertIn(
+                "Nano Banana 2 image generation prompt",
+                (selected / "skill-card.prompt.md").read_text(),
+            )
+            self.assertEqual(
+                "original prompt", (other / "skill-card.prompt.md").read_text()
+            )
+            for package in (selected, other):
+                self.assertEqual(
+                    b"preserve existing artwork",
+                    (package / "skill-card.png").read_bytes(),
+                )
+            repeat = subprocess.run(
+                command, text=True, capture_output=True, check=False
+            )
+            self.assertEqual(0, repeat.returncode, repeat.stderr)
+            self.assertEqual(updated, readme_path.read_text(encoding="utf-8"))
 
 
 class PngRegressionTests(unittest.TestCase):
@@ -280,7 +419,9 @@ class PngRegressionTests(unittest.TestCase):
 
             ART_VALIDATOR.validate_png(path, errors)
 
-        self.assertTrue(any("must be a valid PNG raster image" in error for error in errors))
+        self.assertTrue(
+            any("must be a valid PNG raster image" in error for error in errors)
+        )
 
     def test_rejects_valid_chunk_labels_without_decodable_image_data(self) -> None:
         fake = rgb_png(1, 1, b"not a zlib stream")
@@ -311,7 +452,9 @@ class PngRegressionTests(unittest.TestCase):
             palette_after_idat=True,
         )
 
-        with self.assertRaisesRegex(ValueError, "PLTE must appear before the first IDAT"):
+        with self.assertRaisesRegex(
+            ValueError, "PLTE must appear before the first IDAT"
+        ):
             parse_png(fake)
 
     def test_rejects_malformed_palette_shape(self) -> None:
@@ -324,7 +467,9 @@ class PngRegressionTests(unittest.TestCase):
         oversized_scanline = zlib.compress(b"\x00" * 1_000_000)
         fake = rgb_png(1, 1, oversized_scanline)
 
-        with self.assertRaisesRegex(ValueError, "expands beyond the declared image dimensions"):
+        with self.assertRaisesRegex(
+            ValueError, "expands beyond the declared image dimensions"
+        ):
             parse_png(fake)
 
     def test_rejects_truncated_stream_after_expected_pixels_are_emitted(self) -> None:
@@ -342,6 +487,7 @@ class DescriptionBudgetRegressionTests(unittest.TestCase):
         resolved_description = "x" * (DESCRIPTION_VALIDATOR.MAX_DESCRIPTION_CHARS + 1)
         skill_markdown = (
             "---\n"
+            "name: example\n"
             f"shared_description: &shared '{resolved_description}'\n"
             "description: *shared\n"
             "---\n\n"
@@ -350,7 +496,7 @@ class DescriptionBudgetRegressionTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory(prefix="shared-validator-yaml-") as temp_dir:
             repo_root = Path(temp_dir)
-            skill_dir = repo_root / "skills" / "example"
+            skill_dir = repo_root / "skills" / "engineering" / "example"
             skill_dir.mkdir(parents=True)
             (skill_dir / "SKILL.md").write_text(skill_markdown, encoding="utf-8")
 
@@ -366,10 +512,7 @@ class DescriptionBudgetRegressionTests(unittest.TestCase):
 
     def test_rejects_duplicate_description_keys(self) -> None:
         skill_markdown = (
-            "---\n"
-            "description: first value\n"
-            "description: second value\n"
-            "---\n"
+            "---\ndescription: first value\ndescription: second value\n---\n"
         )
 
         self.assert_description_error(skill_markdown, "duplicate key 'description'")
@@ -384,7 +527,7 @@ class DescriptionBudgetRegressionTests(unittest.TestCase):
                 "---\ndescription: |-\n  first line\n  second line\n---\n",
                 "first line\nsecond line",
             ),
-            "quoted empty": ("---\ndescription: \"\"\n---\n", ""),
+            "quoted empty": ('---\ndescription: ""\n---\n', ""),
         }
 
         for name, (skill_markdown, expected) in cases.items():
@@ -414,7 +557,7 @@ class DescriptionBudgetRegressionTests(unittest.TestCase):
             prefix="shared-validator-description-"
         ) as temp_dir:
             repo_root = Path(temp_dir)
-            skill_dir = repo_root / "skills" / "example"
+            skill_dir = repo_root / "skills" / "engineering" / "example"
             skill_dir.mkdir(parents=True)
             outside = repo_root / "outside.md"
             outside.write_text("---\ndescription: external\n---\n", encoding="utf-8")

@@ -134,27 +134,12 @@ install_gemini_cli() {
     gemini --version
 }
 
-link_gemini_skills() {
-    local gemini_cli="${SKILLS_GEMINI_CLI:-gemini}"
-    local link_output
-
-    link_output="$(mktemp)"
-    if ! "$gemini_cli" skills link "$REPO_ROOT/skills" --scope user --consent \
-        >"$link_output" 2>&1; then
-        cat "$link_output" >&2
-        rm -f "$link_output"
-        return 1
-    fi
-    rm -f "$link_output"
-    echo "Linked repository skills into Gemini CLI."
-}
-
 step "Install missing system tools" install_missing_system_tools
 step "Make the orb browser available to validation" ensure_chromium_browser
 step "Create the Python validation environment" create_validation_venv
 step "Install locked Node.js dependencies" install_node_dependencies
 step "Install repository skills into Amp" install_amp_skills
 step "Install Gemini CLI with Agent Skills support" install_gemini_cli
-step "Link repository skills into Gemini CLI" link_gemini_skills
+step "Link repository skills into Gemini CLI" .agents/link-repository-skills
 
 printf '\nOrb setup complete in %ss.\n' "$SECONDS"

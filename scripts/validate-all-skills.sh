@@ -25,7 +25,7 @@
 #      expected skills.sh install commands.
 #   3. Confirm every README skill section has a constrained 16-bit art card
 #      stored in that skill's folder.
-#   4. For every skills/<name>/ that has a SKILL.md, run validate.py and
+#   4. For every skills/<category>/<name>/ package, run validate.py and
 #      test_skill.py.
 #   5. Confirm skills.sh discovery still works and does not emit Codex
 #      skills context-budget warnings.
@@ -171,20 +171,28 @@ bash scripts/test-validate-ci-with-act.sh
 echo "Checking stop-validation snapshot caching"
 bash scripts/test-agent-stop-checks.sh
 
+echo "Checking namespaced skill inventory and orb lifecycle"
+"$VALIDATION_PYTHON" scripts/test-skill-catalog.py
+bash scripts/test-orb-lifecycle.sh
+bun scripts/test-repository-hooks.ts
+
 echo "Checking README skill coverage"
 "$VALIDATION_PYTHON" scripts/test-shared-validator-regressions.py
 "$VALIDATION_PYTHON" scripts/validate-readme-skills.py
 "$VALIDATION_PYTHON" scripts/validate-skill-art.py
 "$VALIDATION_PYTHON" scripts/check-skill-description-budget.py
 
+# Resolve the complete inventory before invoking any package. A failing reader
+# in process substitution would otherwise let Bash silently skip validation.
+skill_inventory="$("$VALIDATION_PYTHON" scripts/skill_catalog.py --skills-root skills)"
 while IFS= read -r skill; do
     echo "Validating ${skill}"
     "$VALIDATION_PYTHON" "${skill}/scripts/validate.py" "${skill}" < /dev/null
     "$VALIDATION_PYTHON" "${skill}/scripts/test_skill.py" "${skill}" < /dev/null
-done < <(find skills -mindepth 1 -maxdepth 1 -type d -exec test -f "{}/SKILL.md" ';' -print | LC_ALL=C sort)
+done <<<"$skill_inventory"
 
 echo "Checking for leaked builder-only placement metadata"
-if grep -n -E '^## Recommended Destination$' skills/*/SKILL.md; then
+if grep -n -E '^## Recommended Destination$' skills/*/*/SKILL.md; then
     echo "ERROR: remove builder-only placement sections from shipped SKILL.md files" >&2
     exit 1
 fi
@@ -196,9 +204,9 @@ fi
 #   1. A required file is hidden from git by the user's global gitignore
 #      or $GIT_DIR/info/exclude. Local validation passes (the file is on
 #      disk) but CI fails on a fresh checkout (the file was never pushed).
-#      This is exactly how `skills/better-writing/AGENTS.md` broke CI.
+#      This previously happened to the better-writing package's AGENTS.md.
 #
-#   2. A new file was created under skills/<name>/ but never `git add`ed.
+#   2. A new file was created under a skill package but never `git add`ed.
 #      Same symptom: present locally, missing on CI.
 #
 # Files ignored by an in-tree .gitignore (relative path) are legitimate

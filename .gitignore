@@ -14,7 +14,7 @@ node_modules/
 
 # Keep the committed Claude companion eval fixture visible even when a
 # user-global ignore treats CLAUDE.md as machine-local configuration.
-!skills/bootstrap-agents-md/evals/files/ledgerbird/CLAUDE.md
+!skills/agents/bootstrap-agents-md/evals/files/ledgerbird/CLAUDE.md
 
 # Commit the repo-local Codex hook scaffold even when a user-global gitignore
 # hides .codex/** for personal machine config.

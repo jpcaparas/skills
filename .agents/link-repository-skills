@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+CATALOG_SCRIPT="$REPO_ROOT/scripts/skill_catalog.py"
+GEMINI_CLI="${SKILLS_GEMINI_CLI:-gemini}"
+if [ -n "${SKILLS_VALIDATION_PYTHON:-}" ]; then
+    VALIDATION_PYTHON="$SKILLS_VALIDATION_PYTHON"
+elif [ -x "$REPO_ROOT/.venv/bin/python3" ]; then
+    VALIDATION_PYTHON="$REPO_ROOT/.venv/bin/python3"
+else
+    VALIDATION_PYTHON=python3
+fi
+GEMINI_SKILLS_DIR="${SKILLS_GEMINI_SKILLS_DIR:-$HOME/.gemini/skills}"
+
+if [ ! -f "$CATALOG_SCRIPT" ]; then
+    echo "Missing canonical skill catalogue: $CATALOG_SCRIPT" >&2
+    exit 1
+fi
+if ! command -v "$GEMINI_CLI" >/dev/null 2>&1; then
+    echo "Gemini CLI is unavailable; rerun .agents/setup." >&2
+    exit 1
+fi
+
+inventory="$(mktemp)"
+trap 'rm -f "$inventory"' EXIT
+if ! "$VALIDATION_PYTHON" "$CATALOG_SCRIPT" --skills-root "$REPO_ROOT/skills" >"$inventory"; then
+    echo "The canonical skill catalogue failed; no links were changed." >&2
+    exit 1
+fi
+
+skill_paths=()
+while IFS= read -r skill_path; do
+    [ -n "$skill_path" ] && skill_paths+=("$skill_path")
+done <"$inventory"
+
+if [ "${#skill_paths[@]}" -eq 0 ]; then
+    echo "The canonical catalogue found no installable skills." >&2
+    exit 1
+fi
+
+mkdir -p "$GEMINI_SKILLS_DIR"
+linked=0
+for skill_path in "${skill_paths[@]}"; do
+    skill_name="$(basename "$skill_path")"
+    destination="$GEMINI_SKILLS_DIR/$skill_name"
+
+    if [ -L "$destination" ]; then
+        existing_target="$(readlink "$destination")"
+        [ "$existing_target" = "$skill_path" ] && continue
+        case "$existing_target" in
+            "$REPO_ROOT"/skills/*) ;;
+            *) echo "Refusing to replace skill link from another source: $destination -> $existing_target" >&2; exit 1 ;;
+        esac
+        ln -sfn "$skill_path" "$destination"
+        linked=$((linked + 1))
+    elif [ -e "$destination" ]; then
+        echo "Refusing to replace unrelated user file: $destination" >&2
+        exit 1
+    else
+        ln -s "$skill_path" "$destination"
+        linked=$((linked + 1))
+    fi
+done
+
+printf 'Verified %s repository skill links (%s changed).\n' "${#skill_paths[@]}" "$linked"
