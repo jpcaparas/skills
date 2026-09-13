@@ -12,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.request
@@ -92,6 +93,32 @@ SKILL_SCENES = {
 }
 
 
+def prepare_output_root(output_dir: str | None) -> Path:
+    """Return a safe directory for non-committed API artifacts.
+
+    With no explicit directory, create a fresh private mkdtemp directory so no
+    other local user can pre-create it. With an explicit directory, refuse a
+    symlink or a directory owned by another user: a predictable shared path
+    such as the old /tmp default could otherwise be planted to redirect writes.
+    """
+
+    if output_dir is None:
+        return Path(tempfile.mkdtemp(prefix="skills-nanobanana-art-"))
+
+    output_root = Path(output_dir).expanduser()
+    if output_root.is_symlink():
+        raise SystemExit(f"--output-dir must not be a symlink: {output_root}")
+    if output_root.exists() and not output_root.is_dir():
+        raise SystemExit(f"--output-dir exists and is not a directory: {output_root}")
+    output_root.mkdir(parents=True, exist_ok=True)
+    stat = output_root.stat()
+    if stat.st_uid != os.getuid():
+        raise SystemExit(f"--output-dir is not owned by the current user: {output_root}")
+    if stat.st_mode & 0o077:
+        output_root.chmod(0o700)
+    return output_root
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo-root", default=".", help="Repository root. Default: current directory.")
@@ -110,8 +137,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--output-dir",
-        default="/tmp/skills-nanobanana-art",
-        help="Directory for non-committed API request and response artifacts.",
+        default=None,
+        help=(
+            "Directory for non-committed API request and response artifacts. "
+            "Default: a fresh private tempfile.mkdtemp directory, so no other local "
+            "user can pre-create or redirect it."
+        ),
     )
     return parser.parse_args()
 
@@ -376,8 +407,7 @@ def main() -> int:
         print("GEMINI_API_KEY is required to render Nano Banana skill-card PNGs.", file=sys.stderr)
         return 2
 
-    output_root = Path(args.output_dir).expanduser().resolve()
-    output_root.mkdir(parents=True, exist_ok=True)
+    output_root = prepare_output_root(args.output_dir)
     started = time.time()
     results: list[dict] = []
     with ThreadPoolExecutor(max_workers=max(1, args.max_concurrency)) as pool:

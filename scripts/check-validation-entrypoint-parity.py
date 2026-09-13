@@ -41,6 +41,19 @@ HOSTED_BUN_VERSION: Final = "1.3.11"
 HOSTED_SETUP_PYTHON_STEP: Final = "Set Up Python"
 HOSTED_SETUP_NODE_STEP: Final = "Set Up Node"
 HOSTED_SETUP_BUN_STEP: Final = "Set Up Bun"
+# Supply-chain hardening: the hosted workflow pins each action to an immutable
+# commit SHA instead of a movable tag. The `# vX.Y.Z` comment beside each
+# `uses:` line in .github/workflows/validate-skills.yml records which tag the
+# SHA belongs to; Dependabot (.github/dependabot.yml) keeps them current.
+HOSTED_SETUP_PYTHON_USES: Final = (
+    "actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c"
+)
+HOSTED_SETUP_NODE_USES: Final = (
+    "actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903"
+)
+HOSTED_SETUP_BUN_USES: Final = (
+    "oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76"
+)
 LOCAL_MACOS_TOOLCHAIN_STEP: Final = "Prepare Local macOS Toolchain (act)"
 HOSTED_TOOLCHAIN_CONDITION: Final = "${{ !env.ACT || runner.os == 'Linux' }}"
 LOCAL_MACOS_TOOLCHAIN_CONDITION: Final = "${{ env.ACT && runner.os == 'macOS' }}"
@@ -339,10 +352,10 @@ def validate_workflow(
         )
     else:
         hosted_python_step = hosted_python_steps[0]
-        if hosted_python_step.get("uses") != "actions/setup-python@v6":
+        if hosted_python_step.get("uses") != HOSTED_SETUP_PYTHON_USES:
             errors.append(
                 f"GitHub Actions {HOSTED_SETUP_PYTHON_STEP!r} step must use "
-                "'actions/setup-python@v6'"
+                f"{HOSTED_SETUP_PYTHON_USES!r}"
             )
         hosted_python_options = hosted_python_step.get("with")
         if not isinstance(hosted_python_options, dict) or (
@@ -361,13 +374,13 @@ def validate_workflow(
     hosted_runtime_contracts = (
         (
             HOSTED_SETUP_NODE_STEP,
-            "actions/setup-node@v6",
+            HOSTED_SETUP_NODE_USES,
             "node-version",
             HOSTED_NODE_VERSION,
         ),
         (
             HOSTED_SETUP_BUN_STEP,
-            "oven-sh/setup-bun@v2",
+            HOSTED_SETUP_BUN_USES,
             "bun-version",
             HOSTED_BUN_VERSION,
         ),

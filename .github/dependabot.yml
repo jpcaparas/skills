@@ -1,0 +1,9 @@
+# Keep the SHA-pinned GitHub Actions in workflows/ current. The comment on each
+# `uses:` line records the human-readable version that the SHA belongs to.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5

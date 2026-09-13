@@ -58,17 +58,17 @@ jobs:
     steps:
       - name: Set Up Python
         if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
         with:
           python-version: "3.11"
       - name: Set Up Node
         if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903
         with:
           node-version: "24"
       - name: Set Up Bun
         if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
-        uses: oven-sh/setup-bun@v2
+        uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
         with:
           bun-version: "1.3.11"
       - name: Prepare Local macOS Toolchain (act)
