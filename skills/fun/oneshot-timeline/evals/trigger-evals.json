@@ -1,0 +1,10 @@
+[
+  {"query": "/oneshot-timeline why bank runs happen", "should_trigger": true},
+  {"query": "Make a website that walks ordinary readers through a DNS lookup as a visual timeline.", "should_trigger": true},
+  {"query": "Build a playful scrollable chronology explaining how Enron unravelled, with source photos and deeper explanations.", "should_trigger": true},
+  {"query": "Turn my sourdough science notes into a one-shot explainer timeline site.", "should_trigger": true},
+  {"query": "Write a chronological timeline of the Enron collapse in five bullets, no website.", "should_trigger": false},
+  {"query": "Create a project timeline and Gantt chart for our next release.", "should_trigger": false},
+  {"query": "Make a landing page for a startup selling timeline software.", "should_trigger": false},
+  {"query": "Explain this convoluted OAuth process in a Mermaid diagram, not a site.", "should_trigger": false}
+]

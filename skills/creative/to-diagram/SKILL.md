@@ -1,6 +1,6 @@
 ---
 name: to-diagram
-description: "Turn a convoluted engineering, scientific, or general process into one clear Mermaid diagram and export matching Markdown and PNG files. Trigger on /to-diagram, process diagram, workflow visualization, concept map, or explain this flow visually. Do not use for data charts, image-only infographics, or simple diagram syntax questions."
+description: "Creates Mermaid diagrams for engineering, scientific and general processes or concepts, with Markdown and PNG exports. Use /to-diagram; skip data charts, infographics and syntax-only questions."
 compatibility: "Requires Python 3.11+ and either Mermaid CLI v11 on PATH or Node.js with npx; accepts an explicit mmdc executable override."
 ---
 

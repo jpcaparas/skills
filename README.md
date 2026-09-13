@@ -568,6 +568,16 @@ Fun production skill for deterministically translating plain English into exagge
 
 Fun skill for explaining code in a playful, sensual, flirtatious voice while preserving exact technical behavior, evidence boundaries, and a non-graphic code-only target.
 
+#### `oneshot-timeline`
+
+`npx skills add jpcaparas/skills --skill oneshot-timeline`
+
+<p align="center">
+  <img src="skills/fun/oneshot-timeline/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-timeline" width="480">
+</p>
+
+Creates accessible, entertaining timeline websites that untangle concepts and historical events through source-backed storytelling, topic-matched pastels and editorial collages. Each topic has one editable workspace and one portable artifact.
+
 #### `tarsier`
 
 `npx skills add jpcaparas/skills --skill tarsier`

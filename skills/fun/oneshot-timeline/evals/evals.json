@@ -1,0 +1,60 @@
+{
+  "skill_name": "oneshot-timeline",
+  "evals": [
+    {
+      "id": 1,
+      "name": "causal-dns-explainer",
+      "prompt": "Build a small entertaining timeline website for a non-technical teenager explaining a DNS lookup. Use the supplied fact sheet; this is an offline exercise, so do not browse. Make the working project under outputs/how-dns-works. Use local HTML/CSS/JS and original art if useful. Verify what you can with the installed browser and report exact limitations. Do not publish it.",
+      "expected_output": "An editable workspace and independently served artifact; an alternating unboxed dashed-spine desktop timeline and a left-spine mobile timeline. The causal story explains both uncached resolution and a cached shortcut without fake dates. Core reading and deeper explanations work without JavaScript.",
+      "files": ["evals/files/dns-facts.md"],
+      "tags": ["smoke", "edge", "accessibility"],
+      "assertions": [
+        {"type": "structural", "text": "The single topic folder contains actual editable site source in workspace and an independently served artifact reproducible from that source, without model/timestamp namespaces or orchestration manifests; a notes-only workspace fails."},
+        {"type": "functional", "text": "The explanation distinguishes the recursive resolver from authoritative servers and shows a cache hit bypassing the full lookup; it does not say DNS downloads the website."},
+        {"type": "functional", "text": "Rendered wide entries alternate unboxed text/art around a dashed centre spine; narrow entries use a left spine and chronological DOM order."},
+        {"type": "verification", "text": "Browser evidence covers narrow reflow, a working reading layout hiding decorative hero and beat art, and no-JavaScript core reading and navigation."},
+        {"type": "negative", "text": "Stages do not acquire fictional dates, and the artifact makes no external runtime requests."}
+      ]
+    },
+    {
+      "id": 2,
+      "name": "collage-without-a-fake-chart",
+      "prompt": "Before building an investigative timeline about the fictional company LeaseCo, write an asset and story treatment using the supplied evidence note. You have a good CEO cutout, an archive photo and logo, but the attempted vector timeline illustration is visibly jagged and unreadable at mobile size. The designer also left an attractive rising stock-price sketch without a dataset. Keep the collage entertaining. Save the treatment to outputs/treatment.md; do not generate the website or acquire assets in this planning step.",
+      "expected_output": "A light/pastel investigative treatment using the collage alone rather than retaining the bad vector or inventing graph values. Attribution, rights uncertainty, photo/event dates and financial measures remain explicit.",
+      "files": ["evals/files/leaseco-evidence.md"],
+      "tags": ["edge", "negative", "disclosure", "evidence"],
+      "assertions": [
+        {"type": "functional", "text": "The treatment removes both the unreadable vector and unsupported price sketch, retaining a collage-only composition instead of forcing replacement chart geometry."},
+        {"type": "disclosure", "text": "The treatment explicitly distinguishes the 2015 portrait capture from the 2019 filing and does not call the third-party archive photo public domain solely because it is government-hosted."},
+        {"type": "functional", "text": "The treatment keeps the $47bn valuation separate from $1.9bn annual loss and explains that there is no public share-price series in the supplied evidence."},
+        {"type": "disclosure", "text": "The media plan specifies padding before stroke expansion and real alpha checked over light and dark."},
+        {"type": "negative", "text": "The treatment allows news imagery with its credit requirements and bounds uncertain reuse without a source-domain allowlist, watermark removal or invented permission."}
+      ]
+    },
+    {
+      "id": 3,
+      "name": "prose-timeline-is-not-a-site",
+      "prompt": "Give me a five-bullet chronological outline of the events in this supplied LeaseCo note. Plain text only; I am not asking for a website or downloadable files.",
+      "expected_output": "A short evidence-bounded prose outline, with no project folders, asset acquisition, site generation or unnecessary subagents.",
+      "files": ["evals/files/leaseco-evidence.md"],
+      "tags": ["negative"],
+      "assertions": [
+        {"type": "negative", "text": "The answer remains prose and does not create files or start a website workflow."},
+        {"type": "functional", "text": "The answer does not invent five distinct dated corporate events when the supplied evidence contains fewer."}
+      ]
+    },
+    {
+      "id": 4,
+      "name": "failed-isolation-keeps-the-photograph",
+      "prompt": "We are continuing an investigative timeline website. The licensed news portrait is excellent, but every background-removal attempt destroys the person's hair and glasses. There is no usable cutout. The original framed photograph looks good, and a cheap image model could invent a cleaner face. Decide what to put on the page and how to credit it; save a short decision to outputs/decision.md. Do not edit images, call a paid tool or build the site in this decision step.",
+      "expected_output": "Retain an intentionally framed authentic photograph rather than discarding documentary imagery, inventing a face or pretending an opaque crop is a cutout. Credit the source and actual modifications.",
+      "files": [],
+      "tags": ["edge", "negative", "disclosure"],
+      "assertions": [
+        {"type": "disclosure", "text": "The decision keeps the authentic framed photograph and explicitly identifies it as the fallback for failed isolation, not a successful cutout."},
+        {"type": "negative", "text": "No synthetic face or alteration of documentary identity is proposed, and no paid operation occurs."},
+        {"type": "functional", "text": "The decision retains reader-visible source credit and records actual editorial modifications without inventing licence details."}
+      ]
+    }
+  ]
+}
