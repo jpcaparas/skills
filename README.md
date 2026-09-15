@@ -178,16 +178,6 @@ Passive production skill for keeping generated and edited code mockable, stubbab
 
 Production skill for creating or replacing minimal, evidence-backed root agent guidance and an exact Claude import while preserving project-specific truth and capable-model judgment.
 
-#### `codex-subagents`
-
-`npx skills add jpcaparas/skills --skill codex-subagents`
-
-<p align="center">
-  <img src="skills/agents/codex-subagents/skill-card.png" alt="16-bit side-scrolling pixel art badge for codex-subagents" width="480">
-</p>
-
-Codex CLI/App skill for using Codex subagents deliberately: explicit authorization, bounded delegation, disjoint write ownership, sandbox-aware prompts, model-neutral custom-agent guidance, and main-thread synthesis.
-
 #### `scaffold-github-cloud-agent-environment`
 
 `npx skills add jpcaparas/skills --skill scaffold-github-cloud-agent-environment`

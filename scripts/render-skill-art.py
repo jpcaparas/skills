@@ -44,7 +44,6 @@ SKILL_SCENES = {
     "better-chezmoi": "a dotfile workbench separating a source vault and home directory through a glowing preview gate, with template gems, a shielded secret capsule, and reversible sync rails",
     "better-writing": "a quill-shaped tool smoothing a jagged ribbon into a clean luminous ribbon",
     "bootstrap-agents-md": "a repository observatory distilling many project signal paths into one durable guidance beacon with a smaller companion beacon linked beside it",
-    "codex-subagents": "a command center splitting one bright task beam into several parallel agent lanes, each returning small summary gems to a central console",
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
     "devils-advocate": "two opposing debate champions facing each other across a glowing balance arena, with one mirrored argument shield, pressure-test sparks, and a central evidence gem",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
