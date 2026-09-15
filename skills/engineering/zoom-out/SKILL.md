@@ -45,7 +45,7 @@ What is the user asking for?
   Use {{ skill:ripgrep }} directly instead of producing an architecture map.
 
 - The user asks for durable repository intent or product purpose documentation
-  Use {{ skill:repo-intent-documenter }} instead. This skill maps code topology, not human intent.
+  This skill is not the right fit. It maps code topology, not human intent.
 
 ## Quick Reference
 

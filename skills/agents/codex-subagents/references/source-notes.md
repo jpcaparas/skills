@@ -24,7 +24,7 @@ This skill is grounded in official OpenAI Codex documentation checked on 2026-07
 
 ## Advisor-Skill Inspiration
 
-The gating style follows `{{ skill:claude-code-auto-advisor }}`:
+The gating style follows the removed `claude-code-auto-advisor` skill:
 
 - Exit immediately outside the intended harness.
 - Require a concrete reason before invoking an expensive or risky secondary agent capability.

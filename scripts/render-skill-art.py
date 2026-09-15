@@ -39,13 +39,11 @@ NO_TEXT_RULE = (
 SKILL_SCENES = {
     "adhd-friendly": "a focused pathway where scattered task fragments converge through a calm priority gate into one bright next-step tile, with completed progress gems behind and optional paths parked nearby",
     "adversarial-test-sweep": "a testing gauntlet where bug-shaped hazard sprites, boundary gates, race lanes, fault sparks, and resource barriers confront a shielded formation of distinct test gems",
-    "audify": "headphones catching flowing sound ribbons, waveform crystals, and a small studio mixer made of blank blocks",
     "azure-devops-create-work-item": "a quest-token forge where a hammer stamps a blank glowing slab into a task gem",
     "azure-devops-wiki-markdown": "a knowledge temple linking clean geometric blocks through glowing connector paths",
     "better-chezmoi": "a dotfile workbench separating a source vault and home directory through a glowing preview gate, with template gems, a shielded secret capsule, and reversible sync rails",
     "better-writing": "a quill-shaped tool smoothing a jagged ribbon into a clean luminous ribbon",
     "bootstrap-agents-md": "a repository observatory distilling many project signal paths into one durable guidance beacon with a smaller companion beacon linked beside it",
-    "claude-code-auto-advisor": "a coding cockpit with a main agent console, a glowing advisor beacon, shield gates, review lenses, and careful decision rails",
     "codex-subagents": "a command center splitting one bright task beam into several parallel agent lanes, each returning small summary gems to a central console",
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
     "devils-advocate": "two opposing debate champions facing each other across a glowing balance arena, with one mirrored argument shield, pressure-test sparks, and a central evidence gem",
@@ -53,25 +51,17 @@ SKILL_SCENES = {
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",
     "heuristic-to-deterministic": "a workshop converting fuzzy clue clouds into locked gears, check rails, and repeatable test gems",
     "implicit-token-savings": "a compact token backpack moving through a narrow efficient corridor",
-    "instagram-replicate": "a camera portal rebuilding a scene into film reels, snapshot tiles, and local asset crates",
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
-    "lean-text-scaffolding": "a compact layout workbench trimming bulky placeholder ribbons and blank tag blocks into a clean sparse interface panel",
-    "linkedin-speak": "a megaphone transforming a small plain block into an overbright beam of geometric confetti",
-    "make-my-code-flirtatious": "two elegant code-block spirits circling a warm glowing heart-shaped logic core, with blush-pink chemistry sparks and precise connector rails",
     "maintainable-app": "a resilient app control room with queue rails, recovery beacons, heartbeat gems, observability signal towers, and shielded service paths",
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
     "mockable-code": "a testing workbench with interchangeable dependency cartridges, stub blocks, fake service gems, and clean adapter rails",
-    "namethatui": "a field-guide scanner comparing an unknown floating interface shape with clear button, menu, panel, and dialog silhouette gems connected to trusted reference beacons",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
-    "oneshot-prompt-generator": "a precision prism scanner combining visual, motion, structure, and interaction reference gems into one bright handoff beam that enters a fresh empty world portal",
     "oneshot-timeline": "a winding trail of evenly separated story beacons untangling a knot of pathways, with small framed silhouette gems alternating beside the trail and a warm lantern illuminating the next moment",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
     "product-question": "a side-scrolling path of user-flow tiles and glowing inquiry gems leading toward a code city skyline, with simple unlabeled connectors and no screens or papers",
-    "reading-notes": "a reading desk collecting bookmarks, highlight bars, and task gems around a glowing source",
-    "repo-intent-documenter": "a compass room connecting repository clue gems into a clear route line",
     "repository-readme-writer": "a project book shrine assembled from setup tools, blank blocks, and guide rails",
     "ripgrep": "a magnifying beam racing through file shelves and lighting up matching pixels",
     "scaffold-hooks": "a universal agent hook switchboard routing four harness cables into one shared script rail",
@@ -80,14 +70,11 @@ SKILL_SCENES = {
     "seo-analysis": "a crawl-path garden where sitemap nodes glow under search spotlights",
     "skill-creator-advanced": "a skill forge crafting a reusable instruction cartridge from blank parts and test gems",
     "simplified-technical-english": "a precision language workshop where tangled instruction paths pass through a calibration gate into short clear action rails, with terminology gems, a hazard shield, and separate procedure and description lanes",
-    "sprite-decompose": "a luminous illustrated mosaic passing through a precision cutting gate and separating into several clean transparent sprite gems, with exact crop rails and a small manifest crystal",
     "strong-types": "a foundry casting loose shape-shifting blobs into crisp interlocking typed blocks along guarded connector rails with shield gates rejecting misfit pieces",
     "synthetic-search": "a zero-retention radar scanning the web through clean privacy lanes",
-    "tarsier": "a tiny bicycle courier carrying an art packet through a pixel side-scroller lane",
     "temporal-awareness": "a numeral-free clock tower aligning blank date blocks and live verification beacons",
     "to-diagram": "a tangled maze of process rails entering a clarity prism and emerging as one clean branching flow with phase gates and an image crystal",
     "travel-plan-spreadsheet-generator": "a travel desk arranging route tiles, luggage, blank tickets, and grid gems",
-    "tweet-replicate": "a social portal frame being rebuilt into a local video reel, snapshot tile, and asset crate",
     "zoom-out": "a camera lifting above a code city to reveal modules, routes, and call paths",
     "youtube-transcript-dossier": "a play portal unfolding a ribbon of caption gems into a tidy dossier with bookmark rails and topic tiles",
 }
@@ -150,10 +137,7 @@ def parse_args() -> argparse.Namespace:
 def prompt_for_skill(name: str) -> str:
     scene = SKILL_SCENES[name]
     blank_surface_subjects = (
-        "book, ticket, screen, terminal, dashboard, chart, browser, sign, speech bubble, "
-        "social post, calendar, spreadsheet, map, or interface surface"
-        if name == "sprite-decompose"
-        else "paper, book, ticket, screen, terminal, dashboard, chart, browser, sign, "
+        "paper, book, ticket, screen, terminal, dashboard, chart, browser, sign, "
         "speech bubble, social post, calendar, spreadsheet, map, or interface surface"
     )
     return f"""Nano Banana 2 image generation prompt for the `{name}` README skill badge.

@@ -25,8 +25,8 @@ For one skill, use the exact command beside its card below. To install a categor
 ## Find a starting point
 
 - Hardening a codebase? Start with `maintainable-code`, `strong-types`, and `adversarial-test-sweep`.
-- Orienting yourself before a change? Try `zoom-out`, `eli12`, or `repo-intent-documenter`.
-- Turning source material into something useful? Try `reading-notes`, `better-writing`, or `to-diagram`.
+- Orienting yourself before a change? Try `zoom-out`, `eli12`, or `product-question`.
+- Turning source material into something useful? Try `youtube-transcript-dossier`, `better-writing`, or `to-diagram`.
 - Building visual output? Explore `interface-design-taste`, `nanobanana-infographic`, or `oneshot-websites`.
 
 ## Category map
@@ -178,16 +178,6 @@ Passive production skill for keeping generated and edited code mockable, stubbab
 
 Production skill for creating or replacing minimal, evidence-backed root agent guidance and an exact Claude import while preserving project-specific truth and capable-model judgment.
 
-#### `claude-code-auto-advisor`
-
-`npx skills add jpcaparas/skills --skill claude-code-auto-advisor`
-
-<p align="center">
-  <img src="skills/agents/claude-code-auto-advisor/skill-card.png" alt="16-bit side-scrolling pixel art badge for claude-code-auto-advisor" width="480">
-</p>
-
-Claude Code specific passive skill that consults the configured advisor for security work, code reviews, multi-step high-level plan validation for substantial work, high-stakes design, complex refactors, recurring failures, and risky completion checks while staying inert when advisor is unavailable.
-
 #### `codex-subagents`
 
 `npx skills add jpcaparas/skills --skill codex-subagents`
@@ -270,16 +260,6 @@ Production writing system for drafting, rewriting, review, humanisation, and ada
 
 Production skill for turning git commits and diffs since an exact date into a feature-grouped, non-technical client update, with strict date handling and repository checks.
 
-#### `repo-intent-documenter`
-
-`npx skills add jpcaparas/skills --skill repo-intent-documenter`
-
-<p align="center">
-  <img src="skills/writing/repo-intent-documenter/skill-card.png" alt="16-bit side-scrolling pixel art badge for repo-intent-documenter" width="480">
-</p>
-
-Production skill for creating evidence-backed repository intent documents that explain the high-level purpose of a codebase, label certainty, preserve open questions, and give future coding agents a durable briefing.
-
 #### `repository-readme-writer`
 
 `npx skills add jpcaparas/skills --skill repository-readme-writer`
@@ -332,16 +312,6 @@ Production skill for auditing a live repository against Cloudflare's agent-readi
 
 Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
 
-#### `reading-notes`
-
-`npx skills add jpcaparas/skills --skill reading-notes`
-
-<p align="center">
-  <img src="skills/research/reading-notes/skill-card.png" alt="16-bit side-scrolling pixel art badge for reading-notes" width="480">
-</p>
-
-Production skill for turning supplied resources such as notes, documents, webpages, YouTube videos, transcripts, screenshots, talks, and PDFs into high-level topics, interesting ideas, research leads, open questions, and concrete homework todos.
-
 #### `seo-analysis`
 
 `npx skills add jpcaparas/skills --skill seo-analysis`
@@ -384,26 +354,6 @@ Production skill for converting YouTube video transcripts into structured dossie
 
 ### Creative
 
-#### `audify`
-
-`npx skills add jpcaparas/skills --skill audify`
-
-<p align="center">
-  <img src="skills/creative/audify/skill-card.png" alt="16-bit side-scrolling pixel art badge for audify" width="480">
-</p>
-
-Production skill for turning readable URLs, files, and raw text into cleaned Gemini 3.1 Flash TTS narration, with markup stripping, default MP3 bundle output, and fail-fast prerequisite checks.
-
-#### `instagram-replicate`
-
-`npx skills add jpcaparas/skills --skill instagram-replicate`
-
-<p align="center">
-  <img src="skills/creative/instagram-replicate/skill-card.png" alt="16-bit side-scrolling pixel art badge for instagram-replicate" width="480">
-</p>
-
-Production skill for deterministically rebuilding a public Instagram video post or reel into a rerenderable local build with a frozen snapshot, local assets, MP4 output, and a companion GIF capped under 24 MB.
-
 #### `interface-design-taste`
 
 `npx skills add jpcaparas/skills --skill interface-design-taste`
@@ -413,26 +363,6 @@ Production skill for deterministically rebuilding a public Instagram video post 
 </p>
 
 Production skill for shaping web, app, and desktop interfaces with stronger hierarchy, cleaner typography, tighter color and surface systems, platform-aware interaction design, and redesign-first critique workflows that avoid generic AI UI defaults.
-
-#### `lean-text-scaffolding`
-
-`npx skills add jpcaparas/skills --skill lean-text-scaffolding`
-
-<p align="center">
-  <img src="skills/creative/lean-text-scaffolding/skill-card.png" alt="16-bit side-scrolling pixel art badge for lean-text-scaffolding" width="480">
-</p>
-
-Production skill for preventing bloated web-page scaffolds by enforcing lean copy defaults, removing generic labels and placeholder text unless requested, and preserving accessible form labels and operational UI text.
-
-#### `namethatui`
-
-`npx skills add jpcaparas/skills --skill namethatui`
-
-<p align="center">
-  <img src="skills/creative/namethatui/skill-card.png" alt="16-bit side-scrolling pixel art badge for namethatui" width="480">
-</p>
-
-Production skill for naming unfamiliar UI components from descriptions, screenshots, live pages, or DOM clues, with ranked aliases, prompt-ready wording, authoritative links, and a hard guard against accessing namethatui.com.
 
 #### `nanobanana-infographic`
 
@@ -444,16 +374,6 @@ Production skill for naming unfamiliar UI components from descriptions, screensh
 
 Production skill for Nano Banana 2 infographic prompting and verification covering low-noise prompt variants, default `16:9` review sets, terse in-image copy rules, and live Gemini image API probes for executive and editorial visuals.
 
-#### `oneshot-prompt-generator`
-
-`npx skills add jpcaparas/skills --skill oneshot-prompt-generator`
-
-<p align="center">
-  <img src="skills/creative/oneshot-prompt-generator/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-prompt-generator" width="480">
-</p>
-
-Production skill for dissecting websites, apps, visuals, media, documents, code, and mixed references into one self-contained raw replication prompt, with a web-product default, explicit target overrides, and evidence-aware fidelity.
-
 #### `oneshot-websites`
 
 `npx skills add jpcaparas/skills --skill oneshot-websites`
@@ -464,16 +384,6 @@ Production skill for dissecting websites, apps, visuals, media, documents, code,
 
 Production skill for launching one-shot website experiments through fresh isolated subagents, with explicit multi-lead and same-prompt replica fan-out, a catalogue seeded with 100 prompts, lead-owned builder/critic quality gauntlets, coordinator-recorded prompt provenance, slugged timestamp run directories, local-only publication safeguards, and drop-ready static artifacts.
 
-#### `sprite-decompose`
-
-`npx skills add jpcaparas/skills --skill sprite-decompose`
-
-<p align="center">
-  <img src="skills/creative/sprite-decompose/skill-card.png" alt="16-bit side-scrolling pixel art badge for sprite-decompose" width="480">
-</p>
-
-Production skill for separating an existing sprite sheet or illustration contact sheet into reviewed, alpha-tight transparent PNGs with stable filenames and a validated extraction manifest.
-
 #### `to-diagram`
 
 `npx skills add jpcaparas/skills --skill to-diagram`
@@ -483,16 +393,6 @@ Production skill for separating an existing sprite sheet or illustration contact
 </p>
 
 General-purpose process-modeling skill that turns convoluted engineering, scientific, and everyday concepts into one clear Mermaid diagram with matching Markdown source and a verified PNG export.
-
-#### `tweet-replicate`
-
-`npx skills add jpcaparas/skills --skill tweet-replicate`
-
-<p align="center">
-  <img src="skills/creative/tweet-replicate/skill-card.png" alt="16-bit side-scrolling pixel art badge for tweet-replicate" width="480">
-</p>
-
-Production skill for deterministically rebuilding a public X/Twitter post into a rerenderable local build with `snapshot.json`, local assets, MP4 output, and a companion GIF capped under 24 MB.
 
 ### Productivity
 
@@ -548,26 +448,6 @@ Production skill for turning messy travel notes, PDFs, screenshots, shopping ask
 
 ### Fun
 
-#### `linkedin-speak`
-
-`npx skills add jpcaparas/skills --skill linkedin-speak`
-
-<p align="center">
-  <img src="skills/fun/linkedin-speak/skill-card.png" alt="16-bit side-scrolling pixel art badge for linkedin-speak" width="480">
-</p>
-
-Fun production skill for deterministically translating plain English into exaggerated LinkedIn-speak parody, reversing bloated thought-leader posts back into blunt English, and generating Kagi comparison URLs for side-by-side checks.
-
-#### `make-my-code-flirtatious`
-
-`npx skills add jpcaparas/skills --skill make-my-code-flirtatious`
-
-<p align="center">
-  <img src="skills/fun/make-my-code-flirtatious/skill-card.png" alt="16-bit side-scrolling pixel art badge for make-my-code-flirtatious" width="480">
-</p>
-
-Fun skill for explaining code in a playful, sensual, flirtatious voice while preserving exact technical behavior, evidence boundaries, and a non-graphic code-only target.
-
 #### `oneshot-timeline`
 
 `npx skills add jpcaparas/skills --skill oneshot-timeline`
@@ -578,25 +458,3 @@ Fun skill for explaining code in a playful, sensual, flirtatious voice while pre
 
 Creates accessible, entertaining timeline websites that untangle concepts and historical events through source-backed storytelling, topic-matched pastels and editorial collages. Each topic has one editable workspace and one portable artifact.
 
-#### `tarsier`
-
-`npx skills add jpcaparas/skills --skill tarsier`
-
-<p align="center">
-  <img src="skills/fun/tarsier/skill-card.png" alt="16-bit side-scrolling pixel art badge for tarsier" width="480">
-</p>
-
-Creative one-shot skill that generates a tarsier riding a bicycle as an SVG, a padded 500x500 PNG, and a markdown transcript in a timestamped output folder.
-
-## Repository Layout
-
-Installable skills live under a primary category in `skills/`. Category names organise source paths only; globally unique leaf names remain the install and invocation identity.
-
-```text
-skills/
-  <category>/
-    <skill-name>/
-      SKILL.md
-```
-
-Optional wrapper files such as `README.md`, `AGENTS.md`, and `metadata.json` can live beside `SKILL.md`, but `SKILL.md` remains the authoritative instruction source.

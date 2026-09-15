@@ -332,7 +332,7 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="art refresh ") as directory:
             root = Path(directory)
             selected = root / "skills/engineering/maintainable-code"
-            other = root / "skills/fun/tarsier"
+            other = root / "skills/fun/oneshot-timeline"
             for package in (selected, other):
                 package.mkdir(parents=True)
                 (package / "SKILL.md").write_text(
@@ -350,7 +350,7 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
             )
             readme = readme_with_section(readme_skill_section("maintainable-code"))
             readme += "Editorial description that must survive.\n\n### Fun\n\n"
-            readme += readme_skill_section("tarsier").split("### Engineering\n\n", 1)[1]
+            readme += readme_skill_section("oneshot-timeline").split("### Engineering\n\n", 1)[1]
             readme_path = root / "README.md"
             readme_path.write_text(readme, encoding="utf-8")
 
@@ -370,7 +370,7 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stderr)
             updated = readme_path.read_text(encoding="utf-8")
             self.assertIn("Editorial description that must survive.", updated)
-            self.assertIn('src="skills/fun/tarsier/skill-card.png"', updated)
+            self.assertIn('src="skills/fun/oneshot-timeline/skill-card.png"', updated)
             self.assertNotIn('src="skills/engineering/tarsier/skill-card.png"', updated)
             self.assertEqual(2, updated.count('<img src="skills/'))
             self.assertIn(
