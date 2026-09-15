@@ -21,12 +21,22 @@ REQUIRED_FILES = [
     "references/review-rubric.md",
     "references/implementation-plans.md",
     "references/guardrails-and-quality-gates.md",
+    "references/resilience.md",
+    "references/jobs-and-queues.md",
+    "references/distributed-systems.md",
+    "references/observability.md",
+    "references/dependency-boundaries.md",
+    "references/test-doubles.md",
     "references/gotchas.md",
     "references/source-notes.md",
     "scripts/analyze_maintainability.py",
+    "scripts/analyze_app_resilience.py",
+    "scripts/analyze_mockability.py",
     "scripts/validate.py",
     "scripts/test_skill.py",
     "templates/maintainability-review.md",
+    "templates/resilience-review.md",
+    "templates/mockability-review.md",
     "evals/evals.json",
 ]
 
@@ -163,6 +173,31 @@ def validate(root: Path) -> dict[str, object]:
         plan_section = re.search(r"- Writing a plan[\s\S]*?(?=\n- |\n## )", content)
         if not plan_section or "references/commenting.md" not in plan_section.group(0):
             errors.append("SKILL.md planning route must mention references/commenting.md for operational code")
+        jobs_section = re.search(r"- Adding background jobs[\s\S]*?(?=\n- |\n## )", content)
+        if (
+            not jobs_section
+            or "references/resilience.md" not in jobs_section.group(0)
+            or "references/jobs-and-queues.md" not in jobs_section.group(0)
+        ):
+            errors.append("SKILL.md must route background jobs to resilience and jobs-and-queues references")
+        dependency_section = re.search(
+            r"- Adding code that calls a dependency[\s\S]*?(?=\n- |\n## )",
+            content,
+        )
+        if not dependency_section or "references/dependency-boundaries.md" not in dependency_section.group(0):
+            errors.append("SKILL.md must route dependency-heavy code to references/dependency-boundaries.md")
+        doubles_section = re.search(
+            r"- Choosing how to replace a dependency[\s\S]*?(?=\n- |\n## )",
+            content,
+        )
+        if not doubles_section or "references/test-doubles.md" not in doubles_section.group(0):
+            errors.append("SKILL.md must route test-double choices to references/test-doubles.md")
+        observability_section = re.search(
+            r"- Adding logging, metrics, tracing[\s\S]*?(?=\n- |\n## )",
+            content,
+        )
+        if not observability_section or "references/observability.md" not in observability_section.group(0):
+            errors.append("SKILL.md must route observability work to references/observability.md")
         maintainer_context = re.search(r"future maintainer|junior maintainer|next maintainer", content, re.IGNORECASE)
         system_context = re.search(r"fundamentals|system history|system context|session context", content, re.IGNORECASE)
         if not maintainer_context or not system_context:

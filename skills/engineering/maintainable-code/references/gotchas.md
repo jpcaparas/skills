@@ -115,8 +115,98 @@ Repair:
 - Convert errors at user-facing boundaries.
 - Test important failure modes.
 
+## Retries
+
+1. Retrying a side effect without idempotency is duplicate-work generation, not resilience.
+2. Retrying at the HTTP client, SDK, service layer, job layer, and queue layer can multiply load. Pick one owner when possible.
+3. Capped backoff without jitter can synchronize clients at the cap and keep hammering a recovering dependency.
+4. Retrying 4xx validation or permission errors usually hides product bugs and delays terminal feedback.
+5. A timeout does not prove the remote side effect did not happen. Reconcile or retry with the same idempotency key.
+
+## Queues
+
+1. Unique dispatch does not always mean unique execution. The lock scope and TTL matter.
+2. Job timeout must be shorter than queue visibility or retry-after settings. Otherwise a second worker can start before the first is dead.
+3. Long jobs without heartbeat cannot distinguish slow progress from a crashed worker.
+4. Dead-letter queues without alarms and redrive rules become forgotten storage.
+5. Queue length alone can lie. Oldest message age and worker saturation usually reveal stuck processing faster.
+6. FIFO ordering can conflict with dead-letter redrive. Preserve ordering only where the business needs it.
+
+## Work State
+
+1. `pending` needs a creation time, owner, timeout, and next transition.
+2. `failed` needs retryability context. Some failures are terminal, some can redrive after a fix, and some require reconciliation first.
+3. `canceled` work still needs side-effect rules. Canceling a local job might not cancel provider work already in flight.
+4. Free-form status strings spread invalid transitions across the app. Use typed states or centralized transition helpers where the language allows it.
+
+## Distributed Data
+
+1. Publishing an event after committing a database transaction can lose the event if the process crashes.
+2. Publishing inside a transaction can publish an event for a transaction that later rolls back.
+3. Outbox relays can publish more than once, so consumers still need idempotency.
+4. Sagas do not give automatic rollback. Every compensation must be real, safe, and observable.
+5. Webhooks can be duplicated, delayed, reordered, or missed. Critical state needs reconciliation.
+
+## Observability
+
+1. Logs that omit work identity are expensive breadcrumbs. Add correlation ID and work key.
+2. Logging every success in high-volume paths can become a cost and privacy problem. Prefer metrics and sampled logs.
+3. High-cardinality metric labels can make the observability system unstable or expensive.
+4. Tracing tiny local functions creates noise. Trace cross-boundary calls and async handoffs.
+5. Alerting on expected retries trains the maintainer to ignore alerts. Alert when automation is exhausted or users are impacted.
+
+## Mockability Traps
+
+1. Interface inflation.
+   Adding an interface for every class creates noise without improving substitution. Add contracts at dependency ownership boundaries or where a real fake, stub, or adapter exists.
+
+2. Mocking the design instead of the behavior.
+   A test that asserts every internal call usually freezes implementation. Assert outcomes unless call shape is the actual contract.
+
+3. Production wiring with no coverage.
+   Injected dependencies can make unit tests pass while the real application cannot construct the graph. Keep a smoke, integration, or contract test for wiring that matters.
+
+4. Hidden deterministic dependencies.
+   Clocks, random values, environment reads, locale, timezone, current user, and process-wide context can make tests flaky even without network or database calls.
+
+5. Test-only APIs.
+   Public setters, mutable globals, or flags added only for tests weaken production design. Prefer explicit construction, parameters, fixtures, or framework-supported overrides.
+
+6. Over-faking external systems.
+   An in-memory fake can drift from a database, broker, or external API. Use fakes for behavior speed, then backstop risky translation with contract or integration checks.
+
+7. Monkeypatch dependency.
+   Patching module globals is sometimes the least disruptive move in legacy code, but new core code should usually expose a clearer replacement point.
+
+8. Async and scheduler leaks.
+   Sleeps, real timers, background jobs, and unjoined tasks make tests slow or flaky. Prefer controllable schedulers, explicit await points, captured queues, or deterministic job runners.
+
+9. Constructor work.
+   Constructors that call networks, read files, start threads, or inspect environment are hard to replace and hard to fail safely. Move effects into explicit start/connect/load calls or outer wiring.
+
+10. Vendor-shaped domain code.
+    Passing vendor SDK objects deep into business logic couples tests to transport details. Translate at an adapter boundary into domain-shaped data where practical.
+
+### Mockability Repair Heuristic
+
+When a test cannot replace a dependency, ask:
+
+1. Is the dependency needed for the behavior under test?
+2. Who should own creating it in production?
+3. What is the smallest contract the behavior needs?
+4. What double would honestly model it?
+5. What adapter or integration check prevents drift?
+
+Stop once the current risk is verifiable. Do not keep abstracting after the dependency is replaceable and the production path remains clear.
+
 ## See Also
 
 - `references/principles.md`
 - `references/decomposition.md`
 - `references/guardrails-and-quality-gates.md`
+- `references/resilience.md`
+- `references/jobs-and-queues.md`
+- `references/distributed-systems.md`
+- `references/observability.md`
+- `references/dependency-boundaries.md`
+- `references/test-doubles.md`

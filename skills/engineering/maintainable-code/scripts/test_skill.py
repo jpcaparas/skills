@@ -1046,6 +1046,107 @@ def check_scanner(skill_root: Path, errors: list[str]) -> None:
         check_fifo_safety(skill_root, analyzer, fifo_root, errors)
 
 
+def run_auxiliary_scan(
+    skill_root: Path, script: str, fixture: Path, errors: list[str]
+) -> set[str]:
+    """Run one of the folded-in scanners and return the finding kinds it reports."""
+    result = subprocess.run(
+        [sys.executable, str(skill_root / "scripts" / script), str(fixture), "--json"],
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        errors.append(f"{script} failed with exit code {result.returncode}: {result.stderr.strip()}")
+        return set()
+    try:
+        payload = json.loads(result.stdout)
+    except json.JSONDecodeError:
+        errors.append(f"{script} did not emit JSON with --json")
+        return set()
+    findings = payload.get("findings", [])
+    if not isinstance(findings, list):
+        errors.append(f"{script} JSON output has no findings list")
+        return set()
+    return {item.get("kind") for item in findings if isinstance(item, Mapping)}
+
+
+def check_auxiliary_scanners(skill_root: Path, errors: list[str]) -> None:
+    """Smoke-test the resilience and mockability scanners folded into this skill.
+
+    These scanners are intentionally heuristic prompt tools, so the regression
+    covers known trigger lines and a clean control rather than exact output.
+    """
+    with tempfile.TemporaryDirectory() as tmp:
+        fixture = Path(tmp)
+
+        # External call with no timeout signal and queued work with no stable
+        # identity nearby must both be surfaced by the resilience scanner.
+        (fixture / "worker.py").write_text(
+            'import requests\n\ndef run() -> object:\n    return requests.post("https://api.example.com/charge")\n',
+            encoding="utf-8",
+        )
+        (fixture / "job.ts").write_text(
+            "export function start(accountId: string) {\n  dispatch(new MonthlyReportJob(accountId))\n}\n",
+            encoding="utf-8",
+        )
+        resilience_kinds = run_auxiliary_scan(
+            skill_root, "analyze_app_resilience.py", fixture, errors
+        )
+        for expected in ("external-call-without-timeout", "queued-work-without-identity"):
+            if expected not in resilience_kinds:
+                errors.append(
+                    f"analyze_app_resilience.py missed expected finding kind: {expected}"
+                )
+
+        # Hardcoded clock, environment read, and inline client construction
+        # must all be surfaced by the mockability scanner.
+        (fixture / "mockable_smells.ts").write_text(
+            "export function charge() {\n"
+            "  const client = new PaymentClient()\n"
+            "  const at = Date.now()\n"
+            "  const timeout = process.env.PAYMENT_TIMEOUT_MS\n"
+            "  return client.pay(at, timeout)\n"
+            "}\n",
+            encoding="utf-8",
+        )
+        mockability_kinds = run_auxiliary_scan(
+            skill_root, "analyze_mockability.py", fixture, errors
+        )
+        for expected in ("hidden-time-dependency", "direct-environment-read", "direct-construction"):
+            if expected not in mockability_kinds:
+                errors.append(
+                    f"analyze_mockability.py missed expected finding kind: {expected}"
+                )
+
+        # A clean control directory must not produce findings from either scanner.
+        # Explicit collaborators replace the hardcoded clock, env, network, and
+        # client construction smells above, so both scanners stay quiet.
+        clean = fixture / "clean"
+        clean.mkdir()
+        (clean / "handler.ts").write_text(
+            "type Clock = { now(): number }\n"
+            "export function reportTitle(clock: Clock): string {\n"
+            '  return `report-${clock.now()}`\n'
+            "}\n",
+            encoding="utf-8",
+        )
+        clean_resilience = run_auxiliary_scan(
+            skill_root, "analyze_app_resilience.py", clean, errors
+        )
+        if clean_resilience:
+            errors.append(
+                "analyze_app_resilience.py flagged the clean control: " + ", ".join(sorted(clean_resilience))
+            )
+        clean_mockability = run_auxiliary_scan(
+            skill_root, "analyze_mockability.py", clean, errors
+        )
+        if clean_mockability:
+            errors.append(
+                "analyze_mockability.py flagged the clean control: " + ", ".join(sorted(clean_mockability))
+            )
+
+
 def check_evals(root: Path, errors: list[str]) -> tuple[int, set[str], int]:
     evals_path = root / "evals" / "evals.json"
     if not evals_path.is_file():
@@ -1119,6 +1220,7 @@ def main(argv: list[str]) -> int:
         errors.append("validate.py failed")
 
     check_scanner(root, errors)
+    check_auxiliary_scanners(root, errors)
     eval_count, tags, assertion_count = check_evals(root, errors)
     if not (root / "templates" / "maintainability-review.md").is_file():
         errors.append("maintainability review template is missing")

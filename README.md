@@ -84,16 +84,6 @@ Production skill for turning session learnings, repeated heuristics, and manual 
 
 Production skill for minimizing context burn during coding sessions by preferring compact filesystem, git, test, and container commands, with verified local probes and clean fallbacks when preferred binaries are absent.
 
-#### `maintainable-app`
-
-`npx skills add jpcaparas/skills --skill maintainable-app`
-
-<p align="center">
-  <img src="skills/engineering/maintainable-app/skill-card.png" alt="16-bit side-scrolling pixel art badge for maintainable-app" width="480">
-</p>
-
-Passive production skill for building self-healing applications with safer edge-case handling, jobs, queues, distributed systems, graceful degradation, and observability grounded in the four golden signals.
-
 #### `maintainable-code`
 
 `npx skills add jpcaparas/skills --skill maintainable-code`
@@ -102,7 +92,7 @@ Passive production skill for building self-healing applications with safer edge-
   <img src="skills/engineering/maintainable-code/skill-card.png" alt="16-bit side-scrolling pixel art badge for maintainable-code" width="480">
 </p>
 
-Passive production skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, and understandable to human maintainers.
+Passive production skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, resilient to production failures (jobs, queues, retries, observability), and easy to isolate in tests through replaceable dependency boundaries.
 
 #### `ripgrep`
 
@@ -155,16 +145,6 @@ Language-agnostic adversarial test hardening that builds a bounded risk ledger, 
 </p>
 
 Passive production skill for writing and reviewing tests that read as living documentation, cover meaningful edge cases, explain legacy behavior, and stay maintainable for future developers.
-
-#### `mockable-code`
-
-`npx skills add jpcaparas/skills --skill mockable-code`
-
-<p align="center">
-  <img src="skills/testing/mockable-code/skill-card.png" alt="16-bit side-scrolling pixel art badge for mockable-code" width="480">
-</p>
-
-Passive production skill for keeping generated and edited code mockable, stubbable, fake-friendly, and testable without real external dependencies.
 
 ### Agents
 

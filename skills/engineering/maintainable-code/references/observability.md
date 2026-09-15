@@ -158,7 +158,7 @@ The best observability is enough to debug the incident without creating a second
 
 ## See Also
 
-- `principles.md`
+- `resilience.md`
 - `jobs-and-queues.md`
 - `distributed-systems.md`
 - `review-rubric.md`

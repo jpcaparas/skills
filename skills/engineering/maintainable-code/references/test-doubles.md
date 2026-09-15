@@ -53,5 +53,5 @@ Avoid vague names like `MockHelper`, `FakeService`, or `TestManager` when a doma
 
 ## See Also
 
-- `boundaries.md` for where to inject the double.
+- `dependency-boundaries.md` for where to inject the double.
 - `review-rubric.md` for severity ordering in reviews.

@@ -1,10 +1,10 @@
 {
   "name": "maintainable-code",
   "display_name": "Maintainable Code",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "license": "MIT",
   "entrypoint": "SKILL.md",
-  "description": "Passive coding skill for generating, refactoring, reviewing, and planning maintainable code with clear boundaries, safe defaults, compatibility guardrails, executable quality gates, and context-preserving developer comments.",
+  "description": "Passive coding skill for generating, refactoring, reviewing, and planning maintainable, resilient, test-double-friendly code with clear boundaries, safe defaults, idempotent recovery, observability, executable quality gates, and context-preserving developer comments.",
   "tags": [
     "maintainability",
     "code-review",
@@ -15,6 +15,12 @@
     "quality-gates",
     "compatibility",
     "clean-code",
+    "resilience",
+    "observability",
+    "idempotency",
+    "jobs-and-queues",
+    "testability",
+    "mocking",
     "agent-workflows"
   ]
 }

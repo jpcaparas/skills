@@ -154,7 +154,7 @@ Reconciliation job checklist:
 
 ## See Also
 
-- `principles.md`
+- `resilience.md`
 - `jobs-and-queues.md`
 - `observability.md`
 - `gotchas.md`

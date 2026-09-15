@@ -43,7 +43,7 @@ What are you doing?
   Read `references/structure-and-fixtures.md`. Keep the happy path visible, then add boundary cases whose names say what makes the boundary meaningful.
 
 - Tests are hard because the production code is tangled or unmockable:
-  Read `references/doubles-and-boundaries.md`, then load {{ skill:maintainable-code }} and {{ skill:mockable-code }} if available. Improve the production boundary before writing contorted tests.
+  Read `references/doubles-and-boundaries.md`, then load {{ skill:maintainable-code }} if available. Improve the production boundary before writing contorted tests.
 
 - Refactoring legacy code before changing behavior:
   Read `references/legacy-and-characterization.md`. Add characterization tests first, label intentional legacy behavior, then change production code in small verified steps.

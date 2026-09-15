@@ -168,7 +168,7 @@ This avoids ten parallel queues, ten provider calls, and ten copies of the same 
 
 ## See Also
 
-- `principles.md`
+- `resilience.md`
 - `distributed-systems.md`
 - `observability.md`
 - `gotchas.md`
