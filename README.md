@@ -84,6 +84,16 @@ Production skill for turning session learnings, repeated heuristics, and manual 
 
 Production skill for minimizing context burn during coding sessions by preferring compact filesystem, git, test, and container commands, with verified local probes and clean fallbacks when preferred binaries are absent.
 
+#### `jev-opportunities`
+
+`npx skills add jpcaparas/skills --skill jev-opportunities`
+
+<p align="center">
+  <img src="skills/engineering/jev-opportunities/skill-card.png" alt="16-bit side-scrolling pixel art badge for jev-opportunities" width="480">
+</p>
+
+Explicitly invoked audits for applications without Jev: scrape live documentation, find cost reductions, fast paths, adjudication and other semantic decision opportunities, then measure permission-gated spikes against the existing implementation.
+
 #### `maintainable-code`
 
 `npx skills add jpcaparas/skills --skill maintainable-code`

@@ -1,0 +1,6 @@
+interface:
+  display_name: "Jev Opportunities"
+  short_description: "Find and spike evidence-backed Jev optimisations"
+  default_prompt: "Use jev-opportunities to inspect this application, refresh the live Jev docs, and propose measurable optimisation spikes. Ask before live API calls."
+policy:
+  allow_implicit_invocation: false

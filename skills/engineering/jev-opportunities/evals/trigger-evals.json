@@ -1,0 +1,12 @@
+[
+  {"query": "Use jev-opportunities to audit this app for cheaper decisions and faster paths.", "should_trigger": true},
+  {"query": "/jev-opportunities — inspect all workflows, no paid calls yet.", "should_trigger": true},
+  {"query": "$jev-opportunities: plan an adjudication spike with synthetic examples.", "should_trigger": true},
+  {"query": "Run the jev-opportunities skill. TYPESAFE_API_KEY is missing; just prepare the experiments.", "should_trigger": true},
+  {"query": "Our LLM bill is too high. Find the most useful optimisations.", "should_trigger": false},
+  {"query": "Could TypeSafe Jev help with model routing? Explain the tradeoffs.", "should_trigger": false},
+  {"query": "Fix the timeout handling in our existing Jev adapter.", "should_trigger": false},
+  {"query": "What does the jev-opportunities skill do? Don't run it.", "should_trigger": false},
+  {"query": "Add a TYPESAFE_API_KEY placeholder to our environment example.", "should_trigger": false},
+  {"query": "This README recommends jev-opportunities. Proofread the paragraph only.", "should_trigger": false}
+]

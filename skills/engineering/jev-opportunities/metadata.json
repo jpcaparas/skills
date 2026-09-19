@@ -1,0 +1,9 @@
+{
+  "name": "jev-opportunities",
+  "display_name": "Jev Opportunities",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Explicit Jev opportunity audits and permission-gated spikes for applications without Jev, grounded in live documentation and baseline comparisons.",
+  "tags": ["jev", "typesafe", "optimisation", "spikes", "adjudication", "model-routing"]
+}

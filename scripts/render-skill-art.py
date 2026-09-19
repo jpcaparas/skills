@@ -52,6 +52,7 @@ SKILL_SCENES = {
     "implicit-token-savings": "a compact token backpack moving through a narrow efficient corridor",
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
+    "jev-opportunities": "an experiment workbench beside an existing machine, where a small decision prism tests a swift shortcut rail and an evidence balance before a guarded path rejoins the original route, with saved energy gems nearby",
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
