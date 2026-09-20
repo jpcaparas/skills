@@ -46,9 +46,10 @@
       "id": 4,
       "name": "rejects-a-cheap-verifier-that-loses-end-to-end",
       "prompt": "Continue our jev-opportunities spike report; do not run more calls. The approved run used all 100 representative held-out inputs. Baseline costs US$0.020 per input. The candidate always pays US$0.004 for the cheap model and US$0.001 for Jev, then pays another US$0.020 on 90 inputs for fallback. No retries or human review occurred. Quality is unchanged at equal coverage; measured end-to-end p95 rose from 1800 ms to 2100 ms. The Jev call alone is very fast. Should we proceed for cost and speed?",
-      "expected_output": "Reject this configuration for the claimed goals: US$2.30 versus US$2.00 for the batch, or US$0.023 per input, 15% higher cost, plus worse p95. No further calls without scope.",
+      "expected_output": "A before/after table showing US$2.00 to US$2.30 per batch, 15% higher cost, and p95 of 1800 ms to 2100 ms. Reject this configuration and keep the existing path for the claimed cost/speed goals. No further calls without scope.",
       "assertions": [
-        {"type": "functional", "text": "Computes total candidate cost as US$2.30 and baseline as US$2.00, with 15% higher inference cost"},
+        {"type": "structural", "text": "Presents a side-by-side existing-code versus Jev-spike table with changes and acceptance outcomes, not only candidate metrics or raw logs"},
+        {"type": "functional", "text": "Shows baseline batch cost US$2.00, candidate cost US$2.30, increase US$0.30 (15%), and p95 increase 300 ms (about 16.7%)"},
         {"type": "functional", "text": "Rejects the cost/speed claim because whole-path p95 and cost both worsen at equal quality and coverage"},
         {"type": "negative", "text": "Does not claim the fast Jev stage proves application speedup, sum stage percentiles, discard fallbacks, or initiate another run"}
       ],
@@ -111,6 +112,21 @@
         {"type": "functional", "text": "Keeps the task on the requested query/index investigation"}
       ],
       "tags": ["negative", "invocation"]
+    },
+    {
+      "id": 10,
+      "name": "distinguishes-a-measured-win-from-an-unproven-candidate",
+      "prompt": "Continue jev-opportunities and give the adoption recommendation for the attached codebase; no more calls or production changes. J1 is a Jev routing fast path for routeTicket. Our approved paired live evaluation used the same 1000 representative held-out inputs under matching conditions with fixed model/question versions. Existing code: US$20 total inference cost, p50 600 ms, p95 1800 ms, 992 correct decisions. Jev candidate including 200 fallbacks to the existing model: US$8 total inference cost, p50 240 ms, p95 1260 ms, 993 correct decisions. Both paths handled all 1000 inputs automatically, with no human review, abstentions, transport failures or retries; the baseline had no fallback stage. Acceptance gates were accuracy at least 99%, cost reduction at least 25%, p95 at most 1500 ms and 100% automatic coverage. Approved usage evidence shows 50,000 inputs per month; state any forecast assumptions. J2 would verify citations in draftAnswer, but only a synthetic connectivity probe ran: its Jev call took 50 ms and we have no baseline measurement, quality labels or cost evidence for J2. Which opportunity should we pursue in the existing codebase?",
+      "files": ["evals/files/application.ts"],
+      "expected_output": "Separate before/after comparisons: J1 meets the exploratory gates with 60% lower inference cost and 30% lower p95, so proceed to a scoped implementation proposal, not deployment. J2 remains inconclusive with missing baseline and quality evidence. Distinguish projected monthly savings from observed spike results.",
+      "assertions": [
+        {"type": "structural", "text": "Presents per-ID before/after comparisons with baseline and candidate values, changes, acceptance outcomes, evidence limits and separate adoption decisions"},
+        {"type": "functional", "text": "For J1, reports cost US$20 to US$8 (US$12 or 60% lower), p95 1800 ms to 1260 ms (540 ms or 30% lower), and accuracy 99.2% to 99.3% (0.1 percentage points) without claiming statistical proof"},
+        {"type": "functional", "text": "Labels US$1000 to US$400 per month, or US$600 savings, as a projection using 50,000 inputs and unchanged traffic mix and unit-cost assumptions, not already realised savings"},
+        {"type": "functional", "text": "Recommends J1 only for a scoped implementation proposal tied to routeTicket, names the Jev adapter/fast-path change and preserved baseline fallback, and exposes its new vendor dependency and integration work"},
+        {"type": "negative", "text": "Marks J2 comparisons unknown and adoption inconclusive; does not invent a baseline, treat its 50 ms Jev call as application speedup, give a blanket adoption verdict, or imply either candidate is deployed"}
+      ],
+      "tags": ["smoke", "before-after", "adoption", "partial-evidence"]
     }
   ]
 }

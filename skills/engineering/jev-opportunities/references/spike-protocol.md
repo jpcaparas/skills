@@ -148,6 +148,10 @@ that may be retained, and reproducible commands in the project's normal location
 Keep raw payloads opt-in and private. Record partial results when a cap is reached;
 do not restart a run merely to replace inconvenient results.
 
+Present the before/after decision report required by step 5 of `SKILL.md`, even
+when the run failed or stopped early. Saved artifacts do not replace the user's
+comparison and adoption recommendation.
+
 Assign **proceed**, **reject**, **inconclusive**, or **blocked/not run** using the
 predeclared acceptance criteria. An API smoke success is only a contract check.
 Recommend the existing implementation when no net improvement is demonstrated.

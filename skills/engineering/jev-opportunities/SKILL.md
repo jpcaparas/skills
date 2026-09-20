@@ -165,19 +165,44 @@ connectivity and request shape, not production quality or cost savings.
 **Done:** each selected spike is measured, rejected, inconclusive, or explicitly
 blocked; no live call exceeds the approved budget or data scope.
 
-## 5. Return an evidence-backed recommendation
+## 5. Show before/after and an adoption recommendation
 
-Answer in the thread unless the user asks for files. Include:
+After each live-run, eval, or spike round, including failed or stopped rounds,
+present a decision report in the thread unless the user asks for files. Do not
+finish with only logs, benchmark output, or a list of potential benefits.
+**Before** means the existing implementation; **after** means the experimental
+Jev path measured in the spike, not an improvement already deployed. Include:
 
 1. **Verdict:** which decisions merit further work, or why none do.
 2. **Coverage:** inspected workflows and capability areas, no-fits, and gaps.
 3. **Ranked opportunities:** IDs, code anchors, Jev role, official sources,
    expected mechanism, risk/fallback, and proposed or completed spike.
-4. **Results:** baseline versus candidate quality, cost, end-to-end latency,
-   fallback/review load, sample size/mix, model/question versions, failures,
-   and actual budget used. Separate measured values from estimates and claims.
-5. **Disposition per ID:** proceed to an implementation proposal, reject,
-   inconclusive, or blocked/not run; state the evidence or approval still needed.
+4. **Before/after per tested ID:** a side-by-side table with columns **Metric**,
+   **Before (existing code)**, **After (Jev spike)**, **Change**, and
+   **Acceptance gate (pass / fail / unknown)**. Include rows for:
+   - Task quality and consequential errors, not just model agreement.
+   - Whole-path cost per original input or a common volume, including fallbacks
+     and retries; show actual experiment spend separately.
+   - End-to-end p50/p95 latency, not just the Jev stage.
+   - Automatic coverage, abstention, fallback/review load, and failures.
+
+   Beside the table, state sample size/mix, comparison conditions,
+   model/question versions, and the evidence source for each measurement.
+5. **Adoption decision per ID:** proceed to an implementation proposal, reject
+   and keep the existing path, inconclusive, or blocked/not run. Explain which
+   acceptance criteria passed, failed, or remain unknown; what improves or
+   worsens; and whether the gain justifies the codebase's integration cost and
+   risk. Name what would change, what stays, and the remaining evidence or
+   approval needed. A passing API smoke test alone is not a reason to adopt.
+
+Show absolute and relative changes where meaningful, with units and a consistent
+denominator. Use percentage points for differences between rates; a zero baseline
+has no defined relative change. Label measured, estimated, and not-measured
+values separately. Keep monthly savings projections separate from observed
+spike results, and state the volume and assumptions used; do not invent volume.
+If the baseline is missing or the runs are not comparable, mark the affected
+comparison unknown and the adoption claim inconclusive rather than fabricating
+an improvement. Discovery-only reports retain these gaps as not run.
 
 Recommend an opt-in shadow evaluation before consequential automation, with a
 kill switch and the existing path preserved. This is a recommendation, not
@@ -185,3 +210,6 @@ permission to enable shadow traffic. Production integration, promotion, and any
 shared-data changes remain separate work. Remove disposable secrets/payloads and
 leave only approved, reproducible evidence; never modify the installed skill
 cache or publish application data as part of the audit.
+
+**Done:** the user can see before, after, gains, regressions, and uncertainty for
+each tested opportunity, and decide whether to pursue it in this codebase.
