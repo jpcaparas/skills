@@ -1390,6 +1390,40 @@
         {"text": "Does not ask a redundant selection question or downgrade to none", "type": "negative"}
       ],
       "tags": ["verification", "gauntlet", "compatibility", "regression"]
+    },
+    {
+      "id": 112,
+      "name": "local-rigging-tool-serves-generation-only-brief",
+      "prompt": "Create an interactive browser puppet theatre with an expressive articulated fox and reusable walk and bow animations. The local environment has Blender and a compatible exporter. No gauntlet or verification; just generate it.",
+      "expected_output": "The isolated lead uses the available local 3D tooling where it helps model, rig, animate, and export the fox. It retains editable source in workspace/ and runtime-ready assets in artifact/, without adding tool-choice instructions to the sealed brief. Asset production does not trigger output inspection, tests, critics, or a verification-driven repair loop; the handoff remains UNVERIFIED.",
+      "assertions": [
+        {"text": "Uses suitable available local 3D tooling for the articulated character and animation work rather than ignoring that capability", "type": "functional"},
+        {"text": "Separates editable scenes and rigs from runtime-ready assets within the portable static handoff", "type": "structural"},
+        {"text": "Does not reinterpret asset creation or export as permission to verify generation-only output or modify sealed prompt bytes", "type": "negative"}
+      ],
+      "tags": ["local-3d-tools", "rigging", "verification", "none", "regression"]
+    },
+    {
+      "id": 113,
+      "name": "available-3d-tool-does-not-expand-flat-brief",
+      "prompt": "Create a flat typographic event poster website with CSS hover transitions, no 3D content. Blender happens to be installed. Run the gauntlet.",
+      "expected_output": "Keeps the requested flat experience and does not start Blender, create models, or add an asset pipeline merely because the tool is available. Uses the opted-in gauntlet without treating 3D-tool usage as a quality requirement.",
+      "assertions": [
+        {"text": "Preserves the no-3D brief and avoids unnecessary local 3D tooling or asset-generation work", "type": "negative"},
+        {"text": "Keeps the selected gauntlet without inventing a requirement to use Blender", "type": "functional"}
+      ],
+      "tags": ["local-3d-tools", "scope", "negative", "gauntlet"]
+    },
+    {
+      "id": 114,
+      "name": "missing-local-3d-tool-is-not-a-prerequisite",
+      "prompt": "Create a small interactive browser sculpture from procedural geometry. No local 3D authoring tool is installed, but the web toolchain can generate the geometry. Run the gauntlet.",
+      "expected_output": "Uses a suitable procedural approach without blocking on Blender or inventing a mandatory tool-installation step. The absence of a local 3D editor does not prevent the selected gauntlet from exercising the completed artifact.",
+      "assertions": [
+        {"text": "Chooses the available procedural approach without making a local 3D editor a hard dependency", "type": "functional"},
+        {"text": "Does not skip the opted-in gauntlet because optional authoring tooling is unavailable", "type": "negative"}
+      ],
+      "tags": ["local-3d-tools", "fallback", "negative", "gauntlet"]
     }
   ]
 }
