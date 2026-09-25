@@ -8,17 +8,18 @@ compatibility: "Requires: python3 for local static page checks. Optional: access
 
 Build and audit web experiences for Google Search generative AI features using Google's official guidance as the baseline.
 
+Match the scope to the request. A title fix, schema question, or content edit does not require a full audit. Use only the references and tools needed to resolve the task; ordinary layout, section order, and content length remain design choices, not Google eligibility rules.
+
 ## Decision Tree
 
 What are you doing?
 
 - Implementing SEO/GEO in a codebase
-  - Read `references/technical-implementation.md`
-  - Run `python3 scripts/audit_page.py --input <url-or-html-file> --expect-indexable`
+  - Read `references/technical-implementation.md` when the change needs crawl, render, metadata, or schema details.
+  - Use `scripts/audit_page.py` when static page evidence helps. Add `--expect-indexable` only when the target is intended to be indexed, never for an intentional `noindex` page.
 
 - Planning or editing content for AI Overviews, AI Mode, or query fan-out
-  - Read `references/google-guidance.md`
-  - Then read `references/content-and-entity-patterns.md`
+  - Read `references/content-and-entity-patterns.md` for content choices, or `references/google-guidance.md` when the policy rationale is needed.
 
 - Working on ecommerce, local business, or agentic user journeys
   - Read `references/ecommerce-local-agentic.md`
@@ -44,24 +45,28 @@ What are you doing?
 
 ## Core Workflow
 
+Apply the steps relevant to the requested change; use the whole workflow only for a full audit or implementation plan.
+
 1. Establish the page type and business goal: informational, commercial, product, local, documentation, support, account, or utility.
-2. Verify Search eligibility before optimizing copy: status code, indexability, robots directives, canonical, crawlable links, rendered main content, and snippet eligibility.
-3. Inspect the rendered page and the source abstraction that creates it. Shared layout, metadata, routing, and CMS template bugs usually affect many URLs.
+2. When diagnosing eligibility for content intended for Search, check status code, indexability, robots directives, canonical, crawlable links, rendered main content, and snippet eligibility. Preserve intentional exclusions.
+3. Inspect the relevant source abstraction and rendered output when needed to verify the change. Shared layout, metadata, routing, and CMS template bugs can affect many URLs.
 4. Improve the page for humans first: unique experience, non-commodity facts, clear headings, useful media, descriptive links, and satisfying next steps.
 5. Add structured data only when it accurately represents visible page content and a supported Google Search feature or entity clarification.
 6. For ecommerce and local sites, keep product, merchant, and business details consistent across on-page content, structured data, Merchant Center, and Google Business Profile.
 7. For agentic readiness, test the journey as machine-readable UI: semantic HTML, labels, stable layout, visible actions, and no invisible overlays blocking controls.
 8. Document tradeoffs. If a page uses `noindex`, `nosnippet`, JavaScript-only rendering, or duplicate templates, record whether that is intentional.
 
+Do not fabricate reviews, use deceptive schema, or cloak content for crawlers. Obtain authorization before changing external properties such as Search Console, Merchant Center, or Business Profile; an on-site code task is not consent to modify those accounts.
+
 ## Expected Deliverables
 
-When using this skill, produce implementation-ready output:
+Return the requested answer, patch, or plan with relevant evidence and acceptance checks. For a full audit, the optional `templates/implementation-brief-template.md` can organize:
 
-- **Eligibility verdict**: indexable, snippet-eligible, crawlable, rendered, canonicalized.
-- **Findings table**: severity, evidence, affected file/URL/template, Google-grounded rationale, fix.
-- **Implementation plan**: ordered code changes with acceptance checks.
-- **Content/entity plan**: unique facts to add, page sections to clarify, media/schema needed, internal links.
-- **Myth filter**: explicitly reject AI-search hacks that Google does not support.
+- eligibility evidence and limits, when eligibility is in scope;
+- findings and ordered fixes, using a table when useful;
+- content/entity recommendations, when content work is requested.
+
+Discuss unsupported tactics only when the request or evidence raises them. Do not append a myth report or unrelated plans to a scoped answer.
 
 ## Reading Guide
 
@@ -78,7 +83,7 @@ When using this skill, produce implementation-ready output:
 ## Gotchas
 
 1. **GEO is not a separate Google hack layer**: for Google Search, optimize the search experience and foundations instead of inventing AI-only markup.
-2. **Indexing and serving are never guaranteed**: passing every technical check only makes a page eligible.
+2. **Indexing, ranking, and serving are never guaranteed**: passing technical checks does not guarantee selection or visibility.
 3. **Preview controls affect AI features**: `nosnippet` and restrictive `max-snippet` settings can limit direct use in AI Overviews and AI Mode.
 4. **Structured data is not a generative AI requirement**: use it because it accurately describes visible content and supports rich-result eligibility.
 5. **Do not scale pages for every fan-out query**: mass pages for query variants can become scaled content abuse.
@@ -86,7 +91,9 @@ When using this skill, produce implementation-ready output:
 
 ## Source Baseline
 
-This skill is grounded in official Google guidance current as of May 16, 2026, especially Google's "Optimizing your website for generative AI features on Google Search" guide, last updated 2026-05-15 UTC. Re-check the source when Google changes Search AI feature guidance, preview controls, or structured data policies.
+The recorded baseline is official Google guidance reviewed on May 16, 2026, especially the [AI optimization guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide), recorded as updated 2026-05-15 UTC. This is a dated baseline, not a claim that every policy remains current.
+
+When a gap, uncertain policy, or suspected change affects the task, consult the relevant current official Google/tool documentation; use trusted sources for corroboration, not as substitutes for Google policy. Otherwise reuse sufficient evidence without routine browsing. If verification is unavailable, state the gap. Propose a sourced correction plus an example or check in the canonical package; never automatically edit installed copies.
 
 ## Helper Files
 

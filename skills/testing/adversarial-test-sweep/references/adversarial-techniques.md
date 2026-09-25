@@ -1,6 +1,6 @@
 # Adversarial techniques
 
-Read this reference when the risk ledger needs more than direct example-based tests. Use it to choose the smallest technique that can falsify a named contract, then record its oracle, budget, replay data, and limits.
+Read this reference when choosing an adversarial method for a named risk. Use it to choose the smallest economical technique that can falsify the contract, then record its oracle, budget, replay data, and limits. An existing property, fuzz, model, or schedule harness may be the best starting point; direct examples are not a prerequisite.
 
 ## Start with an oracle stack
 
@@ -21,7 +21,7 @@ Combine layers when consequences are high. A no-crash oracle can find robustness
 
 Partition inputs or states by behavior, then test representative valid, invalid, and transition values. For an ordered boundary, include just below, exactly at, and just above when those values exist. Include missing, empty, duplicate, reordered, encoded, normalized, maximum-size, minimum-size, and valid-but-surprising cases only where the contract distinguishes them.
 
-Use a decision table when outcomes depend on several rules. Use state-transition cases when validity depends on history. These are usually the cheapest techniques and should precede random generation.
+Use a decision table when outcomes depend on several rules. Use state-transition cases when validity depends on history. These are often cheap, but choose their order relative to generated testing from the risk, oracle, and available tooling rather than a fixed examples-first rule.
 
 ### Constrained combinatorial testing
 

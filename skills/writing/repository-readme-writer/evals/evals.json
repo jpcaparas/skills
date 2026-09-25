@@ -6,10 +6,10 @@
       "id": 1,
       "name": "draft-new-readme-from-package-manifest",
       "prompt": "Create a new README for this repository after inspecting its package manager, scripts, env examples, and deployment files.",
-      "expected_output": "A concise README with title, summary, Quickstart, project shape, configuration, local development, quality checks, and deployment notes grounded in repository evidence.",
+      "expected_output": "A concise README whose sections and first-use path fit the repository and are grounded in its evidence.",
       "assertions": [
         {
-          "text": "Output includes a Quickstart section near the top.",
+          "text": "Output makes the relevant first-use path easy to find without forcing unrelated sections.",
           "type": "structural"
         },
         {
@@ -23,10 +23,10 @@
       "id": 2,
       "name": "simplify-overgrown-readme",
       "prompt": "Improve this README. It currently has a full directory tree, exact Node and package manager versions in prose, and a long script catalog.",
-      "expected_output": "A simplified README that replaces path inventory with stable boundaries, removes prose version pins, and keeps only the important commands.",
+      "expected_output": "A simplified README that trims noisy inventory, retains useful verified source paths and compatibility requirements, and keeps important commands.",
       "assertions": [
         {
-          "text": "Output avoids fragile path tours unless paths are required for setup.",
+          "text": "Output avoids exhaustive fragile path tours while retaining useful stable navigation links.",
           "type": "quality"
         },
         {
@@ -53,14 +53,47 @@
       "id": 4,
       "name": "route-quickstart-only-request",
       "prompt": "The README is fine, but the quickstart is confusing. Fix just that section.",
-      "expected_output": "Load quickstart-design guidance and rewrite only the quickstart with install, config, run, verification, and quality gate steps.",
+      "expected_output": "Use quickstart-design guidance as needed and rewrite only the quickstart with the evidence-backed steps necessary for first use and verification.",
       "assertions": [
         {
-          "text": "Task routes to references/quickstart-design.md.",
+          "text": "Work stays scoped to the quickstart, using references/quickstart-design.md for unresolved design decisions.",
           "type": "disclosure"
         }
       ],
       "tags": ["disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "archived-dataset-not-an-application",
+      "prompt": "Write a compact README with only Summary, Data, and Status for an archived dataset. Repository evidence: data/observations.csv contains date and count columns, LICENSE is CC-BY-4.0, and ARCHIVE.md says collection ended in 2024. There are no scripts, runtime, or build files. Keep those paths.",
+      "expected_output": "The requested three sections explain the dataset, schema, license, and archive status with useful source paths, without invented executable setup.",
+      "assertions": [
+        {"text": "Uses only Summary, Data, and Status and preserves data/observations.csv, LICENSE, ARCHIVE.md, date, count, and 2024", "type": "functional"},
+        {"text": "Does not add quickstart commands, nine standard sections, deployment, or a generic tutorial stack", "type": "negative"}
+      ],
+      "tags": ["edge", "format-freedom", "data"]
+    },
+    {
+      "id": 6,
+      "name": "scoped-library-review-keeps-useful-details",
+      "prompt": "Review only this README paragraph for wording; do not edit files or run setup probes. Verified pyproject.toml requires Python >=3.11,<3.14; src/parser.py is a stable contributor entrypoint. Paragraph: 'Use Python >=3.11,<3.14. Contributors can start at src/parser.py.' Both details should remain.",
+      "expected_output": "A scoped wording review that can recommend no change and preserves the useful compatibility range and navigation path.",
+      "assertions": [
+        {"text": "Retains Python >=3.11,<3.14 and src/parser.py rather than applying a blanket no-version or no-path rule", "type": "functional"},
+        {"text": "Does not run repo_readme_probe.py, edit files, or expand into a full README audit", "type": "disclosure"}
+      ],
+      "tags": ["edge", "review-only", "disclosure"]
+    },
+    {
+      "id": 7,
+      "name": "repository-truth-over-stale-recipe",
+      "prompt": "Fix README setup instructions. The old instructions say npm run dev, but inspected package.json has only start and check, with scripts/start.mjs providing the documented launch path. Running the service needs unavailable credentials. Suggest a canonical guidance correction if needed; do not edit installed skills.",
+      "expected_output": "Uses repository-backed start guidance, labels execution unverified, and proposes a correction with the manifest and a reproducing command check instead of claiming a successful launch.",
+      "assertions": [
+        {"text": "Does not retain the nonexistent dev command or claim execution; distinguishes manifest evidence from runtime verification", "type": "verification"},
+        {"text": "Proposes any canonical correction with the repository source and check without modifying installed copies", "type": "functional"}
+      ],
+      "tags": ["edge", "source-conflict", "verification"]
     }
   ]
 }

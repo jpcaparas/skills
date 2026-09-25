@@ -1,8 +1,11 @@
 # Adversarial test sweep report
 
+Optional format: adapt to the campaign's size and outcome; omit irrelevant fields, not material uncertainty.
+
 ## Outcome
 
-- Status: clean within scope / findings remain / blocked
+- Status: clean within scope / findings remain / blocked / budget exhausted
+- Basis: clean requires agreed verification to pass with no unresolved in-scope failures; the other outcomes are honest handoffs, not suite-readiness claims.
 - Target and scope:
 - Baseline revision and dirty state:
 - Authority: audit-only / tests editable / product fixes editable
@@ -34,10 +37,13 @@ For each finding:
 - minimized reproducer and replay data
 - root cause or current diagnosis
 - product, test, or harness change
-- regression test or corpus case
-- evidence that the regression detects the defective behavior
+- reproducer; regression test or corpus case for authorized repairs
+- prior-failure/pass evidence for repairs, or why that verification remains blocked
+- unresolved disposition, next action, or owner when no repair was authorized or completed
 
 ## Suite changes
+
+List only tests reviewed or changed in the scoped sweep, not every repository test.
 
 | Test or group | Added / strengthened / consolidated / removed / retained | Distinct behavior or evidence | Comparative removal evidence, when applicable |
 |---|---|---|---|
@@ -45,7 +51,7 @@ For each finding:
 
 ## Verification evidence
 
-- Commands, variants, repetitions, durations, and outcomes:
+- Commands, variants, repetitions, durations, outcomes, and blocked or unrun checks:
 - Coverage scope and interpretation:
 - Mutation tool, version, operators, scope, survivors, and dispositions:
 - Generated testing tool, version, corpus, distributions, budgets, and saved failures:

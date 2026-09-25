@@ -6,7 +6,7 @@
       "id": 1,
       "name": "desktop-ops-direction-smoke",
       "prompt": "I am designing a desktop operations app for finance analysts. It needs to feel calm and precise instead of flashy. Give me the design direction, the taste axes, and the main layout rules.",
-      "expected_output": "Routes through the core principles, picks a fitting style family, sets the taste axes, and adapts the advice for dense desktop work rather than landing-page theatrics.",
+      "expected_output": "Gives a calm, precise direction and the requested taste axes, adapting layout and states for dense desktop work without requiring a named style family.",
       "assertions": [
         {
           "text": "Response defines the taste axes before discussing decorative details",
@@ -78,7 +78,61 @@
         "disclosure",
         "states"
       ]
+    },
+    {
+      "id": 5,
+      "name": "bold-mixed-style-product-keeps-accessibility",
+      "prompt": "Design one dark project-planning screen for our creative studio. Mix editorial serif headlines with a dense neon-accented task board, a decorative gradient, and a playful animated flourish on completion. This is a one-off concept, not a design system; skip the taste-axis worksheet. Keyboard navigation and reduced-motion support matter.",
+      "expected_output": "Develops the requested mixed, expressive direction without imposing a restrained product style or system work. Keeps readable hierarchy, accessible contrast, keyboard focus, and a reduced-motion alternative.",
+      "assertions": [
+        {
+          "text": "Retains the dark canvas, serif and dense-board combination, decorative gradient, and completion flourish as coherent design choices rather than rejecting them by style rule",
+          "type": "functional"
+        },
+        {
+          "text": "Includes legible text and controls, visible keyboard focus, and a reduced-motion alternative that preserves completion feedback",
+          "type": "functional"
+        },
+        {
+          "text": "Does not require all five taste axes, a named style family, or a token system for this one-off concept",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "creative-freedom", "accessibility"]
+    },
+    {
+      "id": 6,
+      "name": "critique-heuristics-are-not-quotas",
+      "prompt": "Critique a dense monitoring view with six equally important service panels. Operators must compare them, and all labels are required. Keep our expressive dark visual identity. Is it a failure if the whole view takes more than two seconds to understand, and must we remove 20% of the chrome?",
+      "expected_output": "Explains that glance and removal tests are diagnostic aids, not quotas. Evaluates comparison, grouping, readability, and states without forcing a hero or indiscriminate deletion.",
+      "assertions": [
+        {
+          "text": "Does not impose a two-second comprehension gate, 20% removal quota, or single dominant service panel",
+          "type": "negative"
+        },
+        {
+          "text": "Preserves required labels and visual identity while proposing checks for service comparison, contrast, and status meaning beyond color alone",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "critique", "accessibility"]
+    },
+    {
+      "id": 7,
+      "name": "platform-guidance-conflict-proposes-sourced-correction",
+      "prompt": "In our web app, matchMedia('(prefers-reduced-motion: reduce)').matches is true, but our decorative CSS animation still runs. The skill tells us to respect reduced motion without saying how. Check the browser/platform guidance, recommend a fix, and suggest a canonical skill clarification with a test. Do not edit installed copies.",
+      "expected_output": "Checks current browser/platform documentation, explains how application styles must respond to the preference, and proposes a sourced canonical clarification with a concrete reduced-motion check without silently changing installed copies.",
+      "assertions": [
+        {
+          "text": "Uses current official evidence for the disputed behavior, or explicitly reports unavailable evidence without asserting a verified resolution",
+          "type": "verification"
+        },
+        {
+          "text": "Proposes a sourced canonical correction and a reproducible interaction check; does not mutate installed copies",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "maintenance"]
     }
   ]
 }
-

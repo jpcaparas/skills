@@ -40,46 +40,46 @@ Keep it lightweight for small edits: apply the core rules silently, then mention
 
 ## Decision Tree
 
-What are you doing?
+Use the routes below when a non-obvious design decision needs more detail than the core rules or local evidence provide. A matching topic alone does not require reading a reference stack.
 
 - Implementing a new feature or fixing a bug:
   Match the local architecture first. Keep the change small, typed, named plainly, and covered by the narrowest meaningful verification. Write for a future maintainer with solid fundamentals but incomplete context about this system.
 
 - Refactoring existing code:
-  Preserve behavior in small steps. Read `references/decomposition.md` before splitting modules, extracting helpers, or changing boundaries. If the code is hard to test because of tangled side effects, also read `references/dependency-boundaries.md` and move side effects behind the smallest useful boundary before changing behavior.
+  Preserve behavior in small steps using adequate existing coverage. Consult `references/decomposition.md` for unclear boundaries and `references/dependency-boundaries.md` when tangled side effects prevent safe verification. Add characterization or a replacement point only where needed.
 
 - Reviewing code:
-  Use the severity-first rubric in `references/review-rubric.md`, including its resilience and testability scopes when the diff touches runtime behavior or dependencies. Findings must cite concrete code and explain maintainer impact. If the diff includes CI, shell, config, migrations, generated glue, or dense cross-boundary code, also read `references/commenting.md`.
+  Findings must cite concrete code and explain maintainer impact. Consult `references/review-rubric.md` for difficult severity or scope decisions and `references/commenting.md` when non-obvious operational context needs explanation.
 
 - Writing a plan for another agent or teammate:
-  Read `references/implementation-plans.md`. Make the plan self-contained enough for a weaker executor with no session context. Include the failure map and dependency boundaries where they apply. If the plan touches operational or dense code, call out where developer comments are required and read `references/commenting.md`.
+  Make the outcome, scope, and verification clear without session context. Consult `references/implementation-plans.md` when handoff complexity warrants it, or `references/commenting.md` when non-obvious rationale needs preserving. Include failure and dependency decisions that affect the work, not a fixed section quota.
 
 - Writing operational code, CI workflows, migrations, generated glue, or dense command pipelines:
-  Read `references/commenting.md`. Add comments that teach intent, invariants, external constraints, and the shape of multi-step logic.
+  Comment on non-obvious intent, invariants, and external constraints. Consult `references/commenting.md` when placement or explanation is unclear; do not narrate obvious code.
 
 - Adding background jobs, queues, cron, webhooks, imports/exports, email, payment capture, or notifications:
-  Read `references/resilience.md` and `references/jobs-and-queues.md`. Require stable work identity, idempotency, bounded concurrency, retry limits, stale-work recovery, dead-letter handling, and worker timeouts.
+  Establish safe duplicate handling, bounded work, and recovery for applicable failure modes. Reuse verified framework or existing guarantees. Consult `references/resilience.md` or `references/jobs-and-queues.md` for unresolved risks, not to add machinery by default.
 
 - Multiple services, external APIs, event publishing, distributed data changes, or async workflows:
-  Read `references/distributed-systems.md`. Design timeouts, retry budgets, outbox/inbox handling, deduplication, reconciliation, and compensating actions.
+  Bound waits and retries, prevent harmful duplicates, and account for partial completion. Consult `references/distributed-systems.md` where the ownership or guarantee is unclear; outbox/inbox, reconciliation, and compensation are options, not a universal stack.
 
 - Adding logging, metrics, tracing, alerts, dashboards, or incident diagnosis:
-  Read `references/observability.md`. Instrument the decision points that explain user impact and recovery, not every line of code.
+  Use existing signals that explain user impact and recovery. Consult `references/observability.md` when a diagnostic gap warrants instrumentation, not to add telemetry for every edit.
 
 - Choosing strict runtime defaults, environment-scoped safety rails, compatibility policy, or repository quality gates:
-  Read `references/guardrails-and-quality-gates.md`. Separate configured, applicable, selected, and successfully applied states; make dangerous effects opt-in; stage behavior-changing defaults; and verify the advertised compatibility range.
+  Separate configured, applicable, selected, and successfully applied states; make dangerous effects opt-in; stage behavior-changing defaults; and verify the advertised compatibility range. Consult `references/guardrails-and-quality-gates.md` when the policy needs further design.
 
 - Adding code that calls a dependency, or making hard-to-test code replaceable:
-  Read `references/dependency-boundaries.md`. Accept dependencies from the caller where practical, keep domain policy separate from construction, configuration, and transport, and control time, randomness, and environment reads at a boundary.
+  Keep external integrations behind narrow ports/adapters or equivalent local boundaries; separate domain policy from construction, configuration, and transport. Control time, randomness, and environment reads at a boundary. Consult `references/dependency-boundaries.md` when an existing seam is inadequate.
 
 - Choosing how to replace a dependency in tests:
-  Read `references/test-doubles.md`. Prefer the least powerful double that proves the behavior: stub for canned answers, fake for realistic in-memory behavior, mock or spy for interaction contracts.
+  Prefer the least powerful double that proves the behavior: stub for canned answers, fake for realistic in-memory behavior, mock or spy for interaction contracts. Consult `references/test-doubles.md` for non-obvious substitution or adapter-drift risks.
 
 - Unsure whether a design is maintainable:
-  Read `references/principles.md`, then choose the option that reduces future reader effort without hiding important domain behavior. For production runtime behavior, also read `references/resilience.md` and run the Self-Healing Gate below.
+  Choose the option that reduces future reader effort without hiding important domain behavior. Consult `references/principles.md` or the reference for the specific unresolved risk.
 
 - The user asks for cleverness, compression, or broad abstraction:
-  Ask whether maintainability still matters. If yes, prefer explicit code. If no, keep the clever part boxed, named, tested, and documented as a local exception.
+  Honor the requested tradeoff without asking them to restate it. Keep correctness, types, and safety intact; contain cleverness where practical and explain only consequential maintenance costs.
 
 ## Quick Reference
 
@@ -95,25 +95,27 @@ What are you doing?
 | Dangerous or overwriting operation | Default it off; use confirmation in interactive tools, and explicit intent, scope, preconditions, idempotency, and recovery appropriate to programmatic contracts |
 | Quality policy | Provide one check-mode command that composes the configured layers: formatting/lint, analysis, behavior tests, and safe refactor dry-runs only when that tooling exists |
 | Version compatibility | Use the stack's supported seam—runtime capability check, versioned adapter, build flag, or conditional compilation—and test the lowest supported combination as well as current versions |
-| Comments | Explain why, tradeoffs, invariants, surprising constraints, and learning context at class, method, property, and dense block level; use small ASCII diagrams for non-obvious flows when helpful |
-| Plans | Include exact files, local conventions, verification commands, and stop conditions |
+| Comments | Explain non-obvious rationale or constraints at the smallest useful scope; use ASCII diagrams only when they clarify the flow |
+| Plans | Give enough scope, local context, and verification evidence for the requested outcome |
 
 Resilience:
 
+Apply these only where the risk exists. Existing database, provider, framework, and platform guarantees count when their scope and configuration cover the operation; add mechanisms only for gaps.
+
 | Situation | Default action |
 |---|---|
-| Duplicate browser submit, webhook replay, retry, or worker restart | Add an idempotency key or deterministic work key and persist the result or state transition |
-| Ten users trigger the same expensive job | Coalesce by unique job key, lease one active worker, return the existing job status, and expose progress |
-| Job stays `pending` or `running` too long | Add `expires_at` or heartbeat-based stale detection, safe retry or failover, and an audit log entry |
-| Remote API call | Set connection and request timeouts, classify retryable errors, use capped backoff with jitter, and stop at a retry budget |
-| Queue load spike | Buffer work, cap worker concurrency, use backpressure/rate limits, and protect shared dependencies |
-| Side effect after database write | Use an outbox or transactional handoff; make consumers idempotent |
-| Multi-step distributed workflow | Model states explicitly and add reconciliation or compensating actions |
+| Duplicate browser submit, webhook replay, retry, or worker restart | Prevent harmful duplicate effects with natural idempotency, uniqueness, or a durable intent key |
+| Ten users trigger the same expensive job | Coalesce the same authorized intent atomically and bound concurrent execution; reuse existing job status |
+| Job stays `pending` or `running` too long | Ensure stale work is detected and safely recovered or made terminal; use existing queue recovery when sufficient |
+| Remote API call | Ensure bounded connection/request waits; if retrying, classify errors and use a bounded, safe backoff policy |
+| Queue load spike | Bound resource use and protect shared dependencies using existing capacity controls or backpressure |
+| Side effect after database write | Ensure required handoff is not lost; use a transactional facility, outbox, or other proven recovery path |
+| Multi-step distributed workflow | Make states and partial-completion outcomes explicit; reconcile or compensate where necessary |
 | Partial outage | Degrade lower-value features first and preserve the core user task |
-| Logging request/job progress | Include correlation ID, actor, work key, state transition, attempt, dependency, duration, and outcome |
-| Metrics | Track latency, traffic, errors, saturation, queue age, retry count, dead-letter count, and stale work |
-| Tracing | Add spans around cross-boundary calls and durable async handoffs, not tiny local helpers |
-| Alert | Page only on user impact or exhausted automation; otherwise create inspectable dashboards or tickets |
+| Logging request/job progress | Include safe context needed to identify the work, outcome, and recovery decision |
+| Metrics | Measure relevant user-health and capacity risks; reuse existing metrics before adding counters |
+| Tracing | Add spans for unexplained cross-boundary latency or failures, not tiny local helpers |
+| Alert | Page only on user impact or exhausted automation; use non-paging signals only when they support diagnosis or action |
 
 Testability:
 
@@ -127,7 +129,7 @@ Testability:
 | Tests need real external services | Use a fake, stub, contract test, or local test container before hitting shared infrastructure |
 | Interface seems useful | Add it only when there is real substitution, a boundary to protect, or a language convention requiring it |
 | Unmockable code found in review | Cite the hidden dependency and show the smallest repair path, not a blanket rewrite |
-| Tests | Add characterization before risky refactors and focused regression tests after fixes |
+| Tests | Reuse adequate coverage; fill behavior or regression gaps before risky changes |
 | Review | Prioritize defects, confusing boundaries, missing tests, and future-change hazards |
 
 ## Core Rules
@@ -140,11 +142,11 @@ Clarity and structure:
 4. Prefer boring typed data shapes over strings, bags of options, or hidden conventions.
 5. Keep functions at one stable level of abstraction: orchestration, policy, transformation, or I/O.
 6. Make invalid states hard to represent when the language and codebase support it.
-7. Leave useful developer comments where names and structure cannot carry the whole story, especially in CI, shell, config, migrations, concurrency, retries, security, generated glue, and external-service boundaries. Consider class, method, property, branch, and block-level comments or docblocks; the user can prune them later, but missing context is harder to recover.
-8. When a comment, docblock, review note, or final answer makes a language or framework claim and official documentation exists, verify and link the current official source for the project's actual stack; paraphrase the documented behavior instead of inventing or overstating it.
+7. Comment only on non-obvious rationale, invariants, or constraints that names and structure cannot express. Put the explanation at the relevant class, method, property, branch, or block; do not add commentary for the user to prune.
+8. Verify uncertain, version-sensitive, or consequential language/framework claims against official sources for the project's actual stack. Link sources when they help verify the claim or the user requests them; do not research known basics by default or overstate documented behavior.
 9. Add compact ASCII diagrams inside comments or docblocks when they clarify non-obvious data flow, state transitions, queues, retries, ownership, or boundary crossings. Keep the diagram and prose consistent; if code changes make either stale, update both immediately.
-10. Refactor with tests or characterization when behavior is non-trivial.
-11. State tradeoffs in the final answer when you intentionally leave complexity in place.
+10. Refactor non-trivial behavior with adequate verification; reuse existing tests and add characterization only for gaps.
+11. State consequential tradeoffs in the final answer when you intentionally leave complexity in place.
 12. Layer strictness across types, analysis, framework behavior, and boundary validation where local compatibility permits. Add migration coverage before enabling a behavior-changing strict mode.
 13. Classify cancellation, optional capability absence, operational failure, and unexpected defects separately at entry points. Preserve actionable causes instead of collapsing every outcome to `false`, `null`, or one generic error.
 14. Keep dangerous capabilities off by default. A force flag may skip interaction, but it must not bypass authorization, validation, invariants, or recovery checks.
@@ -152,13 +154,13 @@ Clarity and structure:
 Production behavior and recovery:
 
 15. Treat retries, duplicate delivery, concurrency, latency, partial failure, deploy restarts, and stale state as normal inputs, not unusual accidents.
-16. Give every expensive or side-effecting operation a stable identity. The system should know whether a request is new work, a replay, or a different intent.
-17. Prefer explicit state machines over loose status strings. Each state needs allowed transitions, owner, timeout, retry policy, terminal outcomes, and recovery behavior.
-18. Put recovery in the application before putting it in a human runbook. Use bounded retries, stale-work sweepers, reconciliation jobs, dead-letter queues, and safe redrive paths.
-19. Limit blast radius with queues, leases, rate limits, bulkheads, and backpressure. Do not let one noisy workflow exhaust the whole app.
-20. Make side effects idempotent at the boundary that can enforce it: database constraints, unique keys, idempotency tables, outbox/inbox tables, provider idempotency keys, or queue deduplication.
-21. Use timeouts everywhere work crosses process, network, queue, database, or provider boundaries. A stuck dependency should become a known state with a bounded recovery path.
-22. Start observability from the four golden signals: latency, traffic, errors, and saturation. Add bespoke metrics only after user-health and capacity questions are covered, and never log secrets, tokens, raw payment details, full PII, session cookies, or provider credentials.
+16. Distinguish new intent from replay when duplicates could harm correctness or resource use. Natural idempotency or existing identity may suffice; do not persist new work records without a need.
+17. Give non-trivial persistent work explicit allowed transitions, ownership, terminal outcomes, and a bounded path out of stuck states. Use only the states and fields the workflow needs.
+18. Ensure applicable failures have safe recovery or a clear terminal outcome. Prefer existing automatic recovery; add retries, sweepers, reconciliation, or dead-letter handling only for uncovered risks.
+19. Bound resource use so one workflow cannot exhaust shared capacity. Existing concurrency limits, leases, rate limits, or backpressure may suffice; queues and bulkheads are not mandatory additions.
+20. Prevent harmful duplicate side effects at the boundary that can enforce it. Verify the scope of natural idempotency, database constraints, provider keys, or other existing guarantees before adding deduplication machinery.
+21. Ensure waits across process, network, queue, database, or provider boundaries are bounded. Respect effective existing deadlines rather than adding competing timeout layers; make uncertain outcomes safe to recover.
+22. Use enough observability to diagnose relevant user-health and capacity failures; latency, traffic, errors, and saturation are useful starting questions, not a telemetry quota. Never log secrets, tokens, raw payment details, full PII, session cookies, or provider credentials.
 
 Testability:
 
@@ -186,18 +188,18 @@ Before finishing code changes, run this gate mentally and with local tooling whe
 
 ## Self-Healing Gate
 
-Before finishing a change that affects production runtime behavior, also check:
+For production runtime changes, check the applicable guarantees below. Accept adequate existing mechanisms; the table is not a requirement to add every state, signal, or recovery component.
 
 | Gate | Pass condition |
 |---|---|
-| Identity | Duplicate requests, jobs, webhooks, and events map to a stable idempotency or work key |
-| State | Non-trivial work has explicit pending/running/succeeded/failed/canceled/stale behavior |
+| Identity | Harmful duplicate effects are prevented through natural idempotency, durable intent identity, uniqueness, or another proven boundary guarantee |
+| State | Non-trivial work has explicit transitions and terminal/recovery behavior for the states it actually uses |
 | Concurrency | Shared resources have uniqueness, locking, leases, rate limits, or worker caps |
 | Time | Remote calls, jobs, locks, and pending states have timeouts or expiration |
 | Retries | Retryable errors are classified, bounded, jittered, and safe against duplicate side effects |
 | Recovery | Stuck, partial, and failed states can be retried, reconciled, redriven, or made terminal without a developer editing data by hand |
 | Degradation | The app preserves the most important user task when optional dependencies fail |
-| Observability | Logs, metrics, and traces explain user impact, work identity, state transitions, attempts, dependency health, and recovery outcomes |
+| Observability | Available signals explain relevant user impact, work identity, failure, and recovery outcomes |
 | Alerts | Alerts fire on exhausted automation or user impact, not on every expected transient failure |
 | Tests | The most likely production failure has a focused test, simulation, or stated verification gap |
 
@@ -218,17 +220,19 @@ Before finishing a change that touches dependencies or side effects, also check:
 
 ## Operating Workflow
 
+Scale this process to the change. Small edits need focused context and verification, not a written story, failure map, or multi-section report.
+
 1. Recon first.
-   Read local docs, nearby code, package scripts, handlers, jobs, schemas, provider adapters, queue config, logging conventions, dependency-injection and test fixture patterns, and tests before designing the change.
+   Read the local guidance, affected code, relevant contracts, and tests needed to act correctly. Inspect wider wiring or configuration only when the change depends on it.
 
 2. Identify the maintainer story.
-   Write down the responsibility being added or changed. If it needs more than one sentence, split the work or name the sub-responsibilities.
+   Understand the responsibility being added or changed. Write it down only when it helps resolve scope or handoff ambiguity.
 
 3. Draw the failure map.
-   For production-facing changes, list duplicate input, concurrent input, dependency timeout, provider 429/5xx, worker crash, deploy restart, database conflict, stale state, and partial completion. Keep the list proportional to feature risk, and decide which mechanism owns each recovery path: request handler, queue worker, scheduler, reconciliation job, database constraint, provider idempotency feature, or operator-facing tool.
+   For material runtime risks, consider relevant duplicate input, concurrency, timeouts, crashes, stale state, and partial completion. Identify the existing owner or missing guarantee; record only decisions needed for implementation or review.
 
 4. Identify hard dependencies.
-   List real I/O, time, randomness, config, SDK, database, framework, and global-state touches. Decide which ones stay at the boundary and which need an explicit replacement point.
+   Inspect affected I/O, time, randomness, config, SDK, and global-state boundaries. Reuse safe replacement points; do not inventory unrelated dependencies.
 
 5. Choose the simplest boundary that fits the codebase.
    Prefer existing modules and helpers. Add a new abstraction only when it protects a real axis of change. Prefer local constraints and existing framework primitives; add queues, locks, outbox tables, circuit breakers, or watchdogs only when the failure mode is real enough to justify them.
@@ -237,10 +241,10 @@ Before finishing a change that touches dependencies or side effects, also check:
    Keep the diff reviewable. Avoid drive-by formatting, unrelated migrations, style churn, and test-only contortions such as public setters or broad service locators added solely for tests.
 
 7. Verify behavior, failure behavior, and readability.
-   Run available tests, typechecks, linters, or focused helper scripts. Cover duplicate input, retry, timeout, stale work, and dependency failure where practical. Re-read the diff as if you were reviewing a stranger's code, and add comments where the next reader would otherwise need session context.
+   Run relevant tests and required repository checks. Reuse adequate coverage and fill consequential gaps. Re-read the diff as if reviewing a stranger's code, commenting only where non-obvious rationale would otherwise be lost.
 
 8. Report plainly.
-   Explain what changed, why this shape is maintainable, the edge cases and failsafes handled, the dependency boundaries and test doubles used, what was verified, and what risk remains.
+   Report the outcome, verification, and remaining risk. Include design decisions only when consequential; omit empty sections and routine process narration.
 
 ## Optional Helpers
 
@@ -259,7 +263,11 @@ python3 scripts/analyze_mockability.py /path/to/project --json
 - `analyze_app_resilience.py` flags likely missing idempotency, retry/backoff gaps, external calls without obvious timeouts, low-context logs, swallowed errors, and pending states without recovery.
 - `analyze_mockability.py` flags likely hardcoded effects and globals so a human or agent can inspect them.
 
-Treat their output as prompts for human review. A quiet scan does not prove code is good, resilient, or mockable, and a noisy scan does not prove code is bad. For deeper reviews, use `templates/maintainability-review.md`, `templates/resilience-review.md`, and `templates/mockability-review.md`.
+Treat their output as prompts for human review. A quiet scan does not prove code is good, resilient, or mockable, and a noisy scan does not prove code is bad. For deeper reviews, optionally adapt `templates/maintainability-review.md`, `templates/resilience-review.md`, or `templates/mockability-review.md`; their format and sections are not required.
+
+## When Guidance Stops Helping
+
+Prefer demonstrated local invariants and idiomatic framework behavior over a bundled pattern. When these conflict or advice fails, inspect the installed version and relevant official documentation or trusted primary sources. State unresolved limits. Propose a canonical skill correction or deletion with the conflicting rule, source/version, and a concrete regression or counterexample; do not silently edit an installed copy or turn the finding into an unrelated refactor.
 
 ## Reading Guide
 

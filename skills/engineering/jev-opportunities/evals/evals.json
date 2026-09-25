@@ -45,10 +45,10 @@
     {
       "id": 4,
       "name": "rejects-a-cheap-verifier-that-loses-end-to-end",
-      "prompt": "Continue our jev-opportunities spike report; do not run more calls. The approved run used all 100 representative held-out inputs. Baseline costs US$0.020 per input. The candidate always pays US$0.004 for the cheap model and US$0.001 for Jev, then pays another US$0.020 on 90 inputs for fallback. No retries or human review occurred. Quality is unchanged at equal coverage; measured end-to-end p95 rose from 1800 ms to 2100 ms. The Jev call alone is very fast. Should we proceed for cost and speed?",
-      "expected_output": "A before/after table showing US$2.00 to US$2.30 per batch, 15% higher cost, and p95 of 1800 ms to 2100 ms. Reject this configuration and keep the existing path for the claimed cost/speed goals. No further calls without scope.",
+      "prompt": "Continue our jev-opportunities spike report; do not run more calls. The approved run used all 100 representative held-out inputs. Baseline costs US$0.020 per input. The candidate always pays US$0.004 for the cheap model and US$0.001 for Jev, then pays another US$0.020 on 90 inputs for fallback. No retries or human review occurred. Quality is unchanged at equal coverage; measured end-to-end p95 rose from 1800 ms to 2100 ms. The Jev call alone is very fast. Should we proceed for cost and speed? Give a concise prose recommendation, not a table.",
+      "expected_output": "A concise prose comparison showing US$2.00 to US$2.30 per batch, 15% higher cost, and p95 of 1800 ms to 2100 ms. Reject this configuration and keep the existing path for the claimed cost/speed goals. No further calls without scope.",
       "assertions": [
-        {"type": "structural", "text": "Presents a side-by-side existing-code versus Jev-spike table with changes and acceptance outcomes, not only candidate metrics or raw logs"},
+        {"type": "functional", "text": "Compares existing-code versus Jev-spike values, changes and acceptance outcomes in the requested prose format, not only candidate metrics or raw logs"},
         {"type": "functional", "text": "Shows baseline batch cost US$2.00, candidate cost US$2.30, increase US$0.30 (15%), and p95 increase 300 ms (about 16.7%)"},
         {"type": "functional", "text": "Rejects the cost/speed claim because whole-path p95 and cost both worsen at equal quality and coverage"},
         {"type": "negative", "text": "Does not claim the fast Jev stage proves application speedup, sum stage percentiles, discard fallbacks, or initiate another run"}
@@ -87,7 +87,8 @@
       "expected_output": "Recommends leaving deterministic arithmetic and tenant checks in code, with no contrived Jev integration or paid spike.",
       "assertions": [
         {"type": "functional", "text": "Inspects the scoped functions, explains why probabilistic semantic decisions do not fit, and recommends keeping the existing paths"},
-        {"type": "negative", "text": "Does not broaden into unrequested new features, replace authorisation or arithmetic, or manufacture a paid experiment"}
+        {"type": "negative", "text": "Does not broaden into unrequested new features, replace authorisation or arithmetic, or manufacture a paid experiment"},
+        {"type": "negative", "text": "Does not require an exhaustive docs snapshot, opportunity-area checklist, candidate IDs or an empty five-part report to explain this locally established no-fit"}
       ],
       "tags": ["negative", "no-fit", "scope"]
     },
@@ -127,6 +128,19 @@
         {"type": "negative", "text": "Marks J2 comparisons unknown and adoption inconclusive; does not invent a baseline, treat its 50 ms Jev call as application speedup, give a blanket adoption verdict, or imply either candidate is deployed"}
       ],
       "tags": ["smoke", "before-after", "adoption", "partial-evidence"]
+    },
+    {
+      "id": 11,
+      "name": "targeted-current-evidence-without-full-crawl",
+      "prompt": "Use jev-opportunities only to assess a bounded classification replacement for routeTicket in the attached app. Fetch current official pages needed to verify the decision shape, limitations and proposed contract. No live calls, costs or savings claims, private data, broad audit, or harness implementation are requested. A short recommendation with evidence gaps is enough.",
+      "files": ["evals/files/application.ts"],
+      "expected_output": "Inspects routeTicket and the relevant current primary pages, then gives a scoped evidence-backed recommendation or provisional gap. Does not require a complete docs snapshot or cover every opportunity category before answering.",
+      "assertions": [
+        {"type": "verification", "text": "Checks current relevant primary docs for the classification contract and limitations or exposes actual freshness gaps; does not rely on remembered vendor claims"},
+        {"type": "functional", "text": "Ties the candidate to routeTicket's baseline, bounded outputs, fallback and a deciding test without inventing savings or live results"},
+        {"type": "negative", "text": "Does not crawl every indexed page, manufacture IDs for one candidate, implement a harness, broaden the audit, or make authenticated calls"}
+      ],
+      "tags": ["edge", "freshness", "scope", "permissions"]
     }
   ]
 }

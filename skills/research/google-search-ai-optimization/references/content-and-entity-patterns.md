@@ -29,7 +29,7 @@ Structured data can reinforce entity clarity, but visible content must carry the
 
 ## Page Structure For AI Search
 
-Use clear sections that match human tasks:
+Choose clear sections that match human tasks. These are optional content patterns, not required headings, length targets, or a mandatory page layout:
 
 - summary of the answer or offer
 - eligibility, pricing, availability, requirements, or constraints
@@ -42,7 +42,7 @@ Do not force every section into a FAQ. FAQs are useful only when questions and a
 
 ## Fan-Out Coverage Pattern
 
-For a topic that triggers related questions, improve the main page with naturally adjacent coverage:
+When broader topic coverage is in scope, consider naturally adjacent questions on the main page. A small content edit need not expand into this planning exercise:
 
 1. List the main user jobs and follow-up questions.
 2. Group related questions into sections.

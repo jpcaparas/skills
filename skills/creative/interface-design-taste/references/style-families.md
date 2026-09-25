@@ -1,6 +1,8 @@
 # Style Families
 
-Pick one family as the primary lane. Borrowing accents is fine. Mixing whole families usually creates a confused interface.
+These families are examples, not a fixed menu. Use one, combine several, or invent a different approach to fit the brief. Coherence comes from intentional relationships and usable hierarchy, not stylistic purity. For example, editorial serif headings can sit above a dense operations table, with a playful animated empty state connecting both to the brand.
+
+The trade-offs below describe risks to check, not forbidden creative choices. Suggested dimensions are optional shorthand; the task and accessibility requirements take precedence.
 
 ## Family Table
 
@@ -20,14 +22,14 @@ Use when the interface should feel considered, articulate, and slightly literary
   - clean reading measure
   - strong whitespace rhythm
   - quiet neutrals with one muted accent
-- Avoid:
-  - overly dense card mosaics
-  - neon or saturated accents
-  - overly animated hero sections
+- Watch for:
+  - dense mosaics that interrupt reading order
+  - saturated accents that compete with the text
+  - hero animation that makes reading difficult
 
 Suggested axes:
 
-- composure: high
+- composure: restrained
 - density: low to medium
 - contrast: medium
 - materiality: low
@@ -39,16 +41,16 @@ Use when trust, scanability, and operational clarity matter more than mood perfo
 
 - Priorities:
   - clear table and form behavior
-  - strong type hierarchy without dramatic display moments
+  - strong type hierarchy, with display moments placed around the working task
   - repeated spacing and border logic
-- Avoid:
-  - soft luxury treatments on hard-working tools
-  - decorative gradients as the main identity
-  - random component radii and shadow styles
+- Watch for:
+  - soft treatments that hide boundaries or state
+  - gradients that reduce control or text contrast
+  - inconsistent radii or shadows that imply the wrong behavior
 
 Suggested axes:
 
-- composure: medium to high
+- composure: restrained to moderately theatrical
 - density: medium to high
 - contrast: high
 - materiality: low to medium
@@ -62,10 +64,10 @@ Use when the product should feel humane, premium, and tactile rather than clinic
   - warm neutrals
   - gentle depth
   - friendly but precise typography
-- Avoid:
-  - sugary palettes
-  - oversoft shadows on every object
-  - slow decorative motion in dense workflows
+- Watch for:
+  - sweetness that conflicts with the intended tone
+  - soft shadows that make object boundaries unclear
+  - decorative motion that delays repeated work
 
 Suggested axes:
 
@@ -83,14 +85,14 @@ Use when speed, oversight, and information compression matter. This is especiall
   - strong grouping without card overuse
   - dense but regular rhythm
   - compact controls with clear affordances
-- Avoid:
-  - marketing-page whitespace
-  - giant hero typography
-  - oversized radius and glass effects
+- Watch for:
+  - whitespace or hero type that displaces essential tools
+  - large radii that waste needed working space
+  - glass effects that obscure values or controls
 
 Suggested axes:
 
-- composure: high
+- composure: restrained
 - density: high
 - contrast: high
 - materiality: low
@@ -98,20 +100,20 @@ Suggested axes:
 
 ## Expressive Showcase
 
-Use when the job is persuasion, storytelling, or memorability, not long-session operation.
+Useful for persuasion, storytelling, or memorability. Elements can also enrich a working product when repeated tasks remain clear and efficient.
 
 - Priorities:
   - one dominant visual idea per section
   - bolder asymmetry
   - larger motion contrasts and richer image treatment
-- Avoid:
-  - importing this whole family into core product surfaces
-  - piling multiple special effects into one view
-  - making text work harder than it needs to
+- Watch for:
+  - spectacle that interrupts core product tasks
+  - effects that compete rather than form a coherent composition
+  - unreadable text, unsafe flashing, or missing reduced-motion behavior
 
 Suggested axes:
 
-- composure: low to medium
+- composure: moderately to strongly theatrical
 - density: low
 - contrast: medium to high
 - materiality: medium
@@ -119,7 +121,7 @@ Suggested axes:
 
 ## Choosing Between Families
 
-Use this shortcut:
+If you need a starting point, try these associations, then adapt or combine them:
 
 - if the product is read-heavy, start with Editorial Calm
 - if the product is work-heavy, start with Product Precision
@@ -131,4 +133,3 @@ Use this shortcut:
 
 - `platform-adaptation.md` for where each family should change across contexts
 - `gotchas.md` for the failure modes of overcommitting to a family
-

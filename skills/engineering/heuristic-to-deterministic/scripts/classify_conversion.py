@@ -51,7 +51,7 @@ RULES = (
     ArtifactRule(
         "docs-drift-check",
         ("docs", "documentation", "spec", "deprecated", "live check", "version", "api"),
-        "Verify the live source before freezing spec-sensitive behavior.",
+        "Use authoritative version or current-source evidence before freezing spec-sensitive behavior.",
     ),
 )
 

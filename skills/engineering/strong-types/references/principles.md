@@ -275,7 +275,7 @@ Never add a `default: return somethingSafe` arm to a closed switch — it conver
 
 ## Principle 10: Strictness Ratchets Up
 
-Checker strictness only moves in one direction. The practical protocol:
+Checker strictness only moves in one direction. Keep scoped new code strict. When a legacy strictness rollout is part of the task, use this protocol; an ordinary edit does not require new baseline or CI infrastructure:
 
 1. New code meets the strictest level the toolchain supports (`strict: true`, PHPStan level 9/10, mypy `--strict`).
 2. Legacy code gets a generated baseline (PHPStan baseline, mypy per-module overrides, tsc `include` growth) so existing debt is frozen, not blessed.

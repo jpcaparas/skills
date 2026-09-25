@@ -26,13 +26,13 @@ Run `python3 scripts/doctor.py --project /path/to/project --symptom "describe th
 
 The official docs say you can inspect session logs from GitHub, IDE integrations, Raycast, or the GitHub CLI.
 
-If the GitHub CLI is available and recent enough, the docs mention:
+Inspect the installed GitHub CLI's help/version first. Earlier docs used the commands below; verify that the installed release supports them before use, and consult the relevant session documentation only if the supported interface is unclear:
 
 - `gh agent-task list`
 - `gh agent-task view --repo OWNER/REPO PR_NUMBER`
 - `gh agent-task view --repo OWNER/REPO PR_NUMBER --log --follow`
 
-Use those commands to understand what Copilot actually tried before editing the workflow.
+Use a supported read-only session/log interface to understand what Copilot actually tried before editing the workflow. Do not upgrade the CLI just to match a historical command example.
 
 ## Findings That Usually Mean Repo Changes
 
@@ -57,7 +57,7 @@ Use those commands to understand what Copilot actually tried before editing the 
 1. Confirm the workflow path and job name.
 2. Inspect session logs before rewriting YAML.
 3. Separate repo-local fixes from repo or org settings fixes.
-4. Patch local files first when the problem is local and clear.
+4. Patch local files minimally when the problem is local and clear, preserving custom steps and pins. The helper's parser and renderer have limits described in `references/scaffold-layout.md`; do not mistake their output for complete platform validation.
 5. Ask the user for settings access or confirmation when the fix lives outside the repository.
 6. Re-run the workflow manually or validate in a pull request after patching.
 

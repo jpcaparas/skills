@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Validate packaging and deterministic helper behavior."""
+"""Check packaging, eval shape and helper behavior; does not run model evals."""
 
 from __future__ import annotations
 
 import json
+import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -42,6 +45,33 @@ def run_classifier(script: Path) -> tuple[bool, str]:
     return True, ""
 
 
+def check_description_contract(root: Path) -> tuple[bool, str]:
+    with tempfile.TemporaryDirectory() as directory:
+        copied = Path(directory) / root.name
+        shutil.copytree(root, copied)
+        skill = copied / "SKILL.md"
+        original = skill.read_text(encoding="utf-8")
+        description = (
+            "Codifies repeated heuristics into deterministic validator and normalizer checks. "
+            "Use for recurring drift with measurable invariants."
+        )
+        skill.write_text(
+            re.sub(r'^description:.*$', f'description: "{description}"', original, count=1, flags=re.MULTILINE),
+            encoding="utf-8",
+        )
+        if not validate.validate_skill(copied)["valid"]:
+            return False, "affirmative description should not require exclusion filler"
+
+        skill.write_text(
+            re.sub(r'^description:.*$', 'description: ""', original, count=1, flags=re.MULTILINE),
+            encoding="utf-8",
+        )
+        errors = validate.validate_skill(copied)["errors"]
+        if "Frontmatter description must mention 'deterministic'" not in errors:
+            return False, "empty description should still fail frontmatter validation"
+    return True, ""
+
+
 def run_tests(skill_path: str | Path) -> dict[str, object]:
     root = Path(skill_path).resolve()
     results: dict[str, object] = {
@@ -51,7 +81,7 @@ def run_tests(skill_path: str | Path) -> dict[str, object]:
         "files_verified": {"passed": 0, "total": 0},
         "assertions_valid": {"passed": 0, "total": 0},
         "tag_coverage": {"passed": 0, "total": len(REQUIRED_TAGS)},
-        "helper_checks": {"passed": 0, "total": 1},
+        "helper_checks": {"passed": 0, "total": 2},
         "errors": [],
         "warnings": [],
         "passed": True,
@@ -110,6 +140,13 @@ def run_tests(skill_path: str | Path) -> dict[str, object]:
         results["helper_checks"]["passed"] = 1
     else:
         results["errors"].append(f"Classifier fixture failed: {error}")
+        results["passed"] = False
+
+    ok, error = check_description_contract(root)
+    if ok:
+        results["helper_checks"]["passed"] += 1
+    else:
+        results["errors"].append(f"Description contract failed: {error}")
         results["passed"] = False
 
     return results

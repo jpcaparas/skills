@@ -60,13 +60,13 @@ Choose the smallest fitting mode.
 - State the observed failure without emotional theatre.
 - Separate evidence, likely cause, and confidence.
 - Give or perform the smallest diagnostic that can distinguish the leading explanations.
-- After three materially similar failed attempts, stop proposing another speculative patch. Name the assumption most likely to be wrong and ask or test one diagnostic question.
+- When attempts repeat without new evidence, reassess instead of proposing another speculative patch. Name the assumption most likely to be wrong and use a discriminating diagnostic to test it.
 
 **Complete when:** the current failure, evidence, and next discriminating check are visible.
 
 ### Resume after interruption
 
-Use a compact state card:
+A compact state card can help; use prose or another shape when clearer:
 
 - **Goal:** the outcome being pursued
 - **Done:** verified progress only
@@ -103,7 +103,7 @@ When several routes are viable:
 
 1. Put the recommended route first.
 2. Give the deciding reason.
-3. Offer no more than three immediate choices unless completeness requires more.
+3. Prefer no more than three immediate choices unless the user's needs or completeness require more.
 4. Park non-urgent ideas under **Later** or omit them.
 
 Do not use an arbitrary list cap for references, audits, requirements, or other tasks where completeness is the point. Group long lists by priority or decision instead.
@@ -150,7 +150,7 @@ If nothing changed, say so plainly.
 
 ### Keep errors neutral and recoverable
 
-Use this order when evidence permits:
+One useful shape, with optional labels, is:
 
 1. **Observed:** what failed and where
 2. **Cause:** confirmed cause, or the leading hypothesis with confidence
@@ -185,6 +185,8 @@ Do not make the user repeatedly explain their diagnosis or working style. Honor 
 ## Evidence and attribution
 
 Read `references/research-notes.md` only when the user asks why these defaults exist, when revising the defaults, or when a claim about ADHD or cognitive accessibility needs evidence. Use it to distinguish accessibility guidance, clinical research, practical inference, and unsupported generalization.
+
+Keep these preference-led communication principles stable. If guidance is insufficient, stale, or conflicting, consult relevant official accessibility guidance or trusted clinical sources; do not browse routinely or treat a user's preferences as clinical claims. Report unresolved limits and propose a sourced correction with a concrete example or regression case. Change the canonical skill only when maintenance is in scope, never silently edit an installed copy.
 
 The upstream MIT attribution and full notice are in `THIRD_PARTY_NOTICES.md`. They are packaging evidence, not runtime instructions.
 

@@ -10,10 +10,10 @@ Apply guidance in this order:
 
 1. Preserve supplied facts, evidence, uncertainty, exact literals, and sensitive-data boundaries.
 2. Follow the selected Azure Boards work item type, the fixed packet schema, and the organisation's process conventions.
-3. Follow the project's approved terminology, template, locale, and house style.
+3. Follow the user's requested locale and style, otherwise the project's approved terminology, template, locale, and house style.
 4. Apply the adaptable documentation rules in this reference.
 
-Do not import Google product wording, US English, or formatting that conflicts with Azure DevOps or local conventions. The existing NZ English contract for manual QA remains authoritative.
+Do not import Google product wording, US English, or formatting that conflicts with Azure DevOps or local conventions. NZ English is the manual QA default, not a constraint overriding the user's or project's locale.
 
 ## Keep style separate from product scope
 
@@ -85,7 +85,7 @@ Do not import Google product wording, US English, or formatting that conflicts w
 - Put conditions and test data before the action they govern.
 - Refer to controls by their exact visible label, not by colour, icon shape, or screen position alone. If the notes provide only a visual locator, use a bounded placeholder such as `[confirm visible label]` and record the gap; do not repeat the inaccessible locator or invent a label.
 - State the visible or inspectable signal that proves the result.
-- Do not invent a failure mode, data state, test clock, dependency, dashboard, log view, or recovery path to reach the scenario count. Ask for the missing detail or mark the scenario as incomplete.
+- Do not invent a failure mode, data state, test clock, dependency, dashboard, log view, or recovery path to fill out a section. Ask for missing detail or mark a scenario incomplete only when that detail is material to the check.
 
 ## Mixed-audience clarity
 
@@ -111,7 +111,7 @@ Before finalising `work-item.md`, confirm that:
 - links name their destinations, dates are unambiguous, and literals remain exact
 - missing UI labels and other required details are recorded instead of guessed
 - the same concept uses the same term across the packet
-- manual QA steps remain UI-driven, accessible, and verifiable
+- manual QA steps suit the UI, API, or backend under test and remain accessible and verifiable
 - every acceptance criterion, edge case, and verification surface is supported or explicitly marked missing
 
 ## Source adaptation

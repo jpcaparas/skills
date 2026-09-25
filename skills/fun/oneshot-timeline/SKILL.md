@@ -5,7 +5,7 @@ description: "Builds accessible timeline websites for concepts, history or inves
 
 # One-shot Timeline
 
-Turn a tangled topic into a story a curious non-specialist can follow, one consequential moment at a time. Deliver a working website, not a mockup or a list of dates. The explanation leads; the collage makes it memorable.
+Turn a tangled topic into a story a curious non-specialist can follow, one consequential moment at a time. Deliver a working website, not a mockup or a list of dates. The explanation leads; the visual treatment serves it.
 
 ## 1. Choose the story and destination
 
@@ -41,42 +41,44 @@ Sketch the minimum set of beats that makes the chain understandable. There is no
 4. An optional deeper question whose answer adds substance rather than repeating the summary.
 5. Claim-level source links and any material uncertainty.
 
-Introduce terms where readers need them. Explain an acronym before relying on it. Use a concrete analogy, then say where it stops being accurate. Name who acts and who bears the consequences. The page should make sense when all pictures are hidden.
+Introduce terms where readers need them. Explain an acronym before relying on it. Use a concrete analogy when it improves understanding, and say where it stops being accurate. Name who acts and who bears the consequences. The page should make sense when all pictures are hidden.
 
 For investigations, separate allegations, admissions, findings, convictions, appeals and later outcomes. Distinguish valuation, revenue, profit, cash, debt and equity; label the period, currency and measure. A source's publication date or a portrait's capture date is not automatically the date of the event being illustrated. Avoid unsupported causation between adjacent events.
 
 Write a compact research note in the workspace with the evidence supporting each beat and unresolved points. Do not manufacture precision to fill a visual gap. If browsing is unavailable, use supplied evidence, narrow the claim and disclose the limitation.
 
+When tool/version or source guidance conflicts or is inadequate, check installed tool help and official documentation for tooling, or primary/trusted story and media sources for claims and rights, as needed. Use a verified compatible route within existing permissions. Propose a targeted canonical skill update with the source and a regression or example; never auto-edit an installed copy. Do not browse routinely when supplied evidence is sufficient or the task is offline; disclose what cannot be verified.
+
 **Complete when:** reading only the beat summaries answers the central question, and consequential claims have evidence or an explicit qualification.
 
 ## 3. Give the topic its own visual voice
 
-Choose colours from the subject and tone. Prefer light paper backgrounds, pastel fields and dark readable ink: oat/apricot for food science, mist blue for network mechanics, sage for banking, cool blue/graphite for corporate accounting, or lilac/cream for startup excess. These are examples, not preset assignments. Use stronger colour sparingly for emphasis, and measure contrast rather than assuming pastel means accessible.
+Choose colours from the subject and tone. Light paper backgrounds, pastel fields and dark readable ink are the default editorial direction: oat/apricot for food science, mist blue for network mechanics, sage for banking, cool blue/graphite for corporate accounting, or lilac/cream for startup excess. These are examples, not preset assignments. Use a coherent alternative, including a dark palette, when it better explains the topic or follows the user's design. Measure contrast rather than assuming any palette is accessible.
 
 Use expressive editorial headings, comfortable body text, generous whitespace and a restrained accent. Wit belongs in headlines, analogies and revealing juxtapositions. Keep essential facts literal. For scandals, aim jokes at inflated promises and absurd incentives, not victims, livelihoods or suffering. Avoid generic startup slogans, repetitive eyebrow labels and UI filler.
 
 When sourcing photographs, logos, documents or other third-party media, read [the media workflow](references/media.md) before acquiring or altering assets; it covers broad discovery, real cutouts, provenance and evidence integrity. For abstract concepts, use good original illustrations or suitable sourced imagery without inventing documentary evidence.
 
-**Prefer a strong collage to a weak graph or vector.** Include a graph, diagram or custom vector only if you can make it legible, accurate and useful at its rendered size. A data graph needs verified values, labels, units and a source; a conceptual diagram needs unambiguous relationships and an explicit illustrative label. If the result is awkward, unreadable or unsupported, remove it and use the collage alone. Do not force a decorative zigzag chart, an incoherent icon or a broken vector merely to fill space. A simple established icon is still welcome when it communicates clearly.
+**Choose visuals for explanatory value, not a required medium.** Collage is a useful default; scientific vectors, diagrams, photography or a text-first treatment may explain the topic better. Keep a visual only if it is legible, accurate and useful at its rendered size. A data graph needs verified values, labels, units and a source; a conceptual diagram needs unambiguous relationships and an explicit illustrative label. Redesign or remove awkward, unreadable or unsupported visuals rather than filling space with invented data or broken geometry. A simple established icon is welcome when it communicates clearly.
 
-**Complete when:** the palette fits the topic, art helps the story, and every retained visual survives a thumbnail-size quality check.
+**Complete when:** the palette fits the topic, any art helps the story, and every retained visual is legible at its intended rendered sizes.
 
 ## 4. Build the editorial timeline
 
-Use the following layout as the defining pattern. Implement it in the existing stack when suitable; for a fresh project, prefer a small static site with progressive enhancement. Do not turn this into a framework installation exercise.
+Use the following layout as a default editorial direction, not a required template. Choose a coherent alternate timeline layout when it better explains the content or the user asks for it. Use the existing stack when suitable, or choose an appropriate new stack; framework choice must satisfy the accessibility and portable source/artifact contracts below.
 
 ### Opening
 
-A quiet masthead, an expressive headline, a brief plain-English premise, one topic-specific hero collage or illustration and a direct anchor into the story. Keep the first viewport readable, not a wall of explanation. Clearly identify an investigative page as independent editorial work, not the subject's official site.
+A quiet masthead, an expressive headline, a brief plain-English premise, a topic-specific hero collage or illustration when useful, and a direct anchor into the story work well for the default direction. Keep the first viewport readable, not a wall of explanation. Clearly identify an investigative page as independent editorial work, not the subject's official site.
 
 ### The timeline itself
 
-- Use an ordered list in chronological or causal DOM order. Each item contains its text followed by its illustration; never duplicate content to create the alternate layout.
-- On wide screens, use two equal flexible columns around a **dashed centre spine**. Place text left/art right for one beat, then art left/text right for the next. Dashed horizontal branches connect the copy to small numbered or symbolic spine nodes.
-- Keep entries **unboxed**: date or stage, serif headline, short summary, meaningful deeper-reading link, and compact source-link chips. Paper shapes belong in the artwork, not as a repeating card around every paragraph.
-- Keep collages comfortably inside their column. Let images vary with the evidence: a cutout portrait, a photographed document, a building or a small cluster of related objects. Do not repeat the hero unchanged at every beat.
-- On narrow screens, move the spine to the **left edge** and stack each beat's copy and art in the same logical order. Left-align all text. Reduce the gutter so the spine does not consume the reading width. Choose the breakpoint where the actual content stops fitting, and test both sides.
-- Treat spacing as editorial rhythm, not a calibrated time axis. Tell readers when historical intervals are not to scale.
+- Keep beats in chronological or causal DOM order, normally using an ordered list. Keep text and its illustration together in a logical reading order; never duplicate content to create a visual arrangement.
+- For the default wide layout, use two flexible columns around a **dashed centre spine**, alternating text and art sides. Dashed horizontal branches can connect copy to small numbered or symbolic nodes.
+- In that direction, **unboxed** entries with serif headlines, short summaries, meaningful deeper-reading links and compact source links give an editorial feel. Other typography, grouping and navigation treatments are welcome when they improve comprehension.
+- Fit art comfortably within the chosen layout. Let images vary with the evidence: a cutout portrait, a photographed document, a building or a small cluster of related objects. Do not repeat the hero unchanged at every beat.
+- For the default narrow layout, a **left-edge spine** with stacked, left-aligned copy and art works well. In any layout, preserve logical reading order and enough reading width; choose breakpoints where actual content stops fitting and test both sides.
+- Treat spacing as editorial rhythm unless intervals are deliberately drawn to a verified scale. Tell readers when historical intervals are not to scale.
 
 ### Depth and conclusion
 
@@ -84,14 +86,14 @@ Provide deeper explanations only where they earn the detour, using native disclo
 
 Close with a compact answer to the opening question, the important caveat and, when useful, one common misconception answered in a native disclosure. Include accessible source and media credits. These are an explainer's supporting material, not a second dashboard.
 
-**Complete when:** the rendered site follows the alternating-spine pattern on desktop, the left-spine pattern on mobile, and every promised reading route works.
+**Complete when:** the rendered timeline makes its chronology or causal sequence clear on wide and narrow screens, preserves logical reading order, and every promised reading route works.
 
 ## 5. Make accessibility and portability real
 
 - Use semantic landmarks, a descriptive document title and language, one main heading, ordered heading levels, a keyboard skip link and visible focus. Keep essential text as HTML, not burned into artwork.
 - Use readable type and line lengths. Target WCAG AA contrast: 4.5:1 for normal text, 3:1 for large text and meaningful controls. Do not communicate distinctions through colour alone. Give standalone controls generous targets, aiming for 44×44 CSS pixels.
 - Give meaningful images concise alt text; use empty alt text for art whose meaning is already fully conveyed nearby. Keep documentary captions and credits visible. Decorative rails and redundant node numbers should not clutter screen-reader output.
-- Offer a **Reading layout** that gives one left-aligned text column and hides nonessential hero and timeline art. Keep all explanations, necessary image-derived evidence and credits available. Use a real toggle with an announced state; hide it until its script is ready, or provide an equivalent working no-script link.
+- Provide a distraction-light reading presentation with all explanations, necessary image-derived evidence and credits available. A text-first page may already satisfy this; do not add a redundant toggle. For an art-heavy layout, offer a **Reading layout** that hides nonessential art, or an equivalent accessible presentation. If using a toggle, announce its state and hide it until its script is ready, or provide a working no-script link.
 - Core content, source links, local navigation and native disclosures must work without JavaScript. Respect reduced motion; never hide content until animation or scroll observation runs. Avoid scroll-jacking, autoplay, flashing effects and motion required to understand a beat.
 - Bundle runtime images, styles, scripts and any custom fonts locally. Use relative internal paths that also work when hosted below a URL prefix. External citation links may need the network; reading the page must not. Exclude secrets, caches, dependency trees and private research from the artifact.
 
@@ -103,9 +105,9 @@ Keep the actual editable implementation—HTML/CSS/JS or framework source—alon
 
 Run the build and the project's relevant checks. Serve the artifact, then use an available browser to exercise:
 
-- Wide desktop and a 320–390px narrow viewport, plus both sides of the layout breakpoint: no horizontal overflow, clipped headings, colliding art, overlapping captions or tiny reading columns.
+- Wide and narrow viewports, plus both sides of content-driven layout breakpoints: no horizontal overflow, clipped headings, colliding art, overlapping captions or tiny reading columns. Choose representative sizes for the intended readers, not a fixed-width acceptance test.
 - Keyboard skip link, focus order, source links, deeper-reading routes, anchored returns and any disclosure open state.
-- Reading layout on and off, 200% text, reduced motion and JavaScript disabled.
+- The reading presentation and any switchable states, 200% text, reduced motion and JavaScript disabled.
 - Local asset loading without external runtime requests, including detail pages and hosting below a path prefix. Verify links and fragments rather than just checking that files exist.
 - Automated accessibility checks where available, followed by manual inspection. A clean automated scan is not full accessibility certification.
 

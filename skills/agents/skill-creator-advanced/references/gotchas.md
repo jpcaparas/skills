@@ -22,14 +22,14 @@ Use this catalog after the relevant branch is known. It contains non-obvious fai
 
 ## Process and Completion
 
-- **Activity without a gate** — “review,” “research,” and “test” let the agent move on early. End each phase with checkable evidence and exhaustive accounting where partial work is dangerous.
+- **Activity mistaken for an outcome** — naming review or testing does not define success. Make the result and risky handoffs checkable without adding a gate after every step.
 - **Size-driven split** — line count alone produces several skills with competing triggers. Disclose branch-only content first; split for independent invocation or a useful context boundary.
-- **Implicit choice** — an omitted decision is neither intentional freedom nor a routed branch. Name the choice or state why the model may decide it.
+- **Missing contract mistaken for freedom** — an omitted safety or output invariant causes inconsistent results. State that invariant; ordinary implementation and presentation choices need no individual permission grant.
 - **Question-first intake** — the skill asks for information already present in the request or repository. Inspect first and ask only when a material branch remains unresolved.
 
 ## Verification and Safety
 
-- **Schema pass presented as behavioral proof** — structural preflight cannot show that prompts trigger correctly or that instructions improve behavior. Run behavioral evals before release.
+- **Schema pass presented as behavioral proof** — structural preflight cannot show that prompts trigger correctly or that instructions improve behavior. Execute behavioral evals for behavioral claims and report missing evidence without inventing certification.
 - **Broken evaluator scored as skill failure** — missing authentication, undiscovered temporary skills, or swallowed subprocess errors can make every positive return false. Health-probe the evaluator and separate infrastructure failures from model behavior.
 - **Live-first verification** — testing a write, send, purchase, or production mutation creates risk merely to prove syntax. Climb from parsing and docs through dry run/sandbox/read-only calls, and require authority for external effects.
 - **Plausible but wrong evidence** — a command returns zero while the assertion checks the wrong path, type, or surface. Trace the promised behavior to its exact observable.
@@ -45,6 +45,8 @@ Use this catalog after the relevant branch is known. It contains non-obvious fai
 - **Partial lifecycle update** — canonical skill changes while catalog, registry, router, wrapper, installer, or dependents remain stale. Reconcile the affected-surface ledger atomically.
 - **Checklist-only consistency** — repeated publication rules drift because nothing executes them. Add a repo-native inventory check when the mapping is deterministic.
 - **Silent self-modification** — feedback about a target skill mutates an installed creator copy without authority or a canonical source checkout. Report the candidate lesson unless the creator itself is in scope.
+- **Stale guidance defended as policy** — a dated tool snapshot contradicts installed help or current official evidence. Verify the applicable contract and propose a sourced correction; never treat a documentation page as permission to widen authority.
+- **Aesthetic lock-in disguised as quality** — evals reward one palette, heading layout, or sequence when the task permits alternatives. Grade fidelity and usability, including a valid unconventional result and an unsafe near-miss.
 
 ## Writing and Examples
 

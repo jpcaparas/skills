@@ -36,7 +36,7 @@ Ask these questions before finishing:
 - Is there one obvious production wiring path?
 - Does the contract name describe caller intent rather than vendor mechanics?
 - Would an in-memory fake be simpler and more stable than a deep mock chain?
-- Is at least one adapter or contract test protecting the boundary from drift?
+- Does existing adapter, contract, or integration coverage adequately protect the boundary from relevant drift?
 
 ## Balancing Forward Progress
 
@@ -59,12 +59,14 @@ Move these to an outer boundary or pass them in when behavior depends on them:
 
 ## Refactoring Pattern
 
-1. Characterize current behavior if it is non-trivial.
+Use existing safe seams first. Apply only the steps needed for the current risk, and keep production changes within authorized scope.
+
+1. Check existing coverage; characterize unprotected important behavior before changing it.
 2. Identify the hard dependency and the behavior that actually needs it.
-3. Introduce a narrow replacement point at the closest stable boundary.
-4. Move construction to the composition root, handler setup, fixture, or factory.
-5. Add tests that replace the dependency and cover at least one failure path.
-6. Keep one integration or contract check around the real adapter when drift matters.
+3. Reuse a narrow replacement point or introduce one at the closest stable boundary if necessary.
+4. Move construction to the composition root, handler setup, fixture, or factory only if the existing wiring is inadequate.
+5. Ensure success and relevant dependency failures are safely testable; reuse adequate coverage and fill gaps.
+6. Retain adequate integration or contract coverage around the real adapter when drift matters.
 
 ## Good Boundaries
 

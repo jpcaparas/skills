@@ -1,10 +1,10 @@
 # Report Format
 
-Use this reference when writing the final markdown analysis.
+Use this reference when choosing the response form. Match the user's requested scope and format; a short diagnosis with evidence, applicability, and limits is sufficient for a single-signal readiness audit.
 
-## Output Packet
+## Optional Output Packet
 
-Create the packet with:
+Create files only when requested. If a packet is useful, optionally scaffold it with:
 
 ```bash
 python3 scripts/create_report_packet.py --repo . --url https://example.com
@@ -20,21 +20,21 @@ Default output layout:
   scan-results.json   # optional, created later if a live scan is run
 ```
 
-## Required Report Sections
+## Suggested Full-Report Sections
 
-The final `agent-readiness-report.md` must contain:
+A full report normally covers these topics; combine, rename, or omit headings to fit the request without losing relevant evidence or limitations:
 
 1. `# Agent Readiness Analysis: <repo>`
 2. `## Executive Summary`
 3. `## Evidence Sources`
-4. `## Official Scan Snapshot`
+4. `## Official Scan Snapshot` — only if a scan ran; include target, timestamp, and reported version when available
 5. `## Findings by Category`
 6. `## Applicability Decisions`
 7. `## Repository Coverage`
 8. `## Prioritized Remediation`
 9. `## Open Questions`
 
-Use `templates/agent-readiness-report.md` as the starting point.
+Use `templates/agent-readiness-report.md` as an optional starting point. If no scan ran, state that the official score is unverified under evidence or limitations, not in a fabricated snapshot. No helper, packet, or fixed heading count is required.
 
 ## Writing Contract
 
@@ -42,18 +42,20 @@ The report must:
 
 - preserve Cloudflare's category boundaries
 - say whether each finding came from runtime, repo, or both
-- note when a check is supporting-only or non-scoring
+- distinguish source status from deployed status; a source pass does not imply deployment
+- note supporting-only or non-scoring checks against the measured scan/version, not an assumed permanent scoring rule
+- retain disagreements between scan, HTTP, browser, and source observations, including dates and request context
 - keep unresolved items visible
 - prioritize fixes instead of ending with a flat checklist
 - use repo-relative paths in the markdown report instead of absolute local filesystem paths
 
-## Minimum Table Shape
+## Suggested Table Shape
 
-Inside `## Findings by Category`, each category table should include:
+When tables are useful, include:
 
 - signal
 - applicability
-- status
+- source status and deployed status separately
 - runtime evidence
 - repository evidence
 - fix direction
@@ -99,11 +101,11 @@ Do not hide applicability in footnotes. If a signal is not applicable or neutral
 - explain why
 - avoid treating the absence as a failing implementation
 
-## Sources File
+## Sources File (When Requested)
 
-Leave `sources.md` intact and append any additional live URLs or relevant RFC links if the audit relied on them.
+If a packet was created, distinguish the bundled baseline URLs in `sources.md` from sources actually consulted. Append relevant current official sources with versions or retrieval dates; a prefilled link is not proof it was read.
 
-## Metadata File
+## Metadata File (When Requested)
 
 Keep `metadata.json` as the machine-readable summary of:
 

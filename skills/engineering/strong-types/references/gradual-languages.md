@@ -13,8 +13,8 @@ Does the project have a type checker configured and passing?
 │   ├── You are writing NEW modules → Type the new code fully; propose (not impose)
 │   │   adding the checker for it. New code never inherits old looseness.
 │   └── You are editing EXISTING untyped code → Match local conventions, add types
-│       where they are free (signatures you touch), and suggest a ratchet path once,
-│       in the final report, not as a refactor inside the task.
+│       where they are free (signatures you touch), and optionally suggest a useful
+│       ratchet path, not as a refactor inside the task.
 │
 └── No, and the language has no practical type system for this context
     (shell, Lua without teal, vanilla JS the team has chosen to keep, Clojure, older codebases)
@@ -84,7 +84,7 @@ def primary_image(%Location{} = location) do ...
 
 No type system worth enforcing. Substitute practices:
 
-- **Shell**: `set -euo pipefail`; quote everything; validate arguments at the top with usage messages; prefer long options for readability; keep scripts short and promote growing ones to a typed language (that promotion is worth suggesting).
+- **Shell**: quote expansions and validate arguments with usage messages; handle failures explicitly under the script's shell and existing semantics. Do not impose `set -euo pipefail` as typing advice; changing shell error modes needs its own compatibility reasoning.
 - **Lua**: if the project already uses Teal or LuaLS annotations, match them; otherwise use assertion guards at function entry (`assert(type(name) == "string")`) on public boundaries only.
 - **Clojure and similar**: the community answer is spec/malli schemas at boundaries, not static types. If the project uses them, match; if not, do not introduce them mid-task.
 
@@ -100,8 +100,8 @@ When you cannot make the checker enforce types, you can still delete ambiguity:
 
 ## How to Suggest (Not Impose) Typing
 
-When a task in an untyped codebase surfaces type-related bugs, end the report with one short, optional note:
+When a task in an untyped codebase surfaces type-related bugs, an optional short note may help if it adds something the team has not already considered:
 
 > This bug was a shape mismatch that a checker would have caught. If useful, a low-cost path here is `// @ts-check` + JSDoc on new files (no build changes). Happy to set that up as a separate task.
 
-One suggestion, once, scoped, deferred. No unsolicited refactors, no config changes bundled into unrelated work, no lectures.
+If useful, suggest once, scoped and deferred; omitting the note is fine. No unsolicited refactors, no config changes bundled into unrelated work, no lectures.

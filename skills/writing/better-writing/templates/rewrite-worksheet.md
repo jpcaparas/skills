@@ -1,5 +1,7 @@
 # Rewrite worksheet
 
+Optional aid for complex or high-risk work. Use only relevant sections; a short edit needs source comparison, not a completed worksheet or pass log.
+
 ## Writing contract
 
 - Deliverable:
@@ -96,8 +98,8 @@
 
 ### Pass 6: Humanisation
 
-- remove-by-default wrappers cleared:
-- rewrite-by-default phrases rebuilt from meaning:
+- empty wrappers removed, useful rhetoric retained:
+- frames that obscured meaning repaired:
 - review-only clusters judged in context:
 - synonym swaps rejected:
 - specific detail restored:

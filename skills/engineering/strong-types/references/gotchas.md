@@ -22,9 +22,9 @@ Tribal knowledge for enforcing strong typing without creating new problems. Orga
 
 ## Enforcement Strategy
 
-- Big-bang strictness retrofits die in review. The working pattern is always: strict for new files, generated baseline for old files, CI fails on baseline growth, baseline shrinks opportunistically.
-- Turning on a strict flag without `warnings-as-errors` (or CI enforcement) means the warnings become wallpaper within a month. Strictness that does not fail the build is decoration.
-- When two checkers disagree (mypy vs pyright, PHPStan vs Psalm), pick one as CI truth. Chasing green on both burns time on incompatible inference edge cases.
+- Big-bang strictness retrofits die in review. For a scoped rollout, use strict new files, a baseline for old code, and CI enforcement against baseline growth. A small edit need not introduce that infrastructure.
+- In a strictness rollout, make violations fail the agreed check (`warnings-as-errors` or equivalent enforcement). Do not silently weaken existing enforcement during an ordinary edit.
+- When two checkers disagree (mypy vs pyright, PHPStan vs Psalm), follow the project's chosen checks, including both when required. Resolve or report the conflict with narrowly justified compatibility handling; do not remove a checker to get green.
 - Do not enable every pedantic flag on day one in a team codebase. `strict` + no-escape-hatch rules deliver most of the value; exotic lints (`exactOptionalPropertyTypes` on a legacy API client) can wait until the team trusts the tooling.
 
 ## Over-Typing
@@ -36,7 +36,7 @@ Tribal knowledge for enforcing strong typing without creating new problems. Orga
 
 ## Language-Specific Traps
 
-- **PHP**: `declare(strict_types=1)` affects calls *from* the file it appears in — a strictly typed library called from a non-strict file still coerces. Coverage must be every file, not just library files.
+- **PHP**: `declare(strict_types=1)` affects calls *from* the file it appears in — a strictly typed library called from a non-strict file still coerces. Check affected caller files too; a repository-wide coverage retrofit is separate rollout work.
 - **PHP**: `empty()` and loose `==` bypass all typing discipline (`empty("0")` is true). In typed code, compare explicitly against the state you mean.
 - **TypeScript**: types are erased at runtime; `as` survives compilation as nothing. Any guarantee about runtime data must come from a runtime parse, not from the type layer.
 - **TypeScript**: `JSON.parse` returns `any`, not `unknown` — it launders silently. Wrap it once (`parseJson(text): unknown`) and ban direct calls in application code.

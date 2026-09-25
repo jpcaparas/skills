@@ -2,6 +2,8 @@
 
 How `scripts/fetch_transcript.py` acquires video metadata and transcript data.
 
+Use it only when transcript or metadata evidence is missing and needed. A supplied transcript can support a summary directly without tool installation, network calls, or metadata enrichment.
+
 ## Architecture
 
 The script uses two tools in sequence:
@@ -9,7 +11,7 @@ The script uses two tools in sequence:
 1. **yt-dlp** — fetches video metadata (title, channel, duration, description, stats) via `--dump-json --skip-download`. This is a read-only operation that does not download the video file.
 2. **youtube-transcript-api** — fetches the transcript with timestamped snippets. Prefers manually created captions over auto-generated ones.
 
-Both tools are called independently. If yt-dlp fails, the transcript is still fetched. If youtube-transcript-api fails, the metadata is still returned. This graceful degradation ensures partial results are always available.
+Both tools are called independently. If yt-dlp fails, transcript fetching can still succeed; if transcript fetching fails, available metadata can still be returned in JSON. Either or both may fail. Metadata is not evidence of the video's spoken content.
 
 ## Input Formats
 
@@ -54,6 +56,8 @@ If no transcript matches any preferred language, the script lists what IS availa
 
 Full structured output with metadata, transcript source info, and all snippets:
 
+JSON preserves fetched snippet text, line breaks, and numeric timestamps. Keep raw output unchanged; annotate or paraphrase in a separate synthesis rather than editing the evidence.
+
 ```json
 {
   "video_id": "dQw4w9WgXcQ",
@@ -71,13 +75,12 @@ Full structured output with metadata, transcript source info, and all snippets:
 ```
 
 The `source` field is the most important quality indicator:
-- `"manual"` — human-written or channel-uploaded captions (highest quality)
-- `"auto-generated"` — YouTube speech-to-text (lower quality, may mishear terms)
-- `"yt-dlp-fallback"` — not currently used, reserved for future fallback
+- `"manual"` — human-written or channel-uploaded captions (preferred by the helper, not guaranteed accurate)
+- `"auto-generated"` — YouTube speech-to-text (may mishear terms)
 
 ### Text
 
-Timestamped plain text suitable for reading or piping to other tools:
+Timestamped plain text suitable for reading or piping to other tools. The helper collapses snippet whitespace and rounds display timestamps to seconds; use JSON or the original supplied transcript when exact text/timing preservation matters:
 
 ```text
 # Video Title
@@ -130,16 +133,19 @@ Not all fields are present for every video. Check for null/missing before using.
 
 ## Cookie File Support
 
-For age-restricted, members-only, or region-locked videos:
+The [official upstream README's Cookie Authentication section](https://github.com/jdepoix/youtube-transcript-api#cookie-authentication), checked on September 25, 2026, reports cookie authentication unavailable after YouTube API changes. This is a verified documentation baseline, not a permanent version claim; a cookie flag or CLI example alone does not establish working support.
+
+The bundled helper attempts `YouTubeTranscriptApi(cookie_path=...)`. If that constructor argument is unsupported, it falls back to an unauthenticated client. It does not pass the cookie file to the separate yt-dlp metadata call. Do not promise age-restricted, members-only, private, or region-locked access.
+
+If current official upstream documentation and the installed version establish support for the needed operation, use only an authorized cookie file the user supplied:
 
 ```bash
-# Export cookies from a logged-in browser session
-# (use a browser extension like "Get cookies.txt" or yt-dlp's --cookies-from-browser)
-
-python3 scripts/fetch_transcript.py "<url>" --cookie-file cookies.txt
+python3 scripts/fetch_transcript.py "<url>" --cookie-file /path/to/user-provided-cookies.txt
 ```
 
-The cookie file should be in Netscape format (the same format yt-dlp uses). If the installed version of youtube-transcript-api does not support `cookie_path`, the script warns and continues without cookies.
+Never automatically export browser cookies or extract session credentials. Treat the file as secret: do not print its contents, commit it, or include it in a dossier. Do not bypass access controls. If access is unavailable, request an authorized transcript instead of assuming an upgrade will fix authentication.
+
+For version/API failures, check the installed version and [youtube-transcript-api](https://github.com/jdepoix/youtube-transcript-api) or [yt-dlp](https://github.com/yt-dlp/yt-dlp) official docs as relevant. State unresolved support gaps and propose a sourced canonical-package correction with a check; do not silently patch an installed copy.
 
 ## Exit Codes
 

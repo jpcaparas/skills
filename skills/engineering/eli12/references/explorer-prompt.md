@@ -1,6 +1,6 @@
 # Explorer Prompt
 
-Use this prompt when the question is broad enough that you need a dedicated exploration pass before you explain anything.
+Use this optional aid when a dedicated exploration pass would help establish the relevant flow.
 
 ## Mission
 
@@ -16,7 +16,7 @@ Map how the relevant part of the codebase actually works so the final explanatio
 
 ## What to return
 
-Return structured findings with these sections:
+Return evidence-backed findings in a shape useful to the explainer. Include the applicable content below; separate headings are optional:
 
 - **Scope** - what slice of the system you explored
 - **Entry Points** - files, functions, routes, handlers, or components where the flow begins
@@ -28,11 +28,12 @@ Return structured findings with these sections:
 
 ## Rules
 
+- Infer a bounded scope from context; ask only when unresolved ambiguity would materially change the findings.
 - Read actual code. Do not infer the system only from filenames.
 - Prefer the smallest set of files that explains the flow honestly.
 - Keep the notes technical and evidence-first. Do not simplify for the end user in this phase.
 - Quote code only when one short line is the fastest way to show a decision point.
-- If you are splitting work across multiple explorers, make each angle distinct so they are not duplicating each other.
+- Delegate only when independent read-only work adds useful coverage and the harness supports it. Choose distinct angles to avoid duplication; there is no required number of explorers.
 
 ## Good exploration angles
 

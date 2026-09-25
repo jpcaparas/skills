@@ -18,7 +18,7 @@ Read this when a feature crosses process, network, database, provider, queue, or
 
 ## Timeouts
 
-Set timeouts at every boundary:
+Ensure bounded waits at applicable boundaries, accounting for effective framework or platform deadlines before adding another timeout layer:
 
 - Connection timeout: cannot establish the connection.
 - Request timeout: remote call did not finish.
@@ -63,7 +63,7 @@ For scheduled or periodic work, add stable jitter so every tenant or worker does
 
 ## Idempotent APIs
 
-When designing an internal API or calling an external provider:
+When duplicates could cause harmful side effects, establish idempotency at the enforcing boundary. Existing resource semantics, uniqueness, or provider guarantees may suffice. When using explicit idempotency keys:
 
 - Accept or generate an idempotency key for side-effecting operations.
 - Persist the key with caller identity, request intent, parameters, status, and response summary.
@@ -76,7 +76,7 @@ Do not infer idempotency only by comparing payloads. Identical payloads can repr
 
 ## Outbox and Inbox
 
-Use an outbox when a database change must publish an event or enqueue a side effect:
+Ensure a required event or side-effect handoff cannot be silently lost after a database change. An outbox is one option when existing transactional messaging or a proven reconciliation path does not already provide that guarantee:
 
 ```text
 HTTP request
@@ -95,7 +95,7 @@ Outbox rules:
 - Store relay attempts, last error, and next run time.
 - Avoid deleting outbox rows before metrics and audit needs are satisfied.
 
-Use an inbox table on consumers when duplicate messages would cause harm:
+Use an inbox table when harmful duplicates are not already prevented by idempotent consumer effects or durable deduplication. If needed:
 
 - Unique key: `consumer_name + message_id`.
 - Store received, processed, failed, and ignored states.
@@ -103,7 +103,7 @@ Use an inbox table on consumers when duplicate messages would cause harm:
 
 ## Sagas and Compensation
 
-Use a saga when a business workflow spans services or databases and cannot rely on one ACID transaction.
+Define safe partial-completion outcomes when a business workflow spans services or databases without one ACID transaction. Use a saga when coordinated recovery warrants it; an existing workflow or a simple terminal failure path may suffice.
 
 Model:
 
@@ -136,7 +136,7 @@ Pick limits in business terms when possible: per account, per user, per provider
 
 ## Reconciliation
 
-Add reconciliation when the local app cannot know whether an external side effect happened:
+Resolve uncertain external outcomes safely. Use an existing provider lookup, same-key idempotent retry, or recovery workflow when sufficient; add reconciliation for otherwise unresolved cases such as:
 
 - Payment status after provider timeout.
 - Email provider accepted request but local worker crashed.
@@ -150,7 +150,7 @@ Reconciliation job checklist:
 - Uses a bounded time window and pagination.
 - Records what changed and why.
 - Is safe to run repeatedly.
-- Emits metrics for drift found, fixed, and skipped.
+- Provides enough evidence to diagnose drift and recovery, reusing existing signals where adequate.
 
 ## See Also
 

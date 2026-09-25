@@ -70,6 +70,43 @@ REQUIRED_EVAL_TAGS = frozenset(
 ASSERTION_TYPES = frozenset(
     {"functional", "structural", "disclosure", "negative", "verification"}
 )
+# Branch coverage, not a quota of cases or assertions. One case may cover related
+# branches, but must carry the evidence types needed for each claimed branch.
+REQUIRED_BRANCH_EVIDENCE = {
+    "regression": frozenset({"functional", "verification", "negative"}),
+    "concurrency": frozenset({"functional", "negative"}),
+    "pruning": frozenset({"functional", "negative"}),
+    "replay": frozenset({"functional", "verification"}),
+    "resources": frozenset({"functional", "negative"}),
+    "audit-only": frozenset({"functional", "verification", "negative"}),
+    "flake": frozenset({"functional", "verification", "negative"}),
+    "ordinary-tests": frozenset({"negative"}),
+    "production": frozenset({"functional", "negative"}),
+    "budget-exhausted": frozenset({"functional", "verification", "negative"}),
+    "method-selection": frozenset({"functional", "verification", "negative"}),
+    "stale-guidance": frozenset({"functional", "verification", "negative"}),
+}
+# Co-located concepts catch accidental removal of a safety/outcome rule without
+# prescribing phase names, order, counts, or completion-marker wording. This is
+# structural evidence only; behavioral evals must judge the meaning and execution.
+WORKFLOW_OUTCOME_PATTERNS = {
+    "scope and authorization": (r"\bscope\b", r"separate authority", r"expand"),
+    "recoverable baseline before edits": (
+        r"before (?:edits|changes)", r"recoverable baseline", r"revision", r"dirty", r"patch|copy",
+    ),
+    "bounded isolated effects": (r"budget|limit", r"simulat|cap", r"isolat", r"restore|cleanup"),
+    "independent oracle": (r"independent oracle", r"contract|model", r"not.{0,30}copy"),
+    "replay evidence": (r"minimiz", r"concrete replay", r"environment", r"schedule|sequence"),
+    "held-out fixture isolation": (r"held-out", r"separate", r"isolated cop", r"do not repair"),
+    "authorized repair regression": (r"authorized repair", r"regression", r"fails", r"passes"),
+    "audit-only findings": (r"audit-only", r"report", r"without editing", r"remain open"),
+    "failure preservation": (r"preserve", r"flake", r"never weaken", r"retries", r"owner"),
+    "scoped test review": (r"reviewed or changed", r"scoped sweep", r"untouched"),
+    "broader verification after changes": (r"after.{0,20}changes", r"run focused", r"broader", r"blocked"),
+    "unresolved bounded handoff": (r"stop", r"budget", r"unresolved", r"unrun", r"do not.{0,60}clean"),
+    "clean outcome evidence": (r"clean within scope", r"verification passed", r"no unresolved", r"limits"),
+    "trusted-source recovery": (r"installed tool", r"official documentation", r"reproducer", r"canonical", r"do not silently"),
+}
 AUTHORING_MARKER_RE = re.compile(r"\b(?:TODO|TBD|FIXME)(?=\b|:)")
 INLINE_PATH_RE = re.compile(
     r"`((?:SKILL\.md|\.\./[^`\s]+|(?:references|templates|scripts|evals|agents)/[^`\s]+))`"
@@ -100,10 +137,10 @@ FIXTURE_SHA256 = {
 }
 REVIEWED_EVIDENCE_SHA256 = {
     "scripts/test_skill.py": (
-        "e9342a901f81c3385fcccf2b23a60f5c3a0aaeca447df66a334905a7bb7d202e"
+        "ea55d849bde29d436eaf4e99a9b60358e57aa868a765bb6b3375fd19cf61a82d"
     ),
     "scripts/test_validator_regressions.py": (
-        "12b75a7a776b3b86566c926fcd300bf72caa3e88df5d663478c331b23b8fe319"
+        "dfcc94f3fb65ac8bf6dccd50cc10f39f1c756d977b9c01ab4c0894c161145393"
     ),
 }
 AGENT_INTERFACE_FIELDS = (
@@ -457,6 +494,7 @@ def validate_behavior_evals(root: Path, report: ValidationReport) -> None:
     seen_assertions: set[tuple[str, str]] = set()
     observed_tags: set[str] = set()
     verified_fixture_cases: set[str] = set()
+    evidenced_branches: set[str] = set()
 
     for index, case in enumerate(cases, start=1):
         label = f"eval #{index}"
@@ -507,6 +545,7 @@ def validate_behavior_evals(root: Path, report: ValidationReport) -> None:
         assertions = case.get("assertions")
         has_positive_disclosure = False
         has_negative_disclosure = False
+        evidence_types: set[str] = set()
         if not isinstance(assertions, list) or not assertions:
             report.errors.append(f"{label} assertions must be a non-empty array")
         else:
@@ -524,6 +563,8 @@ def validate_behavior_evals(root: Path, report: ValidationReport) -> None:
                         f"{label} assertion #{assertion_index} has invalid type: {assertion_type!r}"
                     )
                 if isinstance(text, str) and isinstance(assertion_type, str):
+                    if text.strip() and assertion_type in ASSERTION_TYPES:
+                        evidence_types.add(assertion_type)
                     assertion_key = (assertion_type, " ".join(text.split()).casefold())
                     if assertion_key in seen_assertions:
                         report.errors.append(
@@ -537,6 +578,11 @@ def validate_behavior_evals(root: Path, report: ValidationReport) -> None:
                         report.metrics["negative_disclosure_assertion_count"] += 1
                     else:
                         has_positive_disclosure = True
+
+        for branch in tags or []:
+            required_types = REQUIRED_BRANCH_EVIDENCE.get(branch)
+            if required_types is not None and required_types <= evidence_types:
+                evidenced_branches.add(branch)
 
         if tags and "disclosure" in tags:
             if not has_positive_disclosure:
@@ -579,6 +625,11 @@ def validate_behavior_evals(root: Path, report: ValidationReport) -> None:
     missing_tags = REQUIRED_EVAL_TAGS - observed_tags
     if missing_tags:
         report.errors.append("missing behavioral eval tags: " + ", ".join(sorted(missing_tags)))
+    for branch in sorted(REQUIRED_BRANCH_EVIDENCE.keys() - evidenced_branches):
+        required_types = ", ".join(sorted(REQUIRED_BRANCH_EVIDENCE[branch]))
+        report.errors.append(
+            f"missing eval evidence for branch {branch!r}: needs {required_types} assertions"
+        )
     if report.metrics["fixture_eval_count"] < 1:
         report.errors.append("at least one behavioral eval must use committed fixture files")
     missing_fixture_cases = set(EVAL_FIXTURE_MANIFEST) - verified_fixture_cases
@@ -620,10 +671,10 @@ def validate_trigger_evals(root: Path, report: ValidationReport) -> None:
         else:
             report.metrics["trigger_negative_count"] += 1
 
-    if report.metrics["trigger_positive_count"] < 3:
-        report.errors.append("trigger evals require at least three positive cases")
-    if report.metrics["trigger_negative_count"] < 3:
-        report.errors.append("trigger evals require at least three negative cases")
+    if not report.metrics["trigger_positive_count"]:
+        report.errors.append("trigger evals require positive invocation evidence")
+    if not report.metrics["trigger_negative_count"]:
+        report.errors.append("trigger evals require negative invocation evidence")
 
 
 def validate_metadata(root: Path, skill_version: str | None, report: ValidationReport) -> None:
@@ -693,8 +744,8 @@ def parse_agent_interface(content: str) -> dict[str, str] | None:
     return fields
 
 
-def validate_completion_gates(body: str, report: ValidationReport) -> None:
-    """Require one observable completion gate inside each numbered phase."""
+def validate_workflow_outcomes(body: str, report: ValidationReport) -> None:
+    """Check safety and exit-branch guidance without imposing procedural ceremony."""
 
     workflow_match = re.search(
         r"^## Operating workflow\s*$\n(?P<workflow>.*?)(?=^## |\Z)",
@@ -705,21 +756,17 @@ def validate_completion_gates(body: str, report: ValidationReport) -> None:
         report.errors.append("SKILL.md is missing a parseable operating workflow")
         return
 
-    workflow = workflow_match.group("workflow")
-    phase_matches = list(re.finditer(r"^### ([1-9])\.\s+", workflow, re.MULTILINE))
-    phase_numbers = [int(match.group(1)) for match in phase_matches]
-    if phase_numbers != list(range(1, 10)):
-        report.errors.append("operating workflow must contain numbered phases 1 through 9")
-        return
-
-    for index, phase_match in enumerate(phase_matches):
-        end = phase_matches[index + 1].start() if index + 1 < len(phase_matches) else len(workflow)
-        phase = workflow[phase_match.start() : end]
-        marker_count = phase.count("**Complete when:**")
-        if marker_count != 1:
+    paragraphs = [
+        " ".join(paragraph.split())
+        for paragraph in re.split(r"\n\s*\n", workflow_match.group("workflow"))
+    ]
+    for outcome, patterns in WORKFLOW_OUTCOME_PATTERNS.items():
+        if not any(
+            all(re.search(pattern, paragraph, re.IGNORECASE) for pattern in patterns)
+            for paragraph in paragraphs
+        ):
             report.errors.append(
-                "operating workflow phase "
-                f"{phase_match.group(1)} must contain exactly one completion gate"
+                f"operating workflow missing outcome guidance: {outcome}"
             )
 
 
@@ -789,7 +836,7 @@ def validate_skill(skill_path: str) -> dict[str, object]:
     for term in REQUIRED_TERMS:
         if term.casefold() not in body.casefold():
             report.errors.append(f"SKILL.md missing required concept: {term}")
-    validate_completion_gates(body, report)
+    validate_workflow_outcomes(body, report)
 
     reference_contents: list[str] = []
     for relative_path in (

@@ -1,24 +1,22 @@
 # Compact Git Patterns
 
-Use git as a summary engine first and a patch viewer second.
+Choose summaries for scope and state, patches for semantics, and history for provenance.
 
-## The Git Compression Ladder
+## Choose The Needed View
 
-1. `git status --short --branch`
-2. `git diff --stat`
-3. `git diff --name-only`
-4. `git diff -- path/to/file`
-5. `git diff --cached --stat`
-6. `git diff --cached -- path/to/file`
-7. `git log --oneline --decorate -n 15`
-8. `git log --stat -- path/to/file`
-9. `git show --stat --oneline <commit>`
+- Working-tree state: `git status --short --branch`
+- Change size or paths: `git diff --stat` or `git diff --name-only`
+- Behavior changes in a known file: `git diff -- path/to/file`
+- Staged scope or semantics: `git diff --cached --stat` or `git diff --cached -- path/to/file`
+- Recent history: `git log --oneline --decorate -n 15`
+- Path history with change size: `git log --stat -- path/to/file`
+- A commit summary: `git show --stat --oneline <commit>`
 
-Do not jump to a full unscoped diff unless the summary still leaves a real ambiguity.
+These are alternatives, not a ladder. Read a full diff directly when the task requires the complete patch; prefer explicit paths when the relevant scope is known.
 
 ## Quick Reference
 
-| Need | Preferred command | Escalate to | Why |
+| Need | Compact option | Alternative when useful | Why |
 | --- | --- | --- | --- |
 | Current branch and file states | `git status --short --branch` | `git status` | Branch plus concise state codes answer most triage questions |
 | How large the change is | `git diff --stat` | `git diff --name-only` | File counts and line totals are cheap signal |
@@ -30,22 +28,23 @@ Do not jump to a full unscoped diff unless the summary still leaves a real ambig
 
 ## Staging, Commit, and Push Flow
 
-Use the smallest safe commit workflow:
+When committing is authorized, stage only intended changes and review their semantics:
 
 ```bash
 git add -- path/to/file
-git diff --cached --stat
 git diff --cached -- path/to/file
 git commit -m "fix(scope): concise summary"
+```
+
+Use `git diff --cached --stat` if a staged-size summary helps. Review all staged changes that would enter the commit, including any already present; never silently include unrelated work.
+
+Pushing is a separate external write, not an implied next step after committing. Only when the user has authorized a push and the intended remote and destination are known:
+
+```bash
 git push -u origin HEAD
 ```
 
-Why this order:
-
-- `git add -- path` stages only the intended surface
-- `git diff --cached --stat` is the cheapest sanity check before commit
-- `git diff --cached -- path` is the hunk-level review only for the file that matters
-- `git push -u origin HEAD` avoids branch-name lookup noise when the remote exists
+`HEAD` avoids a branch-name lookup; it does not choose or authorize a destination. Use an explicit refspec when the intended destination differs, and `-u` only when setting the upstream is intended.
 
 ## Narrow History Patterns
 
@@ -72,7 +71,7 @@ git show --stat --oneline <commit>
 
 The probe suite in `scripts/probe_implicit_token_savings.py` creates a temporary repository, stages a file, commits it, and pushes `HEAD` to a local bare remote. That verifies the compact add, commit, and push flow without touching any real repository.
 
-## Escalation Rules
+## Detail Choices
 
 - If `git diff --stat` says the change is trivial, inspect only the affected paths.
 - If the summary suggests rename-heavy or generated-file churn, use `git diff --name-status` before opening hunks.

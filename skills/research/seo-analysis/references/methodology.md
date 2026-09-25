@@ -1,6 +1,6 @@
 # SEO Analysis Methodology
 
-Use this file when the user wants a full audit from repository inspection through a fix-ready handoff prompt.
+Use this file for a full audit. For scoped work, use only the relevant checks and match the requested response form; a handoff prompt is optional.
 
 ## Audit Sequence
 
@@ -25,7 +25,7 @@ Use this file when the user wants a full audit from repository inspection throug
    - Discovery issue caused by weak internal linking
    - Structured-data mismatch between page type and schema
    - Intentional `noindex` surfaces vs accidental exclusions
-5. Produce the handoff prompt.
+5. Report findings, priorities, coverage, and limitations. If a handoff is requested or useful:
    - Keep it implementation-oriented.
    - Point to actual files, templates, and abstractions.
    - Include acceptance criteria and tests.
@@ -57,7 +57,7 @@ Avoid vague findings like:
 
 ## Minimum Audit Coverage
 
-Do not claim a “full” audit unless you checked all of these:
+For a full audit, cover the applicable areas below and explain exclusions. If runtime access or another dependency is unavailable, label the coverage as partial or source-only rather than claiming deployed behavior was verified:
 
 - indexability controls: robots meta, x-robots-tag, robots.txt, status codes
 - canonicalization: rel canonical strategy, duplicate URL handling, parameter and pagination behavior
@@ -77,11 +77,11 @@ Do not claim a “full” audit unless you checked all of these:
 
 ## Handoff Principle
 
-The second session should not repeat the audit. Give it:
+Avoid redundant discovery, not verification. Give the implementing session:
 
 - the files to edit
 - the page types affected
 - the rules to preserve
 - the exact acceptance checks to satisfy
 
-Use `references/fix-prompt-spec.md` after the audit is complete.
+It should revalidate relevant findings against the current checkout, deployment, and official requirements before editing; changed state can invalidate an earlier finding. Broaden discovery only when evidence has drifted or is insufficient. Use `references/fix-prompt-spec.md` when preparing the optional handoff.

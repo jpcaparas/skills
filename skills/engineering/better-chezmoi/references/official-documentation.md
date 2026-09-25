@@ -31,7 +31,9 @@ This fetches the curated official page set into a temporary staging directory, v
 
 Use `--output PATH` to compare against another corpus. Network or HTTP failure is an operational failure, not evidence that the existing snapshot is current.
 
-## Publish a refresh
+## Update the canonical snapshot
+
+Run this only in the canonical skill checkout when the corpus update is authorized. It replaces local snapshot files; committing or publishing the repository remains a separate action.
 
 ```sh
 python3 scripts/official_docs.py refresh --write
@@ -40,7 +42,7 @@ python3 scripts/official_docs.py check
 
 `--write` stages and validates the complete corpus, moves the prior directory to a recovery backup, publishes the staged directory, and restores the backup if publication fails. It refuses a partial fetch. Review the resulting diff for lost headings, examples, source URL changes, and unexpectedly large churn before release.
 
-Publishing the default installed snapshot can fail on a read-only installation. In that case, use `--output` with a writable directory and search it through `--docs`.
+Do not silently replace an installed snapshot. For an ad hoc refresh outside the canonical checkout, use `--output` with a writable scratch directory and search it through `--docs`. Propose any instruction changes with the source URL, version, observed mismatch, and a safe reproducer.
 
 ## Change the page set
 

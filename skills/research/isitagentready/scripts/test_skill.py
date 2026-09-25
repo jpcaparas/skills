@@ -29,10 +29,15 @@ REQUIRED_FILES = {
     "references/report-format.md",
     "references/gotchas.md",
 }
-REQUIRED_STRINGS = [
-    "{{ skill:agent-browser }}",
-    "What production URL should I audit for this repository?",
-]
+# Check evidence and consent guardrails, not a particular tool name or question.
+# These are structural checks; the eval cases specify actual audit behavior.
+REQUIRED_CONTENT_PATTERNS: dict[str, str] = {
+    "clarify an unresolved live target": r"(?:ask|clarify)[^\n]*(?:production|deployed)[^\n]*URL[^\n]*(?:missing|ambiguous)",
+    "browser usability needs rendered evidence": r"browser(?:-agent)? usability[^\n]*require[^\n]*rendered browser evidence",
+    "source evidence is not a deployed pass": r"source[^\n]*(?:not yet proven deployed|not a deployed pass|unverified)",
+    "no invented official score": r"do not invent[^\n]*official[^\n]*(?:score|level)",
+    "consent before private target disclosure": r"(?:consent|permission)[^\n]*before[^\n]*(?:submitting|disclosing)[^\n]*private",
+}
 
 
 def extract_file_references(content: str) -> list[str]:
@@ -127,9 +132,12 @@ def test_skill(skill_path: str) -> dict:
     skill_md = skill_root / "SKILL.md"
     if skill_md.is_file():
         skill_text = skill_md.read_text(encoding="utf-8")
-        for expected in REQUIRED_STRINGS:
-            if expected not in skill_text:
-                results["errors"].append(f"SKILL.md is missing required text: {expected}")
+        for contract, pattern in REQUIRED_CONTENT_PATTERNS.items():
+            results["helper_checks"]["total"] += 1
+            if re.search(pattern, skill_text, re.IGNORECASE):
+                results["helper_checks"]["passed"] += 1
+            else:
+                results["errors"].append(f"SKILL.md is missing content contract: {contract}")
                 results["passed"] = False
         check_file(skill_md)
 
@@ -165,6 +173,19 @@ def test_skill(skill_path: str) -> dict:
         else:
             results["errors"].append("Report template is missing repo-relative path guidance")
             results["passed"] = False
+
+        template_contracts = {
+            "scan snapshot is conditional": bool(re.search(r"snapshot only (?:if|when) a scan ran", template_text, re.IGNORECASE)),
+            "commerce scoring is not hardcoded": not bool(re.search(r"Commerce counted in score\s*\|\s*No\s*\|", template_text)),
+            "source and deployed status are separate": "Source status | Deployed status" in template_text,
+        }
+        for contract, passed in template_contracts.items():
+            results["helper_checks"]["total"] += 1
+            if passed:
+                results["helper_checks"]["passed"] += 1
+            else:
+                results["errors"].append(f"Report template contract failed: {contract}")
+                results["passed"] = False
 
     create_report_script = skill_root / "scripts" / "create_report_packet.py"
     results["helper_checks"]["total"] += 1

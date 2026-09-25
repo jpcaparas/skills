@@ -31,31 +31,31 @@ Load this skill in the background whenever the task involves automated tests, ex
 
 ## Decision Tree
 
-What are you doing?
+Consult the relevant reference only when a non-obvious test-design decision needs more detail than these rules or local examples provide. A matching topic does not require a reference read.
 
 - Adding tests for new behavior:
-  Read `references/principles.md` and `references/naming-and-intent.md`. Name each test after the user-visible rule or domain invariant, then use concrete examples that teach the behavior.
+  Name each test after the user-visible rule or domain invariant, then use concrete examples that teach the behavior. Consult `references/principles.md` or `references/naming-and-intent.md` if intent is unclear.
 
 - Fixing a bug or adding regression coverage:
-  Read `references/legacy-and-characterization.md`. The test should explain the broken scenario, expected behavior, and why this coverage remains valuable after the fix.
+  Prove the broken scenario and expected behavior, reusing adequate coverage where it exists. Consult `references/legacy-and-characterization.md` when preserving legacy behavior or explaining uncertainty needs care.
 
 - Covering edge cases:
-  Read `references/structure-and-fixtures.md`. Keep the happy path visible, then add boundary cases whose names say what makes the boundary meaningful.
+  Keep the happy path visible, then cover meaningful boundaries without duplicating adequate tests. Consult `references/structure-and-fixtures.md` for difficult fixture or case organization.
 
 - Tests are hard because the production code is tangled or unmockable:
-  Read `references/doubles-and-boundaries.md`, then load {{ skill:maintainable-code }} if available. Improve the production boundary before writing contorted tests.
+  Use existing safe seams first, including framework overrides or scoped, reliably restored legacy patches. Refactor production only when necessary, proportionate, and authorized. Consult `references/doubles-and-boundaries.md`, or {{ skill:maintainable-code }} if available, when a boundary decision remains unresolved. In tests-only work, propose a needed production change rather than making it.
 
 - Refactoring legacy code before changing behavior:
-  Read `references/legacy-and-characterization.md`. Add characterization tests first, label intentional legacy behavior, then change production code in small verified steps.
+  Reuse adequate behavior coverage; add characterization only for important gaps. Label intentional legacy behavior and change production code in small verified steps. Consult `references/legacy-and-characterization.md` when the preservation contract is unclear.
 
 - Reviewing a test diff:
-  Use `references/review-rubric.md`. Lead with tests that can pass while behavior is broken, brittle implementation coupling, unclear intent, missing edge coverage, and fixture noise.
+  Lead with tests that can pass while behavior is broken, brittle implementation coupling, and missing edge coverage before style. Consult `references/review-rubric.md` for difficult review judgments; its format is optional.
 
 - Choosing mocks, stubs, fakes, fixtures, or integration tests:
-  Read `references/doubles-and-boundaries.md`. Prefer the least powerful test double that proves the behavior, and keep at least one contract or integration check where adapters can drift.
+  Prefer the least powerful test double that proves the behavior and adequate contract or integration coverage where adapters can drift. Consult `references/doubles-and-boundaries.md` when the choice is non-obvious; existing coverage counts.
 
 - Tests touch network, waiting, global framework state, environment gates, filesystem/CLI effects, or multiple supported dependency versions:
-  Read `references/side-effects-and-compatibility.md`. Deny unintended effects, reset global state, test configuration as a decision matrix, and assert the exact artifact or capability branch.
+  Deny unintended effects, reset global state, test relevant configuration dimensions, and assert the exact artifact or capability branch. Consult `references/side-effects-and-compatibility.md` for unresolved isolation or compatibility risks.
 
 ## Quick Reference
 
@@ -67,7 +67,7 @@ What are you doing?
 | Repeated setup | Extract helpers only when the helper name preserves domain meaning |
 | Parameterized tests | Use named cases that explain why each row exists |
 | Legacy behavior | Add a short rationale: compatibility, data migration, customer contract, bug reference, or explicit unknown |
-| Hard-to-test production code | Refactor boundaries before adding sleeps, globals, reflection, or broad mocks |
+| Hard-to-test production code | Reuse safe seams; refactor only when necessary, proportionate, and within authorized scope |
 | Mock-heavy test | Replace incidental interaction assertions with behavior assertions, fakes, or adapter contract tests |
 | Edge case | Name the boundary, not just "handles invalid input" |
 | Network or subprocess in tests | Fail on unplanned calls; explicitly fake, stub, or integrate only the contract under test |
@@ -87,7 +87,7 @@ What are you doing?
 5. Use DAMP tests when readability and DRY conflict. Duplication that keeps the scenario clear is often better than clever shared setup.
 6. Keep each test focused on one behavior, but assert every outcome needed to prove that behavior. State changes, returned results, and emitted events can belong together when they are one observable rule.
 7. Choose test doubles by contract: stubs answer queries, fakes model simple state, spies observe important effects, mocks enforce essential interactions only.
-8. Do not expose private internals, freeze bad abstractions, or add broad interfaces just to make a test pass. Reshape the production code boundary when the test is telling you the design is hard to observe.
+8. Do not expose private internals, freeze bad abstractions, or add broad interfaces just to make a test pass. Prefer existing safe seams; reshape a production boundary only when necessary and proportionate, and never exceed a tests-only scope.
 9. Document edge cases and legacy behavior where the name alone cannot carry the reason. The future reader needs to know whether behavior is principled, historical, contractual, or temporary.
 10. Keep tests deterministic. Control time, randomness, external services, locale, timezone, concurrency, and persistence at clear boundaries.
 11. Verify the failure mode, not only the happy path. A regression test should fail for the bug it guards against.
@@ -113,22 +113,24 @@ Before finishing test changes, run this gate mentally and with local tooling whe
 | Compatibility | Lowest/current supported combinations are exercised, plus capability-present/absent branches when an optional capability is part of the promise |
 | Artifact evidence | Assertions inspect the exact path, value type, contents, and unchanged state that prove the effect |
 | Doubles | Mocks, stubs, fakes, and spies are the least powerful option that proves the rule |
-| Production design | Code was decomposed when that made the test clearer and the product code healthier |
+| Production design | Safe existing seams are used; any production refactor is necessary, proportionate, and authorized |
 | Handoff | A new maintainer can use the tests as an onboarding map for the behavior |
 
 ## Operating Workflow
+
+Keep small edits small: use focused context and adequate existing coverage, without a written story or fixed report template.
 
 1. Recon first.
    Read nearby tests, fixtures, factories, helpers, and the production code path before adding patterns.
 
 2. Identify the behavior story.
-   Write the rule in one sentence. If the sentence includes unrelated concerns, split the tests or the production code.
+   Identify the rule and keep unrelated concerns separate. Write it down only when that helps resolve ambiguity.
 
 3. Pick examples.
-   Start with the normal case, then choose boundary and failure cases that explain real product risk.
+   Check existing coverage, then choose missing normal, boundary, or failure cases that explain real product risk.
 
 4. Shape the code for observability.
-   If the only readable test needs reflection, sleeps, global monkeypatching, or excessive mocks, improve the production boundary first.
+   Use existing safe seams, including scoped legacy patches with reliable restoration and isolation. If none can prove the behavior safely, propose the smallest production refactor and perform it only within authorized scope. Do not use real side effects or leaked globals to avoid that limit.
 
 5. Write the test as documentation.
    Keep setup meaningful, action obvious, and assertions specific. Add a short comment only for history, invariants, or non-obvious domain tradeoffs.
@@ -137,7 +139,7 @@ Before finishing test changes, run this gate mentally and with local tooling whe
    Run the focused test. When feasible, make sure it fails before the fix or would fail for the guarded regression. Re-read it as onboarding material.
 
 7. Report plainly.
-   Name the behavior covered, edge cases added, production boundaries changed, commands run, and any remaining coverage risk.
+   Report the behavior covered, verification, and remaining risk; mention boundary decisions only when consequential. Omit empty sections and routine process narration.
 
 ## Optional Helper
 
@@ -149,6 +151,10 @@ python3 scripts/analyze_maintainable_tests.py /path/to/project --json
 ```
 
 The helper filters directory scans to conventional test paths plus annotated Rust source, while an explicitly supplied supported source file is inspected directly; recognized declarations are checked for a bounded set of name, assertion, fixture, double, coupling, wall-clock, real-sleep, randomness, and legacy-rationale signals, and network access is not detected. A quiet scan does not prove the suite is good, and a noisy scan does not prove the tests are wrong.
+
+## When Guidance Stops Helping
+
+If a bundled testing pattern fails or conflicts with the repository's runner, check its installed version and official framework documentation. Prefer the idiomatic way to prove the behavior while retaining side-effect isolation; mark unexecuted checks honestly. Propose a canonical skill correction or deletion with the source/version and a distinguishing regression. Do not silently edit installed copies or add brittle tests merely to satisfy this skill's examples.
 
 ## Reading Guide
 

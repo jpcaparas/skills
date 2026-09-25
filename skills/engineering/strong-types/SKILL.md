@@ -30,7 +30,7 @@ Write, edit, and review code so every value has one knowable type at every point
 
 Load this skill in the background whenever a coding task touches a language with a real type system — static (C#, Java, Kotlin, Swift, Go, Rust, TypeScript) or gradual with mature tooling (PHP, Python, Ruby with Sorbet, Elixir with typespecs). Apply it to new code, edits, refactors, reviews, and implementation plans alike.
 
-Keep it proportional: for small edits, run a silent type-ambiguity pass and mention only the decisions that change the implementation. Also load {{ skill:maintainable-code }} for general code quality when available. When the language or codebase has no usable type system, read `references/gradual-languages.md` and do not force the issue.
+Keep it proportional: for small edits, run a silent type-ambiguity pass and mention only the decisions that change the implementation. Also load {{ skill:maintainable-code }} for general code quality when available. When the language or codebase has no usable type system, do not force the issue; consult `references/gradual-languages.md` for suitable alternatives.
 
 ## The Canonical Offense
 
@@ -55,28 +55,28 @@ The fallback logic still exists — but it lives in one named, typed method with
 
 ## Decision Tree
 
-What are you working on?
+What are you working on? Use these references as targeted aids when the task needs language-specific detail, not as compulsory tutorials for every edit. Preserve exact framework/interface type contracts; contain and justify any required escape hatch rather than narrowing a signature incompatibly.
 
 - PHP (Laravel, Symfony, plain):
-  Read `references/php.md`. Require `declare(strict_types=1)`, typed properties, typed signatures, enums, DTOs over associative arrays, and PHPStan/Psalm-level generics annotations.
+  Consult `references/php.md` for detail. Require `declare(strict_types=1)`, typed properties, typed signatures, enums, DTOs over associative arrays, and PHPStan/Psalm-level generics annotations.
 
 - TypeScript or a JS codebase that compiles TS:
-  Read `references/typescript.md`. Require `strict: true`, ban `any` and `@ts-ignore`, use `unknown` + parsing at boundaries, discriminated unions, and exhaustive switches.
+  Consult `references/typescript.md` for detail. Require `strict: true`, ban `any` and `@ts-ignore`, use `unknown` + parsing at boundaries, discriminated unions, and exhaustive switches.
 
 - Python:
-  Read `references/python.md`. Require full signature annotations, mypy/pyright strict mode, dataclasses/TypedDict/pydantic over raw dicts, `Enum`/`Literal` over strings.
+  Consult `references/python.md` for detail. Require full signature annotations, mypy/pyright strict mode, dataclasses/TypedDict/pydantic over raw dicts, `Enum`/`Literal` over strings.
 
 - C#, Java, or Kotlin:
-  Read `references/jvm-and-dotnet.md`. Require nullable reference types (C#), sealed hierarchies and records, exhaustive pattern matching, and no unchecked casts or `!!`.
+  Consult `references/jvm-and-dotnet.md` for detail. Require nullable reference types (C#), sealed hierarchies and records, exhaustive pattern matching, and no unchecked casts or `!!`.
 
 - Go, Rust, or Swift:
-  Read `references/go-rust-swift.md`. Ban `interface{}`/`any` escape hatches, `unwrap()` in production paths, and force-unwraps; prefer newtypes and enums with associated data.
+  Consult `references/go-rust-swift.md` for detail. Ban `interface{}`/`any` escape hatches, `unwrap()` in production paths, and force-unwraps; prefer newtypes and enums with associated data.
 
 - Plain JavaScript, Ruby, Elixir, Lua, shell, or another dynamically typed setting:
-  Read `references/gradual-languages.md`. Nudge toward available typing tools without rewriting the project or fighting its conventions.
+  Consult `references/gradual-languages.md` for alternatives. Suggest typing tools only when useful, without rewriting the project or fighting its conventions.
 
 - Reviewing a diff or plan:
-  Use `references/review-rubric.md`. Lead with ambiguity that can cause runtime failures: nullable leaks, `any` laundering, stringly typed state, and silent coercion.
+  Use `references/review-rubric.md` when helpful. Lead with ambiguity that can cause runtime failures: nullable leaks, `any` laundering, stringly typed state, and silent coercion.
 
 - Unsure where to start:
   Read `references/principles.md`, then run the Type Ambiguity Gate below.
@@ -96,7 +96,7 @@ What are you working on?
 | Casts used to silence the checker (`as any`, `(array)`, `!!`, unchecked cast) | Replace with narrowing, a type guard, or a parse step that can fail loudly |
 | Boolean parameter pairs encoding a state machine | Replace with one enum/sealed type so illegal combinations cannot exist |
 | Same variable reassigned to different types | Split into separate variables with one type each |
-| Weak compiler/checker settings | Turn strictness on for new code; ratchet existing code with baselines |
+| Weak compiler/checker settings | Keep scoped new code strict; use baselines when a legacy rollout is in scope |
 
 ## Core Rules
 
@@ -108,14 +108,14 @@ What are you working on?
 6. Nullability is a design decision, not a default. A field is nullable only when "absent" is a real domain state, and every nullable read has exactly one owner that resolves it. Fallback chains at call sites mean the owner is missing.
 7. Keep one variable one type. Reassigning a variable to a different type destroys inference and reader trust.
 8. Casts move risk, they do not remove it. Prefer narrowing (type guards, pattern matching, `instanceof`, exhaustive switches) that the checker can verify. A cast that cannot fail loudly is a lie waiting to be believed.
-9. Turn the checker up, not off. Strict compiler flags and strict analyzer levels are the baseline for new code; use baseline/ratchet files to adopt them incrementally in legacy code, never blanket suppressions.
+9. Turn the checker up, not off. Strict compiler flags and strict analyzer levels are the baseline for scoped new code; use baseline/ratchet files when adopting them across legacy code, never blanket suppressions. An ordinary edit does not require a project-wide tooling rollout.
 10. Generics exist to preserve types across boundaries. A container, repository, or helper that erases types (`List<Object>`, `Collection<mixed>`) forces every caller to cast; parameterize it instead.
 11. Exhaustiveness is enforced by the compiler, not by comments. Every switch/match over a closed type handles every case or fails compilation when a case is added.
-12. Do not force the issue where the language cannot hold it. In plain JS, untooled Ruby, Lua, or shell, write defensively, document shapes, and suggest — not impose — typing tools. Read `references/gradual-languages.md` first.
+12. Do not force the issue where the language cannot hold it. In plain JS, untooled Ruby, Lua, or shell, write defensively, document shapes, and suggest — not impose — typing tools when useful. Consult `references/gradual-languages.md` for alternatives.
 
 ## Type Ambiguity Gate
 
-Before finishing a change in a typed language, check:
+Before finishing a change in a typed language, check the applicable gates. This is a reasoning aid, not a requirement to print every row in the report:
 
 | Gate | Pass condition |
 |---|---|
@@ -126,7 +126,7 @@ Before finishing a change in a typed language, check:
 | States | Closed sets of states use enums/unions with compiler-checked exhaustive handling |
 | Casts | No cast that merely silences the checker; narrowing or parsing used instead |
 | Suppressions | No new blanket error suppressions; any targeted suppression names the error and the reason |
-| Strictness | New files meet the strictest checker level the project supports; ratchet configured for legacy |
+| Strictness | New files meet the strictest checker level the project supports; legacy ratchets are configured when rollout is in scope |
 | Data shapes | Boundary-crossing data uses DTOs/records/dataclasses, not associative arrays or raw dicts |
 | Proportionality | Untyped-language code was not force-converted; guidance stayed advisory |
 
@@ -145,10 +145,10 @@ Before finishing a change in a typed language, check:
    When you find a `?? $b ?? $c` chain, find out why each link is nullable, pick the owner (accessor, factory, database default, parse step), and collapse the chain into one named typed member.
 
 5. Verify with the checker.
-   Run the project's type checker at its configured level on the touched files. A green checker at strict level is the acceptance test for this skill.
+   Run the project's checker(s) using supported project/package invocations at the configured level; do not pass arbitrary touched files if that bypasses configuration or is unsupported. Keep scoped new code strict and report pre-existing failures or unavailable checks without weakening settings.
 
 6. Report plainly.
-   Name the types introduced, the escape hatches removed or justified, the nullability decisions made, and any remaining ambiguity with its reason.
+   Report consequential typing or nullability decisions, verification results, and unresolved ambiguity. A tiny edit does not need an inventory of every type or gate.
 
 ## Optional Helper
 
@@ -160,6 +160,10 @@ python3 scripts/analyze_type_strictness.py /path/to/project --json
 ```
 
 It flags likely fallback chains, escape-hatch types, untyped signatures, suppressed type errors, missing `strict_types` declarations, and non-strict TypeScript configs. A quiet scan does not prove the code is strongly typed, and a noisy scan does not prove the code is wrong.
+
+## When Guidance Stops Helping
+
+Check the project's compiler/checker version and official language or framework documentation when a bundled typing pattern fails or conflicts with an idiom. Use a minimal type-checkable example without weakening the project settings. Propose a canonical skill correction or deletion with the source/version and counterexample; report unavailable evidence rather than inventing syntax. Do not silently update installed copies or expand a local fix into a typing migration.
 
 ## Reading Guide
 

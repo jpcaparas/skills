@@ -2,7 +2,9 @@
 
 Use this when writing the final response.
 
-## Default Shape
+## Optional Shape
+
+Choose the structure and amount of technical detail that best answer the app-behavior question. This is a starting point, not a required set of labels.
 
 ```text
 Short answer: <direct answer in 1-2 sentences>
@@ -22,11 +24,11 @@ Do not include every section if it makes the answer feel stiff. The response sho
 
 - Put the answer before the evidence.
 - Use words a product manager would use in a customer or stakeholder discussion.
-- Convert implementation details into product meaning.
-- Mention code names only when they help verify the answer.
+- Connect implementation details to product meaning.
+- Mention code names when they help explain or verify the answer.
 - Use "the app" or the product name, not "the code", when describing behavior.
 - Keep bullets short when comparing rules, user states, or exceptions.
-- Avoid code blocks unless the user explicitly asks for code.
+- Use concise technical terms or code when useful or requested, with plain-English meaning and traceable evidence; avoid code dumps.
 
 ## Good Phrases
 

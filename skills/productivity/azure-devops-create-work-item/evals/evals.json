@@ -17,7 +17,7 @@
           "type": "verification"
         },
         {
-          "text": "Defaults to Product Backlog Item when the user does not specify another work item type",
+          "text": "Defaults to Product Backlog Item when neither type nor project process is known",
           "type": "functional"
         }
       ],
@@ -66,7 +66,7 @@
           "type": "functional"
         },
         {
-          "text": "Uses Product Backlog Item by default for maintenance work when no explicit type is requested",
+          "text": "Uses Product Backlog Item as the maintenance-work fallback when neither type nor project process is known",
           "type": "functional"
         },
         {
@@ -87,11 +87,11 @@
     {
       "id": 4,
       "name": "edge-user-story-not-task",
-      "prompt": "Create the right Azure DevOps work item packet for this note: as an account owner, I want to resend an invite from the team page so I do not have to leave the page and start again. Keep the draft user-facing, not implementation-heavy.",
+      "prompt": "Our project uses the Agile process. Create the right Azure DevOps work item packet for this note: as an account owner, I want to resend an invite from the team page so I do not have to leave the page and start again. Keep the draft user-facing, not implementation-heavy.",
       "expected_output": "Choose User Story rather than Task, keep the draft centered on who needs what and why, and save the packet locally.",
       "assertions": [
         {
-          "text": "Chooses User Story when the context is naturally who/what/why instead of implementation work",
+          "text": "Chooses User Story using the known Agile process and who/what/why context instead of Task or the unknown-process PBI fallback",
           "type": "disclosure"
         }
       ],
@@ -176,23 +176,23 @@
     {
       "id": 8,
       "name": "manual-qa-targeted-payment-guard",
-      "prompt": "Add manual QA scenarios to an Azure DevOps work item for a bug fix that prevents duplicate payment submissions when a customer double-clicks Pay or retries after a decline.",
-      "expected_output": "Produces 4-6 targeted manual-qa scenarios, starts with Test environment notes, uses behaviour-focused scenario titles, keeps steps UI-driven, states observable expected outcomes, includes any needed dev-support staging honestly, and uses NZ English.",
+      "prompt": "Add manual QA scenarios to an Azure DevOps work item for a bug fix that prevents duplicate payment submissions when a customer double-clicks Pay or retries after a decline. QA has a test-mode checkout and a payment dashboard; use the documented successful and declined test cards, marking the exact card details as missing if not in the repo.",
+      "expected_output": "Produces risk-based scenarios without count filler, starts with Test environment notes, uses behaviour-focused scenario titles and appropriate browser steps, states observable expected outcomes, includes dev-support staging only if genuinely needed, and defaults to NZ English when no other locale is given.",
       "assertions": [
         {
-          "text": "Includes Test environment notes with concrete test data and dashboards or logs QA should keep open",
+          "text": "Includes Test environment notes using supplied or repository-backed data and verification surfaces, marking material gaps rather than inventing them",
           "type": "verification"
         },
         {
-          "text": "Uses 4-6 targeted scenarios instead of an exhaustive permutation matrix",
+          "text": "Uses risk-based scenarios covering normal payment, double submission, and decline retry without arbitrary minimums or filler",
           "type": "verification"
         },
         {
-          "text": "Uses behaviour-focused scenario titles with ## Scenario headings, short Steps lists, and bulleted Expected lists",
+          "text": "Uses behaviour-focused scenario titles and distinguishes actions from observable expected results without mandatory prose styling",
           "type": "structural"
         },
         {
-          "text": "Keeps steps in browser-facing language and avoids internal method names, endpoints, and database columns unless a scenario is marked needs dev support",
+          "text": "Uses browser steps for this checkout flow and marks needs dev support only for states a tester genuinely cannot create",
           "type": "verification"
         },
         {
@@ -255,6 +255,20 @@
         "references/output-packet.md",
         "templates/product-backlog-item-template.md"
       ]
+    },
+    {
+      "id": 10,
+      "name": "observed-agile-process-backend-qa-and-locale",
+      "prompt": "Draft a local work item packet for the invite service. Our supplied project process export says Agile; I haven't chosen a type. Support operators need repeated POST /invites requests with the same Idempotency-Key to return the original invite ID rather than create duplicates. Use US English. This is an API-only change: QA can send requests to the local test service and inspect its documented invite store. Cover the normal request and duplicate retry; include code excerpts only if real repo evidence helps.",
+      "expected_output": "Uses User Story and Agile metadata without requiring the user to name the type. Keeps the main packet fields stable, uses US English and risk-based API QA, and includes only useful evidence-backed snippets. No fabricated UI, staging mocks, or filler scenarios.",
+      "assertions": [
+        { "text": "Passes --type user-story and --process agile based on supplied process evidence; does not rely on --process alone to infer type", "type": "verification" },
+        { "text": "Keeps the standard packet files and main field order and follows requested US English", "type": "structural" },
+        { "text": "QA covers observable API responses and stored invite counts using the documented test surface", "type": "functional" },
+        { "text": "Does not add UI steps, arbitrary dev-support mocks, scenario quotas, invented snippets, or live Azure DevOps writes", "type": "negative" }
+      ],
+      "tags": ["edge", "process", "manual-qa", "locale", "backend"],
+      "files": ["references/official-primitives.md", "references/output-packet.md"]
     }
   ]
 }

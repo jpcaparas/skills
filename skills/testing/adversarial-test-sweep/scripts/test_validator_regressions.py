@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import tempfile
 import unittest
@@ -16,7 +17,12 @@ from test_skill import (
     verify_fixture_contract,
     verify_validator_regressions,
 )
-from validate import validate_skill
+from validate import (
+    ValidationReport,
+    validate_skill,
+    validate_trigger_evals,
+    validate_workflow_outcomes,
+)
 
 
 PACKAGE_ROOT = Path(__file__).resolve().parents[1]
@@ -198,16 +204,134 @@ class PackageValidatorRegressionTests(unittest.TestCase):
 
             assert_package_rejected(self, root)
 
-    def test_requires_each_workflow_phase_to_own_its_completion_gate(self) -> None:
+    def test_accepts_workflow_without_phase_formatting(self) -> None:
         with copied_package() as root:
             skill_path = root / "SKILL.md"
             content = skill_path.read_text(encoding="utf-8")
-            content = content.replace("**Complete when:**", "**Phase complete:**")
-            replacement = ("\n**Complete when:** displaced marker\n" * 9) + "\n## Gotchas"
-            content = content.replace("\n## Gotchas", replacement, 1)
+            content = re.sub(r"^### .*$", "", content, flags=re.MULTILINE)
+            content = content.replace("Before edits, preserve", "Before changes, preserve")
             skill_path.write_text(content, encoding="utf-8")
 
-            assert_package_rejected(self, root)
+            result = validate_skill(str(root))
+
+            self.assertIs(result.get("valid"), True, result.get("errors"))
+
+    def test_requires_workflow_safety_and_outcome_guidance(self) -> None:
+        content = (PACKAGE_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        # Remove real rules, not just headings. Keep these independent of the
+        # validator's patterns so a weakened pattern cannot redefine the oracle.
+        rules = {
+            "scope and authorization": "Keep scope and authorization explicit",
+            "recoverable baseline before edits": "Before edits, preserve",
+            "bounded isolated effects": "Use proportional budgets.",
+            "independent oracle": "- contract, invariant, state transition",
+            "replay evidence": "1. State the concrete hypothesis:",
+            "held-out fixture isolation": "Keep held-out probes separate",
+            "authorized repair regression": "For an authorized repair,",
+            "audit-only findings": "For audit-only work,",
+            "failure preservation": "Preserve every unexplained failure",
+            "scoped test review": "Challenge tests reviewed or changed",
+            "broader verification after changes": "After actual changes,",
+            "unresolved bounded handoff": "Stop at the agreed budget",
+            "clean outcome evidence": "- **Clean within scope:**",
+            "trusted-source recovery": "If a recommendation fails",
+        }
+        paragraphs = content.split("\n\n")
+        for outcome, prefix in rules.items():
+            with self.subTest(outcome=outcome):
+                removed = [paragraph for paragraph in paragraphs if paragraph.startswith(prefix)]
+                self.assertEqual(1, len(removed), "mutation must remove exactly the intended rule")
+                mutated = "\n\n".join(paragraph for paragraph in paragraphs if paragraph not in removed)
+                report = ValidationReport()
+
+                validate_workflow_outcomes(mutated, report)
+
+                self.assertIn(
+                    f"operating workflow missing outcome guidance: {outcome}", report.errors
+                )
+
+    def test_rejects_outcome_guidance_outside_the_workflow(self) -> None:
+        content = (PACKAGE_ROOT / "SKILL.md").read_text(encoding="utf-8")
+        paragraphs = content.split("\n\n")
+        audit_rule = next(p for p in paragraphs if p.startswith("For audit-only work,"))
+        content = content.replace(audit_rule, "") + "\n\n" + audit_rule
+        report = ValidationReport()
+
+        validate_workflow_outcomes(content, report)
+
+        self.assertEqual(
+            ["operating workflow missing outcome guidance: audit-only findings"], report.errors
+        )
+
+    def test_rejects_missing_branch_evidence_despite_other_cases(self) -> None:
+        for branch in ("audit-only", "budget-exhausted", "method-selection", "stale-guidance"):
+            with self.subTest(branch=branch), copied_package() as root:
+                evals_path = root / "evals/evals.json"
+                payload = json.loads(evals_path.read_text(encoding="utf-8"))
+                payload["evals"] = [case for case in payload["evals"] if branch not in case["tags"]]
+                evals_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+                result = validate_skill(str(root))
+
+                self.assertIn(
+                    f"missing eval evidence for branch {branch!r}: needs functional, negative, verification assertions",
+                    result["errors"],
+                )
+                self.assertIs(result["valid"], False)
+
+    def test_rejects_branch_tags_without_required_assertions(self) -> None:
+        with copied_package() as root:
+            evals_path = root / "evals/evals.json"
+            payload = json.loads(evals_path.read_text(encoding="utf-8"))
+            case = next(case for case in payload["evals"] if "audit-only" in case["tags"])
+            case["assertions"] = [item for item in case["assertions"] if item["type"] != "negative"]
+            evals_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+
+            result = validate_skill(str(root))
+
+            self.assertIn(
+                "missing eval evidence for branch 'audit-only': needs functional, negative, verification assertions",
+                result["errors"],
+            )
+            self.assertIs(result["valid"], False)
+
+    def test_accepts_trigger_evidence_without_numerical_quotas(self) -> None:
+        with copied_package() as root:
+            triggers_path = root / "evals/trigger-evals.json"
+            payload = [
+                {"query": "Audit the parser suite for malformed input and weak assertions.", "should_trigger": True},
+                {"query": "Add one ordinary formatter test, not a sweep.", "should_trigger": False},
+            ]
+            triggers_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+            report = ValidationReport()
+
+            validate_trigger_evals(root, report)
+
+            self.assertEqual([], report.errors)
+            self.assertEqual(1, report.metrics["trigger_positive_count"])
+            self.assertEqual(1, report.metrics["trigger_negative_count"])
+
+    def test_requires_both_trigger_outcomes(self) -> None:
+        for should_trigger, missing in ((True, "negative"), (False, "positive")):
+            with self.subTest(missing=missing), copied_package() as root:
+                triggers_path = root / "evals/trigger-evals.json"
+                payload = json.loads(triggers_path.read_text(encoding="utf-8"))
+                payload = [item for item in payload if item["should_trigger"] is should_trigger]
+                triggers_path.write_text(json.dumps(payload) + "\n", encoding="utf-8")
+                report = ValidationReport()
+
+                validate_trigger_evals(root, report)
+
+                self.assertEqual([f"trigger evals require {missing} invocation evidence"], report.errors)
+
+    def test_rejects_modified_preflight_runner(self) -> None:
+        with copied_package() as root:
+            (root / "scripts/test_skill.py").write_text("raise SystemExit(0)\n", encoding="utf-8")
+
+            result = validate_skill(str(root))
+
+            self.assertIn("reviewed evidence content changed: scripts/test_skill.py", result["errors"])
+            self.assertIs(result["valid"], False)
 
     def test_rejects_a_held_out_probe_in_public_eval_files(self) -> None:
         with copied_package() as root:

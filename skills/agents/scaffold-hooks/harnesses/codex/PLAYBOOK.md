@@ -4,20 +4,20 @@ Internal component of the `scaffold-hooks` skill. This playbook owns the Codex h
 
 
 
-Audit the target project first, then scaffold Codex hooks with a deterministic managed layout around the current official hook model.
+Audit the target project first, then scaffold Codex hooks with the bundled deterministic layout. Event details below describe the recorded `0.133.0` baseline, not a required CLI version or a complete catalog of later releases.
 
 ## Decision Tree
 
 What is the user asking for?
 
 - New project-local Codex hooks in a repo with no hook setup yet:
-  Verify the live official docs and schemas, audit the repo, inspect the effective feature flag, enable it if needed, then scaffold.
+  Audit the repo, inspect the installed version and effective feature/trust state, resolve uncertain contracts from relevant official sources, then scaffold within the authorized scope.
 - Existing `.codex/hooks.json`, `.codex/config.toml`, or `.codex/hooks/` files:
   Audit what exists first, choose `additive` or `overhaul`, then refresh only the managed hook layer.
 - Hooks that exist on disk but never seem to affect Codex:
-  Inspect the effective `hooks` feature first. If it is still off, enable it deliberately. If it is on, remember that repo-local `.codex/config.toml` only loads in trusted projects, then debug `hooks.json`.
+  Inspect the effective `hooks` feature and project/hook trust early. Explain any activation blocker; continue independent read-only checks of `hooks.json` and scripts without first enabling or trusting them.
 - Explanation only, not implementation:
-  Read `references/hook-events.md`, `references/feature-flag.md`, and `references/scaffold-layout.md`, then answer without scaffolding.
+  Use the reading guide to select only the reference needed for the question, then answer without scaffolding.
 
 ## Quick Reference
 
@@ -38,17 +38,17 @@ What is the user asking for?
 
 ## Non-Negotiable Workflow
 
-1. Verify the live official Codex hook docs before planning any scaffold.
-2. Compare the live docs, current schemas, and `assets/hook-events.json` before assuming the event set or output contract is unchanged.
+1. Start with repository and installed-version evidence. Consult relevant live official docs when the contract is uncertain, stale, or event semantics will change.
+2. Compare the affected contract with `assets/hook-events.json`; use schemas/source matching the installed release, not unreleased `main` behavior.
 3. Audit the target project in detail before deciding which events to enable or which commands to run.
 4. Inspect the effective `hooks` feature in the target project before treating any repo-local `hooks.json` as active.
-5. If the feature is off, enable it deliberately in the right scope:
+5. If the feature is off, establish why and obtain authorization before changing activation settings; do not override policy. For an authorized change:
    - default to project scope for shared repo scaffolds
    - use user scope for personal/global hooks or when the repo should not commit `.codex/config.toml`
 6. Inspect any existing `.codex/config.toml`, `.codex/hooks.json`, `.codex/hooks/`, `AGENTS.md`, `README*`, and other automation files before choosing a merge mode.
 7. Produce or update a concrete hook plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
 8. Prefer a repo-owned shared `hooks/` tree for behavior that may move to Claude Code, OpenCode, Devin, Git hooks, GitHub Actions, or local shell usage. Keep Codex-specific files as thin adapters around shared event scripts.
-9. Scaffold every current official event as `hooks/<event>/script.sh` plus `hooks/<event>/codex.{sh,json}`, even if that event stays disabled in `hooks.json`.
+9. The bundled generator renders every manifest event as `hooks/<event>/script.sh` plus `hooks/<event>/codex.{sh,json}`, even if that event stays disabled in `hooks.json`; it has no selected-event-only layout mode.
 10. Wire only the enabled events into `.codex/hooks.json` so inactive stubs stay cheap.
 11. Regenerate `hooks/README.md` so the target project always has a readable event and adapter map.
 12. If hooks still appear inactive after a real scaffold, re-check the effective feature state, confirm the project layer is trusted, and review/trust the hook definitions in `/hooks`.
@@ -67,14 +67,14 @@ Use this flow:
 
 1. Canonicalize the target project path first.
 2. Run `python3 scripts/check_hooks_feature.py --project /path/to/project --json`.
-3. If the effective status is off, enable the feature deliberately with canonical `[features].hooks = true`:
+3. If the effective status is off, inspect config and policy. With authorization, enable canonical `[features].hooks = true` in the agreed scope:
    - `--scope project` for shared repo-local setups
    - `--scope user` for personal/global setups
 4. Re-run the inspection after enabling.
-5. After scaffolding or changing hook definitions, use `/hooks` to review and trust non-managed command hooks.
-6. Only then spend time debugging `hooks.json`, matcher choices, or hook script logic.
+5. After scaffolding or changing hook definitions, use `/hooks` to review them; trust changes require authorization before execution.
+6. Read-only diagnosis of `hooks.json`, matchers, permissions, and script logic can proceed independently. Report activation as unverified until feature and trust gates are satisfied.
 
-## Live Docs First
+## Contract Evidence
 
 The official Codex docs are the source of truth:
 
@@ -82,7 +82,7 @@ The official Codex docs are the source of truth:
 - `https://developers.openai.com/codex/config-basic`
 - `https://developers.openai.com/codex/config-reference`
 
-For exact wire formats and current parser behavior, also verify:
+For an unresolved wire-format or parser question, select the relevant source below and use its release-matched revision:
 
 - `https://github.com/openai/codex/tree/main/codex-rs/hooks/schema/generated`
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/lib.rs`
@@ -95,18 +95,15 @@ For exact wire formats and current parser behavior, also verify:
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/permission_request.rs`
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/core/src/tools/hook_names.rs`
 
-If docs and runtime source disagree, prefer the source-backed current CLI behavior for scaffold inputs and record the docs drift. As of the current manifest, the canonical feature key is `hooks`; `codex_hooks` is a legacy alias.
+If docs and runtime source disagree, resolve the installed release's behavior with version-matched evidence and record the discrepancy. Do not assume a `main` branch schema is released. As of the bundled manifest, the canonical feature key is `hooks`; `codex_hooks` is a legacy alias.
 
 Use the article at `https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b` as secondary material for practical patterns, not as the source of truth. Early hook writeups drifted as the feature evolved.
 
 ## Progressive Maintainer Drift Check
 
-When updating this skill itself, make docs drift the first maintenance step:
+Live-fetch the official Codex hook docs relevant to uncertain or changing semantics; compare with the installed CLI version, generated schemas, and runtime source only as needed to resolve that question. Record the affected passage, source/version, proposed change, and regression check using the root `SKILL.md` maintenance route. For authorized canonical changes, reconcile affected manifests, generators, templates, validators, tests, evals, and references. Do not update this skill from memory or patch an installed copy silently. Stable local repairs and wording edits do not require fetching every schema.
 
-1. Live-fetch the official Codex hook docs, config docs, generated schemas, and runtime source on the day of the edit, then compare event names, matcher rules, input/output contracts, trust behavior, and feature flags with `assets/hook-events.json`.
-2. Check local version evidence when available, such as `codex --version`, and record the Codex source commit or schema URLs that explain the update.
-3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/hook-events.md`, feature-flag and gotchas references, scaffold generators, templates, plan examples, validators, tests, evals, and thin wrappers.
-4. If no drift exists, still mention that the live docs, schemas, and source were checked. Do not update this skill from memory or by copying assumptions from Claude Code or OpenCode.
+Known drift: the official hooks page reviewed on 2026-09-25 documents `SessionEnd`, `Interrupt`, async command hooks, and MCP tool hooks beyond this bundled baseline. These are not implemented by this generator; extending them needs a separate version-matched manifest/generator/test update, not an automatic upgrade.
 
 ## Project Analysis Rules
 
@@ -153,28 +150,28 @@ Allow these parts to stay project-specific:
 
 When the skill is invoked again against a project:
 
-- Re-verify the live docs and schemas before assuming the event set is unchanged.
+- Re-check relevant official docs/schemas when installed-version evidence is insufficient or event semantics change.
 - Re-audit the project before assuming the current hook plan still fits.
 - Re-check the effective feature state before assuming repo-local hooks are active.
 - Preserve non-managed hooks by default.
 - Treat previously managed Codex adapters and `hooks/.state/codex` as replaceable in `overhaul` mode. Do not wipe the whole shared `hooks/` tree because other harnesses may own adapters there.
 - Treat previously managed hooks as append-only in `additive` mode unless the managed layer or README is stale.
-- If the official event set or parser rules changed, update the scaffold inputs first.
+- If the official event set or parser rules changed, propose the canonical source update before using unsupported scaffold inputs.
 
 ## Scaffold Rules
 
-- Generate bash scripts, not Python, for the managed runtime hook stubs.
+- Keep the bundled generator's Bash entrypoints and shared-script layout. Repo-owned programs in suitable languages can run behind that boundary through supported plan scripts/commands; Bash is not a universal Codex architecture requirement.
 - Comment the managed bash stubs with the event-specific input and output contract.
 - Structure managed event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
-- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into managed scripts.
+- The helper runs `scripts[].path` through Bash. For non-Bash programs, use a Bash wrapper or `commands[].command` with an explicit interpreter; a shebang alone does not change the helper's invocation. Do not hard-code a project's toolchain into managed scripts.
 - Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `codex` when output protocols differ. Managed event stubs should stay thin.
 - Default to a shared hook root of `hooks`.
 - Default to a hooks file target of `.codex/hooks.json`.
-- Default to enabling `hooks` in `.codex/config.toml` for shared repo scaffolds.
+- The component helper defaults to enabling `hooks` in `.codex/config.toml`; use `--ensure-feature off` when activation changes are not authorized.
 - Use `~/.codex/config.toml` only when the hook setup should stay personal or machine-local.
 - Keep one shared `script.sh` per official event and one Codex adapter/config pair per event so the event map stays obvious without duplicating event logic.
 - Keep the merged `hooks.json` deterministic: remove only previously managed handlers, never unrelated custom hooks.
-- Never assume `async`, `prompt`, or `agent` hooks work today. The current runtime skips them.
+- The bundled baseline skips `async`, `prompt`, and `agent` hooks; do not infer newer support from this generator. Verify the installed-version contract before extending it.
 - Treat `PreToolUse`, `PermissionRequest`, and `PostToolUse` as tool-path-specific. Current support covers Bash, `apply_patch` with `Edit`/`Write` matcher aliases, and MCP tool names when those paths expose hook payloads; it still does not cover `WebSearch` or every possible shell path.
 - Treat `SubagentStart` and `SubagentStop` as agent-type-specific. `SubagentStop` with `decision: "block"` continues the subagent, not the parent turn.
 - Treat `PreCompact` and `PostCompact` as compaction-trigger hooks. Their matcher values are `manual` and `auto`.
@@ -206,12 +203,12 @@ When the skill is invoked again against a project:
 
 1. The feature key is `hooks`; `codex_hooks` is only a legacy alias. Write the canonical key when editing config. Hooks are enabled by default today unless config or policy turns them off.
 2. `matcher` is ignored for `UserPromptSubmit` and `Stop`. Do not design logic that depends on those matchers.
-3. `async`, `prompt`, and `agent` parse in config shapes, but the current runtime skips them with warnings.
+3. In the recorded baseline, `async`, `prompt`, and `agent` parse but are skipped with warnings. Later runtime support does not automatically extend the bundled generator.
 4. Multiple matching command hooks for the same event run concurrently. One hook cannot stop another matching hook from starting.
 5. `PostToolUse` cannot undo command side effects. At best it can replace the feedback Codex sees next.
 6. `Stop` with `decision: "block"` continues Codex with a new prompt. It does not reject the turn.
 7. `SubagentStop` with `decision: "block"` continues the subagent with a new prompt. Honor `stop_hook_active` to avoid loops.
 8. Repo-local `.codex/config.toml` only loads in trusted projects. If you enable the feature in project scope but the project is not trusted, the effective feature can still look off.
 9. Non-managed command hooks must be reviewed and trusted in `/hooks` before they run.
-10. Generated schemas currently list ten hook events, including `SubagentStart` and `SubagentStop`. Early docs and articles described smaller event sets, so re-check the official docs, schemas, and runtime source every time you scaffold for real.
+10. The bundled manifest lists ten hook events, including `SubagentStart` and `SubagentStop`. It is a historical baseline; resolve uncertain or changed event contracts against official release documentation before extending it.
 11. Do not bury reusable validation or context logic inside harness-specific adapters. Put shared logic in `hooks/<event>/script.sh` or repo-owned scripts, and let `hooks/<event>/codex.sh` handle only Codex protocol adaptation.

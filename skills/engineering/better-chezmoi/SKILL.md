@@ -80,7 +80,7 @@ If a non-interactive preview would stop for a conflict prompt, `--force` may be 
 
 Use the narrowest target list. Prefer one file or subtree over an unscoped apply when the request is narrow. On chezmoi v2.71.0 or newer, use `--error-on-conflict` for non-interactive automation only after the local help confirms it; on older versions, stop rather than replacing conflict handling with `--force`.
 
-Do not enable `git.autoPush`, run a remote push, or commit plaintext secrets unless the user explicitly requests that remote effect and its scope is clear.
+Enable `git.autoPush` or run a remote push only when that remote effect and scope are explicitly authorized. Keep plaintext secrets out of source history; use the user's supported encryption or secret-manager integration instead.
 
 **Complete when:** only the named source, target, config, or remote scope changed and the command returned its documented success result.
 
@@ -110,7 +110,9 @@ python3 scripts/official_docs.py list
 python3 scripts/official_docs.py refresh
 ```
 
-`refresh` fetches and compares without replacing the bundled snapshot. Add `--write` only when the user wants to publish the refreshed corpus. Read `references/official-documentation.md` before refreshing or changing the source list; use it to preserve provenance, rollback-safe staged replacement, and offline validation.
+`refresh` fetches and compares without replacing the bundled snapshot. Use `--write` in the canonical checkout only when updating that corpus is authorized; it replaces local files, not the remote repository. Read `references/official-documentation.md` before refreshing or changing the source list; use it to preserve provenance, rollback-safe staged replacement, and offline validation.
+
+When an instruction fails or a snapshot conflicts with installed help, use the relevant official version-matched evidence to choose a safe alternative. Preserve uncertainty if sources are unavailable. Propose a canonical skill correction with the failed command, version/source, and isolated reproducer; do not silently rewrite an installed copy or publish the proposal.
 
 ## Gotchas
 

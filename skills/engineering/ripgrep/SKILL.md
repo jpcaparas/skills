@@ -1,6 +1,6 @@
 ---
 name: ripgrep
-description: "Prefer ripgrep (`rg`) for text search, recursive codebase search, filename discovery with `rg --files`, and machine-readable search output. Trigger on search, grep, ripgrep, rg, find files, or look for pattern. Do NOT use for full-file reads or JSON queries better handled by jq."
+description: "Uses ripgrep (`rg`) for local text and path search, including code symbols, literals, regexes, filename discovery, and machine-readable matches. Use when searching repository files or local logs; not for web search, full-file reads, or structured JSON queries better handled by jq."
 compatibility: "Requires: rg. Optional: python3 for probe and validation scripts. PCRE2-specific patterns require an rg build compiled with PCRE2."
 metadata:
   version: "1.0.0"
@@ -59,7 +59,7 @@ What kind of search do you need?
 2. Use `-F` for user-provided literals unless the user clearly asked for regex semantics.
 3. Narrow the search early with an explicit path plus `-t` or `-g` instead of searching the entire tree and cleaning up later.
 4. Use `rg --files` for path discovery, then pipe into another `rg` for filename filtering instead of composing `find ... | grep ...`.
-5. Escalate ignore overrides gradually: normal search, then `--hidden`, then `-u` or `--no-ignore`, then `-uu` or `-uuu` only if the missing-result hypothesis justifies it.
+5. Choose ignore handling for the known scope: normal traversal, `--hidden` for hidden entries, `-u` or `--no-ignore` for ignored entries, or both when needed. Search a known file directly; do not run failed intermediate searches merely to reach it. Reserve binary overrides such as `-uuu` for an actual binary-search need.
 6. Use `--debug` when results are missing and you need to know what ripgrep skipped.
 7. Use `--json` or `-n --color never --no-heading` for machine consumption. Prefer `--sort path` when deterministic output matters more than maximum speed.
 
@@ -73,7 +73,7 @@ What kind of search do you need?
 | Filter filenames | `rg --files | rg '(^|/)Dockerfile$'` | Good replacement for `find . | grep ...` |
 | Match specific languages | `rg -n -t py 'pattern' src/` | `-t` includes, `-T` excludes |
 | Match specific globs | `rg -n -g '*.tsx' 'pattern' src/` | Later globs override earlier ones |
-| Search hidden or ignored content | `rg --hidden 'pattern'` then `rg -u 'pattern'` | Escalate only as needed |
+| Search hidden or ignored content | `rg --hidden 'pattern' path/`, `rg -u 'pattern' path/`, or `rg --hidden --no-ignore 'pattern' path/` | Choose the needed filter override directly; a known file path can be searched explicitly |
 | Files with matches | `rg -l 'pattern' path/` | Use before opening files |
 | Count individual matches | `rg --count-matches 'pattern' path/` | `-c` counts matching lines, not matches |
 | Machine-readable output | `rg --json 'pattern' path/` | Best for tools and scripts |
@@ -103,7 +103,7 @@ What kind of search do you need?
 ## Gotchas
 
 1. `rg` is not a byte-for-byte drop-in replacement for POSIX `grep`; it is the default search tool when speed, recursion, ignore handling, or Unicode-aware regex matter.
-2. Missing results are usually an ignore, hidden-file, glob-order, or quoting problem before they are a ripgrep bug. Run `--debug` before switching tools.
+2. Missing results are usually an ignore, hidden-file, glob-order, or quoting problem before they are a ripgrep bug. Choose the relevant correction directly when known; use `--debug` when skip reasons are unclear.
 3. `--replace` changes printed output only. It never edits files.
 4. `--json` is for search results, not every output mode. It does not combine with `--files`, `-l`, or `-c`.
 5. `-P` and `-U` are powerful but costlier than the default engine and normal line-oriented search. Use them deliberately.
@@ -113,3 +113,7 @@ What kind of search do you need?
 - `scripts/probe_ripgrep.py` builds a temporary corpus and verifies real `rg` behavior such as ignore precedence, JSON output, multiline matching, and PCRE2 support.
 - `scripts/validate.py` checks structure, frontmatter, references, required files, and Python syntax.
 - `scripts/test_skill.py` runs validation, checks eval coverage, verifies cross-references, and executes the ripgrep probe suite.
+
+## When Guidance Stops Helping
+
+If an example disagrees with the installed build, inspect `rg --version`, `rg --help`, active configuration, and relevant official docs. Use a small non-sensitive corpus to distinguish a version change from an ignore or quoting mistake. Propose a canonical skill correction with that evidence and reproducer, leaving unsupported behavior explicit. Do not silently edit an installed copy or broaden the search into secret-bearing paths to prove a point.

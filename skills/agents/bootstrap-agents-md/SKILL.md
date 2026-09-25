@@ -88,3 +88,7 @@ Use an exhaustive line-by-line replacement ledger only when the user asks for it
 ## Maintenance Reference
 
 Read `references/source-notes.md` when maintaining this skill, rechecking the `CLAUDE.md` import convention, or revising its context-design rationale. Keep research history out of generated project instructions.
+
+When a harness convention fails or guidance conflicts with project evidence, inspect the installed harness and relevant current official documentation or trusted primary sources. Label unknowns when that evidence is unavailable; do not preserve obsolete wording just because it was once verified.
+
+If a rule no longer adds useful guidance, propose a canonical skill correction or deletion with the affected passage, source/version or counterexample, and a check for preserved intent. Do not silently edit an installed copy or publish changes. Generated project guidance can point to its actual source of truth rather than carrying a new research ritual.

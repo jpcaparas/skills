@@ -23,7 +23,7 @@ Favor code that makes domain behavior obvious over code that hides domain behavi
    Use guard clauses, early normalization, and direct branches when they reveal the story. Reach for higher-order functions, metaprogramming, or dynamic dispatch only when they simplify real variation.
 
 5. Tests should protect behavior, not implementation trivia.
-   Test observable outcomes, edge cases, and contracts. For refactors, add characterization tests before moving behavior.
+   Test observable outcomes, edge cases, and contracts. Reuse adequate existing coverage for refactors; add characterization before moving important behavior only where coverage is missing.
 
 6. Comments transfer context.
    Good comments record constraints, invariants, tradeoffs, data provenance, security assumptions, external quirks, and the phase structure of dense operational code. They teach the next maintainer what cannot be inferred from names and types. They do not translate obvious code into prose.

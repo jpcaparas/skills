@@ -105,7 +105,7 @@ Express the prerequisite using a mechanism the target harness actually supports.
 
 1. **YAML frontmatter** (required) — enclosed in `---` fences
 2. **Title or immediate purpose** — make the skill's job obvious
-3. **Ordered steps** — only when the skill is procedural; give each a checkable completion criterion
+3. **Ordered steps** — only where dependencies matter; define completion for the outcome and risky handoffs, not every paragraph
 4. **Early routing** — only when distinct branches need disambiguation
 5. **Quick reference** — only when repeated operations benefit from scanning
 6. **Conditional pointers** — name when to load a support file and what decision or action it supports
@@ -167,7 +167,7 @@ references:                           # Only when the contract defines this fiel
 
 ### Description Writing Guide
 
-Use the canonical description and invocation rules in `SKILL.md` Phase 2. This anatomy reference adds only the format boundary: `description` is a frontmatter scalar, while manual-only or model-invoked controls belong to documented harness-specific fields and their target-native validation.
+Use Define Frontmatter and Invocation in `SKILL.md`. This anatomy reference adds only the format boundary: `description` is a frontmatter scalar, while manual-only or model-invoked controls belong to documented harness-specific fields and their target-native validation.
 
 ---
 
@@ -179,7 +179,7 @@ Documentation intended for conditional loading. The target harness may expose it
 
 **Best practices:**
 - Organize by a branch's access pattern, not by arbitrary topic count
-- Include a TOC if >300 lines
+- Add a TOC when it makes a long reference easier to navigate
 - Use condition-and-purpose pointers; keep navigation shallow
 - Match example precision to the intended freedom: keep executable examples syntactically valid and label pseudocode or parameterized forms clearly
 

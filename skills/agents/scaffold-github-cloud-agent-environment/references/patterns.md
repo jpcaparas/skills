@@ -4,7 +4,7 @@ Use these patterns after the repo audit. Prefer the simplest setup that removes 
 
 ## General Rules
 
-- Install dependencies, not the full application lifecycle.
+- Install dependencies plus bounded code generation or preparation needed for a usable environment. Do not duplicate the full build/test/deploy lifecycle by default; preserve necessary repository bootstrap steps.
 - Use version files when they exist. Ask a question when the repo needs a version but does not declare one clearly.
 - Prefer official GitHub actions for runtime setup when the version signal is strong.
 - Keep service containers explicit and minimal. If the service topology is ambiguous, ask.
@@ -114,7 +114,7 @@ Treat these as medium-confidence unless the repo clearly declares versions.
 
 ## LFS
 
-If `.gitattributes` contains `filter=lfs`, use `actions/checkout@v5` with `lfs: true`.
+If `.gitattributes` contains `filter=lfs`, use a compatible, repository-approved `actions/checkout` ref with `lfs: true`. The bundled `@v5` example is historical, not a permanent requirement; preserve repository pins unless a verified compatibility need justifies an authorized update.
 
 Do not infer LFS from large files alone.
 

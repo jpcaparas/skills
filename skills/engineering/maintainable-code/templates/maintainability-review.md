@@ -1,5 +1,7 @@
 # Maintainability Review
 
+Optional scaffold. Adapt the format to the task and omit sections that add no consequential evidence.
+
 ## Findings
 
 | Severity | File | Issue | Maintainer impact | Repair direction |

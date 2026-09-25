@@ -18,14 +18,14 @@ import sys
 import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
-from contextlib import redirect_stderr, redirect_stdout
+from contextlib import ExitStack, redirect_stderr, redirect_stdout
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Mapping, Optional, Sequence
 from unittest.mock import patch
 
 import validate_catalog as catalog_validator
 from build_catalog_index import CATALOGUE_LOCK, parse_flat_run_id
-from cleanup_run_tmp import cleanup_run_temporary
+from cleanup_run_tmp import TemporaryCleanupError, cleanup_run_temporary
 from directional_controls import (
     directional_response,
     infer_directional_control_requirement,
@@ -481,6 +481,7 @@ def prepare_run(
     errors: List[str],
     classification: str = "autonomous-one-shot",
     prior_run: Optional[Path] = None,
+    verification: Optional[str] = None,
 ) -> Optional[Path]:
     command = [
         sys.executable,
@@ -500,6 +501,8 @@ def prepare_run(
     ]
     if prior_run is not None:
         command.extend(("--prior-run", str(prior_run)))
+    if verification is not None:
+        command.extend(("--verification", verification))
     result = run(command)
     data = invocation_json(result, errors, "prepare_run.py")
     prepared = run_directory(data, errors, "prepare_run.py") if data is not None else None
@@ -511,6 +514,177 @@ def prepare_run(
             errors,
         )
     return prepared
+
+
+def exercise_optional_verification(skill: Path, errors: list[str]) -> None:
+    """Generation-only stays uninspected; consent, identity, and cleanup stay anchored."""
+
+    import verify_directional_controls as directional_verifier
+
+    def save(path: Path, value: Mapping[str, object]) -> None:
+        path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+
+    def metadata_result(root: Path) -> dict[str, Any]:
+        built = rebuild_catalog_index(root)
+        assert_ok(built.returncode == 0, f"optional-mode index build failed: {built.stderr}", errors)
+        return catalog_validator.validate(root)
+
+    with tempfile.TemporaryDirectory(prefix="oneshot-optional-") as temporary:
+        base = Path(temporary).resolve()
+        prompt = base / "prompt.md"
+        for name, brief in (
+            ("ordinary", "Create a quiet museum website.\n"),
+            ("directional", "Create a racing game with WASD and arrow-key steering.\n"),
+        ):
+            prompt.write_text(brief, encoding="utf-8")
+            root = base / name
+            prepared = prepare_run(skill, root, "Model", "Harness", name, prompt, errors, verification="none")
+            if prepared is None:
+                continue
+            manifest_path = prepared / "run.json"
+            report_path = prepared / "worker-report.json"
+            receipt_path = root / ".oneshot-provenance" / f"{prepared.name}.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            report = json.loads(report_path.read_text(encoding="utf-8"))
+            receipt = json.loads(receipt_path.read_text(encoding="utf-8"))
+            assert_ok(
+                manifest["schemaVersion"] == "3.5" and receipt["schemaVersion"] == "2.5"
+                and all(record["verificationMode"] == "none" for record in (manifest, report, receipt))
+                and receipt["qualityGauntlet"]["required"] is False
+                and manifest["interaction"]["directionalControls"]["required"] is False
+                and not (prepared / ".tmp" / "TECHNICAL_PROMPT.md").exists()
+                and (prepared / "artifact" / "PROMPT.md").read_bytes() == brief.encode("utf-8"),
+                f"{name}: generation-only preparation changed prompt or enabled verification", errors,
+            )
+            # Deliberately broken output must not become a reason to inspect or
+            # repair it. Its contents and forbidden source tree are never read.
+            (prepared / "artifact" / "index.html").write_text('<img src="missing.png">', encoding="utf-8")
+            (prepared / "artifact" / "package.json").write_text('{"not":"portable"}', encoding="utf-8")
+            manifest["status"] = report["status"] = "RUNNING"
+            report["temporary"]["routingApplied"] = True
+            save(manifest_path, manifest)
+            save(report_path, report)
+            original_read = catalog_validator.read_regular_file_bounded
+
+            def metadata_only_read(path: Path, bound: int) -> bytes:
+                if prepared / "artifact" in path.parents and path.name != "PROMPT.md":
+                    raise AssertionError(f"generation-only artifact content read: {path}")
+                if prepared / "workspace" in path.parents:
+                    raise AssertionError(f"generation-only workspace content read: {path}")
+                return original_read(path, bound)
+
+            with ExitStack() as stack:
+                for target in ("validate_artifact_tree", "validate_local_assets", "validate_directional_control_evidence", "validate_quality_gauntlet"):
+                    stack.enter_context(patch.object(catalog_validator, target, side_effect=AssertionError(f"forbidden check: {target}")))
+                for target in ("artifact_tree_digest", "resolve_browser", "exercise_browser"):
+                    stack.enter_context(patch.object(directional_verifier, target, side_effect=AssertionError(f"forbidden directional check: {target}")))
+                stack.enter_context(patch.object(catalog_validator, "read_regular_file_bounded", side_effect=metadata_only_read))
+                result = metadata_result(root)
+                assert_ok(result["valid"], f"{name}: active metadata rejected: {result}", errors)
+                try:
+                    directional_verifier.verify(directional_verifier.parse_arguments(["--run", str(prepared)]))
+                except directional_verifier.VerificationError as error:
+                    assert_ok("forbids browser verification" in str(error), str(error), errors)
+                else:
+                    errors.append("none mode allowed a directional verifier invocation")
+                assert_ok(cleanup_run_temporary(prepared, True) == "deleted", "none cleanup failed", errors)
+                manifest["status"] = report["status"] = "UNVERIFIED"
+                save(manifest_path, manifest)
+                save(report_path, report)
+                result = metadata_result(root)
+                assert_ok(result["valid"] and any("UNVERIFIED" in warning for warning in result["warnings"]), f"{name}: {result}", errors)
+                html = (root / "index.html").read_text(encoding="utf-8")
+                assert_ok('class="status status-unverified">UNVERIFIED' in html and 'class="status status-ok">' not in html, "unverified index used verified styling", errors)
+                assert_ok(cleanup_run_temporary(prepared, True) == "already-absent", "none cleanup is not idempotent", errors)
+
+                # Same-run recovery preserves consent and needs no technical file.
+                manifest["status"] = report["status"] = "RUNNING"
+                save(manifest_path, manifest)
+                save(report_path, report)
+                (prepared / ".tmp").mkdir()
+                (prepared / ".tmp" / "scratch").write_text("recoverable", encoding="utf-8")
+                assert_ok(metadata_result(root)["valid"], "none recovery changed contract", errors)
+                for record_path, original in ((receipt_path, receipt), (manifest_path, manifest), (report_path, report)):
+                    for invalid in (None, "invalid", [], "gauntlet"):
+                        changed = dict(original)
+                        if invalid is None:
+                            changed.pop("verificationMode")
+                        else:
+                            changed["verificationMode"] = invalid
+                        save(record_path, changed)
+                        result = metadata_result(root)
+                        assert_ok(not result["valid"] and any("verificationMode" in error for error in result["errors"]), f"accepted invalid mode: {record_path} {invalid!r}", errors)
+                        try:
+                            cleanup_run_temporary(prepared, True)
+                        except TemporaryCleanupError:
+                            pass
+                        else:
+                            errors.append(f"cleanup accepted invalid mode: {record_path} {invalid!r}")
+                        assert_ok((prepared / ".tmp" / "scratch").exists(), "failed cleanup lost recoverable scratch", errors)
+                        save(record_path, original)
+
+                for status in ("OK", "PARTIAL", "BLOCKED", "ERROR"):
+                    manifest["status"] = report["status"] = status
+                    save(manifest_path, manifest)
+                    save(report_path, report)
+                    try:
+                        cleanup_run_temporary(prepared, True)
+                    except TemporaryCleanupError:
+                        pass
+                    else:
+                        errors.append(f"none cleanup accepted {status}")
+                    if status == "OK":
+                        result = metadata_result(root)
+                        assert_ok(not result["valid"], "none mode accepted OK", errors)
+                        assert_ok('class="status status-ok">' not in (root / "index.html").read_text(), "none/OK mismatch rendered green", errors)
+                manifest["status"] = report["status"] = "RUNNING"
+                save(manifest_path, manifest)
+                save(report_path, report)
+                for field, value in (("verification", [{"kind": "smoke", "result": "passed", "evidence": "invented"}]), ("qualityGauntlet", {}), ("artifact", {"entrypoint": "artifact/index.html", "staticDeploymentVerified": True})):
+                    changed = dict(report)
+                    changed[field] = value
+                    save(report_path, changed)
+                    assert_ok(not metadata_result(root)["valid"], f"none accepted verification claim {field}", errors)
+                save(report_path, report)
+                (prepared / "artifact" / "PROMPT.md").write_text("mutated prompt", encoding="utf-8")
+                try:
+                    cleanup_run_temporary(prepared, True)
+                except TemporaryCleanupError as error:
+                    assert_ok("prompt identity" in str(error), str(error), errors)
+                else:
+                    errors.append("none cleanup accepted a changed sealed prompt")
+                (prepared / "artifact" / "PROMPT.md").write_text(brief, encoding="utf-8")
+                if os.name == "posix":
+                    scratch = prepared / ".tmp"
+                    scratch.rename(prepared / "saved-scratch")
+                    scratch.symlink_to(prepared / "saved-scratch", target_is_directory=True)
+                    try:
+                        cleanup_run_temporary(prepared, True)
+                    except TemporaryCleanupError as error:
+                        assert_ok("non-symlink" in str(error), str(error), errors)
+                    else:
+                        errors.append("none cleanup followed a symlinked scratch target")
+                    scratch.unlink()
+                    (prepared / "saved-scratch").rename(scratch)
+                assert_ok(cleanup_run_temporary(prepared, True) == "deleted", "none recovery finalization failed", errors)
+
+        prompt.write_text("Create an ordinary museum website.\n", encoding="utf-8")
+        for mode in (None, "gauntlet"):
+            root = base / ("historical" if mode is None else "gauntlet")
+            prepared = prepare_run(skill, root, "Model", "Harness", "Museum", prompt, errors, verification=mode)
+            if prepared is None:
+                continue
+            mark_successful_static_artifact(prepared)
+            assert_ok(metadata_result(root)["valid"], f"gauntlet compatibility failed: {mode}", errors)
+            manifest_path = prepared / "run.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest["verificationMode"] = "none"
+            save(manifest_path, manifest)
+            assert_ok(not metadata_result(root)["valid"], f"worker-only downgrade accepted: {mode}", errors)
+            manifest["verificationMode"] = "gauntlet"
+            manifest["status"] = "UNVERIFIED"
+            save(manifest_path, manifest)
+            assert_ok(not metadata_result(root)["valid"], f"gauntlet accepted UNVERIFIED: {mode}", errors)
 
 
 def prepare_finalizable_static_artifact(run_path: Path) -> None:
@@ -1984,7 +2158,7 @@ def exercise_adversarial_contract(
             structured_build.returncode == 0
             and structured_validation.returncode != 0
             and "flat run schemaVersion must be one of" in structured_validation.stdout
-            and "schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, or 2.4" in structured_validation.stdout
+            and "schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, 2.4, or 2.5" in structured_validation.stdout
             and "Traceback" not in structured_validation.stderr,
             "structured schema versions escaped validation or caused a crash: {}{}".format(
                 structured_validation.stdout,
@@ -5130,10 +5304,15 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         protocol_path.write_text(original_protocol, encoding="utf-8")
 
         protocol_without_public_get_fallback = re.sub(
-            r"(?m)^If the experience depends on unauthenticated public HTTP `GET` data,.*\n\n",
+            r"(?m)^If the experience depends on unauthenticated public HTTP `GET` data\b.*\n\n",
             "",
             original_protocol,
             count=1,
+        )
+        assert_ok(
+            protocol_without_public_get_fallback != original_protocol,
+            "public GET fallback mutation did not remove its target paragraph",
+            errors,
         )
         protocol_path.write_text(protocol_without_public_get_fallback, encoding="utf-8")
         missing_public_get_protocol_result = run(
@@ -5287,7 +5466,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         skill_path.write_text(original_skill, encoding="utf-8")
 
         skill_without_blind_design_independence = re.sub(
-            r"(?ms)^For every multi-lead fan-out, build a private design-diversity ledger.*?\n\n",
+            r"(?ms)^Only when the user requests design variations, build a private design-diversity ledger.*?\n\n",
             "",
             original_skill,
             count=1,
@@ -5362,9 +5541,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
 
         skill_without_verbatim_conflict = original_skill.replace(
-            " If the user also forbids any applicable experience-level addition, stop before dispatch and report "
-            "that the request conflicts with this skill’s mandatory prompt contract; never silently "
-            "omit an applicable requirement.",
+            "byte-for-byte as the entire actual prompt, with no appended creative requirements",
             "",
         )
         skill_path.write_text(skill_without_verbatim_conflict, encoding="utf-8")
@@ -5375,13 +5552,13 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             missing_verbatim_conflict_result.returncode != 0
             and "SKILL.md runtime contract missing unbounded full-depth custom prompt refinement"
             in missing_verbatim_conflict_result.stdout,
-            "package validator accepted a verbatim custom-prompt rule that silently bypasses the mandate",
+            "package validator accepted a verbatim custom-prompt rule without its no-additions boundary",
             errors,
         )
 
         skill_without_shortcuts_requirement = original_skill.replace(
-            "must reject shortcuts and cookie-cutter approximation",
-            "must reject cookie-cutter approximation",
+            "should reject shortcuts and cookie-cutter approximation",
+            "should reject cookie-cutter approximation",
         )
         skill_path.write_text(skill_without_shortcuts_requirement, encoding="utf-8")
         missing_shortcuts_result = run(
@@ -5412,8 +5589,8 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
         )
 
         skill_without_replica_depth = original_skill.replace(
-            "and smallest meaningful interactions—not merely a recognizable shell",
-            "and basic interactions—not merely a recognizable shell",
+            "For a replica, clone, or emulator, preserve the requested source fidelity",
+            "For a replica, clone, or emulator, ignore source fidelity",
         )
         skill_path.write_text(skill_without_replica_depth, encoding="utf-8")
         missing_replica_depth_result = run(
@@ -5423,13 +5600,13 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             missing_replica_depth_result.returncode != 0
             and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_replica_depth_result.stdout,
-            "package validator accepted a replica mandate without smallest-interaction fidelity",
+            "package validator accepted a replica mandate without requested source fidelity",
             errors,
         )
 
         skill_without_original_depth = original_skill.replace(
-            "For an original experience, demand equivalent depth",
-            "For an original experience, suggest some depth",
+            "Exact-prompt and narrower-scope requests take precedence",
+            "Creative expansion takes precedence",
         )
         skill_path.write_text(skill_without_original_depth, encoding="utf-8")
         missing_original_depth_result = run(
@@ -5439,7 +5616,7 @@ def exercise_package_validator(skill: Path, errors: List[str]) -> None:
             missing_original_depth_result.returncode != 0
             and "SKILL.md runtime contract missing subject-adapted prose completion mandate"
             in missing_original_depth_result.stdout,
-            "package validator accepted a completion mandate without equivalent depth for original work",
+            "package validator accepted creative expansion overriding the user's exact scope",
             errors,
         )
 
@@ -5999,6 +6176,7 @@ def main() -> int:
     skill = Path(sys.argv[1]).resolve()
     errors: List[str] = []
     check_evals(skill, errors)
+    exercise_optional_verification(skill, errors)
     exercise_browser_clock(skill, errors)
     exercise_runtime_scripts(skill, errors)
     exercise_package_validator(skill, errors)

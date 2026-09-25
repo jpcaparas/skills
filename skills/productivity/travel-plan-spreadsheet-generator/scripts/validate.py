@@ -113,8 +113,10 @@ def validate_skill(skill_path: Path) -> dict[str, object]:
     for concept, terms in NEGATIVE_TRIGGER_CONCEPTS.items():
         if not all(term in lowered_description for term in terms):
             errors.append(f"Frontmatter description is missing negative boundary: {concept}")
-    if "/home/oai/skills/spreadsheets/SKILL.md" not in skill_content:
-        errors.append("SKILL.md must mention /home/oai/skills/spreadsheets/SKILL.md for Codex-style environments")
+    if re.search(r"/(?:home|Users)/[^\s`]+/skills/", skill_content):
+        errors.append("SKILL.md must not assume a machine-specific skill installation path")
+    if "spreadsheet skill" not in body or "through the harness" not in body:
+        errors.append("SKILL.md must describe harness-based spreadsheet skill discovery")
     if metrics["skill_md_lines"] and metrics["skill_md_lines"] > 500:
         errors.append(f"SKILL.md body exceeds 500 lines: {metrics['skill_md_lines']}")
 

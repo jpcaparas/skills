@@ -4,15 +4,15 @@ Common README failure modes and how to recover from them.
 
 ## Quickstart Missing Or Late
 
-If the README starts with background, architecture, badges, screenshots, or philosophy before setup, move quickstart up. Readers should not hunt for the first command.
+For a runnable project, keep the first-use path easy to find. Do not add a quickstart to a static or archived repository merely to fill a section, or reorder unrelated content during a scoped review.
 
 ## Version Pins In Prose
 
-Pinned versions decay. Replace prose pins with guidance to use the repository's configured toolchain. Keep exact versions in manifests, lockfiles, version manager files, CI, or package manager configuration.
+Duplicate pins can decay. Prefer the configured toolchain as their source of truth, while retaining useful supported ranges or exact requirements with a source link. Do not remove a real compatibility boundary in the name of evergreen prose.
 
 ## Path Tours
 
-A path tour is not architecture. Collapse directory lists into project roles and boundaries. Keep paths only for commands, files the user must edit, or public import paths.
+A path tour is not architecture. Explain project roles and boundaries, retaining verified stable source paths when they help readers navigate or contribute. Cut noise, not useful orientation.
 
 ## AI-Hostile Over-Specification
 
@@ -36,7 +36,7 @@ Repository READMEs are not landing pages. Remove inflated claims, vague adjectiv
 
 ## Monorepo Confusion
 
-Monorepos need a root-level mental model and a root-level quickstart. Package-specific commands belong only when they are common, stable, and helpful.
+Monorepos benefit from a root-level mental model and a clear path to the relevant package's first-use instructions. Do not invent a root quickstart when packages are independently operated. Keep useful package commands and links.
 
 ## README As Policy Document
 

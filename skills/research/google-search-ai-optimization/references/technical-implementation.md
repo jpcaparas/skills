@@ -4,7 +4,7 @@ Use this when changing code or auditing rendered pages for Google Search and Goo
 
 ## Eligibility Gate
 
-Before copy, schema, or content recommendations, verify the page can participate in Search:
+When diagnosing Search eligibility for content intended to be indexed, verify the relevant signals below. This is not a prerequisite for every copy, schema, or layout edit; preserve intentional exclusions:
 
 - HTTP status is `200` for canonical content, or a correct redirect for moved content.
 - Primary content is visible in rendered HTML.
@@ -15,13 +15,13 @@ Before copy, schema, or content recommendations, verify the page can participate
 - Internal links to the page use crawlable `<a href>` elements.
 - Important images and videos are crawlable, descriptive, and near relevant text.
 
-Run:
+For a static probe of an intended indexable page, run:
 
 ```bash
 python3 scripts/audit_page.py --input https://example.com/page --expect-indexable
 ```
 
-The script is a static signal probe. It does not replace rendered browser checks, Search Console URL Inspection, or Rich Results Test.
+Omit `--expect-indexable` on an intentional `noindex` page. The script is an optional static signal probe; it does not replace rendered browser checks, Search Console URL Inspection, or Rich Results Test when those are needed. Its length and heading warnings are review hints, not Google requirements.
 
 ## Framework Implementation Patterns
 
@@ -79,7 +79,7 @@ Good candidates:
 
 - `Organization` for site identity
 - `BreadcrumbList` for navigational context
-- `Article`, `Product`, `LocalBusiness`, `FAQPage`, `HowTo`, `VideoObject`, or other supported types only when the page actually qualifies
+- `Article`, `Product`, `LocalBusiness`, `VideoObject`, or other types when representative of the page; rich-result claims require the relevant current Google feature documentation
 - `@id` values to connect related entities on the same page
 
 Avoid:
@@ -106,7 +106,7 @@ If a page should appear in AI Search features, treat accidental `nosnippet` and 
 
 ## Acceptance Checks
 
-For each page type changed, verify:
+Choose checks that cover the changed behavior. For a full page-type audit, consider:
 
 - source and rendered HTML contain expected title, description, canonical, robots, and main content
 - page can be reached through crawlable internal links
@@ -114,3 +114,5 @@ For each page type changed, verify:
 - JSON-LD parses and matches visible content
 - URL Inspection or Rich Results Test confirms the expected rendered HTML for high-value pages
 - Search Console is monitored after deployment for indexing, enhancement, and traffic changes
+
+Report inaccessible tools as verification limits. Obtain authorization before changing external property settings; passing these checks never guarantees indexing, ranking, or AI inclusion.

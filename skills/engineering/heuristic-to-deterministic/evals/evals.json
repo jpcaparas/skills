@@ -6,7 +6,7 @@
       "id": 1,
       "name": "readme-art-contract",
       "prompt": "We learned README skill images should sit below each install command, render at width 480, and stop hooks should block missing images. Convert that into deterministic behavior.",
-      "expected_output": "The response extracts inspectable invariants, updates or creates a README/art validator, keeps image generation separate from structural validation, and wires the shared check into hooks and CI with exit code 2 for policy failures.",
+      "expected_output": "The response extracts inspectable invariants, updates or creates a README/art validator, keeps image generation separate from structural validation, and wires the shared check into the requested hooks using their documented exit contract, including code 2 when required.",
       "assertions": [
         {
           "text": "Identifies README placement and width as validator-friendly invariants",
@@ -57,14 +57,14 @@
       "id": 4,
       "name": "choose-reference",
       "prompt": "I need to decide whether a repeated agent mistake should become a validator, normalizer, fixture, manifest, or CI check.",
-      "expected_output": "The response loads conversion-patterns for artifact selection and verification for proof depth, then chooses the lowest-freedom artifact that enforces the stable invariant.",
+      "expected_output": "The response uses conversion-patterns or verification when selection or proof depth is unclear, choosing the smallest reliable mechanism that enforces the stable invariant without constraining unrelated choices.",
       "assertions": [
         {
-          "text": "Uses references/conversion-patterns.md for artifact selection",
+          "text": "If artifact selection needs detail, consults references/conversion-patterns.md rather than unrelated support files",
           "type": "disclosure"
         },
         {
-          "text": "Uses references/verification.md for proof ladder and cross-platform checks",
+          "text": "Selects proof depth for the invariant's risk, consulting references/verification.md when needed rather than requiring every rung",
           "type": "disclosure"
         }
       ],
@@ -86,6 +86,29 @@
         }
       ],
       "tags": ["edge", "ci"]
+    },
+    {
+      "id": 6,
+      "name": "reuse-formatter-check-mode",
+      "prompt": "Codify our repeated JSON formatting drift. The repo already has a locked formatter, format:check detects it with exit 1, and CI already runs that command. Only indentation and key layout are contractual, not file placement. Use the installed help and versioned docs; no network is available.",
+      "expected_output": "Reuses the existing formatter and check command, verifies canonical and drifting samples and repeat-run stability, and preserves its exit semantics and unrelated file layout. Does not add a duplicate validator or CI wrapper.",
+      "assertions": [
+        {"text": "Uses the existing formatter/check mode as enforcement and confirms it detects a relevant violation", "type": "functional"},
+        {"text": "Does not create a custom core script, separate validator, or duplicate CI gate for behavior already covered", "type": "negative"},
+        {"text": "Accepts installed/versioned authoritative evidence without demanding a live fetch, and keeps exit 1 rather than imposing exit 2", "type": "verification"}
+      ],
+      "tags": ["edge", "reuse", "normalizer"]
+    },
+    {
+      "id": 7,
+      "name": "preserve-noncontractual-layout-choice",
+      "prompt": "Our service generator keeps forgetting required manifest keys. Enforce that repeatable contract using the existing JSON schema validator. Teams intentionally organize the generated implementation files differently; the schema neither reads nor constrains that layout. This is a local generator fix, not a hook rollout.",
+      "expected_output": "Checks the manifest against the existing schema with positive and missing-key fixtures, leaving teams' implementation file organization open and not introducing hook or CI infrastructure.",
+      "assertions": [
+        {"text": "Enforces the required manifest keys and exercises a missing-key failure", "type": "functional"},
+        {"text": "Does not freeze implementation file layout or add hooks merely because a generator is involved", "type": "negative"}
+      ],
+      "tags": ["edge", "generator", "scope"]
     }
   ]
 }

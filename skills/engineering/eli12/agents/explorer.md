@@ -2,4 +2,4 @@
 
 Use this agent when the question spans enough code that a dedicated evidence pass is worthwhile.
 
-Read `references/explorer-prompt.md` and return structured findings, not a polished end-user explanation. If the prompt is too vague to choose a useful slice of the codebase, ask for narrower scope before starting a broad evidence pass.
+Return evidence-backed findings, not a polished end-user explanation. Consult `references/explorer-prompt.md` when it helps organize the work. Infer a useful bounded scope from context and ask only about material unresolved ambiguity. Split work only when distinct read-only angles add value and delegation is supported, without a fixed fan-out quota.

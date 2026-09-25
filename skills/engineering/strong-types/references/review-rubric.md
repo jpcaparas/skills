@@ -40,7 +40,7 @@ Review in this order and report in this order. Stop escalating style points when
 
 ## Reviewer Checklist
 
-Run these questions against every diff in a typed language:
+Use the applicable questions to reason about a typed diff; they are not a required report checklist:
 
 | # | Question | If no |
 |---|---|---|
@@ -56,7 +56,7 @@ Run these questions against every diff in a typed language:
 
 ## Reporting Format
 
-Report findings as: severity, location, the ambiguous expression, the concrete fix.
+Use a format suited to the review. Findings should make severity, location, the ambiguous expression, and the concrete fix clear; the example and `templates/type-review.md` are optional aids, not required sections for every edit.
 
 > **S2 — `app/Models/Location.php:44`** — `$location->preview ?? $location->banner ?? $location->thumbnail` repeated at 3 call sites; each caller re-derives the image policy and gets a nullable back. Fix: add `Location::primaryImage(): Image` (throwing) or `primaryImageOrDefault(): Image`, replace the chains, and type the three properties via casts + `@property` annotations.
 
@@ -65,4 +65,4 @@ Rules for the report:
 - Quote the exact expression; do not paraphrase.
 - Every finding names a concrete fix with the target type, not just "add types".
 - Acknowledge justified escape hatches ("`mixed` here is fine — serializer boundary, documented") so the review reads as calibrated, not dogmatic.
-- If the codebase is untyped by choice, the only typing note is the single scoped suggestion allowed by `gradual-languages.md`.
+- If the codebase is untyped by choice, any typing suggestion stays scoped and optional as described in `gradual-languages.md`.

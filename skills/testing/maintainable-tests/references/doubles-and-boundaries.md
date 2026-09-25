@@ -43,11 +43,11 @@ Hard-to-write tests often reveal production design issues:
 - Private methods contain behavior that wants a name.
 - One function both decides and performs irreversible effects.
 
-Do not paper over these problems with reflection, sleeps, global monkeypatches, or excessive mocks. Improve the boundary when it makes both production code and tests easier to understand.
+Use existing safe seams before changing production code. A narrowly scoped legacy monkeypatch can be appropriate when the harness reliably restores it, including after failure, and isolates it from concurrent tests. Avoid real sleeps, leaked global state, reflection into private internals, and excessive mocks that obscure the behavior.
 
 ## Refactor For Testability
 
-Good refactors for tests also improve production readability:
+Refactor only when necessary, proportionate, and authorized. For tests-only requests, propose a missing seam rather than modifying production files. When a refactor is warranted, it should also improve production readability:
 
 ```ts
 // Before: hard to test without real time and gateway construction.
@@ -79,7 +79,7 @@ export function makeInvoiceCharger(config: Config) {
 
 ## Contract And Integration Checks
 
-When tests use fakes or mocks for an external boundary, add a small contract or integration check where drift would be costly:
+When tests use fakes or mocks for an external boundary, reuse adequate contract or integration coverage and fill gaps where drift would be costly:
 
 - Adapter serializes the request the external API expects.
 - Repository fake and database repository share the same query semantics.

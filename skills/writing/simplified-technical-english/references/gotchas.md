@@ -88,9 +88,9 @@ Safety, legal, regulatory, contractual, or publication authorities can control e
 
 Do not change the controlled sentence and call it approved.
 
-## Prior issues can conflict with Issue 9
+## Different issues can conflict
 
-Do not merge dictionary entries or rules from different issues without explicit authority. Report the source-version conflict and limit the result to one named issue.
+Do not merge dictionary entries or rules from different issues without explicit authority. Report the source-version conflict and limit the result to the user's governing issue. Issue 9 is the bundled baseline; verify later or uncertain status with official ASD/STEMG sources and do not claim that the bundled scanner supports another issue without evidence.
 
 ## A tool result is not a conformance result
 

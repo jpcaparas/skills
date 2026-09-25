@@ -2,6 +2,8 @@
 
 Use this file when the syntax looks plausible but Azure DevOps still renders something in an unexpected way.
 
+These fixes reflect the April 9, 2026 documentation baseline. Treat limitations as version-specific; verified current Microsoft documentation for the user's target can supersede them.
+
 ## Symptom / Cause / Fix
 
 | Symptom | Cause | Fix |
@@ -28,6 +30,7 @@ Microsoft Learn explicitly tells readers to use the version selector for their A
 1. Check whether the user is on Azure DevOps Services, Azure DevOps Server, or Azure DevOps Server 2022.
 2. Re-read the relevant section in the matching documentation version.
 3. Avoid claiming support for newly documented Mermaid types or wiki features in older server versions without confirmation.
+4. If verified target behavior differs, use it within the task's authority and propose a canonical correction with the official source, target version, and minimal example. If verification is unavailable, disclose the gap instead of assuming either support or a permanent ban.
 
 ## Fast Triage
 
@@ -46,4 +49,3 @@ Microsoft Learn explicitly tells readers to use the version selector for their A
 - `references/decision-trees.md`
 - `references/mermaid.md`
 - `references/code-languages.md`
-

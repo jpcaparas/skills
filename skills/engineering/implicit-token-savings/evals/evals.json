@@ -6,14 +6,14 @@
       "id": 1,
       "name": "smoke-session-opener",
       "prompt": "I just landed in a large repository and need the fastest high-signal first pass before I open any files. Use implicit-token-savings.",
-      "expected_output": "The response starts with compact inventory commands such as ls, tree, or rg --files, and points to the probe script rather than dumping whole files.",
+      "expected_output": "Starts with a sufficient compact inventory such as ls, tree, or rg --files rather than dumping whole files. The comprehensive environment probe is optional.",
       "assertions": [
         {
           "text": "Mentions a compact repo inventory command such as ls -1, tree -L 2, or rg --files",
           "type": "functional"
         },
         {
-          "text": "Mentions scripts/probe_implicit_token_savings.py when environment availability matters",
+          "text": "Uses known availability or a targeted check when needed rather than requiring the comprehensive probe as a session opener",
           "type": "verification"
         }
       ],
@@ -29,10 +29,10 @@
       "id": 2,
       "name": "edge-rg-missed-file",
       "prompt": "rg returned nothing, but I am certain the string exists somewhere in a hidden or ignored file. What is the cheapest next step?",
-      "expected_output": "The response escalates from rg to --hidden, -u, or --debug before suggesting broader or noisier reads.",
+      "expected_output": "Chooses a scoped hidden/ignore override or --debug to resolve the missing-result hypothesis, without repeating a normal search or forcing an escalation ladder.",
       "assertions": [
         {
-          "text": "Escalates with rg --hidden, rg -u, or rg --debug before suggesting a different tool",
+          "text": "Selects appropriate rg hidden/ignore handling or --debug based on the uncertainty, without requiring unnecessary intermediate commands",
           "type": "functional"
         },
         {
@@ -88,6 +88,53 @@
         "references/git.md",
         "SKILL.md"
       ]
+    },
+    {
+      "id": 5,
+      "name": "known-file-needs-whole-context",
+      "prompt": "Review config/runtime.ts for contradictory defaults and overrides. It is 90 lines long, and all sections affect the result. The path and file size are already confirmed.",
+      "expected_output": "Reads the known file in full immediately rather than discovering it again or requiring a failed narrow excerpt.",
+      "assertions": [
+        {
+          "text": "Uses a direct whole-file read to inspect defaults and overrides together",
+          "type": "functional"
+        },
+        {
+          "text": "Does not run an inventory, search, comprehensive probe, or arbitrary short excerpt as a prerequisite",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge"]
+    },
+    {
+      "id": 6,
+      "name": "negative-incidental-runner-mention",
+      "prompt": "Rewrite this sentence for our release notes: 'We switched from pytest to go test for the new service.' Do not inspect or run anything.",
+      "expected_output": "Edits the sentence without triggering shell-command optimization just because test runners are mentioned.",
+      "assertions": [
+        {
+          "text": "Does not run or recommend shell probes, inventories, or test commands for a copy-only request",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 7,
+      "name": "required-gate-not-optional",
+      "prompt": "Finish the authorized lint cleanup in src/api.py. Relevant ruff autofixes are allowed. The repository requires its complete validation suite before handoff even though it is slow. Do not commit or push.",
+      "expected_output": "Applies and reviews scoped autofixes without asking again, runs the required gate with failure details visible, and respects the no-commit/no-push boundary.",
+      "assertions": [
+        {
+          "text": "Does not substitute a narrow test for the required full gate or ask for approval solely because the gate is slow",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves errors and failure details and performs no commit or push",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge"]
     }
   ]
 }

@@ -45,7 +45,14 @@ VALIDATOR_REGRESSION_TEST_OUTCOMES = {
             "test_rejects_frontmatter_yaml_aliases",
             "test_rejects_invalid_plain_frontmatter_scalar",
             "test_rejects_invalid_plain_agent_scalar",
-            "test_requires_each_workflow_phase_to_own_its_completion_gate",
+            "test_accepts_workflow_without_phase_formatting",
+            "test_requires_workflow_safety_and_outcome_guidance",
+            "test_rejects_outcome_guidance_outside_the_workflow",
+            "test_rejects_missing_branch_evidence_despite_other_cases",
+            "test_rejects_branch_tags_without_required_assertions",
+            "test_accepts_trigger_evidence_without_numerical_quotas",
+            "test_requires_both_trigger_outcomes",
+            "test_rejects_modified_preflight_runner",
             "test_rejects_a_held_out_probe_in_public_eval_files",
             "test_rejects_a_non_fixture_file_as_behavioral_evidence",
             "test_rejects_modified_fixture_content",
@@ -77,7 +84,6 @@ class PreflightResult:
     validator_regressions_verified: bool = False
     trigger_positive: int = 0
     trigger_negative: int = 0
-    completion_gates: int = 0
     tag_counts: dict[str, int] = field(default_factory=dict)
     errors: list[str] = field(default_factory=list)
 
@@ -282,20 +288,14 @@ def run_preflight(root: Path) -> PreflightResult:
         collect_evals(root, result)
         verify_fixture_contract(root, result)
         verify_validator_regressions(root, result)
-        skill_content = (root / "SKILL.md").read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
         result.errors.append(f"preflight could not read package evidence: {exc}")
         return result
 
-    result.completion_gates = skill_content.count("**Complete when:**")
+    # validate_skill checks each outcome branch and its assertion types, plus
+    # disclosure routing and both trigger polarities. Counts below are diagnostics,
+    # not quality targets. These independent checks prove the fixtures actually run.
     checks = (
-        (result.behavioral_cases >= 8, "requires at least eight behavioral cases"),
-        (result.assertions >= 20, "requires at least twenty typed assertions"),
-        (result.fixture_cases >= 1, "requires at least one committed behavioral fixture"),
-        (
-            result.negative_disclosures >= 4,
-            "requires a negative loading assertion for every disclosure branch",
-        ),
         (
             result.fixture_contract_verified,
             "requires a green fixture baseline with a failing held-out probe",
@@ -304,12 +304,6 @@ def run_preflight(root: Path) -> PreflightResult:
             result.validator_regressions_verified,
             "requires the validator false-positive regression suite to pass",
         ),
-        (result.trigger_positive >= 3, "requires at least three positive trigger cases"),
-        (result.trigger_negative >= 3, "requires at least three negative trigger cases"),
-        (result.completion_gates >= 9, "requires one completion gate per operating phase"),
-        (result.tag_counts.get("negative", 0) >= 2, "requires multiple behavioral near-misses"),
-        (result.tag_counts.get("disclosure", 0) >= 3, "requires reference-routing evidence"),
-        (result.tag_counts.get("safety", 0) >= 2, "requires multiple safety-boundary cases"),
     )
     for passed, message in checks:
         if not passed:
@@ -347,7 +341,6 @@ def main(argv: list[str]) -> int:
         "Trigger balance: "
         f"{result.trigger_positive} positive / {result.trigger_negative} negative"
     )
-    print(f"Completion gates: {result.completion_gates}")
     for tag, count in sorted(result.tag_counts.items()):
         print(f"  {tag}: {count}")
 

@@ -2,13 +2,15 @@
 
 Use this when the site sells products, represents a local business, or needs browser-agent-friendly journeys.
 
+Apply only the relevant checks. Comparing external records does not authorize changing Merchant Center, Business Profile, or other accounts; get consent before those mutations.
+
 ## Ecommerce
 
 Google's ecommerce guidance focuses on helping Google find, parse, and present product content across Search surfaces.
 
 Implementation priorities:
 
-- Product detail pages must have crawlable, indexable, unique product information.
+- Product detail pages intended for Search need crawlable, indexable, useful product information; preserve intentional exclusions.
 - Product data should be consistent across visible content, JSON-LD, feeds, Merchant Center, and checkout availability.
 - Use `Product` structured data only for visible product details.
 - Keep price, availability, shipping, returns, ratings, and variants current.

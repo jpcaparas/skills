@@ -1,5 +1,7 @@
 # Product Answer
 
+Optional starting point for a code-grounded app-behavior answer. Adapt or omit labels and use concise technical detail when useful; preserve the direct answer, material conditions, evidence, and uncertainty.
+
 Short answer: <Answer the product question directly in one or two sentences.>
 
 What this means for users: <Describe the visible behavior, decision, or impact in plain language.>

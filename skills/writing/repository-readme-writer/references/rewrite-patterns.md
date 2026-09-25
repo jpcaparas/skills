@@ -5,10 +5,10 @@ Improving an existing README is preservation work before it is rewrite work.
 ## Rewrite Workflow
 
 1. Read the current README and identify what still helps.
-2. Inspect repository evidence for setup, checks, configuration, and deployment.
+2. Inspect repository evidence for the sections in scope; do not turn a narrow review into a full setup audit.
 3. Keep accurate sections, but simplify their wording.
 4. Move fragile or exhaustive detail out of the README, or cut it when no better home exists.
-5. Add or repair the quickstart.
+5. Add or repair the first-use path when relevant to the repository and requested scope.
 6. Verify commands when feasible.
 
 ## Keep, Cut, Move
@@ -21,7 +21,7 @@ Improving an existing README is preservation work before it is rewrite work.
 | Full file tree | Cut unless the layout is the product |
 | Complete script catalog | Cut or reduce to common commands |
 | Detailed deployment runbook | Move to dedicated docs when long |
-| Exact runtime versions | Replace with toolchain-source guidance |
+| Exact runtime versions | Check the toolchain source; retain useful requirements or ranges with a link |
 | Stale TODOs and placeholders | Remove |
 
 ## Compression Patterns
@@ -42,7 +42,7 @@ After:
 The public app and admin app share UI and configuration through workspace packages. Keep browser-facing code separate from server-only integrations.
 ```
 
-Use explicit paths only when a command or package README requires them.
+Keep explicit stable paths when they help navigation; this transformation illustrates reducing noise, not banning source links.
 
 ### Command Catalog To Quality Gate
 

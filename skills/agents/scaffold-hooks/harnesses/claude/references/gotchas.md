@@ -73,4 +73,4 @@ If the status comes back `untrusted`, tell the user exactly that and offer two r
 
 Only mutate `~/.claude.json` when the user asks you to flip the flag or explicitly asks you to ensure trust is enabled. Otherwise, offer the check and explain the two recovery paths.
 
-If hooks still do not fire in a fresh session, check `.projects[...]` in `~/.claude.json` before investigating settings, script permissions, or hook logic. It is almost always this flag.
+If hooks still do not fire in a fresh session, check `.projects[...]` in `~/.claude.json` early. Independent read-only checks of settings, script permissions, and hook logic can proceed while trust remains unresolved; do not enable trust merely to diagnose the files.

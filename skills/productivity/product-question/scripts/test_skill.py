@@ -94,7 +94,7 @@ def run_tests(skill_path: str) -> dict:
         ("decision-tree", "## Decision Tree" in skill_content),
         ("quick-reference", "## Quick Reference" in skill_content),
         ("share-ready-standard", "## Share-Ready Answer Standard" in skill_content),
-        ("no-code-default", "no code" in skill_content.lower() or "code blocks" in skill_content.lower()),
+        ("useful-technical-detail", "technical terms or code when useful" in skill_content),
         ("answer-short-answer", "Short answer" in answer_contract),
         ("answer-checked-line", "Checked:" in answer_contract),
         ("discovery-confidence", "Confidence Labels" in discovery),

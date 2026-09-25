@@ -13,7 +13,7 @@ Repository READMEs should make the project understandable and runnable without b
 ## What To Avoid
 
 - Long path inventories. Directory names and workspace layouts change.
-- Exact tool versions in prose. Use the repository's manifest, lockfile, version manager file, or CI config as the source of truth.
+- Unmaintained duplicate version pins. Use manifests, lockfiles, version manager files, or CI as the source of truth; include supported ranges or useful exact requirements with a source link.
 - Exhaustive command catalogs. Readers need the shared gate and the few task-specific commands that matter.
 - Generic filler such as "This project is a modern web application."
 - Overly rigid instructions that future agents may follow verbatim after the project has changed.
@@ -41,7 +41,7 @@ Prefer stable facts over fragile facts.
 | Deployment model | Provider dashboard steps |
 | Required configuration groups | Complete env variable dump |
 
-Use fragile details only when they are required for day-one success and verified from the repository.
+Use verified details when they help setup, navigation, or contribution. Stable source paths can be more useful than vague roles; avoid exhaustive inventories rather than banning paths.
 
 ## Voice
 
@@ -65,9 +65,9 @@ This repository contains the source code for a modern, scalable, robust scheduli
 
 ## Default Section Rules
 
-### Quickstart Is Mandatory
+### First Use Fits the Repository
 
-Every repository README needs a quickstart. If the project cannot run locally, write the closest useful first-run path and say what external dependency blocks a full run.
+Runnable projects benefit from a verified quickstart. Libraries may need a minimal import example; datasets need access, schema, and license guidance; archived repositories may need status and a successor link. Do not force setup, deployment, or a generic tutorial stack where no such workflow exists.
 
 ### Architecture Stays High-Level
 

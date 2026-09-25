@@ -11,15 +11,15 @@ Audit the target project first, then scaffold Claude Code hooks with a determini
 What is the user asking for?
 
 - New Claude Code hooks in a project with no hook setup yet:
-  Run live docs verification, audit the project, choose a hook plan, then scaffold.
+  Audit the project and installed-version evidence, resolve uncertain contracts from relevant official docs, choose a hook plan, then scaffold.
 - Existing `.claude/settings*.json` or `.claude/hooks/` files:
   Audit what already exists, choose `additive` or `overhaul`, then regenerate only the managed hook layer.
 - Existing hooks that show up in `/hooks` but never actually fire:
   Treat workspace trust as the first diagnostic. Check `~/.claude.json` for the exact project path before debugging settings or script logic, then offer to enable trust if it is still off.
 - Existing hooks plus possible Claude Code feature drift:
-  Verify the live official hook event list before writing files. If the docs changed, update the scaffold inputs first.
+  Verify the affected official contract before changing event semantics. If it exceeds the bundled helper, propose a canonical source update rather than silently editing installed inputs.
 - Explanation only, not implementation:
-  Read `references/hook-events.md` and `references/scaffold-layout.md`, then answer without scaffolding.
+  Use the reading guide to select only the reference needed for the question, then answer without scaffolding.
 
 ## Quick Reference
 
@@ -38,13 +38,13 @@ What is the user asking for?
 
 ## Non-Negotiable Workflow
 
-1. Verify the live official Claude Code hook docs before planning any scaffold.
-2. Compare the live event list, hook type support, and async rules with `assets/hook-events.json`.
+1. Use repository and installed-version evidence for stable local repairs; consult relevant live official docs when evidence is insufficient, stale, or event semantics will change.
+2. Compare the affected event, hook type, or async contract with `assets/hook-events.json` before relying on it.
 3. Audit the target project in detail before deciding which events to enable.
 4. Inspect any existing `.claude/settings.json`, `.claude/settings.local.json`, `.claude/hooks/`, `CLAUDE.md`, `.claude/rules/`, and related automation files before choosing a merge mode.
 5. Produce or update a concrete hook plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
 6. Prefer a repo-owned shared `hooks/` tree for behavior that may move to Codex, OpenCode, Devin, Git hooks, GitHub Actions, or local shell usage. Keep Claude-specific files as thin adapters around shared event scripts.
-7. Scaffold every current hook event as `hooks/<event>/script.sh` plus `hooks/<event>/claude.{sh,json}`, even if the event stays disabled in settings.
+7. The bundled generator renders every manifest event as `hooks/<event>/script.sh` plus `hooks/<event>/claude.{sh,json}`, even if the event stays disabled in settings; it has no selected-event-only layout mode.
 8. Wire only the enabled events into the chosen settings file so the project does not pay runtime cost for inactive stubs.
 9. Regenerate `hooks/README.md` so the project always has a readable event and adapter map.
 10. If the user reports that hooks are registered but not firing, or you just completed a real scaffold and need to verify the setup, check or explicitly offer to check workspace trust for the exact project path before debugging hook logic.
@@ -65,9 +65,9 @@ Use this flow:
 2. Run `scripts/check_workspace_trust.sh /path/to/project --json`.
 3. If status is `untrusted`, tell the user the flag is false and offer to enable it.
 4. If the user wants it fixed, run `scripts/check_workspace_trust.sh /path/to/project --enable`.
-5. Only after trust is confirmed should you spend time debugging settings merges, hook matchers, script permissions, or hook logic.
+5. Continue independent read-only checks of settings merges, matchers, permissions, and hook logic while trust is unresolved. Do not execute untrusted hooks or change trust without authorization.
 
-## Live Docs First
+## Contract Evidence
 
 The official Claude Code docs are the source of truth:
 
@@ -79,16 +79,11 @@ Use the two reading.sh articles only as secondary material for practical pattern
 - `https://reading.sh/claude-code-hooks-a-bookmarkable-guide-to-git-automation-11b4516adc5d`
 - `https://reading.sh/claude-code-async-hooks-what-they-are-and-when-to-use-them-61b21cd71aad`
 
-If the official docs and the secondary articles disagree, follow the official docs and update the local references.
+If official docs and secondary articles disagree, use evidence for the installed version and propose a canonical reference correction through the root `SKILL.md` maintenance route.
 
 ## Progressive Maintainer Drift Check
 
-When updating this skill itself, make docs drift the first maintenance step:
-
-1. Live-fetch the official Claude Code docs on the day of the edit, then compare the current event list, handler types, matcher rules, input/output contracts, async behavior, and trust behavior with `assets/hook-events.json`.
-2. Check local version evidence when available, such as `claude --version`, and record any source or docs date that explains the update.
-3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/hook-events.md`, scaffold generators, templates, plan examples, validators, tests, evals, and thin wrappers.
-4. If no drift exists, still mention that the live docs were checked. Do not update this skill from memory or by copying assumptions from Codex or OpenCode.
+Live-fetch the official Claude Code docs relevant to an uncertain or changing contract, recording the source and applicable CLI version/date. Follow the root `SKILL.md` maintenance route: affected passage, proposed correction, and regression check. For authorized canonical changes, reconcile affected manifests, generators, templates, validators, tests, evals, and references. Do not update this skill from memory, mutate installed copies, or infer Claude capability from another harness. Wording-only and known local repairs need no full docs sweep.
 
 ## Project Analysis Rules
 
@@ -135,20 +130,20 @@ Allow these parts to stay project-specific:
 
 When the skill is invoked again against a project:
 
-- Re-run live docs verification before assuming the event set is unchanged.
+- Consult relevant official docs when installed-version evidence is insufficient or the event contract changes.
 - Re-audit the project before assuming the current hook plan still fits.
 - If the user says hooks never fire, or the scaffold needs verification, re-check workspace trust for the exact project path before assuming the managed settings are wrong.
 - Preserve non-managed hooks by default.
 - Treat previously managed Claude adapters and `hooks/.state/claude` as replaceable in `overhaul` mode. Do not wipe the whole shared `hooks/` tree because other harnesses may own adapters there.
 - Treat previously managed hooks as append-only in `additive` mode unless a missing event or stale README requires a refresh.
-- If new official hook events exist, add new stubs and README entries even if the project keeps them disabled.
+- If new official hook events are needed, propose a canonical manifest/generator/test update before claiming the helper supports them.
 
 ## Scaffold Rules
 
-- Generate bash scripts, not Python, for the project hook runtime.
+- Keep the bundled generator's Bash entrypoints and shared-script layout. Suitable repo-owned programs can run behind that protocol boundary through supported plan scripts/commands; Bash is not a universal Claude hook requirement.
 - Comment the managed bash stubs in plain language.
 - Structure managed event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
-- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into managed scripts.
+- The helper runs `scripts[].path` through Bash. For non-Bash programs, use a Bash wrapper or `commands[].command` with an explicit interpreter; a shebang alone does not change the helper's invocation. Do not hard-code a project's toolchain into managed scripts.
 - Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `claude` when output protocols differ. Managed event stubs should stay thin.
 - Use `$CLAUDE_PROJECT_DIR` in managed command paths.
 - Default to a shared hook root of `hooks`.

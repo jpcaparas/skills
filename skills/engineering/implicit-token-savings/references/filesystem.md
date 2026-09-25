@@ -2,18 +2,18 @@
 
 Prefer path discovery and targeted excerpts over dumping files blindly.
 
-## Escalation Ladder
+## Choose From Known Context
 
-1. Start with top-level inventory.
-2. Move to capped directory shape.
-3. Discover candidate paths without reading contents.
-4. Search file contents only after path discovery narrowed the field.
-5. Read only the slice you need.
-6. Parse structured output with `jq` only after the command surface is already small.
+- Use an inventory or capped tree when repository shape is the question.
+- Discover paths when the relevant file is unknown.
+- Search a known subtree or file directly when matching content is the question.
+- Read a known file or excerpt directly when its contents are needed.
+- Parse structured output with `jq` when fields are the useful result.
+- A full read is appropriate when whole-file context is needed; no failed excerpt is required.
 
 ## Quick Reference
 
-| Situation | Preferred command | Escalate to | Why |
+| Situation | Compact option | Alternative when useful | Why |
 | --- | --- | --- | --- |
 | Need the names in the current directory | `ls -1` | `ls -lah` | Plain names are often enough |
 | Need directory structure | `tree -L 2 path/` | `tree -a -L 3 path/` | Depth limits keep output legible |
@@ -48,7 +48,7 @@ rg --files src/ | rg 'service|controller'
 rg -n -F 'TODO:' .
 ```
 
-### Search hidden or ignored files only when the missing-result hypothesis justifies it
+### Choose hidden or ignore handling for the known scope or missing-result hypothesis
 
 ```bash
 rg --hidden -n -F 'SECRET' .
@@ -67,7 +67,7 @@ head -n 60 README.md
 tail -n 80 logs/app.log
 ```
 
-Only reach for a full-file read when:
+A full-file read can be the first useful command when:
 
 - The file is already known to be short
 - You need global context such as import ordering, config inheritance, or end-to-end flow

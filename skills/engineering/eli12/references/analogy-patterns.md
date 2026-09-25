@@ -37,10 +37,9 @@ The retry queue is like a call-back list at a busy repair shop: failed jobs do n
 
 ## Rules for analogy discipline
 
-- One concept, one analogy.
-- Do not stack multiple metaphors in the same paragraph.
-- Prefer everyday systems with clear jobs: front desk, warehouse shelf, checklist, assembly line, ticket line.
-- Avoid fantasy metaphors, sports metaphors, and anthropomorphic phrasing.
+- Choose analogies for the audience and the behavior being explained, not a quota per concept.
+- Avoid mixing metaphors when doing so obscures the mechanism.
+- Everyday systems with clear jobs often work well: front desk, warehouse shelf, checklist, assembly line, ticket line. Sports, fantasy, or human-role comparisons can also work when familiar to the audience and technically grounded.
 - If the code has an important mismatch with the analogy, name the mismatch.
 
 ## When not to use analogies

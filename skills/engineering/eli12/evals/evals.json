@@ -6,14 +6,14 @@
       "id": 1,
       "name": "broad_flow_smoke",
       "prompt": "Walk me through what happens when a user signs in across this codebase, and keep it simple.",
-      "expected_output": "Routes to a broad exploration pass, then synthesizes the result into a digestible explanation with concrete file anchors.",
+      "expected_output": "Traces the sign-in flow and explains it simply with concrete file anchors, using references or independent explorers only where they help.",
       "assertions": [
         {
-          "text": "Loads references/explorer-prompt.md for the evidence-gathering pass",
-          "type": "disclosure"
+          "text": "Explains the observed sign-in path from entrypoint to result, with file or symbol anchors and explicit uncertainty where wiring is unverified",
+          "type": "functional"
         },
         {
-          "text": "Loads references/explainer-prompt.md for the final explanation",
+          "text": "Uses only references relevant to an actual need, if any; neither reference preloads nor a fixed number of explorers are required for a broad flow",
           "type": "disclosure"
         }
       ],
@@ -30,8 +30,8 @@
       "expected_output": "Keeps the explanation accessible, uses one grounded analogy, and ties that analogy back to the real cache implementation.",
       "assertions": [
         {
-          "text": "Loads references/analogy-patterns.md when analogy choice matters",
-          "type": "disclosure"
+          "text": "Uses an audience-appropriate analogy and states any important mismatch, consulting references/analogy-patterns.md only if useful",
+          "type": "functional"
         },
         {
           "text": "Reconnects the analogy to exact code roles instead of leaving it abstract",
@@ -60,14 +60,14 @@
       "id": 4,
       "name": "narrow_symbol_direct",
       "prompt": "Explain this auth middleware simply.",
-      "expected_output": "Uses a direct explanation pass instead of fan-out exploration for a narrow symbol question.",
+      "expected_output": "Explains the middleware's actual checks and continuation or rejection behavior directly, without unnecessary delegation or reference reads.",
       "assertions": [
         {
-          "text": "Routes narrow symbol questions to a direct explanation pass",
+          "text": "Grounds the explanation in the middleware's code and defines jargon rather than inventing behavior from its name",
           "type": "functional"
         },
         {
-          "text": "Loads references/explainer-prompt.md for tone and output shape",
+          "text": "Can answer directly from the relevant code without preloading references/explainer-prompt.md or creating explorers",
           "type": "disclosure"
         }
       ],
@@ -76,15 +76,15 @@
     {
       "id": 5,
       "name": "vague_scope_clarification",
-      "prompt": "Explain this repo.",
-      "expected_output": "Asks a few short scope questions before doing an expensive repo tour.",
+      "prompt": "Explain how sessions work here. The workspace has an auth-session service and an unrelated analytics-session pipeline; I have not indicated which one I mean.",
+      "expected_output": "Asks a concise question to resolve the material ambiguity instead of guessing or touring both subsystems.",
       "assertions": [
         {
-          "text": "Asks for narrower scope when the request is too vague for an efficient explain pass",
+          "text": "Asks which kind of session the user means because the two explanations would materially differ",
           "type": "functional"
         },
         {
-          "text": "Loads references/gotchas.md when guarding against a broad, unfocused answer",
+          "text": "Does not require a gotchas reference preload or a quota of clarification questions before resolving the target",
           "type": "disclosure"
         }
       ],
@@ -92,6 +92,23 @@
       "files": [
         "references/gotchas.md"
       ]
+    },
+    {
+      "id": 6,
+      "name": "broad_but_answerable",
+      "prompt": "Explain this repo. We have just traced the login route through SessionService to the session store; use that flow to give a newcomer a high-level overview, not a full architecture audit.",
+      "expected_output": "Uses the established sign-in flow as a bounded overview and answers without asking the user to choose the scope again.",
+      "assertions": [
+        {
+          "text": "States the sign-in-flow boundary and builds a plain-language overview from the already inspected code",
+          "type": "functional"
+        },
+        {
+          "text": "Does not treat broad wording or the probe's clarify/fanout hint as a requirement to ask questions, preload references, or delegate",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "smoke"]
     }
   ]
 }

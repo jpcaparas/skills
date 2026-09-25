@@ -35,11 +35,19 @@ detail behind the matching route.
 
 {{EVIDENCED_GOTCHAS_OR_LINK}}
 
+## When Guidance Fails
+
+Resolve stale or incomplete advice against current project evidence and relevant
+official or trusted primary sources. Do not browse again when reliable evidence
+already settles the question. Keep unknowns explicit when sources are unavailable.
+Propose a targeted canonical update or deletion with the affected passage, source,
+and an example; do not silently rewrite installed skills or publish changes.
+
 ## Completion Gate
 
-Complete when the immediate task reaches {{PRIMARY_OBSERVABLE}}, every route
-has one canonical owner, and disclosure checks show unrelated branches remain
-unloaded.
+Complete when the immediate task reaches {{PRIMARY_OBSERVABLE}} and any material
+limits are clear. When maintaining this package, also verify routing and that
+branch-specific material is available without loading unrelated references.
 
 ## Release Gate
 

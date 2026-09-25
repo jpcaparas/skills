@@ -4,6 +4,8 @@ When redesigning an existing interface, do not jump straight to colors or hero s
 
 ## Audit Order
 
+Use this as a starting order; prioritize observed task failures and the user's requested scope over completing every category.
+
 1. product fit
 2. information hierarchy
 3. layout and grouping
@@ -72,28 +74,30 @@ For each screen or flow, record:
 
 ### Platform Fit
 
-- marketing patterns inside tools
+- marketing patterns that displace essential tools
 - desktop behavior flattened into mobile-style simplicity
-- web product screens carrying too much ornamental motion
+- ornamental motion that interrupts tasks or lacks accessible alternatives
 
 ## Redesign Sequence
 
-1. Remove noise.
+1. Identify what works and what interferes with the user's task or desired expression.
 2. Re-establish grouping and dominance.
 3. Rewrite labels where they are vague.
-4. Simplify color and surface logic.
+4. Clarify color and surface relationships, simplifying where it helps.
 5. Complete the missing states.
-6. Reintroduce character only where it supports the thesis.
+6. Preserve or develop character, including mixed styles and decorative moments, where it serves the brief.
+
+The two-second glance and removing 20% of chrome can expose hierarchy problems. Neither is a pass/fail threshold or deletion quota; judge comprehension and usefulness for the actual audience.
 
 ## Deliverable Format
 
-When giving redesign feedback, produce:
+Scale feedback to the request. A useful review can include:
 
 1. one-paragraph diagnosis
 2. ordered findings by severity
-3. the top three fixes with the highest leverage
-4. the taste-axis shift you recommend
-5. the target family, if relevant
+3. the highest-leverage fixes, without filling a quota
+4. relevant taste-axis shifts, if they clarify the recommendation
+5. a proposed direction or combination of styles, if relevant
 
 Use `templates/critique-scorecard.md` when a reusable review format helps.
 

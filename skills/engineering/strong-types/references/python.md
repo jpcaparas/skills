@@ -49,7 +49,7 @@ typeCheckingMode = "strict"
 reportMissingTypeStubs = "warning"
 ```
 
-Untyped third-party libraries get stubs (`types-*` packages) or a `py.typed`-aware alternative — not a project-wide strictness downgrade.
+Contain untyped third-party behavior at a typed boundary using existing stubs or narrowly justified local annotations. When dependency/tooling work is in scope, consider `types-*` stubs or a `py.typed`-aware alternative; do not force a dependency migration during an unrelated edit or downgrade project-wide strictness.
 
 ## Signatures: Annotate Everything
 

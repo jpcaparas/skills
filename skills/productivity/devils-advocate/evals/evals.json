@@ -9,7 +9,7 @@
       "expected_output": "The response steelmans the safety and performance case, then concentrates on migration value, team capability, opportunity cost, parity risk, and launch timing. It identifies a smaller measurement or pilot that could answer the strongest objection.",
       "assertions": [
         {
-          "text": "Steelmans the rewrite's strongest safety or performance rationale before attacking it",
+          "text": "Accurately addresses the rewrite's strongest safety or performance rationale without requiring a separate steelman section",
           "type": "functional"
         },
         {
@@ -165,6 +165,17 @@
         }
       ],
       "tags": ["edge", "stopping", "interaction"]
+    },
+    {
+      "id": 9,
+      "name": "brief-opposition-without-template-filler",
+      "prompt": "Use devils-advocate in one short paragraph. We want to remove the only pre-production smoke test because it adds 20 seconds, but it caught a broken login yesterday. Give me the strongest objection and what would change your mind; no labelled sections.",
+      "expected_output": "One concise paragraph targets the lost detection mechanism and names evidence or a replacement control that would defeat the objection, without padding to a minimum objection count or labelled conclusion.",
+      "assertions": [
+        { "text": "Explains a material failure mechanism and falsifier while recognizing the time-saving aim", "type": "functional" },
+        { "text": "Honors the paragraph request without extra objections or mandatory conclusion labels", "type": "negative" }
+      ],
+      "tags": ["edge", "presentation", "debate"]
     }
   ]
 }

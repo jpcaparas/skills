@@ -94,6 +94,57 @@
         "disclosure",
         "metadata"
       ]
+    },
+    {
+      "id": 5,
+      "name": "scoped-offline-canonical-answer-without-handoff",
+      "prompt": "Offline review only: inspect the canonical helper and tell me in three bullets whether /docs pagination is handled correctly. Do not create files or an implementation prompt, and leave intentional noindex pages alone.",
+      "expected_output": "Returns a focused source-only answer with evidence and runtime limitations, without expanding to a full report or generating a handoff.",
+      "assertions": [
+        {"text": "Answers in three bullets without report files, helper execution, or a fix prompt", "type": "functional"},
+        {"text": "Cites relevant source evidence, labels deployed behavior unverified, and preserves intentional noindex", "type": "verification"},
+        {"text": "Does not guarantee ranking or AI-answer visibility from the proposed change", "type": "negative"}
+      ],
+      "tags": ["edge", "scope", "offline"],
+      "files": ["SKILL.md", "references/technical-audit.md"]
+    },
+    {
+      "id": 6,
+      "name": "valid-schema-without-rich-result-eligibility",
+      "prompt": "Our FAQPage JSON-LD is valid schema.org and matches visible questions and answers, but the current official Google feature policy says this site is ineligible for FAQ rich results. Should we remove it as misleading? We also have an AggregateRating with no real reviews.",
+      "expected_output": "Separates vocabulary validity from Google feature eligibility, does not remove truthful markup merely for ineligibility, and flags the unsupported rating facts.",
+      "assertions": [
+        {"text": "Distinguishes truthful valid FAQ markup from current Google rich-result eligibility without promising display", "type": "functional"},
+        {"text": "Flags fabricated or unsupported rating data rather than treating all non-eligible markup as misleading", "type": "functional"}
+      ],
+      "tags": ["edge", "schema"],
+      "files": ["references/structured-data-and-entities.md"]
+    },
+    {
+      "id": 7,
+      "name": "handoff-revalidates-changed-state-and-evidence",
+      "prompt": "Prepare a fix-session prompt from last month's SEO audit. The layout has since changed, one finding says 'No evidence provided', and checkout noindex must remain. Avoid repeating the whole audit.",
+      "expected_output": "Reuses relevant evidence but requires revalidation of changed state, keeps unsupported findings unconfirmed, and preserves implementation constraints.",
+      "assertions": [
+        {"text": "Requires targeted revalidation before edits instead of forbidding all repeated investigation", "type": "functional"},
+        {"text": "Does not present placeholder evidence as a confirmed issue or turn it into an unconditional fix", "type": "negative"},
+        {"text": "Carries the intentional checkout noindex constraint into the handoff", "type": "functional"}
+      ],
+      "tags": ["edge", "handoff"],
+      "files": ["references/fix-prompt-spec.md", "templates/fix-prompt-template.md"]
+    },
+    {
+      "id": 8,
+      "name": "stale-baseline-proposes-canonical-update",
+      "prompt": "The bundled structured-data guidance conflicts with the current official Google policy supplied with this audit. Resolve the recommendation for this site; do not modify installed skills or invent a search benefit.",
+      "expected_output": "Uses the relevant current official policy and site evidence, states the dated baseline limitation, and proposes rather than silently applies a canonical skill update.",
+      "assertions": [
+        {"text": "Identifies the exact stale passage and current official source/version or retrieval date", "type": "verification"},
+        {"text": "Proposes a canonical repository correction with an example or regression test without changing the installed skill", "type": "functional"},
+        {"text": "Does not invent ranking or AI-visibility guarantees", "type": "negative"}
+      ],
+      "tags": ["edge", "freshness"],
+      "files": ["SKILL.md", "references/structured-data-and-entities.md"]
     }
   ]
 }

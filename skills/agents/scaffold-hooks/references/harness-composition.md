@@ -46,11 +46,11 @@ The OpenCode managed manifest stores scaffold provenance, plan/template hashes, 
 
 ## Per-Harness Stdout Protocols for Shared Context Scripts
 
-Shared scripts that emit session context (for example a repo-owned agent-session-context script) should prefer the shared Claude-format JSON shape for Claude Code, Codex, and Devin:
+Shared scripts that emit session context (for example a repo-owned agent-session-context script) can use this specifically verified `SessionStart` JSON shape for Claude Code, Codex, and Devin. Sharing one shape does not imply compatibility across other events or fields:
 
 - `claude`: emit `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`. Plain text is tolerated by Claude Code, but using the shared JSON shape avoids a Claude-only branch.
 - `codex`: emit the same `hookSpecificOutput.additionalContext` shape.
-- `devin`: emit the same `hookSpecificOutput.additionalContext` shape. Devin strictly parses non-empty stdout as Claude-format JSON; plain text fails its effects evaluator and is silently dropped (only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`). Field-verified 2026-06-12 on v2026.5.26-8.
+- `devin`: emit the same `hookSpecificOutput.additionalContext` shape, documented by Devin's hook overview. Plain-text rejection was field-verified 2026-06-12 on v2026.5.26-8; see `harnesses/devin/references/hook-events.md` for the historical evidence and current official source, not a universal Claude-compatibility claim.
 
 Use harness branches only for harnesses that need different routing, such as OpenCode actions that intentionally suppress stdout.
 
@@ -80,7 +80,7 @@ This matters for OpenCode Froggy because it displays stdout and stderr separatel
 
 ## Hook Visibility Expectations
 
-Codex CLI renders hook execution and context inline. Devin CLI runs hooks silently and renders nothing, even on success; verify via `/hooks`, the CLI logs, or the transcript JSON under `~/.local/share/devin/cli/transcripts/`. Mention this during scaffolding so users do not interpret silence as a broken scaffold.
+In the recorded baseline, Codex CLI rendered hook execution/context inline and Devin CLI ran hooks silently. Verify the installed version via `/hooks`, CLI logs, or transcript JSON under `~/.local/share/devin/cli/transcripts/`; do not interpret TUI silence alone as a broken scaffold.
 
 ## GitHub Copilot
 

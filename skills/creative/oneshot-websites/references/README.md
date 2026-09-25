@@ -4,7 +4,7 @@ Load only the branch needed for the current request.
 
 | File | Load when and why |
 | --- | --- |
-| `references/catalogue-authoring.md` | Adding templates; use it to preserve stable IDs, goal-only prompt style, the silent experience direction, and the universal subject-adapted completion mandate. |
+| `references/catalogue-authoring.md` | Adding templates; preserve stable IDs, goal-only style, silent experience direction, and user-controlled prompt refinement. |
 | `references/execution-protocol.md` | Preparing or dispatching runs; use it for flat run layout, isolation, bounded lead-liveness monitoring, recovery, and rerun decisions. |
 | `references/directional-controls.md` | A prepared game, simulation, or interactive 3D run requires directional verification; use its transient technical prompt to implement the production-state adapter and run the digest-bound browser gate without changing the prose artifact prompt. |
 | `references/wasm-selection.md` | A request or source presents a plausible compiled core or browser-local compute boundary; use it to choose WASM, a bounded spike, or the ordinary web stack without changing the sealed prompt. |

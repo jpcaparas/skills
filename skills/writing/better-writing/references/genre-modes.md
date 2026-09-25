@@ -1,6 +1,6 @@
 # Genre modes
 
-Choose the page shape from the reader's task. Sentence style cannot rescue the wrong genre.
+Choose the page shape from the reader's task and requested form. These shapes are defaults, not compulsory templates; sentence style cannot rescue the wrong genre.
 
 ## Quick chooser
 
@@ -19,7 +19,7 @@ Choose the page shape from the reader's task. Sentence style cannot rescue the w
 | Complete a small interaction | UI copy, error, or notification |
 | Respond or coordinate | email, update, or release note |
 
-For every technical documentation or wiki mode in this table, also read `references/technical-documentation-and-wikis.md`. It supplies the shared style hierarchy, heading, procedure, linking, accessibility, global-audience, and maintenance rules without forcing every page into the same shape.
+For a technical documentation or wiki mode that needs convention-specific guidance, consult `references/technical-documentation-and-wikis.md`. It supplies the shared style hierarchy, heading, procedure, linking, accessibility, global-audience, and maintenance guidance without requiring a read for routine known edits.
 
 ## Guide, tutorial, or runbook
 

@@ -2,6 +2,8 @@
 
 An installable collection of skills I find useful: engineering discipline, testing, agent workflows, writing and research, creative media, practical productivity, and a few playful detours. Each skill keeps its own purpose and detailed instructions while sharing one discovery and validation system.
 
+Skills describe useful outcomes and real boundaries, leaving capable models room to choose their approach. Templates and style defaults are starting points, not universal requirements. When guidance becomes stale, skills consult relevant official or trusted sources and propose a correction to the canonical package rather than silently rewriting installed copies.
+
 The category structure takes inspiration from [Matt Pocock's skills repository](https://github.com/mattpocock/skills), without copying its voice or skill prose.
 
 Contributing? Start with the conventions and validation workflow in [AGENTS.md](AGENTS.md).
@@ -206,7 +208,7 @@ Production skill for building, reviewing, and hardening AI agents, LLM applicati
   <img src="skills/agents/skill-creator-advanced/skill-card.png" alt="16-bit side-scrolling pixel art badge for skill-creator-advanced" width="480">
 </p>
 
-Production-grade skill creator and library curator with precise invocation, branch-driven disclosure, release validation, lifecycle synchronization, and path-aware placement.
+Outcome-led skill creator and library curator with optional blueprints, precise invocation, progressive disclosure, proportional verification, creative-alternative evals, evergreen source recovery, and consistent lifecycle updates.
 
 ### Writing
 
@@ -238,7 +240,7 @@ Production writing system for drafting, rewriting, review, humanisation, and ada
   <img src="skills/writing/client-report-from-commits/skill-card.png" alt="16-bit side-scrolling pixel art badge for client-report-from-commits" width="480">
 </p>
 
-Production skill for turning git commits and diffs since an exact date into a feature-grouped, non-technical client update, with strict date handling and repository checks.
+Production skill for turning git commits and diffs since a resolved date into a feature-grouped client update, with evidence-backed date handling, repository checks, and a format suited to the audience.
 
 #### `repository-readme-writer`
 
@@ -248,7 +250,7 @@ Production skill for turning git commits and diffs since an exact date into a fe
   <img src="skills/writing/repository-readme-writer/skill-card.png" alt="16-bit side-scrolling pixel art badge for repository-readme-writer" width="480">
 </p>
 
-Production skill for creating and improving concise repository READMEs with mandatory quickstarts, stable project orientation, repository-grounded commands, version-source guidance, and agent-safe wording that avoids brittle path inventories.
+Production skill for creating and improving concise repository READMEs with first-use guidance suited to the project, repository-grounded commands, version-source guidance, and agent-safe wording that avoids brittle path inventories.
 
 #### `simplified-technical-english`
 
@@ -280,7 +282,7 @@ Production skill for implementing Google-grounded SEO/GEO optimization in web de
   <img src="skills/research/isitagentready/skill-card.png" alt="16-bit side-scrolling pixel art badge for isitagentready" width="480">
 </p>
 
-Production skill for auditing a live repository against Cloudflare's agent-readiness signals, combining browser-first runtime verification, repository inspection, optional official scan capture, and deterministic markdown report-packet generation.
+Production skill for auditing repository agent readiness against Cloudflare's signals, combining scoped source and runtime evidence, optional official scan capture, and optional deterministic Markdown report packets.
 
 #### `markdown-new`
 
@@ -352,7 +354,7 @@ Production skill for shaping web, app, and desktop interfaces with stronger hier
   <img src="skills/creative/nanobanana-infographic/skill-card.png" alt="16-bit side-scrolling pixel art badge for nanobanana-infographic" width="480">
 </p>
 
-Production skill for Nano Banana 2 infographic prompting and verification covering low-noise prompt variants, default `16:9` review sets, terse in-image copy rules, and live Gemini image API probes for executive and editorial visuals.
+Production skill for Nano Banana 2 infographic prompting and verification, with optional low-noise presets, brief-led format and art direction, and live Gemini image API probes for executive and editorial visuals.
 
 #### `oneshot-websites`
 
@@ -362,7 +364,7 @@ Production skill for Nano Banana 2 infographic prompting and verification coveri
   <img src="skills/creative/oneshot-websites/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-websites" width="480">
 </p>
 
-Production skill for launching one-shot website experiments through fresh isolated subagents, with explicit multi-lead and same-prompt replica fan-out, a catalogue seeded with 100 prompts, lead-owned builder/critic quality gauntlets, coordinator-recorded prompt provenance, slugged timestamp run directories, local-only publication safeguards, and drop-ready static artifacts.
+Production skill for launching one-shot website experiments through fresh isolated subagents, with a 100-prompt catalogue, same-prompt replicas, prompt provenance, and local-only static handoffs. It asks whether to run the existing gauntlet; declining produces generation-only output explicitly marked UNVERIFIED, without artifact or workspace checks.
 
 #### `to-diagram`
 
@@ -436,5 +438,4 @@ Production skill for turning messy travel notes, PDFs, screenshots, shopping ask
   <img src="skills/fun/oneshot-timeline/skill-card.png" alt="16-bit side-scrolling pixel art badge for oneshot-timeline" width="480">
 </p>
 
-Creates accessible, entertaining timeline websites that untangle concepts and historical events through source-backed storytelling, topic-matched pastels and editorial collages. Each topic has one editable workspace and one portable artifact.
-
+Creates accessible, entertaining timeline websites through source-backed storytelling and topic-led visual design, with optional pastel and editorial-collage starting points. Each topic has one editable workspace and one portable artifact.

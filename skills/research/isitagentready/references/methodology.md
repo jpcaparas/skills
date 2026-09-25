@@ -2,11 +2,11 @@
 
 ## Goal
 
-Produce a detailed markdown report packet that explains whether a repository abides by Cloudflare's agent-readiness signals, what was proven in production, what was only found in source, what remains unverified, and what should be fixed first.
+Explain readiness for the signals in scope: what was proven in production, what was only found in source, what remains unverified, and what should be fixed first. Match the user's requested response form; create a report packet only when files are requested.
 
 ## Workflow
 
-Follow these stages in order. Do not skip the browser or live-site step when a production URL and browser tooling are available.
+These stages are a planning guide, not a fixed inspection order. Honor explicit user ordering; otherwise choose the sequence that best resolves uncertainty, and run independent source, HTTP, and browser checks in parallel. Obtain runtime evidence before making runtime claims, regardless of when source inspection happens.
 
 ### Stage 1: Resolve Scope
 
@@ -26,15 +26,15 @@ Follow these stages in order. Do not skip the browser or live-site step when a p
 
 ### Stage 2: Ask for the Production URL
 
-If the user did not supply a production URL and live verification is possible, ask exactly one short question before source inspection:
+If live verification is needed and the production URL is missing or ambiguous, ask a concise question to identify the target. For example:
 
 `What production URL should I audit for this repository?`
 
-Do this before browsing source code when `{{ skill:agent-browser }}` or networked runtime validation is available. The user explicitly asked for the browser step to happen before source analysis.
+Continue independent source work while the target is unresolved. A source-only request does not require a URL. Never guess which app or deployment to scan.
 
-### Stage 3: Create the Report Packet
+### Stage 3: Optionally Create the Report Packet
 
-Run:
+If the user requests report files, the helper can scaffold them:
 
 ```bash
 python3 scripts/create_report_packet.py --repo . --url https://example.com
@@ -51,25 +51,25 @@ The script creates a visible timestamped folder under the repository root by def
 
 Use the printed `output_dir` for any later `scan-results.json` file.
 
-### Stage 4: Browser-First Live Verification
+### Stage 4: Live Verification
 
-If a production URL exists and `{{ skill:agent-browser }}` is available:
+When a production URL and authorized browser tooling are available, use a browser for rendered behavior in scope:
 
-1. Load `{{ skill:agent-browser }}`.
-2. Complete a rendered browser pass before opening source files.
+1. Load the browser tool's harness guidance.
+2. Inspect representative pages; source inspection may guide which ones to check.
 3. Capture evidence for:
    - homepage response behavior
    - visible or hidden `.well-known` routes
    - WebMCP registration
    - auth gating
    - content rendering that may affect markdown or bot access
-4. Finish this pass and record the outcome before moving into repo inspection.
+4. Record observations and browser/version context before claiming browser usability or rendered WebMCP support.
 
-If a browser skill is not available, fall back to the official scan API plus direct HTTP checks.
+If browser access is unavailable or out of scope, use authorized HTTP and source checks, but label browser-dependent behavior unverified. HTTP or scan results do not substitute for a rendered browser usability check.
 
 ### Stage 5: Fetch the Official Scan JSON
 
-If network access is available and you have a production URL, run:
+If an external scan is in scope and authorized, optionally run the helper below. Before submitting private, staging, internal, or credential-bearing URLs, obtain consent to disclose the target to `isitagentready.com`; never send credentials or signed query tokens. Network access alone is not consent.
 
 ```bash
 python3 scripts/scan_site.py --url https://example.com --output <report-dir>/scan-results.json
@@ -82,11 +82,11 @@ Capture at least these fields in the report when present:
 - `nextLevel`
 - `checks.*`
 
-Treat the official scan as runtime truth for deployed behavior. Do not discard it because the repo looks better on paper.
+Keep the URL, scan time, and reported version if available. The scan establishes what the scanner reported at that time, not infallible deployed truth. Compare it with direct HTTP/browser evidence and source; preserve discrepancies and investigate differences in URL, timing, deployment, user agent, or auth rather than overwriting either observation.
 
 ### Stage 6: Inspect the Repository
 
-Use `references/repo-search-playbook.md` to inspect, at minimum:
+Use `references/repo-search-playbook.md` to inspect relevant surfaces (all applicable ones for a full audit):
 
 - static files in public or build output roots
 - route handlers and middleware
@@ -111,16 +111,17 @@ Classify each signal into one of these evidence patterns:
 | Pattern | Meaning | Typical Fix Path |
 | --- | --- | --- |
 | runtime pass + repo evidence | implemented and deployed | no action or low-priority polish |
-| runtime fail + repo evidence | deployment drift or incorrect wiring | inspect deployment config or route exposure |
-| runtime unknown + repo evidence | likely implemented but unverified | request live access or staging verification |
-| runtime fail + no repo evidence | missing implementation | add the feature |
+| runtime fail + repo evidence | possible deployment drift or incorrect wiring | inspect deployment config or route exposure |
+| runtime unknown + repo evidence | source implementation found; deployment unverified | request live access or staging verification |
+| runtime fail + no repo evidence | observed failure; implementation may be absent or external | inspect deployment ownership before proposing a change |
+| scanner and direct runtime checks disagree | differing observations, not a resolved pass/fail | record both with time and request context; recheck the disputed behavior |
 | neutral or not applicable | deliberate omission | document the rationale |
 
 When a split repository exposes backend OpenAPI or MCP configuration but the user-supplied production URL is a separate public web app, record that as `present in source` or `runtime unverified` until the deployed surface exposes or links the capability.
 
 ### Stage 8: Write the Report
 
-Open `templates/agent-readiness-report.md`, then replace its placeholders and comments with real findings.
+Use `references/report-format.md` for an adaptable full-report outline or a focused answer. If using `templates/agent-readiness-report.md`, replace placeholders with real findings and remove sections outside scope, including the scan snapshot when no scan ran.
 
 The final report must:
 
@@ -145,16 +146,19 @@ Avoid vague claims such as "probably supported" or "should work" unless you mark
 
 ## Minimum Deliverable Quality
 
-Do not finish the audit without all of these:
+For a full audit, normally include:
 
 1. Executive summary
 2. Category-by-category findings
 3. Applicability decisions
 4. Repo coverage map
 5. Prioritized remediation
+6. Evidence limits and unresolved disagreements
+
+A scoped answer may combine these into a few paragraphs or a small table. Do not imply uninspected signals were audited.
 
 ## Escalation Rules
 
-- If the repository clearly maps to more than one deployed surface, ask which production URL is authoritative.
+- If live verification is in scope and the repository maps to multiple deployed surfaces, clarify which production URL to assess.
 - If the live site is behind auth and the user does not provide access, continue with repo inspection but mark runtime-dependent signals as `unknown`.
 - If the repo contains deployment config for one platform but production behaves differently, call out the mismatch instead of guessing which source is canonical.

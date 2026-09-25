@@ -23,7 +23,7 @@ hooks/
     └── codex.json             # Codex-specific plan data for this event
 ```
 
-Every official Codex event gets the same `hooks/<event>/script.sh`, `codex.sh`, and `codex.json` shape. Only enabled events are wired into `.codex/hooks.json`.
+Every event in the bundled manifest gets the same `hooks/<event>/script.sh`, `codex.sh`, and `codex.json` shape. Only enabled events are wired into `.codex/hooks.json`. This is the helper's fixed layout, not a complete catalog of later Codex releases or a selected-event-only generation option.
 
 ## Ports And Adapters
 

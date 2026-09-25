@@ -285,25 +285,25 @@
     },
     {
       "id": 24,
-      "name": "verbatim-custom-brief-cannot-bypass-mandate",
+      "name": "verbatim-custom-brief-has-no-compulsory-additions",
       "prompt": "Use this entire brief verbatim: Create a web-based Windows XP clone. Do not rewrite any of those words.",
-      "expected_output": "Preserves the user-authored brief byte-for-byte as the opening block, then appends a subject-specific completion clause that explicitly rejects shortcuts and cookie-cutter shells, states that the skill imposes no token budget limit, and requires Windows XP fidelity down to the smallest meaningful interactions. The combined actual prompt is sent to the lead and preserved exactly in artifact/PROMPT.md.",
+      "expected_output": "Preserves the user-authored brief byte-for-byte as the entire actual prompt, without appending a completion mandate or other creative requirements. Asks for the verification choice before dispatch because none was specified. Safety and provenance remain separate operational guidance.",
       "assertions": [
-        {"text": "Keeps the protected user-authored brief byte-for-byte as its own opening block", "type": "verification"},
-        {"text": "Appends the mandatory no-shortcuts, anti-cookie-cutter, no-skill-imposed-token-budget, full-fidelity requirements", "type": "structural"},
-        {"text": "Does not treat a verbatim request as permission to omit the completion mandate", "type": "negative"}
+        {"text": "Keeps the protected user-authored brief byte-for-byte as the entire actual prompt", "type": "verification"},
+        {"text": "Asks whether to run the gauntlet before dispatch", "type": "functional"},
+        {"text": "Does not append skill-authored requirements or weaken provenance", "type": "negative"}
       ],
       "tags": ["custom-brief", "completion-mandate", "exact-prompt", "conflict"]
     },
     {
       "id": 25,
-      "name": "verbatim-no-additions-conflicts-with-mandate",
+      "name": "verbatim-no-additions-remains-authoritative",
       "prompt": "Dispatch exactly this sentence and nothing else: Create a web-based Windows XP clone. Do not append, prepend, or add any other text under any circumstances.",
-      "expected_output": "Stops before preparing or dispatching a one-shot and reports that the request is incompatible with the skill's mandatory completion mandate. It does not alter the protected sentence, silently append forbidden text, or omit the no-shortcuts, anti-cookie-cutter, no-skill-imposed-token-budget, full-fidelity contract.",
+      "expected_output": "Accepts the exact-prompt constraint, asks for the verification choice separately, and after that choice dispatches the unchanged sentence as the actual prompt with safety and provenance outside it. It does not invent a conflict with creative-direction defaults.",
       "assertions": [
-        {"text": "Recognizes that an absolute no-additions instruction conflicts with the mandatory prompt contract", "type": "functional"},
-        {"text": "Stops before lead dispatch and artifact generation", "type": "structural"},
-        {"text": "Does not silently drop the completion mandate", "type": "negative"},
+        {"text": "Treats an exact no-additions request as authoritative for the actual prompt", "type": "functional"},
+        {"text": "Records the verification choice in the operational dispatch and immutable receipt", "type": "structural"},
+        {"text": "Does not append the completion mandate or invent a prompt conflict", "type": "negative"},
         {"text": "Does not violate the user's exact no-additions instruction", "type": "negative"}
       ],
       "tags": ["custom-brief", "completion-mandate", "exact-prompt", "conflict", "negative"]
@@ -547,7 +547,7 @@
       "id": 45,
       "name": "gauntlet-descendants-remain-experiment-isolated",
       "prompt": "Run two one-shots at once: a lunar greenhouse and a harbour control room. Each lead uses builders and critics. Do not let either result bias the other.",
-      "expected_output": "Each experiment keeps one fresh owning lead and an isolated descendant tree. The coordinator privately assigns mutually exclusive design territories, and builders and critics receive only their own prepared prompt, territory, references, bar, run paths, artifact, and evidence; no sibling design direction, prompt, artifact, quality score, or critic result enters the other run.",
+      "expected_output": "Each experiment keeps one fresh owning lead and an isolated descendant tree. The requested critics explicitly select gauntlet mode. Builders and critics receive only their own prepared prompt, references, bar, run paths, artifact, and evidence; no sibling design direction, prompt, artifact, quality score, or critic result enters the other run. No design territories are imposed unless variations are requested.",
       "assertions": [
         {"text": "Maintains two disjoint lead-owned descendant trees and run namespaces", "type": "structural"},
         {"text": "Critics inspect only their assigned experiment's territory, artifact, and bar", "type": "functional"},
@@ -583,11 +583,11 @@
       "id": 48,
       "name": "three-identical-libreoffice-replicas",
       "prompt": "Create three replicas of LibreOffice Writer in the browser with multiple lead subagents. Use the same brief for all three.",
-      "expected_output": "Crafts and seals one actual prompt, reserves three separate slugged timestamp runs, and dispatches three fresh top-level leads. All three autonomous-one-shot runs preserve byte-identical PROMPT.md content, matching digests and byte counts, and null priorRun values. Each lead privately receives a mutually exclusive positive territory for discretionary design choices while LibreOffice traits fixed by the source remain shared fidelity constraints.",
+      "expected_output": "Asks for the verification choice, then crafts and seals one actual prompt, reserves three separate slugged timestamp runs, and dispatches three fresh top-level leads. All three autonomous-one-shot runs preserve byte-identical PROMPT.md content, matching digests and byte counts, and null priorRun values. No design territories or forced differences are added to identical replicas; source fidelity and sibling blindness remain intact.",
       "assertions": [
         {"text": "Creates three distinct top-level runs and three fresh lead owners", "type": "structural"},
         {"text": "Uses one exact prompt byte sequence and matching digest for every replica", "type": "verification"},
-        {"text": "Assigns each lead only its own private design territory without leaking sibling choices", "type": "functional"},
+        {"text": "Does not impose design variations or leak sibling context", "type": "negative"},
         {"text": "Does not turn the replicas into descendants, prompt variants, or reruns", "type": "negative"}
       ],
       "tags": ["multiple", "replicas", "prompt-provenance", "isolation", "regression"]
@@ -596,11 +596,11 @@
       "id": 49,
       "name": "multiple-leads-defaults-to-two",
       "prompt": "Build a browser-based terminal emulator with multiple lead subagents.",
-      "expected_output": "Interprets the unnumbered word multiple as two independent experiment instances, seals the one terminal-emulator prompt once for both, assigns two private mutually exclusive design territories, reserves two sibling runs, and dispatches two fresh top-level leads. Inner builders or critics do not count toward the requested lead total.",
+      "expected_output": "Interprets the unnumbered word multiple as two independent experiment instances, asks for verification choice, seals the one terminal-emulator prompt once for both, reserves two sibling runs, and dispatches two fresh top-level leads without invented design variants. Inner builders or critics do not count toward the requested lead total.",
       "assertions": [
         {"text": "Defaults the explicit but unnumbered outer lead count to two", "type": "functional"},
         {"text": "Uses matching sealed prompt bytes and digests because no variants were requested", "type": "verification"},
-        {"text": "Gives each lead its own run, workspace, temporary directory, artifact, receipt, and private design territory", "type": "structural"},
+        {"text": "Gives each lead its own run, workspace, temporary directory, artifact, and receipt without compulsory design territories", "type": "structural"},
         {"text": "Keeps each lead blind to the other's territory, workspace, artifact, critic, and outcome", "type": "negative"},
         {"text": "Does not satisfy the request with descendants inside one owning lead", "type": "negative"}
       ],
@@ -610,12 +610,12 @@
       "id": 50,
       "name": "multiple-workspaces-mean-sibling-runs",
       "prompt": "Make multiple workspaces for independent replicas of a browser-based paint application.",
-      "expected_output": "Creates two sibling run directories directly beneath the selected output root, each with one workspace, one fresh lead, and one private mutually exclusive design territory. It does not create workspace/a and workspace/b inside a shared run, and it keeps the replica prompt bytes identical while keeping sibling design context hidden.",
+      "expected_output": "Asks for verification choice, then creates two sibling run directories directly beneath the selected output root, each with one workspace and one fresh lead. It does not invent design territories, create workspace/a and workspace/b inside a shared run, or alter the identical replica prompt bytes. Sibling design context remains hidden.",
       "assertions": [
         {"text": "Maps multiple workspaces to two top-level experiment runs", "type": "functional"},
         {"text": "Preserves byte-identical prompts across the repeated single brief", "type": "verification"},
-        {"text": "Keeps each workspace and private design territory inside its own sibling run", "type": "structural"},
-        {"text": "Produces material separation across discretionary composition, navigation, typography, and motion choices", "type": "functional"},
+        {"text": "Keeps each workspace inside its own sibling run", "type": "structural"},
+        {"text": "Does not force diversity onto identical replicas", "type": "negative"},
         {"text": "Does not nest several requested workspaces beneath one run", "type": "negative"}
       ],
       "tags": ["multiple", "workspaces", "replicas", "layout", "regression"]
@@ -1331,6 +1331,65 @@
         {"text": "Uses the normal two-observation threshold only if exposed activity later disappears", "type": "structural"}
       ],
       "tags": ["subagents", "liveness", "long-running-tools", "false-positive", "negative"]
+    },
+    {
+      "id": 107,
+      "name": "ask-for-gauntlet-before-new-dispatch",
+      "prompt": "Build a browser sculpture garden with one fresh lead.",
+      "expected_output": "Asks whether to run the built artifact and workspace through the existing battery of tests (the gauntlet) or generate only. Waits for an explicit choice before reservation or dispatch; silence is not consent.",
+      "assertions": [
+        {"text": "Asks the verification question before dispatching a new build", "type": "functional"},
+        {"text": "Does not treat silence as gauntlet consent or as an opt-out", "type": "negative"}
+      ],
+      "tags": ["verification", "consent", "regression"]
+    },
+    {
+      "id": 108,
+      "name": "generation-only-directional-game-never-tests",
+      "prompt": "Build a browser racing game with WASD and arrow controls. No gauntlet or verification; just generate it.",
+      "expected_output": "Uses --verification none without asking again, seals the selection in receipt and dispatch, and generates/exports without any artifact or workspace checks. Creates no technical prompt or probe adapter, invokes no browser, screenshots, tests, critics, directional helper, static scanner, or repair loop, and safely cleans scratch before reporting UNVERIFIED, not OK.",
+      "assertions": [
+        {"text": "Records none in the immutable receipt and every descendant dispatch", "type": "structural"},
+        {"text": "Does not create or require TECHNICAL_PROMPT.md or a probe adapter", "type": "negative"},
+        {"text": "Does not run artifact/workspace verification, including validate_catalog as a completion gate", "type": "negative"},
+        {"text": "Reports UNVERIFIED with staticDeploymentVerified false, verification [], and qualityGauntlet null", "type": "disclosure"}
+      ],
+      "tags": ["verification", "none", "directional-controls", "regression"]
+    },
+    {
+      "id": 109,
+      "name": "generation-only-public-get-export-is-not-proof",
+      "prompt": "Generate a museum collection browser with public GET data, local snapshot fallbacks, and a WASM parser. Skip all verification.",
+      "expected_output": "Builds the requested deliverables without testing fallback paths, profiling WASM, linting, typechecking, scanning files, browser inspection, or critic review. Essential compilation/export may run but is never called behavioral proof. The sealed brief contains experience requirements, not a hidden live-success or fallback testing mandate. Output is UNVERIFIED.",
+      "assertions": [
+        {"text": "Keeps testing out of both sealed experience brief and generation-only operational tasks", "type": "negative"},
+        {"text": "Allows essential compilation/export but does not claim it verifies behavior", "type": "disclosure"},
+        {"text": "Preserves prompt provenance, single writer, scope, and safe cleanup without scanning the artifact", "type": "structural"}
+      ],
+      "tags": ["verification", "none", "public-get", "wasm", "regression"]
+    },
+    {
+      "id": 110,
+      "name": "recovery-preserves-receipt-verification-choice",
+      "prompt": "Resume this interrupted run. Its immutable receipt says verificationMode none; the worker report now says gauntlet.",
+      "expected_output": "Treats the mode mismatch as a metadata recovery blocker, never reinterprets it as consent, and preserves the same run and single-writer boundary. Once metadata agrees with the receipt, recovery continues generation only with no adapter or verification. Historical missing mode remains gauntlet, not none.",
+      "assertions": [
+        {"text": "Rejects worker-only mode changes without inspecting artifact behavior", "type": "negative"},
+        {"text": "Preserves receipt choice and same-run single-writer recovery", "type": "structural"},
+        {"text": "Never interprets a historical missing mode as an opt-out", "type": "negative"}
+      ],
+      "tags": ["verification", "recovery", "provenance", "negative"]
+    },
+    {
+      "id": 111,
+      "name": "explicit-gauntlet-keeps-existing-pipeline",
+      "prompt": "Build a browser racing game and run the full existing gauntlet.",
+      "expected_output": "Uses --verification gauntlet without asking again. Preserves the existing quality bar, mobile and directional checks, critic routing, production-state adapter, coordinator browser measurement, static validation, and receipt-bound evidence gates. No worker-only downgrade can turn missing evidence into UNVERIFIED completion.",
+      "assertions": [
+        {"text": "Keeps opted-in gauntlet measurement and completion gates unchanged", "type": "verification"},
+        {"text": "Does not ask a redundant selection question or downgrade to none", "type": "negative"}
+      ],
+      "tags": ["verification", "gauntlet", "compatibility", "regression"]
     }
   ]
 }

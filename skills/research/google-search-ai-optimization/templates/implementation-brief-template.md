@@ -1,5 +1,7 @@
 # Google Search AI Optimization Implementation Brief
 
+Optional full-audit scaffold. Keep only sections useful to the requested scope; a small fix needs neither this brief nor a myth report.
+
 ## Scope
 
 - Site/repo:
@@ -27,7 +29,9 @@
 
 ## Myth Filter
 
-Rejected tactics:
+Use only when an unsupported tactic was proposed or found. Otherwise omit this section.
+
+Relevant rejected tactics:
 
 - `llms.txt` as a Google Search requirement:
 - AI-only markup:
@@ -36,6 +40,8 @@ Rejected tactics:
 - inauthentic mentions:
 
 ## Implementation Sequence
+
+Select and order applicable work rather than treating this list as mandatory:
 
 1. Fix eligibility blockers.
 2. Fix shared metadata/rendering/canonical abstractions.

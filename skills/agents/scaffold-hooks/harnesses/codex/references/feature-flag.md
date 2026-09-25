@@ -10,7 +10,7 @@ Official sources:
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/lib.rs`
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/features/src/legacy.rs`
 
-As of the 2026-05-26 verification pass with Codex CLI `0.133.0`, `codex features list` reports `hooks stable true`, and source maps legacy `codex_hooks` to the same feature. Hooks are enabled by default unless config, requirements, or policy turns them off. Write canonical `[features].hooks = true` when editing config.
+In the historical 2026-05-26 verification pass with Codex CLI `0.133.0`, `codex features list` reported `hooks stable true`, and source mapped legacy `codex_hooks` to the same feature. That version is not a perpetual requirement. Inspect the installed CLI's effective state rather than assuming its defaults; use canonical `[features].hooks = true` for an authorized activation change.
 
 ## What To Inspect First
 
@@ -48,6 +48,8 @@ Use `--scope user` when:
 - you want the feature available across many projects
 
 ## Enabling The Feature
+
+Obtain authorization for the selected scope before changing activation, trust, or user/global settings. If policy disables hooks, report that constraint rather than overriding it. Read-only diagnosis does not require enabling hooks; the scaffold helper can use `--ensure-feature off` to leave activation unchanged.
 
 Enable project scope:
 

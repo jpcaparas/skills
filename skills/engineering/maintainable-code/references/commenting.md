@@ -57,7 +57,7 @@ Do not hide bad names behind comments. Rename first when a better name can carry
 
 Do not concentrate all documentation at the class or module header. Put context at the smallest level that will help the next maintainer make the right change.
 
-Use this placement ladder:
+Choose the smallest useful scope; this is a placement guide, not a coverage checklist:
 
 1. **Module or class docblock**: explain the responsibility, lifecycle, ownership boundary, or public contract.
 2. **Method or function docblock**: explain inputs, outputs, side effects, thrown errors, idempotency, retries, or framework hooks.
@@ -65,7 +65,7 @@ Use this placement ladder:
 4. **Branch or block comment**: explain a local invariant, surprising condition, multi-step phase, workaround, or external contract.
 5. **Inline trailing comment**: use sparingly for short source notes such as a protocol constant, status code, or required version.
 
-Prefer adding the useful comments first and letting the user or reviewer prune them. It is easier to remove a comment that repeats obvious structure than to recover missing context about why a block exists.
+Comment only on non-obvious rationale, invariants, or constraints that names, types, and structure cannot carry. Do not add comments for the user or reviewer to prune later.
 
 Example property and method docblocks:
 
@@ -88,7 +88,7 @@ async function requestWithRetry(policy: RetryPolicy): Promise<Response> {
 
 ## Source-Backed Claims
 
-When a comment, docblock, review note, or final answer makes a claim about a language, framework, runtime, or official convention, check whether official documentation can back it. Link the official source when the claim affects maintainability, correctness, security, or future upgrades.
+Verify uncertain, version-sensitive, or consequential claims about a language, framework, runtime, or convention against official documentation for the project's actual stack. Known basics do not need fresh research by default. Link the source when it helps a maintainer verify the claim or when the user explicitly requests official links.
 
 Good source-backed comments:
 
@@ -115,7 +115,7 @@ Avoid source-shaped decoration. Do not add a link just because a source exists; 
 
 Write comments for a junior developer with solid fundamentals and limited system context. Keep the wording concrete, local, and scan-friendly.
 
-Use this shape for longer comments:
+For longer comments, use whichever structure makes the rationale easiest to follow. One useful shape is:
 
 1. Start with the constraint or reason.
 2. Name the moving parts in the order the code uses them.
@@ -134,8 +134,8 @@ amount = parse_export_amount(row["amount"])
 
 Keep comments digestible:
 
-- Prefer two or three short sentences over one dense paragraph.
-- Use bullet points when explaining multiple reasons, phases, or failure modes.
+- Use as much explanation as the non-obvious rationale needs, without a sentence quota.
+- Use bullet points when they clarify multiple reasons, phases, or failure modes.
 - Name domain concepts directly instead of using vague words like "stuff", "things", or "logic".
 - Avoid unexplained acronyms unless the surrounding code already defines them.
 

@@ -1,6 +1,6 @@
 # Simplified Technical English
 
-Production skill for rewriting or auditing selected technical procedures, descriptions, and safety instructions using ASD-STE100 Issue 9 constraints without changing technical meaning or protected literals.
+Production skill for rewriting or auditing selected technical procedures, descriptions, and safety instructions without changing technical meaning or protected literals. Issue 9 is the bundled ASD-STE100 baseline; verification follows the user's governing issue and available authoritative material.
 
 ## What it covers
 

@@ -31,4 +31,4 @@ Codex loads `hooks.json` next to every active config layer. Project-local hooks 
 
 ## Docs Drift Rule
 
-Before every real scaffold, verify the live official hook docs, compare them with `assets/hook-events.json`, re-check schemas and runtime source for parser changes, and update manifest inputs first if anything changed.
+For uncertain or changing event contracts, compare relevant official release docs and version-matched schemas/source with `assets/hook-events.json`. Follow the root `SKILL.md` maintenance route to propose canonical input changes; edit the source package only when in scope, not an installed copy. Stable local repairs need no full docs sweep.

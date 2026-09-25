@@ -2,7 +2,7 @@
 
 Production-grade writing and revision skill for prose that must stay accurate, useful, and recognisably owned by its writer.
 
-It supports six jobs: drafting, rewriting, line editing, review, humanisation, and adaptation. The workflow protects facts and exact literals, fixes structure before style, restores voice without invented personality, and finishes with explicit fidelity and quality gates.
+It supports six jobs: drafting, rewriting, line editing, review, humanisation, and adaptation. Select passes and checks for the edit's scope and risk while preserving facts, exact literals, uncertainty, and voice. Ledgers and diagnostics are optional aids, not a ritual for every sentence.
 
 ## What it adds
 
@@ -13,7 +13,7 @@ It supports six jobs: drafting, rewriting, line editing, review, humanisation, a
 - paragraph, sentence, evidence, voice, and humanisation passes with observable stop conditions
 - worked technical, editorial, memo, product, email, UI, and reflective rewrites that remove formulae by rebuilding the thought
 - relation-first em-dash, semicolon, and colon transformations with natural sentence-flow patterns
-- a researched, searchable formulaic-language catalogue with remove, rewrite, review, and protect actions
+- a researched, searchable formulaic-language catalogue with contextual diagnostics, not word or rhetoric bans
 - meaning-first rewrites across vague change frames, canned significance, benefit fog, generic authority, assistant residue, and formulaic openings or endings, without synonym swapping
 - an extensible machine-readable corpus and optional Python scanner with literal, technical, quotation, and locality protections
 - release-grade behavioural, routing, edge, disclosure, and near-miss evals

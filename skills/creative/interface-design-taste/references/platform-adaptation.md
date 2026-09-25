@@ -2,6 +2,8 @@
 
 The same visual language should not behave the same way everywhere.
 
+The examples below are starting points, not prescribed product aesthetics. Dark, bold, eclectic, or decorative directions can work on any platform when they preserve readable content, accessible interaction, and the user's task.
+
 ## Web Marketing
 
 Primary user mode:
@@ -96,7 +98,7 @@ When the same product spans web and desktop:
 - keep the core type and color logic consistent
 - let density, chrome, and interaction depth diverge
 - do not force identical navigation if the environment changes
-- let desktop expose more controls while web stays more guided
+- expose controls according to the workflow and available space, not a web/desktop stereotype
 
 ## Quick Mapping
 
@@ -111,4 +113,3 @@ When the same product spans web and desktop:
 
 - `style-families.md` for which family to start from
 - `layout-and-rhythm.md` for pane and grid behavior
-

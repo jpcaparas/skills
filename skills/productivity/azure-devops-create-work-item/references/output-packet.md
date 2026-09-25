@@ -15,9 +15,9 @@ Each packet contains:
 
 ## Workflow
 
-1. Read the source context and decide whether the item should remain the default `Product Backlog Item` or become an explicit `Epic`, `Feature`, `User Story`, `Task`, `Issue`, or `Bug`.
+1. Read the source context and choose one primary type using supplied or observed process evidence. Use `Product Backlog Item` as the fallback when neither type nor process is known.
 2. Run `python3 scripts/create_work_item_packet.py --title "<title>"` from the current working directory for the default PBI.
-3. Add `--type <type>` only when the user specifies or clearly needs another work item type.
+3. Pass `--type <type>` and `--process <process>` when the project process is known; the process option records metadata but does not infer type. Report unsupported types rather than inventing helper options.
 4. Add `--context-file /path/to/file.md` when the source notes already exist on disk.
 5. If the packet is being drafted inside a repository, inspect the codebase before replacing placeholders.
 6. Open the generated `work-item.md` and replace the placeholders with a final audience-safe draft.
@@ -34,6 +34,7 @@ Each packet contains:
 ## Writing Contract
 
 - Apply the style precedence and field-level rules in `references/writing-style.md`. Azure Boards semantics, the exact packet schema, project terminology, requested locale, and exact literals override generic style preferences.
+- The labels and order below are the helper's default packaging contract, not a prose template; change that shape only when the user explicitly requests it. Adapt wording and detail within sections freely while preserving facts and type semantics.
 - Do not use `#`, `##`, or `###` headings in `work-item.md` outside a detailed manual QA `Test Scenario` block.
 - Use bold section labels in `work-item.md`.
 - Use these exact labels for non-bug drafts, in this order:
@@ -52,12 +53,12 @@ Each packet contains:
 - Put prerequisites and conditions before the actions that depend on them.
 - Make acceptance criteria observable and testable, but add only conditions supported by the source, repository evidence, or an explicit user decision. Use `must` for requirements, `can` for capabilities, and `might` for possibilities; avoid ambiguous `should` in pass-or-fail criteria.
 - Use backticks for code identifiers, file paths, commands, configuration keys, and API elements. Use descriptive Markdown link text when the renderer supports it.
-- Default unspecified work to `Product Backlog Item`; use `Bug`, `Feature`, `Task`, and other types only when specified or clearly required.
-- `Feature` drafts should keep `Problem` and `Outcome` to one or two short paragraphs each, with no more than five high-level actions.
+- Use supplied or observed process evidence before the `Product Backlog Item` fallback; a known Agile backlog request uses `User Story` even without an explicit type name.
+- Keep `Feature` drafts outcome-focused, with enough high-level actions to describe the capability without becoming an implementation diary.
 - `Bug` drafts must include simple numbered `**Reproduction Steps**` that QA, product, or developers can follow without interpreting dense prose.
 - `User Story` drafts should describe who needs what and why before implementation notes.
 - `Task` drafts should stay execution-focused and should not masquerade as user-facing value.
-- `Developer Notes` is for implementation constraints, dependencies, rollout notes, environment notes, and known unknowns. Keep it bullet-based.
+- `Developer Notes` is for implementation constraints, dependencies, rollout notes, environment notes, and known unknowns. Bullets often help, but choose the clearest form.
 - `Test Scenario` is for QA-facing validation notes. If it contains manual QA scenarios, use the Manual QA Scenario Contract below instead of generic bullets.
 
 ## Manual QA Scenario Contract
@@ -68,18 +69,18 @@ For `work-item.md`, keep the existing `**Test Scenario**` section label and star
 
 Rules:
 
-1. Produce 4-6 targeted scenarios only when the source supports a complete manual QA section. Include one happy path, then one scenario for each defect, guard, or regression risk the change introduces. Do not invent risks to reach the count; if fewer than four scenarios can be grounded, ask for the missing detail or record the gap instead of presenting the section as final.
-2. Write UI-driven steps in plain language. Say what a person does in the browser, such as "click Pay rapidly several times before the screen changes". Do not name methods, endpoints, database columns, queues, or flags unless staging genuinely needs developer support.
+1. Choose risk-based scenarios: cover the happy path and the material defects, guards, or regressions introduced by the change. Use the number needed for that coverage, with no minimum, maximum, or filler. Ask or record a gap only when missing evidence prevents a meaningful check, not because a count is low.
+2. Match steps to the surface under test. Use plain UI actions for browser flows, and documented requests, commands, jobs, or inspectable state for API/backend work. Technical identifiers are useful when the tester needs them; do not invent a UI path for headless behaviour.
 3. Make scenario titles state the behaviour being protected in sentence case. Use "Double-clicking Pay does not charge twice", not "Payment flow test 2".
-4. Give each scenario a short `**Steps:**` list and `**Expected:**` list. Expected outcomes must be observable: what the customer sees, what appears in an admin or third-party dashboard, what email arrives, or what a support screen shows. Bold the key observable, such as `exactly **one** charge appears in the Stripe dashboard`.
-5. Put verification aids first. Start with a short `Test environment notes:` block with concrete test data and the dashboards, admin pages, or log screens QA should keep open to confirm side effects.
-6. Be honest when the UI cannot create the required state. Put `(needs dev support)` in the scenario title, describe the condition and staging before the UI steps in one sentence, and include the counter-check where relevant, such as confirming the guard still allows a fresh non-stale transaction.
+4. Make actions and expected results distinct; `**Steps:**` and `**Expected:**` lists are a useful default. Expected outcomes must be observable, such as a UI state, response, persisted record, documented log, dashboard entry, or email. Highlight the decisive signal when helpful.
+5. Put verification aids first. Start with a short `Test environment notes:` block containing known prerequisites, safe test data, and available verification surfaces. Mark missing essentials rather than inventing test infrastructure.
+6. Mark `(needs dev support)` only when a tester genuinely needs developer help to stage a state. Explain the supported setup before the dependent steps and include a counter-check where relevant. Do not prescribe arbitrary mocks or staged failures merely to fill a section.
 7. Call out non-obvious verification traps. If pass and fail look identical on screen, tell QA where the real signal is.
 8. Use only supplied or repository-backed verification surfaces. Do not invent an admin page, dashboard, log view, test clock, dependency failure, or recovery path. Mark the missing verification mechanism and request it when needed.
-9. Use plain Markdown that pastes cleanly into Azure DevOps: `##` scenario headings, `---` separators, numbered steps, and bulleted expectations. Do not use HTML or nested tables.
-10. Use NZ English throughout, including spellings such as behaviour, authorised, cancelled, and enrolment where those words appear.
+9. Use plain Markdown that pastes cleanly into Azure DevOps. `##` scenario headings, separators, numbered steps, and bulleted expectations are a useful pattern, not required prose styling. Do not use HTML or nested tables.
+10. Use NZ English by default, including behaviour, authorised, cancelled, and enrolment where appropriate. Follow the user's or project's locale when specified; preserve exact UI labels and literals regardless of spelling.
 
-Trimmed example:
+Trimmed UI example; adapt the number of scenarios, test surface, and prose to the actual change:
 
 ```markdown
 # <Ticket> - <Change summary>: Manual QA Scenarios
@@ -133,7 +134,7 @@ When run inside a project or repository, investigate the structure before finali
 1. Check repo state and shape: `git status --short`, `rg --files`, manifests, app entry points, routes, services, tests, migrations, and configuration.
 2. Search for terms from the title, user flow, error text, entity names, API names, UI labels, and likely module names.
 3. Read the smallest relevant files needed to identify likely ownership and implementation surfaces.
-4. Add concise file references and up to 2-4 short snippets to `**Developer Notes**` when they would help the implementer or reviewer.
+4. Add concise file references and short snippets to `**Developer Notes**` only when they help the implementer or reviewer. Use the useful number, including zero; do not add evidence-shaped filler.
 5. Put longer code excerpts, search notes, dead ends, and assumptions in `context.md` under `**Codebase investigation**`.
 6. If no relevant code is found, state that in `context.md`; do not invent a code path.
 

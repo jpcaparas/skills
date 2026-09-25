@@ -44,9 +44,18 @@ or co-locate a short rule here.
 
 {{EVIDENCED_GOTCHAS_OR_LINK}}
 
+## When Guidance Fails
+
+Check the installed tool's help and relevant official version-matched docs when
+an example fails or lacks a consequential detail. Validate a compatible command
+in a temporary workspace or supported dry run without expanding authority.
+Report unresolved syntax instead of guessing. Propose a sourced correction to
+the canonical skill, including a reproducer; do not silently edit an installed
+copy or publish it.
+
 ## Completion Gate
 
-Complete when command syntax matches the pinned command surface, the primary
+Complete when command syntax matches the supported command surface, the primary
 observable passes at the safest non-mutating rung available, and any authorized
 effect is explicit and independently verified.
 

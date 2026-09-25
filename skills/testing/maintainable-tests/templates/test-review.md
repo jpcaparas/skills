@@ -1,5 +1,7 @@
 # Maintainable Test Review
 
+Optional scaffold. Adapt to the requested review and omit sections that add no consequential evidence.
+
 ## Behavior Story
 
 - What behavior should the tests document?

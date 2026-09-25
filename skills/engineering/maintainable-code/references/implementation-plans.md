@@ -6,11 +6,11 @@ Use this when writing a plan for another agent, teammate, or future session.
 
 The plan is a maintenance artifact. It must be executable by someone who has not seen the conversation and cannot infer your unstated intent.
 
-This adapts the strongest idea from shadcn/improve: a capable agent should spend its judgment on understanding, prioritizing, and specifying; the executor should receive a self-contained plan with enough context to avoid improvising.
+Give the executor enough context to preserve the outcome and constraints, while leaving local implementation choices to their judgment.
 
-## Required Plan Sections
+## Optional Plan Structure
 
-Use this structure unless the user requested another format:
+Scale the plan to uncertainty and risk. The following sections are prompts for a complex handoff, not eight mandatory headings. A small change may need only its scope, intended outcome, and verification evidence.
 
 ```markdown
 # Plan: <specific outcome>
@@ -56,22 +56,21 @@ Use this structure unless the user requested another format:
 
 ## Plan Quality Gate
 
-A plan is not ready if:
+A plan should provide enough evidence to act without guessing about consequential decisions:
 
-- It refers to "as discussed" or "the above pattern."
-- It omits exact file paths.
-- It tells the executor to "clean up" without a boundary.
-- It lacks verification commands.
-- It lacks stop conditions for ambiguous discoveries.
-- It assumes tests exist without checking.
-- It asks for broad abstraction before proving real variation.
+- State the outcome and scope without relying on "as discussed."
+- Identify affected files or symbols precisely enough to locate the work; do not invent paths not yet inspected.
+- Define observable completion criteria and relevant checks, with exact commands when known.
+- Note material uncertainty, permission limits, and discoveries that require stopping.
+- Check existing coverage before prescribing new tests or characterization.
+- Justify new abstraction with real variation or a boundary to protect.
 
 ## Dependency Ordering
 
-Put risky refactors behind safety work:
+Put risky refactors behind adequate verification. Reuse existing tests; add characterization only where important behavior is unprotected. Order implementation steps by real dependencies rather than requiring every phase below:
 
 1. Establish or repair verification baseline.
-2. Add characterization tests around current behavior.
+2. Fill consequential coverage gaps around current behavior.
 3. Rename and isolate obvious concepts.
 4. Move behavior behind clearer boundaries.
 5. Replace or remove old paths.

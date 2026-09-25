@@ -4,7 +4,7 @@ Production skill for turning git history since an exact date into a copy-pastabl
 
 ## What It Covers
 
-- Exact-date intake with a mandatory stop on ambiguous dates
+- Date-range resolution from reliable context, with questions only for genuinely ambiguous boundaries
 - Git repository detection in the current directory or via an explicit path
 - Deterministic commit collection through `scripts/collect_git_changes.py`
 - Non-technical, feature-based accomplishment summaries for clients and stakeholders

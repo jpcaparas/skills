@@ -21,7 +21,7 @@ Create or improve repository READMEs that help humans and agents understand the 
 What kind of README work is this?
 
 - Creating a new README from a repository
-  Read `references/repository-audit.md`, then use `templates/repository-readme.md`.
+  Inspect relevant repository evidence; consult `references/repository-audit.md` and adapt `templates/repository-readme.md` when useful.
 
 - Improving an existing README
   Read `references/rewrite-patterns.md`, then preserve useful sections and remove stale or overly specific material.
@@ -30,7 +30,7 @@ What kind of README work is this?
   Read `references/quickstart-design.md` and make the quickstart the shortest verified path from clone to useful local feedback.
 
 - Reviewing README quality without editing yet
-  Run `python3 scripts/repo_readme_probe.py <repo>` and use `templates/readme-review.md`.
+  Review the requested scope against repository evidence. The probe and `templates/readme-review.md` are optional aids for broader reviews, not prerequisites for a wording or link review.
 
 - Unsure which path applies
   Start with `references/foundations.md`, then inspect the repository before writing.
@@ -49,15 +49,15 @@ What kind of README work is this?
 ## Operating Contract
 
 1. Inspect before writing. A README that guesses commands, package managers, ports, or deployment shape is worse than no README.
-2. Write for first successful use. The reader needs purpose, quickstart, local development, configuration, quality checks, and where to look next.
-3. Prefer stable concepts over fragile paths. Name apps, services, packages, and boundaries by role; avoid directory tours unless the layout is the user-facing interface.
-4. Avoid pinned tool versions in prose. Point readers to the repository's version manager, lockfile, manifest, or CI config when exact versions matter.
+2. Write for the reader's first useful action. Apps may need runnable setup; libraries need usage, datasets need access and schema, and archived repositories may need status and migration guidance instead.
+3. Explain roles and boundaries, using verified stable source paths when they help navigation. Avoid exhaustive directory tours, not useful paths.
+4. Document supported version ranges when useful. Prefer manifests, lockfiles, version manager files, or CI for exact pins; repeat an exact requirement in prose when it materially helps and link its source of truth.
 5. Keep examples executable and few. A README should show the happy path and the main verification command, not every script in the project.
 6. Make it safe for AI agents. Do not over-constrain future agents with brittle rules, exhaustive inventories, or stale assumptions that they may follow verbatim.
 
 ## Default README Shape
 
-Use this shape unless the repository clearly calls for a different one.
+For a runnable application, this is a starting point, not a required nine-section structure. Follow the user's requested form and include only sections useful to this repository.
 
 1. Title
 2. One-sentence project summary
@@ -79,11 +79,11 @@ Say what the project is and what it is for in one or two sentences. Do not open 
 
 ### Quickstart
 
-Always include a quickstart. It should move from install to running to a visible verification point. If configuration is required, include only the minimum local setup.
+Include a quickstart when first use involves executable steps. It should lead to a visible verification point using evidence-backed commands, with only necessary configuration. Use an import example for a library or access/schema guidance for data when that better serves the reader. Do not invent commands or a build system for a static or archived repository.
 
 ### Project Shape
 
-Explain boundaries and responsibilities at a level that survives file moves. Prefer "the CMS owns content and the website reads through server-side API routes" over a tree of paths.
+Explain boundaries and responsibilities. A sentence such as "the CMS owns content and the website reads through server-side API routes" can include stable source links that help readers find those components.
 
 ### Configuration
 
@@ -100,10 +100,14 @@ Document the deployment model and required services. Avoid provider-specific min
 ## Templates
 
 - `templates/repository-readme.md`
-  Use as the default shell for new READMEs.
+  Optional application-oriented starter; omit, reorder, or replace irrelevant sections.
 
 - `templates/readme-review.md`
-  Use when reporting README issues before editing.
+  Optional review outline; keep findings within the requested scope.
+
+## When guidance is insufficient
+
+When guidance is stale, incomplete, or conflicts with a repository, inspect its manifests, source, tests, and maintained docs first. Consult current official tool documentation only for unresolved behavior. Use compatible verified commands within the user's authority, distinguish inspected from executed checks, and disclose gaps. Propose a canonical skill correction with the source and an example or reproducible check; do not silently change an installed copy or browse for routine wording edits.
 
 ## Gotchas
 

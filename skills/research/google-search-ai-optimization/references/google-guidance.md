@@ -1,6 +1,6 @@
 # Google Guidance For AI Search
 
-This file distills Google's official guidance for generative AI features on Google Search into developer decisions.
+This file distills the recorded May 16, 2026 official Google guidance baseline into developer decisions. For uncertain or changed policies affecting the task, consult the [official guide](https://developers.google.com/search/docs/fundamentals/ai-optimization-guide) and the relevant feature documentation rather than treating this snapshot as current forever.
 
 ## Core Model
 
@@ -71,7 +71,9 @@ Use preview controls intentionally for legal, privacy, licensing, paywall, or pr
 
 Re-open the official docs before making strong claims when:
 
-- Google changes AI Overviews, AI Mode, preview control behavior, or structured data policies.
-- The recommendation depends on a specific rich result type.
-- The site uses JavaScript rendering, web components, faceted navigation, or user-generated content.
-- The user asks for "latest", "official", "current", or policy-sensitive guidance.
+- Google policy changes are known or suspected to affect AI Overviews, AI Mode, preview controls, or structured data in this task.
+- The recommendation depends on a rich result type whose current eligibility is uncertain.
+- Rendering or indexing behavior is unclear and the available evidence does not resolve it.
+- The user asks for the latest policy or current official confirmation not already supported by fresh evidence.
+
+Routine content or layout choices need no policy refresh when the existing evidence suffices. If sources are unavailable, name the unresolved claim instead of asserting it as current policy.

@@ -1,6 +1,6 @@
 # Control Catalog
 
-Use this catalog as the checklist for new builds and security reviews. Prefer concrete evidence over assurances.
+Use this catalog to select controls for the affected risks, not to require every mechanism in every system. Prefer concrete evidence over assurances. Distinguish an inapplicable control from accepting an actual unmitigated risk.
 
 ## Prompt And Input Boundary Controls
 
@@ -27,8 +27,8 @@ Implementation notes:
 | Per-action authorization | Server-side check for the specific action, resource, and user |
 | Minimal agent accounts | Dedicated service account with narrow scopes |
 | Dynamic least privilege | Access requested only for the current step and released or expired after use |
-| Human approval for high-impact actions | Approval record before send, delete, transaction, code execution, access grant, or external write |
-| Rate limits everywhere | Limits for API calls, tool invocations, files, tokens, and external requests |
+| Human approval for high-impact actions | Approval or accepted equivalent before consequential communications, transactions, access changes, privileged execution, or external writes; existing scoped permission can cover reversible sandbox work |
+| Bounded resource use | Limits at cost, abuse, concurrency, or availability boundaries, sized for the task rather than arbitrary caps on reasoning |
 | Reversible action preference | Draft, preview, soft delete, staging, or dry-run path exists |
 | Rollback on error | Transaction, compensating action, or explicit stop-and-recover behavior |
 | Locking and sequencing | Coordination for shared state, multi-agent flows, and external writes |
@@ -55,6 +55,7 @@ Implementation notes:
 - Treat AI output as another untrusted input.
 - Validate output shape and meaning before it crosses a trust boundary.
 - Prefer intent-to-action mapping over free-form command generation.
+- General-purpose coding or analysis agents can execute generated programs in a disposable, resource-bounded sandbox with restricted filesystem, credentials, and network access. The enforced sandbox is the capability boundary; it does not authorize privileged host execution or external mutations.
 
 ## Data Controls
 

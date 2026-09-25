@@ -58,7 +58,7 @@ FROZEN_CATALOGUE_PREFIX_COUNT = 100
 FROZEN_CATALOGUE_PREFIX_SHA256 = "893ce63f63f0dfb7bac7d4a0f0c22785f5433b04d7d8042fbd556674b445e3a0"
 CANONICAL_EXPERIENCE_DIRECTION_SHA256 = "3a1ea9312d003857de83dce0dbe551641b0fba412efe86b1f585de4e5a629a3a"
 CANONICAL_COMPLETION_MANDATE_SHA256 = "201992e157d431e5509729e26c06b2f6b07954125f5287d2157758f7689a061f"
-PACKAGE_VERSION = "2.21.0"
+PACKAGE_VERSION = "2.22.0"
 
 # These checks deliberately target unambiguous implementation prescriptions. A
 # template may name a technology as its subject, but it must not prescribe a
@@ -96,6 +96,28 @@ IMPLEMENTATION_CONSTRAINTS = (
 
 RUNTIME_CONTRACTS = (
     (
+        "explicit optional verification selection",
+        re.compile(
+            r"Choose Verification Before Dispatch.*?Before reserving or dispatching a new build, ask.*?"
+            r"request explicitly chooses.*?Do not interpret silence as consent.*?"
+            r"generation-only one-shot.*?no browser/render/screenshots.*?lints/typechecks/tests.*?"
+            r"critics.*?directional probe or adapter.*?fallback-path checks.*?static artifact scans.*?"
+            r"validation/repair loops.*?success does not prove behavior.*?UNVERIFIED.*?"
+            r"immutable coordinator receipt.*?verificationMode.*?Never change the selection during continuation or recovery.*?"
+            r"missing mode on a historical receipt is not an opt-out.*?Package developer regression tests",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "generation-only handoff without completion validation",
+        re.compile(
+            r"## 5\. Record, Validate, and Present.*?qualityGauntlet: null.*?verification: \[\].*?"
+            r"staticDeploymentVerified: false.*?UNVERIFIED.*?Do not invoke `validate_catalog\.py` as a completion gate.*?"
+            r"skips their artifact tree and resource scans",
+            re.I | re.S,
+        ),
+    ),
+    (
         "catalogue-first no-argument response",
         re.compile(
             r"No brief or arguments.*?first substantive response.*?grouped by namespace.*?one-line description",
@@ -106,11 +128,9 @@ RUNTIME_CONTRACTS = (
         "unbounded full-depth custom prompt refinement",
         re.compile(
             r"^- \*\*Custom brief:\*\*.*?refine.*?fully developed.*?"
-            r"no skill-imposed paragraph or token budget.*?complete depth and fidelity.*?"
-            r"public `GET`.*?local-snapshot fallback.*?games.*?simulations.*?3D.*?"
-            r"mouse-and-keyboard.*?directional-semantics.*?machine contracts out of the actual prompt.*?"
-            r"forbids any applicable experience-level addition.*?"
-            r"stop before dispatch.*?never silently omit an applicable requirement.*?$",
+            r"no skill-imposed paragraph or token budget.*?entire brief to remain verbatim.*?"
+            r"byte-for-byte as the entire actual prompt, with no appended creative requirements.*?"
+            r"Exact-prompt requests override.*?safety and provenance.*?machine contracts out of the actual prompt.*?$",
             re.I | re.M,
         ),
     ),
@@ -125,10 +145,9 @@ RUNTIME_CONTRACTS = (
     (
         "subject-adapted prose completion mandate",
         re.compile(
-            r"^The catalogue’s top-level `completionMandate` is different:.*?"
-            r"every prepared actual prompt.*?natural language.*?shortcuts.*?cookie-cutter.*?"
-            r"complete subject-specific depth.*?For a replica, clone, or emulator, require.*?"
-            r"smallest meaningful interactions.*?For an original experience, demand equivalent depth.*?"
+            r"^The catalogue’s top-level `completionMandate` guides.*?user permits refinement.*?shortcuts.*?cookie-cutter.*?"
+            r"complete subject-specific depth.*?For a replica, clone, or emulator, preserve the requested source fidelity.*?"
+            r"Exact-prompt and narrower-scope requests take precedence.*?"
             r"operational lead envelope.*?never add phrases such as.*?token budget limit.*?$",
             re.I | re.M,
         ),
@@ -138,10 +157,9 @@ RUNTIME_CONTRACTS = (
         re.compile(
             r"^When the requested shell or interface.*?unauthenticated HTTP `GET` requests.*?"
             r"prepared actual prompt.*?build-time local snapshots.*?meaningful default or primary experience.*?"
-            r"even when.*?CORS.*?"
             r"prefer valid live data.*?timeout.*?network or DNS failure.*?restrictive CORS policy.*?"
             r"non-success response.*?malformed payload.*?incompatible schema.*?browser cache.*?first successful request.*?"
-            r"source and capture time.*?live-success and forced-fallback paths.*?"
+            r"source and capture time.*?live-success and forced-fallback verification requirements out of the sealed experience brief.*?gauntlet-only.*?"
             r"size or volatility alone is not an exemption.*?task-relevant bounded slice.*?"
             r"credentials.*?authenticated or private responses.*?personal or sensitive data.*?lawfully.*?"
             r"only when a public `GET` dependency exists.*?do not invent a network dependency.*?$",
@@ -257,10 +275,11 @@ RUNTIME_CONTRACTS = (
     (
         "blind multi-lead design independence",
         re.compile(
-            r"For every multi-lead fan-out.*?private design-diversity ledger.*?"
+            r"Only when the user requests design variations.*?private design-diversity ledger.*?"
             r"only its own positively stated design territory.*?same sealed prompt bytes.*?"
             r"composition.*?navigation.*?typography.*?motion.*?"
-            r"Never expose.*?sibling.*?design.*?DIVERSITY_CONFLICT",
+            r"Do not force diversity onto identical replicas.*?Never expose.*?sibling.*?design.*?"
+            r"reuse it unchanged on continuation or recovery.*?User-requested fidelity",
             re.I | re.S,
         ),
     ),
@@ -465,7 +484,7 @@ RUNTIME_CONTRACTS = (
         "completion-only temporary cleanup",
         re.compile(
             r"For a successful finalization.*?stop or await every descendant and process.*?"
-            r"promote all required evidence out of `\.tmp/`.*?no final check depends on scratch state.*?"
+            r"promote durable output out of `\.tmp/`.*?In gauntlet mode.*?in none mode do not run checks.*?"
             r"cleanup_run_tmp\.py.*?--confirm-finalized.*?Only after it succeeds.*?`OK`.*?"
             r"cleanup.*?fails.*?non-`OK`.*?`PARTIAL`.*?`BLOCKED`.*?`ERROR`.*?retain `\.tmp/`",
             re.I | re.S,
@@ -490,8 +509,9 @@ RUNTIME_CONTRACTS = (
             r"ChatGPT sites.*?GitHub.*?authenticated tool.*?do not count as permission.*?"
             r"explicit user instruction.*?specific external action and destination.*?"
             r"Never ask a lead, descendant, or critic.*?remote publication.*?remote repository mutation.*?"
-            r"coordinator retains.*?only after.*?local artifact passes validation.*?"
-            r"using `artifact/` only.*?nothing was uploaded, deployed, published, or pushed",
+            r"coordinator retains.*?after local handoff.*?using `artifact/` only.*?"
+            r"gauntlet mode.*?pass validation.*?generation-only mode.*?UNVERIFIED.*?"
+            r"nothing was uploaded, deployed, published, or pushed",
             re.I | re.S,
         ),
     ),
@@ -626,6 +646,38 @@ GUIDANCE_CLAUSE_BOUNDARY = re.compile(r"[.!?;:\n—–]+|\b(?:but|however|instea
 
 FILE_RUNTIME_CONTRACTS = (
     (
+        "agents/oneshot-lead.md",
+        "lead generation-only boundary",
+        re.compile(
+            r"Verification Selection.*?receipt-anchored.*?verificationMode.*?unchanged on continuation or recovery.*?"
+            r"`none`: generation only.*?no browser/render/screenshots.*?lints/typechecks/tests.*?critics.*?"
+            r"fallback-path checks.*?static artifact scans.*?validation/repair loops.*?"
+            r"Do not invoke `validate_catalog\.py` as a completion gate.*?"
+            r"No `\.tmp/TECHNICAL_PROMPT\.md` is created or required.*?UNVERIFIED",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "templates/worker-dispatch.md",
+        "dispatch immutable verification mode",
+        re.compile(
+            r"VERIFICATION_MODE.*?Verification Envelope.*?Silence is not consent.*?immutable coordinator receipt.*?"
+            r"continuation/recovery.*?every descendant.*?For `none`, perform generation only.*?"
+            r"no artifact/workspace verification.*?UNVERIFIED.*?qualityGauntlet: null",
+            re.I | re.S,
+        ),
+    ),
+    (
+        "agents/oneshot-critic.md",
+        "critic refuses generation-only review",
+        re.compile(r"Routing Gate.*?With `none`, do not open, render, inspect, test, or score.*?UNVERIFIED.*?must not dispatch critics", re.I | re.S),
+    ),
+    (
+        "references/catalog-index.md",
+        "unverified catalogue metadata boundary",
+        re.compile(r"For `none`, do not invoke `validate_catalog\.py` as a completion gate.*?UNVERIFIED.*?neutral badge.*?never reads generated artifact contents beyond the sealed prompt", re.I | re.S),
+    ),
+    (
         "agents/oneshot-critic.md",
         "fresh read-only critic contract",
         re.compile(
@@ -717,7 +769,7 @@ FILE_RUNTIME_CONTRACTS = (
         re.compile(
             r"Blind Design Independence.*?private design territory.*?"
             r"must not inspect.*?sibling.*?workspace.*?artifact.*?report.*?capture.*?"
-            r"materially distinct.*?composition.*?navigation.*?typography.*?motion.*?"
+            r"only to user-requested variations.*?identical replicas need no artificial distinction.*?"
             r"source or prompt explicitly fixes.*?not a lead design choice.*?"
             r"descendants.*?only your territory",
             re.I | re.S,
@@ -877,7 +929,7 @@ FILE_RUNTIME_CONTRACTS = (
             r"every descendant.*?best-effort containment.*?Retain `\.tmp/`.*?`PARTIAL`.*?`BLOCKED`.*?`ERROR`.*?"
             r"never copy `\.tmp/` into `artifact/`.*?successful finalization.*?"
             r"stop or await every descendant.*?cleanup_run_tmp\.py.*?--confirm-finalized.*?"
-            r"only then set both status records to `OK`.*?successful handoff has no `\.tmp/`.*?"
+            r"only then set both status records to `OK` for gauntlet or `UNVERIFIED` for none.*?completed handoff has no `\.tmp/`.*?"
             r"Never add it.*?artifact/PROMPT\.md",
             re.I | re.S,
         ),
@@ -956,7 +1008,7 @@ FILE_RUNTIME_CONTRACTS = (
             r"Operational Runtime Envelope.*?assigned `\.tmp/`.*?TMPDIR.*?TMP.*?TEMP.*?"
             r"every descendant.*?Retain `\.tmp/`.*?non-`OK`.*?Never copy `\.tmp/` into `artifact/`.*?"
             r"never add.*?artifact/PROMPT\.md.*?successful finalization only.*?"
-            r"TEMP_CLEANUP_HELPER.*?--confirm-finalized.*?Set both statuses to `OK` only after.*?"
+            r"TEMP_CLEANUP_HELPER.*?--confirm-finalized.*?Set both statuses to `OK` for gauntlet or `UNVERIFIED` for none only after.*?"
             r"`PARTIAL`.*?`BLOCKED`.*?`ERROR`.*?keep `\.tmp/` intact",
             re.I | re.S,
         ),
@@ -1062,9 +1114,10 @@ FILE_RUNTIME_CONTRACTS = (
         "protocol blind multi-lead design diversity",
         re.compile(
             r"Blind Design Diversity.*?private design-diversity ledger.*?"
-            r"same sealed prompt.*?mutually exclusive.*?design territories.*?"
+            r"same sealed prompt.*?design territories.*?"
             r"only its own.*?sibling.*?workspace.*?artifact.*?critic.*?"
-            r"fixed source.*?DIVERSITY_CONFLICT.*?recovery.*?same private territory",
+            r"Identical replicas have no forced diversity.*?fixed source.*?"
+            r"do not distort.*?recovery.*?same private territory",
             re.I | re.S,
         ),
     ),

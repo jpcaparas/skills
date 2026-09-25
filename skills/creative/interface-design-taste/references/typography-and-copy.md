@@ -27,9 +27,9 @@ One family can cover multiple roles, but the roles must still feel distinct.
 
 ### Product apps and dashboards
 
-- default to high-quality sans for display and body
-- use mono only where alignment earns it
-- avoid decorative serif moments in dense operational views
+- a high-quality sans is a useful starting point, not a product-only font rule
+- mono can support comparison or character; check readability at working sizes
+- serif or decorative display moments can fit when small controls and operational text remain legible
 
 ### Desktop tools
 
@@ -96,7 +96,7 @@ Use mono when it improves comparison:
 - currency columns
 - percentages in dense lists
 
-Do not use mono for:
+Check reading comfort before extending mono to:
 
 - long descriptions
 - explanatory empty states
@@ -116,4 +116,3 @@ If the UI feels amateur:
 
 - `layout-and-rhythm.md` for how type creates spatial hierarchy
 - `color-material-and-iconography.md` for contrast and text-on-surface decisions
-

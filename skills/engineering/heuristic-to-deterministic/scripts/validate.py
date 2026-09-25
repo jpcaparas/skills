@@ -109,7 +109,7 @@ def validate_skill(skill_path: str | Path) -> dict[str, object]:
         if frontmatter.get("name") != root.name:
             errors.append("Frontmatter name must match directory name")
         description = frontmatter.get("description", "")
-        for fragment in ["deterministic", "validator", "normalizer", "Do NOT"]:
+        for fragment in ["deterministic", "validator", "normalizer"]:
             if fragment not in description:
                 errors.append(f"Frontmatter description must mention {fragment!r}")
         if len(description) > 1024:

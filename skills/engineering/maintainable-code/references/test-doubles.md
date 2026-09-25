@@ -18,7 +18,7 @@ Prefer stubs and fakes for most application behavior. They keep tests focused on
 
 ## Contract Coverage
 
-When production code depends on an adapter, add at least one check that protects the adapter boundary:
+When production code depends on an adapter, ensure adequate coverage of consequential translation or wiring risks. Reuse existing checks and add only missing evidence, such as:
 
 - Schema validation against real or recorded responses.
 - Local integration test with a test container, emulator, or fixture server.

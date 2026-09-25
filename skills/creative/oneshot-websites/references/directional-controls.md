@@ -2,6 +2,8 @@
 
 Read this reference only when the prepared run records `interaction.directionalControls.required: true`. Use it to connect the artifact’s real production control state to the coordinator-owned browser gate. This contract supplements the rendered gauntlet; it does not replace mouse, complete-keyboard, pointer, touch, controller, rotation, transform, or visible-label checks.
 
+This is gauntlet-only operational guidance. With receipt-anchored `verificationMode: none`, do not create or require `.tmp/TECHNICAL_PROMPT.md`, implement a probe adapter, launch this helper, or exercise directional behavior. Generation-only output remains UNVERIFIED, including on recovery. The helper refuses none mode before hashing output or resolving a browser. The measurement contract below is unchanged for opted-in gauntlet runs.
+
 ## Transient technical delivery contract
 
 `prepare_run.py` copies this contract to `.tmp/TECHNICAL_PROMPT.md` for an applicable active run. The coordinator gives that transient file and its contents to the lead separately from the sealed actual prompt. `artifact/PROMPT.md` stays a natural-language experience brief and must not contain this schema, its identifiers, its query flag, or coordinator verification commands.

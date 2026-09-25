@@ -19,8 +19,8 @@ This skill is organized as a hub and spoke. Load the smallest file that answers 
 
 ## Load Order
 
-1. Start with `principles.md` for any new direction.
-2. Add exactly one or two specialized references based on the current failure mode.
-3. Use `critique-workflow.md` when working on an existing product instead of jumping straight to style changes.
-4. Use `design-systems-and-tokens.md` only after the screen logic is clear.
+Load references only when they help the task; there is no required count or sequence.
 
+- Use `principles.md` to ground an uncertain direction and `style-families.md` for optional examples.
+- Use `critique-workflow.md` for an audit, then the specialized guidance relevant to its findings.
+- Use `design-systems-and-tokens.md` when reusable rules or a system handoff are needed.

@@ -49,7 +49,9 @@ Delay extracting when:
 
 ## Refactoring Sequence
 
-1. Characterize existing behavior with tests or recorded examples.
+Adapt the sequence to the actual dependency and risk; do not perform unrelated renames or extractions merely to complete it.
+
+1. Check existing behavior coverage; add tests or recorded examples only for consequential gaps.
 2. Rename misleading variables and functions before moving code.
 3. Extract pure transformations first.
 4. Separate policy from I/O next.

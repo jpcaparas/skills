@@ -4,7 +4,7 @@ Use this reference before drafting or editing when the work has meaningful const
 
 ## 1. Define the job
 
-Write a one-sentence contract:
+Identify the contract; write it down when complex constraints or handoff needs make that useful:
 
 > Create or revise **[deliverable]** for **[reader]** so they can **[outcome]**, using **[source authority]**, while preserving **[protected material]**.
 
@@ -32,9 +32,9 @@ Infer answers that the prompt, draft, repository, or house style already supplie
 
 When the user says “polish,” infer the narrowest level that solves the visible problem. Do not silently turn a proofread into a rewrite.
 
-## 3. Build the preservation ledger
+## 3. Identify what to preserve
 
-For an existing draft, record what must survive. Use the smallest ledger that protects the work.
+For an existing draft, identify what must survive. Direct source comparison is enough for a simple edit. Record a ledger when complexity, consequence, or handoff needs warrant it; preservation is mandatory, a separate artefact is not.
 
 ### Exact literals
 
@@ -84,7 +84,7 @@ Protect lines that carry useful identity:
 - a culturally or regionally meaningful expression
 - a deliberate fragment, aside, or joke that works
 
-Mark these before line editing. Otherwise a consistency pass may erase them.
+Notice these before line editing; record them when a ledger is useful. Otherwise a consistency pass may erase them.
 
 ## 4. Establish source authority
 
@@ -131,7 +131,7 @@ Before revision begins, confirm:
 
 - the job and edit freedom are explicit
 - the source of truth is known
-- protected literals, facts, uncertainty, and voice anchors are recorded
+- protected literals, facts, uncertainty, and voice anchors are identified, with a record when the risk warrants it
 - missing facts remain missing rather than invented
 - the reader is defined by a real need
 

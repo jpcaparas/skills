@@ -6,9 +6,9 @@ Use this reference when the git history or the request is messy.
 
 Symptom: the user says `this week`, `recently`, `the last few days`, or another relative range.
 
-Cause: relative dates are subjective and easy to misread.
+Cause: some relative ranges depend on an unknown timezone, week boundary, or event.
 
-Fix: stop immediately and ask `What exact start date should I use? Please reply in YYYY-MM-DD.`
+Fix: resolve the range when reliable clock, timezone, and context make it unambiguous, then state the exact dates. Otherwise ask for the missing boundary. Never infer the last push or deployment from a commit timestamp alone.
 
 ## 2. Not Actually in a Git Repo
 
@@ -48,4 +48,4 @@ Symptom: the report starts promising faster conversions, fewer support tickets, 
 
 Cause: the rewrite added business outcomes the diff does not establish.
 
-Fix: keep the wording high-level and factual. State what changed, not speculative results.
+Fix: keep the wording high-level and factual. State what changed, not speculative results. A commit is not proof that the change was deployed or used.

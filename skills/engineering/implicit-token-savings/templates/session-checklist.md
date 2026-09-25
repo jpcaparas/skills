@@ -1,12 +1,12 @@
 # Session Checklist
 
-Use this checklist when you want a repeatable low-noise workflow.
+Use the applicable checks when choosing sufficient, low-noise commands; this is not an execution sequence.
 
-1. Run `python3 scripts/probe_implicit_token_savings.py --format pretty` if tool availability is unknown.
-2. Inventory the repo with `ls -1`, `tree -L 2`, or `rg --files` before opening files.
-3. Search with `rg -n` before reading.
-4. Read only the slice you need with the harness read tool or `sed -n`.
-5. Inspect change scope with `git status --short` and `git diff --stat` before full diffs.
-6. Stage explicit paths and review staged scope before `git commit`.
-7. Choose the narrowest stack-native test or lint command that exists.
-8. Use structured output for containers or JSON when another tool will consume the result.
+- Use known tool availability or a focused check. Run `python3 scripts/probe_implicit_token_savings.py --format pretty` only when a comprehensive probe helps.
+- Inventory with `ls -1`, `tree -L 2`, or `rg --files` when paths or shape are unknown.
+- Use `rg -n` for matching text; read a known relevant file or excerpt directly.
+- Choose full-file context immediately when needed rather than forcing smaller reads first.
+- Use `git status --short` or `git diff --stat` for state or scope, and a relevant diff for semantics.
+- When committing is authorized, stage explicit paths and review all staged changes. Push only with separate authority for that external write.
+- Choose focused tests for feedback and run all repository-required gates before handoff.
+- Use structured output for containers or JSON when another tool will consume it; preserve errors and failure details in every format.

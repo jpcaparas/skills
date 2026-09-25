@@ -19,6 +19,7 @@ from typing import Any, Optional, Sequence
 from directional_controls import (
     DIRECTIONAL_TECHNICAL_PROMPT_PATH,
     DirectionalControlError,
+    DirectionalControlRequirement,
     directional_control_contract,
     infer_directional_control_requirement,
     reject_internal_directional_contract_in_prompt,
@@ -27,12 +28,14 @@ from directional_controls import (
 from runtime_contract import (
     BoundedReadError,
     COORDINATOR_MONITORING_CONTRACT,
+    VerificationMode,
     experiment_slug,
     find_likely_mojibake,
     identity_key,
     parse_json_bounded,
     read_regular_file_bounded,
     resolve_existing_or_new,
+    verification_mode,
 )
 
 
@@ -78,6 +81,11 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--harness", required=True, help="Raw harness name")
     parser.add_argument("--experiment", required=True, help="Raw experiment name")
     parser.add_argument("--prompt-file", required=True, type=Path, help="UTF-8 prompt file to preserve verbatim")
+    parser.add_argument(
+        "--verification",
+        choices=("gauntlet", "none"),
+        help="Explicit user choice; omission retains historical gauntlet compatibility only",
+    )
     parser.add_argument(
         "--classification",
         choices=CLASSIFICATIONS,
@@ -301,11 +309,15 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2", "2.3", "2.4"}
+        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2", "2.3", "2.4", "2.5"}
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
         raise RunPreparationError("prior run coordinator provenance receipt does not match the prior run")
+    try:
+        verification_mode(receipt, read_json_object_bounded(run_manifest, "prior run manifest"))
+    except ValueError as error:
+        raise RunPreparationError(str(error)) from error
 
     commit_path = exact_child(provenance_directory, f"{run_id}.commit")
     if commit_path is None:
@@ -437,11 +449,12 @@ def run_document(
     prior_run: Optional[str],
     receipt_path: str,
     directional_controls: dict[str, Any],
+    verification: VerificationMode | None = None,
 ) -> dict[str, Any]:
     """Build the durable run metadata, following templates/run.json's contract."""
 
     document: dict[str, Any] = {
-        "schemaVersion": "3.4",
+        "schemaVersion": "3.5" if verification is not None else "3.4",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -469,6 +482,8 @@ def run_document(
         "priorRun": prior_run,
         "provenanceReceipt": receipt_path,
     }
+    if verification is not None:
+        document["verificationMode"] = verification
     return document
 
 
@@ -483,14 +498,15 @@ def provenance_receipt(
     prompt_bytes: int,
     prior_run: Optional[str],
     directional_controls: dict[str, Any],
+    verification: VerificationMode | None = None,
 ) -> dict[str, Any]:
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
-    return {
-        "schemaVersion": "2.4",
+    document = {
+        "schemaVersion": "2.5" if verification is not None else "2.4",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "3.4",
+        "runSchemaVersion": "3.5" if verification is not None else "3.4",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -505,19 +521,22 @@ def provenance_receipt(
             "lifecycle": "retain-until-successful-finalization",
         },
         "qualityGauntlet": {
-            "required": True,
+            "required": verification != "none",
             "contractVersion": "1.0",
             "reportSchemaVersion": "2.1",
         },
         "coordinatorMonitoring": dict(COORDINATOR_MONITORING_CONTRACT),
         "directionalControls": directional_controls,
     }
+    if verification is not None:
+        document["verificationMode"] = verification
+    return document
 
 
-def initial_worker_report(run_id: str) -> dict[str, Any]:
+def initial_worker_report(run_id: str, verification: VerificationMode | None = None) -> dict[str, Any]:
     """Reserve an honest, editable report without inventing worker telemetry."""
 
-    return {
+    document = {
         "schemaVersion": "2.1",
         "runId": run_id,
         "status": "PLANNED",
@@ -555,6 +574,11 @@ def initial_worker_report(run_id: str) -> dict[str, Any]:
             "livenessEvents": [],
         },
     }
+    if verification is not None:
+        document["verificationMode"] = verification
+    if verification == "none":
+        document["qualityGauntlet"] = None
+    return document
 
 
 def create_run(arguments: argparse.Namespace) -> Path:
@@ -570,6 +594,12 @@ def create_run(arguments: argparse.Namespace) -> Path:
         prompt.decode("utf-8"),
         force_required=arguments.directional_controls == "required",
     )
+    if arguments.verification == "none":
+        directional_requirement = DirectionalControlRequirement(
+            required=False,
+            basis="verification-disabled",
+            signals=directional_requirement.signals,
+        )
     try:
         reject_internal_directional_contract_in_prompt(prompt.decode("utf-8"))
     except DirectionalControlError as error:
@@ -611,9 +641,10 @@ def create_run(arguments: argparse.Namespace) -> Path:
                 prior_run,
                 receipt_relative.as_posix(),
                 directional_controls,
+                arguments.verification,
             ),
         )
-        write_json(paths.run / "worker-report.json", initial_worker_report(run_id))
+        write_json(paths.run / "worker-report.json", initial_worker_report(run_id, arguments.verification))
         write_json(
             receipt_path,
             provenance_receipt(
@@ -627,6 +658,7 @@ def create_run(arguments: argparse.Namespace) -> Path:
                 len(prompt),
                 prior_run,
                 directional_controls,
+                arguments.verification,
             ),
             owned_provenance_paths,
         )
@@ -656,6 +688,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         json.dumps(
             {
                 "runDirectory": str(run.resolve()),
+                "verificationMode": manifest.get("verificationMode", "gauntlet"),
                 "directionalControlsRequired": directional_controls.get("required") is True,
                 "technicalPromptPath": (
                     str((run / DIRECTIONAL_TECHNICAL_PROMPT_PATH).resolve())

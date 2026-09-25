@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """
-probe_eli12.py - Small routing probe for the eli12 skill.
+probe_eli12.py - Advisory prompt-only routing probe for the eli12 skill.
+
+Modes and references are heuristic suggestions, not required tool actions.
+This classifier cannot see repository or conversation context: "clarify" does
+not require a question, "fanout" does not require delegation, and references
+are optional aids. The suite checks classifier stability, not agent behavior.
 
 Usage:
     python3 probe_eli12.py --prompt "How does auth work?"
@@ -98,7 +103,9 @@ def _matches_any(patterns: list[str], text: str) -> bool:
 
 def analyze_prompt(prompt: str) -> ProbeResult:
     text = prompt.lower().strip()
-    reasons: list[str] = []
+    reasons: list[str] = [
+        "advisory only: use context to decide scope, assistance, and reference reads"
+    ]
 
     if _matches_any(NEGATIVE_PATTERNS, text):
         reasons.append("negative trigger matched")
@@ -114,7 +121,7 @@ def analyze_prompt(prompt: str) -> ProbeResult:
     ]
 
     if _matches_any(VAGUE_PATTERNS, text):
-        reasons.append("request is too vague for an efficient explain pass")
+        reasons.append("broad wording; clarify only if context leaves material ambiguity")
         return ProbeResult(
             True,
             "clarify",
@@ -123,7 +130,7 @@ def analyze_prompt(prompt: str) -> ProbeResult:
         )
 
     if _matches_any(BROAD_PATTERNS, text):
-        reasons.append("broad architecture or flow question")
+        reasons.append("broad flow; delegate only if independent work is useful and supported")
         return ProbeResult(
             True,
             "fanout",
@@ -187,7 +194,7 @@ def run_suite() -> dict[str, object]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Probe routing for the eli12 skill.")
+    parser = argparse.ArgumentParser(description="Suggest advisory routing for the eli12 skill.")
     parser.add_argument("--prompt", help="Prompt to classify")
     parser.add_argument("--run-suite", action="store_true", help="Run the built-in probe suite")
     args = parser.parse_args()

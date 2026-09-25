@@ -48,19 +48,19 @@ Agent-generated code often starts with clear high-level steps, then drops into d
 
 Repair:
 
-- Add phase comments before multi-step operational blocks.
+- Add phase comments when a multi-step operational block's rationale is not clear from names and structure.
 - Add method, property, branch, and block comments where that smaller scope carries the real maintenance risk.
-- Explain external API contracts, artifact names, cache keys, and failure-mode decisions.
+- Explain non-obvious external API constraints, artifact contracts, cache keys, and failure-mode decisions; do not narrate familiar syntax.
 - Write for a junior maintainer with good fundamentals but limited system context.
 
 ## Source-Less Claims
 
-Framework and language comments become risky when they make claims without a source. A future maintainer cannot tell whether the note came from official documentation, a stale blog post, local convention, or an agent guess.
+Uncertain, version-sensitive, or consequential framework and language claims need evidence. A future maintainer should be able to distinguish documented behavior from local convention or an agent guess; known basics do not need research by default.
 
 Repair:
 
-- Link official docs when they exist and the claim affects correctness, maintainability, security, or upgrades.
-- Verify the URL resolves before including it in reusable instructions or review notes.
+- Verify those claims against official docs for the project's version. Link them when the source helps verify a non-obvious rule or the user requests it.
+- Check that a cited page supports the claim, not merely that its URL resolves.
 - Paraphrase the official behavior and keep long explanations in the source, not in the code comment.
 - If the claim comes from local evidence instead of docs, point to the file, test, or observed behavior.
 

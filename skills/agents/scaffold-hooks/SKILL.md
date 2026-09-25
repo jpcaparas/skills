@@ -59,7 +59,7 @@ Pass explicit additions as `--harnesses claude,codex,copilot,devin,opencode` (or
    - `.github/hooks/copilot-hooks.json` and `.github/copilot/hooks/generated/`
    - existing `hooks/` tree and repo-owned validation scripts under `scripts/`
 2. Confirm the harness set only when creating a new scaffold or adding harnesses. For a bare invocation on a repo with existing hook surfaces, refresh the detected set only.
-3. Verify the live official harness docs before making event-surface changes. Each harness component records its verified contract in `harnesses/<name>/assets/hook-events.json` and its workflow in `harnesses/<name>/PLAYBOOK.md`.
+3. Use repository configuration, installed-version evidence, and the selected harness's `PLAYBOOK.md` to plan the repair. Consult relevant live official docs when that evidence is insufficient, appears stale, or event semantics will change; do not browse every harness for a stable local repair. Each component records its bundled contract in `harnesses/<name>/assets/hook-events.json`. Load references only for the open question.
 4. Start from `templates/hook-plan.example.json` unless the project already has a clearer plan.
 5. Run `scripts/scaffold_all_hooks.sh` with `--dry-run`, then without `--dry-run`.
 6. Review `hooks/README.md`, `hooks/.state/scaffold-hooks/manifest.json`, the harness config files, and the selected adapters.
@@ -67,7 +67,7 @@ Pass explicit additions as `--harnesses claude,codex,copilot,devin,opencode` (or
 
 ## Output Shape
 
-The target project should end up with this pattern:
+The bundled Claude, Codex, Devin, and Copilot generators use Bash entrypoints and render all manifest events, wiring only enabled events. The shared tree is a generator convention, not a requirement of every harness or repository. Keep suitable repo-owned programs behind the Bash protocol boundary; these helpers do not offer a selected-event-only file layout. Preserve existing custom architectures rather than replacing them just to match this pattern:
 
 ```text
 hooks/
@@ -143,15 +143,15 @@ Each supported harness is a self-contained component under `harnesses/<name>/` w
 - `harnesses/opencode/` owns OpenCode Froggy configuration, `opencode.json` plugin merging, and cleanup of prior scaffold-owned local plugin artifacts.
 - `harnesses/copilot/` owns GitHub Copilot event semantics and `.github/hooks/copilot-hooks.json` merging for the cloud agent and Copilot CLI.
 
-When an event name, matcher, output contract, or feature flag changes, update the harness component first (manifest, references, scripts, tests), then the universal orchestration. Read `references/harness-composition.md` when changing the composition order or adding a harness.
+When an event name, matcher, output contract, or feature flag changes, follow the sourced-update route below. For an authorized package update, change the harness component first (manifest, references, scripts, tests), then the universal orchestration. Read `references/harness-composition.md` when changing the composition order or adding a harness.
 
 ## Protocol Output Hygiene
 
 Treat stdout as part of the harness protocol, not a scratch log. For JSON-output hooks, stdout is reserved for the final protocol JSON payload; successful no-op paths should stay quiet unless the event contract explicitly allows stdout. Send diagnostics, debug text, filenames, and human-readable failure details to stderr unless the harness requires them on stdout.
 
-Helper and predicate functions must be silent by default and return exit status only. Use quiet checks such as `grep -q` / `grep -Eq`, or redirect stdout to `/dev/null`; do not use filename probes like `grep ... | head -1` unless the output is captured and cannot leak to hook stdout. Known regression: `hook_has_code_changes` must remain an exit-status-only predicate.
+Predicates must be silent and return exit status only. Other helpers must not leak uncaptured output onto protocol stdout; value-producing helpers may return captured data, and designated protocol emitters may write the event's JSON. Use quiet checks such as `grep -q` / `grep -Eq`, or redirect stdout to `/dev/null`; do not use filename probes like `grep ... | head -1` unless the output is captured and cannot leak to hook stdout. Known regression: `hook_has_code_changes` must remain an exit-status-only predicate.
 
-Validate generated JSON-output hooks for zero stdout on success/no-op paths, parseable JSON with no prefix or suffix on blocking paths, and no filenames/debug/status lines leaking from shared helpers.
+Validate generated JSON-output hooks for zero stdout on silent success/no-op paths, one parseable event-appropriate JSON payload with no prefix or suffix when emitting context or decisions, and no filenames/debug/status lines leaking from shared helpers. Preserve each event's exit-code contract separately.
 
 ## Gotchas
 
@@ -161,7 +161,7 @@ Validate generated JSON-output hooks for zero stdout on success/no-op paths, par
 4. A clean-looking config can still collide if old generated commands remain. Always scan final configs for `.claude/hooks/generated`, `.codex/hooks/generated`, and `.devin/hooks/generated`.
 5. Keep project policy in repo-owned scripts such as `./scripts/agent-stop-checks.sh`; hook adapters should translate protocol, not duplicate validation logic. Generated shell Stop adapters default to `run_on_code_changes: true` and use detected source/config extensions so expensive checks do not run on clean turns.
 6. Copilot does not write adapters into the shared `hooks/` tree. Its generated events stay under `.github/copilot/hooks/generated/` because the Copilot cloud agent only reads files committed to the repository; keep shared policy in repo-owned `scripts/` that both layers call.
-7. Shared scripts that emit session context should use the Claude/Codex/Devin `hookSpecificOutput.additionalContext` JSON shape. Devin strictly parses non-empty stdout as Claude-format JSON and silently drops plain text; Claude Code also accepts the shared JSON shape, so do not special-case Claude for `SessionStart`. See `references/harness-composition.md` for details.
+7. Shared `SessionStart` context scripts can use the specifically verified `hookSpecificOutput.additionalContext` JSON shape for Claude, Codex, and Devin. That shared shape does not imply compatibility with other events or fields. See `references/harness-composition.md` for Devin's documented JSON and historical plain-text failure evidence.
 8. Treat exit codes and output streams as separate contracts. Exit code controls success, failure, or blocking; stderr is for diagnostics and failure reasons, not successful status messages. Successful routine skips should write to stdout only when the harness protocol allows it, or stay quiet.
 9. Froggy's `isMainSession` condition handles main-session filtering for OpenCode hooks; use it on session lifecycle hooks that should skip child/subagent sessions.
 10. Managed manifests record scaffold skill provenance, plan/template hashes, selected harnesses, detected harnesses, selection source, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
@@ -181,4 +181,8 @@ Harness TUIs differ in whether hook activity is visible. Set expectations during
 
 ## Progressive Maintainer Drift Check
 
-When this skill changes, live-fetch the official hook docs for every affected harness on the day of the edit and compare them with `harnesses/<name>/assets/hook-events.json`. Update the harness component first (manifest, references, generators, templates, validators, tests), then the universal orchestration. Do not update this skill from memory; the per-harness manifests are the event-contract source of truth. Each `harnesses/<name>/PLAYBOOK.md` carries the detailed drift checklist for its harness.
+Treat recorded versions and dates as verification baselines, not perpetual runtime requirements. For an uncertain or changing contract, check the relevant official docs and, when needed, source/schema evidence matching the installed release; a `main` branch may describe unreleased behavior. Preserve deterministic pins unless a verified, in-scope change needs them updated.
+
+When evidence exposes stale guidance, record the affected passage, current official source and applicable version/date, proposed correction, and regression check. Propose the update rather than silently editing an installed skill. Edit the canonical package only when that maintenance is in scope; then reconcile affected manifests, references, generators, templates, validators, and tests before changing universal orchestration. Report unsupported drift instead of claiming the bundled helper already implements it. No full live-doc sweep is needed for wording-only or known local repairs.
+
+Inspect trust and effective feature state early, but allow independent read-only diagnosis while activation is unresolved. Obtain authorization before changing trust, user/global settings, or policy; never bypass those gates to make a scaffold appear active.

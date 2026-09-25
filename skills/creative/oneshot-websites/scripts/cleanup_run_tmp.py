@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import shutil
@@ -13,8 +14,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
+from runtime_contract import (
+    BoundedReadError,
+    parse_json_bounded,
+    read_regular_file_bounded,
+    require_unverified_report,
+    verification_mode,
+)
 
-FINALIZABLE_STATUSES = {"RUNNING", "OK"}
 
 
 @dataclass(frozen=True)
@@ -44,6 +51,14 @@ FINALIZATION_CONTRACTS: Mapping[str, FinalizationContract] = {
     ),
     "3.4": FinalizationContract(
         receipt_schema="2.4",
+        temporary={
+            "path": ".tmp/",
+            "routing": "best-effort-run-local",
+            "lifecycle": "retain-until-successful-finalization",
+        },
+    ),
+    "3.5": FinalizationContract(
+        receipt_schema="2.5",
         temporary={
             "path": ".tmp/",
             "routing": "best-effort-run-local",
@@ -89,8 +104,8 @@ def read_json_object(path: Path, label: str) -> Mapping[str, object]:
     if not stat.S_ISREG(metadata.st_mode) or metadata.st_size > 1024 * 1024:
         raise TemporaryCleanupError(f"{label} must be a regular file no larger than 1 MiB: {path}")
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        value = parse_json_bounded(read_regular_file_bounded(path, 1024 * 1024).decode("utf-8"))
+    except (BoundedReadError, UnicodeDecodeError, ValueError) as error:
         raise TemporaryCleanupError(f"{label} is invalid UTF-8 JSON: {path}: {error}") from error
     if not isinstance(value, dict):
         raise TemporaryCleanupError(f"{label} must contain a JSON object: {path}")
@@ -152,17 +167,6 @@ def validate_cleanup_target(run_path: Path) -> tuple[Path, Path | None]:
         )
     if run.get("temporary") != contract.temporary:
         raise TemporaryCleanupError("run temporary-storage contract does not authorize completion cleanup")
-    run_status = run.get("status")
-    report_status = report.get("status")
-    if run_status != report_status or run_status not in FINALIZABLE_STATUSES:
-        raise TemporaryCleanupError(
-            "run.json and worker-report.json must share RUNNING or OK status before final cleanup"
-        )
-    report_artifact = report.get("artifact")
-    if not isinstance(report_artifact, dict) or report_artifact.get("staticDeploymentVerified") is not True:
-        raise TemporaryCleanupError("worker report must record successful local static-handoff verification")
-    if not has_passed_verification(report):
-        raise TemporaryCleanupError("worker report must contain structured passed verification evidence")
 
     root = run_path.parent
     provenance_directory = exact_child(root, ".oneshot-provenance")
@@ -193,6 +197,44 @@ def validate_cleanup_target(run_path: Path) -> tuple[Path, Path | None]:
         raise TemporaryCleanupError(f"provenance commit marker is unreadable: {error}") from error
     if not stat.S_ISREG(commit_metadata.st_mode) or commit_metadata.st_size != 0:
         raise TemporaryCleanupError("provenance commit marker must be an empty regular file")
+
+    try:
+        mode = verification_mode(receipt, run, report)
+        if mode == "none":
+            require_unverified_report(report)
+    except ValueError as error:
+        raise TemporaryCleanupError(str(error)) from error
+    terminal_status = "UNVERIFIED" if mode == "none" else "OK"
+    if run.get("status") != report.get("status") or run.get("status") not in {"RUNNING", terminal_status}:
+        raise TemporaryCleanupError(
+            f"run.json and worker-report.json must share RUNNING or {terminal_status} status before final cleanup"
+        )
+    if mode == "gauntlet":
+        report_artifact = report.get("artifact")
+        if not isinstance(report_artifact, dict) or report_artifact.get("staticDeploymentVerified") is not True:
+            raise TemporaryCleanupError("worker report must record successful local static-handoff verification")
+        if not has_passed_verification(report):
+            raise TemporaryCleanupError("worker report must contain structured passed verification evidence")
+    if run_schema == "3.5":
+        for field in ("identity", "classification", "priorRun"):
+            if run.get(field) != receipt.get(field):
+                raise TemporaryCleanupError(f"run {field} differs from coordinator receipt")
+        if report.get("runId") != run_id or report.get("schemaVersion") != "2.1":
+            raise TemporaryCleanupError("worker report identity or schema differs from prepared run")
+        if run.get("workspace") != {"path": "workspace/"}:
+            raise TemporaryCleanupError("run workspace path must remain workspace/")
+        require_ordinary_directory(run_path / "workspace", "workspace directory")
+        require_ordinary_directory(run_path / "artifact", "artifact directory")
+        # Prompt identity is a provenance check, not an artifact-content scan.
+        try:
+            prompt_bytes = read_regular_file_bounded(run_path / "artifact" / "PROMPT.md", 5 * 1024 * 1024)
+        except BoundedReadError as error:
+            raise TemporaryCleanupError(str(error)) from error
+        digest = hashlib.sha256(prompt_bytes).hexdigest()
+        if receipt.get("prompt") != {"sha256": digest, "bytes": len(prompt_bytes)} or run.get("prompt") != {
+            "path": "artifact/PROMPT.md", "sha256": digest, "preservation": "verbatim"
+        }:
+            raise TemporaryCleanupError("sealed prompt identity differs from coordinator receipt")
 
     try:
         casefold_matches = [entry for entry in run_path.iterdir() if entry.name.casefold() == ".tmp"]

@@ -17,6 +17,8 @@ references:
 
 Rewrite selected technical text into a precise candidate STE form, or audit it against the applicable ASD-STE100 constraints.
 
+This is deliberately a restrictive standard-specific skill. Apply its vocabulary, sentence, counting, and safety rules when ASD-STE100 is requested or governs the publication, not as general writing preferences.
+
 ## Route the request
 
 Choose the job and evidence mode before changing text.
@@ -60,13 +62,13 @@ Identify:
 - whether the result is fully reference-backed, scoped reference-backed, or Issue 9-oriented
 - the responsible technical reviewer when the text affects safety, legality, or product behavior
 
-Issue 9, dated 15 January 2025, is the current official issue in the evidence for this release. Verify current status when the user asks for the latest issue or when later material is supplied.
+Issue 9, dated 15 January 2025, is this package's bundled baseline, not a permanent claim about the current issue. Use the issue governing the user's publication; do not silently upgrade it. Verify official ASD/STEMG sources when issue status is uncertain, later material is supplied, or the latest issue is requested. Keep checks from different issues separate.
 
 **Complete when:** scope, text type, evidence mode, governing sources, output form, and review owner are known or explicitly marked unavailable.
 
-### 2. Build a preservation ledger
+### 2. Preserve meaning with proportionate traceability
 
-Record the source elements that must not change:
+Identify the source elements that must not change. For a short, low-risk selection, direct source comparison and a compact note can suffice. For safety-sensitive, complex, or review-bound work, retain a ledger that traces every high-consequence element and literal to its source:
 
 - technical facts, causal direction, conditions, exceptions, uncertainty, and sequence
 - prohibitions, permissions, required actions, warning level, hazard, mitigation, and consequence
@@ -96,7 +98,7 @@ Do not apply one text type’s rules to another. A note in a procedure gives inf
 
 ### 4. Resolve technical meaning before language
 
-Build a term ledger with one status for each material term:
+Track one status for each material term. Use a term ledger for complex or consequential work and a compact evidence note for a short low-risk selection:
 
 - verified approved general word, meaning, and part of speech
 - governed technical noun
@@ -144,19 +146,19 @@ Shared surface requirements include:
 - consistent terminology and wording
 - American English spelling unless an applicable directive requires another spelling
 
-These shared requirements are not a substitute for checking the official Issue 9 dictionary and full rule explanations.
+These shared requirements describe the Issue 9 baseline and are not a substitute for checking the governing issue's official dictionary and full rule explanations. A different issue requires its own evidence, not relaxed interpretation of these constraints.
 
 **Complete when:** every block passes its branch checklist or has a precise exception with an owner.
 
 ### 7. Verify rather than certify
 
-Compare the result with the preservation ledger. Check:
+Compare the result with the source and any preservation ledger. Check:
 
 1. meaning, conditions, negation, thresholds, sequence, and risk
 2. selected-text boundaries and protected literals
 3. text type, voice, sentence function, word count, and paragraph structure
 4. terminology consistency
-5. approved word, meaning, part of speech, and verb form against the available Issue 9 material
+5. approved word, meaning, part of speech, and verb form against the available governing-issue material
 6. project terminology against the governed glossary or termbase
 7. conflicts with publication, safety, legal, or regulatory directives
 
@@ -167,7 +169,7 @@ python3 scripts/analyze_ste_surface.py --text-type procedure path/to/text.md
 python3 scripts/analyze_ste_surface.py --text-type description --format json path/to/text.md
 ```
 
-The scanner does not contain the ASD-STE100 dictionary, does not decide technical meaning, and does not establish conformance. Judge every finding in context.
+The scanner targets the bundled Issue 9 surface checks. It does not contain the ASD-STE100 dictionary, decide technical meaning, or establish conformance. Do not claim support for a later or different issue without evidence that the checks match it. Judge every finding in context.
 
 **Complete when:** each applicable check has evidence, each exception has an owner, and no unverified item is presented as verified.
 
@@ -198,6 +200,10 @@ Default rewrite output:
 3. unresolved questions only when they affect correctness
 
 Use `templates/rewrite-report.md` when the user wants an audit trail, reviewer handoff, or batch record. Keep ordinary responses lighter.
+
+## When guidance is insufficient
+
+When bundled guidance is stale, incomplete, or conflicts with governing material, consult the applicable official ASD/STEMG issue, authorized standard copy, and governed terminology or publication owner. Apply only verified rules within that authority; disclose missing sources and block strict verification where needed. Propose a canonical skill correction with its source, issue, and a minimal example or check without redistributing protected standard text. Do not silently modify installed copies, browse on every rewrite, or treat a new issue as supported by the bundled scanner without validation.
 
 ## Non-negotiables
 

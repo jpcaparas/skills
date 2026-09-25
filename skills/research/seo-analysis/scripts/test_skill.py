@@ -108,6 +108,20 @@ def run_tests(skill_path: str) -> dict:
         ("normalize-count", len(normalized) == 2),
     ]
 
+    spec = Path(skill_path, "references", "fix-prompt-spec.md").read_text(encoding="utf-8")
+    example_match = re.search(r"```json\n(.*?)\n```", spec, re.DOTALL)
+    if example_match is None:
+        probe_expectations.append(("documented-findings-example-exists", False))
+    else:
+        example = json.loads(example_match.group(1))
+        draft = build_fix_prompt.render_prompt(example, build_fix_prompt.load_template(Path(skill_path, "scripts")))
+        constraint = "Preserve intentional noindex rules for account and checkout routes."
+        probe_expectations.extend([
+            ("documented-constraint-is-preserved", constraint in draft),
+            ("documented-repo-is-preserved", "`/abs/path/to/repo`" in draft),
+            ("documented-evidence-is-preserved", "Shared metadata helper emits the same title and description for every route." in draft),
+        ])
+
     for name, passed in probe_expectations:
         results["probe_checks"]["total"] += 1
         if passed:

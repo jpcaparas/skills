@@ -1,10 +1,10 @@
 # Fix Prompt Specification
 
-Use this file after the audit is done and the user wants a prompt for another session to implement fixes.
+Use this file when the user requests an implementation handoff or it would help within the requested scope. Neither a handoff nor the helper is required for an audit answer.
 
 ## Goal
 
-Produce a prompt that lets another session edit code immediately without redoing discovery.
+Produce a prompt that avoids redundant discovery while requiring revalidation of relevant findings against the current checkout, deployment, and official requirements before edits.
 
 ## Required Sections
 
@@ -34,6 +34,7 @@ Produce a prompt that lets another session edit code immediately without redoing
 ## Prompt Quality Rules
 
 - reference actual files and abstractions
+- include only evidence-backed issues as confirmed findings; keep unknowns and unverified hypotheses separate
 - be explicit about what not to touch
 - prefer centralized fixes over page-by-page band-aids
 - include page types affected
@@ -42,16 +43,14 @@ Produce a prompt that lets another session edit code immediately without redoing
 
 ## Findings JSON Shape
 
-The builder script accepts this shape:
+The optional builder accepts `--input findings.json`; set `repo` in the JSON, not as a command-line flag. It renders a draft, not a validated audit. Review every finding, constraint, and acceptance criterion before handoff: missing evidence produces placeholder text, not confirmation. Supply custom constraints in the `extra_constraints` string; a `constraints` array is not consumed by this helper.
 
 ```json
 {
   "objective": "Improve technical SEO and preview quality for core landing pages.",
   "repo": "/abs/path/to/repo",
   "stack": "Unknown or detected stack",
-  "constraints": [
-    "Preserve intentional noindex rules for account and checkout routes."
-  ],
+  "extra_constraints": "Preserve intentional noindex rules for account and checkout routes.",
   "verification_commands": [
     "pnpm test",
     "pnpm build"

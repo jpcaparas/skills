@@ -25,9 +25,9 @@ Inspired by [`poteto/how`](https://github.com/poteto/how), but tuned for accessi
 ## Decision Tree
 
 1. If the user is asking how a subsystem, feature flow, runtime path, or file cluster works, use this skill.
-2. If the request is very vague and the likely search space is large, ask 1-3 short narrowing questions before exploring. Default to scope-first questions such as "Which feature or path do you care about?", "Do you want runtime flow, architecture, or file tour?", and "Should I stay focused on frontend, backend, or data?".
-3. If the question is narrow and local to one function, class, hook, or file, do a direct explain pass after a focused code search.
-4. If the question spans multiple modules, services, or an end-to-end flow, split it into 2-4 exploration angles, gather findings in parallel when the harness allows it, then synthesize.
+2. Infer a bounded, useful scope from the conversation and repository context. Ask a short question only when unresolved ambiguity would materially change the explanation.
+3. If the question is narrow and local to one function, class, hook, or file, explain directly from that code; use a focused search if its location or relevant connections are unknown.
+4. For cross-module or end-to-end questions, delegate independent read-only exploration when it adds useful coverage and the harness supports it. Otherwise trace the flow directly; breadth alone does not require fan-out.
 5. If the user mainly wants bugs, risks, or architectural critique, explain only enough to ground the discussion, then switch to normal review mode instead of staying inside the teaching frame.
 6. If a real-world analogy would make the explanation fuzzier, use fewer analogies and stay closer to the code.
 
@@ -35,18 +35,18 @@ Inspired by [`poteto/how`](https://github.com/poteto/how), but tuned for accessi
 
 | Situation | Open / do | Why |
 | --- | --- | --- |
-| User asks something broad like "Explain this repo" with no target | Ask a few short scope questions before reading deeply | Prevents token waste and irrelevant architecture tours |
-| Explain one file, class, or helper simply | Read `references/explainer-prompt.md` | Keeps the answer direct and digestible |
-| Explain a broad subsystem or runtime flow | Read `references/explorer-prompt.md`, then `references/explainer-prompt.md` | Gather evidence first, simplify second |
-| Need better analogies without getting sloppy | Read `references/analogy-patterns.md` | Maps abstract code ideas to grounded everyday systems |
-| Unsure where simplification goes wrong | Read `references/gotchas.md` | Avoids patronizing tone and misleading shortcuts |
+| User asks something broad like "Explain this repo" with no target | Offer a bounded overview from context; clarify only material ambiguity | Prevents irrelevant architecture tours without blocking a useful answer |
+| Need help with tone or explanation structure | Consult `references/explainer-prompt.md` | Keeps the answer direct and digestible |
+| Need help tracing a broad subsystem or runtime flow | Consult `references/explorer-prompt.md` | Supports evidence gathering without a mandatory separate pass |
+| Need better analogies without getting sloppy | Consult `references/analogy-patterns.md` | Maps abstract code ideas to grounded everyday systems |
+| Unsure where simplification goes wrong | Consult `references/gotchas.md` | Avoids patronizing tone and misleading shortcuts |
 | Need a ready-made output shape | Copy `templates/explanation-outline.md` | Gives a stable structure for the final explanation |
-| Sanity-check prompt routing locally | Run `python3 scripts/probe_eli12.py --prompt "How does auth work?"` | Verifies trigger and complexity heuristics |
+| Sanity-check prompt routing locally | Run `python3 scripts/probe_eli12.py --prompt "How does auth work?"` | Exercises advisory heuristics, not required questions, delegation, or reference reads |
 
 ## What This Skill Optimizes For
 
 - building the smallest correct mental model first
-- asking for scope before doing an expensive repo tour
+- choosing a useful scope without an expensive repo tour
 - defining jargon right when it appears
 - using short, concrete paragraphs instead of wall-of-text explainers
 - using friendly ASCII sketches when a flow or boundary is easier to see than to read
@@ -55,14 +55,14 @@ Inspired by [`poteto/how`](https://github.com/poteto/how), but tuned for accessi
 
 ## Default Operating Mode
 
-1. If the request is too vague to answer efficiently, ask 1-3 short narrowing questions before opening a large slice of the repo.
+1. Use the available context to choose a bounded explanation; ask only when materially different interpretations remain unresolved.
 2. State your interpretation of the question once the target is clear.
 3. Search for entry points, key types, and the files that actually move data or decisions.
 4. Trace the real path from trigger to effect. Do not explain from filenames alone.
 5. Collapse the findings into plain language.
-6. Use one grounded analogy per important concept when it helps, then tie it back to exact code names.
+6. Use grounded analogies if they help, then tie them back to exact code names. Direct explanation may be clearer.
 7. Add a small ASCII sketch when topology, control flow, or data movement is easier to grasp visually than in prose.
-8. End with a short map of where the important pieces live.
+8. Include a short map or next-read suggestion when it helps the reader verify or continue; inline file anchors may already suffice.
 
 ## Output Shape
 
@@ -118,11 +118,11 @@ request
 
 ### 8. Spend tokens on the right scope
 
-If the user asks something like "How does this app work?" and the repo is large, clarify the target before exploring. A short question is better than an unfocused architecture dump.
+For "How does this app work?", use context to select a useful overview or representative flow and state that boundary. Ask only if choosing among plausible targets would materially change the answer; do not substitute a whole-repo tour for a focused explanation.
 
 ## When To Fan Out
 
-Fan out exploration only when it improves coverage.
+Fan out exploration only when independent work improves coverage and delegation is supported. These are possible opportunities, not automatic triggers:
 
 - Broad architecture overviews
 - Runtime flows that jump across layers
@@ -131,7 +131,13 @@ Fan out exploration only when it improves coverage.
 
 Stay in one pass for narrow questions. Extra delegation slows simple explanations down.
 
+## When Guidance Stops Helping
+
+Repository behavior outranks a bundled analogy or workflow. When framework behavior is unclear, consult the installed version and relevant official documentation or trusted primary sources; state uncertainty if they are unavailable. If an example is stale or a rule makes explanations less useful, propose a canonical skill correction or deletion with the code/source evidence and a counterexample. Do not silently edit an installed copy.
+
 ## Reading Guide
+
+These are optional targeted aids. Open only what resolves an explanation or exploration need; an ordinary answer does not require reference preloads.
 
 | Need | Read |
 | --- | --- |

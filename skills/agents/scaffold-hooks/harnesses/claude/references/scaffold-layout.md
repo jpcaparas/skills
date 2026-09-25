@@ -23,7 +23,7 @@ hooks/
     └── claude.json            # Claude-specific plan data for this event
 ```
 
-Every official Claude Code event gets the same `hooks/<event>/script.sh`, `claude.sh`, and `claude.json` shape. Only enabled events are wired into `.claude/settings.json`.
+Every event in the bundled manifest gets the same `hooks/<event>/script.sh`, `claude.sh`, and `claude.json` shape. Only enabled events are wired into `.claude/settings.json`. This is the helper's fixed layout, not a universal hook architecture or a selected-event-only generation option.
 
 ## Ports And Adapters
 

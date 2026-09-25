@@ -31,8 +31,8 @@ What is the user asking?
 - The user asks "what happens when", "why does the app do X", "how does this feature work", or "what does the user see"
   Use this skill. Trace the real behavior, rules, and exceptions before answering.
 
-- The user wants a response they can forward, paste, or quote
-  Use this skill. Make the final response polished enough to share as-is.
+- The user wants a code-grounded app-behavior answer they can forward, paste, or quote
+  Use this skill. Make the final response polished enough to share as-is. A generic request to rewrite or share prose is not enough to trigger it.
 
 - The user asks for implementation details, a fix, a review, or code changes
   Do not stay in this skill unless they also need a product-facing explanation. Switch to the appropriate coding or review workflow.
@@ -57,20 +57,20 @@ What is the user asking?
 
 ## Default Workflow
 
-1. Restate the product question in concrete terms: feature, screen, workflow, user action, account state, or business rule.
-2. Search for user-facing terms first: labels, route names, button copy, config names, event names, test names, and docs.
+1. Identify the product question in concrete terms: feature, screen, workflow, user action, account state, or business rule. Restate it only when that clarifies scope.
+2. Start from known owning files when available; otherwise search user-facing terms such as labels, route names, button copy, config names, event names, test names, and docs. Choose the shortest reliable investigation path.
 3. Read the files that define actual behavior, not just files with promising names.
 4. Trace the path from user action or system event to outcome. Capture inputs, decision rules, state changes, and messages the user can see.
 5. Check tests, fixtures, feature flags, permissions, tenant/account conditions, and environment-specific branches for exceptions.
 6. Separate observed behavior from inference. Use direct evidence for strong claims.
-7. Write the answer for a product reader: outcome first, short paragraphs, minimal jargon, no code unless requested.
+7. Write the answer for a product reader: outcome first and plain English by default. Include concise technical terms or code when useful for the audience or requested; explain their product meaning.
 8. Add a compact "Confidence" or "Checked" line only when it helps the recipient trust the answer without reading code.
 
 ## Share-Ready Answer Standard
 
 The final response should feel like it was written for a product channel, not a developer notebook.
 
-Use this order unless the question needs something different:
+This optional structure can help; combine, omit, or reorder sections to fit the question and audience:
 
 1. **Short answer** - one or two sentences that answer the question directly.
 2. **What this means for users** - the user-visible behavior, decision, or limitation.
@@ -85,7 +85,7 @@ Keep it:
 - specific about behavior
 - honest about uncertainty
 - light on filenames and technical terms
-- free of code blocks unless the user explicitly asks for code
+- selective about code blocks: use them when they clarify behavior or satisfy a request, not as an investigation dump
 
 ## Evidence Rules
 
@@ -106,11 +106,17 @@ If a claim depends on inference, say so:
 Confidence: high for the web flow; I did not find mobile-specific handling in the available code.
 ```
 
+Keep material claims traceable to inspected files, tests, or configuration even when the shareable answer uses compact citations rather than a technical appendix. Code establishes what this checkout does, not what an unverified deployment or external service currently does.
+
+## Sources and maintenance
+
+Keep code-grounded behavior and honest uncertainty as the stable principles. If local guidance is insufficient, stale, or conflicts with an external dependency's behavior, consult relevant official documentation or trusted primary sources for the installed version; do not browse routinely or substitute provider documentation for app evidence. Report verification limits and propose a sourced skill correction with an example or regression case. Edit the canonical skill only when maintenance is in scope, never silently update an installed copy.
+
 ## Tone Contract
 
 - Do not say "I inspected the codebase" as filler. Lead with the answer.
 - Do not over-explain frameworks, services, hooks, reducers, migrations, or APIs.
-- Replace technical mechanism with product meaning.
+- Connect technical mechanisms to product meaning; keep concise technical detail when it helps the reader.
 - Use short paragraphs over long bullet lists unless the answer naturally needs comparison.
 - Make it easy for the user to forward the answer without editing out internal analysis.
 

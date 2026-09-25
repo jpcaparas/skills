@@ -1,12 +1,12 @@
 ---
 name: seo-analysis
 description: "Audit real codebases for SEO: metadata, rendering, crawlability, canonicals, schema, OG/social previews, i18n, sitemaps, robots, internal links, and AI-era search readiness. Trigger on SEO audit, schema, canonical, hreflang, sitemap, title/meta, or AI Overviews. Do NOT use for ads or link building."
-compatibility: "Requires: python3. Optional: command-line access to the target repo, local build/test tooling, and browser or HTTP tooling for rendered-page verification."
+compatibility: "Optional: python3 for packaged helpers, command-line access to the target repo, local build/test tooling, and browser or HTTP tooling for rendered-page verification."
 ---
 
 # seo-analysis
 
-Audit a codebase for search visibility risks, then produce a fix-ready prompt another session can execute.
+Audit a codebase for search visibility risks at the requested scope. Provide an implementation handoff when requested or useful, not as a prerequisite to answering a focused question.
 
 This skill is framework- and language-agnostic. Start from the live repository and rendered output, not from assumptions about React, Next.js, Rails, Laravel, Astro, WordPress, or any other stack.
 
@@ -15,7 +15,6 @@ This skill is framework- and language-agnostic. Start from the live repository a
 What SEO problem are you solving?
 
 - Need a full technical and on-page audit of a codebase
-  - Run `python3 scripts/build_fix_prompt.py --help`
   - Read `references/methodology.md`
   - Then read `references/technical-audit.md`
 
@@ -50,12 +49,12 @@ What SEO problem are you solving?
 | Check content and link architecture | `references/content-and-information-architecture.md` | Content gaps, duplication, orphan pages, weak anchors |
 | Check AI-era search readiness | `references/agentic-search-and-ai-surfaces.md` | Preview controls, crawl access, citation readiness |
 | Produce a fix session prompt | `references/fix-prompt-spec.md` + `templates/fix-prompt-template.md` | Copy-paste prompt for a second implementation session |
-| Generate a prompt draft from findings JSON | `python3 scripts/build_fix_prompt.py --input findings.json --repo /abs/path` | Structured prompt with priorities, constraints, and acceptance criteria |
+| Generate an optional prompt draft from findings JSON | `python3 scripts/build_fix_prompt.py --input findings.json` (put `repo` in the JSON) | Draft to review for evidence, constraints, and acceptance criteria |
 
 ## Core Workflow
 
-1. Inspect the repository structure, routing model, page templates, layout files, and any head/metadata abstractions before drawing conclusions.
-2. Inspect representative URLs or templates for each page type: home, category, product/service, article/docs, auth/account, paginated/filter pages, and utility pages.
+1. Match the user's scope and requested output form. Inspect the relevant routing, templates, layout files, and head/metadata abstractions before drawing conclusions; broaden only to trace shared causes.
+2. Inspect representative URLs or templates for the page types in scope. For a full audit, include home, category, product/service, article/docs, auth/account, paginated/filter pages, and utility pages where applicable.
 3. Separate findings by severity and by layer:
    - Crawl/index controls
    - Render/discovery/canonicalization
@@ -65,27 +64,29 @@ What SEO problem are you solving?
    - Performance/page experience
    - AI-era search surface readiness
 4. For every finding, capture evidence from code, built HTML, or runtime behavior. Do not speculate when you can verify.
-5. Turn the findings into an implementation prompt for another session only after deduplicating root causes. One broken metadata abstraction can explain hundreds of bad pages.
+5. Deduplicate root causes before prioritizing fixes. One broken metadata abstraction can explain hundreds of bad pages. If a handoff is requested or useful within scope, use `references/fix-prompt-spec.md`; the helper is optional and its draft is not evidence.
 
 ## Audit Deliverables
 
-Produce these artifacts in the response:
+Match the requested form: a scoped answer, findings table, full report, or implementation handoff. Create files only when requested. A full audit normally includes:
 
-1. **Executive summary** — what is blocking or suppressing search visibility right now.
+1. **Executive summary** — the observed risks to search visibility, without inventing ranking effects.
 2. **Findings table** — severity, URL/template scope, evidence, impact, fix direction.
 3. **Page-type coverage map** — which templates or routes were checked and which were not.
 4. **Remediation sequence** — what to fix first, second, and later.
-5. **Implementation prompt** — a clean handoff for another session to make code changes safely.
+5. **Limits and unknowns** — unavailable runtime checks, evidence dates, and unresolved questions.
+
+A focused answer can be much shorter, but retain the evidence and limitations needed to support its conclusion. Add an implementation prompt only when requested or useful; do not expand a scoped request into a full report packet.
 
 ## Analysis Rules
 
-1. Work from the rendered reality of the site, not only source files. SSR, SSG, CSR, hydration, and edge rendering change what crawlers actually receive.
+1. Verify rendered behavior when making runtime claims. SSR, SSG, CSR, hydration, and edge rendering change what crawlers receive. When offline or limited to source, label the result source-only and list runtime checks still needed.
 2. Treat crawlability, renderability, and canonicalization as prerequisites. Title tweaks do not matter if important pages are blocked, duplicated, or undiscoverable.
 3. Evaluate page types, not just single pages. SEO failures usually come from shared template logic.
 4. Distinguish intentional exclusions from mistakes. Login, cart, internal search, faceted combinations, and thin utility pages are often meant to be `noindex`.
 5. Check both search-result previews and social previews. Missing or conflicting Open Graph data is a distribution problem even when classic SEO looks acceptable.
-6. Prefer supported structured data aligned to page purpose. Do not recommend schema spam or irrelevant types.
-7. Treat AI-answer visibility as an extension of crawlability, metadata clarity, structured facts, and trustworthy content. Do not invent a separate magical “AI SEO” system.
+6. Prefer truthful, valid schema.org markup aligned to visible content and page purpose. Assess current search rich-result eligibility separately; ineligible does not mean invalid or misleading.
+7. Treat AI-answer visibility as an extension of crawlability, metadata clarity, structured facts, and trustworthy content. Do not invent ranking or AI-visibility guarantees.
 
 ## Reading Guide
 
@@ -106,7 +107,9 @@ The guidance in this skill was grounded against current primary sources in April
 - Google Search Central on SEO basics, helpful content, JavaScript SEO, robots meta directives, canonicalization, snippets, structured data, sitemaps, site names, favicons, and preferred sources.
 - The Open Graph protocol specification for required OG fields and image metadata.
 
-Use the references as the first source of truth, then verify live details when the target stack or search surface has materially changed.
+Keep the stable evidence and safety principles above. Bundled references are a dated baseline, not a substitute for current official guidance. When they are inadequate, uncertain, stale, or conflicting, consult the relevant Google Search Central, schema.org, or protocol documentation and trusted target evidence. Record the source and version or retrieval date; if offline, disclose the uncertainty rather than inventing a current rule.
+
+Propose a canonical repository update with the exact stale passage, replacement source/version, and a concrete example or regression test. Do not silently edit an installed skill while auditing a site.
 
 ## Gotchas
 

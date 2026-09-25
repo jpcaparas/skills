@@ -27,7 +27,7 @@ What did the user actually ask for?
   Extract everything you can first. Do not ask questions that the attachments already answer.
 
 - The request is missing material facts that would make the workbook wrong
-  Ask exactly one consolidated intake batch. Group it as `Required to proceed`, `Useful but optional`, and `Documents or screenshots that would improve accuracy`. Read `references/intake-protocol.md`.
+  Consolidate known blockers into a short intake batch. Follow up if materially new safety or correctness issues emerge; do not reinterview answered context. Read `references/intake-protocol.md`.
 
 - The request has non-blocking ambiguity
   Proceed with explicit assumptions and visible review flags. Do not stop the build just to perfect every detail.
@@ -35,14 +35,14 @@ What did the user actually ask for?
 - The user only wants prose, lightweight recommendations, or a casual itinerary chat
   Do not use this skill as the primary tool.
 
-- You are in an OpenAI or Codex-style environment and `/home/oai/skills/spreadsheets/SKILL.md` exists
-  Read that file before spreadsheet work, then continue with this skill's workbook-specific rules.
+- The harness offers a spreadsheet skill or equivalent local guidance
+  Discover and load it through the harness before spreadsheet work, then apply this skill's workbook-specific contract. Do not assume a machine-specific installation path.
 
 ## Quick Reference
 
 | Need | Read or run | Why |
 | --- | --- | --- |
-| One-batch intake discipline | `references/intake-protocol.md` | Prevent drip-fed questioning |
+| Consolidated intake and material follow-ups | `references/intake-protocol.md` | Avoid both repeated questioning and unsafe guesses |
 | Deterministic workbook contract | `references/workbook-spec.md` | Sheet order, widths, merges, formulas, palette |
 | Canonical trip model fields | `references/trip-model.md` | Build the internal model before writing cells |
 | Field-to-sheet mapping | `references/mapping-rules.md` | Keep Pack vs Buy vs Prep clean |
@@ -55,7 +55,7 @@ What did the user actually ask for?
 ## Operating Rules
 
 1. Start with extraction, not interrogation. Read the user's PDFs, screenshots, pasted notes, flight details, hotel confirmations, shopping asks, and fixed commitments before asking anything.
-2. Separate blockers from non-blockers. If essential trip facts are still missing, ask one consolidated clarification batch and only one batch unless the user later changes scope.
+2. Separate blockers from non-blockers. Consolidate known missing essentials, then follow up only for materially new safety or correctness issues. Never guess a critical fact to meet a question limit or re-ask answered questions.
 3. Build a canonical trip model before touching the workbook. Use `templates/trip_model_schema.json` and `references/trip-model.md`.
 4. Keep the deterministic and heuristic layers separate:
    - Use `scripts/build_workbook.py` for filename strategy, sheet order, merges, widths, formulas, validations, fills, fonts, borders, and fixed row patterns.
@@ -70,7 +70,7 @@ What did the user actually ask for?
 
 Ask nothing if the message and attachments already cover the essentials.
 
-If a clarification batch is necessary, use this exact grouping and keep it short:
+If a clarification batch is necessary, keep it short. These optional groupings may help; rename them or omit empty groups:
 
 ```text
 Required to proceed
@@ -90,7 +90,7 @@ Read `references/intake-protocol.md` for the full checklist, blocker logic, and 
 ## Build Workflow
 
 1. Extract facts from the user's files and notes.
-2. Run only the one required clarification batch if blockers remain.
+2. Consolidate known blockers into an intake batch if needed; revisit only materially new safety or correctness issues as evidence arrives.
 3. Build the canonical trip model and record assumptions, sources, review flags, and shopping objectives explicitly.
 4. Verify volatile facts that matter. Read `references/research-policy.md`.
 5. Run `scripts/build_workbook.py` to generate the workbook.
@@ -113,12 +113,18 @@ Read `references/intake-protocol.md` for the full checklist, blocker logic, and 
 
 Do not improvise the deterministic layer in prose. Use the builder script.
 
+If the requested workbook needs layout, styling, or features outside the supported builder contract, explain the limitation and choose a suitable alternative workflow or propose a scoped extension. Do not invent customization flags or claim the standard validator certifies a different workbook shape.
+
+## Sources and maintenance
+
+Keep the trip model, dates, formulas, coverage flags, and builder/validator contract stable. Continue the required official-source checks for material volatile travel facts. When skill or runtime guidance is insufficient, stale, or conflicting, consult relevant official documentation or trusted primary sources rather than browsing routinely. Report unresolved limits and propose a sourced correction with a sample trip model or regression case. Edit the canonical skill only when maintenance is in scope, never silently update an installed copy.
+
 ## Reading Guide
 
 | Task | Read |
 | --- | --- |
 | Exact workbook architecture, merges, counters, naming rules | `references/workbook-spec.md` |
-| Intake questions, blockers, and one-batch discipline | `references/intake-protocol.md` |
+| Intake questions, blockers, and material follow-ups | `references/intake-protocol.md` |
 | Source verification, official-source priority, and what to research | `references/research-policy.md` |
 | Canonical model fields and normalization rules | `references/trip-model.md` |
 | Sheet-mapping and categorization rules | `references/mapping-rules.md` |
@@ -127,7 +133,7 @@ Do not improvise the deterministic layer in prose. Use the builder script.
 
 ## Gotchas
 
-1. Do not ask a second or third round of "just one more thing" questions. Either ask the full blocker batch once or proceed with assumptions.
+1. Avoid drip-fed questions by extracting first and consolidating known blockers. New safety or correctness issues justify follow-up; non-blockers can use explicit assumptions and review flags.
 2. Do not bury shopping in a note field. If shopping matters, surface it in Daily Plan, the options bank, and Buy List.
 3. Do not turn Pack List into Buy List. Pack is what physically travels. Buy is the purchase tracker.
 4. Do not silently accept partial coverage. When flights, hotel rooms, or attraction tickets cover fewer people than the plan assumes, keep the mismatch visible.

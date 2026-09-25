@@ -4,8 +4,8 @@ Keep the skill portable.
 
 ## Spreadsheet Runtime Guidance
 
-- In OpenAI or Codex-style environments, if `/home/oai/skills/spreadsheets/SKILL.md` exists, read it before spreadsheet work.
-- If that file does not exist, use the harness-equivalent spreadsheet skill or local spreadsheet guidance.
+- Discover an available spreadsheet skill or local spreadsheet guidance through the harness and load it before spreadsheet work. Do not assume a vendor-specific installation path.
+- If no equivalent guidance is available, use this package's documented builder and validator, reporting any unavailable optional verification.
 - The deterministic workbook builder for this skill is `scripts/build_workbook.py`, which uses `openpyxl` for portability.
 
 ## Python Runtime

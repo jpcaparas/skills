@@ -1,12 +1,13 @@
 # Intake Protocol
 
-Use one consolidated intake pass or none at all.
+Consolidate known blockers; do not reinterview answered context.
 
 ## Core Rule
 
 - If the user's message and attachments already provide enough information to build a materially correct workbook, do not ask more questions.
-- If essential information is missing, ask exactly one clarification batch.
-- Do not drip-feed questions during the build.
+- If essential information is missing, ask a consolidated clarification batch.
+- Follow up when new evidence reveals a materially new safety or correctness issue. Do not guess a critical fact just to avoid another question.
+- Avoid drip-fed questions about facts that could have been extracted or grouped earlier.
 
 ## Intake Sequence
 
@@ -15,11 +16,11 @@ Use one consolidated intake pass or none at all.
 3. Separate missing facts into:
    - blockers: without these, the workbook would be materially wrong
    - non-blockers: you can proceed with assumptions and visible flags
-4. Ask one intake batch only when blockers remain.
+4. Ask an intake batch only when blockers remain. Revisit a critical issue if later evidence changes it, without repeating settled questions.
 
-## Required Grouping
+## Optional Grouping
 
-Use this structure exactly:
+Use these labels if helpful, or choose a simpler shape. Skip empty groups:
 
 ```text
 Required to proceed
@@ -81,4 +82,4 @@ Proceed with assumptions and flags when the user is missing:
 
 - Keep the blocker batch practical and short.
 - State what you already inferred from the files so the user can correct you efficiently.
-- Ask for missing facts once, then move into trip-model creation.
+- Move into trip-model creation once blockers are resolved or safely bounded; ask a focused follow-up if materially new safety or correctness evidence requires it.

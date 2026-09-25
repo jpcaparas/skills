@@ -1,5 +1,7 @@
 # Application Resilience Review
 
+Optional scaffold. Cover applicable risks and existing guarantees; neither these sections nor new recovery or telemetry components are mandatory.
+
 ## Scope
 
 - Feature or workflow:

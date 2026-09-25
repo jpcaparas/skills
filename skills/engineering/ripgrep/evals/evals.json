@@ -25,11 +25,11 @@
     {
       "id": 2,
       "name": "edge-missing-result-debugging",
-      "prompt": "I know a match exists but ripgrep returns nothing. Walk me through the exact escalation path before I fall back to grep. Hidden files and ignore rules may be involved.",
-      "expected_output": "Explains normal search, then --hidden, then -u or --no-ignore, and mentions --debug for skip reasons.",
+      "prompt": "I know a match exists under config/ but ripgrep returns nothing. Hidden files and ignore rules may be involved; I do not know which. What diagnostic should I use?",
+      "expected_output": "Suggests scoped --debug for unknown skip reasons and explains the relevant hidden/ignore options without prescribing unnecessary intermediate searches.",
       "assertions": [
         {
-          "text": "Response escalates from default search to hidden and ignore overrides instead of jumping straight to grep",
+          "text": "Keeps diagnostics scoped to config/ and explains that --hidden and --no-ignore address different filters, without requiring an ordered ladder",
           "type": "functional"
         },
         {
@@ -95,6 +95,36 @@
         "smoke",
         "patterns"
       ]
+    },
+    {
+      "id": 6,
+      "name": "known-hidden-ignored-file",
+      "prompt": "Find file:line matches for the literal 'cache.hit' only in .cache/build/result.txt. That exact text file exists and is ignored. Do not search the rest of the repo.",
+      "expected_output": "Uses a direct literal rg search on the named file, such as rg -Hn -F 'cache.hit' .cache/build/result.txt, without a preliminary normal search or repository-wide override.",
+      "assertions": [
+        {
+          "text": "Searches only the exact file with literal semantics, filename, and line numbers; explicit file arguments do not need an ignore-override ladder",
+          "type": "functional"
+        },
+        {
+          "text": "Does not run path discovery, broad scans, or known-insufficient intermediate commands before the direct search",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "search"]
+    },
+    {
+      "id": 7,
+      "name": "negative-web-search",
+      "prompt": "Search the web for the official ripgrep documentation. I am not asking you to search local files.",
+      "expected_output": "Uses web research rather than treating the generic word search or the product name as a request to run a local rg workflow.",
+      "assertions": [
+        {
+          "text": "Does not run local text or path searches for a web-only lookup",
+          "type": "negative"
+        }
+      ],
+      "tags": ["negative"]
     }
   ]
 }

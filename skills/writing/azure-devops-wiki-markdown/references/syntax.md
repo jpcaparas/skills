@@ -6,7 +6,7 @@ Primary source: Microsoft Learn, "Markdown syntax for files, widgets, wikis - Az
 
 ## Safe Wiki Page Skeleton
 
-Use this pattern when the user wants a clean wiki page rather than a loose snippet:
+This is an illustrative page pattern, not a required structure. Adapt or omit sections to fit the request:
 
 ````md
 [[_TOC_]]
@@ -136,4 +136,3 @@ For collapsible sections, embedded videos, query tables, mentions, and KaTeX, re
 - `references/code-languages.md`
 - `references/gotchas.md`
 - `templates/wiki-page-starter.md`
-

@@ -1,8 +1,8 @@
 {
-  "version": "2.21.0",
+  "version": "2.22.0",
   "organization": "JP Caparas",
   "date": "August 2026",
-  "abstract": "Launch autonomous website experiments through fresh isolated subagents, with same-run reconnect and steering recovery, bounded coordinator liveness checks and single-owner zombie recovery, explicit multi-lead and same-prompt replica fan-out, coordinator-private mutually exclusive design territories and strict sibling blindness, unbounded recursive descendant teams, unrestricted build-agent capability, lean consolidated critics with explicit mobile-friendliness inspection, terminal READY, batched blockers, targeted rechecks, evidence reuse, and warranted escalation, 100 plainly labelled catalogue options, cohesive full-depth prose prompts without leaked orchestration contracts, mouse-and-keyboard-friendly games and simulations with paired WASD and arrow controls plus transient run-only production-state adapters and digest-bound Chromium verification across input methods and transformed viewpoints, live-first public GET interfaces with bundled local snapshot fallbacks and freshness disclosure, evidence-based stopping, coupling-aware delegation, justified WebAssembly selection, slugged timestamp run directories, nearby artifact and prompt catalogue links, clickable run IDs for portable artifact-folder access, recoverable run-local temporary state with safe completion cleanup, prompt provenance, local-only publication safeguards, and drop-ready multi-file static artifacts.",
+  "abstract": "Launch isolated one-shot website experiments with an explicit pre-dispatch choice between the existing gauntlet and generation-only UNVERIFIED output. Preserve the immutable receipt mode, sealed prompt, single-writer recovery, sibling blindness, local-only authority, and safe scratch cleanup. Exact-prompt requests need no additions; design territories apply only to requested variations. Canonical behavior lives in SKILL.md.",
   "references": [
     "https://gist.github.com/jpcaparas/c16268ac961bb332f3fbf2a39e2efbdd",
     "https://x.com/mweinbach/status/2077827886149439547",

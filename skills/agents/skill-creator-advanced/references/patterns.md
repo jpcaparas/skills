@@ -122,7 +122,7 @@ Verify the target harness can express each dependency. Two explicit-only skills 
 
 ## Branch and Content Ledger
 
-Build the canonical branch-and-artifact ledger from `SKILL.md` Phase 2 before selecting a pattern. This catalog adds two access questions to each branch: how often is the material needed, and can the target harness reliably reach it on demand? Use those answers to choose flat, hub-and-spoke, domain-directory, or composition patterns without copying the placement rules here.
+For complex routing, map how often each branch needs material and whether the target harness can reach it on demand. Use that evidence to choose flat, hub-and-spoke, domain-directory, or composition patterns. A simple skill does not need a written ledger before its structure can be chosen.
 
 ---
 
@@ -134,7 +134,7 @@ How tightly should your skill constrain the agent? It depends on how fragile the
 
 Multiple valid approaches exist. The agent should choose based on context.
 
-**Style:** Text instructions explaining tradeoffs. No specific commands.
+**Style:** Outcomes and relevant tradeoffs. Commands and examples may illustrate an option without becoming the only permitted approach.
 
 **When:**
 - Architecture decisions
@@ -173,7 +173,7 @@ Preserve the caller's requested encoding when the contract supports it.
 
 The operation is fragile. Specific syntax, exact commands, or precise configuration required.
 
-**Style:** Copy-paste commands with exact parameters. No room for interpretation.
+**Style:** Exact syntax at the fragile boundary, with the supported version and effect explained. Leave unrelated choices open. Recheck official documentation or the installed tool when that contract no longer holds; do not improvise through a safety boundary.
 
 **When:**
 - API auth headers and token formats
@@ -321,7 +321,7 @@ Add a task-to-file mapping only when it improves on the tree instead of duplicat
 
 ## Completion Criteria
 
-Every ordered step ends with a condition the agent can observe. Make it exhaustive where partial coverage is the likely failure.
+Make the result and consequential handoffs observable. Specify intermediate conditions where partial coverage could cause a real failure, not after every ordered step.
 
 | Weak activity | Strong criterion |
 |---|---|
@@ -350,7 +350,7 @@ Merge when skills compete for the same trigger and follow substantially the same
 ## Cross-Reference Rules
 
 1. **Keep answer paths shallow** — a task should not require chasing an accidental chain of references.
-2. **Include "See Also" sections** — at the bottom of each reference, list related files
+2. **Link useful next material** — add a "See Also" section only when it helps the current reader; do not create obligatory reference chains
 3. **Use relative paths** — `references/cross-harness.md`, not absolute machine paths
 4. **Encode condition and purpose** — "Read `references/testing.md` when behavioral evidence is in scope; use it to choose the evaluator and result contract"
 5. **Don't duplicate** — information lives in ONE place. Reference it, don't copy it.

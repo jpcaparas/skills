@@ -1,10 +1,10 @@
 # Quality gates
 
-Use these gates before handing off a draft, rewrite, review, or adaptation. Apply only the gates that fit the job, but never skip fidelity when source material exists.
+Use these checks when a draft, rewrite, review, or adaptation needs them. They are not a required multi-pass ritual or report format. Apply only checks relevant to the scope and risk, but never skip source fidelity or the user's requested output.
 
 ## Gate 1: Fidelity
 
-Compare the final prose with the source and preservation ledger.
+Compare the final prose with the source and any preservation ledger used.
 
 Pass when:
 
@@ -54,16 +54,16 @@ Pass when:
 
 - the writer's stance, source of authority, and limits are legible
 - specific detail displaces generic mood or praise where evidence allows
-- formulaic frames no longer carry the argument
-- remove-by-default wrappers are gone unless the genre requires them
-- rewrite-by-default phrases expose their actor, mechanism, evidence, comparison, or consequence
+- formulaic frames no longer hide the argument
+- wrappers are removed when empty, retained when useful to the genre, relationship, or writer's rhetoric
+- flagged frames expose the relevant meaning or are deliberately retained because they already serve it
 - rejected phrases were not replaced with equally vague synonyms
 - a diagnostic match was never treated as proof of authorship
 - dialect, second-language identity, accessibility choices, and intentional rhetoric remain intact
 - no fake typo, slang, anecdote, emotion, or first-person claim was added
 - high-signal source lines survived unless there was a clear reason to change them
 
-When a substantial draft was scanned, rerun it after the last substantive edit. Review every remove- and rewrite-labelled candidate when the writing contract includes an explicit formulaic-language ban, and record any deliberate exception. Use `--gate` only for the conservative multi-pattern cluster check.
+If a scanner result is being used as evidence, refresh it after relevant changes. When the user explicitly requests a formulaic-language ban, review candidates in that scope and explain material exceptions. Otherwise no per-match log or clean scan is required. Use `--gate` only for the conservative multi-pattern cluster check, not editorial acceptance.
 
 ## Gate 5: Genre and reader task
 
@@ -108,14 +108,14 @@ Pass when:
 
 ## Gate 8: Final proof
 
-Run last.
+Choose checks appropriate to the changed material; a short edit needs a direct reread and source comparison, not a page-level sampling exercise.
 
 1. Read the first screen without context. Does it establish the right contract?
 2. Read one dense middle section. Can the reader follow the reasoning or task?
 3. Read the ending. Does it add the right final move rather than recap by habit?
 4. Compare protected literals and claims with the source.
 5. Check the output format and requested locale.
-6. Confirm that all diagnostics were rerun after the last real rewrite.
+6. If reporting diagnostic results, confirm they describe the final relevant text.
 
 ## Severity and release decisions
 

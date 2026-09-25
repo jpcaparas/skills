@@ -109,8 +109,9 @@ Symptoms:
 
 Repairs:
 
-- Move policy into a deterministic unit and test it directly.
-- Keep adapter or framework integration tests for wiring.
+- First use existing safe seams and simplify only the setup that obscures the behavior.
+- Move policy into a deterministic unit only when necessary, proportionate, and authorized; tests-only work must not silently refactor production.
+- Reuse adequate adapter or framework integration coverage for wiring.
 - Replace broad shared setup with local builders.
 - Use named factory states instead of mysterious defaults.
 - Delete fixture fields that do not affect the assertion.

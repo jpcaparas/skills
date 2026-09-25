@@ -40,9 +40,9 @@ Use regexes over `tool_name`. For MCP tools, write `^mcp__github__.*`, not `mcp_
 
 Command hooks can return JSON on stdout. Put diagnostics on stderr so a log line does not corrupt the decision JSON.
 
-## 6a. Devin strictly parses stdout as Claude-format JSON
+## 6a. Emit Devin-supported JSON, not plain text
 
-Verified in the field on 2026-06-12 (Devin CLI v2026.5.26-8): unlike Claude Code, Devin does not accept plain-text stdout from hooks. Non-empty stdout that is not valid Claude-format JSON fails Devin's effects evaluator and the entire hook output is silently discarded. The only symptom is a line in `~/.local/share/devin/cli/logs/`:
+Historical field verification on 2026-06-12 (Devin CLI v2026.5.26-8): plain-text stdout failed Devin's effects evaluator and the entire hook output was silently discarded. This is a baseline, not a required runtime version. The observed symptom was a line in `~/.local/share/devin/cli/logs/`:
 
 ```
 WARN agent_ext::hooks::event_handler: Effects evaluator failed for hook None: Failed to parse Claude hook output: expected value at line 1 column 1
@@ -50,7 +50,7 @@ WARN agent_ext::hooks::event_handler: Effects evaluator failed for hook None: Fa
 
 Rules for generated Devin hook scripts:
 
-- Emit either empty stdout or one valid Claude-format JSON object. Never plain text.
+- Emit either empty stdout or one valid event-appropriate Devin JSON object. Keep plain text and diagnostics off protocol stdout.
 - To inject context from `SessionStart`, use:
 
 ```json
@@ -62,11 +62,11 @@ Rules for generated Devin hook scripts:
 }
 ```
 
-- Top-level fields Devin parses include `decision`, `reason`, `continue`, `stopReason`, `suppressOutput`, `systemMessage`, and `hookSpecificOutput`.
+- The official Devin overview's output format, checked on 2026-09-25, documents `decision`, `reason`, and event-specific `hookSpecificOutput` fields. The context shape above is explicitly supported by Devin, not inferred from Claude. Treat earlier parser observations about `continue`, `stopReason`, `suppressOutput`, and `systemMessage` as version-specific; parsing a field does not prove its effect. Verify any needed effect against the installed release. Source: `https://docs.devin.ai/cli/extensibility/hooks/overview#output-format`.
 
-## 6b. Devin renders no hook activity in its TUI
+## 6b. TUI silence in the recorded baseline is not failure
 
-Devin CLI applies hook effects (context injection, block decisions) but never displays hook execution in the transcript, unlike Codex CLI which prints `Running SessionStart hook` and the hook context inline. Even a parsed `systemMessage` is not rendered as of v2026.5.26-8. Silence is not failure. Verify hooks via:
+Devin CLI v2026.5.26-8 applied hook effects (context injection, block decisions) without displaying hook execution in the transcript. Even a parsed `systemMessage` was not rendered. Do not assume identical UI behavior in every later release. Verify hooks via:
 
 - `/hooks` to list loaded hooks and their source files
 - `~/.local/share/devin/cli/logs/` for `Loaded N hooks` lines and effects-evaluator warnings

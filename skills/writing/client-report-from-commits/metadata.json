@@ -2,7 +2,7 @@
   "version": "1.0.0",
   "organization": "JP Caparas",
   "date": "April 2026",
-  "abstract": "Production skill for turning git commits and diffs since an exact date into a feature-grouped, copy-pastable client update for non-technical audiences, with strict date handling and repository checks.",
+  "abstract": "Production skill for turning git commits and diffs over a reliably resolved date range into a feature-grouped client update, with non-technical wording, repository evidence, and the user's requested format.",
   "references": [
     "https://git-scm.com/docs/git-log",
     "https://git-scm.com/docs/git-diff",

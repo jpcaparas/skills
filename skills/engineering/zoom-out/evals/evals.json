@@ -57,14 +57,14 @@
       "id": 4,
       "name": "loads-caller-mapping-reference",
       "prompt": "Who calls PaymentIntentBuilder? I need to know the caller chain, but I only trust verified paths, not random grep hits.",
-      "expected_output": "Reads the caller mapping reference, ranks evidence by runtime wiring/direct invocation/tests/exports/textual matches, and labels each path as verified, likely, lead, or unknown.",
+      "expected_output": "Reads the caller mapping reference and distinguishes inspected invocation or runtime wiring from unverified imports and textual matches, using labels or clear prose.",
       "assertions": [
         {
           "text": "Agent reads references/caller-mapping.md",
           "type": "disclosure"
         },
         {
-          "text": "Response uses evidence labels for caller relationships",
+          "text": "Response states which caller relationships are verified and which remain uncertain, without requiring fixed label names",
           "type": "functional"
         }
       ],
@@ -74,18 +74,35 @@
       "id": 5,
       "name": "output-contract-map",
       "prompt": "Give me a concise architecture map around the nightlyBillingJob. I need the entrypoints, downstream dependencies, unknowns, and the next three files to read.",
-      "expected_output": "Uses the output contract with Target, One-Layer Map, Caller Paths, Boundaries, Evidence, Unknowns, and Next Reads, keeping the result concise.",
+      "expected_output": "Maps the job's entrypoints, downstream dependencies, and unresolved wiring with evidence, then recommends three files in an order suited to the user's goal. Headings are optional.",
       "assertions": [
         {
-          "text": "Agent reads references/output-contract.md or uses templates/zoom-out-map.md",
-          "type": "disclosure"
+          "text": "Contains evidence-backed entrypoints and dependencies, distinguishing observed paths from unknowns without requiring a template or specific headings",
+          "type": "functional"
         },
         {
-          "text": "Output ends with an ordered next-read list",
+          "text": "Recommends exactly three next files in a useful order, as requested by the user",
           "type": "structural"
         }
       ],
-      "tags": ["disclosure", "structural"]
+      "tags": ["structural"]
+    },
+    {
+      "id": 6,
+      "name": "bounded-map-with-missing-callers",
+      "prompt": "Zoom out on src/plugins/legacyHook.ts using only src/plugins/. The defining file and its imports are known, but a focused check found no caller or test in that subtree. I need a bounded map, not a repo-wide audit.",
+      "expected_output": "Maps the known owner and downstream dependencies, reports the caller/test gaps within the inspected scope, and stops without expanding to satisfy a quota.",
+      "assertions": [
+        {
+          "text": "Uses known files or focused searches without requiring the inventory helper or a minimum number of center files",
+          "type": "functional"
+        },
+        {
+          "text": "Reports that no callers or tests were found in src/plugins/ without asserting global absence or searching outside the user boundary",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge"]
     }
   ]
 }

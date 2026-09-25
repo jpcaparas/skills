@@ -1,5 +1,7 @@
 # Design Brief Template
 
+Optional planning aid: keep only sections that clarify this task. Styles may mix; the examples in the skill are not a required menu.
+
 ## Product Context
 
 - Product:
@@ -7,7 +9,7 @@
 - Platform: web marketing, web app, desktop, or mixed
 - User goal:
 
-## Taste Axes
+## Useful Taste Dimensions (Optional)
 
 - Composure:
 - Density:
@@ -15,11 +17,11 @@
 - Materiality:
 - Motion:
 
-## Chosen Family
+## Visual Direction
 
-- Primary family:
+- Direction or combination of styles:
 - Why this fits:
-- What to avoid:
+- User constraints and trade-offs:
 
 ## Structural Priorities
 
@@ -27,7 +29,7 @@
 2. Supporting objects:
 3. States that must be designed:
 
-## System Seed
+## System Seed (When Reuse Or Handoff Needs It)
 
 - Typography roles:
 - Palette logic:
@@ -39,5 +41,5 @@
 
 - The first thing users notice should be:
 - The screen must still work with:
+- Accessibility and interaction checks:
 - This design should not feel like:
-

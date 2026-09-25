@@ -4,10 +4,12 @@ Repository-agnostic creator and curator for production-grade skills and skill li
 
 ## What It Adds
 
-- Progressive disclosure and blueprint-driven skill design
+- Outcome-led authoring with explicit safety boundaries and room for model judgment
+- Progressive disclosure and optional API, CLI, and reference blueprints
 - Branch ownership, invocation design, lifecycle promotion, rename, and deprecation gates
-- Draft-vs-release validation, behavioral eval design, and safe verification ladders
+- Draft-vs-release validation and proportional verification, including valid creative alternatives in behavioral evals
 - Evidence-backed pruning for duplication, no-ops, sediment, and stale publication surfaces
+- Evergreen guidance with official-source recovery and sourced canonical update proposals
 - Cross-harness compatibility guidance
 - Destination inference so new skills land in the right repo-local or global skills directory
 

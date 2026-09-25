@@ -20,6 +20,8 @@ Do not use a decision tree when the work is purely linear. In that case, a check
 
 ## Azure-Safe Authoring Rules
 
+These syntax defaults follow the April 9, 2026 baseline in `references/mermaid.md`. Verified official documentation for the target version may supersede them. The proposal layouts below are illustrative, not required sections.
+
 1. Use `::: mermaid` blocks in wiki pages.
 2. Use `graph TD` or `graph LR`, not `flowchart`.
 3. Keep one decision per branching node.
@@ -137,4 +139,3 @@ After the diagram, include:
 - `references/syntax.md`
 - `references/gotchas.md`
 - `templates/decision-tree-proposal.md`
-

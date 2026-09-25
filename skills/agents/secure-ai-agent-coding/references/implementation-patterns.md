@@ -1,6 +1,6 @@
 # Implementation Patterns
 
-Use these patterns to turn policy intent into code structure. Adapt names to the local stack, but keep the control boundary outside the model.
+Use these patterns to turn policy intent into code structure. Adapt them to the local stack and actual risk; examples are not required architectures or universal numeric limits. Keep the control boundary outside the model.
 
 ## Pattern 1: Prompt Boundary
 
@@ -67,7 +67,7 @@ Review checks:
 
 ## Pattern 3: Action Registry
 
-Map validated intent to fixed capabilities. Do not let the model invent tools, endpoints, paths, or shell commands.
+For a narrow business agent, map validated intent to fixed capabilities and reject tools, endpoints, paths, or commands outside that registry. For a general-purpose coding agent, a well-isolated sandbox can be the capability boundary instead: constrain its filesystem, network, credentials, effects, and resources rather than pretending every generated program can be statically enumerated. Neither design lets the model authorize its own access.
 
 ```python
 from dataclasses import dataclass

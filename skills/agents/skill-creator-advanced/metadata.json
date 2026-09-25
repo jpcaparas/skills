@@ -2,7 +2,7 @@
   "version": "1.1.0",
   "organization": "JP Caparas",
   "date": "July 2026",
-  "abstract": "Advanced creator and curator for production-grade installable skills. It combines destination-aware scaffolding with precise invocation contracts, branch-driven disclosure, safe verification, draft-versus-release gates, behavioral evals, evidence-backed pruning, and atomic lifecycle updates across catalogs, registries, routers, wrappers, and discovery surfaces.",
+  "abstract": "Outcome-led creator and curator for installable skills, from small corrections to library migrations. It combines explicit safety boundaries with model judgment, optional blueprints, precise invocation, progressive disclosure, proportional verification, creative-alternative evals, evergreen source recovery, sourced update proposals, and consistent publication surfaces.",
   "references": [
     "https://agentskills.io/specification",
     "https://docs.github.com/en/copilot/how-tos/copilot-on-github/customize-copilot/customize-cloud-agent/add-skills",

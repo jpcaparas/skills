@@ -6,10 +6,10 @@
       "id": 1,
       "name": "tokyo-family-trip-with-partial-coverage-and-shopping",
       "prompt": "Build an .xlsx travel itinerary workbook from a hotel PDF, outbound e-ticket PDF, attraction screenshots, conference dates, and shopping notes for a four-person Tokyo trip.",
-      "expected_output": "The response uses this skill, extracts facts from the attachments first, asks at most one consolidated clarification batch if blockers remain, and produces an .xlsx workbook with the required sheet order, visible review flags for partial coverage, protected conference days, and shopping still visible.",
+      "expected_output": "The response uses this skill, extracts facts first, consolidates known blockers and follows up only for materially new safety or correctness issues, then produces an .xlsx workbook with the required sheet order, coverage flags, protected conference days, and shopping still visible.",
       "assertions": [
         { "text": "Skill triggers for workbook generation", "type": "functional" },
-        { "text": "Clarification stays in one grouped batch", "type": "functional" },
+        { "text": "Known blockers are consolidated without repeated questions; material new safety or correctness issues may receive focused follow-up", "type": "functional" },
         { "text": "Workbook is created", "type": "verification" },
         { "text": "Coverage review flags remain visible", "type": "structural" },
         { "text": "Shopping remains visible in Daily Plan and Buy List", "type": "structural" }
@@ -42,11 +42,11 @@
     },
     {
       "id": 4,
-      "name": "traveller-count-mismatch-needs-one-batch-clarification",
+      "name": "traveller-count-mismatch-needs-consolidated-clarification",
       "prompt": "Build a holiday itinerary spreadsheet from conflicting hotel and flight documents where the hotel covers 3 adults and the flights show 2, but the notes talk about 4 travellers.",
-      "expected_output": "The skill asks exactly one consolidated clarification batch because coverage is materially contradictory, then keeps the mismatch visible as review flags rather than silently choosing one source.",
+      "expected_output": "The skill consolidates known coverage questions, follows up if new critical evidence appears, and keeps unresolved mismatches visible as review flags rather than silently choosing one source.",
       "assertions": [
-        { "text": "Exactly one clarification batch is used", "type": "functional" },
+        { "text": "Known contradictions are addressed together without a hard cap that prevents necessary follow-up", "type": "functional" },
         { "text": "Contradictions become review flags", "type": "structural" },
         { "text": "The skill does not silently overwrite one source with another", "type": "negative" }
       ],
@@ -66,7 +66,7 @@
       "id": 6,
       "name": "rough-notes-only-no-uploaded-files",
       "prompt": "I only have rough notes for a family Singapore trip. Build a travel prep spreadsheet and itinerary workbook anyway, using assumptions and visible flags where needed.",
-      "expected_output": "The skill generates a workbook from rough notes, asks at most one blocker batch, and uses explicit assumptions and review flags instead of freezing.",
+      "expected_output": "The skill generates a workbook from rough notes, consolidates known blockers with focused follow-up for materially new safety or correctness issues, and uses assumptions and review flags for non-blockers instead of freezing.",
       "assertions": [
         { "text": "Workbook can be generated without uploaded files", "type": "functional" },
         { "text": "Assumptions are explicit", "type": "structural" },
@@ -85,6 +85,30 @@
         { "text": "No fake return booking is invented", "type": "negative" }
       ],
       "tags": ["edge", "return-flight", "review-flags"]
+    },
+    {
+      "id": 8,
+      "name": "new-transit-blocker-after-intake",
+      "prompt": "We already answered the intake: two travellers, Tokyo trip from 2027-04-05 to 2027-04-12, both returning home on April 13, no mobility constraints. A newly supplied flight document reveals an overnight transfer requiring entry into another country, but only one traveller's passport nationality is known. Continue the workbook; don't re-ask the dates or group size.",
+      "expected_output": "Asks a focused follow-up about the newly material passport/transit facts rather than guessing because an earlier intake occurred. Reuses settled dates and group size, verifies relevant official entry rules, and flags unresolved compliance.",
+      "assertions": [
+        { "text": "Follows up on the newly material transit or nationality uncertainty without reinterviewing answered context", "type": "functional" },
+        { "text": "Does not guess entry eligibility or claim current rules were verified without official evidence", "type": "negative" },
+        { "text": "Uses only useful intake groupings and keeps unresolved coverage or compliance visible", "type": "structural" }
+      ],
+      "tags": ["edge", "clarification", "safety"]
+    },
+    {
+      "id": 9,
+      "name": "unsupported-workbook-layout-is-not-a-fake-flag",
+      "prompt": "Use this travel workbook skill, but I need a single-sheet dashboard with a custom palette and no other tabs. Discover spreadsheet guidance through this harness; do not assume a vendor installation path. Do not change the builder source without asking.",
+      "expected_output": "Explains that the bundled builder and validator enforce a different workbook contract, then proposes an alternative workflow or scoped extension rather than inventing customization flags or claiming the normal validator supports the requested shape.",
+      "assertions": [
+        { "text": "Discovers available guidance through the harness rather than a fixed home-directory path", "type": "functional" },
+        { "text": "Distinguishes supported builder output from a proposed alternative or extension", "type": "functional" },
+        { "text": "Does not silently edit the canonical or installed builder or claim unsupported flags or validation coverage", "type": "negative" }
+      ],
+      "tags": ["edge", "portability", "scope"]
     }
   ]
 }

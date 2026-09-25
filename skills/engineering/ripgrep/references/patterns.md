@@ -116,23 +116,29 @@ If downstream tools may choke on spaces or newlines in paths, use `-0` and `xarg
 
 ## Debugging Missing Results
 
-Use a strict escalation path instead of giving up:
+Choose the diagnostic or override that fits the evidence; these are alternatives, not a sequence:
 
 ```bash
-# 1. Normal search
-rg -n 'pattern' .
+# Normal traversal when hidden and ignored entries are irrelevant
+rg -n 'pattern' src/
 
-# 2. Hidden files might matter
-rg -n --hidden 'pattern' .
+# Include hidden entries while retaining ignore rules
+rg -n --hidden 'pattern' config/
 
-# 3. Ignore files might be hiding it
-rg -n -u 'pattern' .
+# Include ignored entries in the relevant subtree
+rg -n -u 'pattern' logs/
 
-# 4. Need to see why ripgrep skipped things
-rg --debug 'pattern' .
+# Known scope needs both hidden and ignored entries
+rg -n --hidden --no-ignore 'pattern' .cache/build/
+
+# A known file can be searched directly, even when hidden or ignored
+rg -n -F 'needle' .cache/build/result.txt
+
+# Investigate unknown skip reasons
+rg --debug 'pattern' src/
 ```
 
-This approach is better than jumping straight to `grep -R` because it preserves speed and teaches you why the match disappeared.
+Keep the scope narrow rather than switching blindly to `grep -R` or running a known-insufficient command first. `--no-ignore` alone does not include hidden entries or enable binary-as-text search.
 
 ## Large Repositories
 
@@ -202,4 +208,3 @@ Use `-a` only when you consciously want binary-as-text behavior.
 - Read `references/commands.md` for the exact flags in each example.
 - Read `references/configuration.md` to make a pattern repeatable with config or aliases.
 - Read `references/gotchas.md` when an otherwise sensible workflow returns surprising output.
-

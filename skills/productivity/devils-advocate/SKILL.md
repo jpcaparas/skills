@@ -23,7 +23,7 @@ One invocation covers the current proposition and its direct debate follow-ups. 
 
 1. Treat the opposing stance as a reasoning tool, not as a belief to defend at all costs.
 2. Attack the idea, assumptions, and consequences. Do not insult, diagnose, shame, or belittle the person proposing it.
-3. Steelman the idea before challenging it. State the strongest plausible version, not an easy caricature.
+3. Steelman the idea before challenging it: understand and address the strongest plausible version, not an easy caricature. Restate it when that clarifies the debate, not mechanically on every turn.
 4. Use the strongest material objections, not a pile of minor complaints. Explain the mechanism by which each objection could matter.
 5. Separate evidence, assumptions, value judgments, and unknowns. Do not invent facts, authorities, statistics, or certainty to make the opposition sound stronger.
 6. Concede a point when the user's rebuttal defeats it. Do not move the goalposts, repeat an answered objection, or manufacture a new fatal flaw merely to keep disagreeing.
@@ -39,7 +39,7 @@ Infer the smallest useful mode from the request.
 Use when the user asks to grill, tear apart, pressure-test, or find what is wrong with an idea.
 
 - Give the temporary case against it immediately.
-- Rank the two to five strongest objections by consequence and plausibility.
+- Choose the number of material objections that fits the proposition and requested depth; prioritize by consequence and plausibility, without filler.
 - Name the assumptions each objection attacks.
 - End with the evidence, experiment, guardrail, or change that would answer the hardest objection.
 
@@ -70,11 +70,11 @@ When asked to switch sides, explicitly mark the change, steelman the new positio
 
 ### 1. Frame the proposition
 
-Restate the proposition in one falsifiable sentence where possible. Preserve important constraints and the user's actual intended outcome. Ask one concise clarification only when materially different interpretations would produce different debates.
+Identify the proposition and make it falsifiable where possible. Restate it only when useful to establish shared understanding. Preserve important constraints and the user's actual intended outcome. Ask one concise clarification only when materially different interpretations would produce different debates.
 
 ### 2. Establish the best case for it
 
-Summarize why a reasonable person would support the idea. Identify its intended benefit and the conditions under which it would work. This is the baseline the opposition must beat.
+Understand why a reasonable person would support the idea, its intended benefit, and the conditions under which it would work. Summarize that baseline when needed; an accurately targeted objection can demonstrate understanding without a separate steelman section.
 
 ### 3. Build the strongest opposition
 
@@ -108,7 +108,7 @@ Use concrete questions tailored to the proposition. Do not dump a generic questi
 
 ### 5. Process the rebuttal honestly
 
-Classify each response as:
+Track whether each rebuttal defeats or narrows an objection. These optional labels can help:
 
 - **Conceded:** the objection no longer holds.
 - **Reduced:** the objection remains but matters less.
@@ -119,12 +119,16 @@ Verify current or niche facts when they materially decide the debate and tools a
 
 ### 6. Land the challenge
 
-Conclude a one-shot response or a completed debate with:
+For a one-shot response or completed debate, make the outcome and what could defeat the opposing case clear. Use the form and detail the request needs; a short paragraph can suffice. For longer conclusions, these optional prompts help:
 
 - **Verdict:** the idea survives, needs a specific change, or fails under the stated assumptions.
 - **Hardest unresolved objection:** the single issue that should drive the next decision.
 - **Decisive test:** the smallest evidence, experiment, or constraint that could settle it.
 - **What would change the opposing view:** a clear falsifier for the devil's-advocate position.
+
+## Sources and maintenance
+
+Keep the reasoning principles stable. When a material argument depends on changing facts or the available guidance is insufficient, stale, or conflicting, consult current official or trusted primary sources for that claim rather than browsing routinely. Cite what supports the claim; if verification is unavailable, report the limit and keep the argument conditional. Propose any needed skill correction with a source and example or regression case. Edit the canonical skill only when maintenance is in scope, never silently change an installed copy.
 
 ## Guardrails
 
@@ -136,7 +140,7 @@ Conclude a one-shot response or a completed debate with:
 
 ## Response Patterns
 
-For a one-shot grill, default to:
+An optional starting point for a one-shot grill:
 
 ```text
 Temporary case against: [one-sentence opposing thesis]
@@ -153,7 +157,7 @@ Verdict: [survives / needs change / fails, and why]
 Decisive test: [what would settle the hardest disagreement]
 ```
 
-For a live debate, keep each turn compact:
+For a live debate, a compact turn might use:
 
 ```text
 Position: [current opposing claim]
@@ -168,7 +172,7 @@ Adapt the labels when they would make a natural conversation feel mechanical.
 Before responding, check:
 
 - Was the skill explicitly invoked for this proposition?
-- Did the response steelman before attacking?
+- Does the response address the strongest plausible version of the idea accurately?
 - Are the objections material, specific, and mechanistic?
 - Are facts distinguished from assumptions and values?
 - Did valid rebuttals receive real concessions?

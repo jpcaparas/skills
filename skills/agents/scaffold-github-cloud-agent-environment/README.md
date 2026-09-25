@@ -4,7 +4,7 @@ Repository-agnostic skill for auditing a project and scaffolding or repairing Gi
 
 ## What It Adds
 
-- live-doc verification against the current GitHub Docs contract before real scaffolding
+- targeted official-doc verification when repository evidence leaves a platform contract uncertain or stale
 - a repo audit that looks at runners, package managers, toolchains, LFS, containers, and private registries
 - a plan-driven renderer for `.github/workflows/copilot-setup-steps.yml`
 - targeted questions when repo signals are ambiguous

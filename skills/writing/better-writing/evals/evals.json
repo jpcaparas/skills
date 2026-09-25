@@ -12,7 +12,7 @@
         {"text": "Organizes the response as README/runbook content with prerequisites, numbered steps, verification, and rollback", "type": "structural"},
         {"text": "Preserves `make db-reset ENV=staging` character-for-character", "type": "functional"},
         {"text": "Does not invent commands, prerequisites, evidence, or citations beyond the fixture", "type": "negative"},
-        {"text": "Captured trace records reads of operating-contract.md, revision-pass-stack.md, and genre-modes.md and no reads of style-bundles.md or research-notes.md", "type": "disclosure"}
+        {"text": "Uses only references needed to settle runbook structure or preservation; no full pass stack or unrelated style research is required", "type": "disclosure"}
       ],
       "tags": ["smoke", "drafting", "readme", "runbook", "disclosure"]
     },
@@ -26,7 +26,7 @@
         {"text": "Keeps a memo shape with a clear decision, context, risks, and next step rather than turning it into an essay", "type": "structural"},
         {"text": "Preserves 18.4%, Q3, `We have not tested this in production.`, the fixture's quoted sentence, and the uncertainty marker `may`", "type": "functional"},
         {"text": "Does not invent metrics, customer results, first-hand experience, or citations", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, natural-structure-and-digestibility.md, genericity-and-stiffness.md, and genre-modes.md and excludes style-bundles.md, voice-and-rhythm.md, and research-notes.md", "type": "disclosure"}
+        {"text": "Selects guidance for the actual memo structure, genericity, or evidence problem rather than loading a prescribed stack", "type": "disclosure"}
       ],
       "tags": ["rewrite", "memo", "preservation", "evidence", "disclosure"]
     },
@@ -40,7 +40,7 @@
         {"text": "Returns a review or diagnosis with prioritized findings instead of silently rewriting the guide", "type": "functional"},
         {"text": "Separates observations from suggested edits and identifies the most consequential issue first", "type": "structural"},
         {"text": "Does not claim to have changed the fixture or present a full replacement guide", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, and quality-gates.md and excludes genre-modes.md, style-bundles.md, and research-notes.md", "type": "disclosure"}
+        {"text": "Uses review guidance only as needed; does not run a rewrite workflow to satisfy a reading checklist", "type": "disclosure"}
       ],
       "tags": ["review", "review-only", "technical-guide", "disclosure"]
     },
@@ -54,7 +54,7 @@
         {"text": "Improves ownership, cadence, and concrete diction while retaining the memo's professional register", "type": "functional"},
         {"text": "Does not add slang, fake jokes, random contractions, or a recognizable writer's surface mannerisms", "type": "negative"},
         {"text": "Preserves the cautious recommendation and the fixture's concrete details", "type": "functional"},
-        {"text": "Captured trace records voice-and-rhythm.md, genericity-and-stiffness.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+        {"text": "Uses voice or humanisation guidance when needed to resolve a specific problem, without requiring every related reference", "type": "disclosure"}
       ],
       "tags": ["humanisation", "memo", "voice", "disclosure"]
     },
@@ -68,7 +68,7 @@
         {"text": "Uses a technical-guide shape with ordered steps, rationale, and a verification step", "type": "structural"},
         {"text": "Preserves `curl -fsS http://localhost:8787/healthz`, `idempotency key`, and `eventual consistency` exactly", "type": "functional"},
         {"text": "Explains the workflow without claiming tests, benchmarks, or production experience not present in the fixture", "type": "negative"},
-        {"text": "Captured trace records revision-pass-stack.md, genre-modes.md, and style-bundles.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Consults adaptation guidance only for unresolved audience or structure decisions, not a compulsory full stack", "type": "disclosure"}
       ],
       "tags": ["adaptation", "technical-guide", "voice", "commands", "terms"]
     },
@@ -82,7 +82,7 @@
         {"text": "Uses landing-page structure with audience problem, specific benefit, proof boundary, and a direct CTA", "type": "structural"},
         {"text": "Keeps `reduces triage time in our pilot` framed as a pilot observation rather than a universal result", "type": "functional"},
         {"text": "Does not invent logos, percentages, testimonials, certifications, citations, or customer experience", "type": "negative"},
-        {"text": "Captured trace records genre-modes.md, style-bundles.md, genericity-and-stiffness.md, and quality-gates.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Selects relevant copy or evidence guidance when needed rather than requiring a fixed reading stack", "type": "disclosure"}
       ],
       "tags": ["rewrite", "landing-page", "conversion-copy", "claims", "disclosure"]
     },
@@ -96,7 +96,7 @@
         {"text": "Uses an essay/reflection shape with a purposeful braid between the two scenes", "type": "structural"},
         {"text": "Preserves the quote `I stopped explaining the delay` and the uncertainty marker `I think`", "type": "functional"},
         {"text": "Does not add a tidy moral, generic inspirational conclusion, or fabricated personal detail", "type": "negative"},
-        {"text": "Captured trace records genre-modes.md, style-bundles.md, voice-and-rhythm.md, and gotchas.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Uses essay or voice references only as needed; does not force a generic genre template over the requested braid", "type": "disclosure"}
       ],
       "tags": ["rewrite", "essay", "reflection", "structure", "disclosure"]
     },
@@ -110,7 +110,7 @@
         {"text": "Separates the email copy from the UI labels and keeps both concise and scannable", "type": "structural"},
         {"text": "Preserves `Send recovery link` and `Back to sign in` exactly", "type": "functional"},
         {"text": "Uses calm, non-blaming language and does not invent support promises or security claims", "type": "functional"},
-        {"text": "Captured trace records genre-modes.md, style-bundles.md, and quality-gates.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Uses email or UI guidance only where needed, without obligatory style-bundle or research reads", "type": "disclosure"}
       ],
       "tags": ["rewrite", "email", "ui-copy", "microcopy", "disclosure"]
     },
@@ -124,7 +124,7 @@
         {"text": "Preserves all fixture numbers, dates, quoted phrases, technical terms, and uncertainty qualifiers", "type": "functional"},
         {"text": "Clearly labels the observation as staging-only and does not upgrade it to production evidence", "type": "functional"},
         {"text": "Does not add citations, sources, benchmarks, customer proof, or first-hand experience", "type": "negative"},
-        {"text": "Captured trace records foundations.md, revision-pass-stack.md, and quality-gates.md and excludes research-notes.md and style-bundles.md", "type": "disclosure"}
+        {"text": "Checks source fidelity directly and loads extra guidance only for an unresolved editorial issue", "type": "disclosure"}
       ],
       "tags": ["rewrite", "fact-preservation", "numbers", "uncertainty", "disclosure"]
     },
@@ -138,7 +138,7 @@
         {"text": "Revises explanatory prose while preserving the TypeScript block, imports, identifiers, code comments, and output example byte-for-byte", "type": "functional"},
         {"text": "Makes the scope boundary visible instead of silently refactoring or reformatting code", "type": "structural"},
         {"text": "Does not invent runtime results, dependencies, or technical behavior", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, and quality-gates.md and no read of style-bundles.md or research-notes.md", "type": "disclosure"}
+        {"text": "Limits supporting reads to scope or fidelity issues that need them, not a compulsory prose workflow", "type": "disclosure"}
       ],
       "tags": ["mixed-scope", "code-and-prose", "preservation", "review"]
     },
@@ -151,7 +151,7 @@
       "assertions": [
         {"text": "Avoids expanding `OK.` without a demonstrated reader need and may recommend no change", "type": "functional"},
         {"text": "Does not invent audience, context, facts, or a larger replacement draft", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md and gotchas.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+        {"text": "Stops without a ledger, scanner, or mandatory reference reads for this tiny draft", "type": "disclosure"}
       ],
       "tags": ["edge", "tiny-input", "stop-condition"]
     },
@@ -164,7 +164,7 @@
       "assertions": [
         {"text": "States that there is no source text to revise and asks only for the minimum missing material or audience context", "type": "functional"},
         {"text": "Does not fabricate prose, edits, facts, citations, or a claimed result", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md and quality-gates.md and excludes style-bundles.md and research-notes.md", "type": "disclosure"}
+        {"text": "Asks for the missing text without a scanner or compulsory reference reads", "type": "disclosure"}
       ],
       "tags": ["edge", "empty-input", "clarification"]
     },
@@ -178,7 +178,7 @@
         {"text": "Diagnoses clipped cadence, genericity, or over-signposting before making a restrained revision", "type": "functional"},
         {"text": "Does not merely rearrange `streamline`, `clarity`, `speed`, and `impact`; it removes unsupported hype or asks for the concrete change and evidence", "type": "functional"},
         {"text": "Does not perform an indiscriminate rewrite or claim new evidence", "type": "negative"},
-        {"text": "Captured trace records voice-and-rhythm.md, genericity-and-stiffness.md, gotchas.md, and quality-gates.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Uses only guidance needed for the overediting failure and stops after the smallest useful repair", "type": "disclosure"}
       ],
       "tags": ["edge", "over-edited", "humanisation", "cadence", "disclosure"]
     },
@@ -192,7 +192,7 @@
         {"text": "Identifies the conflict between legal precision and playful conversion copy and asks one focused question or states the chosen priority", "type": "functional"},
         {"text": "Preserves the disclaimer exactly until the priority is resolved", "type": "functional"},
         {"text": "Does not blend incompatible modes into misleading legal or marketing claims", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, genre-modes.md, and gotchas.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Consults constraint or genre guidance if needed to resolve the conflict without loading an unrelated style stack", "type": "disclosure"}
       ],
       "tags": ["edge", "conflicting-modes", "genre", "clarification"]
     },
@@ -239,7 +239,7 @@
         {"text": "Reports checks for exact commands, quoted text, numbers, uncertainty markers, evidence boundaries, and genre shape", "type": "verification"},
         {"text": "Distinguishes verified constraints from any constraint it could not verify", "type": "verification"},
         {"text": "Does not claim completion or proof without observable support", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, quality-gates.md, and revision-pass-stack.md and no read of research-notes.md", "type": "disclosure"}
+        {"text": "Uses source comparison and relevant constraint guidance, without treating a complete pass stack as verification evidence", "type": "disclosure"}
       ],
       "tags": ["verification", "release", "preservation", "disclosure"]
     },
@@ -256,7 +256,7 @@
         {"text": "Preserves the fixture's headings, paragraph order, protected-literal labels, and untouched passages", "type": "structural"},
         {"text": "Retains the dash in `“I was only trying to—”` and explains that it encodes an abrupt interruption rather than treating it as an authorship signal", "type": "negative"},
         {"text": "Does not create a comma splice, put a semicolon beside a fragment, split a verb from its object with a colon, or turn the paragraph into clipped notes", "type": "negative"},
-        {"text": "Captured trace records punctuation-and-sentence-flow.md and at least one of foundations.md or voice-and-rhythm.md, and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Consults punctuation-and-sentence-flow.md for this explicit punctuation transformation without requiring additional routine reads", "type": "disclosure"}
       ],
       "tags": ["punctuation-transformation", "line-edit", "em-dash", "semicolon", "colon", "preservation", "disclosure"]
     },
@@ -271,7 +271,7 @@
         {"text": "Preserves 46 of 50, 15 minutes, four jobs, more than 20 minutes, 31 minutes, 25%, both uses of `may`, `awaiting_confirmation`, and the quoted sentence exactly", "type": "functional"},
         {"text": "Keeps the callback cause unresolved and does not convert the proposed customer rollout into an approved decision", "type": "functional"},
         {"text": "Does not produce one-sentence-paragraph drumbeats, decorative bullets, diagnostic-label headings, invented evidence, or a generic summary conclusion", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, and natural-structure-and-digestibility.md and excludes quality-gates.md, punctuation-and-sentence-flow.md, and research-notes.md", "type": "disclosure"}
+        {"text": "Uses structural guidance such as natural-structure-and-digestibility.md if needed without forcing unrelated checks or a fixed reading stack", "type": "disclosure"}
       ],
       "tags": ["rewrite", "structure", "digestibility", "analysis", "preservation", "uncertainty", "disclosure"]
     },
@@ -286,7 +286,7 @@
         {"text": "Preserves every source command plus `kid`, `staging.env`, `issuer mismatch`, `test-user`, and `<old-kid>` exactly", "type": "functional"},
         {"text": "Makes revocation conditional on successful deployment, signing, and token acceptance", "type": "functional"},
         {"text": "Does not invent a rollback command, omit the restore instruction, claim execution or success, or add a post-revocation verification requirement absent from the source", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, natural-structure-and-digestibility.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Selects guidance for runbook sequence and high-consequence preservation as needed, rather than performing every writing pass", "type": "disclosure"}
       ],
       "tags": ["rewrite", "runbook", "digestibility", "technical-guide", "commands", "preservation", "verification", "disclosure"]
     },
@@ -302,7 +302,7 @@
         {"text": "Removes the rhetorical uses of `shift`, `gap`, `bridges the gap`, `unlocking`, `seamless alignment`, `not just ... it is ...`, and `move forward with confidence`", "type": "negative"},
         {"text": "Does not replace the rejected wording with `transition`, `divide`, `chasm`, `evolution`, `transformation`, or another abstraction that still hides the mechanism", "type": "negative"},
         {"text": "Does not invent time savings, user feedback, adoption, approval, or production results", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, genericity-and-stiffness.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Uses the relevant humanisation or catalogue guidance to resolve actual formulae without requiring a full revision stack", "type": "disclosure"}
       ],
       "tags": ["humanisation", "formulaic-language", "meaning-first-rewrite", "gap", "shift", "preservation", "disclosure"]
     },
@@ -318,7 +318,7 @@
         {"text": "Retains or precisely restates the missing seven-versus-14-day comparison in adults over 70 instead of erasing the research question", "type": "functional"},
         {"text": "Preserves the direct quotation exactly", "type": "functional"},
         {"text": "Does not apply the avoidance rule mechanically or invent research findings and scientific meaning", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes punctuation-and-sentence-flow.md and research-notes.md", "type": "disclosure"}
+        {"text": "Consults contextual-exception guidance if needed; does not expand a line edit into unrelated punctuation or research work", "type": "disclosure"}
       ],
       "tags": ["line-edit", "formulaic-language", "contextual-exceptions", "gap", "shift", "protected-literals", "disclosure"]
     },
@@ -334,7 +334,7 @@
         {"text": "Removes `meaningful shift`, `operational excellence`, `capability gaps`, `empowers`, `unlock value`, and `at scale`", "type": "negative"},
         {"text": "Does not substitute `transformation`, `evolution`, `potential`, `possibilities`, or comparable glaze", "type": "negative"},
         {"text": "Does not invent a capability, benefit, metric, user reaction, or deployment result", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, genericity-and-stiffness.md, ai-isms-and-humanisation.md, and formulaic-language-catalogue.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Uses only guidance needed to distinguish missing evidence from empty phrasing, without a compulsory reference stack", "type": "disclosure"}
       ],
       "tags": ["rewrite", "formulaic-language", "evidence-boundary", "no-invention", "gap", "shift", "disclosure"]
     },
@@ -350,7 +350,7 @@
         {"text": "Removes `rapidly evolving landscape`, `research shows`, `pivotal role`, `here's the kicker`, `not just ... it is about`, `empowering`, `unlocking the potential`, `at its core`, `testament`, `commitment to excellence`, `here's what's interesting`, `in conclusion`, `paves the way`, `brighter future`, `only time will tell`, and `possibilities are endless`", "type": "negative"},
         {"text": "Does not replace the rejected language with new hype, presenter hooks, historical importance, or unsupported authority", "type": "negative"},
         {"text": "Does not claim faster repairs, greater participation, resident approval, wider adoption, or results outside East Ward", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, genericity-and-stiffness.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Uses relevant catalogue guidance for the requested trope removal without treating all related files or a scanner as mandatory", "type": "disclosure"}
       ],
       "tags": ["rewrite", "formulaic-language", "broad-ai-tropes", "public-information", "meaning-first-rewrite", "evidence-boundary", "disclosure"]
     },
@@ -365,7 +365,7 @@
         {"text": "Preserves the absence of income, transport, and cancellation data and the limits on causal and cross-hospital conclusions", "type": "functional"},
         {"text": "Removes `against the backdrop`, `growing body of literature`, `aims to explore`, `deeper understanding`, `patient journey`, `shed light`, `critical issue`, `contribute to our understanding`, and `open new avenues`", "type": "negative"},
         {"text": "Does not invent a mechanism, recommendation, intervention, causal explanation, or future study design", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Loads academic or formulaic-language guidance only as needed, not a universal pass stack", "type": "disclosure"}
       ],
       "tags": ["rewrite", "formulaic-language", "broad-ai-tropes", "academic", "uncertainty", "no-invention", "disclosure"]
     },
@@ -380,7 +380,7 @@
         {"text": "Preserves `may`, the three-to-five-business-day bank window, and support's inability to accelerate the process", "type": "functional"},
         {"text": "Removes or naturally replaces `thank you for reaching out`, `we completely understand how frustrating`, `you're absolutely right`, `rest assured`, `committed to making this right`, `seamless resolution`, `I hope this helps`, and `please do not hesitate`", "type": "negative"},
         {"text": "Does not promise a refund, release date, successful resolution, compensation, or action by the bank", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Uses relevant support-language guidance without expanding the edit into a required stack of passes", "type": "disclosure"}
       ],
       "tags": ["rewrite", "formulaic-language", "broad-ai-tropes", "support", "warmth", "no-invention", "disclosure"]
     },
@@ -396,7 +396,7 @@
         {"text": "Removes or rebuilds `Let's be clear`, `whether you're`, `independent testing confirms`, `real impact`, `at the end of the day`, and `this changes everything` without inventing proof", "type": "negative"},
         {"text": "Preserves robust standard errors, critical care, the physical landscape, the approved 2027 maintenance roadmap, the 4,200-piece mosaic, Tuesday, and the direct quotation exactly", "type": "functional"},
         {"text": "Does not treat a catalogue word as sufficient reason to edit accurate prose", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, and revision-pass-stack.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Consults only guidance needed to judge the contextual matches; a full pass stack is not required", "type": "disclosure"}
       ],
       "tags": ["line-edit", "formulaic-language", "broad-ai-tropes", "contextual-exceptions", "protected-literals", "no-invention", "disclosure"]
     },
@@ -411,7 +411,7 @@
         {"text": "Retains the instruction to reply with the bank statement if the charge posts after 22 July because it is a necessary conditional action, not a generic offer of help", "type": "functional"},
         {"text": "Preserves case 7816, invoice 1042, 22 July, Mina, `may`, three to five business days, the bank limitation, greeting, and sign-off", "type": "functional"},
         {"text": "Does not add blanket validation, unsupported reassurance, a refund promise, a generic chatbot closer, or cold impersonal language", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, ai-isms-and-humanisation.md, formulaic-language-catalogue.md, revision-pass-stack.md, and genre-modes.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Uses contextual guidance only where needed and does not treat template compliance as more important than the established voice", "type": "disclosure"}
       ],
       "tags": ["line-edit", "formulaic-language", "broad-ai-tropes", "support", "warmth", "contextual-exceptions", "protected-literals", "disclosure"]
     },
@@ -428,9 +428,42 @@
         {"text": "Flags that the source does not provide the portal control's visible label instead of inventing one", "type": "negative"},
         {"text": "Preserves `keyctl rotate --environment staging --change CHG-4821`, `kid`, `staging.env`, `environment=staging`, the URL, the staging-only scope, and every verification condition exactly", "type": "verification"},
         {"text": "Does not invent a rollback command, production behaviour, owner, review date, approval, or successful execution", "type": "negative"},
-        {"text": "Captured trace records operating-contract.md, revision-pass-stack.md, genre-modes.md, and technical-documentation-and-wikis.md and excludes research-notes.md", "type": "disclosure"}
+        {"text": "Uses technical-documentation-and-wikis.md for the requested conventions without requiring unrelated supporting references", "type": "disclosure"}
       ],
       "tags": ["rewrite", "technical-documentation", "wiki", "procedures", "accessibility", "preservation", "verification", "disclosure"]
+    },
+    {
+      "id": 31,
+      "name": "sentence-edit-without-ritual",
+      "prompt": "Line-edit only this sentence for grammar and return only the corrected sentence: The pilot may reduces delays for 12 teams using `retry_count=3`.",
+      "expected_output": "The pilot may reduce delays for 12 teams using `retry_count=3`.",
+      "assertions": [
+        {"text": "Corrects reduces to reduce and preserves may, 12, and `retry_count=3` exactly", "type": "functional"},
+        {"text": "Returns only the sentence without a ledger, headings, edit log, scanner, or routine reference reads", "type": "disclosure"}
+      ],
+      "tags": ["edge", "line-edit", "protected-literals", "disclosure"]
+    },
+    {
+      "id": 32,
+      "name": "intentional-rhetoric-is-not-a-defect",
+      "prompt": "Proofread this speech, preserving my deliberate contrast, repetition, and em dash. Return only the paragraph; no style rewrite: This is not just a bridge—it is a promise. We build for our children; we build for their children.",
+      "expected_output": "The paragraph remains intact; its conventional rhetorical frame and punctuation are intentional and grammatical.",
+      "assertions": [
+        {"text": "Preserves the contrast, repeated we build, em dash, and semicolon without requiring a technical exception", "type": "functional"},
+        {"text": "Does not add claims, call the paragraph AI-written, cite detector scores, or force a catalogue-driven rewrite", "type": "negative"}
+      ],
+      "tags": ["edge", "formulaic-language", "contextual-exceptions"]
+    },
+    {
+      "id": 33,
+      "name": "source-conflict-proposal-not-installed-edit",
+      "prompt": "Review a developer wiki heading. The approved house style supplied here requires title case: 'Rotate Staging Keys'. The bundled writing reference recommends sentence case. Keep our heading convention and briefly suggest how the canonical guidance could clarify this. Do not edit installed skills.",
+      "expected_output": "Keeps the supplied heading, applies house-style precedence, and proposes a sourced clarification with this example rather than browsing or changing installed copies.",
+      "assertions": [
+        {"text": "Retains Rotate Staging Keys and identifies the supplied approved house style as the governing source", "type": "functional"},
+        {"text": "Proposes a canonical clarification and a title-case counterexample without claiming a persisted update or requiring routine browsing", "type": "verification"}
+      ],
+      "tags": ["edge", "technical-documentation", "source-conflict"]
     }
   ]
 }

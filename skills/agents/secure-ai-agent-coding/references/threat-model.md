@@ -51,13 +51,13 @@ Every crossing needs validation, authorization, encoding, redaction, or monitori
 
 ## Action Risk Tiers
 
-Use the highest applicable tier.
+Use the highest applicable tier based on effect, privilege, data, and reversibility. Tool availability or generated code alone does not make an action high-risk. Existing explicit scoped authorization can cover repeated actions; evaluate materially new effects separately.
 
 | Tier | Description | Examples | Minimum control |
 |------|-------------|----------|-----------------|
-| Low | Read-only or reversible, no sensitive data, no external side effect | Summarize public docs, draft private note | Input validation, output validation, logging |
+| Low | Read-only or reversible, no sensitive data, no external side effect | Summarize public docs, draft private note, compute in an isolated disposable sandbox | Input/output validation and enforced capability boundaries; logging proportionate to the risk |
 | Medium | Internal write, recoverable action, moderate sensitivity | Create ticket, update draft, write internal note | Authorization, schema validation, rate limit, audit |
-| High | External side effect, sensitive data, irreversible action, code execution, money, access, deletion | Send email, charge card, grant role, delete record, run shell | Human approval or accepted equivalent, scoped credentials, rollback, monitoring |
+| High | Consequential external effect, sensitive data, irreversible action, privileged execution, money, access, deletion | Send email, charge card, grant role, delete shared record, execute on a production host | Human approval or accepted equivalent, scoped credentials, recovery where possible, monitoring |
 | Critical | Safety, legal, regulated, physical, medical, financial, or broad customer impact | Execute production migration, release agent with admin access | Formal risk acceptance, security review, staged rollout, incident plan |
 
 ## Design Questions
@@ -77,7 +77,7 @@ Ask these before implementation:
 
 ## Threat Model Deliverable
 
-Produce:
+Choose a format that makes the in-scope assets, boundaries, threats, controls, and residual uncertainty inspectable. For a broader system, these elements are useful; a narrow review can be much shorter:
 
 - one-paragraph system summary
 - asset list

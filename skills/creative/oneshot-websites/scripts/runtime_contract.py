@@ -12,6 +12,7 @@ import stat
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, Mapping
 
 
 APPLEDOUBLE_MAGIC = b"\x00\x05\x16\x07"
@@ -30,6 +31,59 @@ _UTF8_LEAD_BYTES_DECODED_AS_CP1252 = frozenset("\u00c2\u00c3\u00e2\u00ef\u00f0")
 
 class BoundedReadError(ValueError):
     """Raised when a path is not a stable regular file within the read bound."""
+
+
+VerificationMode = Literal["gauntlet", "none"]
+
+
+def verification_mode(
+    receipt: Mapping[str, object],
+    run: Mapping[str, object],
+    report: Mapping[str, object] | None = None,
+) -> VerificationMode:
+    """Resolve consent from coordinator metadata, never from a worker downgrade."""
+
+    if receipt.get("schemaVersion") == "2.5":
+        mode = receipt.get("verificationMode")
+        if mode not in ("gauntlet", "none"):
+            raise ValueError("receipt verificationMode must be gauntlet or none")
+        if receipt.get("runSchemaVersion") != "3.5" or run.get("schemaVersion") != "3.5":
+            raise ValueError("verification selection requires receipt 2.5 and run 3.5")
+        if run.get("verificationMode") != mode:
+            raise ValueError("run verificationMode must match the coordinator receipt")
+        if report is not None and report.get("verificationMode") != mode:
+            raise ValueError("report verificationMode must match the coordinator receipt")
+        if receipt.get("qualityGauntlet") != {
+            "required": mode == "gauntlet", "contractVersion": "1.0", "reportSchemaVersion": "2.1"
+        }:
+            raise ValueError("receipt qualityGauntlet must agree with verificationMode")
+        if mode == "none":
+            directional = receipt.get("directionalControls")
+            if not isinstance(directional, dict) or (
+                directional.get("required") is not False
+                or directional.get("technicalPrompt") is not None
+                or directional.get("evidencePath") is not None
+            ):
+                raise ValueError("verificationMode none cannot require directional verification")
+        return "none" if mode == "none" else "gauntlet"
+    if run.get("schemaVersion") == "3.5":
+        raise ValueError("run 3.5 requires a verificationMode anchored by receipt 2.5")
+    # Missing historical consent is not an opt-out. Old scripts retain their
+    # gauntlet default; new canonical dispatch must pass the user's choice.
+    for document in (receipt, run, report):
+        if document is not None and document.get("verificationMode", "gauntlet") != "gauntlet":
+            raise ValueError("historical runs cannot downgrade verificationMode")
+    return "gauntlet"
+
+
+def require_unverified_report(report: Mapping[str, object]) -> None:
+    """Reject verification claims in generation-only metadata without reading output."""
+
+    artifact = report.get("artifact")
+    if not isinstance(artifact, dict) or artifact.get("staticDeploymentVerified") is not False:
+        raise ValueError("generation-only report must keep staticDeploymentVerified false")
+    if report.get("verification") != [] or report.get("qualityGauntlet") is not None:
+        raise ValueError("generation-only report requires verification [] and qualityGauntlet null")
 
 
 @dataclass(frozen=True)

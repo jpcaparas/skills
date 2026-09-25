@@ -4,21 +4,21 @@ Read this file when you need to load the real date, time, and timezone into the 
 
 ## Session-Start Protocol
 
-1. Capture the current local and UTC clock state.
+1. Check the existing session anchor and known user timezone. Reuse them when reliable and fresh enough for the question. If missing, stale, or boundary math matters, capture the clock; add the user's IANA zone when it differs from the host:
 
 ```bash
-python3 scripts/capture_temporal_context.py --format markdown
+python3 scripts/capture_temporal_context.py --format markdown --extra-zone America/New_York
 ```
 
-2. If the user's prompt already exists, classify the recency risk before answering.
+2. Assess whether the requested claim is volatile. The optional guard can flag risks, but its keyword matches are advisory:
 
 ```bash
 python3 scripts/recency_guard.py --prompt "What is the latest OpenAI model for coding?" --format markdown
 ```
 
-3. If the guard says `requires_live_verification: true`, verify against current authoritative sources before answering.
-4. If the prompt contains `today`, `yesterday`, `tomorrow`, `this week`, or similar language, restate the relevant absolute dates and timezone in the answer.
-5. If the session spans hours or crosses midnight, rerun the capture step. Read `references/long-horizon.md` for refresh rules.
+3. Verify genuinely changing external claims against current authoritative sources. A guard label neither proves volatility nor excuses skipping verification of a volatile fact.
+4. Interpret relative dates in the user's timezone. Restate absolute dates and the zone when ambiguity or boundaries matter, without dumping unrelated clock metadata.
+5. Reassess anchor freshness after long pauses or relevant boundaries. Read `references/long-horizon.md` when refresh decisions are unclear.
 
 ## What the Capture Script Returns
 
@@ -31,7 +31,7 @@ python3 scripts/recency_guard.py --prompt "What is the latest OpenAI model for c
 | `timezone.utc_offset` | Offset from UTC in `±HH:MM` form |
 | `locale` | Locale hints from the environment |
 | `system` | Host, platform, and Python version used to generate the anchor |
-| `session_directives` | Ready-to-apply rules for the rest of the session |
+| `session_directives` | General reminders; apply the canonical skill's scope and freshness rules |
 
 ## Useful Variants
 
@@ -52,9 +52,9 @@ python3 scripts/capture_temporal_context.py --format json
 
 ## Use the Right Source of Truth
 
-- Use the system clock for local time, date, and timezone.
+- Use a reliable session/system clock for the current instant. The host's local zone is not evidence of the user's zone; known user timezone takes precedence for user-relative dates.
 - Use live authoritative sources for external facts that can change.
-- Use absolute dates in the answer whenever the user might be thinking in a different timezone than the machine.
+- If the user's zone is unknown and changes the answer, ask or state the assumption. Use absolute dates when the difference matters.
 
 ## Cross-References
 

@@ -191,7 +191,39 @@
         "code-fence",
         "verification"
       ]
+    },
+    {
+      "id": 9,
+      "name": "routine-snippet-not-package-maintenance",
+      "prompt": "Return only the Azure DevOps wiki Markdown for a TOC followed by ## Owner and the existing mention @<{12345678-1234-1234-1234-123456789abc}>. No starter sections or explanation; no code or identifier changes.",
+      "expected_output": "Only [[_TOC_]], the requested heading, and the exact mention, without extra structure or package checks.",
+      "assertions": [
+        {"text": "Preserves [[_TOC_]] and @<{12345678-1234-1234-1234-123456789abc}> exactly and includes only the requested content", "type": "functional"},
+        {"text": "Does not run skill validate.py or test_skill.py, browse, or require stacked reference reads for this known syntax", "type": "disclosure"}
+      ],
+      "tags": ["edge", "format-freedom", "disclosure"]
+    },
+    {
+      "id": 10,
+      "name": "newer-target-evidence-can-supersede-baseline",
+      "prompt": "Review a wiki diagram. In this hypothetical test, a verified newer Microsoft Learn page for our exact Azure DevOps Services target explicitly supports the flowchart syntax used here, and a target rendering check passed. Keep flowchart TD with A[Draft] --> B[Review]. Do not claim the same support for older Server releases or edit installed skills.",
+      "expected_output": "Accepts the verified target syntax rather than enforcing the bundled graph-only baseline, and proposes a sourced target-specific canonical update/check.",
+      "assertions": [
+        {"text": "Keeps flowchart TD under the supplied verified target evidence instead of treating the old limitation as permanent", "type": "functional"},
+        {"text": "Limits support to the evidenced target and proposes a canonical correction citing that official evidence and rendering example without modifying installed copies", "type": "verification"}
+      ],
+      "tags": ["edge", "source-version"]
+    },
+    {
+      "id": 11,
+      "name": "upstream-support-is-not-target-proof",
+      "prompt": "The latest upstream Mermaid supports a new diagram type. Add it to our Azure DevOps Server 2022 wiki and say it works. Target-version Microsoft docs and a rendering environment are unavailable.",
+      "expected_output": "Discloses the target support gap, avoids an unsupported promise, and offers a compatible baseline diagram or a target check rather than extrapolating upstream support.",
+      "assertions": [
+        {"text": "Does not claim Azure support from upstream Mermaid alone or fabricate a target check", "type": "negative"},
+        {"text": "Names the missing target evidence and offers a compatible documented alternative or a bounded verification plan", "type": "verification"}
+      ],
+      "tags": ["edge", "source-version", "verification"]
     }
   ]
 }
-

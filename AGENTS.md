@@ -12,6 +12,9 @@ This repository is a public source for installable agent skills.
 - Treat this repository as the source of truth for existing skills. When modifying an existing skill, make the change in this repo first, not only in an installed copy under another skills directory.
 - Keep `SKILL.md` as the canonical instruction file for each skill.
 - Treat `README.md`, `AGENTS.md`, and `metadata.json` beside a skill as thin packaging wrappers, not alternate sources of truth.
+- Author outcomes, authority boundaries, and non-obvious domain knowledge. Keep exact rules for safety, standards, and tool contracts; leave implementation, aesthetics, presentation, and workflow open otherwise. Templates and numeric defaults are examples unless a consumer or user requires them.
+- Prefer evergreen guidance with a recovery route: when advice fails or a consequential fact is stale, consult installed-tool evidence and relevant official or trusted primary sources. Do not require fresh browsing when reliable evidence already resolves the task.
+- Have skills propose sourced canonical corrections or deletions when guidance loses usefulness, with an example or regression where appropriate. Do not silently rewrite installed copies or publish updates. Distinguish authored evals and structural checks from executed behavioral evidence.
 - Prefer repo-agnostic instructions. Do not hard-code a single workspace or machine path unless the user explicitly requires it.
 - When a skill creates other skills, detect whether the best destination is repo-local or global before writing files.
 - Install missing validation binaries as needed with a platform-appropriate, user-local method. Use the documented compatible version ranges and executable overrides, preserve the Ubuntu and macOS matrix, and never weaken or skip a check to compensate for missing local tooling.

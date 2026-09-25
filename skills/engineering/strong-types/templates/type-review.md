@@ -1,6 +1,6 @@
 # Type-Strictness Review — <change name>
 
-Reviewed against the strong-types skill. Findings ordered by severity; see `references/review-rubric.md` for definitions.
+Optional template: adapt to the review and omit irrelevant sections or the gate table. Small edits can use a concise finding and verification result instead. Findings ordered by severity; see `references/review-rubric.md` for definitions.
 
 ## Verdict
 

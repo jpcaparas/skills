@@ -1,5 +1,7 @@
 # {Title}
 
+<!-- Optional full-dossier scaffold: adapt to requested length/format, omit unsupported or unhelpful sections, and never invent metadata, quotes, or follow-ups. -->
+
 | Field | Value |
 | --- | --- |
 | Channel | {channel} |
@@ -11,7 +13,7 @@
 
 ## Executive Summary
 
-{2-3 sentence overview of the video's core message}
+{Overview of the video's core message at the requested length}
 
 ## Key Topics
 

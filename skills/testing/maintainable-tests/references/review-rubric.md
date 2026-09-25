@@ -15,6 +15,8 @@
 
 Review tests for their ability to prevent regressions and teach behavior. Lead with defects and maintenance risks, not style preferences.
 
+Use the user's or repository's review format. `templates/test-review.md` is optional; include concrete evidence and impact, not empty sections or a required production refactor.
+
 ## Critical Findings
 
 Critical issues mean the tests are actively misleading:

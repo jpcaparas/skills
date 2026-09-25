@@ -17,18 +17,20 @@ This skill targets Nano Banana 2 through Gemini `generateContent`.
 - Public product name: `Nano Banana 2`
 - Public model family name: `Gemini 3.1 Flash Image`
 - Callable Developer API model verified on April 9, 2026: `gemini-3.1-flash-image-preview`
-- Default aspect ratio: `16:9`
-- Default verification size: `1K`
-- Default workflow: one render pass per variant, batched concurrently when rendering the full pack
+- Script preset aspect ratio: `16:9` (overridable)
+- Script preset verification size: `1K` (overridable)
+- Workflow: one request per intended image; concurrent batches only for an authorized multi-image pack
 
-Google's February 26, 2026 launch post identifies Nano Banana 2 as `Gemini 3.1 Flash Image`. A live `ListModels` call on April 9, 2026 exposed `models/gemini-3.1-flash-image-preview` as the callable Developer API model for this key. Use that callable ID in scripts and raw HTTP requests.
+Google's February 26, 2026 launch post identifies Nano Banana 2 as `Gemini 3.1 Flash Image`. This package records an April 9, 2026 `ListModels` observation of `models/gemini-3.1-flash-image-preview`. That is historical evidence, not a guarantee that the same ID is callable today.
+
+For an unresolved or conflicting model/API detail, consult the current [Gemini image generation documentation](https://ai.google.dev/gemini-api/docs/image-generation), [API reference](https://ai.google.dev/api/generate-content), and [model listing reference](https://ai.google.dev/api/models). Confirm that a callable ID belongs to Nano Banana 2 using official evidence, not just an `image` substring. Do not silently switch models. Ordinary prompt drafting does not need a fresh API lookup.
 
 ## Verified Models
 
 Nano Banana 2 guidance for this skill is intentionally narrow:
 
 - preferred public name: `Nano Banana 2`
-- preferred API target: `gemini-3.1-flash-image-preview`
+- bundled script default, historically verified: `gemini-3.1-flash-image-preview`
 
 If you need to confirm what your own key can call today, list the models directly:
 
@@ -55,7 +57,7 @@ Content-Type: application/json
 
 ## Request Shape
 
-Minimal raw HTTP request for a single infographic render:
+Minimal raw HTTP request for a single infographic render using the recorded model ID and an optional light editorial preset. This is a paid live call; use only within the user's authorized scope and verify uncertain model availability first:
 
 ```bash
 curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image-preview:generateContent" \
@@ -86,7 +88,7 @@ Notes:
 
 - `responseModalities` must include `IMAGE` to ask for image output.
 - `TEXT` is useful because Gemini often returns a short text part alongside the image.
-- For review loops, keep the prompt focused on one composition, not a list of styles.
+- Describe a coherent composition, including mixed styles when requested, rather than giving conflicting alternatives in one prompt.
 
 ## ImageConfig
 
@@ -109,11 +111,11 @@ Supported image sizes documented by Google:
 
 If `imageSize` is omitted, Google documents a default of `1K`.
 
-For this skill:
+For review workflows, when consistent with the requested output and budget:
 
 - Use `1K` as the default review size.
 - Use `512` for quick previews when you want lower-cost iteration. A live Nano Banana 2 probe on April 9, 2026 accepted both `512` and `1K`.
-- Use `2K` or `4K` only after the composition is already working.
+- Use `2K` or `4K` when delivery needs it. A smaller preview is an optional spend-saving step, not a required extra render.
 
 ## Response Handling
 
@@ -134,6 +136,8 @@ Use `scripts/probe_gemini_image_api.py` for a portable reference implementation.
 
 These are practical HTTP failures to expect when operating the API:
 
+Diagnose before retrying and keep further paid calls within the authorized scope. Never print credentials or silently substitute models to resolve an error.
+
 | Status | Likely Cause | Fix |
 |---|---|---|
 | `400` | bad request shape, unsupported config, malformed JSON | check `responseModalities`, `imageConfig`, and JSON syntax |
@@ -145,6 +149,6 @@ These are practical HTTP failures to expect when operating the API:
 
 ## See Also
 
-- `references/patterns.md` for the four-variant workflow
+- `references/patterns.md` for custom compositions and optional presets
 - `references/configuration.md` for the local scripts
 - `references/gotchas.md` for text and clutter pitfalls

@@ -2,12 +2,12 @@
 
 Use this reference when a draft contains canned, model-associated, corporate, academic, promotional, or assistant-like diction. It is a general-purpose editorial catalogue, not an authorship test. It applies only to editable natural-language prose. Code and other machine-readable constructs are outside its scope; in mixed documentation, revise the explanation and preserve those constructs exactly. `Gap` and `shift` receive worked examples because they are easy to ban carelessly; they are only two members of a much broader set of phrase families.
 
-The catalogue can be used across prose genres, but no action is genre-blind. Its force depends on the phrase's job:
+The catalogue offers diagnostics across prose genres, not a list of forbidden words or rhetorical forms. Its suggestions depend on the phrase's job; intentional rhetoric, warmth, cadence, and legitimate style can justify retention without a technical exception:
 
 | Action | Default |
 |---|---|
-| **Remove** | Delete the wrapper or stage direction unless the destination genuinely needs it. |
-| **Rewrite** | Rebuild the claim from supported meaning. Do not leave the formula in finished prose merely because it occurs once. |
+| **Remove** | Consider deletion when a wrapper or stage direction adds no useful function. |
+| **Rewrite** | Rebuild from supported meaning when the frame hides it; one occurrence can be enough to notice a problem, not enough to prove one. |
 | **Review** | Inspect density and function. Keep a precise or characteristic use. |
 | **Protect** | Preserve quotations, code, identifiers, official names, exact technical or legal terms, measured uses, and deliberate writer-owned language. |
 
@@ -316,12 +316,12 @@ Ordinary connective words observed in some corpora, including `across`, `within`
 - **Legal, policy, and regulated text:** exact required language, defined terms, and house style win. Record deliberate exceptions.
 - **Accessible and second-language writing:** do not erase useful repetition, plain transitions, dialect, or stable phrasing merely to create statistical irregularity.
 
-## Final avoidance check
+## Optional contextual check
 
-Before delivering prose, ask:
+When formulaic language is the issue, ask only the relevant questions. The labels below are diagnostic shorthand, not automatic rejection criteria:
 
-1. Did any remove-by-default wrapper survive without a genre reason?
-2. Does any rewrite-by-default phrase still carry the claim?
+1. Does a flagged wrapper help the reader, genre, relationship, or writer's rhetoric?
+2. Does a flagged frame clarify the claim or hide it?
 3. Did vague absence, change, or topic containers—such as `gap`, `shift`, `landscape`, or `journey`—become a named fact, comparison, sequence, or before-and-after?
 4. Did borrowed importance become evidence, consequence, or a clearly attributed judgement?
 5. Did benefit and assurance language become user actions, mechanisms, test conditions, or bounded results?

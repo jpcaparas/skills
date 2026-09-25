@@ -44,7 +44,7 @@ from directional_controls import (
     parse_directional_sample,
     response_matches_direction,
 )
-from runtime_contract import BoundedReadError, parse_json_bounded, read_regular_file_bounded
+from runtime_contract import BoundedReadError, parse_json_bounded, read_regular_file_bounded, verification_mode
 
 
 METADATA_MAX_BYTES = 1024 * 1024
@@ -352,6 +352,12 @@ def verify(arguments: argparse.Namespace) -> tuple[dict[str, Any], Optional[Path
     run_id = run.name
     manifest = load_json_object(run / "run.json", "run manifest")
     receipt = load_json_object(root / ".oneshot-provenance" / f"{run_id}.json", "provenance receipt")
+    try:
+        mode = verification_mode(receipt, manifest)
+    except ValueError as error:
+        raise VerificationError(str(error)) from error
+    if mode == "none":
+        raise VerificationError("verificationMode none forbids browser verification; output remains UNVERIFIED")
     contract = receipt.get("directionalControls")
     if not isinstance(contract, Mapping):
         return {

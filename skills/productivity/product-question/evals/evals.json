@@ -13,7 +13,7 @@
           "type": "functional"
         },
         {
-          "text": "Avoids code blocks and implementation-heavy language unless explicitly requested",
+          "text": "Uses plain-English product meaning, including technical detail only when it helps this audience or is requested",
           "type": "negative"
         },
         {
@@ -69,6 +69,28 @@
         }
       ],
       "tags": ["disclosure", "answer-contract"]
+    },
+    {
+      "id": 5,
+      "name": "generic-forwardable-prose-is-not-a-product-question",
+      "prompt": "Rewrite this birthday message so I can forward it to our team: Happy birthday Jo, have a lovely day!",
+      "expected_output": "Handles the prose request without activating app-behavior investigation or searching a repository.",
+      "assertions": [
+        { "text": "Does not treat forwardability alone as a reason to inspect code or use the product-answer template", "type": "negative" }
+      ],
+      "tags": ["negative", "invocation"]
+    },
+    {
+      "id": 6,
+      "name": "known-owner-and-useful-technical-detail",
+      "prompt": "Use product-question. The behavior is in src/billing/cancel.ts and tests/billing/cancel.test.ts; start there. Explain cancellation eligibility to a technical PM in one paragraph, keeping the exact status enum and a short relevant code excerpt if it helps. Do not use a five-section template.",
+      "expected_output": "Starts from the supplied owning files, verifies the actual behavior and exceptions, and gives a shareable paragraph with useful technical detail and compact traceable evidence rather than enforcing a search order or template.",
+      "assertions": [
+        { "text": "Reads the known owning files before expanding discovery only as needed", "type": "verification" },
+        { "text": "Preserves product meaning, material conditions, and traceable evidence in the requested form", "type": "functional" },
+        { "text": "Does not ban useful technical terms or code, force labels, or claim unseen behavior", "type": "negative" }
+      ],
+      "tags": ["edge", "presentation", "evidence"]
     }
   ]
 }

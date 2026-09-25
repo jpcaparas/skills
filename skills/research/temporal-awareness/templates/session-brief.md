@@ -2,7 +2,8 @@
 
 - Local now: `{{LOCAL_ISO}}`
 - UTC now: `{{UTC_ISO}}`
-- Primary timezone: `{{TIMEZONE_PRIMARY}}`
-- Relative-date rule: interpret `today`, `yesterday`, and `tomorrow` in this timezone unless the user specifies another one.
+- User timezone (or explicit assumption): `{{USER_TIMEZONE}}`
+- Host timezone: `{{TIMEZONE_PRIMARY}}` (not necessarily the user's)
+- Relative-date rule: use the user's timezone for `today`, `yesterday`, and `tomorrow`.
 - Verification rule: use live sources for volatile external facts such as models, versions, prices, schedules, laws, weather, executives, and current events.
-- Refresh rule: rerun the temporal capture if the session crosses midnight, changes timezone context, or rechecks rolling external data.
+- Refresh rule: reuse a sufficient fresh anchor; capture when missing, stale, or relevant boundary math matters. Recheck rolling external evidence separately.

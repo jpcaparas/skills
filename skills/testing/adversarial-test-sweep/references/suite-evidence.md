@@ -118,7 +118,7 @@ Use evidence appropriate to the risk; do not force every tool into every reposit
 | Race and sanitizer tooling | Defects on executed paths | Absence on unexecuted paths |
 | Historical regressions | Protection against known failure modes | Unknown future faults |
 
-The suite is ready to hand off when its important behaviors have meaningful oracles; uncovered or surviving cases are explained; flake and isolation findings are resolved or visibly owned; removed tests have no unique material contribution; and the complete agreed verification passes.
+A clean-within-scope result requires meaningful oracles for the reviewed behaviors, justified removals, passing agreed verification, and no unresolved in-scope failure. Ownership or quarantine alone does not make a flake repaired. An audit-only, blocked, or budget-exhausted campaign can still be handed off with findings and unrun checks explicitly documented; it must not claim the suite is clean or ready to release. Contribution claims cover tests reviewed or changed in the scoped sweep, not untouched repository tests.
 
 ## Research basis
 

@@ -77,6 +77,19 @@
         "references/governance.md"
       ],
       "tags": ["edge", "rag", "disclosure"]
+    },
+    {
+      "id": 5,
+      "name": "sandbox-computation-is-not-production-authority",
+      "prompt": "Review an AI data explainer that receives public CSVs. It can generate Python in a disposable sandbox with no network, credentials, host mounts, or persistent writes; resource limits are enforced outside the model. The user already authorized those computations. A proposed revision also gives it a production database credential and permission to email analysis automatically. Which controls are actually needed for each version?",
+      "expected_output": "Accepts bounded generated computation as a legitimate design without approval for every line or a fixed-command-only rewrite. Retains enforced isolation and input/output/resource controls. Treats production credentials and outgoing mail as new high-impact authority requiring narrow server-side authorization and approval or an accepted equivalent.",
+      "assertions": [
+        {"text": "Allows the already-authorized sandbox design without demanding transaction rollback, a command allowlist for every possible program, or repeated human approval for each computation", "type": "functional"},
+        {"text": "Requires enforced isolation, resource controls, and safe treatment of untrusted CSV content and generated output", "type": "verification"},
+        {"text": "Does not transfer sandbox authorization to production database access or outgoing mail", "type": "negative"},
+        {"text": "Explains the concrete trust-boundary and effect difference instead of classifying all tools as equally high risk", "type": "functional"}
+      ],
+      "tags": ["edge", "risk-proportionality", "safety"]
     }
   ]
 }

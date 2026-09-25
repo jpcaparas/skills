@@ -1,10 +1,10 @@
 # Design Systems And Tokens
 
-Capture the direction only after the product-level decisions are clear. Otherwise you will formalize weak instincts into reusable rules.
+Use this reference for reuse, handoff, or system work; a one-off design need not produce tokens. Capture the direction after the product-level decisions are clear, and reuse an existing system where appropriate.
 
 ## What To Capture
 
-At minimum, define:
+Capture the categories that need shared rules:
 
 1. type roles
 2. spacing rhythm
@@ -68,8 +68,8 @@ Document components by behavior, not just by appearance:
 Write the design system seed in this order:
 
 1. product context
-2. chosen family
-3. taste axes
+2. visual direction, including any intentional combination of styles
+3. useful taste dimensions, if any
 4. visual rules
 5. component rules
 6. state rules
@@ -79,13 +79,13 @@ Use `templates/design-brief-template.md` when you need a repeatable skeleton.
 
 ## When To Fork Variants
 
-Fork variants only when the context changes materially:
+Shared variants are useful when contexts recur, for example:
 
 - marketing vs product
 - web vs desktop
 - dense operations vs guided onboarding
 
-Do not fork just because one screen wanted more flair.
+A one-off flourish can remain local rather than becoming a system-wide variant. Promote it when reuse makes that worthwhile.
 
 ## See Also
 

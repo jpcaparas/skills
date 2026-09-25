@@ -27,4 +27,4 @@ Behavior:
 
 ## Docs Drift Rule
 
-Before every real scaffold or refresh, verify the live official hook docs, compare them with `assets/hook-events.json`, update manifest inputs if needed, then re-run the scaffold.
+For uncertain or changing event contracts, compare relevant official evidence with `assets/hook-events.json`. Propose a source-repository correction using the root `SKILL.md` maintenance route; update canonical inputs only when maintenance is in scope, never an installed copy silently. Stable local repairs need no full docs sweep.

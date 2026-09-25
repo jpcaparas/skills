@@ -1,5 +1,7 @@
 # Adversarial test risk ledger
 
+Optional format: keep only fields relevant to this campaign. Follow the outcome and safety rules in `SKILL.md`, not a requirement to fill every field.
+
 ## Campaign contract
 
 - Target:
@@ -7,10 +9,10 @@
 - Audit-only or authorized changes:
 - Supported environments:
 - Focused and full-suite commands:
-- Case, time, size, sequence, concurrency, memory, output, and shrink budgets:
+- Stopping budget and method-specific limits needed to bound risk:
 - Allowed effects and forbidden targets:
 - Abort conditions:
-- Required repeated-run count and variants:
+- Repetitions and variants, when justified:
 
 ## Status vocabulary
 
@@ -19,7 +21,7 @@
 - `confirmed-defect` — reproducible contract violation found
 - `excluded` — intentionally outside scope with a recorded reason
 - `escalated` — owned by another test discipline, decision maker, or environment
-- `unresolved` — evidence is blocked or contradictory
+- `unresolved` — evidence is blocked, contradictory, or not reached before the budget ended
 
 ## Risk rows
 
@@ -37,13 +39,13 @@ For every failing row, record:
 - toolchain, versions, environment, and configuration
 - seed plus generator version, when applicable
 - event or schedule trace, when applicable
-- regression test or corpus location
+- reproducer location; regression test or corpus location for authorized repairs
 - repair, owner, or escalation
 
 ## Closure check
 
-- Every row is covered, excluded with evidence, escalated, or explicitly unresolved.
-- Every confirmed defect has a minimal deterministic regression.
-- Every retained test has a distinct contribution.
-- Declared verification and repetitions are clean.
+- Every row is covered, a documented confirmed defect, excluded with evidence, escalated, or explicitly unresolved.
+- Every authorized repair has a durable regression, with prior-failure/pass evidence or an explicit verification limit; audit-only findings remain documented without code changes.
+- Every retained test reviewed or changed in this sweep has a distinct contribution; untouched tests are outside that claim.
+- Verification outcomes and unrun checks are recorded. Claim clean only when agreed verification passes and no in-scope failure remains; findings, blocked work, or an exhausted budget are valid non-clean handoffs.
 - Residual high-risk gaps are visible in the sweep report.

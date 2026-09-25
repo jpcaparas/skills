@@ -5,9 +5,10 @@ Use this file when the issue involves JSON-LD, schema selection, rich result eli
 ## Principles
 
 1. Match schema to the real page purpose.
-2. Prefer valid, specific, supportable types over stuffing many irrelevant types.
+2. Prefer valid, specific schema.org types grounded in the page's facts over stuffing many irrelevant types.
 3. Keep structured data consistent with visible content.
 4. Treat JSON-LD as a support signal, not a substitute for poor page content.
+5. Separate schema.org validity from a search engine's current rich-result eligibility. A valid type can have no Google rich-result feature; eligibility also depends on feature-specific requirements and policies and does not guarantee display or ranking.
 
 ## Page-Type Mapping
 
@@ -19,13 +20,14 @@ Common pairings:
 - breadcrumbed navigational hierarchies -> `BreadcrumbList`
 - FAQ content -> `FAQPage` only when the page visibly presents actual questions and answers
 
-Be conservative. Unsupported or misleading schema is worse than missing schema.
+Be conservative about facts, not vocabulary breadth. Misleading, irrelevant, or fabricated markup is harmful; truthful schema.org markup is not defective merely because a search engine does not support a rich result for it. Check current schema.org definitions and the relevant official search feature documentation when eligibility is uncertain, especially for restricted features such as FAQ rich results.
 
 ## Audit Checks
 
 - JSON-LD is emitted in rendered HTML, not just assembled in runtime objects
 - page type and schema type agree
-- required fields for the chosen type are present when needed
+- syntax and schema.org types/properties are valid
+- when a particular rich result is a goal, its current required fields and eligibility policies are satisfied; report this separately from vocabulary validity
 - URLs inside schema are canonical and resolve
 - image URLs are valid and publicly fetchable
 - organization data is consistent across templates
@@ -55,3 +57,4 @@ For organizations, people, products, and authored content, check whether the sit
 - schema fields match visible page content
 - breadcrumbs and organization data are internally consistent
 - no invalid, contradictory, or clearly spammy schema remains
+- findings distinguish invalid or misleading markup from valid markup without current rich-result eligibility

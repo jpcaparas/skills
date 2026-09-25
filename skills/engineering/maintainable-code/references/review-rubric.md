@@ -18,7 +18,7 @@ Do not lead with compliments or broad summaries. If there are no findings, say t
 
 ## Finding Format
 
-Each finding should include:
+Use the user's or repository's review format. The fields below are optional structure; preserve concrete evidence, impact, and a useful repair direction without filling empty sections:
 
 - Severity: P0, P1, P2, or P3
 - File and line
@@ -72,6 +72,8 @@ Before handing off a diff:
 ## Resilience Scope
 
 Use this severity guide when the diff or plan affects application runtime behavior: background jobs, queues, webhooks, external providers, persistence transitions, or observability. Lead with concrete risks that could cause duplicate side effects, stuck work, silent failures, overload, data inconsistency, or unnecessary developer intervention.
+
+Judge applicable guarantees, including verified framework or platform behavior. Missing a named mechanism or telemetry field is not itself a defect when the risk is already covered.
 
 | Severity | Use when |
 |---|---|
@@ -142,6 +144,8 @@ Use this severity guide when the change risks making behavior hard to isolate in
 | Low | Names like `MockService` or `Helper` obscure the role of a test double | Readability suffers but behavior may still be safe |
 
 ### Testability Finding Format
+
+Optional example; omit sections that add no useful evidence:
 
 ```markdown
 ## Findings

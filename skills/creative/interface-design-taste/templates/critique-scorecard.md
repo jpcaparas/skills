@@ -1,5 +1,7 @@
 # Critique Scorecard
 
+Use relevant sections, not a mandatory worksheet. Glance tests and hypothetical chrome removal are heuristics, not quotas; preserve the requested character while fixing observed problems.
+
 ## Screen Or Flow
 
 - Name:
@@ -18,7 +20,7 @@
 | --- | --- | --- | --- |
 | Blocker / High / Medium / Low | hierarchy / layout / type / color / interaction / platform |  |  |
 
-## Taste Axis Shift
+## Relevant Taste Dimensions (Optional)
 
 - Composure:
 - Density:
@@ -26,14 +28,12 @@
 - Materiality:
 - Motion:
 
-## Recommended Family
+## Recommended Direction (If Needed)
 
-- Primary family:
+- Direction or combination of styles:
 - Why:
 
-## Top Three Fixes
+## Highest-Leverage Fixes
 
-1.
-2.
-3.
-
+- Fix and evidence:
+- Accessibility, state, or real-content check:

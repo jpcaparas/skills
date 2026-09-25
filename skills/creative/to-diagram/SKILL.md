@@ -55,30 +55,30 @@ Use one Mermaid diagram, not a gallery.
 | How does one thing change state? | `stateDiagram-v2` | Mermaid-managed |
 | How do causes, stages, or entities form a cycle or mechanism? | `flowchart` with labeled feedback edges | `TD` |
 
-Prefer a flowchart when more than one grammar could work. Do not use class, ER, Gantt, journey, mind-map, or timeline syntax merely because the subject mentions software, data, time, people, or concepts. Choose the grammar that answers the user's main comprehension question.
+These are common starting points, not a grammar allowlist. Choose the grammar that best answers the user's main comprehension question, not a flowchart by default or a grammar suggested only by a keyword. The renderer passes Mermaid source to the selected CLI rather than restricting diagram types. Before using another grammar, confirm support in that CLI version and verify it through the same rendering and safety checks below.
 
 This step is complete when the diagram has one reading model and no second diagram is needed to understand the main flow.
 
 ### 3. Compress without distorting
 
-Design an overview before authoring Mermaid:
+Design the smallest truthful, readable diagram before authoring Mermaid. Let the content and audience determine granularity, not node, phase, or word quotas:
 
-1. Group details into three to six named phases when phases genuinely exist.
-2. Keep roughly 7–15 nodes by default; exceed 20 only when removing another node would hide a material branch, state, or handoff.
-3. Give each action node one short verb phrase, normally six words or fewer.
+1. Group details into named phases only when those phases clarify the subject.
+2. Keep every node needed to preserve material branches, states, and handoffs; omit detail that does not help the reader's question.
+3. Give each action node a concise, concrete label without cutting words needed for accuracy.
 4. Give each decision node one question and label every outgoing branch with its outcome.
 5. Show only loops and failure paths that change how the process is understood.
 6. Move examples, edge-case inventories, evidence, and implementation detail below the diagram in normal Markdown.
 
-Use shapes consistently: rounded nodes for start/end, rectangles for actions, diamonds for decisions, cylinders only for meaningful stored data, and subgraphs for real phases or boundaries. Shape and text must carry meaning without relying on color alone.
+For flowcharts, use shapes consistently: rounded nodes for start/end, rectangles for actions, diamonds for decisions, cylinders only for meaningful stored data, and subgraphs for real phases or boundaries. For other grammars, use their native conventions. Shape and text must carry meaning without relying on color alone.
 
 For engineering subjects, preserve trust boundaries, asynchronous handoffs, retry destinations, and terminal failure states when material. For scientific subjects, do not turn correlation into causation; label hypothesized or uncertain links and explain them below. For general concepts, replace unexplained jargon with audience-appropriate language.
 
-This step is complete when a reader can trace the happy path first, then find branches and loops without crossing a maze of arrows.
+This step is complete when a reader can follow the main relationship or path, then find material branches and loops without crossing a maze of arrows.
 
 ### 4. Author the Markdown source
 
-Write `<slug>.md` with exactly one fenced `mermaid` block and this compact structure:
+Write `<slug>.md` with exactly one fenced `mermaid` block, as required by the renderer, and disclose material assumptions, inferences, and omissions. The following explanation layout is illustrative: adapt or omit headings and bullets to suit the subject, while retaining those disclosures.
 
 ````markdown
 # <Human-readable title>
@@ -96,11 +96,11 @@ flowchart TD
 
 ## How to read it
 
-- <Explain the main path, important branch, and loop in two to four bullets.>
+- <Explain relationships or reading conventions that need context.>
 
 ## Assumptions and omissions
 
-- <Name material assumptions, inferred links, collapsed detail, or “None”.>
+- <Name any material assumptions, inferred links, or collapsed detail.>
 ````
 
 Use stable simple node IDs and quote human-facing labels. Keep labels as plain text: no HTML, scripts, click handlers, remote images, remote icon packs, or links. Use a small print-friendly palette only when it adds semantic value; avoid decorative gradients and a different color for every node.
@@ -131,6 +131,8 @@ The environment variable `TO_DIAGRAM_MMDC` provides the same override. Do not us
 
 If rendering fails, fix the Mermaid source and rerun. Do not substitute a screenshot, hand-authored raster, or unrelated image generator, and do not claim completion with only the Markdown file.
 
+When tool or version guidance conflicts with the installed CLI or is inadequate, check its version/help and official Mermaid/CLI documentation as needed. Use a verified compatible route within existing permissions, preserving the single-source, safety, and no-clobber contracts. Propose a targeted update to the canonical skill with the source and a regression or example; never auto-edit an installed copy. Routine runs need no extra browsing.
+
 This step is complete when the renderer exits zero and reports non-zero PNG dimensions.
 
 ### 6. Verify meaning and readability
@@ -140,7 +142,7 @@ Verify the deliverables, not merely their existence:
 1. Confirm the directory contains the two requested deliverables and no persisted renderer sidecars.
 2. Confirm both files are non-empty and the PNG decodes as a raster image.
 3. Inspect the PNG with the available image/media viewer at a representative size.
-4. Trace every branch from start to a terminal outcome or intentional loop.
+4. Trace every relationship using the chosen grammar; for process diagrams, follow each branch to a terminal outcome or intentional loop.
 5. Compare nodes, arrows, labels, and assumptions with the source material.
 6. If labels are cramped, arrows cross heavily, or the dominant path is not obvious, simplify the Mermaid and render again.
 
@@ -157,7 +159,7 @@ Tell the user what the diagram covers and link or list both output paths. Mentio
 Before finishing, require all applicable answers to be yes:
 
 - Is there exactly one Mermaid block and exactly two durable deliverables?
-- Can the primary path be understood before reading the notes?
+- Can the main relationship or path be understood before reading the notes?
 - Does each decision have labeled outcomes?
 - Are loops, retries, uncertainty, and terminal failures shown only when material?
 - Are node labels short, concrete, and consistent in abstraction level?

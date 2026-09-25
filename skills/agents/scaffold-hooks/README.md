@@ -2,7 +2,7 @@
 
 Thin wrapper for the installable `scaffold-hooks` skill.
 
-Use this skill when a user wants `/scaffold-hooks` to scaffold, refresh, or migrate Claude Code, Codex, GitHub Copilot, Devin CLI, or OpenCode hook configuration into one shared `hooks/` directory. Bare runs detect existing hook surfaces and refresh only those harnesses; new harnesses are added only when explicitly requested.
+Use this skill when a user wants `/scaffold-hooks` to scaffold, refresh, or migrate Claude Code, Codex, GitHub Copilot, Devin CLI, or OpenCode hook configuration. The bundled layout shares `hooks/` for shell harnesses; Copilot and OpenCode keep their own adapter locations. Bare runs detect existing hook surfaces and refresh only those harnesses; new harnesses are added only when explicitly requested.
 
 It provides:
 

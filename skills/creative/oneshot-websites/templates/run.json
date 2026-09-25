@@ -1,5 +1,6 @@
 {
-  "schemaVersion": "3.4",
+  "schemaVersion": "3.5",
+  "verificationMode": "{{VERIFICATION_MODE}}",
   "identity": {
     "model": {"name": "{{MODEL_NAME}}", "key": "{{MODEL_KEY}}"},
     "harness": {"name": "{{HARNESS_NAME}}", "key": "{{HARNESS_KEY}}"},

@@ -7,9 +7,13 @@ or a model version.
 
 ## Define the experiment before collecting wins
 
-Write a short experiment record for each candidate:
+Record the controls relevant to each candidate in the project's existing notes,
+tests, or experiment record; this table is a planning aid, not a required document
+layout. Hypothesis, acceptance criteria, permitted inputs, failure policy and
+live authority must be clear before execution. Add reproduction detail as needed
+for a comparable, repeatable run; irrelevant fields need no filler.
 
-| Field | Required decision |
+| Control | Decision to capture as applicable |
 | --- | --- |
 | Hypothesis | What improves, compared with which current path, and why? |
 | Acceptance | Task-specific quality/error ceiling, net cost target, latency budget, minimum useful coverage, and review capacity |
@@ -17,7 +21,7 @@ Write a short experiment record for each candidate:
 | Alternatives | Current path, a simpler non-Jev alternative, and the proposed Jev path |
 | Failure policy | Abstain/review/fallback on uncertainty, malformed responses, timeout, or exhaustion |
 | Reproduction | Code revision, fixture IDs/split, question revision, requested and returned model, SDK/HTTP contract, environment, concurrency |
-| Authority | Approved candidate IDs, recipient, data classes, request/attempt cap, spend ceiling/currency, duration, and cancellation conditions |
+| Authority | Approved candidates (preserve existing IDs), recipient, data classes, request/attempt cap, spend ceiling/currency, duration, and cancellation conditions |
 
 Use independent labels or domain review, not Jev's own answers as ground truth.
 For an adjudicator, measure false acceptance of known-bad outputs and false
@@ -117,7 +121,9 @@ concurrency, timeouts, region, and cache conditions. Separate warm-up from the
 measured sample. Record failures as outcomes; do not discard timeouts to improve
 latency. When testing batching, compare both sequential and concurrent baselines.
 
-Report:
+Report the evidence needed to decide the hypothesis and consequential risks,
+using applicable measures below. Missing decision-critical evidence is unknown,
+not permission to omit a loss; do not invent measurements to fill a template:
 
 - Task quality, false positives/negatives or ranking metrics, and slice results.
 - Coverage: the share handled automatically, abstention, escalation, and review load.
@@ -148,9 +154,10 @@ that may be retained, and reproducible commands in the project's normal location
 Keep raw payloads opt-in and private. Record partial results when a cap is reached;
 do not restart a run merely to replace inconvenient results.
 
-Present the before/after decision report required by step 5 of `SKILL.md`, even
-when the run failed or stopped early. Saved artifacts do not replace the user's
-comparison and adoption recommendation.
+Present the baseline/candidate comparison, outcome, uncertainty, and adoption
+recommendation described in step 5 of `SKILL.md`, even when the run failed or
+stopped early. Use prose, a table, or the project's format as appropriate; saved
+artifacts do not replace the user's decision summary.
 
 Assign **proceed**, **reject**, **inconclusive**, or **blocked/not run** using the
 predeclared acceptance criteria. An API smoke success is only a contract check.

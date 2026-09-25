@@ -1,5 +1,7 @@
 # README Review
 
+Optional outline: report only findings within the requested scope. Omit irrelevant sections; not every repository needs a quickstart, deployment guide, or nine-section README.
+
 ## Findings
 
 - [severity] Issue grounded in the current README or repository evidence.

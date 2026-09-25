@@ -13,7 +13,7 @@ Statically typed languages can still harbor ambiguity: nulls outside the type sy
 
 ### Baseline
 
-1. `<Nullable>enable</Nullable>` in every project file, warnings as errors: `<WarningsAsErrors>nullable</WarningsAsErrors>`.
+1. Enable nullable reference checking for scoped new code (`<Nullable>enable</Nullable>` or `#nullable enable`), with nullable warnings treated as errors. Applying `<WarningsAsErrors>nullable</WarningsAsErrors>` across legacy projects is rollout work, not a prerequisite for every edit.
 2. No `object` parameters/returns in application code; no `dynamic` outside genuine interop.
 3. Records for data, exhaustive `switch` expressions for closed hierarchies.
 4. Null-forgiving `!` treated like a cast: evidence adjacent, comment attached.
@@ -74,7 +74,7 @@ Turn on `CS8509` (non-exhaustive switch expression) as an error. Avoid `enum` + 
 2. Sealed interfaces + pattern-matching `switch` (Java 21+) for closed hierarchies, no `default` arm on sealed switches.
 3. `Optional<T>` for optional returns; never `null` collections (return empty).
 4. No raw generic types (`List` without `<T>`), no unchecked casts without a contained, commented `@SuppressWarnings("unchecked")`.
-5. JSpecify/`@Nullable` annotations + NullAway or Error Prone in the build for null tracking.
+5. Express nullability with the project's annotations and use its configured analyzer. JSpecify/`@Nullable` with NullAway or Error Prone are rollout options when build-tooling adoption is in scope, not mandatory new dependencies for every edit.
 
 ### Golden Reference — Sealed States
 

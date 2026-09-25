@@ -18,6 +18,7 @@ You are working in the repository at `{{REPO_PATH}}`.
 
 ## Implementation Constraints
 
+- Revalidate the relevant findings against the current checkout and deployment before editing. Reuse the audit evidence, but investigate changed or unsupported claims rather than treating them as confirmed.
 - Preserve intentional `noindex` behavior for utility, auth, account, cart, checkout, preview, and internal search routes unless a confirmed finding says otherwise.
 - Prefer shared abstraction fixes over one-off page edits.
 - Keep search metadata, social metadata, canonical logic, and schema aligned per page type.

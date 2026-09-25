@@ -30,7 +30,7 @@ What is the user asking for?
   Use this skill. Produce a code context map before making recommendations.
 
 - A specific symbol, file, route, job, table, command, event, or component is named
-  Run the inventory helper when possible, then trace direct callers, direct callees, entrypoints, and boundary crossings.
+  Trace direct callers, direct callees, entrypoints, and boundary crossings. Use the inventory helper if its candidate map would add evidence beyond what is already known.
 
 - A feature or subsystem is named, but no concrete entrypoint is obvious
   Find likely entrypoints first: routes, commands, jobs, public exports, UI screens, handlers, tests, migrations, and package manifests.
@@ -51,7 +51,7 @@ What is the user asking for?
 
 | Need | Do |
 | --- | --- |
-| First pass around a symbol or path | `python3 scripts/zoom_out_inventory.py --repo <repo> --target "<symbol-or-path>" --json` |
+| Optional candidate inventory around a symbol or path | `python3 scripts/zoom_out_inventory.py --repo <repo> --target "<symbol-or-path>" --json` |
 | Human-readable inventory | `python3 scripts/zoom_out_inventory.py --repo <repo> --target "<symbol-or-path>"` |
 | Full discovery method | Read `references/discovery.md` |
 | Caller and callee tracing rules | Read `references/caller-mapping.md` |
@@ -64,9 +64,9 @@ What is the user asking for?
 
 1. Restate the target in concrete terms: symbol, path, route, feature, job, package, or subsystem.
 2. Resolve the repository root and any user-provided scope boundaries. If the target is missing and cannot be inferred from context, ask one concise question.
-3. Run `scripts/zoom_out_inventory.py` when local files are available. Treat its output as a lead generator, not proof.
-4. Search for the target using exact strings first, then nearby names: exported symbols, filenames, route segments, test names, config keys, table names, queue names, event names, and API paths.
-5. Identify the center of gravity: the 3-7 files that define, orchestrate, or expose the behavior.
+3. Use `scripts/zoom_out_inventory.py` if candidate discovery would add useful evidence. Known paths or focused searches may suffice; helper output is a lead generator, not proof.
+4. Choose searches from the evidence available: exact identifiers, filename fragments, route segments, test names, config keys, table names, queue names, event names, or API paths. Read a known target directly when that is the useful next step.
+5. Identify the center of gravity: the files needed to explain who defines, orchestrates, or exposes the behavior, without a file quota.
 6. Trace one layer up and one layer down:
    - Upstream: callers, routes, commands, jobs, event subscribers, tests, UI screens, public exports.
    - Downstream: services, data access, adapters, external APIs, queues, stores, feature flags, config.
@@ -113,4 +113,8 @@ Use these sections when they help. Omit sections that would add noise.
 
 ## Verification Notes
 
-This skill's examples are local commands. Verify command syntax with `--help` and validate behavior by running `scripts/test_skill.py`, which builds a temporary codebase and confirms the inventory helper returns target matches, caller candidates, import edges, and suggested reads.
+When maintaining this package, verify command syntax with `--help` and run `scripts/test_skill.py`, which builds a temporary codebase and confirms the inventory helper returns target matches, caller candidates, import edges, and suggested reads. These are package maintenance checks, not prerequisites for each zoom-out invocation.
+
+## When Guidance Stops Helping
+
+When the helper or a bundled tracing assumption misses real wiring, follow repository registration and the installed framework's official docs or primary source. Keep unproven edges explicit when runtime evidence is unavailable. Propose a canonical skill correction with the missed path, source/version, and a small counterexample; do not silently edit installed copies or substitute a generic framework story for observed application behavior.

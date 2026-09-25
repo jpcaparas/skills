@@ -1,3 +1,5 @@
+<!-- Optional starter: adapt to the requested form. Remove unused sections and this note; choose bullet counts from the actual changes. Do not imply deployment from commits alone. -->
+
 Here is a high-level update for work completed since <YYYY-MM-DD>.
 
 ## <Main Accomplishment 1>

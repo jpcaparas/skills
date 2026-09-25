@@ -8,7 +8,9 @@ compatibility: "Requires: public URLs reachable by markdown.new; optional curl f
 
 Use markdown.new to turn public URLs or files into Markdown, crawl a site section into one Markdown document, or use the hosted editor utilities.
 
-Verified against the live service on April 9, 2026 with direct `curl` requests, browser automation, and failure-case probes.
+The bundled behavior notes are a snapshot verified on April 9, 2026 with direct `curl` requests, browser automation, and failure-case probes, not permanent service guarantees.
+
+When a route fails, documentation conflicts, or a consequential detail is missing, consult current official markdown.new/Cloudflare documentation and use a bounded public or synthetic probe if authorized. Do not upload private files or credentials merely to diagnose drift. State unresolved limits when live evidence is unavailable. Propose a canonical skill correction with the old claim, source/date, and sanitized response or reproducer; do not silently edit installed copies or publish it.
 
 ## Decision Tree
 

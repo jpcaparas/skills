@@ -4,15 +4,15 @@
     {
       "id": 1,
       "name": "causal-dns-explainer",
-      "prompt": "Build a small entertaining timeline website for a non-technical teenager explaining a DNS lookup. Use the supplied fact sheet; this is an offline exercise, so do not browse. Make the working project under outputs/how-dns-works. Use local HTML/CSS/JS and original art if useful. Verify what you can with the installed browser and report exact limitations. Do not publish it.",
-      "expected_output": "An editable workspace and independently served artifact; an alternating unboxed dashed-spine desktop timeline and a left-spine mobile timeline. The causal story explains both uncached resolution and a cached shortcut without fake dates. Core reading and deeper explanations work without JavaScript.",
+      "prompt": "Build a small entertaining timeline website for a non-technical teenager explaining a DNS lookup. Use the supplied fact sheet; this is an offline exercise, so do not browse. Make the working project under outputs/how-dns-works. Use local HTML/CSS/JS with a dark, text-only single-column layout, no spine and no reading-mode toggle. Verify what you can with the installed browser and report exact limitations. Do not publish it.",
+      "expected_output": "An editable workspace and independently served artifact with the requested dark, text-only layout that reads clearly on wide and narrow screens without a redundant reading toggle. The causal story explains both uncached resolution and a cached shortcut without fake dates. Core reading and deeper explanations work without JavaScript.",
       "files": ["evals/files/dns-facts.md"],
       "tags": ["smoke", "edge", "accessibility"],
       "assertions": [
         {"type": "structural", "text": "The single topic folder contains actual editable site source in workspace and an independently served artifact reproducible from that source, without model/timestamp namespaces or orchestration manifests; a notes-only workspace fails."},
         {"type": "functional", "text": "The explanation distinguishes the recursive resolver from authoritative servers and shows a cache hit bypassing the full lookup; it does not say DNS downloads the website."},
-        {"type": "functional", "text": "Rendered wide entries alternate unboxed text/art around a dashed centre spine; narrow entries use a left spine and chronological DOM order."},
-        {"type": "verification", "text": "Browser evidence covers narrow reflow, a working reading layout hiding decorative hero and beat art, and no-JavaScript core reading and navigation."},
+        {"type": "functional", "text": "Rendered entries follow causal DOM order and honor the requested dark, text-only single-column design without imposing collage, an alternating spine or a reading-mode toggle."},
+        {"type": "verification", "text": "Browser evidence covers wide and narrow readability, accessible contrast, keyboard navigation, and no-JavaScript core reading and navigation; the default presentation provides distraction-light reading."},
         {"type": "negative", "text": "Stages do not acquire fictional dates, and the artifact makes no external runtime requests."}
       ]
     },
@@ -20,11 +20,11 @@
       "id": 2,
       "name": "collage-without-a-fake-chart",
       "prompt": "Before building an investigative timeline about the fictional company LeaseCo, write an asset and story treatment using the supplied evidence note. You have a good CEO cutout, an archive photo and logo, but the attempted vector timeline illustration is visibly jagged and unreadable at mobile size. The designer also left an attractive rising stock-price sketch without a dataset. Keep the collage entertaining. Save the treatment to outputs/treatment.md; do not generate the website or acquire assets in this planning step.",
-      "expected_output": "A light/pastel investigative treatment using the collage alone rather than retaining the bad vector or inventing graph values. Attribution, rights uncertainty, photo/event dates and financial measures remain explicit.",
+      "expected_output": "An investigative treatment with a coherent topic-appropriate palette and useful collage, without retaining the bad vector or inventing graph values. Any replacement diagram must earn its place through accuracy and legibility. Attribution, rights uncertainty, photo/event dates and financial measures remain explicit.",
       "files": ["evals/files/leaseco-evidence.md"],
       "tags": ["edge", "negative", "disclosure", "evidence"],
       "assertions": [
-        {"type": "functional", "text": "The treatment removes both the unreadable vector and unsupported price sketch, retaining a collage-only composition instead of forcing replacement chart geometry."},
+        {"type": "functional", "text": "The treatment removes the unreadable vector and unsupported price sketch, retaining the useful collage; it may propose a legible, source-grounded replacement diagram but must not invent chart values or require replacement geometry."},
         {"type": "disclosure", "text": "The treatment explicitly distinguishes the 2015 portrait capture from the 2019 filing and does not call the third-party archive photo public domain solely because it is government-hosted."},
         {"type": "functional", "text": "The treatment keeps the $47bn valuation separate from $1.9bn annual loss and explains that there is no public share-price series in the supplied evidence."},
         {"type": "disclosure", "text": "The media plan specifies padding before stroke expansion and real alpha checked over light and dark."},

@@ -1,12 +1,14 @@
 # Gotchas
 
+Runtime details below describe the bundled `0.133.0` baseline, not every later release. See `PLAYBOOK.md` for known drift and the evidence-led update route.
+
 ## 1. The feature flag is `hooks`
 
 Current Codex source and `codex features list` use canonical `[features].hooks`. The old `[features].codex_hooks` key is a legacy alias. When writing config, use `hooks = true`. Hooks are enabled by default today, so feature inspection is mainly for detecting explicit disables, legacy keys, or policy overrides.
 
 ## 2. Docs can lag runtime source
 
-The public hooks guide may lag the generated schemas and runtime source. On 2026-05-26, the released docs and generated schemas include ten events, adding `SubagentStart` and `SubagentStop` to the earlier eight-event set. Re-check docs, schemas, and source before scaffolding for real.
+Docs and runtime source can describe different releases. On 2026-05-26, the baseline docs and schemas included ten events, adding `SubagentStart` and `SubagentStop` to an earlier eight-event set. Resolve uncertain or changing semantics with official release docs and source matching the installed CLI; `main` may include unreleased changes. No full source sweep is needed for a known local repair.
 
 ## 3. Tool hooks are broad, but not universal
 
@@ -20,9 +22,9 @@ File edits expose canonical `tool_name: "apply_patch"` to hook stdin. The matche
 
 The current runtime strips matchers from those events. If your logic depends on a `Stop` matcher or a prompt matcher, the config shape may look correct while the behavior quietly stays broad.
 
-## 6. `async`, `prompt`, and `agent` are config-shaped but not runtime-real
+## 6. Parsed fields may lack effects in the bundled baseline
 
-The current parser accepts those shapes, but the runtime skips them with warnings. Do not scaffold or recommend them as if they worked today.
+The baseline parser accepted `async`, `prompt`, and `agent`, but skipped them with warnings. Later official docs describe async command hooks; do not mistake either the historical runtime limit or the helper's current limitations for a perpetual platform rule. Extending the generator requires a separately verified contract change.
 
 ## 7. Multiple matching hooks run concurrently
 

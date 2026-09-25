@@ -15,9 +15,9 @@ If these three levels do not agree, the interface feels noisy even with perfect 
 
 ## Composition Rules
 
-### One dominant zone
+### Clear priorities
 
-Every screen needs a clear dominant zone:
+A dominant zone often gives a screen focus:
 
 - a hero claim
 - a working canvas
@@ -25,7 +25,7 @@ Every screen needs a clear dominant zone:
 - a form sequence
 - a primary panel
 
-Do not make navigation, filters, cards, and hero copy equally loud.
+Keep supporting controls from competing with the task. Comparison or monitoring views may instead need equally weighted peers; make their relationships explicit.
 
 ### Rhythm over raw whitespace
 
@@ -101,8 +101,8 @@ For promotional surfaces:
 
 - keep the headline readable at a glance
 - avoid six-line heading blocks when width is available
-- keep one clear visual thesis per section
-- if the hero is dramatic, let the next section become calmer and more explanatory
+- connect visual ideas through a clear composition, whether restrained or eclectic
+- consider a calmer explanatory section after a dramatic hero when that improves pacing
 
 ## Dense Screen Rules
 
@@ -110,7 +110,7 @@ When a screen feels cramped:
 
 1. reduce repeated chrome before shrinking type
 2. collapse decorative wrappers before shrinking hit areas
-3. use monospace selectively for numeric comparison, not entire paragraphs
+3. check type choices for readability and numeric comparison at the needed density
 4. align numbers and actions with strong vertical rails
 5. reserve high-emphasis color for actual status or actions
 
@@ -148,4 +148,3 @@ If the screen still feels off, ask:
 
 - `typography-and-copy.md` for internal component hierarchy
 - `platform-adaptation.md` for web versus desktop layout differences
-

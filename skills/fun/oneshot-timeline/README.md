@@ -1,6 +1,6 @@
 # oneshot-timeline
 
-Builds a working, accessible explainer timeline with topic-matched pastel styling, editorial imagery and source-backed storytelling.
+Builds a working, accessible explainer timeline with topic-matched visual direction and source-backed storytelling. Pastel-paper collage is a default, not a required style.
 
 Example requests:
 

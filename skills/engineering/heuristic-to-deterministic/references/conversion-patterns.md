@@ -16,14 +16,14 @@ Use this catalog to choose the smallest deterministic artifact that captures a r
 
 ## Validator
 
-Validators answer "does the artifact satisfy the contract?" They should:
+Validators answer "does the artifact satisfy the contract?" Define scope and failure semantics for the tool and its callers:
 
-- accept a root path argument
-- read files from that root only
-- collect all errors before exiting
+- use a root argument, project discovery, or explicit inputs as the tool supports
+- limit reads to the intended inputs and declared dependencies
+- collect independent errors when safe; fail early when continuing is unsafe or misleading
 - print precise repair guidance
-- return `2` for policy failures when used by stop hooks
-- return `1` for usage errors, missing runtimes, or broken validators
+- preserve the tool's documented exit codes; adapt them only where a caller requires different semantics
+- use `2` for policy failures and `1` for tool/usage errors only when that is the caller's contract, not as a universal convention
 
 Good validator targets:
 
@@ -46,11 +46,11 @@ Good normalizer actions:
 - format code with the repository's formatter
 - convert path separators or line endings
 
-Pair every normalizer with a validator. A normalizer alone hides whether the expected contract changed.
+Verify the normalizer's postconditions through an existing check mode, focused assertions, a validator, or equivalent evidence. Add a separate validator only for properties not already checked; normalization alone does not reveal whether the expected contract changed.
 
 ## Generator
 
-Generators should be boring. Put human judgment in a plan or manifest, then make the generated layout deterministic.
+Generators should be boring. Put human judgment in a plan or manifest, then make contract-governed output deterministic without freezing incidental organization.
 
 Generator inputs should be explicit:
 

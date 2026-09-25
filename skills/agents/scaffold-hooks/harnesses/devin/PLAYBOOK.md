@@ -11,7 +11,7 @@ Audit the target project first, then scaffold Devin CLI hooks with a determinist
 What is the user asking for?
 
 - New Devin CLI hooks in a project with no hook setup:
-  Verify the live official Devin docs, audit the project, choose a hook plan, then scaffold `.devin/hooks.v1.json`.
+  Audit the project and installed-version evidence, resolve uncertain contracts from relevant official docs, choose a hook plan, then scaffold `.devin/hooks.v1.json`.
 - Existing `.devin/hooks.v1.json`, `.devin/config*.json`, or `.devin/hooks/` files:
   Audit what already exists, choose `additive` or `overhaul`, then regenerate only the managed hook layer.
 - A hook must deny or block agent behavior:
@@ -19,7 +19,7 @@ What is the user asking for?
 - Existing Claude hook config is present:
   Treat it as an inherited-config risk to inspect, not as the target. Do not write managed Devin hooks to Claude config paths.
 - Explanation only, not implementation:
-  Read `references/hook-events.md` and `references/scaffold-layout.md`, then answer without editing files.
+  Use the reading guide to select only the reference needed for the question, then answer without editing files.
 
 ## Quick Reference
 
@@ -36,37 +36,32 @@ What is the user asking for?
 
 ## Non-Negotiable Workflow
 
-1. Verify the live official Devin hook docs before planning a real scaffold.
-2. Compare the live event list, matcher rules, hook format, `DEVIN_PROJECT_DIR`, and exit-code table with `assets/hook-events.json`.
+1. Use repository and installed-version evidence for stable repairs; consult relevant live official docs when evidence is insufficient, stale, or event semantics will change.
+2. Compare the affected event, matcher, I/O, environment, or exit-code contract with `assets/hook-events.json`.
 3. Audit the target project in detail before deciding which events to enable.
 4. Inspect existing `.devin/hooks.v1.json`, `.devin/config.json`, `.devin/config.local.json`, `.devin/hooks/`, `AGENTS.md`, and related automation files before choosing a merge mode.
 5. Produce or update a concrete hook plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
 6. Prefer `.devin/hooks.v1.json` for managed project hooks because Devin documents it as the recommended standalone hooks file.
 7. Avoid Claude config as a Devin target. Do not write managed Devin hooks to `.claude/settings.json`, `.claude/settings.local.json`, `~/.claude.json`, or any Claude-only path.
 8. Prefer a repo-owned shared `hooks/` tree for behavior that may move to Codex, Claude Code, OpenCode, Git hooks, GitHub Actions, or local shell usage. Keep Devin-specific files as thin adapters around shared event scripts.
-9. Scaffold every current documented Devin lifecycle event as `hooks/<event>/script.sh` plus `hooks/<event>/devin.{sh,json}`, even if the event stays disabled in `.devin/hooks.v1.json`.
+9. The bundled generator renders every manifest event as `hooks/<event>/script.sh` plus `hooks/<event>/devin.{sh,json}`, even if it stays disabled in `.devin/hooks.v1.json`; it has no selected-event-only layout mode.
 10. Wire only the enabled events into `.devin/hooks.v1.json` so the project does not pay runtime cost for inactive stubs.
 11. Use exit code `2` for intentional blocking. Other non-zero exits are logged by Devin but do not block according to the official docs.
 12. Regenerate `hooks/README.md` so the project always has a readable event and adapter map.
 13. Tell the user to verify loaded hooks with Devin's `/hooks` slash command after opening Devin CLI in the target project.
 
-## Live Docs First
+## Contract Evidence
 
 The official Devin docs are the source of truth:
 
 - `https://docs.devin.ai/cli/extensibility/hooks/overview`
 - `https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks`
 
-If the official docs and this skill disagree, follow the official docs and update the local scaffold inputs before writing project files.
+If official docs and this skill disagree, distinguish documented behavior from version-specific field observations. Resolve the installed release's contract and propose a canonical source correction through the root `SKILL.md` maintenance route; never silently modify an installed skill.
 
 ## Progressive Maintainer Drift Check
 
-When updating this skill itself:
-
-1. Live-fetch both official Devin docs pages on the day of the edit.
-2. Compare the current event list, hook format, matcher rules, stdin payload fields, stdout decision shape, `DEVIN_PROJECT_DIR`, config locations, and exit-code semantics with `assets/hook-events.json`.
-3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/hook-events.md`, scaffold generators, templates, plan examples, validators, tests, evals, and thin wrappers.
-4. If no drift exists, still mention that the live docs were checked. Do not update this skill from memory or by copying assumptions from Claude Code, Codex, or OpenCode.
+Live-fetch both official Devin docs only when an open question spans the overview and lifecycle contracts; otherwise read the relevant page. Record the affected passage, source/version or date, proposed change, and regression check. Reconcile affected canonical files only when maintenance is in scope. Do not update this skill from memory or infer Devin support from another harness's fields. Stable repairs and wording edits need no full docs sweep.
 
 ## Project Analysis Rules
 
@@ -109,16 +104,16 @@ Allow these parts to stay project-specific:
 
 ## Scaffold Rules
 
-- Generate bash scripts, not Python, for the project hook runtime.
+- Keep the bundled generator's Bash entrypoints and shared-script layout. Suitable repo-owned programs can run behind that protocol boundary through supported plan scripts/commands; Bash is not a universal Devin hook requirement.
 - Comment the managed bash stubs in plain language.
 - Structure managed event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
-- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into managed scripts.
+- The helper runs `scripts[].path` through Bash. For non-Bash programs, use a Bash wrapper or `commands[].command` with an explicit interpreter; a shebang alone does not change the helper's invocation. Do not hard-code a project's toolchain into managed scripts.
 - Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `devin` when output protocols differ.
 - Use `$DEVIN_PROJECT_DIR` in managed command paths because Devin documents it as the project root environment variable.
 - Default to a shared hook root of `hooks`.
 - Keep one shared `script.sh` per event and one Devin adapter/config pair per event so the event map stays obvious without duplicating event logic.
 - Keep `.devin/hooks.v1.json` deterministic: remove only previously managed handlers, never unrelated custom hooks.
-- Do not add unsupported fields such as `async`, `if`, or Claude-specific hook output contracts unless the Devin docs later document them.
+- Use only output shapes specifically documented or verified for the installed Devin release. The documented `hookSpecificOutput` context shape below is supported; its similarity to Claude does not establish support for other Claude fields, `async`, or `if`.
 
 ## Reading Guide
 
@@ -148,5 +143,5 @@ Allow these parts to stay project-specific:
 5. `Stop` hooks that block can loop unless they check `stop_hook_active`.
 6. Devin can read Claude hook config by default, but this scaffold intentionally writes only `.devin/hooks.v1.json`.
 7. Hook shells are non-interactive. Keep profile noise out of stdout because stdout is reserved for optional JSON decisions.
-8. Devin strictly parses non-empty stdout as Claude-format JSON. Plain text fails its effects evaluator and is silently dropped; emit empty stdout or one valid JSON object. `SessionStart` context injection must use `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`. See `references/gotchas.md` 6a.
-9. Devin renders no hook activity in its TUI, unlike Codex CLI. Silence is not failure: verify via `/hooks`, the CLI logs, or the session transcript. See `references/gotchas.md` 6b.
+8. Emit empty stdout or one Devin-supported JSON object. `SessionStart` context uses `{"hookSpecificOutput": {"hookEventName": "SessionStart", "additionalContext": "..."}}`, documented by Devin. Plain-text rejection was field-verified on v2026.5.26-8; that is a historical baseline, not a required version. See `references/gotchas.md` 6a.
+9. In the recorded Devin CLI baseline, hook execution is not shown in the TUI. Silence is not failure: verify via `/hooks`, CLI logs, or the session transcript rather than assuming later versions have identical UI behavior. See `references/gotchas.md` 6b.

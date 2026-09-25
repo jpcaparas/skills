@@ -19,22 +19,24 @@ Turn the user's language into searchable handles:
 | Background job | scheduler config, queue topic, handler, retry/dead-letter code |
 | Database concept | table/model name, migration, repository/DAO, generated types |
 
-Prefer exact searches before fuzzy searches. Fuzzy searches are useful only after the exact handles are exhausted.
+Choose the search that fits the known evidence: an exact identifier for a named symbol, a path fragment for a partial filename, or related terms for a product concept. There is no need to exhaust exact searches when the target is known under a different name.
 
 ## First Pass Commands
 
-Run the helper when the skill files are available:
+The helper is useful when a candidate inventory would add evidence:
 
 ```bash
 python3 scripts/zoom_out_inventory.py --repo <repo> --target "<target>" --json
 ```
 
-If the helper is not available, use the same shape manually:
+Focused searches are equally valid starting points; scope them to the relevant subtree when known:
 
 ```bash
-rg -n -F "<target>" <repo>
-rg --files <repo> | rg -i "<target-or-path-fragment>"
+rg -n -F "<target>" <scope>
+rg --files <scope> | rg -i "<target-or-path-fragment>"
 ```
+
+Read a known defining file directly if that resolves the next question; the helper is not a prerequisite.
 
 Use {{ skill:ripgrep }} for deeper search flag choices.
 
@@ -63,16 +65,16 @@ Avoid promoting a file just because it imports a shared type, constant, or utili
 
 ## Scope Control
 
-Stop expanding when you have:
+Stop expanding when you can give a useful map covering:
 
 - the defining file or closest owner
-- at least one verified upstream path
+- verified upstream paths, unresolved caller wiring, or an explicit statement that no caller was found in the inspected scope, as the evidence supports
 - the main downstream dependencies
 - the boundary crossings
-- tests or fixtures that exercise the behavior
-- enough uncertainty labels to avoid pretending the map is complete
+- relevant tests or fixtures, or an explicit statement that none were found in the inspected scope
+- remaining uncertainty, including registration or runtime evidence that is unavailable
 
-If the map is still too broad, narrow by runtime path: web request, background job, CLI command, UI interaction, test case, or package export.
+Missing callers or tests do not require endless discovery or prove that none exist. State the searched scope and what evidence would resolve the gap. If the map is still too broad, narrow by runtime path: web request, background job, CLI command, UI interaction, test case, or package export.
 
 ## See Also
 

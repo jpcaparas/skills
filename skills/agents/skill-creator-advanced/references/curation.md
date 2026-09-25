@@ -1,6 +1,6 @@
 # Skill Authoring and Library Curation
 
-Use this reference when deciding whether to create, improve, merge, compose, promote, rename or move, deprecate, retire, or remove a skill. The goal is a predictable process: the agent follows the same decision path each run even when the final wording differs.
+Use this reference for skill ownership and lifecycle changes. Preserve the required outcomes and safety boundaries; investigation order, working notes, and presentation can vary with the task.
 
 ## Table of Contents
 
@@ -20,7 +20,7 @@ Use this reference when deciding whether to create, improve, merge, compose, pro
 
 Inspect before proposing structure. Repository conventions outrank this reference when they are explicit and internally consistent.
 
-Inventory:
+Inventory the affected surfaces. A collection-wide reorganization needs the whole map; a local repair needs its behavior and consumers, not an unrelated documentation census:
 
 - every canonical `SKILL.md` and its invocation description
 - adjacent skills with overlapping jobs, inputs, or trigger language
@@ -62,7 +62,7 @@ Determine who or what must be able to reach the skill:
 
 Then verify how the target harness represents that contract. Invocation-only fields and slash-command behavior are platform capabilities, not portable assumptions. Keep universally valid `name` and `description` frontmatter unless the target's documented contract explicitly supports another mode.
 
-For discoverable skills, apply the canonical description rules in `SKILL.md` Phase 2. This reference owns the additional library decision: every semantic branch must have exactly one current package owner, and neighboring descriptions must make that ownership legible without competing for the same request.
+For discoverable skills, apply the description rules in `SKILL.md` under Define Frontmatter and Invocation. Each primary job needs a clear owner; compatible supporting skills can compose without pretending all overlap is a conflict. Make precedence clear where neighboring skills could compete for the same request.
 
 Explicit-only skills trade agent discoverability for human memory. When many accumulate, a router can reduce that memory burden, but the router is a derived surface: it must be rechecked whenever a reachable skill changes.
 
@@ -70,7 +70,7 @@ Complete this decision when every invocation branch has one owner and the target
 
 ## Build a Branch and Content Ledger
 
-Start with the canonical branch-and-artifact ledger in `SKILL.md` Phase 2. For a library change, extend each branch with its current owner, proposed owner, lifecycle state, dependents, and governed publication surfaces before moving files.
+For a multi-package change, a branch-and-artifact ledger can track current and proposed owners, lifecycle state, dependents, and affected publication surfaces. Use a smaller note or the diff for a simple change; the requirement is not to lose a behavior or consumer, not to produce a particular document.
 
 A strong context pointer says both when to load a file and what decision or action it supports:
 
@@ -82,7 +82,7 @@ Complete the ledger when every retained statement has one canonical location and
 
 ## Use Checkable Completion Criteria
 
-Every procedural phase ends with an observable criterion. Prefer criteria that are:
+Define observable completion for the outcome and consequential handoffs. Intermediate gates are useful where partial work is dangerous, not as mandatory furniture after every step. Prefer criteria that are:
 
 - **checkable** — the agent can distinguish done from not done
 - **exhaustive where needed** — every affected branch, artifact, or claim is accounted for
@@ -163,10 +163,10 @@ Run this pass sentence by sentence:
 3. **No-op** — remove instructions the target model follows equally well without the skill; prove disputed cases with comparative evals.
 4. **Sediment** — delete stale history markers, superseded advice, and append-only feedback residue from runtime guidance.
 5. **Sprawl** — move branch-only reference behind a good pointer or split independently invoked jobs.
-6. **Positive steering** — state the desired behavior first. Retain prohibitions for real safety, integrity, or scope guardrails and pair each with the permitted action.
+6. **Freedom** — state outcomes and safe authority; keep exact steps only for a fragile contract. Replace arbitrary quotas, fixed output shapes, mandatory doc stacks, and aesthetic bans with useful examples or remove them. Retain safety, integrity, and scope prohibitions.
 7. **Implicit choices** — decide whether each omitted detail is intentional freedom, a routed branch, or an accidental gap delegated to model defaults.
 
-Pruning is complete when each retained sentence changes behavior, explains a load-bearing reason, or routes to needed material.
+Pruning is complete when retained guidance earns its cost. Do not require a sentence-by-sentence report unless requested or needed for a contested rule. When a skill has become less useful, compare the intended result with current unassisted behavior; deletion or retirement may be better than adding another rule.
 
 ## Make Consistency Executable
 
@@ -191,12 +191,14 @@ Release or promote only when:
 
 - the applicable create, improve, merge, compose, promote, rename/move, deprecate, retire, or remove decision is evidenced
 - every invocation branch has one owner and realistic trigger/near-miss evals
-- every procedural phase has a checkable completion criterion
+- the requested result and consequential handoffs have checkable completion criteria
 - branch-only content is disclosed through condition-and-purpose pointers
 - every claim and example has verification evidence or an explicit limitation
 - no unresolved placeholder, duplicate canonical rule, or stale route remains
 - all governed publication surfaces and dependents are reconciled
-- release validation and behavioral evals pass, along with every discovery check the target contract exposes
+- required release validation and discovery checks pass, and behavioral claims are supported by executed evals rather than structural preflight alone
+
+Keep incomplete behavioral evidence visible. A reviewed local improvement with unrun model evals is not a behaviorally certified release. Do not block a harmless local correction on unrelated platform experiments, or disguise missing evidence as success.
 
 ## See Also
 

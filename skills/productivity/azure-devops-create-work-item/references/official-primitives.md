@@ -12,7 +12,7 @@ Use this file to keep type selection grounded in Microsoft Learn rather than in 
 
 ## Core Model
 
-Microsoft documents that work item types depend on the selected process. This skill defaults to the Scrum `Product Backlog Item` because the requested default work item should represent a user story, requirement, or functional enhancement unless another type is specified.
+Microsoft documents that work item types depend on the selected process. Use supplied or observed project process evidence even if the user has not named a type. The Scrum `Product Backlog Item` is the fallback only when type and process are unknown.
 
 The default Scrum-oriented set this skill drafts is:
 
@@ -21,7 +21,7 @@ The default Scrum-oriented set this skill drafts is:
 - `Task`
 - `Feature`
 - `Epic`
-- `Impediment` mapped through this skill's `Issue` template when needed
+- `Impediment` can use an explicitly agreed local adaptation of the `Issue` template; the helper does not natively support that type
 
 The official hierarchy is simple:
 
@@ -34,7 +34,7 @@ The official hierarchy is simple:
 
 | Type | Use it when | Avoid it when |
 | --- | --- | --- |
-| `Product Backlog Item` | The type is not specified, or the item is a user story, requirement, or functional enhancement to deliver. | The user explicitly asks for a bug, task, feature, epic, or another process-specific type. |
+| `Product Backlog Item` | Scrum backlog work, or the fallback when neither type nor process is known. | Another type is requested or the known process uses a different backlog type. |
 | `Epic` | The item is a larger initiative that will likely break into multiple features or workstreams. | The request is one deliverable capability or one sprint-scale activity. |
 | `Feature` | The item describes a concrete capability or slice of value and may group one or more user stories. | The item is really a single user need or a narrow implementation task. |
 | `User Story` | The context naturally answers who needs what and why, and the team should not lock into implementation yet. | The work is already purely implementation or operational. |
@@ -67,7 +67,7 @@ The local packet does not force every Azure DevOps field into the Markdown draft
 
 ## Cross-Process Note
 
-If the user explicitly says the project is not Scrum, remap the primary backlog item carefully:
+Use the process supplied by the user or observed in project evidence to select the primary backlog item:
 
 | Backlog concept | Basic | Agile | Scrum | CMMI |
 | --- | --- | --- | --- | --- |
@@ -78,3 +78,5 @@ If the user explicitly says the project is not Scrum, remap the primary backlog 
 | `Bug` | no native default bug type | `Bug` | `Bug` | `Bug` |
 
 If the project uses Basic, call out that Basic does not ship with a native `Bug` work item type by default. Do not silently draft a Basic bug packet as if it were an Agile bug.
+
+For a known Agile backlog request, pass `--type user-story --process agile`; passing `--process` alone does not change the helper's default type. CMMI `Requirement`, Scrum `Impediment`, and custom types are not native helper choices. Explain that limitation and agree a local adaptation or another workflow rather than representing a generic template as a process-native type.

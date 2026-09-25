@@ -2,6 +2,16 @@
 
 Use this reference after one or more leads finish, or when checking an existing one-shot output root.
 
+## Verification Mode Boundary
+
+Before a new build, the coordinator asks whether to run the existing gauntlet unless the user explicitly chose; silence is not consent. Explicit `--verification gauntlet|none` creates run `3.5` and receipt `2.5` with immutable `verificationMode`, also recorded in worker report `2.1`. Historical receipts without mode retain gauntlet behavior. New-schema missing/invalid mode or worker-only downgrades are errors.
+
+For `none`, do not invoke `validate_catalog.py` as a completion gate. Build/export and safe scratch cleanup lead to **UNVERIFIED**, not `OK`. The report keeps `qualityGauntlet: null`, `verification: []`, and `artifact.staticDeploymentVerified: false`. There are no browser, critic, directional, static artifact, resource, workspace, fallback-path, or repair checks. Essential build/export success is not proof of behavior. No technical prompt or directional adapter is created or required.
+
+The index may be built from metadata without opening output; UNVERIFIED uses a neutral badge distinct from green OK and failed statuses. It is completed generation, not passed or failed verification. Both completed statuses remove `.tmp/` safely; active, partial, blocked, and failed runs retain it. Preserve the same mode on recovery. Only scoped authority, ownership, provenance identity reads, and exact-path cleanup remain mandatory for none mode.
+
+If catalogue metadata validation is explicitly requested later (or gauntlet runs share the catalogue), `validate_catalog.py` checks none-mode metadata, receipt/prompt identity, path boundaries, mode/status agreement, and scratch lifecycle only. It never reads generated artifact contents beyond the sealed prompt or scans their tree/resources. The warning explicitly leaves output UNVERIFIED; neither a clean metadata result nor a valid link upgrades it. All artifact inspection and evidence requirements below apply only to gauntlet runs. Package developer regression tests are unaffected.
+
 ## Purpose
 
 The root catalogue is a provenance and navigation layer over artifacts built without stack prescriptions. It shows which prompt, model, harness, experiment, lead, and run produced each result. It does not impose an internal project shape.
@@ -65,7 +75,7 @@ A passing structural check does not prove visual quality, JavaScript module grap
 
 ## Status and Classification
 
-Use stable terminal statuses: `PLANNED`, `RUNNING`, `OK`, `PARTIAL`, `BLOCKED`, or `ERROR`.
+Use stable statuses: `PLANNED`, `RUNNING`, `OK`, `UNVERIFIED`, `PARTIAL`, `BLOCKED`, or `ERROR`. Only receipt-anchored none mode permits `UNVERIFIED`; it cannot claim `OK`. Gauntlet runs cannot substitute `UNVERIFIED` for missing or failing evidence.
 
 Use `autonomous-one-shot` for the original lead assignment. Use `rerun` or `curated-attempt` for separately dispatched later runs. Internal edits, tests, and revisions by the same owning lead remain part of `autonomous-one-shot`.
 

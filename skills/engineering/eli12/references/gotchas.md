@@ -30,7 +30,7 @@ When a behavior is implied by naming or nearby code but not directly confirmed, 
 
 ## 8. Vague prompts can waste a lot of tokens
 
-If "Explain this app" could mean five subsystems, ask a short narrowing question before exploring. Fast clarification beats a sprawling answer aimed at the wrong target.
+For "Explain this app", infer a bounded overview or representative flow from context and state the scope. Ask a short question only if unresolved alternatives would materially change the answer; neither automatic clarification nor a sprawling tour is helpful.
 
 ## 9. ASCII charts should clarify, not decorate
 

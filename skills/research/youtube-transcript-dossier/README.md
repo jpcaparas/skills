@@ -1,13 +1,15 @@
 # YouTube Transcript Dossier
 
-Convert a YouTube video transcript into a structured dossier with metadata, executive summary, timestamped key topics, notable quotes, takeaways, and follow-up items.
+Convert supplied or fetched YouTube transcripts into scoped summaries, notes, exports, or full dossiers with source timestamps.
 
-## Requirements
+## Fetching Requirements
+
+Supplied transcripts need none of these tools.
 
 - `python3`
 - `yt-dlp` — for video metadata (`brew install yt-dlp` or `pip install yt-dlp`)
 - `youtube-transcript-api` — for transcript fetching (`pip install youtube-transcript-api`)
-- Optional: cookie file for age-restricted videos
+- Restricted-content access is not guaranteed; see `references/fetching.md` for the upstream baseline and authorized-file boundary.
 
 ## Quick Start
 
@@ -22,7 +24,7 @@ python3 scripts/fetch_transcript.py "VIDEO_ID" --format text
 python3 scripts/fetch_transcript.py "https://youtu.be/VIDEO_ID" --lang es en
 ```
 
-Then use the output to build a dossier following `templates/dossier.md`.
+Then produce the requested summary or notes; `templates/dossier.md` is an optional scaffold for a full dossier.
 
 ## Install
 

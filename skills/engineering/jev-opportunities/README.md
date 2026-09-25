@@ -1,7 +1,7 @@
 # jev-opportunities
 
 An explicitly invoked opportunity audit for an existing application without Jev.
-It refreshes the live documentation, maps semantic decisions in the codebase,
+It checks relevant current primary docs, maps scoped semantic decisions in the codebase,
 and finishes approved spikes with a before/after comparison and a recommendation
 on whether to adopt Jev in that codebase.
 

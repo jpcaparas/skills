@@ -44,6 +44,15 @@ or co-locate a short rule here.
 
 {{EVIDENCED_GOTCHAS_OR_LINK}}
 
+## When Guidance Fails
+
+If the example or response differs from the supported contract, check the
+installed client and official version-matched API documentation. Verify a
+compatible alternative with a safe read or sandbox; keep credentials and effect
+permissions unchanged. Report unknowns when evidence is unavailable. Propose a
+canonical correction with the failed passage, source/version, and a regression
+example; do not silently edit installed skills or publish it.
+
 ## Completion Gate
 
 Complete when {{PRIMARY_OBSERVABLE}} is verified at the safest authorized

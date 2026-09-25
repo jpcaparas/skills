@@ -22,11 +22,13 @@ Assume the reader does not want:
 
 ## Structure
 
-Use this shape:
+Default to this shape when the user has not requested another form:
 
 1. One-line intro naming the date range.
 2. Short feature heading for each main accomplishment.
-3. `2-3` bullets max per feature section.
+3. A few concise bullets per feature, with the count determined by distinct meaningful changes.
+
+A short email paragraph, table, or single bullet can be enough. Do not force headings, pad to a minimum, or compress unrelated outcomes merely to fit a template.
 
 Recommended heading style:
 
@@ -45,8 +47,8 @@ Each bullet should:
 
 Prefer:
 
-- `Improved the checkout flow so customers can move through payment with less friction.`
-- `Expanded reporting so the team can track progress and spot issues more quickly.`
+- `Added a saved-address option to checkout.` (when the diff establishes it)
+- `Added overdue invoices to the reporting view.` (when the diff establishes it)
 
 Avoid:
 
@@ -74,9 +76,9 @@ Weak groups:
 
 ## Conservative Language
 
-If the benefit is clear, say it plainly.
+If evidence supports the benefit, say it plainly. Do not imply deployment or measured impact from implementation alone.
 
-If the benefit is not clear from the diff, use modest language:
+If the benefit is not clear from the diff, state the changed capability or unfinished work rather than inventing a softer-sounding benefit. Phrases such as these still require a concrete basis:
 
 - `advanced the work on`
 - `improved the foundation for`
@@ -85,7 +87,7 @@ If the benefit is not clear from the diff, use modest language:
 
 ## Final Pass Checklist
 
-- Each section has `2-3` bullets max.
+- Length and grouping match the requested form and the substance of the changes.
 - Every bullet is safe for a non-technical audience.
 - Duplicate themes across commits have been merged into one section.
-- The final Markdown can be pasted directly into an email or chat message.
+- The final report can be pasted directly into the requested destination.

@@ -39,15 +39,17 @@ Choose the job before touching the prose.
 | Humanise | The prose feels generic, machine-smooth, formulaic, or unlike its author | `references/ai-isms-and-humanisation.md`, `references/genericity-and-stiffness.md`; add `references/formulaic-language-catalogue.md` for explicit avoidance or dense formulae |
 | Adapt | The substance should stay while audience, genre, channel, length, or voice changes | `references/genre-modes.md`, `references/style-bundles.md` |
 
-Mixed requests can use more than one job. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill may revise the user-facing words but does not edit the surrounding source, syntax, or code behaviour. Never rename, rewrite, or reinterpret code constructs to satisfy a style or diction rule. In mixed documentation, edit only the natural-language prose and preserve machine-readable material exactly.
+Mixed requests can use more than one job. The references are available when an issue needs guidance, not a required reading stack. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill may revise the user-facing words but does not edit the surrounding source, syntax, or code behaviour. Never rename, rewrite, or reinterpret code constructs to satisfy a style or diction rule. In mixed documentation, edit only the natural-language prose and preserve machine-readable material exactly.
 
 For an explicit request to remove, replace, limit, or standardise em dashes, semicolons, or colons, read `references/punctuation-and-sentence-flow.md`. Load it conditionally; ordinary line editing and humanisation do not imply a punctuation ban.
 
-For technical documentation or wiki entries, read `references/technical-documentation-and-wikis.md` in addition to the applicable mode in `references/genre-modes.md`. Follow repository or organisation style, locale, exact terminology, and destination constraints before the adapted Google developer documentation guidance.
+For technical documentation or wiki entries, consult `references/technical-documentation-and-wikis.md` when documentation conventions need attention; consult `references/genre-modes.md` when the page shape is uncertain. Follow repository or organisation style, locale, exact terminology, and destination constraints before the adapted Google developer documentation guidance.
 
 Use another workflow for code-only implementation, standalone fact-checking, or authorship classification. This skill may rewrite prose produced alongside those tasks, but it does not perform them.
 
 ## Operating workflow
+
+Choose only the passes needed for the edit scope and risk. A sentence correction can go straight from understanding the request to editing and comparing with the source. A substantial recast may need structural, evidence, voice, and delivery checks. The sections below are a menu in useful order, not eight compulsory passes or required process artefacts. Fidelity and the user's requested output remain mandatory at every scale.
 
 ### 1. Establish the writing contract
 
@@ -59,7 +61,7 @@ Infer what the supplied context already settles. Identify:
 - whether the user wants a draft, rewrite, review, humanisation pass, or adaptation
 - how much change is allowed
 
-For an existing draft, build a preservation ledger before editing. Protect facts, numbers, dates, names, quotations, citations, commands, paths, API identifiers, legal or technical terms, explicit uncertainty, and lines that carry the writer's voice.
+For an existing draft, protect facts, numbers, dates, names, quotations, citations, commands, paths, API identifiers, legal or technical terms, explicit uncertainty, and lines that carry the writer's voice. Record a preservation ledger only when complexity, high consequences, or handoff needs make direct source comparison insufficient.
 
 Ask only when a missing choice would materially change the result. Never invent evidence, experience, approval, customer language, or confidence the source does not contain.
 
@@ -85,7 +87,7 @@ Preserve what already works. A good edit is not a demonstration that every sente
 
 ### 3. Fix shape before style
 
-Choose the page shape in `references/genre-modes.md`. Give each section and paragraph one job. Put the main point where that genre expects it. Order evidence so the reader never has to guess why it is present.
+When restructuring is in scope, choose a shape that serves the reader and requested format; `references/genre-modes.md` offers defaults, not fixed templates. Give each section and paragraph a clear job. Order evidence so the reader never has to guess why it is present.
 
 For documentation and wikis, establish the reader, starting state, canonical terminology, and finish line before styling the page. Use the documentation reference for headings, procedures, links, accessibility, global-audience clarity, and maintenance boundaries.
 
@@ -95,9 +97,9 @@ For review-only work, stop short of rewriting: report the diagnosis, cite exact 
 
 **Complete when:** the opening establishes the right contract, the middle advances it without echoing itself, and the ending performs the genre's real closing task.
 
-### 4. Run two clarity passes
+### 4. Edit clarity at the affected scale
 
-Use `references/revision-pass-stack.md`.
+For complex revisions, `references/revision-pass-stack.md` offers a pass order. Combine or skip passes that add no value:
 
 1. **Paragraph pass:** one job per paragraph, visible logic, no repeated claim, evidence beside the claim it supports.
 2. **Sentence pass:** clear actor and action, concrete nouns and verbs, related words together, honest qualifications, informative emphasis.
@@ -116,22 +118,22 @@ Human signal comes from judgement, selection, detail, and position—not fake ty
 
 **Complete when:** the prose has a discernible point of view, sentence movement suits the thought, and the writer's high-signal details remain intact.
 
-### 6. Run the formulaic-language and humanisation pass
+### 6. Diagnose formulaic language when relevant
 
-Run a light avoidance check on every prose deliverable. Do not introduce assistant residue, empty ceremony, canned significance, unsupported benefit language, or a formula that hides the actor, mechanism, evidence, or consequence.
+When formulaic language is an actual problem, identify what it obscures. Do not introduce unsupported benefit language or a formula that hides the actor, mechanism, evidence, or consequence. Ordinary words, punctuation, courtesy, and intentional rhetoric are not defects by themselves.
 
-Read `references/ai-isms-and-humanisation.md` and `references/formulaic-language-catalogue.md` when the user asks to remove AI-like words or phrases, ban formulaic diction, make prose less robotic, or when a draft shows generic authority, excessive symmetry, service tone, or repeated rhetorical frames.
+For humanisation or explicit formulaic-language requests, consult `references/ai-isms-and-humanisation.md` when the diagnosis is uncertain and `references/formulaic-language-catalogue.md` for phrase-family examples or exceptions. Do not load both merely because a sentence is being edited.
 
-Apply the catalogue's action levels:
+Treat the catalogue's action levels as contextual diagnostics, not bans:
 
-- remove wrappers and empty stage directions
-- rewrite canned semantic frames from supported meaning, even when they occur once
+- remove empty wrappers and stage directions that add no useful function
+- rewrite canned semantic frames from supported meaning when they obscure it, even when they occur once
 - review ordinary words and structural signals in context or clusters
-- protect literal, technical, legal, measured, quoted, and writer-owned uses
+- protect literal, technical, legal, measured, quoted, and writer-owned uses, including intentional rhetoric and legitimate genre conventions
 
 Never perform a synonym swap to satisfy an avoidance rule. This applies across the catalogue, not only to individual watch words. `Bridge the gap` does not become `close the divide`; identify what is missing and what action changes it. `Marks a significant shift` does not become `signals a major transformation`; state the before and after. `Plays a critical role`, `unlocks value`, and `research shows` likewise need a supported action, result, or source. If the source lacks the necessary substance, delete, narrow, or query the claim.
 
-If a substantial draft exists as a file, run:
+If locating repeated patterns would help resolve the issue in a file-backed draft, optionally run:
 
 ```bash
 python3 scripts/scan_aiisms.py path/to/draft.md
@@ -147,13 +149,13 @@ Rewrite the thought, not just the flagged token. Preserve dialect, accessibility
 
 Apply the target genre, audience, locale, and house style. Check headings, lists, calls to action, examples, and ending shape. Keep formatting proportional to the material; not every paragraph wants a heading and not every thought wants a bullet.
 
-For documentation and wiki pages, run the documentation gate in `references/technical-documentation-and-wikis.md`. Do not replace an established locale or project convention with a Google-specific preference.
+For documentation and wiki pages, use the relevant checks in `references/technical-documentation-and-wikis.md` when those aspects changed. Do not replace an established locale or project convention with a Google-specific preference.
 
 **Complete when:** the artefact looks and sounds native to its destination without losing factual or personal identity.
 
-### 8. Pass the quality gates and stop
+### 8. Compare with the source and stop
 
-Run the gates in `references/quality-gates.md`:
+Always check changed prose for fidelity and the requested format. For broader or high-risk work, select relevant checks from `references/quality-gates.md`:
 
 1. fidelity
 2. logic and evidence
@@ -162,7 +164,7 @@ Run the gates in `references/quality-gates.md`:
 5. genre and mechanics
 6. final proof
 
-Compare the revision against the preservation ledger. Re-run deterministic diagnostics after the last substantive edit, not before it. Stop when every remaining change is merely different, not better.
+Compare the revision against the source and any ledger used. If relying on a diagnostic result, refresh it after changes that could invalidate it; scanning is not a universal completion condition. Stop when every remaining change is merely different, not better.
 
 **Complete when:** the deliverable passes every applicable gate, protected material matches the source, and no known critical issue remains.
 
@@ -177,12 +179,16 @@ Lead with the requested artefact or review outcome. Keep process notes brief unl
 
 Do not claim a passage was AI-written. Do not turn stylistic preference into an accusation.
 
+## When guidance is insufficient
+
+If a consequential usage, documentation convention, or factual authority is stale or conflicts with this guidance, consult the applicable house style, current primary documentation, or a trusted editorial reference. Use verified guidance within the user's edit authority; disclose unresolved gaps instead of guessing. Propose a correction to the canonical skill source with the source and a before/after example or regression check. Do not browse for routine edits or silently modify an installed skill copy.
+
 ## Quick reference
 
 | Need | Read or run |
 |---|---|
 | Brief, preservation ledger, and edit freedom | `references/operating-contract.md` |
-| Exact revision order and loopbacks | `references/revision-pass-stack.md` |
+| Optional revision passes and loopbacks | `references/revision-pass-stack.md` |
 | Natural structure, paragraph architecture, and long-prose digestibility | `references/natural-structure-and-digestibility.md` |
 | Grammar, clarity, and modern usage baseline | `references/foundations.md` |
 | Cadence, stance, and voice repair | `references/voice-and-rhythm.md` |
@@ -199,7 +205,7 @@ Do not claim a passage was AI-written. Do not turn stylistic preference into an 
 
 ## Templates
 
-- `templates/rewrite-worksheet.md` records the brief, preservation ledger, pass results, and final gates.
+- `templates/rewrite-worksheet.md` optionally records the brief, preservation ledger, pass results, and final checks for complex work.
 - `templates/personal-style-sheet.md` captures a writer's real habits from samples before revision smooths them away.
 
 ## Non-negotiables

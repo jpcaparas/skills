@@ -1,6 +1,6 @@
 # Gemini Infographic Gotchas
 
-> This file captures the main ways Nano Banana style infographic prompts drift into clutter.
+> Diagnose failures against the brief, not against a mandatory minimalist style. These remedies are options; factual fidelity, accessibility, privacy, and authorized spend remain requirements.
 
 ## 1. "Detailed" Often Means "Busy"
 
@@ -18,39 +18,39 @@ Google's limitations guidance says text-first workflows work best: decide the te
 
 Fix:
 
-- keep titles to 5 words or fewer
-- keep labels to 1-3 words
-- move explanation, evidence, and citations outside the image
+- decide exact visible copy before rendering
+- try short titles and labels when the format permits; never truncate required wording or qualifiers
+- enlarge text, adjust grouping, or use a text-overlay workflow when longer explanation or citations must stay in the image
 
-## 3. Do Not Trust A Single Request To Yield Three Good Variants
+## 3. A Request Does Not Guarantee An Exact Image Count
 
 Google also documents that the model might not create the exact number of images you ask for.
 
 Fix:
 
-- run four deliberate render passes
-- treat each pass as a named design direction
-- compare the saved outputs side by side
+- use one request per intended image within the authorized count
+- check the actual saved outputs, including missing images
+- compare variants only when a review set was requested; one image does not need four paid attempts
 
-## 4. Too Many Colours Create Poster Energy
+## 4. Color Needs Readable Relationships
 
-Bright multi-colour palettes push the result toward "startup poster" or "conference banner" instead of executive communication.
+Bright multi-colour palettes can suit promotional or educational work. They become a problem when essential distinctions or text are hard to read, or when the tone conflicts with the brief.
 
 Fix:
 
-- stay with 2-3 accents plus gray or white
-- prefer one dark neutral and one main accent
-- use colour for hierarchy, not decoration
+- try 2-3 accents plus neutrals as a low-noise preset, not a limit
+- keep the requested dark or colorful background when it works
+- use labels and other non-color cues for essential meaning; decoration can coexist with hierarchy
 
 ## 5. Mixed Visual Metaphors Increase Noise
 
-If one image mixes metaphor illustration, process diagram, data labels, and collage textures, it stops scanning cleanly.
+Mixed metaphors, process diagrams, data labels, and collage textures can compete when their relationships are unclear.
 
 Fix:
 
-- pick a single metaphor family
-- keep icons from one family only
-- remove background flourishes first
+- connect the elements through a clear reading order, framing, or shared visual language
+- simplify or unify icons if they confuse meaning
+- retain requested flourishes when they support character without obscuring content
 
 ## 6. Omitted Aspect Ratio Leads To Unstable Layout
 
@@ -58,18 +58,18 @@ If you do not state the ratio, Gemini may choose a shape that fights the intende
 
 Fix:
 
-- default to `16:9`
-- switch to `3:4` when the asset is intentionally tall and article-first
-- switch to `4:5` or `9:16` only when the publishing channel demands it
+- choose a ratio for the intended channel and composition; `16:9` is a slide preset, not a universal default
+- use tall, square, or panoramic formats when the brief benefits from them
+- keep prompt and API ratio consistent, checking official support when uncertain
 
 ## 7. Language Matters
 
-When legibility matters, English is still the safest default prompt language unless the current Nano Banana 2 docs for your surface say otherwise.
+Language support and text fidelity can vary by model and delivery surface. Do not replace the requested language with English or shorten meaning on an unsupported assumption.
 
 Fix:
 
-- write the prompt in English unless there is a strong reason not to
-- keep visible labels even shorter when you must render in another language
+- specify the exact requested language and visible text
+- inspect glyphs, spelling, and reading order; consult current official guidance if behavior conflicts with expectations
 
 ## 8. Use A Better Tool When Precision Is The Real Requirement
 
@@ -95,16 +95,18 @@ Fix:
 
 - use the public name when talking to users
 - use the callable model ID when writing code
-- re-check `ListModels` if the naming looks inconsistent again
+- check official model documentation and, when authorized, `ListModels` if the naming or availability is uncertain; a similar-looking model name is not proof of identity
+- report unavailability rather than silently substituting another model
 
-## 10. Serial Rendering Wastes Time Once The Pack Is Stable
+## 10. Parallelism Does Not Authorize Extra Renders
 
-After the prompt pack is written, serially rendering each variant leaves network time idle.
+An approved multi-image pack can benefit from concurrent rendering. The preset builder's four prompts do not themselves authorize four API calls.
 
 Fix:
 
-- use `scripts/render_variant_pack.py` for the first full review sweep
-- use `scripts/probe_gemini_image_api.py` only for one-off rerenders or debugging
+- use the batch script's `--dry-run` to inspect job count and `--max-concurrency` to bound concurrency
+- use `scripts/probe_gemini_image_api.py` with a custom prompt for a single image
+- inspect failures before further paid attempts; keep retries within the user's budget and protect saved prompts and responses
 
 ## See Also
 

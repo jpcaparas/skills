@@ -24,7 +24,7 @@ The standard is not "the app never fails." The standard is:
 
 ## Failure-First Design
 
-Before coding the happy path, write a compact failure map:
+For material runtime risks, use these questions to identify missing guarantees. Write a failure map only when it helps the design or handoff; a small edit does not need a separate artifact.
 
 | Failure | Default design question |
 |---|---|
@@ -39,11 +39,11 @@ Before coding the happy path, write a compact failure map:
 | Load spike | What queues, caps, rate limits, or degraded paths protect the app? |
 | Missing observability | Which log, metric, or trace answers "what happened to this work item?" |
 
-Keep this map proportional. A low-risk admin label change needs a short pass. A payment, queue, import, webhook, or email flow needs a serious one.
+Keep this assessment proportional. A low-risk admin label change needs no resilience ceremony. A payment, queue, import, webhook, or email flow needs consideration of relevant failures. Verified database, provider, framework, or platform guarantees count; add machinery only to close gaps.
 
 ## Stable Work Identity
 
-Every side-effecting operation needs a durable identity. Examples:
+When replay or concurrency could produce harmful duplicate effects or expensive duplicate work, establish stable intent identity or another proven idempotency guarantee. Natural idempotency and existing identifiers may suffice. Where a durable key is needed, examples include:
 
 - `idempotency_key` for API requests and form submissions.
 - `webhook_event_id` for provider event delivery.
@@ -93,12 +93,12 @@ Define allowed transitions:
 | `stale` | `pending` | watchdog or reconciler when retry is safe |
 | `pending` | `canceled` | user/admin/system cancellation path |
 
-Every non-terminal state needs:
+Persistent non-terminal work must not become stranded. Ensure the applicable guarantees below through existing infrastructure or application logic; not every workflow needs heartbeat fields, a watchdog, or this full state model:
 
 - A timeout or expiration.
 - A single owner or lease rule.
 - A retry or terminal transition.
-- Observability around entry, exit, and stale detection.
+- Enough diagnostic evidence to explain stuck work and its recovery.
 
 ## Recovery Ownership
 
@@ -133,7 +133,7 @@ Use risk-based defaults:
 
 ## Verification
 
-For meaningful app changes, verify at least one failure path:
+Verify the failure paths affected by the change, reusing adequate existing coverage. Examples of useful evidence:
 
 - Duplicate request returns existing result instead of creating another record.
 - Concurrent workers do not process the same work key.
@@ -143,7 +143,7 @@ For meaningful app changes, verify at least one failure path:
 - Logs include correlation ID and work identity.
 - Metrics expose queue age, errors, retries, or saturation.
 
-When local verification is not practical, state the gap and add the smallest hook that makes it testable next time.
+When local verification is not practical, state the gap. Add a test seam only when necessary, proportionate, and in scope; do not expand the implementation just to satisfy a check quota.
 
 ## See Also
 

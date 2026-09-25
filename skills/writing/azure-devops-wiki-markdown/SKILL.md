@@ -9,11 +9,13 @@ license: MIT
 
 Route Azure DevOps Markdown questions to the right reference, with extra depth on wiki-only blocks, Mermaid-safe authoring, and code-fence language identifiers.
 
-Verified against Microsoft Learn Azure DevOps Markdown guidance, the Azure Repos Sprint 259 release note, and the current Highlight.js supported-language table on April 9, 2026.
+Bundled baseline: checked against Microsoft Learn Azure DevOps Markdown guidance, the Azure Repos Sprint 259 release note, and the Highlight.js supported-language table on April 9, 2026. Support statements describe that baseline, not permanent bans or proof for every Server version.
 
 ## Decision Tree
 
 What do you need to do?
+
+Use the quick reference directly for routine known syntax. Load the relevant reference when a platform quirk, uncertain capability, or rendering failure needs it; the routes below do not require stacked reads for every edit.
 
 - Draft or repair a normal wiki page -> read `references/syntax.md`
 - Check whether a feature works in Done, Widget, PR, README, or Wiki -> read `references/support-matrix.md`
@@ -60,6 +62,11 @@ What do you need to do?
 - For proposal decision trees, keep one branching question per node and put the recommendation, risks, and next step below the diagram.
 - Prefer mainstream code-fence aliases such as `bash`, `powershell`, `json`, `yml`, `ts`, `tsx`, `python`, `csharp`, `cpp`, `sql`, and `plaintext`. Use the helper script for edge cases and alias overlaps.
 - When a user edits wiki Markdown directly in source control instead of the browser editor, favor literal, documented syntax over UI-only instructions.
+- Preserve exact macros, source-code literals, and real query or identity GUIDs. Do not invent identifiers or repair code for prose style. Templates illustrate syntax and useful layouts; follow the requested page structure rather than forcing a starter's sections.
+
+## When guidance is insufficient
+
+If a limitation is stale, insufficient, or conflicts with the target, consult current Microsoft Learn documentation using its Services/Server version selector and relevant release notes. Use newly supported syntax when verified for that target and within the user's authority; an upstream Mermaid or Highlight.js feature alone does not prove Azure support. When documentation is unavailable or inconclusive, disclose the gap and use the compatible baseline or an authorized rendering check. Propose a correction to the canonical skill with the source, target version, and minimal rendering example/check. Do not browse for routine known syntax or silently modify installed copies.
 
 ## Gotchas
 
@@ -75,6 +82,6 @@ What do you need to do?
 
 ## Verification
 
-- Run `python3 scripts/find_code_language.py <query>` when a user asks whether a language alias exists or whether an alias is ambiguous.
-- Run `python3 scripts/validate.py .` from this skill directory after edits.
-- Run `python3 scripts/test_skill.py .` to verify eval structure and cross-references locally.
+- Use `python3 scripts/find_code_language.py <query>` when an uncertain language alias or overlap needs checking.
+- When maintaining this skill package (not when editing a wiki page), run `python3 scripts/validate.py .` from this skill directory.
+- For package maintenance, run `python3 scripts/test_skill.py .` to verify eval structure and cross-references locally. Neither package command proves that a user's wiki page renders.

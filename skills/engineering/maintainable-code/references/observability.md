@@ -74,9 +74,9 @@ Golden rule: start with user-facing health and capacity before bespoke metrics:
 - Errors.
 - Saturation.
 
-For any production-facing app change, ask whether these four signals are already measurable for the affected route, job, queue, or dependency. If not, add or route the minimum metric needed before inventing workflow-specific counters.
+For material production risks, check whether existing signals answer the relevant user-health and capacity questions. Add instrumentation only for a consequential diagnostic gap; a routine app change does not require four new metrics.
 
-For app self-healing, add:
+For app self-healing, select signals that answer an actual recovery question:
 
 | Metric | Why it matters |
 |---|---|
@@ -94,7 +94,7 @@ Avoid high-cardinality labels such as raw user IDs, emails, request paths with I
 
 ## Traces
 
-Trace boundaries and async handoffs:
+When tracing is useful and existing instrumentation is insufficient, focus on boundaries and async handoffs:
 
 - HTTP request handler.
 - Database transaction.
@@ -126,7 +126,7 @@ Every alert needs:
 
 - User impact.
 - Likely cause dimensions.
-- First three commands, dashboard links, or queries to inspect.
+- An actionable diagnostic starting point, such as a command, dashboard, or query; no fixed count is required.
 - Known automatic recovery behavior.
 - Manual action only when automation is exhausted.
 

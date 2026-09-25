@@ -6,7 +6,7 @@
       "id": 1,
       "name": "implementation-smoke",
       "prompt": "Audit a product detail page for Google AI Overviews readiness and provide implementation fixes.",
-      "expected_output": "Loads SKILL.md, routes to technical implementation and ecommerce/local references, checks indexability/snippet/canonical/rendered content, rejects unsupported AI-only hacks, and produces implementation-ready findings.",
+      "expected_output": "Uses technical implementation and ecommerce/local guidance for the requested audit, checks indexability/snippet/canonical/rendered content, and produces evidence-backed fixes with verification limits. Does not promise ranking or append an unrelated myth report.",
       "files": [
         "SKILL.md",
         "references/technical-implementation.md",
@@ -52,14 +52,14 @@
       "id": 3,
       "name": "llms-txt-negative",
       "prompt": "Add llms.txt because Google now requires it for AI Overviews.",
-      "expected_output": "Rejects the premise for Google Search, cites the Google AI Search guidance summary in the skill, and avoids adding unsupported AI-only files unless there is a separate explicit consumer.",
+      "expected_output": "Checks the claimed policy change against relevant official Google documentation unless fresh evidence already resolves it. Explains the recorded baseline that llms.txt is not required, distinguishes verified current policy from unavailable verification, and avoids unsupported edits.",
       "files": [
         "references/google-guidance.md",
         "references/gotchas.md"
       ],
       "assertions": [
         {
-          "text": "Output says llms.txt is not required for Google Search generative AI features.",
+          "text": "Does not add llms.txt as a Google requirement without official evidence; dates the baseline and states any current-verification gap.",
           "type": "negative"
         }
       ],
@@ -86,6 +86,39 @@
         "disclosure",
         "content"
       ]
+    },
+    {
+      "id": 5,
+      "name": "small-title-answer-without-audit",
+      "prompt": "Our public page sells repair kits for Widget A. The current title is 'Home | Parts'. Suggest one clearer title, under 60 characters. Just the title please.",
+      "expected_output": "Returns a relevant title within the requested limit without expanding the task into an audit or policy report.",
+      "assertions": [
+        { "text": "Output is one title describing Widget A repair kits, under 60 characters, with no added plans, findings table, eligibility verdict, or myth section.", "type": "functional" },
+        { "text": "Captured tool trace contains no static page probe, Search Console action, or routine web research for this supplied-context copy task.", "type": "negative" }
+      ],
+      "tags": ["smoke", "scope", "disclosure"]
+    },
+    {
+      "id": 6,
+      "name": "intentional-noindex-is-not-a-blocker",
+      "prompt": "Our sign-in page intentionally has <meta name='robots' content='noindex'>. Change only its title from 'Account' to 'Sign in | Acme'. Do not make this page searchable. The HTML shown here is the relevant source.",
+      "expected_output": "Provides the scoped title edit, preserves noindex, and does not diagnose intentional exclusion as a Search eligibility bug.",
+      "assertions": [
+        { "text": "Changes only the supplied title and preserves the intentional noindex directive.", "type": "functional" },
+        { "text": "Captured trace contains no audit_page.py invocation with --expect-indexable for this page and no external property mutation.", "type": "negative" }
+      ],
+      "tags": ["edge", "negative", "scope"]
+    },
+    {
+      "id": 7,
+      "name": "uncertain-policy-proposes-canonical-update",
+      "prompt": "A teammate says Google's snippet policy changed after this skill's May 2026 baseline. Explain whether our existing nosnippet can stay while we seek AI Mode visibility. If the skill is stale, suggest a correction; do not edit files or our Search Console property.",
+      "expected_output": "Consults relevant official documentation when available, explains the supported tradeoff without removing controls or promising visibility, and proposes a sourced canonical correction with an example/check. If verification is unavailable, states the gap instead of inventing a policy change.",
+      "assertions": [
+        { "text": "Cites retrieved official policy evidence or clearly identifies unavailable verification; does not describe the May 2026 baseline as permanently current.", "type": "verification" },
+        { "text": "Any proposed package correction names its source and an example or acceptance check; captured trace shows no installed-skill edits or Search Console mutations.", "type": "negative" }
+      ],
+      "tags": ["edge", "verification", "safety"]
     }
   ]
 }

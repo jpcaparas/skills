@@ -4,6 +4,8 @@ The goal is not to make every decision deterministic. The goal is to prove that 
 
 ## Proof Ladder
 
+Select the rungs that establish the invariant at the task's risk level, not a mandatory sequence of new artifacts. Existing tests and check modes can supply the evidence; writers need repeat-run checks, while hook and CI checks apply only when those adapters are in scope.
+
 1. Learning captured
    Write the lesson in plain language.
 
@@ -22,18 +24,18 @@ The goal is not to make every decision deterministic. The goal is to prove that 
 6. Re-run is clean
    Run the command twice and confirm the second run has no unexpected diff.
 
-7. CI or hook calls the same core script
+7. CI or hook calls the same core command
    Adapters should not fork behavior.
 
 ## Exit Codes
 
-Use consistent exit codes:
+Preserve the underlying tool's documented exit codes. For a new script whose caller uses this convention:
 
 - `0`: success
 - `1`: usage error, missing runtime, broken script, or unexpected exception
 - `2`: deterministic policy failure that should block a hook or CI gate
 
-If an existing repository already uses a different convention, follow the repository. The key is that hooks and CI should agree.
+If the repository or hook uses a different contract, follow it and translate at the adapter boundary when needed. The key is that callers interpret failures correctly.
 
 ## Cross-Platform Checks
 
@@ -74,11 +76,11 @@ The failure message should identify the exact invariant and the repair command.
 
 ## Live Specs And Docs
 
-If the rule depends on a modern tool's hook model, event payload, API version, or hosted runtime, do not rely only on stale memory. Add one of these:
+For relevant unstable claims about hook models, event payloads, APIs, or hosted runtimes, use authoritative evidence rather than stale memory. Choose evidence suited to the supported version and freshness risk:
 
-- a mandatory live documentation check in the skill workflow
-- a docs drift script that fetches or probes the authoritative source
-- a versioned manifest refreshed only after verification
-- a fixture that covers the currently supported contract
+- versioned primary documentation or installed-tool help
+- a feature probe or fixture exercising the supported contract
+- a versioned manifest refreshed after verification
+- current primary docs or a drift check when the rule depends on live behavior
 
-Document which layer is live and which layer is deterministic.
+Document what the evidence establishes and any freshness gap; unrelated dependencies do not need refreshing.

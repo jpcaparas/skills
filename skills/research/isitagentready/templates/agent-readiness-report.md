@@ -1,5 +1,7 @@
 # Agent Readiness Analysis: {{REPO_NAME}}
 
+<!-- Optional full-report starting point. Adapt to the requested scope; remove unused sections and placeholders. -->
+
 | Field | Value |
 | --- | --- |
 | Repository | `{{REPO_NAME}}` |
@@ -18,6 +20,7 @@
 - Official `isitagentready.com` scan:
 - Unverified or blocked areas:
 
+<!-- Include the snapshot only if a scan ran. Otherwise remove it and note the unverified official score under Evidence Sources. -->
 ## Official Scan Snapshot
 
 | Field | Value |
@@ -25,55 +28,57 @@
 | Level | |
 | Level name | |
 | Next level | |
-| Commerce counted in score | No |
+| Scanned URL and timestamp | |
+| Scanner version (if reported) | |
+| Scoring rules, including commerce | Measured snapshot or dated official source; unknown if not reported |
 
-Leave this section explicit even when a live scan was unavailable.
+<!-- Record any disagreement with direct HTTP/browser evidence without rewriting the reported score. -->
 
 ## Findings by Category
 
 ### Discoverability
 
-| Signal | Applicability | Status | Runtime evidence | Repository evidence | Fix direction |
-| --- | --- | --- | --- | --- | --- |
-| `robotsTxt` | | | | | |
-| `sitemap` | | | | | |
-| `linkHeaders` | | | | | |
+| Signal | Applicability | Source status | Deployed status | Runtime evidence | Repository evidence | Fix direction |
+| --- | --- | --- | --- | --- | --- | --- |
+| `robotsTxt` | | | | | | |
+| `sitemap` | | | | | | |
+| `linkHeaders` | | | | | | |
 
 ### Content
 
-| Signal | Applicability | Status | Runtime evidence | Repository evidence | Fix direction |
-| --- | --- | --- | --- | --- | --- |
-| `markdownNegotiation` | | | | | |
-| `llms.txt` | | | | | |
-| `llms-full.txt` | | | | | |
+| Signal | Applicability | Source status | Deployed status | Runtime evidence | Repository evidence | Fix direction |
+| --- | --- | --- | --- | --- | --- | --- |
+| `markdownNegotiation` | | | | | | |
+| `llms.txt` | | | | | | |
+| `llms-full.txt` | | | | | | |
 
 ### Bot Access Control
 
-| Signal | Applicability | Status | Runtime evidence | Repository evidence | Fix direction |
-| --- | --- | --- | --- | --- | --- |
-| `robotsTxtAiRules` | | | | | |
-| `contentSignals` | | | | | |
-| `webBotAuth` | | | | | |
+| Signal | Applicability | Source status | Deployed status | Runtime evidence | Repository evidence | Fix direction |
+| --- | --- | --- | --- | --- | --- | --- |
+| `robotsTxtAiRules` | | | | | | |
+| `contentSignals` | | | | | | |
+| `webBotAuth` | | | | | | |
 
 ### Capabilities / Discovery
 
-| Signal | Applicability | Status | Runtime evidence | Repository evidence | Fix direction |
-| --- | --- | --- | --- | --- | --- |
-| `apiCatalog` | | | | | |
-| `oauthDiscovery` | | | | | |
-| `oauthProtectedResource` | | | | | |
-| `mcpServerCard` | | | | | |
-| `a2aAgentCard` | | | | | |
-| `agentSkills` | | | | | |
-| `webMcp` | | | | | |
+| Signal | Applicability | Source status | Deployed status | Runtime evidence | Repository evidence | Fix direction |
+| --- | --- | --- | --- | --- | --- | --- |
+| `apiCatalog` | | | | | | |
+| `oauthDiscovery` | | | | | | |
+| `oauthProtectedResource` | | | | | | |
+| `mcpServerCard` | | | | | | |
+| `a2aAgentCard` | | | | | | |
+| `agentSkills` | | | | | | |
+| `webMcp` | | | | | | |
 
 ### Commerce and Supporting Signals
 
-| Signal | Applicability | Status | Runtime evidence | Repository evidence | Fix direction |
-| --- | --- | --- | --- | --- | --- |
-| `x402` | | | | | |
-| `ucp` | | | | | |
-| `acp` | | | | | |
+| Signal | Applicability | Source status | Deployed status | Runtime evidence | Repository evidence | Fix direction |
+| --- | --- | --- | --- | --- | --- | --- |
+| `x402` | | | | | | |
+| `ucp` | | | | | | |
+| `acp` | | | | | | |
 
 ## Applicability Decisions
 

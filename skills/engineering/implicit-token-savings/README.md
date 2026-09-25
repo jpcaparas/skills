@@ -1,6 +1,6 @@
 # implicit-token-savings
 
-Production skill for forcing compact, high-signal command selection during coding sessions.
+Production skill for selecting sufficient, low-noise local shell output during coding sessions.
 
 ## What It Covers
 
@@ -17,6 +17,6 @@ Production skill for forcing compact, high-signal command selection during codin
 - `references/filesystem.md` - repo inventory, search, and targeted read patterns
 - `references/git.md` - compact git workflows
 - `references/runners.md` - narrow test, lint, and container commands
-- `references/patterns.md` - fallback matrix and escalation rules
+- `references/patterns.md` - context-driven choices and fallbacks
 - `references/gotchas.md` - high-value pitfalls
 - `scripts/probe_implicit_token_savings.py` - repeatable local verification suite

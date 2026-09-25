@@ -35,7 +35,7 @@ Without it, PHP silently coerces: `strlen(42)` works, `function f(int $x)` accep
 declare(strict_types=1);
 ```
 
-The declaration is per-file and applies to calls made *from* that file. That is why every file needs it, not just the library code. Enforce with a CI grep or PHPStan's `declareStrictTypes` rule (phpstan-strict-rules).
+The declaration is per-file and applies to calls made *from* that file. Check scoped caller files as well as library code. For a planned repository-wide rollout, a CI check or PHPStan's `declareStrictTypes` rule (phpstan-strict-rules) can enforce coverage; do not add infrastructure merely for a small edit.
 
 ## Typed Signatures and Properties
 
@@ -122,9 +122,9 @@ public function primaryImageOrDefault(): Image // Null Object: absence has a saf
 }
 ```
 
-Step 4 — replace every call-site chain with the named method. The `??` chain now exists in exactly one place, typed and documented.
+Step 4 — replace the in-scope affected call-site chains with the named method. The scoped callers now share one typed, documented policy; note unrelated duplicates as follow-up rather than expanding the task.
 
-If the underlying columns are untyped model magic, also fix the property types (see Laravel section).
+If the underlying columns are untyped model magic, type the affected properties (see Laravel section).
 
 ## Enums Over Magic Strings
 
@@ -267,7 +267,7 @@ protected function casts(): array
 final class Location extends Model
 ```
 
-3. **Larastan** (`phpstan/phpstan` + `larastan/larastan`) understands relations, builders, and collections — use it, and parameterize relations: `@return HasMany<Image, $this>`.
+3. **Larastan** (`phpstan/phpstan` + `larastan/larastan`) understands relations, builders, and collections — use it when configured; adding it is a tooling decision, not an automatic dependency migration. Parameterize affected relations using the installed framework/analyzer contract, e.g. `@return HasMany<Image, $this>` where supported.
 
 4. Request input is untyped; parse it. Form Requests + a `toDto(): CreateLocationData` method keep controllers free of raw `array` access.
 
@@ -309,4 +309,4 @@ parameters:
     treatPhpDocTypesAsCertain: true
 ```
 
-For legacy adoption: generate a baseline (`phpstan analyse --generate-baseline`), commit it, fail CI if it grows, and delete entries as files are touched. Never lower the level to make old code pass.
+When legacy adoption is in scope: generate a baseline (`phpstan analyse --generate-baseline`), commit it, fail CI if it grows, and delete entries as files are touched. An ordinary edit uses existing analysis and keeps new code strict without requiring that rollout. Never lower the level to make old code pass.

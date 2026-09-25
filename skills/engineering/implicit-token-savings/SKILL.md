@@ -1,6 +1,6 @@
 ---
 name: implicit-token-savings
-description: "Use compact, low-noise shell commands for repo exploration, git status/diff/log, tests, containers, and file search. Trigger on token savings, terse shell workflow, rg, tree, pytest, npm test, cargo test, go test, or docker ps. Do NOT use when full output is requested."
+description: "Selects sufficient, low-noise local shell commands for repository exploration, git inspection, tests, and container checks. Use when choosing command scope or output detail, especially for token savings or terse workflows; not for incidental tool mentions or requests for full output."
 compatibility: "Requires: python3 and a Unix-like shell. Best with rg, tree, git, npm, docker, and jq; degrades cleanly when some tools are absent."
 metadata:
   version: "1.0.0"
@@ -21,9 +21,9 @@ references:
 
 # implicit-token-savings
 
-Bias every coding session toward the smallest command that answers the real question.
+Choose the smallest sufficient local shell command for the real question.
 
-Prefer inventories, summaries, scoped searches, and path-selective test commands before full file dumps, wide diffs, or whole-repo test runs.
+Prefer compact output when it answers the question, especially when requested. Go directly to a known file, relevant diff, or full output when the task needs it; preliminary summaries are not prerequisites.
 
 ## Decision Tree
 
@@ -48,8 +48,8 @@ What do you need right now?
 
 - Staging, committing, or pushing
   - Stage only the intended paths
-  - Review the staged summary before the commit
-  - Push `HEAD` instead of spelling the branch when the remote is already known
+  - Review all staged changes before an authorized commit; use summaries for scope and hunks for semantics
+  - Only when pushing is authorized, use `HEAD` if the intended remote and destination are known
   - Read `references/git.md`
 
 - Test, lint, or container health for a specific stack
@@ -62,33 +62,35 @@ What do you need right now?
 
 ## Default Operating Rules
 
-1. Inventory before contents. Ask "which path?" before "what does the whole file say?"
-2. Scope before detail. Prefer `--files`, `--name-only`, `--stat`, and explicit paths before raw output.
-3. Search before read. Use `rg` to identify the few files worth opening.
-4. Summarize before hunk. Use `git diff --stat` or `git diff --name-only` before `git diff`.
-5. Narrow test surfaces aggressively. Run the smallest path, package, test name, or pattern that can answer the question.
+1. Use known context to choose a sufficient command directly. Inventory helps when paths are unknown, not when the target file is already named.
+2. Keep scope explicit. Use `--files`, `--name-only`, or `--stat` for scope questions, and content output for semantic questions.
+3. Use `rg` to locate unknown files or matching lines; read known relevant files without a search ceremony.
+4. Use a path-specific `git diff` directly when reviewing behavior. Summaries help size or file-list questions but cannot establish semantics.
+5. Use focused tests for local feedback, and run all repository-required validation gates before handoff. Narrow tests do not replace required full suites.
 6. Prefer machine-readable output when another tool or script will consume it: `--json`, `--format '{{json .}}'`, `jq -r`.
-7. Escalate in steps: terse, then structured, then full output.
+7. Choose terse, structured, or full output to match the known need. Preserve errors, exit status, and failure details; never compress away evidence needed for a safe decision.
 8. If a preferred tool is absent, use the nearest cheaper equivalent rather than stalling.
 
 ## Quick Reference
 
-| Need | Start here | Escalate only if needed | Why |
+Choose a row for the question at hand; alternatives are not a required sequence.
+
+| Need | Compact option | Alternative when useful | Why |
 | --- | --- | --- | --- |
-| Top-level repo inventory | `ls -1` | `ls -lah`, then `tree -L 2` | File names beat decorative output when you just need bearings |
+| Top-level repo inventory | `ls -1` | `ls -lah` or `tree -L 2` | File names beat decorative output when you just need bearings |
 | Directory shape | `tree -L 2 path/` | `tree -a -L 3 path/` | Depth caps keep structure readable |
 | Candidate paths only | `rg --files path/` | `rg --files path/ \| rg 'pattern'` | Avoid opening file contents at all |
-| Text or symbol search | `rg -n -F 'needle' path/` | `rg -n 'regex' path/` | Match first, read later |
-| File excerpt | `sed -n '1,80p' file` | `head -n 120 file`, then full read | Pull only the needed slice |
+| Text or symbol search | `rg -n -F 'needle' path/` | `rg -n 'regex' path/` | Choose literal or pattern semantics |
+| File excerpt | `sed -n '1,80p' file` | Full read when whole-file context is needed | Pull enough context in one useful read |
 | Working tree state | `git status --short --branch` | `git status` | Short form is enough for most decisions |
-| Change scope | `git diff --stat` | `git diff --name-only`, then `git diff -- path` | Summaries first, hunks last |
+| Change scope or semantics | `git diff --stat` | `git diff --name-only` for paths; `git diff -- path` for semantics | Choose the detail the question requires |
 | Recent history | `git log --oneline --decorate -n 15` | `git log --stat -- path` | Commit headlines answer many questions quickly |
 | Stage and review | `git add -- path && git diff --cached --stat` | `git diff --cached -- path` | Review only what you are about to commit |
-| Push current branch | `git push -u origin HEAD` | `git remote -v`, then explicit branch push | `HEAD` avoids branch-name lookup noise |
-| Node test surface | `npm test -- --help` | `npm test -- <runner-args>` | Confirm how the project forwards args before widening |
-| Rust test surface | `cargo test name -- --nocapture` | `cargo test package::module::name` | Target a single test before a suite |
+| Authorized push of current branch | `git push -u origin HEAD` | Inspect the destination if unknown | `HEAD` is shorthand, not push authorization |
+| Node test surface | `npm test -- <runner-args>` | `npm test -- --help` if flags are unknown | Use the project's known runner contract |
+| Rust test surface | `cargo test name -- --nocapture` | `cargo test package::module::name` | Choose a test filter for focused feedback |
 | Python lint surface | `ruff check path/` | `ruff check path/ --fix` | Keep fixes explicit |
-| Python test surface | `pytest -q tests/test_file.py -k expr` | `pytest -q tests/` | Start with a file or expression, not the whole suite |
+| Python test surface | `pytest -q tests/test_file.py -k expr` | `pytest -q tests/` | Choose focused feedback or suite coverage as needed |
 | Go test surface | `go test ./pkg/... -run Pattern` | `go test ./...` | Package and `-run` filters cut noise |
 | Container inventory | `docker ps --format '{{json .}}'` | `docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'` | Structured rows are easier to filter or summarize |
 
@@ -99,15 +101,8 @@ What do you need right now?
 | Repo shape, search, and targeted file reads | `references/filesystem.md` |
 | Compact git status, diff, history, staging, and push patterns | `references/git.md` |
 | Narrow test, lint, and container commands | `references/runners.md` |
-| Fallbacks, escalation ladders, and session choreography | `references/patterns.md` |
+| Context-driven command choices and fallbacks | `references/patterns.md` |
 | Missing results, over-compression mistakes, and command traps | `references/gotchas.md` |
-
-## Verified Environment
-
-- Verified locally on April 19, 2026 in a Unix-like shell.
-- Found during verification: `/bin/ls`, `tree 2.2.1`, `ripgrep 15.1.0`, `git 2.53.0`, `npm 11.7.0`, `docker 28.5.2`, and `jq 1.8.1`.
-- Not on `PATH` during verification: `cargo`, `ruff`, `pytest`, and `go`.
-- Re-run `python3 scripts/probe_implicit_token_savings.py --format pretty` to refresh availability and behavior on the current machine.
 
 ## Gotchas
 
@@ -125,3 +120,7 @@ What do you need right now?
 - `scripts/validate.py` checks packaging, required files, and syntax.
 - `scripts/test_skill.py` runs validation, eval coverage checks, cross-reference checks, and the probe suite.
 - `templates/session-checklist.md` is a reusable checklist for starting a low-noise coding session.
+
+## When Guidance Stops Helping
+
+If a compact command fails or hides needed evidence, use fuller output and inspect installed help or official version-matched docs. Preserve failures and unknowns rather than optimizing them away. Propose a canonical skill update when an example is stale or saves less work than it adds, citing the tool/version and a reproducer. Do not silently edit installed copies or publish the proposal.

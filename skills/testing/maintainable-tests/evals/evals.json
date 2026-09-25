@@ -27,10 +27,10 @@
       "id": 2,
       "name": "legacy-rounding-characterization",
       "prompt": "Before refactoring LegacyInvoiceCalculator, add a characterization test for the current pre-2025 tax rounding behavior. Nobody is sure if it is right, but old invoices must not change while we refactor.",
-      "expected_output": "Routes to legacy guidance, writes a characterization test that labels uncertainty, explains why behavior is pinned, and avoids presenting the current behavior as a permanent domain rule.",
+      "expected_output": "Writes the requested characterization test, labels uncertainty, explains why behavior is pinned, and avoids presenting it as a permanent domain rule. Consults legacy guidance only if the preservation decision remains unclear.",
       "assertions": [
         {
-          "text": "Loads or follows references/legacy-and-characterization.md",
+          "text": "Consults references/legacy-and-characterization.md only when preservation or uncertainty needs further guidance; does not load unrelated references",
           "type": "disclosure"
         },
         {
@@ -48,14 +48,18 @@
       "id": 3,
       "name": "hard-to-test-payment-service",
       "prompt": "I need tests for PaymentService. It constructs StripeClient internally, reads Date.now(), and sends receipts in the same method that calculates invoice totals. Please just mock whatever is needed.",
-      "expected_output": "Recognizes the production code is hard to observe, recommends decomposing calculation, clock, gateway, and receipt boundaries before adding broad mocks, then suggests focused tests and adapter checks.",
+      "expected_output": "Inspects existing safe seams for gateway construction, time, and receipts. Uses framework overrides or scoped, restored doubles where sufficient; otherwise proposes the smallest proportionate production refactor and respects authorization. Tests prove totals and important effects without real charges or email, reusing adequate adapter coverage.",
       "assertions": [
         {
-          "text": "Loads or follows references/doubles-and-boundaries.md",
+          "text": "Consults references/doubles-and-boundaries.md only for unresolved seam or test-double choices, not as a required prelude to every test",
           "type": "disclosure"
         },
         {
-          "text": "Recommends improving production boundaries instead of only adding broad mocks",
+          "text": "Uses an existing safe seam or proposes a necessary scoped refactor, rather than mandating production decomposition before any test",
+          "type": "functional"
+        },
+        {
+          "text": "Controls gateway, clock, and receipt effects without real external calls, leaked globals, or incidental call-order coupling",
           "type": "functional"
         },
         {
@@ -72,7 +76,7 @@
       "expected_output": "Uses severity-first review, calls out misleading tests, weak assertions, and brittle implementation coupling, then suggests behavior names, observable assertions, and narrower doubles.",
       "assertions": [
         {
-          "text": "Loads or follows references/review-rubric.md",
+          "text": "Consults references/review-rubric.md only for unresolved review judgments; a severity-first review does not require its template",
           "type": "disclosure"
         },
         {
@@ -111,11 +115,11 @@
       "id": 6,
       "name": "review-false-positive-artifact-assertions",
       "prompt": "Review evals/files/publish-config.spec.ts against this contract: production writes formatter.ts with `export default { mode: \"strict\" };`, writes formatter.ts.backup only when backup is true, and the backup must equal the old bytes. Identify tests that can pass while the contract is broken and show the smallest repair.",
-      "expected_output": "The agent reads side-effect guidance, catches the boolean-versus-content assertion and formatter.json.backup path drift, recommends reading the exact destination and backup bytes, and preserves the valid backup-content assertion.",
+      "expected_output": "The agent catches the boolean-versus-content assertion and formatter.json.backup path drift, recommends reading exact destination and backup bytes, and preserves valid backup-content coverage. Additional reference reads depend on an unresolved design question.",
       "files": ["evals/files/publish-config.spec.ts"],
       "assertions": [
         {
-          "text": "Agent reads references/side-effects-and-compatibility.md",
+          "text": "Consults references/side-effects-and-compatibility.md only if an isolation or assertion decision needs it; does not require extra reads for defects already clear from the supplied contract",
           "type": "disclosure"
         },
         {
@@ -148,7 +152,7 @@
       "expected_output": "The agent routes to side-effect and compatibility guidance, denies unstubbed requests, fakes waiting while asserting meaningful backoff, restores global state, tests capability presence and absence, and includes the lowest supported plus current SDK combinations.",
       "assertions": [
         {
-          "text": "Agent reads references/side-effects-and-compatibility.md",
+          "text": "Consults references/side-effects-and-compatibility.md when non-obvious isolation or version-coverage decisions remain unresolved, without unrelated reference reads",
           "type": "disclosure"
         },
         {
@@ -182,6 +186,56 @@
         }
       ],
       "tags": ["negative", "near-miss"]
+    },
+    {
+      "id": 9,
+      "name": "tests-only-receipt-replay-regression",
+      "prompt": "Add only a pytest regression in tests/test_billing_service.py; production files are out of scope. billing/service.py imports Gateway from payments_sdk, time from time, and send_receipt from mailer. Its fixed capture(invoice) is: `if invoice.paid: return invoice.charge_id`; otherwise it calls `Gateway().charge(invoice.total_cents, time())`, assigns the returned ID to invoice.charge_id, sets invoice.paid = True, calls `send_receipt(invoice.email, invoice.charge_id)`, and returns the ID. The bug was sending a second receipt on a replay. Existing tests cover the first successful capture and SDK adapter contract. The suite uses pytest monkeypatch with automatic teardown and denies unstubbed network. Use an invoice for billing@example.test, 1250 cents, initially unpaid with no charge ID; invoke capture twice. Do not redesign PaymentService or add constructor injection.",
+      "expected_output": "Adds the replay regression using scoped monkeypatches on billing.service.Gateway, billing.service.time, and billing.service.send_receipt, with restored state and no real payment or email. Proves identical returned charge IDs, paid state, one exact charge and one receipt. Leaves production and adequate first-capture/adapter coverage unchanged.",
+      "assertions": [
+        {
+          "text": "Changes only the requested test surface and does not require or implement a production refactor",
+          "type": "negative"
+        },
+        {
+          "text": "Uses module lookup seams with reliable pytest cleanup, deterministic time, and denied unstubbed network rather than real gateway or mail effects",
+          "type": "functional"
+        },
+        {
+          "text": "Asserts identical capture results, paid state and stored charge ID, exactly one charge with 1250 cents and controlled time, and exactly one receipt to billing@example.test for that charge ID",
+          "type": "functional"
+        },
+        {
+          "text": "Shows why the regression would fail if the replay resent a receipt, runs or identifies the focused pytest check, and does not duplicate adequate existing success or adapter tests",
+          "type": "verification"
+        }
+      ],
+      "tags": ["edge", "regression", "tests-only", "boundary", "isolation", "scope"]
+    },
+    {
+      "id": 10,
+      "name": "small-test-edit-no-extra-ceremony",
+      "prompt": "Rename only the vague test title in tests/invitations.spec.ts: `it('handles error', () => { expect(validateInvitation({ expiresAt: 100 }, 101)).toEqual({ ok: false, reason: 'expired' }); });`. Existing tests already cover the valid and exact-deadline cases. The test body is correct. Keep this a small edit and summarize briefly.",
+      "expected_output": "Renames the test to describe rejection after expiry, preserves the exact assertion and body, uses focused existing verification, and gives a brief outcome without extra reference reading or ceremony.",
+      "assertions": [
+        {
+          "text": "Changes only the title to describe the post-deadline rejection and preserves the exact observable assertion",
+          "type": "functional"
+        },
+        {
+          "text": "Does not add tests, fixtures, production refactors, a written behavior story, or a multi-section review report",
+          "type": "negative"
+        },
+        {
+          "text": "Does not read reference stacks when the supplied test and contract already resolve the naming decision",
+          "type": "disclosure"
+        },
+        {
+          "text": "Runs relevant existing checks or reports a concrete verification limitation without claiming unrun tests passed",
+          "type": "verification"
+        }
+      ],
+      "tags": ["smoke", "small-edit", "disclosure", "scope"]
     }
   ]
 }

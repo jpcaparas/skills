@@ -1,13 +1,13 @@
 # Revision pass stack
 
-Use this reference for a reliable edit order. Each pass has one job, a completion test, and a loopback. Do not make every pass equally heavy; a clean draft may need only one or two.
+Use this reference when a complex revision needs an edit order. Each pass is optional except source fidelity and requested-output checks: select, combine, or skip passes based on scope and risk. A sentence edit does not need the whole stack, a ledger, or a scanner.
 
 ## Pass 0: Preserve and diagnose
 
 Before rewriting:
 
 - establish edit freedom and source authority
-- record protected literals, facts, uncertainty, citations, and voice anchors
+- identify protected literals, facts, uncertainty, citations, and voice anchors; record them when risk or complexity warrants a ledger
 - identify the reader's desired outcome
 - name the failure at whole-piece, section, paragraph, sentence, or surface level
 - mark the strongest passage so revision does not flatten it
@@ -18,7 +18,7 @@ Use `references/operating-contract.md` for high-risk or constrained work.
 
 ## Pass 1: Whole-piece shape
 
-Choose the genre in `references/genre-modes.md`, then inspect:
+When whole-piece shape is in scope, use the requested form, with `references/genre-modes.md` as optional guidance, then inspect:
 
 - opening contract: does the reader know where the piece is taking them?
 - thesis or task: is the central job visible where this genre expects it?
@@ -26,7 +26,7 @@ Choose the genre in `references/genre-modes.md`, then inspect:
 - scope: does every part belong?
 - ending: does it decide, verify, ask, invite, or turn outward as required?
 
-Make a reverse outline: one short line describing what each paragraph does. Reorder, merge, or cut before polishing sentences.
+Use a reverse outline when the order is hard to assess: one short line describing what each paragraph does. Reorder, merge, or cut before polishing sentences when that is within scope.
 
 For a substantial recast, use the worked cross-genre transformations in `references/natural-structure-and-digestibility.md`. They show how to rank material by the reader's next question without forcing every genre into a news lead.
 
@@ -104,7 +104,7 @@ Read `references/voice-and-rhythm.md`.
 Run this pass when the draft sounds interchangeable, machine-smooth, ceremonious, or over-produced.
 
 - replace praise words with mechanisms, evidence, or consequences
-- remove default-banned wrappers and rebuild default-rewrite phrases even when they occur once
+- remove empty wrappers and rebuild frames that hide meaning, even when they occur once; retain useful conventions and intentional rhetoric
 - cut service tone, generic authority, false suspense, tidy binaries, and self-summary
 - inspect repeated frames, sentence starts, triads, list shapes, and paragraph silhouettes
 - restore writer-specific selection: the detail, stake, caveat, or judgement only this piece needs
@@ -132,11 +132,11 @@ Now tune the finished piece to its destination.
 
 Use `references/genre-modes.md` and `references/style-bundles.md`.
 
-**Pass when:** the piece feels native to its channel and still matches the preservation ledger.
+**Pass when:** the piece feels native to its channel and still matches the source and any preservation ledger used.
 
 ## Pass 8: Final proof and stop
 
-Read the opening, one middle section, and the ending aloud. Then run `references/quality-gates.md`.
+Check the changed passages against the source and requested format. For a substantial revision, reading representative passages aloud and selecting checks from `references/quality-gates.md` can help.
 
 Check the diff for accidental changes to:
 
@@ -145,7 +145,7 @@ Check the diff for accidental changes to:
 - paragraph meaning
 - authorial voice anchors
 
-Rerun any deterministic scanner after the last substantive rewrite.
+Refresh a diagnostic only if relying on its result and subsequent edits could invalidate it. Scanner use is optional.
 
 **Pass when:** every applicable gate is satisfied and another edit would express preference rather than solve a named problem.
 

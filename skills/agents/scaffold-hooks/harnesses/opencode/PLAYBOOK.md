@@ -7,7 +7,7 @@ Internal component of the `scaffold-hooks` skill. This playbook owns the OpenCod
 What is the user asking for?
 
 - New OpenCode hooks in a repo:
-  Verify the current OpenCode plugin docs and `opencode-froggy` package, audit the repo, then scaffold `opencode.json` plus `.opencode/hook/hooks.md`.
+  Audit the repo and installed OpenCode/Froggy evidence, verify relevant official docs or trusted package source when the contract is uncertain, then scaffold `opencode.json` plus `.opencode/hook/hooks.md`.
 - Existing old scaffold under `.opencode/plugins/.managed/`:
   Treat it as a migration. Raze scaffold-owned `.opencode/plugins/*.ts`, `.opencode/package.json` dependency artifacts, and `hooks/opencode-session-*` adapters, then install Froggy and render `hooks.md`.
 - Existing custom `.opencode/hook/hooks.md`:
@@ -17,7 +17,7 @@ What is the user asking for?
 - Personal cross-repo OpenCode hooks:
   Use global scope so config lands under `~/.config/opencode/opencode.json` and `~/.config/opencode/hook/hooks.md`.
 - Explanation only:
-  Read `references/hook-events.md`, `references/config-layering.md`, `references/scaffold-layout.md`, and `references/merge-strategy.md`, then answer without scaffolding.
+  Use the reading guide to select only the reference needed for the question, then answer without scaffolding.
 
 ## Quick Reference
 
@@ -34,7 +34,7 @@ What is the user asking for?
 
 ## Non-Negotiable Workflow
 
-1. Verify live OpenCode plugin/config docs and current `opencode-froggy` source before changing event semantics.
+1. Verify relevant live OpenCode docs and trusted Froggy source matching the installed version when evidence is insufficient, stale, or event semantics will change. Stable local repairs need no full source sweep.
 2. Compare that ground truth with `assets/hook-events.json`.
 3. Audit the target repo before choosing project or global scope.
 4. Inspect `opencode.json`, `opencode.jsonc`, `.opencode/hook/hooks.md`, `.opencode/plugins/`, `.opencode/package.json`, AGENTS files, and repo-owned scripts.
@@ -46,6 +46,8 @@ What is the user asking for?
 10. Run this component's validator and test suite.
 
 ## Froggy Contract
+
+The bundled manifest records `opencode-froggy@0.12.0` as a historical verification baseline, not a perpetual required version. Confirm changed behavior against the target installation; do not upgrade deterministic pins merely to match a newer release.
 
 `opencode-froggy` is loaded as an npm plugin by OpenCode:
 
@@ -139,14 +141,7 @@ Project plans can swap `./scripts/validate-project.sh` for `./scripts/agent-stop
 
 ## Progressive Maintainer Drift Check
 
-When updating this skill itself:
-
-1. Live-fetch the official OpenCode plugin and config docs on the day of the edit.
-2. Check `npm view opencode-froggy --json`, `npm view @opencode-ai/plugin version`, and local `opencode --version` when available.
-3. Read the current Froggy source for hook loading, event handling, bash execution, and config paths.
-4. Update `assets/hook-events.json` first if the contract changed.
-5. Then update scaffold scripts, templates, references, validators, tests, evals, and wrappers.
-6. Do not update this skill from memory.
+When an affected contract is uncertain or changing, compare relevant official OpenCode documentation and version-matched Froggy source with `assets/hook-events.json`. Follow the root `SKILL.md` maintenance route: record the affected passage, source/version, proposed correction, and regression check. Update canonical package files only when maintenance is in scope; never silently mutate installed copies. Do not update this skill from memory. Preserve manifest-owned cleanup and custom plugins while reconciling any authorized change.
 
 ## Reading Guide
 

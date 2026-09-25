@@ -2,13 +2,13 @@
 
 Read this file when the agent keeps sounding current while actually answering from stale memory.
 
-## 1. GPT-4o Drift
+## 1. Product-Version Drift
 
-**Symptom:** The assistant keeps talking about GPT-4o as if it were the current default family.
+**Symptom:** The assistant treats a remembered model family or product version as the current default.
 
 **Cause:** Model-family names are volatile, and agents overfit to old high-frequency training patterns.
 
-**Fix:** Treat model names, model pickers, and availability by tier as live data. Verify against official docs before answering. As of April 9, 2026, OpenAI's Help Center documents GPT-5.3 and GPT-5.4 in ChatGPT and notes GPT-4o retirement in ChatGPT.
+**Fix:** Verify current model names, pickers, and availability against official docs. Hypothetically, a remembered "Model A" default may have been replaced by "Model B"; do not infer the replacement or rollout from memory.
 
 ## 2. UTC Leakage
 
@@ -16,7 +16,7 @@ Read this file when the agent keeps sounding current while actually answering fr
 
 **Cause:** The machine or model silently reasoned in UTC while the user meant local time.
 
-**Fix:** Capture local time first, state the timezone explicitly, and convert relative dates into absolute dates before answering.
+**Fix:** Use the known user's timezone rather than the orb/server's local zone. Reuse a sufficient anchor or capture when needed, and state absolute dates when the boundary matters.
 
 ## 3. Over-Browsing Stable History
 

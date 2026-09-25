@@ -1,4 +1,4 @@
 interface:
   display_name: "implicit-token-savings"
   short_description: "Prefer compact repo, git, test, and container commands that minimize context burn"
-  default_prompt: "Choose the smallest command that answers the question, prefer terse inventories and path-selective probes, degrade cleanly when a preferred binary is missing, and only escalate to full output when the narrow summary is insufficient"
+  default_prompt: "Choose the smallest sufficient local shell command from known context, prefer compact output when it answers the question, go directly to full output when needed, preserve failure details, and honor repository validation gates. Degrade cleanly when a preferred binary is missing."

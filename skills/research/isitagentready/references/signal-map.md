@@ -1,6 +1,6 @@
 # Signal Map
 
-This file maps Cloudflare's agent-readiness signals to concrete runtime checks and repository evidence.
+This file maps the April 19, 2026 Cloudflare agent-readiness baseline to runtime checks and repository evidence. Table keys, candidate endpoints, scoring weights, and WebMCP API examples describe that snapshot, not permanent requirements. Verify uncertain or changed details against current official Cloudflare and protocol documentation; record the version/date used and distinguish scanner conventions from protocol validity.
 
 Use it together with `references/repo-search-playbook.md`.
 
@@ -13,7 +13,7 @@ Cloudflare's April 17, 2026 blog groups the score into four dimensions:
 - Bot Access Control
 - Capabilities
 
-Commerce checks are evaluated separately and do not currently count toward the score.
+In that launch baseline, commerce checks were evaluated separately and did not count toward the score. The tables' Score column refers to that baseline; use measured results and dated official guidance for current scoring claims.
 
 ## Discoverability
 
@@ -118,9 +118,9 @@ Commerce checks are evaluated separately and do not currently count toward the s
 
 ### WebMCP
 
-- This is effectively a browser check. Source matches must still be confirmed in a rendered page when possible.
+- Browser behavior requires rendered evidence; source matches alone are not a deployed pass. Verify against the target browser and protocol version rather than treating the baseline `registerTool()` example as the only valid implementation.
 
 ### Commerce signals
 
-- Cloudflare explicitly says commerce checks are currently non-scoring.
+- Cloudflare's April 17, 2026 post described commerce checks as non-scoring; do not assume that remains true for a later scan/version.
 - Treat them as optional enhancements unless the product is clearly commerce-capable.

@@ -26,16 +26,17 @@ By default, ripgrep filters:
 - binary files
 - symlink targets
 
-Recommended escalation:
+Choose based on the suspected filter or known path:
 
 ```bash
-rg 'pattern' .
-rg --hidden 'pattern' .
-rg -u 'pattern' .
-rg --debug 'pattern' .
+rg --hidden 'pattern' config/             # hidden entries, ignores still apply
+rg -u 'pattern' logs/                    # ignored entries, hidden still skipped
+rg --hidden --no-ignore 'pattern' .cache/ # both kinds in a known subtree
+rg -n -F 'needle' .cache/result.txt       # explicit known file
+rg --debug 'pattern' src/                # unknown skip reason
 ```
 
-Do not jump straight to `-uuu` unless the problem statement actually justifies it.
+No normal-hidden-ignore-debug ladder is required. Avoid `-uuu` unless binary search as well as hidden and ignored traversal is justified.
 
 ## Ignore Precedence Can Be Non-Obvious
 
@@ -131,6 +132,5 @@ Ripgrep may stop early or treat files differently depending on the output mode w
 ## See Also
 
 - Read `references/commands.md` for exact flag syntax.
-- Read `references/patterns.md` for escalation workflows and script-friendly pipelines.
+- Read `references/patterns.md` for diagnostic choices and script-friendly pipelines.
 - Read `references/configuration.md` when the same gotcha keeps repeating and you need better defaults.
-

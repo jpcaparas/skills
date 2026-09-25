@@ -4,9 +4,9 @@ Read this file when a session may run for hours, cross date boundaries, or revis
 
 ## Refresh Triggers
 
-Refresh the temporal anchor when any of these happen:
+Reassess whether the anchor is still sufficient when any of these happen:
 
-1. The session crosses local midnight.
+1. The session crosses midnight in the user's relevant timezone.
 2. More than a few hours pass and the answer depends on `today`, `this week`, or a rolling window.
 3. The user switches geography or timezone context.
 4. The task revisits live external data such as prices, weather, releases, or schedules.
@@ -14,9 +14,9 @@ Refresh the temporal anchor when any of these happen:
 
 ## Refresh Procedure
 
-1. Rerun `python3 scripts/capture_temporal_context.py --format markdown`.
-2. Re-run `python3 scripts/recency_guard.py --prompt "..." --format markdown` if the active question changed.
-3. Re-verify live external claims instead of assuming an earlier source is still current.
+1. Reuse a freshly supplied reliable session clock if it resolves the question. Otherwise rerun `python3 scripts/capture_temporal_context.py --format markdown`, adding the user's IANA zone when needed. Capture for relevant day/DST boundary math rather than relying on an old offset.
+2. Assess the active claim again. The optional `scripts/recency_guard.py` can assist, but a changed prompt does not mandate running it.
+3. Re-verify rolling external claims when the earlier evidence is no longer fresh enough. This does not always require another clock capture.
 4. Restate the new absolute date in the answer if the boundary matters.
 
 ## Multi-Step Workflows
@@ -26,7 +26,7 @@ For long-running investigations or recurring tasks:
 - store the captured local and UTC timestamps alongside notes
 - record the timezone used for each relative-date interpretation
 - annotate external facts with the verification time and source
-- rerun the capture and verification flow before finalizing
+- check anchor and source freshness before finalizing; refresh only evidence the final answer needs
 
 ## Anti-Patterns
 

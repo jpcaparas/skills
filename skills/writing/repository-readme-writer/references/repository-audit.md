@@ -4,13 +4,13 @@ Inspect the repository before writing or rewriting a README. Ground every setup 
 
 ## First Pass
 
-Run the probe when you have filesystem access:
+Inspect only the evidence needed for the requested scope. For a broad audit, the optional probe can locate repository signals:
 
 ```bash
 python3 scripts/repo_readme_probe.py <repo>
 ```
 
-Use the output as evidence, not as README content. The probe intentionally finds paths and files; the README should usually translate those signals into stable project concepts.
+Use the output as evidence, not as README content. The probe intentionally finds paths and files; explain their roles and retain useful stable source links. A narrow wording or link review need not run the probe or audit unrelated setup.
 
 ## Manual Inspection Checklist
 
@@ -49,7 +49,7 @@ Prefer the package manager implied by lockfiles and scripts:
 - `Cargo.lock` implies Cargo
 - `go.mod` implies Go tooling
 
-Do not pin package manager or runtime versions in README prose. If exact versions matter, tell readers to use the repository's configured toolchain.
+Use the repository's configured toolchain as the version authority. Include supported ranges and, when useful, exact requirements with a source link; avoid unsupported or needlessly duplicated pins.
 
 ## Command Selection
 

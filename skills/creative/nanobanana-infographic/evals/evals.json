@@ -4,23 +4,23 @@
   "evals": [
     {
       "id": 1,
-      "name": "smoke-blog-brief-produces-four-default-variants",
+      "name": "smoke-blog-brief-produces-one-suitable-infographic",
       "prompt": "Create a polished infographic for a blog post on AI incident response. Audience is senior engineering managers. The graphic needs to show Detect, Triage, and Contain, plus the numbers 15 min MTTD and 2x faster rollback. Keep it clean and executive-friendly.",
-      "expected_output": "Builds four default variants, defaults to 16:9, keeps visible text terse, and avoids asking unnecessary follow-up questions because the brief is already sufficient.",
+      "expected_output": "Creates one suitable composition without forcing a four-variant pack or re-interviewing the user. Chooses a reasonable ratio and preserves the supplied labels and figures.",
       "files": [
         "templates/brief.json"
       ],
       "assertions": [
         {
-          "text": "Response offers four distinct infographic directions by default",
+          "text": "Produces one infographic direction and does not schedule four paid renders for the singular request",
           "type": "functional"
         },
         {
-          "text": "Response defaults to aspect ratio 16:9",
+          "text": "Chooses a format suited to the blog context without asking for inferable essentials",
           "type": "functional"
         },
         {
-          "text": "Response keeps image text constraints short and explicit",
+          "text": "Preserves Detect, Triage, Contain, 15 min MTTD, and 2x faster rollback, without adding invented statistics",
           "type": "functional"
         }
       ],
@@ -33,7 +33,7 @@
       "id": 2,
       "name": "edge-case-slide-override-respects-user-ratio",
       "prompt": "I only want one version for a keynote slide. Make it 3:4, comparison-focused, and use our navy + teal palette. The topic is build vs buy for internal copilots.",
-      "expected_output": "Respects the 3:4 override and the single-variant request instead of forcing the default quartet, while still applying the anti-noise rules.",
+      "expected_output": "Respects the 3:4 ratio, navy and teal palette, and single-variant request while keeping the comparison legible.",
       "assertions": [
         {
           "text": "Response respects an explicit aspect-ratio override",
@@ -44,7 +44,7 @@
           "type": "functional"
         },
         {
-          "text": "Response still applies restrained palette and low-noise guidance",
+          "text": "Uses the requested navy and teal palette with readable comparison labels",
           "type": "functional"
         }
       ],
@@ -100,20 +100,24 @@
     {
       "id": 5,
       "name": "current-nano-banana-2-model-id-stays-current",
-      "prompt": "We're only using Nano Banana 2 moving forward. What is the callable Gemini API model ID I should use today, and how is it different from the public name?",
-      "expected_output": "Uses Nano Banana 2 as the public-facing name and the current callable API model ID for code, without falling back to older image models.",
+      "prompt": "We're only using Nano Banana 2 moving forward. What is the callable Gemini API model ID I should use today, and how is it different from the public name? The skill's dated probe may be stale; suggest a canonical correction if needed, but don't edit installed copies or spend on an image to check.",
+      "expected_output": "Checks current official model evidence, distinguishes historical records from current verification, and does not substitute a different model. If guidance is stale, proposes a sourced canonical correction with a check instead of mutating installed copies.",
       "assertions": [
         {
-          "text": "Response uses the current Nano Banana 2 callable model ID",
-          "type": "functional"
+          "text": "Reports current official evidence for the callable Nano Banana 2 ID, or clearly states that verification is unavailable instead of presenting a dated probe as current proof",
+          "type": "verification"
         },
         {
           "text": "Response distinguishes public naming from API model naming",
           "type": "functional"
         },
         {
-          "text": "Does not recommend older image models by default",
+          "text": "Does not silently substitute another model, run a paid image check, or edit an installed skill",
           "type": "negative"
+        },
+        {
+          "text": "If the guidance is stale, proposes a sourced canonical correction and a concrete request or model-identity check",
+          "type": "functional"
         }
       ],
       "tags": [
@@ -149,6 +153,73 @@
         "batch-render",
         "parallel"
       ]
+    },
+    {
+      "id": 7,
+      "name": "bold-dark-custom-prompt-preserves-required-copy",
+      "prompt": "Write one Nano Banana 2 prompt, no rendering. Use 4:5, a black base, a bold coral/teal/gold/violet palette with glow, and a radial composition rather than the four presets. Exact title: How our community turns ideas into action. Include this paragraph: Volunteers propose projects, residents vote, and local teams deliver the chosen work. Add Source: Community program brief. Keep it readable on a phone and provide an accessible text equivalent.",
+      "expected_output": "Authors one custom prompt without passing through the title-truncating preset builder. Honors the bold dark style, radial layout, ratio, complete title and paragraph, and source note, with legibility and accessibility checks and no paid call.",
+      "assertions": [
+        {
+          "text": "Retains the 4:5 black canvas, four-color palette, glow, and radial composition instead of forcing a white editorial preset",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves the exact title, paragraph, and source note without enforcing five-word or no-paragraph limits",
+          "type": "functional"
+        },
+        {
+          "text": "Specifies readable text and contrast at phone size, non-color cues for meaningful distinctions, and an accessible text equivalent",
+          "type": "functional"
+        },
+        {
+          "text": "Makes no rendering API call or mandatory model lookup for this prompt-only task, and does not invent unsupported builder flags",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "creative-freedom", "accessibility", "no-spend"]
+    },
+    {
+      "id": 8,
+      "name": "six-custom-directions-bypass-builder-count-limit",
+      "prompt": "Prepare six distinct Nano Banana 2 prompt directions for a square infographic about our workflow: Listen, Build, Share. Keep those labels exact, invent no numbers, and use dark illustrated compositions. Save a batch plan only; do not render. Can build_variant_pack.py do this as-is?",
+      "expected_output": "Explains the builder's 1-4 preset limit and fixed styling, authors six custom entries instead, and uses only the batch renderer's documented dry-run facility for planning.",
+      "assertions": [
+        {
+          "text": "Provides six custom directions with 1:1 ratio, dark illustration, exact labels, and no invented numbers; does not silently clamp the request to four",
+          "type": "functional"
+        },
+        {
+          "text": "Reports that the builder cannot express the requested count and style as-is, without inventing --count, --style, or other nonexistent flags",
+          "type": "verification"
+        },
+        {
+          "text": "Plans six one-pass jobs using scripts/render_variant_pack.py --dry-run, with unique safe IDs, and makes no paid call",
+          "type": "functional"
+        }
+      ],
+      "tags": ["edge", "override", "batch-render", "no-spend"]
+    },
+    {
+      "id": 9,
+      "name": "one-paid-render-is-not-a-review-quartet",
+      "prompt": "I authorize exactly one Nano Banana 2 rendering request at 1K for a 9:16 dark infographic. Use only these labels: Plan, Build, Learn. The key is already in the environment; do not show it or upload other files. If that request fails or produces unreadable text, report it without retrying.",
+      "expected_output": "Uses one custom prompt and one request, keeps the secret private, and checks the actual output for legibility. Does not render preset alternatives, retry, or substitute another model on failure.",
+      "assertions": [
+        {
+          "text": "Limits generation to one request at 1K and 9:16, without extra previews, alternatives, retries, or model substitution",
+          "type": "functional"
+        },
+        {
+          "text": "Does not expose the credential or send unrelated content to the external service",
+          "type": "negative"
+        },
+        {
+          "text": "Inspects returned images for the exact labels and legibility, or reports failure honestly rather than claiming a manifest proves success",
+          "type": "verification"
+        }
+      ],
+      "tags": ["edge", "spend", "privacy"]
     }
   ]
 }

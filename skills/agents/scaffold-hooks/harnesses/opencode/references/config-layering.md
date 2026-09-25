@@ -2,6 +2,8 @@
 
 Verified on 2026-06-21 against the OpenCode plugin/config docs and `opencode-froggy@0.12.0`.
 
+This is a historical verification baseline, not a required installation version. Resolve uncertain or changing behavior against official OpenCode docs and trusted Froggy source for the installed version; preserve deterministic pins unless an authorized, verified update needs them changed.
+
 ## OpenCode Plugin Loading
 
 This scaffold enables Froggy by merging `opencode-froggy` into the OpenCode config `plugin` array. Project scope defaults to `opencode.json`; global scope defaults to `~/.config/opencode/opencode.json`.

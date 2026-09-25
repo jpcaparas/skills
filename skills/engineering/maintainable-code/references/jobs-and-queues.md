@@ -18,12 +18,12 @@ Read this when building or reviewing queues, background jobs, cron tasks, import
 
 ## Default Job Contract
 
-Every production job should answer:
+For each applicable risk, establish the guarantee rather than a particular field or component. Reuse verified queue/framework behavior before adding application machinery:
 
-| Question | Required answer |
+| Question | Possible guarantee |
 |---|---|
 | What is the durable work identity? | `job_key`, provider event ID, resource ID plus action, or caller idempotency key |
-| Can it run twice safely? | Yes through idempotent side effects, or no with a lock/lease plus dedupe |
+| Can it run twice safely? | Natural idempotency, durable deduplication, or boundary-enforced uniqueness; a lease alone cannot protect a completed effect after a crash |
 | What owns concurrency? | Unique constraint, queue deduplication, lock, lease, message group, or partition |
 | How long may it run? | Worker timeout and dependency timeouts |
 | When is it retried? | Retryable error classes and attempt limits |
@@ -31,7 +31,7 @@ Every production job should answer:
 | How is stuck work found? | `lease_expires_at`, `last_heartbeat_at`, `next_run_at`, queue age, or provider status reconciliation |
 | What does a user see? | Existing job status, progress, retryable error, or terminal failure |
 
-Do not enqueue anonymous work when the input can be named. A named job can be coalesced, retried, observed, and redriven.
+Use meaningful work identity when coalescing, retrying, or tracing intent requires it. Existing resource IDs and framework job records can satisfy this; do not create a separate jobs table by default.
 
 ## Coalescing Duplicate Work
 
@@ -93,7 +93,7 @@ Classify errors:
 
 ## Stale Work Recovery
 
-Add a watchdog or scheduled reconciler for states that can get stuck.
+Ensure states that can get stuck have a bounded recovery or terminal path. Use queue visibility, lease expiry, or existing recovery first; add a watchdog or scheduled reconciler only for a gap those mechanisms do not cover. For example:
 
 ```ts
 async function recoverStaleJobs(now: Date): Promise<number> {
@@ -143,7 +143,7 @@ Keep dead-letter retention longer than the source queue retention when the platf
 Webhook providers usually deliver at least once. Design for duplicates and reordering:
 
 1. Verify signature before writing anything.
-2. Persist provider event ID in an inbox table with a unique constraint.
+2. Prevent harmful duplicate processing durably, for example with a provider event ID and unique constraint. Reuse an existing event store or idempotent transition when sufficient; an inbox table is not mandatory.
 3. Return success for already-processed event IDs when the payload matches.
 4. Process side effects through idempotent state transitions.
 5. Record ignored, duplicate, invalid, and failed events separately.

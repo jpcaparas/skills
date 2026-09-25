@@ -4,7 +4,7 @@ Most weak interfaces use too many visual signals at once. Tight systems feel ric
 
 ## Palette Structure
 
-Build the palette in this order:
+For a restrained starting palette, consider:
 
 1. background or canvas neutrals
 2. surface neutrals
@@ -12,7 +12,7 @@ Build the palette in this order:
 4. one primary accent
 5. semantic status colors
 
-Only add a secondary accent if it has a stable job.
+Additional colors, rich gradients, and dark canvases can serve the brief. Give essential signals recognizable roles and maintain readable contrast; this is not a color-count limit.
 
 ## Accent Budget
 
@@ -23,7 +23,7 @@ Use the primary accent for:
 - active selection
 - one or two reinforcing highlights
 
-Do not spend the same accent on:
+Check whether sharing the same accent weakens essential signals when it also appears on:
 
 - decorative gradients
 - unrelated tags
@@ -82,7 +82,7 @@ Good icon usage:
 Weak icon usage:
 
 - decorative clutter
-- mixed icon families
+- mixed icon families that imply inconsistent meaning or behavior
 - overloaded metaphor icons with no text
 
 ## Imagery
@@ -98,13 +98,13 @@ Imagery should reinforce the product story, not rescue an empty layout.
 
 ## Charts And Visual Data
 
-Use color conservatively:
+For a chart focused on one takeaway, try:
 
 - neutral baseline series
 - accent on the key series
 - semantic colors only for status or threshold meaning
 
-If the screen already has multiple accents, charts should get quieter, not louder.
+For comparisons, a broader categorical palette may be clearer. Distinguish series with labels or other non-color cues, and balance chart emphasis with the decisions around it.
 
 ## Quick Fixes
 
@@ -120,4 +120,3 @@ If the UI feels noisy:
 
 - `style-families.md` for family-specific palette behavior
 - `gotchas.md` for common color and surface mistakes
-

@@ -45,7 +45,7 @@ Use tables when comparing module roles. Use a compact ASCII flow when execution 
 
 ## Evidence Labels
 
-Use these labels consistently:
+Always distinguish observed relationships from inference and unresolved gaps. These labels are optional shorthand; plain prose is equally valid:
 
 - `Verified`: direct call, runtime registration, focused test, or framework wiring was inspected.
 - `Likely`: import/export relationship or multiple naming signals point to the relationship, but runtime wiring was not inspected.
@@ -80,13 +80,15 @@ Do not dump raw search output. Summarize it into the map.
 
 ## Next Reads
 
-Order next reads by value:
+Order next reads by the user's goal and the uncertainty blocking it. Useful candidates include:
 
-1. the central owner or orchestrator
-2. the most important upstream caller
-3. the most important downstream dependency
-4. the focused test or fixture
-5. the config or registration file that resolves uncertainty
+- the central owner or orchestrator for understanding responsibility
+- an upstream caller for understanding how execution begins
+- a downstream dependency for understanding effects
+- a focused test or fixture for understanding the behavior contract
+- config or registration that resolves an unverified path
+
+For example, read registration first when the question is how a job is scheduled; read the behavior test first when preparing a change. Do not pad the list to match the template.
 
 ## See Also
 

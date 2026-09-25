@@ -24,7 +24,7 @@ Symptom: The tool list includes broad shell, browser, file-system, database, or 
 
 Risk: A small prompt failure becomes a broad production capability.
 
-Fix: Replace wildcard tools with narrow named actions and validated arguments.
+Fix: Use narrow named actions and validated arguments for business operations, or an enforced isolated sandbox for general computation. Broad host access with a prompt-only warning is not a sandbox. Preserve the useful capability while preventing unauthorized effects.
 
 ## Client-Side Guardrails
 

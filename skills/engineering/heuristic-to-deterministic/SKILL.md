@@ -19,16 +19,16 @@ Turn session learnings and repeated review heuristics into repeatable checks, no
 What kind of heuristic are you converting?
 
 - A rule about required or forbidden structure
-  Build a validator. Read `references/conversion-patterns.md`.
+  Use or extend a validator. Consult `references/conversion-patterns.md` when artifact selection needs detail.
 
 - A rule about canonical formatting, image shape, generated output, or metadata cleanup
-  Build a normalizer, then validate the normalized artifact.
+  Reuse a normalizer where available, then verify its postconditions.
 
 - A repeated scaffold or generated file layout
-  Build a generator from a manifest or explicit plan. Keep the plan editable and the scaffold shape fixed.
+  Use or extend a generator from a manifest or explicit plan. Fix only the shape required by the output contract; leave incidental file organization editable.
 
 - A flaky environment or cross-platform failure
-  Add runtime discovery, version checks, fixtures, and CI matrix coverage. Read `references/verification.md`.
+  Select runtime discovery, version checks, fixtures, or CI coverage for the failure. Consult `references/verification.md` when proof depth needs detail.
 
 - A prompt guideline for generated media or model output
   Keep the prompt harness as source, then add deterministic post-generation checks for the properties a script can inspect.
@@ -44,16 +44,16 @@ What kind of heuristic are you converting?
 | Make outputs consistent across machines | Normalizer | Strip metadata, sort keys, resize, format, or canonicalize before validation |
 | Avoid hand-copying a scaffold | Generator | Use a manifest or plan file as source of truth |
 | Stop repeated regressions | Fixture or golden test | Add positive and negative examples that fail before the fix |
-| Reuse the check in hooks and CI | Thin wrapper | Keep the core script path-agnostic and callable from multiple adapters |
+| Reuse the check in hooks and CI | Thin wrapper | Keep the core command portable and callable from multiple adapters |
 | Convert model art or prose rules | Prompt harness plus post-check | Persist the prompt, then verify dimensions, paths, format, or required metadata |
 
 ## Operating Contract
 
 1. Start with the learning, not the tool. Write the observed failure as a sentence before choosing an artifact.
-2. Convert only stable claims. If the underlying API, docs, or product behavior can drift, add a live documentation check or version probe before freezing assumptions.
+2. Convert only stable claims. Support relevant unstable API or product claims with appropriate authoritative evidence: versioned docs, installed-tool help, a feature probe, or current primary docs. Refresh when freshness matters to the rule.
 3. Separate judgment from enforcement. Let humans or agents decide policy in a small plan; let scripts enforce shape, paths, schema, size, and compatibility.
-4. Make every check path-agnostic. Accept a target path argument, resolve from that root, and avoid machine-specific absolute paths.
-5. Use exit code `2` for hook-blocking validation failures when the caller already uses that convention. Use `1` for usage or tool errors.
+4. Keep checks portable within their intended scope. Reuse the tool's project-root discovery or accept a target path; avoid machine-specific absolute paths.
+5. Follow the tool's documented exit semantics and the caller's contract. Use exit code `2` for hook-blocking failures only when that caller expects it; adapt codes at the boundary when needed.
 6. Print the repair path. A deterministic failure should tell the next agent which command or file fixes the drift.
 
 ## Workflow
@@ -64,7 +64,7 @@ What kind of heuristic are you converting?
    - What is stable enough to enforce?
    - What remains subjective?
 
-2. Choose the lowest-freedom artifact.
+2. Choose the smallest mechanism that reliably enforces the stable invariant while leaving unrelated choices open.
    - Validator for yes/no structure.
    - Normalizer for canonical representation.
    - Generator for repeatable creation.
@@ -72,20 +72,19 @@ What kind of heuristic are you converting?
    - Manifest for shared source of truth.
    - CI or hook adapter for enforcement timing.
 
-3. Build the core script first.
-   - Use the target repo path as input.
-   - Avoid global state and current-machine paths.
-   - Prefer standard-library code unless the repo already depends on a parser or formatter.
-   - Make the script idempotent.
+3. Reuse before building.
+   - Check the repository's existing formatter, checker, schema, or generator for the invariant.
+   - Configure or extend it where sufficient; code only the missing behavior.
+   - Keep new code portable and avoid hidden global state.
+   - Make generators and normalizers idempotent where the output contract permits.
 
 4. Add proof.
-   - Positive fixture passes.
-   - Negative fixture fails with the expected message.
-   - Running the tool twice produces no diff.
-   - The same command works on macOS and Ubuntu when the repo claims both.
+   - Select checks by risk and artifact; use existing tests or add focused fixtures.
+   - Show the invariant passes and a relevant violation is detected.
+   - Check repeat runs for writers and macOS/Ubuntu compatibility when claimed.
 
-5. Wire adapters last.
-   - Stop hooks, Git hooks, and GitHub Actions should call the same core script.
+5. Wire adapters when enforcement timing is in scope.
+   - Stop hooks, Git hooks, and GitHub Actions should call the same core command.
    - Keep adapter files thin so behavior does not fork by environment.
 
 ## Determinism Ladder
@@ -96,7 +95,7 @@ Use this ladder to avoid over-promising:
 2. Canonical: sorted keys, normalized PNG, formatted code, stripped metadata.
 3. Behavioral: fixture input produces expected output or exit code.
 4. Environmental: dependency versions and feature flags are detected before use.
-5. External: live docs or APIs are checked before freezing a spec-sensitive rule.
+5. External: authoritative evidence establishes the supported contract before freezing a spec-sensitive rule; check live sources when freshness matters.
 6. Subjective: examples and review rubrics only; no hard failure unless criteria become measurable.
 
 ## Helper
@@ -108,6 +107,10 @@ python3 scripts/classify_conversion.py "README cards must be below install comma
 ```
 
 The classifier is intentionally simple. Treat it as a planning aid, not as proof that the chosen artifact is sufficient.
+
+## When Guidance Stops Helping
+
+If a proposed invariant conflicts with repository behavior or a current tool contract, inspect the installed tool and official version-matched sources before encoding it. Do not freeze a stale workaround into a validator. Propose a canonical skill correction with the failed advice, source/version, and a distinguishing fixture; do not silently update installed copies or claim unavailable evidence is verified.
 
 ## Reference Guide
 

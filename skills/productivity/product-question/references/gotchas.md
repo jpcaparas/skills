@@ -39,3 +39,7 @@ Answer the product question first. Only include architecture context if it chang
 ## 10. A share-ready answer should not expose private analysis
 
 Do the messy investigation privately. The final answer should not read like a transcript of every search and dead end.
+
+## 11. Shareability alone is not the trigger
+
+A forwardable birthday message, policy rewrite, or generic status note does not need code investigation. This skill owns code-grounded app-behavior answers, not every prose message.

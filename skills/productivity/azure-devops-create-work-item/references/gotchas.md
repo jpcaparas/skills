@@ -2,7 +2,7 @@
 
 1. This skill is for drafting a local packet, not for creating the work item in Azure DevOps itself.
 2. Do not confuse a blocker with a defect. `Issue` is for delivery blockers or nonwork problems. `Bug` is for defective software behavior.
-3. Do not collapse `Product Backlog Item`, `Feature`, `User Story`, and `Task` into one generic ticket shape. Default to PBI only when the user has not specified another type.
+3. Do not collapse `Product Backlog Item`, `Feature`, `User Story`, and `Task` into one generic ticket shape. Use known project process evidence; default to PBI only when neither type nor process is known.
 4. The packet should be easy to paste into Azure DevOps and easy to read in chat or email. Use bold section labels, but avoid heading syntax and heavy Markdown.
 5. If the context is mostly implementation detail but the title is user-facing, pause and decide whether the item is really a `Task` under a larger `Feature` or `User Story`.
 6. When the project uses Basic, do not assume a native `Bug` work item exists. Confirm the process or suggest a process-appropriate type.
@@ -12,8 +12,8 @@
 10. When source notes mention sensitive hostnames, environments, customers, or incident details, redact or generalize them in examples and keep only the detail needed to draft the work item.
 11. Do not skip repo inspection just because the user provided a good narrative. If the skill is run inside a repository, the draft should reflect relevant code ownership, test surfaces, config, or snippets when they exist.
 12. Do not dump large code blocks into `work-item.md`. Keep main-draft snippets short and move longer excerpts to `context.md`.
-13. Do not let manual QA become an exhaustive matrix. A good `**Test Scenario**` section has 4-6 targeted scenarios: one happy path, then the meaningful guards and regressions introduced by the change.
-14. Do not pretend there is a browser path for a staged failure state. If QA needs developer help to create stale, crashed, or partially-complete state, say `(needs dev support)` in the scenario title and describe the staging in one sentence.
+13. Do not let manual QA become an exhaustive matrix or fill a quota. Use risk-based scenarios covering the happy path and meaningful guards and regressions introduced by the change.
+14. Do not pretend there is a browser path for headless behaviour or a staged failure. Use documented API/backend checks where appropriate. If QA genuinely needs developer help to stage a state, say `(needs dev support)` and describe the supported setup; do not invent mocks.
 15. If the screen looks the same for pass and fail, call out the real verification signal in the scenario, such as the payment dashboard, admin audit trail, email inbox, or gateway request logs.
-16. Google-style preferences do not replace the Azure schema, project terminology, requested locale, or NZ English Manual QA contract. Use `references/writing-style.md` for the precedence rules.
+16. Google-style preferences do not replace the Azure schema, project terminology, or requested locale. NZ English is a manual QA default that yields to the user's or project's locale. Use `references/writing-style.md` for precedence.
 17. This skill does not create standalone wiki pages or general documentation. Route that work to a documentation-writing workflow.

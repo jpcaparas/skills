@@ -2,6 +2,8 @@
 
 Use this reference as operational lead guidance only when the request or supplied source presents a plausible WebAssembly boundary. Never append it to the prepared actual prompt or `artifact/PROMPT.md`. The prompt states the experience; this reference helps the owning lead choose its implementation.
 
+Respect the receipt-anchored verification mode. In `none`, use source requirements or known reuse/semantics needs to choose an implementation; skip every benchmark, spike measurement, parity check, browser inspection, fallback exercise, and artifact scan below. Compile/export only as needed to produce deliverables, then report UNVERIFIED without performance or correctness claims. In `gauntlet`, keep the evidence pipeline below unchanged.
+
 WebAssembly complements the web layer rather than replacing it. Keep HTML, CSS, accessible DOM behavior, navigation, forms, ordinary application state, and network orchestration in the normal web stack. Give WASM one narrow, named responsibility only when reuse, portability, exact semantics, browser-local execution, or representative measurements earn the extra build and runtime complexity.
 
 ## Decision Gate

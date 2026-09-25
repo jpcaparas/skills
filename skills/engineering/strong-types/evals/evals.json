@@ -11,7 +11,7 @@
         { "text": "Adds one owner method with an explicit non-ambiguous return type", "type": "functional" },
         { "text": "States an explicit policy for the all-null case (throw, nullable-once, or placeholder)", "type": "functional" },
         { "text": "Types the underlying model attributes via casts and/or @property annotations", "type": "functional" },
-        { "text": "Replaces all call-site chains rather than adding a fourth", "type": "verification" }
+        { "text": "Replaces the three in-scope call-site chains rather than adding a fourth", "type": "verification" }
       ],
       "tags": ["smoke", "php"]
     },
@@ -96,6 +96,41 @@
         { "text": "Presents findings as prompts to investigate, not as definitive defects", "type": "functional" }
       ],
       "tags": ["smoke", "python"]
+    },
+    {
+      "id": 9,
+      "name": "small-fix-keeps-both-project-checkers",
+      "prompt": "Fix only the None dereference in shipping.py: declared_cost is int | None, and 0 is a valid cost. Absence should raise MissingCost. This project's documented check-types command runs both mypy and pyright on the package with strict settings; passing arbitrary files is unsupported. Keep both checkers, existing dependencies and CI. A concise fix summary is enough.",
+      "expected_output": "An explicit None guard with the existing typed signature and MissingCost policy, preserving zero. Runs the documented project command, keeping both checkers and strictness, and reports the consequential decision and results without a full review template or infrastructure rollout.",
+      "assertions": [
+        {"text": "Narrows int | None explicitly, preserves zero, and does not use Any, an unjustified cast, or a suppression", "type": "functional"},
+        {"text": "Uses the documented package check-types invocation rather than arbitrary file arguments and preserves both configured checkers", "type": "verification"},
+        {"text": "Does not introduce baselines, dependencies or CI work, load the entire tutorial library, or print an irrelevant gate inventory", "type": "negative"}
+      ],
+      "tags": ["edge", "python", "scope"]
+    },
+    {
+      "id": 10,
+      "name": "shell-fix-does-not-change-error-regime",
+      "prompt": "Fix the unquoted pathname expansion in this POSIX shell helper. Its caller deliberately inspects command failures, and its existing error handling is part of the contract. Keep this a shell script; no typing-tool recommendation or general refactor is wanted.",
+      "expected_output": "A scoped quoting fix under the existing shell and error-handling contract, with no universal set -euo pipefail addition, language migration or typing suggestion.",
+      "assertions": [
+        {"text": "Fixes pathname handling without changing the caller-visible failure behavior", "type": "functional"},
+        {"text": "Does not add set -euo pipefail, a type checker, a new runtime, or an unsolicited typing recommendation", "type": "negative"}
+      ],
+      "tags": ["negative", "edge", "scope"]
+    },
+    {
+      "id": 11,
+      "name": "framework-signature-and-scoped-caller-contract",
+      "prompt": "Refactor the fallback duplicated in the two controller actions in this patch into an existing strict PHP model's typed method. Keep the current all-null behavior: throw MissingImage. Other modules with old duplicates are out of scope. The adjacent framework serializer override is required by its installed interface to accept and return mixed; its inline comment explains that contract, and it parses values before application code uses them. Do not change framework signatures or tooling.",
+      "expected_output": "A named Image-returning owner with an explicit MissingImage path and both in-scope callers updated. Preserves the justified framework mixed contract and parse boundary, and leaves unrelated callers and analyzer infrastructure alone.",
+      "assertions": [
+        {"text": "Uses a typed owner and preserves the explicit all-null policy in both scoped callers", "type": "functional"},
+        {"text": "Preserves the required framework mixed signature with its justification and typed parse boundary rather than narrowing it incompatibly", "type": "functional"},
+        {"text": "Does not migrate unrelated callers or introduce analyzer/dependency changes", "type": "negative"}
+      ],
+      "tags": ["edge", "php", "scope"]
     }
   ]
 }

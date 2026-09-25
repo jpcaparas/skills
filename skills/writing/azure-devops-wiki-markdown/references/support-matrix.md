@@ -7,6 +7,8 @@ Primary sources:
 - Microsoft Learn, "Markdown syntax for files, widgets, wikis - Azure DevOps," current as checked on April 9, 2026
 - Azure Repos Sprint 259 release note, published July 17, 2025
 
+This matrix is the April 9, 2026 baseline, not a permanent support contract. Where capability matters, newer official documentation for the target Services/Server version takes precedence; do not infer Azure support from upstream libraries alone.
+
 ## Core Markdown Features
 
 | Feature | Done | Widget | PR | README | Wiki | Notes |
@@ -44,7 +46,7 @@ Primary sources:
 
 ## Mermaid Scope
 
-The current Learn page documents Mermaid under wiki pages. The Azure Repos Sprint 259 release note says Azure DevOps added expanded Mermaid support in wiki pages and file preview, specifically including Entity Relationship and Timeline diagrams. Treat that release note as useful background, but use wiki pages as the canonical authoring surface unless the user explicitly only cares about file preview behavior.
+The Learn page checked for this baseline documents Mermaid under wiki pages. The Azure Repos Sprint 259 release note says Azure DevOps added expanded Mermaid support in wiki pages and file preview, specifically including Entity Relationship and Timeline diagrams. Treat that release note as useful background, but use wiki pages as the canonical authoring surface unless the user explicitly only cares about file preview behavior.
 
 ## Practical Routing Rules
 
@@ -61,4 +63,3 @@ The current Learn page documents Mermaid under wiki pages. The Azure Repos Sprin
 - `references/mermaid.md`
 - `references/code-languages.md`
 - `references/gotchas.md`
-

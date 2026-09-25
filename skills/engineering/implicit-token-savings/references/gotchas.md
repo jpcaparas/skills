@@ -8,12 +8,13 @@ Symptom: the pattern is obviously present, but `rg` returns nothing.
 
 Cause: hidden files, ignore rules, or the wrong root path.
 
-Fix:
+Fix: choose the relevant path or filter correction; these are options, not a sequence:
 
 ```bash
 rg -n -F 'needle' path/
 rg --hidden -n -F 'needle' path/
 rg -u -n -F 'needle' path/
+rg --hidden --no-ignore -n -F 'needle' path/
 rg --debug -n -F 'needle' path/
 ```
 
@@ -93,7 +94,7 @@ Symptom: the service is listed, but the actual app is broken.
 
 Cause: process presence is not service health.
 
-Fix: inspect the formatted `Status` field or move to a deeper container-specific health check only after `docker ps` establishes the inventory.
+Fix: inspect the formatted `Status` field or go directly to a container-specific health check when the target container is already known.
 
 ## 9. Machine-readable output was available but ignored
 

@@ -72,11 +72,11 @@
     {
       "id": 4,
       "name": "externalizes-state-after-an-interruption",
-      "prompt": "I'm back after two days and lost the thread. Goal was to ship invoice reminders. We already added the database field and email template; the scheduler test still fails because timezone handling is unclear. Reorient me in an ADHD-friendly way and continue.",
-      "expected_output": "The response shows a compact Goal, Done, Now, and Blocked by state, then performs or proposes the one diagnostic needed for timezone behavior without replaying the entire history.",
+      "prompt": "I'm back after two days and lost the thread. Goal was to ship invoice reminders. We already added the database field and email template; the scheduler test still fails because timezone handling is unclear. Reorient me in an ADHD-friendly way and continue, using a short paragraph rather than a labelled state card.",
+      "expected_output": "A short paragraph makes the goal, verified progress, current step, and blocker clear, then performs or proposes the diagnostic needed for timezone behavior without replaying the entire history or forcing state-card labels.",
       "assertions": [
         {
-          "text": "The response visibly separates the goal, verified progress, current step, and blocker.",
+          "text": "The requested paragraph communicates the goal, verified progress, current step, and blocker without mandatory labels.",
           "type": "structural"
         },
         {
@@ -114,7 +114,7 @@
     {
       "id": 6,
       "name": "challenges-an-assumption-after-a-debug-spiral",
-      "prompt": "Still broken. This is the third time we changed the token parsing and the same test still returns 401. Keep the response ADHD-friendly, but don't give me another random patch.",
+      "prompt": "Still broken. We've changed token parsing twice without new evidence and the same test still returns 401. Keep the response ADHD-friendly, but don't give me another random patch.",
       "expected_output": "The response stops speculative patching, states the observed invariant, names the most suspect assumption, and runs or requests one discriminating diagnostic.",
       "assertions": [
         {
@@ -126,7 +126,7 @@
           "type": "functional"
         },
         {
-          "text": "The response does not propose a fourth unverified token-parsing change.",
+          "text": "The response does not wait for an arbitrary attempt threshold or propose another unverified token-parsing change.",
           "type": "negative"
         }
       ],

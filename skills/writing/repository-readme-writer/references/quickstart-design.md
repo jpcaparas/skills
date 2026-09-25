@@ -2,9 +2,9 @@
 
 A quickstart is the README's contract: the shortest verified path from a fresh checkout to useful local feedback.
 
-## Required Shape
+## Runnable-Project Default
 
-Use this order unless the repository demands another one:
+For projects with an executable first-use path, adapt this order to the actual workflow:
 
 1. Install dependencies.
 2. Create local configuration, if needed.
@@ -20,7 +20,7 @@ Keep the quickstart near the top. Do not bury it under project background.
 - Prefer the repository-level command when it exists.
 - Use one command block per logical step.
 - Avoid shell prompts and machine-specific paths.
-- Avoid exact version commands such as "install Node 20.11.1" unless the repository's own tooling requires that exact prose.
+- State useful compatibility ranges and link the toolchain source. Include an exact version when genuinely required or helpful, not as an unsupported universal pin.
 
 ## Configuration Rules
 
@@ -82,7 +82,7 @@ For multi-app repositories:
 
 ## Library Repositories
 
-For libraries, the quickstart should include:
+For libraries, choose the relevant consumer or contributor path, not both by default:
 
 - install or build
 - run tests
@@ -92,9 +92,11 @@ Do not fake usage examples from implementation details. If usage is not clear, k
 
 ## Non-Runnable Repositories
 
-For documentation, infrastructure, or template repositories, "quickstart" still applies. It may mean:
+For documentation, infrastructure, or template repositories, first use may mean:
 
 - how to preview docs
 - how to validate configuration
 - how to instantiate the template
 - how to run policy checks
+
+For datasets or archives, access, schema, provenance, licensing, or migration guidance may replace executable steps entirely. Do not invent a validator or preview command to complete this outline.

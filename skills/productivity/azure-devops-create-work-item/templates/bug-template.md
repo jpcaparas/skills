@@ -34,4 +34,4 @@ As a [affected user or tester], I can [complete the affected workflow] without [
 
 **Test Scenario**
 
-[For manual QA, replace with the Manual QA Scenario Contract from references/output-packet.md: Test environment notes, then 4-6 targeted `## Scenario` blocks with short `**Steps:**` and `**Expected:**` lists. Keep steps UI-driven and expected outcomes observable.]
+[For manual QA, follow the Manual QA Scenario Contract from references/output-packet.md: Test environment notes and risk-based scenarios with observable outcomes. Adapt the number and prose to the change; use UI, API, or backend steps as appropriate and the user's or project's locale, otherwise NZ English.]

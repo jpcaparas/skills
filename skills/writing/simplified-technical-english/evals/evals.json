@@ -339,7 +339,7 @@
       "id": 12,
       "name": "current-issue-source-conflict",
       "prompt": "Use the attached source-status note for a current reference-backed review. Reconcile the issue conflict before you rewrite anything.",
-      "expected_output": "A source conflict report that treats official Issue 9 evidence as current, does not merge prior-issue material, and identifies missing reference material.",
+      "expected_output": "A source conflict report that attributes Issue 9 status to the supplied official evidence, does not treat it as permanently current, does not merge issues, and identifies missing reference material.",
       "files": [
         "evals/files/source-status.md"
       ],
@@ -353,7 +353,7 @@
           "type": "negative"
         },
         {
-          "text": "The response names Issue 9 dated 15 January 2025 as current under the supplied official evidence.",
+          "text": "The response names Issue 9 dated 15 January 2025 under the supplied official evidence, not as an unconditional claim about all future tasks.",
           "type": "functional"
         }
       ],
@@ -377,6 +377,41 @@
       "tags": [
         "negative"
       ]
+    },
+    {
+      "id": 14,
+      "name": "governing-issue-not-silent-upgrade",
+      "prompt": "Our publication contract explicitly governs an upcoming ASD-STE100 audit with Issue 8. We have authorized Issue 8 rules, dictionary decisions, and terminology, but have not supplied them yet. Your bundle uses Issue 9. Tell us which issue and materials you would use; do not audit or upgrade anything yet.",
+      "expected_output": "Names Issue 8 as governing, requests its authorized materials for verification, and does not mix Issue 9 checks or scanner claims into a result.",
+      "assertions": [
+        {"text": "Keeps Issue 8 as governing and does not silently substitute or merge the Issue 9 baseline", "type": "functional"},
+        {"text": "Does not claim certification or scanner support for Issue 8 without validated compatibility", "type": "negative"}
+      ],
+      "tags": ["edge", "source-version"]
+    },
+    {
+      "id": 15,
+      "name": "later-issue-claim-needs-authoritative-evidence",
+      "prompt": "A vendor blog says a later ASD-STE100 issue now permits semicolons. Official sources are unavailable. Certify 'Close the valve; disconnect HL-7.' under that new issue using your bundled scanner. Do not modify installed skills.",
+      "expected_output": "Declines certification and later-issue scanner claims, discloses missing official evidence, preserves HL-7 and action order, and offers only a clearly labelled provisional baseline rewrite if useful.",
+      "assertions": [
+        {"text": "Does not weaken the bundled no-semicolon rule on a vendor blog's authority or claim the scanner supports an unverified new issue", "type": "negative"},
+        {"text": "Discloses the official-source gap and identifies official ASD/STEMG evidence plus an example/check needed before proposing a canonical behavior update", "type": "verification"},
+        {"text": "Any provisional rewrite preserves HL-7 and closing-before-disconnecting order, with no certification or silent installed-copy edit", "type": "functional"}
+      ],
+      "tags": ["edge", "source-version", "preservation"]
+    },
+    {
+      "id": 16,
+      "name": "small-selection-proportional-record-strict-rules",
+      "prompt": "Using the supplied scoped Issue 9 profile and governed term SW-4, rewrite this short low-risk training instruction. Return the candidate plus one compact verification note, not a table: 'Set SW-4 to OFF and record the result.' Treat these as two independent actions.",
+      "expected_output": "Two short imperative instructions preserving SW-4 and OFF, followed by a compact scoped verification note without an unnecessary ledger table.",
+      "files": ["evals/files/issue9-scoped-profile.md"],
+      "assertions": [
+        {"text": "Separates the independent actions, stays within the procedural 20-word limit, and preserves SW-4 and OFF exactly", "type": "functional"},
+        {"text": "Uses a compact evidence note rather than a compulsory ledger table and does not imply whole-standard conformance", "type": "verification"}
+      ],
+      "tags": ["edge", "format-freedom", "preservation"]
     }
   ]
 }

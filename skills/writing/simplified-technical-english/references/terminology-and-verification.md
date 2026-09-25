@@ -31,7 +31,7 @@ Call the result “checked against the supplied scoped profile.” Do not extend
 
 ### Issue 9-oriented rewrite
 
-Use this mode when one or more required sources are missing.
+Use this provisional mode when one or more required sources are missing and the Issue 9 baseline is useful. If the user's governing issue differs, label this as Issue 9-oriented assistance only, not verification against their issue; do not silently substitute the bundled baseline.
 
 Apply the verified structural principles, produce useful candidate text, and list what remains unverified:
 
@@ -61,7 +61,7 @@ If sources conflict, stop that decision and report the exact conflict.
 
 ## Term ledger
 
-Create a row for every term that affects meaning or consistency:
+Verify every term that affects meaning or consistency. Use rows when the selection is complex, consequential, or needs reviewer traceability; a short low-risk selection can use a compact note with the same evidence status:
 
 | Source term | Concept | Status | Evidence | Output term | Notes |
 |---|---|---|---|---|---|

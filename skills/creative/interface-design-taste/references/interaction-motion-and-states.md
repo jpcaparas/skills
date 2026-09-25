@@ -1,6 +1,6 @@
 # Interaction, Motion, And States
 
-Motion quality matters, but state design matters first.
+Motion can provide feedback, continuity, atmosphere, or delight. Keep essential state feedback usable even when the design's character comes from expressive animation.
 
 ## Complete The State Model
 
@@ -21,6 +21,8 @@ If a component only looks designed when nothing is happening, it is unfinished.
 
 ## Motion Tiers
 
+These are optional intensity examples, not permissions tied to product categories. Mix intensities by context or use another approach when the brief supports it.
+
 ### Tier 0: Still
 
 Use for:
@@ -29,7 +31,7 @@ Use for:
 - critical workflows
 - contexts where speed and calm matter more than personality
 
-Allowed motion:
+Typical motion:
 
 - fast hover and focus feedback
 - small opacity or transform changes
@@ -42,7 +44,7 @@ Use for:
 - onboarding
 - controlled navigation transitions
 
-Allowed motion:
+Typical motion:
 
 - staggered entry
 - panel and modal transitions
@@ -56,13 +58,13 @@ Use for:
 - showcase sections
 - storytelling pages
 
-Allowed motion:
+Typical motion:
 
 - larger scroll choreography
 - media reveals
 - stronger spatial transitions
 
-Do not carry Tier 2 motion wholesale into repeated working surfaces.
+Expressive motion can work in product surfaces too. Check repeated use: it should not delay actions, move targets unexpectedly, or make users lose their place.
 
 ## Interaction Rules
 
@@ -71,6 +73,7 @@ Do not carry Tier 2 motion wholesale into repeated working surfaces.
 3. Preserve continuity when objects move between states.
 4. Keep timings consistent across a family of actions.
 5. Respect keyboard and assistive states, not just pointer hover.
+6. Provide reduced-motion alternatives and pause/stop controls where needed; avoid unsafe flashing and preserve essential information without animation.
 
 ## Forms And Inputs
 
@@ -118,12 +121,11 @@ For dense apps and desktop tools:
 
 For high-expression surfaces:
 
-- concentrate motion in specific narrative sections
-- keep supporting sections calmer
+- use concentration and quieter sections when they strengthen pacing
+- sustained or decorative motion is also valid when it fits the brief and leaves content usable
 - let typography, crop, and pacing do as much work as the animation
 
 ## See Also
 
 - `platform-adaptation.md` for motion expectations by platform
 - `gotchas.md` for over-animation and incomplete-state mistakes
-

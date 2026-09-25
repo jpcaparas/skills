@@ -1,6 +1,6 @@
 # Hook Events
 
-Current Codex hook catalog, verified on 2026-05-26 against the official docs, generated schemas, local Codex CLI 0.133.0, and open-source runtime code at `8a94430bb273623be42b68f144f1ab1df343bb53`.
+Bundled Codex hook baseline, verified on 2026-05-26 against the official docs, generated schemas, local Codex CLI 0.133.0, and open-source runtime code at `8a94430bb273623be42b68f144f1ab1df343bb53`. This is historical evidence, not a required version or a complete catalog for later releases; runtime claims below refer to that baseline.
 
 Primary sources:
 
@@ -13,9 +13,9 @@ Primary sources:
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/permission_request.rs`
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/core/src/tools/hook_names.rs`
 
-Use `assets/hook-events.json` as the deterministic scaffold input. Re-verify the official sources before every real scaffold or refresh.
+Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official release docs and version-matched schemas/source when installed evidence is insufficient, stale, or event semantics will change; `main` may include unreleased behavior. Follow the root `SKILL.md` maintenance route for proposed canonical updates, not silent installed edits. See `PLAYBOOK.md` for known later-release drift beyond the bundled helper.
 
-## Current Runtime Model
+## Bundled Runtime Baseline
 
 - Current source-backed events: `SessionStart`, `SubagentStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `SubagentStop`, `Stop`
 - Current supported handler type in practice: `command`

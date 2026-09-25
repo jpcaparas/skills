@@ -4,7 +4,7 @@ Use this workflow when reviewing a design, repository, pull request, incident, o
 
 ## Output Shape
 
-Start reviews with findings, not a long summary. Use this format:
+Lead with findings, their evidence, concrete risk, and repair. Adapt the presentation to the caller; this is an example, not a required report shape:
 
 ```text
 Findings
@@ -31,6 +31,8 @@ Residual risk
 
 ## Review Phases
 
+Inspect the affected surfaces and relevant failure paths. A whole-system audit needs a complete map; a local permission fix does not require every governance artifact below.
+
 1. Define the AI surface.
    - List model providers, model versions, prompts, system instructions, RAG sources, vector stores, tools, plugins, memory, state stores, jobs, and downstream APIs.
    - Identify every place untrusted text can enter: user prompt, web page, document, email, issue, ticket, chat, transcript, retrieved chunk, tool output, or another model's response.
@@ -38,7 +40,7 @@ Residual risk
 2. Draw trust boundaries.
    - Separate server-side trusted controls from client-side hints.
    - Mark boundaries between model output and interpreters such as SQL, shell, code execution, HTML rendering, workflow engines, and third-party APIs.
-   - Verify all network calls use authenticated, certificate-validated endpoints.
+   - Verify transport and peer identity for network calls; authenticate access when the endpoint requires it. Public read-only endpoints need no invented credentials.
 
 3. Classify data.
    - Identify personal data, secrets, credentials, business-confidential material, regulated data, and user-provided content.
@@ -53,7 +55,7 @@ Residual risk
 5. Tier actions by risk.
    - Low: read-only, reversible, no sensitive data, no external side effect.
    - Medium: writes internal state, handles moderately sensitive data, or triggers recoverable automation.
-   - High: sends communications, changes records, moves money, deletes data, executes code, grants access, calls external systems, or processes highly sensitive data.
+   - High: consequential communications, record changes, money, destructive actions, privileged execution, access grants, or highly sensitive data. Classify an action's actual effect, not merely the presence of a tool call or code execution.
    - High-risk actions need human approval or an equivalent policy-approved control.
 
 6. Inspect validation.
@@ -100,7 +102,7 @@ Ask for or inspect:
 
 ## Exception Handling
 
-If a control does not apply, document:
+For an accepted risk exception, record enough for accountable review:
 
 - the control
 - why it does not apply
@@ -109,11 +111,11 @@ If a control does not apply, document:
 - expiry or review date
 - risk accepted
 
-Do not silently skip a control because it is inconvenient.
+Do not silently skip an applicable control because it is inconvenient. An inapplicable mechanism is not a risk exception: a public read-only summarizer does not need a transaction rollback plan. Explain consequential applicability decisions without producing an empty waiver for every unused catalog row.
 
 ## Done Criteria
 
-A review is complete when:
+A review is complete when the in-scope risks are evidenced or explicitly unresolved, and applicable controls establish that:
 
 - every AI input, output, tool, credential, and side effect has an owner and a control
 - high-risk actions have explicit approval or a documented equivalent

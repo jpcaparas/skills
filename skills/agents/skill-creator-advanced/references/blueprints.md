@@ -1,5 +1,7 @@
 # Blueprints
 
+These are optional starting points, not required package shapes or research itineraries. Use only the rows needed to support the promised behavior; supplied reliable evidence can satisfy a research need without another lookup.
+
 ## Table of Contents
 
 - [API Wrapper Blueprint](#api-wrapper-blueprint)
@@ -17,9 +19,9 @@ Use this blueprint when wrapping a REST API, GraphQL API, SDK, or another docume
 
 **Indicators:** The source material documents callable operations, their inputs and outputs, and their failure contract. The skill must produce working invocations through the selected client or protocol.
 
-### Required Research Phase
+### Relevant Contract Evidence
 
-Before writing a single line of the skill, gather:
+Before relying on a consequential API claim, establish the applicable evidence:
 
 1. **Access pattern, when required**
    - Identify the credential, identity, session, or local setup the selected contract actually requires
@@ -76,7 +78,7 @@ api-skill/
 
 ### Entry-Point Contract
 
-Start from `templates/api-wrapper/SKILL.template.md`, then remove every branch and support surface the promised operations do not earn. Keep shared authentication and safety constraints inline. Route operation details, setup, workflows, and evidenced pitfalls through condition-and-purpose pointers only when those files exist. Add a verification script only when a safe reusable probe exists and its runtime is supported in the declared target environment.
+`templates/api-wrapper/SKILL.template.md` is an optional starting point. Remove branches and support surfaces the promised operations do not earn. Keep shared authentication and safety constraints inline. Route operation details, setup, workflows, and evidenced pitfalls through condition-and-purpose pointers only when those files exist. Add a verification script only when a safe reusable probe exists and its runtime is supported in the declared target environment.
 
 ### Reference File Organization
 
@@ -106,7 +108,7 @@ Use this blueprint when wrapping a command-line tool into a skill. The skill wil
 
 **Indicators:** The user mentions a CLI tool by name. The source material is built-in help, manuals, generated command metadata, or primary CLI documentation. The skill must produce correct invocations for a named shell, process API, or command environment.
 
-### Required Research Phase
+### Relevant Command Evidence
 
 1. **Subcommand discovery**
    - Use the tool's documented help or command-introspection mechanism and capture the relevant output
@@ -122,7 +124,7 @@ Use this blueprint when wrapping a command-line tool into a skill. The skill wil
    - Global flags vs subcommand-specific flags
    - Default values for optional flags
 
-3. **Version pinning**
+3. **Version compatibility**
    - Use the tool's documented version or build-identification mechanism and record the output
    - Check if flag syntax changed between versions (common source of broken examples)
    - Document the minimum supported version
@@ -186,7 +188,7 @@ Use this blueprint for large reference skills covering many domains, products, o
 
 **Indicators:** The subject has several distinct user goals or domains. No single API or CLI owns the whole job, and different invocations should load different reference material.
 
-### Required Research Phase
+### Relevant Routing Evidence
 
 1. **Domain mapping**
    - List every product, topic, or area promised by the invocation contract
@@ -196,8 +198,8 @@ Use this blueprint for large reference skills covering many domains, products, o
 
 2. **Decision trees**
    - How does a user choose between products? (What question do they start with?)
-   - Build a tree from the user's goal to the specific product
-   - Multiple trees may be needed (by task, by scale, by cost, by feature)
+   - Use a tree when branching improves access; a flat reference can be sufficient
+   - Separate routes only for genuinely different decisions, not every classification axis
 
 3. **Access pattern**
    - Keep a flat peer set together when every invocation needs it
@@ -296,7 +298,7 @@ Use `references/curation.md` as the canonical workflow. The matrix below records
 | Transition | Required evidence |
 |---|---|
 | Create | A distinct invocation branch, no better existing owner, release evals, all active surfaces updated |
-| Improve | Every old behavior accounted for, canonical rule updated in place, regressions covered |
+| Improve | Affected behavior accounted for, canonical rule updated in place, regressions covered |
 | Merge | Trigger ownership resolved, dependents migrated, duplicate package and routes removed |
 | Compose | Each child remains independently discoverable; dependency resolution and dependent revalidation pass |
 | Promote | Release validation and behavioral evals pass; every active discovery surface includes it |

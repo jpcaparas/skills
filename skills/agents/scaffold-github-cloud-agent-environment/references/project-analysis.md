@@ -26,7 +26,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The audit script reports 
 
 | Signal | Why it matters |
 |--------|----------------|
-| Existing `copilot-setup-steps.yml` | Determines whether you should bootstrap or refresh |
+| Existing `copilot-setup-steps.yml` | Start from its custom steps; prefer minimal repair over replacement |
 | Multiple lockfiles or package managers | Usually means you need to ask which workflow is authoritative |
 | Toolchain version files like `.nvmrc`, `.python-version`, `go.mod`, `global.json` | Let you scaffold setup steps without guessing runtime versions |
 | `.gitattributes` with `filter=lfs` | Means checkout should use `lfs: true` |
@@ -38,7 +38,7 @@ Run `scripts/audit_project.sh /path/to/project` first. The audit script reports 
 
 ## Questions To Ask Only When Needed
 
-Ask only the questions the repo facts cannot answer. Useful examples:
+Ask only material questions the repo facts cannot answer. Block on unresolved correctness or safety decisions; record advisory preferences in `assumptions` or `notes` and continue safe work. Useful examples:
 
 - Does Copilot need Windows to build or validate this repository, or is Ubuntu sufficient?
 - Must Copilot run on self-hosted or larger runners to reach internal resources?

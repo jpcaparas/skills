@@ -41,7 +41,7 @@ Golden reference `tsconfig.json` (checking-related options):
 }
 ```
 
-`strict: false`, or a missing `strict` key, makes every other rule in this file unenforceable. If the project cannot flip it globally, add a stricter `tsconfig` for new directories and expand its `include` over time.
+Check the effective configuration, including inherited settings. Keep scoped new code strict. For a planned rollout where global strictness is blocked, a stricter `tsconfig` for new directories can expand its `include` over time; do not turn a small edit into a project-wide configuration migration.
 
 ## The any Ban
 
@@ -85,7 +85,7 @@ function cb(handler: Function) // Function erases parameters; type the signature
 const items = []             // infers any[]; annotate: const items: Order[] = []
 ```
 
-Enforce mechanically: ESLint `@typescript-eslint/no-explicit-any`, `no-unsafe-assignment`, `no-unsafe-member-access`, `no-unsafe-return` (all in the `strict-type-checked` preset).
+Existing ESLint rules such as `@typescript-eslint/no-explicit-any`, `no-unsafe-assignment`, `no-unsafe-member-access`, and `no-unsafe-return` (in the `strict-type-checked` preset) can enforce this mechanically. If tooling adoption is in scope, consider these rules; an ordinary edit must avoid unsafe types without automatically adding or migrating the lint stack.
 
 ## unknown + Parsing at Boundaries
 

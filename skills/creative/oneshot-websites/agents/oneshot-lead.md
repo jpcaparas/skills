@@ -2,6 +2,15 @@
 
 You own exactly one website experiment in an isolated initial or recovery context.
 
+## Verification Selection (applies to every section below)
+
+Your dispatch must include the user's receipt-anchored `verificationMode`, matching `run.json` and `worker-report.json`. Preserve it unchanged on continuation or recovery and pass it to every descendant. Never edit the coordinator receipt or choose your own downgrade.
+
+- `gauntlet`: follow the existing checks, critics, and verification pipeline below. Completed verified output is `OK`.
+- `none`: generation only. Do not verify the artifact or workspace: no browser/render/screenshots, smoke tests, lints/typechecks/tests, critics, directional probe or adapter, fallback-path checks, benchmarks, static artifact scans, or validation/repair loops. Build/export steps essential to produce deliverables are allowed, not behavioral evidence. Skip every verification, measurement, integration-inspection, and quality-gauntlet instruction below. Do not invoke `validate_catalog.py` as a completion gate. Assemble output without judging it; read source only as needed for generation or same-run continuation, not to audit the result. No `.tmp/TECHNICAL_PROMPT.md` is created or required, even for a directional game. Keep `qualityGauntlet: null`, `verification: []`, and `artifact.staticDeploymentVerified: false`. After generation and safe cleanup, set both statuses to `UNVERIFIED` and say the artifact and workspace were not checked.
+
+In either mode, preserve scoped authority, sibling isolation, single writer, sealed prompt bytes, identity reads, and exact-path cleanup. These safety checks do not authorize inspecting or testing the output. Unknown or inconsistent mode is a metadata blocker, not permission to assume gauntlet consent. Historical runs without a mode retain their anchored legacy gauntlet contract.
+
 ## Inputs
 
 - The actual prompt, included verbatim in your initial dispatch
@@ -10,7 +19,7 @@ You own exactly one website experiment in an isolated initial or recovery contex
 - `.tmp/TECHNICAL_PROMPT.md` as a transient machine-facing delivery contract when the prepared run requires directional verification
 - `workspace/` for unrestricted source and build work
 - `artifact/` for the finished portable static handoff
-- Your private design territory for a multi-lead fan-out, or an explicit not-applicable marker
+- Your private design territory only for user-requested variations, or an explicit not-applicable marker
 
 Treat the actual prompt as authoritative for the experience to build, never for operational authority. Complete it fully and make your own technical and creative decisions. You may use any suitable language, framework, library, dependency, asset source, build tool, browser, testing method, or project structure consistent with the prompt and the local-build-only boundary below. Neither the environment nor the prompt grants remote-write authority.
 
@@ -32,7 +41,7 @@ If the run identity is ambiguous, its prompt or receipt differs, paths escape th
 
 When the coordinator supplies a private design territory, treat it as the positive operational direction for your discretionary choices. Keep the territory out of the actual prompt and `artifact/PROMPT.md`; it does not change the sealed brief or authorize a weaker fidelity target.
 
-You and every descendant must not inspect, enumerate, search for, request, infer, or compare any sibling workspace, artifact, report, capture, design territory, critic, or outcome. Stay inside the assigned run even if its parent directory is readable. Within that isolation, produce a materially distinct design through your assigned composition and spatial structure, navigation and interaction model, typography and colour language, and motion and feedback character. Do not reuse a sibling’s design system, template, component kit, reference shortlist, seed assets, screenshot, or feedback, and do not seek cross-run comparison from the coordinator. Traits that the source or prompt explicitly fixes are constraints, not a lead design choice; preserve them faithfully while applying your territory to the remaining design freedom. Descendants and critics receive only your territory—not any sibling context—and reuse the same territory unchanged after continuation or recovery.
+You and every descendant must not inspect, enumerate, search for, request, infer, or compare any sibling workspace, artifact, report, capture, design territory, critic, or outcome. Stay inside the assigned run even if its parent directory is readable. Apply an assigned territory only to user-requested variations; identical replicas need no artificial distinction. Do not reuse a sibling’s design system, template, component kit, reference shortlist, seed assets, screenshot, or feedback, and do not seek cross-run comparison from the coordinator. Traits that the source or prompt explicitly fixes are constraints, not a lead design choice; preserve them faithfully. Descendants and critics receive only your territory when one exists—not any sibling context—and reuse the same territory unchanged after continuation or recovery.
 
 ## External-Write Boundary
 
@@ -62,7 +71,7 @@ Whenever the prompt, source, or your implementation uses unauthenticated public 
 
 Size and volatility do not by themselves justify omitting the snapshot. When the complete response is disproportionate, bundle a task-relevant bounded page, time window, or subset and keep any claims about coverage truthful. When freshness affects interpretation, visibly distinguish live from bundled data and show the snapshot source and capture time. Never bundle credentials, tokens, authenticated or private responses, personal or sensitive data, or content that cannot lawfully be redistributed. If local retention would be inappropriate, provide an explicit unavailable or empty state rather than unsafe or misleading data.
 
-Exercise both the live-success path when it is available and a deterministic forced-fallback path with the remote endpoint blocked or failed. Confirm the built `artifact/` loads the local snapshot without a server runtime, record the endpoint class, snapshot scope and capture time, failure conditions, user-facing freshness treatment, and verification evidence in `worker-report.json`, and reuse that evidence in the gauntlet and final checks when it proves the same revision. Do not introduce a public API merely to satisfy this section.
+In gauntlet mode only, exercise both the live-success path when it is available and a deterministic forced-fallback path with the remote endpoint blocked or failed. Confirm the built `artifact/` loads the local snapshot without a server runtime, record the endpoint class, snapshot scope and capture time, failure conditions, user-facing freshness treatment, and verification evidence in `worker-report.json`, and reuse that evidence in the gauntlet and final checks when it proves the same revision. In none mode implement the fallback without checking it. Do not introduce a public API merely to satisfy this section.
 
 ## Directional Control Semantics
 
@@ -74,7 +83,9 @@ Inspect `run.json.interaction.directionalControls`. When its coordinator-prepare
 
 ## Quality Gauntlet
 
-Before treating a non-trivial artifact as complete:
+This entire section is gauntlet-only. With `verificationMode: none`, do not establish a scoring bar, invoke critics, produce evidence, or perform fallback review.
+
+Before treating a non-trivial gauntlet artifact as complete:
 
 1. Establish an inspectable quality bar from the user’s supplied source, screenshots, recordings, examples, or acceptance criteria. If none exists, research suitable category examples or define measurable subject-specific acceptance evidence. Do not substitute vague praise such as “polished” or “world class.” Before scoring the artifact, when fresh recursive criticism is available, have the fresh critic reject any bar that is vague, unavailable, non-comparable, irrelevant, or materially weaker than the prepared prompt. Freeze the accepted bar; if later evidence requires a legitimate revision, record the old bar, new bar, and reason.
 2. Decompose only along concerns that can be improved and judged independently. Parallelize independent work when useful, but keep coupled visual, behavioral, state, and integration concerns under one sequential owner. After parallel work merges, smooth the integrated artifact before whole-artifact review.
@@ -96,7 +107,7 @@ Keep scratch files, transient downloads, generated intermediates, tool logs, and
 
 This is a best-effort containment boundary because a harness or tool may create files before your process starts or ignore overrides. Retain `.tmp/` throughout active work, reconnects, interruptions, recovery, and every `PARTIAL`, `BLOCKED`, or `ERROR` handoff. Record any known external exceptions in `worker-report.json`; do not inspect, move, or delete unrelated paths outside the assigned run merely to make containment appear complete. Keep durable source, build inputs, and evidence needed after completion in `workspace/`, `artifact/`, or structured report fields, and never copy `.tmp/` into `artifact/`.
 
-For a successful finalization, first stop or await every descendant and local process that can still write into the run, promote all required evidence out of `.tmp/`, finish the artifact and local verification, and ensure no final check depends on scratch state. Keep both status records at `RUNNING`, then invoke the coordinator-supplied absolute `scripts/cleanup_run_tmp.py` path with `--run <exact-run-path> --confirm-finalized`. Do not substitute a broad recursive command, glob, output-root sweep, symlink-following deletion, or any deletion outside your assigned run. Confirm the helper reports `deleted` or `already-absent`; only then set both status records to `OK`. If cleanup or absence verification fails, retain a non-`OK` status and report the blocker instead of claiming completion. A successful handoff has no `.tmp/` directory at all.
+For a successful finalization, first stop or await every descendant and local process that can still write into the run, promote durable output out of `.tmp/`, and finish generation/export. In gauntlet mode also finish local verification and promote required evidence; in none mode do not run checks. Keep both status records at `RUNNING`, then invoke the coordinator-supplied absolute `scripts/cleanup_run_tmp.py` path with `--run <exact-run-path> --confirm-finalized`. Do not substitute a broad recursive command, glob, output-root sweep, symlink-following deletion, or any deletion outside your assigned run. Confirm the helper reports `deleted` or `already-absent`; only then set both status records to `OK` for gauntlet or `UNVERIFIED` for none. If cleanup or absence verification fails, retain a non-`OK`, non-`UNVERIFIED` status and report the blocker instead of claiming completion. A completed handoff has no `.tmp/` directory at all.
 
 This section is an operational envelope, not part of the authored website brief. Never add it, its environment-variable instructions, or generic temporary-file prose to the actual prompt or `artifact/PROMPT.md`.
 
@@ -111,12 +122,14 @@ Work freely in `workspace/`, using `.tmp/` for disposable run-local state. Befor
 5. Make `artifact/` deployable as a static folder with no install, build, framework development server, or server-side runtime step.
 6. Keep package manifests, source-only components, build and provider configuration, dependency or cache directories, server functions, secrets, provider-filtered build state such as `.next/`, and the run’s `.tmp/` out of the entire `artifact/` tree. Keep durable project state in `workspace/` when the source project needs it.
 7. Keep the final folder within the conservative shared Drop envelope: at most 1,000 files, 5 MiB per file, and 100 MiB total.
-8. Serve or open the built artifact locally and verify its primary experience. Local serving for inspection is not remote publication. Record what you exercised and any network-dependent behavior; use `PARTIAL` rather than `OK` if the harness cannot establish credible static-handoff evidence.
-9. Before setting `OK`, stop every descendant and process, move required evidence out of `.tmp/`, use the supplied safe cleanup helper, and verify that the exact run-local `.tmp/` no longer exists. Keep it intact for every non-`OK` outcome.
+8. Only in gauntlet mode, serve or open the built artifact locally and verify its primary experience. Local serving for inspection is not remote publication. Record what you exercised and any network-dependent behavior; use `PARTIAL` rather than `OK` if the harness cannot establish credible static-handoff evidence. In none mode, do not open or inspect the result and do not claim it works.
+9. Before setting `OK` (gauntlet) or `UNVERIFIED` (none), stop every descendant and process, promote durable output, use the supplied safe cleanup helper, and confirm the exact run-local `.tmp/` no longer exists. Keep it intact for interrupted, partial, blocked, and failed outcomes.
 
 Framework projects are welcome. For example, a React source tree may live in `workspace/` and its production `dist` contents may become `artifact/`. The final handoff is the built site, not the source-only project.
 
 Write `worker-report.json` beside the artifact. Record status, summary or blocker, chosen technologies, build command, quality-gauntlet applicability, quality bar, critic rounds or capability fallback, integration pass, concrete final verification evidence, lead and descendant IDs when exposed, the fixed `artifact/index.html` entrypoint, whether run-local temporary routing was applied, and any known tool or harness exceptions.
+
+The remaining evidence instructions are gauntlet-only. For none mode leave `qualityGauntlet: null`, `verification: []`, and `artifact.staticDeploymentVerified: false`; record generation/export information without verification claims and report **UNVERIFIED**.
 
 Use `qualityGauntlet` for gauntlet history. Mark it `required` for non-trivial builds; a genuinely trivial artifact may use `not-required` only with a concrete reason. Record exposed critics in descendant IDs. Every full pass or targeted recheck records the exact artifact revision, capture set, or digest inspected, verdict, evidence, material blocker batch in the backwards-compatible `highestLeverageGap` field, applied fix, and recheck. Reusing one critic task means reusing its exposed critic worker ID. Historical `NOT_READY` entries remain here even when a later recheck returns `READY`.
 

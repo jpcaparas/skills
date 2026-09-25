@@ -23,9 +23,9 @@ Use paid generation or processing only with the required authorization. If an av
 
 ## Compose like an editorial desk
 
-Give each collage one focal subject and a few supporting pieces. Use topic-matched pastel paper, short annotations, restrained rotations and intentional outline strokes. Show a real source document when the document matters; show a contextual portrait when the person matters. A different crop alone is not always a different idea.
+When using collage, give it a focal subject and supporting pieces that earn their place. Topic-matched pastel paper, short annotations, restrained rotations and intentional outline strokes suit the default direction; adapt the treatment to the chosen palette and layout, including dark or scientific styles. Show a real source document when the document matters; show a contextual portrait when the person matters. A different crop alone is not always a different idea.
 
-Keep all essential labels in adjacent HTML. Caption any potentially misleading time relationship, such as a 2015 portrait accompanying a 2019 event. Distinguish illustration from evidence; do not mount invented labels to look like an authentic company filing. Apply the graph/vector quality gate in the main workflow before keeping supplementary marks. Collage alone is a complete composition.
+Keep all essential labels in adjacent HTML. Caption any potentially misleading time relationship, such as a 2015 portrait accompanying a 2019 event. Distinguish illustration from evidence; do not mount invented labels to look like an authentic company filing. Apply the visual accuracy and legibility gate in the main workflow to every medium, including graphs and vectors. Collage alone can be complete, but it is not required when another treatment explains the story better.
 
 Optimise image size for the rendered use, set intrinsic dimensions and lazy-load below-the-fold assets. Keep full-resolution originals in the workspace, not in the portable artifact unless actually needed.
 

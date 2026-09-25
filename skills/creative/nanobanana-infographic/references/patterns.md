@@ -1,9 +1,9 @@
-# Prompt Patterns For Sleek Infographics
+# Prompt Patterns For Infographics
 
 ## Table of Contents
 
 - [When To Ask Questions](#when-to-ask-questions)
-- [Four-Variant Default](#four-variant-default)
+- [Optional Composition Presets](#optional-composition-presets)
 - [Prompt Formula](#prompt-formula)
 - [Parallel Rendering](#parallel-rendering)
 - [Quality Gates](#quality-gates)
@@ -11,24 +11,25 @@
 
 ## When To Ask Questions
 
-Ask follow-up questions only when one of these is missing:
+Resolve these from the brief where possible; ask only when an unknown would materially change the result:
 
 - the subject or core claim
 - the audience or placement context
 - the must-include numbers, labels, or sections
 - the visual boundaries or must-avoid look
 
-Do not ask process questions that the skill can answer itself. If the user asks for "an infographic for a blog post about X", default to:
+Do not ask process questions that the skill can answer itself. For "an infographic for a blog post about X", make one suitable composition. A restrained editorial option might use:
 
-- four variants
 - `16:9`
 - white or near-white background
 - flat editorial graphics
 - restrained palette
 
-## Four-Variant Default
+Choose another ratio, palette, or composition when the brief or channel calls for it. Missing brand preferences do not require an interview, and a single-image request does not authorize a paid comparison pack.
 
-Unless the user says otherwise, produce these four directions:
+## Optional Composition Presets
+
+Use, combine, or skip these examples. They are neither an exhaustive menu nor a requirement to produce four variants.
 
 ### 1. Executive Snapshot
 
@@ -61,7 +62,7 @@ Structure:
 - modular grid or side-by-side layout
 - equal panel weight
 - short comparison labels
-- no decorative background elements
+- a quiet background when it helps comparison
 
 ### 4. Insight Ribbon
 
@@ -76,16 +77,16 @@ Structure:
 
 ## Prompt Formula
 
-Use this shape. Keep it specific but not overloaded:
+Adapt this shape to the requested style and content:
 
 ```text
-Create a sleek editorial infographic, not a busy poster.
+Create an infographic in <requested or chosen style>.
 
 Topic: <topic>
 Audience/context: <audience>
 Core message: <message>
 Aspect ratio: <ratio>
-Variant direction: <one of the four default variants>
+Composition: <preset, combination, or custom direction>
 
 Must include:
 - <exact fact or section>
@@ -97,58 +98,56 @@ Composition:
 - <icon policy>
 
 Style:
-- white or near-white background
-- flat 2D editorial graphics
-- restrained palette, 2-3 accent colours plus gray/white
-- generous whitespace
-- clean alignment and spacing
+- <background, palette, material, and imagery suited to the brief>
+- <intentional grouping, alignment, and spacing>
+- readable text and distinguishable data encodings at the final display size
 
-Text rules:
-- title max 5 words
-- labels 1-3 words
-- no sentences, captions, legends, or source notes in the image
+Exact visible text:
+- <title, labels, required explanation, units, and attribution>
+- preserve supplied facts and qualifiers without inventing claims
 
 Avoid:
-- busy collage layouts
-- gradients, glow, glassmorphism, bevels, drop shadows
-- decorative filler icons
-- poster energy
-- dashboard clutter
+- <actual user exclusions or identified sources of confusion>
 ```
+
+A title around five words, labels of 1-3 words, and explanation outside the image can help a small slide. They are not limits for all formats. Dark palettes, glow, gradients, decorative illustrations, paragraphs, and multi-part compositions are valid when they fit the brief and remain legible. Do not remove a required source note or qualification just to shorten text.
 
 ## Parallel Rendering
 
-After the prompt pack is ready, render all variants concurrently by default:
+For an authorized multi-image pack, inspect a no-spend plan first:
 
 ```bash
 python3 scripts/render_variant_pack.py \
   --variant-pack ./out/prompt-pack/variant-pack.json \
-  --output-dir ./out/renders/batch
+  --output-dir ./out/renders/batch \
+  --dry-run
 ```
 
-Use the batch renderer for the first sweep. Drop back to `scripts/probe_gemini_image_api.py` only when you want to rerender one variant in isolation.
+For a live batch, omit `--dry-run` only within the authorized count and budget. Bound concurrency with `--max-concurrency` when needed for quotas. Use `scripts/probe_gemini_image_api.py` with a custom prompt file and `--passes 1` for a single image; it has no dry-run flag.
 
 ## Quality Gates
 
-Reject and rerender when any of these happen:
+Before delivery, check:
 
-- the image needs more than a few seconds to parse
-- the composition tries to explain two unrelated ideas at once
-- there are more than 4-5 meaningful blocks on a single review image
-- labels become sentence-like
-- the style becomes loud, glossy, or promotional
+- exact facts, wording, quantities, units, qualifiers, and required attribution
+- readable text and contrast at intended size
+- clear relationships and an appropriate reading order for the audience
+- requested style, ratio, and image count
+- an accessible text equivalent and non-color cues for essential distinctions
+
+Glance speed, block count, and text length are diagnostic cues, not automatic rejection rules. A six-panel dark explainer or a glossy promotional infographic may be exactly right. Report unresolved defects; revise or rerender only within the approved scope.
 
 ## Iteration Ladder
 
 When the first pass is wrong, do not rewrite everything immediately.
 
-1. If the image is noisy, cut the number of panels or callouts by 30-50%.
-2. If the text is warped, shorten the title and labels before touching layout.
-3. If the result feels generic, sharpen the hierarchy, not the decoration.
-4. If the image feels empty, add one stronger framing device, not more fragments.
-5. If the model keeps missing exact wording, render fewer words or move the longer explanation outside the image entirely.
+1. If the image is noisy, clarify grouping and emphasis; remove nonessential callouts where useful, without a removal quota.
+2. If the text is warped, check size and spacing, then shorten only wording that may change. Preserve exact required copy.
+3. If the result feels generic, strengthen hierarchy or introduce a distinctive visual device consistent with the brief.
+4. If the image feels empty, adjust scale, framing, or supporting detail rather than filling space automatically.
+5. If exact wording keeps failing, propose a text-overlay or vector workflow, or moving explanation outside the image when the brief permits it. Do not spend indefinitely trying to force fidelity.
 
-Use `scripts/build_variant_pack.py` to materialize the default quartet from a structured brief.
+Use `scripts/build_variant_pack.py` only when its strict low-noise preset fits. It defaults to four prompts and cannot express every choice above; `references/configuration.md` documents its limits and the custom-prompt route.
 
 ## See Also
 

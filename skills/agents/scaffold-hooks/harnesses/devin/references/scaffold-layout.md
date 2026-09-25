@@ -23,7 +23,7 @@ hooks/
     └── devin.json             # Devin-specific plan data for this event
 ```
 
-Every documented Devin lifecycle event gets the same `hooks/<event>/script.sh`, `devin.sh`, and `devin.json` shape. Only enabled events are wired into `.devin/hooks.v1.json`.
+Every event in the bundled manifest gets the same `hooks/<event>/script.sh`, `devin.sh`, and `devin.json` shape. Only enabled events are wired into `.devin/hooks.v1.json`. This is the helper's fixed layout, not a universal hook architecture or a selected-event-only generation option.
 
 ## Ports And Adapters
 

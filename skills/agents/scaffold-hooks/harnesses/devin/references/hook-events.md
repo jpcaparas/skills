@@ -1,13 +1,13 @@
 # Hook Events
 
-Current documented Devin CLI hook contract, verified against the official docs on 2026-06-10.
+Bundled Devin CLI hook baseline, verified against the official docs on 2026-06-10. The JSON context/decision guidance below was also checked against the official overview on 2026-09-25; this does not re-certify every bundled event field.
 
 Official sources:
 
 - `https://docs.devin.ai/cli/extensibility/hooks/overview`
 - `https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks`
 
-Use `assets/hook-events.json` as the deterministic scaffold input. Re-verify the official docs before every real scaffold or refresh.
+Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official docs when installed evidence is insufficient, stale, or event semantics will change. Propose canonical updates through the root `SKILL.md` maintenance route; do not silently edit installed inputs.
 
 ## Hook File Format
 
@@ -43,11 +43,11 @@ Command hooks receive a single JSON object on stdin. They may print a JSON decis
 }
 ```
 
-Documented decisions are `approve`, `block`, and `deny`. Plain logs belong on stderr so stdout stays valid JSON when the hook needs to control the outcome.
+The official overview's output table documents `approve` and `block`. Older package evidence also lists `deny`; verify it against the target release before using it rather than treating it as interchangeable. Plain logs belong on stderr so stdout stays valid JSON when the hook needs to control the outcome.
 
-Field-verified stricter contract (2026-06-12, v2026.5.26-8): Devin parses non-empty stdout strictly as Claude-format JSON. Plain text fails the effects evaluator and the output is silently dropped, with only a `Failed to parse Claude hook output` warning in `~/.local/share/devin/cli/logs/`. Generated scripts must emit empty stdout or one valid JSON object.
+Historical field evidence (2026-06-12, v2026.5.26-8): Devin rejected plain-text stdout in its effects evaluator and silently dropped it, logging `Failed to parse Claude hook output` in `~/.local/share/devin/cli/logs/`. That version is a verification baseline, not an installation requirement. Generated scripts must emit empty stdout or one event-appropriate Devin JSON object; a parser's Claude-related error text does not prove general Claude compatibility.
 
-To inject context from `SessionStart`, emit the Claude `hookSpecificOutput` shape:
+To inject context from `SessionStart`, emit this specifically documented Devin `hookSpecificOutput` shape:
 
 ```json
 {
@@ -58,7 +58,7 @@ To inject context from `SessionStart`, emit the Claude `hookSpecificOutput` shap
 }
 ```
 
-Devin injects `additionalContext` as a system message before the user's first prompt. Note that Devin renders no hook activity in its TUI; verify injection via `/hooks`, the CLI logs, or the transcript JSON under `~/.local/share/devin/cli/transcripts/`. See `references/gotchas.md` items 6a and 6b.
+In the field-tested baseline, Devin injected `additionalContext` as a system message before the user's first prompt without rendering hook activity in the TUI. Verify injection via `/hooks`, CLI logs, or transcript JSON under `~/.local/share/devin/cli/transcripts/`; do not assume later UI behavior is identical. See `references/gotchas.md` items 6a and 6b.
 
 ## Exit Codes
 

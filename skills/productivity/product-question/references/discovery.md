@@ -12,7 +12,7 @@ Turn the question into one or more concrete lookup targets:
 - data object names such as invoice, subscription, booking, order, profile, or claim
 - test descriptions, fixture names, analytics events, and error messages
 
-Search those terms first. Product questions often hide in copy, tests, route names, config, and feature flag names before they show up in obvious service names.
+If the owner is known, start there and trace outward as needed. Otherwise these terms are useful entry points: product questions often hide in copy, tests, route names, config, and feature flag names before they show up in obvious service names.
 
 ## Trace The Behavior
 
@@ -24,7 +24,7 @@ Build a small evidence chain:
 4. User-visible result: what appears, changes, gets blocked, gets sent, or gets saved.
 5. Exceptions: edge cases, permissions, missing data, disabled flags, fallbacks, or environment differences.
 
-Stop when you can explain the behavior without naming framework internals.
+Stop when you can explain the behavior and its material conditions with traceable evidence. Framework internals are optional unless they clarify the product answer.
 
 ## Evidence Ranking
 
@@ -47,7 +47,7 @@ Use confidence only when helpful:
 
 ## Search Tips
 
-- Search exact user-facing words first, then normalized variants.
+- When ownership is unknown, try exact user-facing words and normalized variants.
 - Search both product terms and technical synonyms: "cancel", "terminate", "void", "deactivate".
 - Check tests for behavior names, then verify against runtime code.
 - Check feature flag and permission definitions before assuming a behavior applies to everyone.

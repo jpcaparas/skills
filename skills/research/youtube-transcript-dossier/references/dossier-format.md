@@ -2,11 +2,13 @@
 
 How to structure the synthesized dossier from a YouTube transcript.
 
+These sections are options for a full dossier, not a minimum for every summary. Follow the user's requested length, focus, and format; omit empty or unhelpful sections rather than inventing content. Supplied transcripts need no refetch just to fill metadata.
+
 ## Section Definitions
 
 ### Header
 
-The top of the dossier. Always present. Pull from the fetch output metadata:
+For a full dossier, identify the source using available metadata. Do not invent missing title, channel, duration, or dates. A short answer need not include this table:
 
 ```markdown
 # {title}
@@ -25,7 +27,7 @@ Format the upload date from YYYYMMDD to a readable form (e.g. 20091025 → Oct 2
 
 ### Executive Summary
 
-2-3 sentences capturing the video's core message. Answer: what is this video about and why would someone watch it?
+Capture the video's core message at the length requested. Answer: what is this video about and why would someone watch it? No fixed sentence count is required.
 
 Do not list every topic here. The summary should give a reader enough context to decide whether the full dossier is worth reading.
 
@@ -55,7 +57,7 @@ Verbatim quotes that are memorable, controversial, or encapsulate a key idea. Ea
 > "Premature optimization is the root of all evil." — [07:15]
 ```
 
-Keep quotes short (1-3 sentences). If a quote spans multiple snippets, join them and use the start timestamp of the first snippet.
+Include quotes only when useful and supported by actual transcript text. Keep wording exact; never silently repair names or numbers. If a quote spans contiguous snippets, preserve their order and use the first snippet's timestamp. Mark omissions explicitly and put uncertainty or corrections outside the quotation. The examples above illustrate format, not quotes to insert into an unrelated dossier.
 
 ### Key Takeaways
 
@@ -73,7 +75,7 @@ Each takeaway should be a complete, standalone sentence. Not a topic name — a 
 
 ### Follow-Ups
 
-Concrete action items inspired by the video. Use verb-first phrasing:
+When useful or requested, include concrete action items supported by the video. Distinguish the speaker's recommendations from your own suggested follow-ups. Use verb-first phrasing:
 
 ```markdown
 ## Follow-Ups
@@ -102,16 +104,16 @@ Include the timestamp where each reference appears so the user can hear the orig
 
 ## Quality Bar
 
-- **Anchor with timestamps.** Every topic, quote, and key point references a timestamp. The user should be able to jump to the exact moment.
+- **Anchor with available timestamps.** Topics, quotes, and key points retain source timing. If supplied text has no timestamps, disclose that limit rather than inventing anchors or fetching solely to populate a template.
 - **Separate fact from inference.** The transcript is evidence; the dossier is interpretation. Mark uncertain claims explicitly.
-- **Filter non-speech.** Remove `[♪♪♪]`, `[Applause]`, `[Music]`, and similar markers from quotes and takeaways. Note when a section is primarily music or silence.
+- **Filter synthesis, not evidence.** Omit irrelevant non-speech from summaries; leave raw exports unchanged. Preserve markers inside quotations or mark omissions explicitly.
 - **Respect transcript source.** When the source is `auto-generated`, names and technical terms may be wrong. Do not treat transcribed proper nouns as verified. Add a note at the top: "Transcript is auto-generated; names and terms may contain errors."
 - **Preserve named references.** Keep exact tool names, library names, paper titles, and URLs as transcribed, but note when the transcript source is auto-generated.
-- **Chunk long videos.** For videos longer than 30 minutes, synthesize in timestamp ranges (e.g. 0-15 min, 15-30 min, 30-45 min) rather than all at once.
+- **Chunk when useful.** Choose topic or timestamp chunks based on context capacity and requested coverage, not a fixed duration threshold. Preserve provenance and avoid duplicate takeaways when merging.
 
 ## What NOT to Include
 
-- The full raw transcript (too long; the user can get it with `--format text`)
+- The full raw transcript unless requested (a separate raw export is available)
 - Personal opinions about the speaker or channel
 - Speculation about what the speaker meant (unless explicitly marked as inference)
 - Timestamps for every sentence (only for topics, quotes, and key points)
@@ -120,4 +122,4 @@ Include the timestamp where each reference appears so the user can hear the orig
 
 - `references/fetching.md` — how to get the transcript and metadata
 - `references/gotchas.md` — handling transcript quality issues
-- `templates/dossier.md` — the skeleton to copy
+- `templates/dossier.md` — optional full-dossier skeleton

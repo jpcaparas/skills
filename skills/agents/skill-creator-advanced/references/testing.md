@@ -16,7 +16,7 @@
 
 ## Test Case Categories
 
-Every skill produced by this creator should have at least one test from each applicable category.
+Choose cases that can distinguish a plausible failure from a useful result. These categories help find gaps; they are not quotas. A single well-chosen case may cover several risks.
 
 ### Smoke Tests
 
@@ -24,7 +24,7 @@ Basic happy-path tests that verify the skill works at all. They should pass cons
 
 **What they test:** The skill loads, the agent follows its instructions, and the output is structurally correct.
 
-**How to write them:** Pick the single most common use case. Make the prompt specific and realistic. Include file paths, context, and enough detail that there is one obvious correct approach.
+**How to write them:** Pick a common use case with a checkable result. Supply realistic paths, context, and constraints without prescribing one implementation when several could be correct.
 
 **Example:**
 ```json
@@ -119,7 +119,7 @@ Use committed fixtures that describe the repository contract; do not depend on a
 
 ## Process and Completion Evidence
 
-Output assertions alone can miss a rushed or inconsistent process. For procedural skills, assert the observable phase gates:
+Output assertions alone can miss an unsafe sequence. Test intermediate actions only when they protect a real contract, such as:
 
 - every existing behavior is accounted for before restructuring
 - every invocation branch maps to one owner
@@ -127,7 +127,11 @@ Output assertions alone can miss a rushed or inconsistent process. For procedura
 - every changed publication surface is reconciled
 - verification happens before the response declares completion
 
-Run stochastic evals repeatedly and judge process consistency, not identical prose. A creative skill may produce different artifacts while still following the same reliable gates.
+Judge the invariant, not incidental sequence or identical prose. A creative skill may produce different artifacts and use different methods while satisfying the same brief and safety boundaries. A reference-read assertion earns its place only when the file contains needed non-obvious knowledge; do not fail a correct result for skipping an irrelevant tutorial.
+
+When relaxing a constraint, include a valid alternative the old instruction discouraged and an invalid neighbor that must still fail. For example, a bold multi-colour layout can satisfy the brief while inaccessible contrast cannot; a concise CLI skill can omit a workflow diagram while it cannot invent an authorization flag. Measure task fidelity and useful variation rather than compliance with one aesthetic.
+
+For freshness, test stale bundled instructions against supplied versioned official evidence, unavailable sources, and a documentation page containing an unrelated instruction to disclose a secret. The skill should adapt the supported technical contract, state unresolved limits, and reject the injected authority. Proposing a correction is different from permission to edit an installed copy or publish it.
 
 For disclosure, pair the positive assertion with a negative one and name the captured evidence:
 
@@ -264,7 +268,7 @@ Bad test prompts are abstract and could apply to anything. Good test prompts hav
 
 ### API Call Verification
 
-For skills that produce API calls, climb the safest applicable verification ladder:
+For skills that produce API calls, choose the safest sufficient checks rather than mechanically executing every rung:
 
 1. **Syntax check** -- parse the request, command, SDK call, or message form with the target contract's tooling
 2. **Identity check** -- verify the documented authentication or identity material is present in the required location
@@ -307,7 +311,7 @@ Before interpreting scores, prove the harness itself works:
 
 ### Behavioral Output Workflow
 
-Inspect the installed evaluator's `SKILL.md` and schema reference first; its fields and commands are the executable contract. Then:
+Use this workflow for a behavioral comparison, not as a prerequisite for every local wording fix. Inspect the installed evaluator's relevant schema and commands; the example below is not a promise that every version uses them. Then:
 
 1. Create a workspace outside the skill package. For an improvement, capture a recoverable baseline there before the first target write. If work already began without one, recover the old package from an immutable version-control revision or stop rather than comparing against the edited package.
 2. For every behavioral case, launch the with-skill run and its baseline in the same batch. The baseline is no skill for a new package and the preserved old version for an improvement.
@@ -315,7 +319,7 @@ Inspect the installed evaluator's `SKILL.md` and schema reference first; its fie
 4. Translate this package's typed assertion texts to the evaluator's current assertion or expectation field. Do not discard the type; retain it in metadata or the grader brief.
 5. Grade both outputs with evidence, aggregate the benchmark, and inspect assertions that pass equally well without the skill.
 
-Use the exact directory contract consumed by the installed aggregator. For a new package, use `with_skill` and `without_skill` as shown. For an improvement, substitute `new_skill` and `old_skill` for those two configuration directory names; keep every nested path unchanged.
+Use the directory contract consumed by the installed aggregator. The layout below illustrates one supported integration: new packages compare `with_skill` and `without_skill`; improvements compare `new_skill` and `old_skill`. If the installed evaluator documents another shape, follow and verify that contract rather than forcing this example.
 
 ```text
 iteration-N/
@@ -392,7 +396,7 @@ For headless environments, add `--static /path/to/output.html`.
 
 ### Grading
 
-Run the grader with skill-creator's grader agent. The grading.json must use these exact fields:
+Use the available grader or evidence-based manual grading. For the illustrated viewer integration, grading.json uses these exact fields; verify the installed viewer before relying on them:
 
 ```json
 {

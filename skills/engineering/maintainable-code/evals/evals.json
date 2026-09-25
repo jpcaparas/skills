@@ -31,10 +31,10 @@
       "id": 2,
       "name": "decomposition-edge-case",
       "prompt": "This 220-line function is hard to read. Split it up, but don't create a maze of tiny helpers. It mixes validation, database reads, pricing rules, and response formatting.",
-      "expected_output": "The agent reads references/decomposition.md, identifies stable responsibilities, preserves behavior with characterization tests where needed, and extracts helpers around validation, I/O, policy, and formatting only where boundaries improve readability.",
+      "expected_output": "The agent identifies stable responsibilities, reuses adequate behavior coverage, adds characterization only for gaps, and extracts helpers only where boundaries improve readability. It consults decomposition guidance only for unresolved design decisions.",
       "assertions": [
         {
-          "text": "Agent reads references/decomposition.md",
+          "text": "Consults references/decomposition.md when boundary choices remain non-obvious; otherwise uses local evidence without unrelated reference reads",
           "type": "disclosure"
         },
         {
@@ -42,7 +42,7 @@
           "type": "negative"
         },
         {
-          "text": "Adds or recommends characterization coverage before risky refactoring",
+          "text": "Preserves behavior using adequate existing coverage or fills consequential characterization gaps before risky refactoring",
           "type": "functional"
         }
       ],
@@ -56,10 +56,10 @@
       "id": 3,
       "name": "review-finding-priority",
       "prompt": "Review this PR for maintainability. The diff adds a generic RuleEngine class, removes three explicit functions, and has no tests for the new configuration format.",
-      "expected_output": "The agent reads references/review-rubric.md, leads with concrete findings ordered by severity, calls out abstraction and test risks with file/line evidence, and avoids nit-only review output.",
+      "expected_output": "The agent leads with concrete findings ordered by impact, calls out abstraction and test risks with file/line evidence, and avoids nit-only review output or unnecessary report sections.",
       "assertions": [
         {
-          "text": "Agent reads references/review-rubric.md",
+          "text": "Consults references/review-rubric.md only for unresolved review judgments rather than requiring a reference read or fixed format",
           "type": "disclosure"
         },
         {
@@ -81,10 +81,10 @@
       "id": 4,
       "name": "handoff-plan",
       "prompt": "Write a plan another agent can execute to untangle billing calculation from the React checkout page. The executor will not have this conversation.",
-      "expected_output": "The agent reads references/implementation-plans.md and produces a self-contained plan with exact files, current-state evidence, local conventions, ordered steps, verification commands, done criteria, and stop conditions.",
+      "expected_output": "The agent produces a self-contained plan with grounded scope, affected boundaries, observable completion criteria, verification, and material stop conditions. It chooses a useful structure rather than eight mandatory sections.",
       "assertions": [
         {
-          "text": "Agent reads references/implementation-plans.md",
+          "text": "Consults references/implementation-plans.md only when handoff complexity needs additional guidance; does not load unrelated reference stacks",
           "type": "disclosure"
         },
         {
@@ -105,14 +105,14 @@
       "id": 5,
       "name": "operational-code-comments",
       "prompt": "Improve a GitHub Actions workflow step that fetches artifacts with gh api, filters them with jq, de-duplicates with sort -u, then downloads each artifact. Keep the script maintainable for a junior maintainer with good fundamentals.",
-      "expected_output": "The agent reads references/commenting.md, keeps the shell/YAML idiomatic, and adds useful phase comments explaining the artifact list fetch, prefix matching contract, de-duplication, empty-match guard, and GitHub API assumptions instead of narrating syntax.",
+      "expected_output": "The agent keeps shell/YAML idiomatic and comments on non-obvious artifact contracts, data flow, and failure rationale where names and structure are insufficient, without narrating syntax or requiring a comment at every phase.",
       "assertions": [
         {
-          "text": "Agent reads references/commenting.md",
+          "text": "Consults references/commenting.md only for non-obvious comment decisions, not merely because the file is shell or YAML",
           "type": "disclosure"
         },
         {
-          "text": "Adds developer comments for phase, data shape, external API contract, and failure handling",
+          "text": "Preserves non-obvious artifact and failure-handling rationale in comments where code structure does not express it",
           "type": "functional"
         },
         {
@@ -130,10 +130,10 @@
       "id": 6,
       "name": "language-and-markup-comment-guidance",
       "prompt": "Review comments in a TypeScript retry helper, a SQL migration CTE, and a CSS sticky command bar. Distinguish helpful maintainer comments from comments that just narrate syntax.",
-      "expected_output": "The agent reads references/commenting.md, evaluates comments across application code, database code, and UI markup, preserves comments that explain contracts or invariants, and recommends removing or replacing comments that merely restate syntax.",
+      "expected_output": "The agent evaluates the requested comments across application code, database code, and UI markup, preserves contract or invariant rationale, and removes or replaces syntax narration. Reference reads depend on unresolved questions, not the number of languages.",
       "assertions": [
         {
-          "text": "Agent reads references/commenting.md for non-CI code comment guidance",
+          "text": "Consults references/commenting.md only where a non-obvious comment decision needs it, without mandatory language-by-language reference reads",
           "type": "disclosure"
         },
         {
@@ -156,18 +156,18 @@
       "id": 7,
       "name": "source-backed-method-property-comments",
       "prompt": "Add maintainability comments to a Laravel model accessor, a typed TypeScript retry policy property, and a Next.js route handler. Include docblocks or comments wherever they help a junior maintainer, and link official sources for framework claims.",
-      "expected_output": "The agent reads references/commenting.md, places comments at method, property, and block level where useful, keeps explanations junior-friendly with bullets or numbered structure for multi-part concepts, verifies current official documentation for the actual language and framework claims in the prompt, and paraphrases source-backed behavior instead of inventing details.",
+      "expected_output": "The agent comments at useful scopes with concise, understandable rationale and no forced layout. It verifies and links official documentation for the requested framework claims for the actual project stack, paraphrasing rather than inventing details.",
       "assertions": [
         {
-          "text": "Agent reads references/commenting.md",
+          "text": "Consults references/commenting.md only when comment placement or explanation is non-obvious; official-source verification requested by the user remains required",
           "type": "disclosure"
         },
         {
-          "text": "Adds comments or docblocks at method, property, and dense block levels instead of only class-level comments",
+          "text": "Places comments at the smallest useful scope for non-obvious rationale rather than filling a class/method/property/block quota",
           "type": "functional"
         },
         {
-          "text": "Uses bullet or numbered structure for multi-concept comments intended for junior maintainers",
+          "text": "Explains multi-part rationale clearly for the intended maintainer without requiring bullets or numbered formatting",
           "type": "functional"
         },
         {
@@ -186,10 +186,10 @@
       "id": 8,
       "name": "ascii-diagram-comment-guardrail",
       "prompt": "Document a webhook processing function that validates payloads, enqueues accepted events, retries transient queue failures, and rejects malformed requests. Use comments or docblocks that a junior maintainer can scan quickly, including an ASCII diagram if it helps. The existing comment says malformed requests are retried, but the code now rejects them immediately.",
-      "expected_output": "The agent reads references/commenting.md, adds a compact ASCII flow diagram only if it clarifies the webhook path, makes the diagram labels match the actual validation/enqueue/retry/reject behavior, updates stale prose that conflicts with the code, and checks that arrows, branch labels, and surrounding text agree before finishing.",
+      "expected_output": "The agent corrects stale prose and adds an ASCII diagram only if useful. Any diagram labels and prose must agree with the actual validation/enqueue/retry/reject behavior; the fix does not require a reference read.",
       "assertions": [
         {
-          "text": "Agent reads references/commenting.md",
+          "text": "Consults references/commenting.md only when non-obvious documentation choices remain unresolved; does not read unrelated resilience references for a comment-only correction",
           "type": "disclosure"
         },
         {
@@ -201,7 +201,7 @@
           "type": "functional"
         },
         {
-          "text": "Verifies the ASCII diagram, prose, and code describe the same behavior",
+          "text": "Verifies corrected prose and any included ASCII diagram describe the actual code behavior",
           "type": "verification"
         }
       ],
@@ -231,13 +231,13 @@
       "id": 10,
       "name": "review-runtime-default-guardrails",
       "prompt": "Review evals/files/runtime-defaults.ts before we use it in a mature service. We want stricter records eventually, no accidental external traffic in tests, and protection from destructive production commands. Propose the narrowest maintainable shape and a staged rollout; do not invent a general plugin framework.",
-      "expected_output": "The agent reads the guardrails reference, identifies the inverted dangerous defaults and unconditional mutability, distinguishes configured/applicable/selected/applied state, proposes fail-closed test and production policies, stages strictness as a behavior migration, and keeps the orchestration direct.",
+      "expected_output": "The agent identifies inverted dangerous defaults and unconditional mutability, distinguishes configured/applicable/selected/applied state, proposes fail-closed test and production policies, stages strictness as a behavior migration, and keeps orchestration direct.",
       "files": [
         "evals/files/runtime-defaults.ts"
       ],
       "assertions": [
         {
-          "text": "Agent reads references/guardrails-and-quality-gates.md",
+          "text": "Consults references/guardrails-and-quality-gates.md when activation, safety, or migration decisions need detail beyond the supplied evidence; does not load unrelated references",
           "type": "disclosure"
         },
         {
@@ -275,7 +275,7 @@
       "expected_output": "The agent routes to guardrail guidance and proposes a non-mutating umbrella check that composes formatting, lint/type analysis, codemod dry-run, and behavior tests, while exercising the lowest and current supported combinations without turning CI into an unbounded matrix.",
       "assertions": [
         {
-          "text": "Agent reads references/guardrails-and-quality-gates.md",
+          "text": "Consults references/guardrails-and-quality-gates.md only for unresolved quality-policy or compatibility decisions, not as mandatory ceremony",
           "type": "disclosure"
         },
         {
@@ -322,7 +322,7 @@
       "id": 13,
       "name": "coalesces-expensive-report-job",
       "prompt": "I'm adding a Next.js endpoint at app/api/reports/monthly/route.ts that starts a background job to generate an account's monthly PDF report. Ten people from the same account may click Generate at once. Design the implementation and name the database fields, queue behavior, retries, and logs.",
-      "expected_output": "The response designs one durable work key per account/month, uses atomic uniqueness or upsert, returns an existing active job instead of enqueueing duplicates, includes lease/heartbeat/stale recovery, bounded retries, and structured logs with correlation ID and job key.",
+      "expected_output": "The response designs one durable work key per account/month, uses atomic uniqueness or upsert, returns an existing authorized active job, and ensures bounded execution, stale-work recovery, safe retries, and useful logs. Adequate queue/framework guarantees count without duplicate heartbeat or watchdog machinery.",
       "assertions": [
         {
           "text": "Uses a stable job or idempotency key to coalesce duplicate report generation.",
@@ -372,10 +372,10 @@
       "id": 15,
       "name": "golden-signals-observability",
       "prompt": "I'm adding logging and metrics around our image-processing worker. I don't want random log spam. What should we instrument and alert on?",
-      "expected_output": "The response makes latency, traffic, errors, and saturation the metrics baseline, then adds queue age, retries, stale jobs, dead letters, structured logs for state transitions, traces around async handoffs/provider calls, and alerts only on user impact or exhausted automation.",
+      "expected_output": "The response uses latency, traffic, errors, and saturation to assess relevant health questions, reuses existing signals, and adds only consequential diagnostic gaps. Recovery signals and traces are selected for actual questions; alerts focus on user impact or exhausted automation.",
       "assertions": [
         {
-          "text": "Makes the four golden signals a first-class rule.",
+          "text": "Uses the four golden signals as relevant health/capacity questions rather than a quota of new metrics.",
           "type": "functional"
         },
         {
@@ -461,10 +461,10 @@
       "id": 19,
       "name": "boundary-refactor-edge-case",
       "prompt": "This order fulfillment function is impossible to unit test. It validates inventory, calls our warehouse SDK, writes to Postgres, publishes an event, and formats the HTTP response. Refactor it without turning the code into interface soup.",
-      "expected_output": "The agent reads references/dependency-boundaries.md, preserves behavior, separates framework response formatting from policy, introduces narrow replacement points for warehouse, database, and event publishing, avoids unnecessary interfaces, and adds tests with suitable fakes or stubs.",
+      "expected_output": "The agent preserves behavior, separates framework formatting from policy, uses narrow replacement points for external collaborators, avoids unnecessary interfaces, and fills consequential test gaps with suitable fakes or stubs.",
       "assertions": [
         {
-          "text": "Agent reads references/dependency-boundaries.md",
+          "text": "Consults references/dependency-boundaries.md for unresolved boundary choices, not as a mandatory stack alongside every refactor reference",
           "type": "disclosure"
         },
         {
@@ -486,10 +486,10 @@
       "id": 20,
       "name": "test-double-choice",
       "prompt": "I need tests for a notification workflow. It sends one email, writes an audit record, and enqueues a follow-up job. Should I mock all three dependencies or use fakes?",
-      "expected_output": "The agent reads references/test-doubles.md and recommends the least powerful doubles that prove behavior: a capturing email sender or spy for the email interaction, an in-memory audit repository fake, and a fake or captured job queue, with contract coverage for risky adapters.",
+      "expected_output": "The agent recommends the least powerful doubles that prove behavior, such as a capturing email sender, audit repository fake, and captured queue, with adequate existing or added contract coverage for risky adapters.",
       "assertions": [
         {
-          "text": "Agent reads references/test-doubles.md",
+          "text": "Consults references/test-doubles.md only for non-obvious substitution or drift decisions; no extra reference reads are required for a well-supported choice",
           "type": "disclosure"
         },
         {
@@ -511,10 +511,10 @@
       "id": 21,
       "name": "review-testability-priority",
       "prompt": "Review this PR for testability. The diff adds a static FraudService.getInstance(), calls fetch() inside the pricing rules, reads System.getenv() in three methods, and replaces a behavior test with strict mock call ordering.",
-      "expected_output": "The agent reads references/review-rubric.md, leads with high-impact findings about hidden globals and side effects in policy code, explains how the strict mock ordering makes tests brittle, and proposes narrow repair directions with verification notes.",
+      "expected_output": "The agent leads with high-impact findings about hidden globals and side effects in policy code, explains how strict mock ordering makes tests brittle, and proposes narrow repair directions with relevant verification notes.",
       "assertions": [
         {
-          "text": "Agent reads references/review-rubric.md",
+          "text": "Consults references/review-rubric.md only for unresolved review judgments; does not require its output template",
           "type": "disclosure"
         },
         {
@@ -531,6 +531,48 @@
         "review",
         "disclosure"
       ]
+    },
+    {
+      "id": 22,
+      "name": "small-edit-no-extra-ceremony",
+      "prompt": "In src/email/normalize.ts, rename the misleading local `data` to `trimmedEmail`: `export function normalizeEmail(email: string): string { const data = email.trim(); return data.toLowerCase(); }`. Existing tests cover trimming, lowercasing, and empty input. Keep behavior unchanged and give a brief summary.",
+      "expected_output": "Renames only the local variable, preserves the typed contract, runs the relevant existing checks, and reports briefly. It does not add tests, comments, architecture, a written failure map, or official-doc research for known string operations.",
+      "assertions": [
+        {
+          "text": "Preserves the function signature and observable behavior with only the requested rename",
+          "type": "functional"
+        },
+        {
+          "text": "Reuses adequate existing tests and reports actual focused verification or an explicit gap",
+          "type": "verification"
+        },
+        {
+          "text": "Does not load reference stacks, research known string basics, ask whether maintainability matters, or produce a multi-section design report",
+          "type": "disclosure"
+        }
+      ],
+      "tags": ["smoke", "small-edit", "disclosure", "scope"]
+    },
+    {
+      "id": 23,
+      "name": "reuse-existing-recovery-guarantees",
+      "prompt": "Add a CSV column to the account-scoped report worker. The inspected framework config already gives it a 60-second timeout, 90-second visibility window, capped jittered retries, durable failed-job handling, and safe redrive. The report store atomically upserts by account/month and publication is an idempotent replacement; the current worker logs and dashboard cover failures and queue age. Existing tests cover duplicate delivery and recovery. The new column contains the invoice's typed currency code. Do not redesign the pipeline.",
+      "expected_output": "Adds the column and focused output evidence while preserving account scope and existing recovery guarantees. It does not add a queue, outbox, watchdog, idempotency table, or telemetry just to satisfy a checklist.",
+      "assertions": [
+        {
+          "text": "Preserves account scoping, typed currency data, and the existing duplicate/recovery guarantees",
+          "type": "functional"
+        },
+        {
+          "text": "Verifies the exact CSV header and currency value using existing test patterns without duplicating adequate recovery coverage",
+          "type": "verification"
+        },
+        {
+          "text": "Does not add resilience or telemetry components when the supplied and inspected guarantees already cover the relevant risk",
+          "type": "negative"
+        }
+      ],
+      "tags": ["edge", "jobs", "scope", "verification"]
     }
   ]
 }

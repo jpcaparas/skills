@@ -25,6 +25,7 @@ from runtime_contract import (
     parse_json_bounded,
     read_regular_file_bounded,
     resolve_existing_or_new,
+    verification_mode,
 )
 
 
@@ -393,6 +394,8 @@ def status_class(status: str) -> str:
     normalized = status.upper()
     if normalized == "OK":
         return "status-ok"
+    if normalized == "UNVERIFIED":
+        return "status-unverified"
     if normalized in {"PLANNED", "RUNNING", "PARTIAL"}:
         return "status-progress"
     return "status-problem"
@@ -425,6 +428,8 @@ def outcome_text(run: dict[str, Any], report: dict[str, Any], load_error: Option
     """Prefer an honest summary and otherwise surface the worker's blocker."""
     if load_error:
         return f"Report unavailable: {load_error}"
+    if run.get("status") == "UNVERIFIED":
+        return "Generated without artifact or workspace checks."
     for source in (report, run):
         summary = text_value(source.get("summary"))
         if summary:
@@ -463,6 +468,18 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
         classification = bounded_text(run.get("classification"), "Unknown", 128)
         run_id = bounded_text(run.get("runId"), run_dir.name, 128)
         row_error = run_error or report_error
+        receipt, receipt_error = load_object(root / ".oneshot-provenance" / f"{run_dir.name}.json")
+        try:
+            mode = verification_mode(receipt, run, report)
+            if mode == "none" and status == "OK":
+                raise ValueError("generation-only completion must be UNVERIFIED, never OK")
+            if mode == "gauntlet" and status == "UNVERIFIED":
+                raise ValueError("UNVERIFIED requires receipt-anchored verificationMode none")
+            if run.get("schemaVersion") == "3.5" and receipt_error:
+                raise ValueError(receipt_error)
+        except ValueError as error:
+            status = "INVALID"
+            row_error = str(error)
         if candidate.discovery_error is None:
             site_link = file_link(out_path, run_dir / "artifact" / "index.html", "Artifact entry")
             prompt_link = file_link(out_path, run_dir / "artifact" / "PROMPT.md", "PROMPT.md")
@@ -501,7 +518,8 @@ def build_html(root: Path, out_path: Path) -> str:
         ),
         "{{FAIRNESS_NOTE}}": (
             "Each row preserves the run directory and points to the worker-owned artifact. "
-            "Incomplete and failed runs remain visible alongside completed work."
+            "Incomplete and failed runs remain visible alongside completed work. "
+            "UNVERIFIED means generation completed without artifact or workspace checks, not a passed or failed test."
         ),
         "{{ROWS}}": rows or '        <tr><td colspan="10" class="muted">No run manifests found in this output root.</td></tr>',
         "{{FOOTER_NOTE}}": "This index reads provenance files and never rewrites run artifacts.",

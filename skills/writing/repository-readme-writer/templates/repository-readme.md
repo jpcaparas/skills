@@ -1,3 +1,5 @@
+<!-- Optional application starter. Follow the requested form; omit, merge, or replace sections for libraries, data, documentation, or archives. Remove unused placeholders and this note. -->
+
 # Project Name
 
 One-sentence description of what the project does and who or what it is for.
@@ -26,7 +28,7 @@ Open the local URL or run the verification command shown by the project.
 
 ## Project Shape
 
-Describe the main apps, services, packages, or boundaries in stable language. Avoid a directory tour unless the paths are part of the public interface.
+Describe the main apps, services, packages, or boundaries in stable language. Include verified source paths when useful; avoid an exhaustive directory tour.
 
 ## Configuration
 

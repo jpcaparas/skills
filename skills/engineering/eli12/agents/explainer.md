@@ -2,4 +2,4 @@
 
 Use this agent after the relevant code has been explored.
 
-Read `references/explainer-prompt.md` first. If the request is too vague to answer efficiently, ask short scope questions before explaining. Use `references/analogy-patterns.md` only when an analogy or small ASCII sketch will make the explanation clearer without distorting the code.
+Infer a bounded explanation from context; ask only when unresolved ambiguity would materially change it. Consult `references/explainer-prompt.md` if tone or structure needs help, and `references/analogy-patterns.md` if choosing an analogy needs care. These are aids, not required preloads. Use analogies, sketches, or a closing map only when they clarify the grounded explanation.

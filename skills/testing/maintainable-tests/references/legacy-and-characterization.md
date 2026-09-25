@@ -12,7 +12,7 @@
 
 ## When To Characterize
 
-Add characterization tests before refactoring code whose behavior is important but poorly understood. The goal is to capture what the system currently does so you can change structure without accidentally changing behavior.
+Before refactoring important but poorly understood behavior, check existing coverage. Add characterization only for gaps needed to change structure without accidentally changing behavior.
 
 Good candidates:
 
@@ -73,10 +73,12 @@ Unknown is acceptable during characterization. It is not acceptable as permanent
 
 ## Changing Behavior Safely
 
-1. Add characterization tests around current behavior.
-2. Refactor production code without changing those tests.
-3. Add new behavior tests for the desired rule.
-4. Change production behavior.
+Adapt this sequence to the actual change; a refactor is not a prerequisite for a regression test or behavior fix.
+
+1. Reuse adequate current-behavior coverage; add characterization for consequential gaps.
+2. If a production refactor is necessary, proportionate, and authorized, preserve behavior while making it. Otherwise use existing safe seams; in tests-only scope, propose any missing production seam without changing it.
+3. Add or update behavior tests for the desired rule where coverage is missing.
+4. Change production behavior only when that change is requested or authorized, not during a tests-only task.
 5. Delete or rewrite characterization tests that no longer describe intended behavior.
 6. Keep regression tests that document bugs likely to recur.
 

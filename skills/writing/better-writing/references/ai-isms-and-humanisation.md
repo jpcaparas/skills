@@ -2,7 +2,7 @@
 
 Use this reference to revise prose that feels generic, formulaic, machine-smooth, over-signposted, or unlike its writer.
 
-The aim is better writing, not detector evasion. No word, punctuation mark, sentence shape, or model score can prove who wrote a passage. The editorial policy can still ban a canned rhetorical use from finished prose: the ban attaches to the phrase's function, not to every occurrence of its words.
+The aim is better writing, not detector evasion. No word, punctuation mark, sentence shape, or model score can prove who wrote a passage. Diagnose a phrase's effect in context, not its membership in a list. Intentional rhetoric and ordinary genre conventions can be right even when the catalogue flags them; only an explicit user or house-style constraint creates a ban.
 
 ## Contents
 
@@ -38,21 +38,21 @@ Use three action levels:
 
 | Action | Instruction |
 |---|---|
-| Remove | Delete assistant residue, empty ceremony, staged delivery, and other wrappers unless the destination genuinely needs them. |
-| Rewrite | Rebuild a canned semantic frame from the source's actor, action, mechanism, evidence, comparison, or consequence. Do this even when the phrase occurs once. |
+| Remove | Delete residue or wrappers when they add no useful meaning, courtesy, cadence, or genre function. |
+| Rewrite | Rebuild a frame when it hides the source's actor, action, mechanism, evidence, comparison, or consequence, even if it occurs once. |
 | Review | Inspect a contextual word, transition, punctuation habit, or structural pattern in density; retain precise and characteristic uses. |
 
 Read `references/formulaic-language-catalogue.md` for the full phrase-family catalogue, natural rewrite moves, worked examples, and protected uses. Its central rule is firm: never satisfy an avoidance rule by swapping in a fashionable synonym.
 
 The catalogue is much wider than a watch-word list. It covers reveal hooks such as `here's the kicker`, canned importance and benefit claims, vague appeals to research, academic boilerplate, scripted empathy, assistant residue, generic openings and endings, place-and-history glaze, sentimental narrative packaging, and dense lexical habits. `Gap` and `shift` simply illustrate the boundary: rewrite `bridge the gap` or `marks a significant shift` when they hide the proposition, but keep a measured pay gap, a defined research gap, a night shift, the Shift key, a phase shift, or distribution shift. The bare token is not the problem.
 
-This policy applies to drafting as well as revision. Do not introduce a listed formula merely because it was absent from the source.
+This reasoning applies to drafting as well as revision. Do not add empty formulae, but do not avoid a useful expression merely because it is listed.
 
 ## Humanisation workflow
 
 ### 1. Protect the source
 
-Record facts, numbers, quotations, citations, commands, identifiers, terminology, uncertainty, and voice anchors. Humanisation often fails by replacing precise source detail with lively invention.
+Preserve facts, numbers, quotations, citations, commands, identifiers, terminology, uncertainty, and voice anchors. Record a ledger when complexity or risk warrants it. Humanisation often fails by replacing precise source detail with lively invention.
 
 ### 2. Diagnose at several levels
 
@@ -68,7 +68,7 @@ Do not stop at vocabulary. Inspect:
 
 ### 3. Apply the action level
 
-Remove and rewrite rules do not need a cluster before they deserve an edit. Review-only signals usually do: several related cues in a short span matter more than one ordinary word or transition.
+An isolated frame can deserve an edit if it obscures meaning, but the label alone does not justify one. Several related cues in a short span usually matter more than one ordinary word or transition.
 
 ### 4. Rewrite from meaning
 
@@ -97,9 +97,9 @@ Add only what the source supports:
 
 Compare source and revision. Reject a change that lowers detector-like signals while making the prose less accurate, less accessible, less individual, or less natural.
 
-### 7. Run the final diagnostic
+### 7. Use a diagnostic if helpful
 
-For a substantial file-backed draft:
+For a file-backed draft whose repeated patterns are difficult to locate, optionally run:
 
 ```bash
 python3 scripts/scan_aiisms.py path/to/draft.md
@@ -249,7 +249,7 @@ Inspect:
 - adjectives that announce complexity, importance, or novelty without evidence
 - abstract nouns outnumbering named actors and objects
 
-Do not ban a useful spelling in every setting. `Landscape` can describe land; `robust` has precise statistical and engineering uses; `delve` may be the writer's natural verb. Ban vague rhetorical uses by default and protect exact ones. Function matters more than the token.
+Do not ban a useful spelling in every setting. `Landscape` can describe land; `robust` has precise statistical and engineering uses; `delve` may be the writer's natural verb. Revise vague rhetoric when it weakens the passage; preserve intentional imagery and cadence as well as exact terms. Function matters more than the token.
 
 Repair: name the mechanism, object, comparison, or consequence.
 
@@ -437,11 +437,11 @@ Even a high signal is not an authorship verdict.
 
 Action is separate from both dimensions:
 
-- **Remove** means the frame has no useful job in the finished artefact unless a named genre exception applies.
-- **Rewrite** means the underlying thought may matter, but the formula cannot carry it.
+- **Remove** suggests checking whether the frame has a useful job before deleting it.
+- **Rewrite** suggests checking whether the formula hides the underlying thought before rebuilding it.
 - **Review** means context, density, and writer preference decide.
 
-A low-severity phrase can still be remove-by-default because deletion is harmless. A high-severity signal can remain review-only when the scanner cannot distinguish a technical use safely.
+A low-severity phrase may be worth deleting when it is empty; deletion is not automatically harmless. All action labels require contextual judgment, including for rhetoric, warmth, and cadence, not only technical exceptions.
 
 ## False-positive protections
 
@@ -470,15 +470,15 @@ The machine-readable catalogue lives at `assets/aiisms.json`. Add a pattern only
 5. **Calibration:** severity, confidence, minimum occurrence, exceptions, evidence, and review date are explicit.
 6. **Safety:** it does not turn dialect, disability, second-language writing, or ordinary punctuation into suspicion.
 
-Update the corpus, tests, and explanatory reference together. Retire patterns whose meaning, evidence, or false-positive rate no longer justifies them.
+For authorized canonical package maintenance, update the corpus, tests, and explanatory reference together. Otherwise propose the change with sources and counterexamples; do not edit installed copies. Retire patterns whose meaning, evidence, or false-positive rate no longer justifies them.
 
 ## Humanisation gate
 
 A revision passes when:
 
 - it is more accurate or clear, not merely less formulaic
-- remove-by-default wrappers are gone unless the genre requires them
-- rewrite-by-default frames no longer carry the claim
+- empty wrappers are gone while useful conventions and intentional rhetoric survive
+- frames that obscured meaning are repaired, not merely replaced with synonyms
 - high-confidence clusters have been resolved or deliberately retained
 - no fact, literal, qualification, citation, or voice anchor was lost
 - no fake experience or stylistic mess was added

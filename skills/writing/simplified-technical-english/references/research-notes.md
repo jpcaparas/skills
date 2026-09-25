@@ -14,11 +14,11 @@ Checked on 29 July 2026:
 - [Official Issue 9 PDF](https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf)
 - [ASD announcement for Issue 9](https://www.asd-europe.org/news-media/news-events/news/simplified-technical-english-asd-ste100-issue-9/)
 
-Use current official ASD or STEMG material when later information conflicts with this release basis.
+Use the official material for the user's governing issue. Consult current official ASD or STEMG sources when later information or uncertain issue status conflicts with this baseline; do not silently upgrade a publication's governing issue.
 
-## Current issue basis
+## Bundled Issue 9 basis
 
-The official sources identify Issue 9, dated 15 January 2025, as the current issue. It replaces previous issues and contains:
+At the check date above, the official sources identified Issue 9, dated 15 January 2025, as current. This is a dated baseline, not a live status assertion. Issue 9 superseded prior issues and contains:
 
 - 53 rules in nine writing-rule sections
 - a controlled dictionary
@@ -43,6 +43,8 @@ The official FAQ and tools page state that:
 - writers remain responsible for clarity, accuracy, and compliance
 
 This package therefore treats automation as diagnostic and requires human review for consequential approval.
+
+The bundled scanner implements only its documented Issue 9 surface checks. A newer issue requires verified rule mapping and regression checks before any claim of scanner support. Without those, disclose the limit and check against authorized governing material rather than projecting the old scanner's results onto the new issue.
 
 ## Copyright, trademark, and distribution
 
@@ -78,6 +80,8 @@ A defensible internal review requires, at minimum:
 That checklist is an audit practice derived from the official responsibility boundaries. It is not an ASD certification procedure.
 
 ## Maintenance checks
+
+For ordinary use, propose sourced corrections to the canonical package; do not silently update installed copies. Perform the following only when package maintenance is authorized.
 
 Before changing version-sensitive behavior:
 

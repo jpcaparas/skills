@@ -7,7 +7,7 @@
   "organization": "JP Caparas",
   "date": "June 2026",
   "description": "Production skill for converting YouTube video transcripts into structured dossiers with metadata, timestamped key topics, quotes, takeaways, and follow-up items.",
-  "abstract": "Production skill for converting YouTube video transcripts into structured dossiers. Fetches video metadata via yt-dlp and transcripts via youtube-transcript-api, then synthesizes a dossier with timestamped key topics, notable quotes, takeaways, and follow-up items. Supports language preference, cookie-based auth for restricted videos, and JSON/text/VTT output formats.",
+  "abstract": "Production skill for converting supplied or fetched YouTube transcripts into scoped summaries, notes, exports, or full dossiers with timestamps. Fetching uses youtube-transcript-api with optional yt-dlp metadata and language preference. JSON/text/VTT exports are available; restricted-content authentication depends on verified upstream support and an authorized user-provided file.",
   "tags": [
     "youtube",
     "transcript",

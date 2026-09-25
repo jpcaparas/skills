@@ -32,7 +32,7 @@ The target project scaffold is deterministic on purpose. The plan decides what i
                 └── notification.sh
 ```
 
-Every documented Copilot hook event gets a script stub. Only enabled events are registered in `.github/hooks/copilot-hooks.json`.
+Every event in the bundled manifest gets a script stub. Only enabled events are registered in `.github/hooks/copilot-hooks.json`. This is the helper's fixed layout, not a universal hook architecture or a selected-event-only generation option.
 
 ## Event Script Anatomy
 

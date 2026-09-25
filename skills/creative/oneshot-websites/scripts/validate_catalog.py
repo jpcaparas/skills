@@ -42,6 +42,7 @@ from build_catalog_index import (
 from runtime_contract import (
     BoundedReadError,
     COORDINATOR_MONITORING_CONTRACT,
+    VerificationMode,
     experiment_slug,
     find_likely_mojibake,
     identity_key,
@@ -49,10 +50,12 @@ from runtime_contract import (
     is_appledouble_sidecar,
     parse_json_bounded,
     read_regular_file_bounded,
+    require_unverified_report,
+    verification_mode,
 )
 
 
-STATUSES = {"PLANNED", "RUNNING", "OK", "PARTIAL", "BLOCKED", "ERROR"}
+STATUSES = {"PLANNED", "RUNNING", "OK", "UNVERIFIED", "PARTIAL", "BLOCKED", "ERROR"}
 CLASSIFICATIONS = {"autonomous-one-shot", "rerun", "curated-attempt"}
 GAUNTLET_VERDICTS = {"NOT_READY", "READY", "BLOCKED"}
 GAUNTLET_STOP_REASONS = {
@@ -219,6 +222,7 @@ class PreparedRunContracts:
     directional_contract_version: str
     directional_technical_prompt_required: bool
     directional_evidence_path: Optional[str]
+    verification: VerificationMode | None = None
 
 
 class LocalReferenceParser(HTMLParser):
@@ -1506,11 +1510,12 @@ def validate_provenance_receipt(
         "2.2": ("3.2", True, True, False, True),
         "2.3": ("3.3", True, True, True, True),
         "2.4": ("3.4", True, True, True, True),
+        "2.5": ("3.5", True, True, True, True),
     }
     receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
     if receipt_contract is None:
         errors.append(
-            f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, or 2.4"
+            f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, 2.4, or 2.5"
         )
     (
         expected_run_schema,
@@ -1523,7 +1528,12 @@ def validate_provenance_receipt(
         errors.append(
             f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
         )
-    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2", "2.3", "2.4"}:
+    mode: VerificationMode | None = None
+    try:
+        mode = verification_mode(receipt, run)
+    except ValueError as error:
+        errors.append(f"{receipt_path}: {error}")
+    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2", "2.3", "2.4", "2.5"}:
         if receipt.get("runSchemaVersion") != expected_run_schema:
             errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
         receipt_temporary = object_value(receipt.get("temporary"))
@@ -1544,7 +1554,7 @@ def validate_provenance_receipt(
             errors.append(f"{receipt_path}: temporary contract does not match the prepared run")
     if current_quality_gauntlet_contract:
         expected_quality_gauntlet = {
-            "required": True,
+            "required": mode != "none",
             "contractVersion": "1.0",
             "reportSchemaVersion": "2.1",
         }
@@ -1552,7 +1562,7 @@ def validate_provenance_receipt(
             errors.append(
                 f"{receipt_path}: qualityGauntlet contract does not match the prepared run"
             )
-    current_coordinator_monitoring_contract = receipt_schema == "2.4"
+    current_coordinator_monitoring_contract = receipt_schema in ("2.4", "2.5")
     if current_coordinator_monitoring_contract:
         if receipt.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
             errors.append(
@@ -1584,10 +1594,10 @@ def validate_provenance_receipt(
     directional_technical_prompt_required = False
     directional_evidence_path: Optional[str] = None
     expected_directional_contract_version = (
-        DIRECTIONAL_CONTROL_CONTRACT_VERSION if receipt_schema == "2.4" else "1.0"
+        DIRECTIONAL_CONTROL_CONTRACT_VERSION if receipt_schema in ("2.4", "2.5") else "1.0"
     )
     receipt_directional = receipt.get("directionalControls")
-    if receipt_schema == "2.4" and receipt_directional is None:
+    if receipt_schema in ("2.4", "2.5") and receipt_directional is None:
         errors.append(f"{receipt_path}: current receipt is missing directionalControls")
     if receipt_directional is not None:
         if not isinstance(receipt_directional, dict):
@@ -1606,7 +1616,10 @@ def validate_provenance_receipt(
                     f"{receipt_path}: directionalControls.contractVersion must be exactly "
                     f"{expected_directional_contract_version}"
                 )
-            if basis not in {"prepared-prompt-analysis", "coordinator-required"}:
+            allowed_bases = {"verification-disabled"} if mode == "none" else {"prepared-prompt-analysis", "coordinator-required"}
+            if mode == "none" and required is not False:
+                errors.append(f"{receipt_path}: generation-only runs cannot require a directional gate")
+            if basis not in allowed_bases:
                 errors.append(f"{receipt_path}: directionalControls.basis is invalid")
             if not isinstance(signals, list) or not all(
                 isinstance(signal, str) and bool(signal.strip()) for signal in signals
@@ -1625,7 +1638,7 @@ def validate_provenance_receipt(
                 )
             elif isinstance(evidence_path, str):
                 directional_evidence_path = evidence_path
-            if receipt_schema == "2.4":
+            if receipt_schema in ("2.4", "2.5"):
                 expected_technical_prompt = (
                     {
                         "path": DIRECTIONAL_TECHNICAL_PROMPT_PATH,
@@ -1654,6 +1667,7 @@ def validate_provenance_receipt(
         directional_contract_version=expected_directional_contract_version,
         directional_technical_prompt_required=directional_technical_prompt_required,
         directional_evidence_path=directional_evidence_path,
+        verification=mode,
     )
 
 
@@ -1790,7 +1804,7 @@ def validate_run(
         return
 
     schema_version = run.get("schemaVersion")
-    expected_schemas = {"3.0", "3.1", "3.2", "3.3", "3.4"} if layout == "flat" else {"2.0", "2.1"}
+    expected_schemas = {"3.0", "3.1", "3.2", "3.3", "3.4", "3.5"} if layout == "flat" else {"2.0", "2.1"}
     if not isinstance(schema_version, str) or schema_version not in expected_schemas:
         errors.append(
             f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
@@ -1839,7 +1853,7 @@ def validate_run(
                     if marker != expected_marker:
                         errors.append(f"{marker_path}: marker does not match run identity.{field}")
     if layout == "flat" and parsed_flat_run_id is not None:
-        if isinstance(schema_version, str) and schema_version in {"3.2", "3.3", "3.4"}:
+        if isinstance(schema_version, str) and schema_version in {"3.2", "3.3", "3.4", "3.5"}:
             try:
                 expected_slug = experiment_slug(experiment_name) if experiment_name is not None else None
             except UnicodeEncodeError:
@@ -1910,7 +1924,7 @@ def validate_run(
             else:
                 if not decoded_prompt.strip():
                     errors.append(f"{prompt_path}: preserved prompt must not be blank")
-                if schema_version == "3.4":
+                if schema_version in ("3.4", "3.5"):
                     try:
                         reject_internal_directional_contract_in_prompt(decoded_prompt)
                     except DirectionalControlError as error:
@@ -1936,6 +1950,11 @@ def validate_run(
         prompt_bytes,
         errors,
     )
+    generation_only = prepared_contracts.verification == "none"
+    if generation_only and status == "OK":
+        errors.append(f"{run_path}: generation-only completion must be UNVERIFIED, never OK")
+    if not generation_only and status == "UNVERIFIED":
+        errors.append(f"{run_path}: UNVERIFIED requires receipt-anchored verificationMode none")
     validate_manifest_paths(
         run_path,
         run,
@@ -1943,9 +1962,11 @@ def validate_run(
         prepared_contracts.temporary_cleanup_on_success,
         errors,
     )
+    if prepared_contracts.verification is None:
+        return  # Path safety still applies; invalid consent never authorizes artifact inspection.
     temporary_directory = exact_child(run_path.parent, ".tmp")
     if prepared_contracts.temporary:
-        if prepared_contracts.temporary_cleanup_allowed_on_success and status == "OK":
+        if prepared_contracts.temporary_cleanup_allowed_on_success and status in {"OK", "UNVERIFIED"}:
             try:
                 temporary_candidates = [
                     entry for entry in run_path.parent.iterdir() if entry.name.casefold() == ".tmp"
@@ -1973,7 +1994,7 @@ def validate_run(
         ):
             errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
 
-    if schema_version == "3.4" and status != "OK" and temporary_directory is not None:
+    if schema_version in ("3.4", "3.5") and status not in {"OK", "UNVERIFIED"} and temporary_directory is not None:
         technical_prompt_path = exact_child(temporary_directory, "TECHNICAL_PROMPT.md")
         if prepared_contracts.directional_technical_prompt_required:
             if technical_prompt_path is None or not is_regular_file_within(
@@ -2031,6 +2052,10 @@ def validate_run(
             errors.append(
                 f"{report_path}: schemaVersion must be exactly {expected_report_schema}"
             )
+        if schema_version == "3.5" and report.get("verificationMode") != prepared_contracts.verification:
+            errors.append(f"{report_path}: verificationMode must match the coordinator receipt")
+        elif schema_version != "3.5" and report.get("verificationMode", "gauntlet") != "gauntlet":
+            errors.append(f"{report_path}: historical runs cannot downgrade verificationMode")
         if text_value(report.get("runId")) != run_id:
             errors.append(f"{report_path}: runId must match namespace segment {run_id!r}")
         report_worker_identity = parse_worker_identity(report, report_path, "", errors)
@@ -2067,7 +2092,7 @@ def validate_run(
                 isinstance(item, str) and bool(item.strip()) for item in external_exceptions
             ):
                 errors.append(f"{report_path}: temporary.externalExceptions must be an array of non-blank strings")
-            elif status == "OK":
+            elif status in {"OK", "UNVERIFIED"}:
                 if not isinstance(routing_applied, bool):
                     errors.append(f"{report_path}: successful run must record temporary.routingApplied as true or false")
                 elif routing_applied is False and not external_exceptions:
@@ -2082,7 +2107,12 @@ def validate_run(
                 f"{report_path}: successful run must set artifact.staticDeploymentVerified to true "
                 "after local static-handoff verification; remote publication is never required"
             )
-        if (
+        if generation_only:
+            try:
+                require_unverified_report(report)
+            except ValueError as error:
+                errors.append(f"{report_path}: {error}")
+        elif (
             prepared_contracts.quality_gauntlet
             and "qualityGauntlet" not in report
         ):
@@ -2107,6 +2137,10 @@ def validate_run(
             is_failed_verification(item) for item in verification
         ):
             errors.append(f"{report_path}: successful run must not contain failed verification evidence")
+
+    if generation_only:
+        warnings.append(f"{run_path}: UNVERIFIED output; metadata/provenance only, no artifact inspection")
+        return
 
     index_path = exact_child(artifact_directory, "index.html") if artifact_directory is not None else None
     artifact_tree_valid = True

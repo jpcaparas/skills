@@ -10,7 +10,7 @@ Primary sources:
 
 ## Supported Diagram Types
 
-The current Azure DevOps wiki documentation lists these Mermaid diagram types:
+The April 9, 2026 documentation baseline lists these Mermaid diagram types. Use the target Services/Server documentation version and a rendering check when support is uncertain; newer official target documentation can supersede these limitations.
 
 - `sequenceDiagram`
 - `gantt`
@@ -113,7 +113,7 @@ timeline
 
 ## Routing Rules
 
-- If the user needs a whole page, combine this file with `references/syntax.md`.
+- If the user needs a whole page and its syntax is uncertain, consult `references/syntax.md`.
 - If the user needs a proposal or planning decision tree, read `references/decision-trees.md`.
 - If the user is unsure whether Mermaid belongs on this surface at all, read `references/support-matrix.md`.
 - If the user wants a Mermaid-like code fence language tag, correct them: Mermaid is not a Highlight.js language alias in Azure DevOps wiki docs. Read `references/code-languages.md`.
@@ -126,4 +126,3 @@ timeline
 - `references/code-languages.md`
 - `references/gotchas.md`
 - `templates/mermaid-starter.md`
-

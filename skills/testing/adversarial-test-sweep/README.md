@@ -14,7 +14,7 @@ npx skills add jpcaparas/skills --skill adversarial-test-sweep
 - Systematic attack families for malformed input, boundaries, state, concurrency, dependencies, resources, and harness false positives
 - Research-grounded routes for combinatorial, property, fuzz, metamorphic, model-based, differential, mutation, schedule, and fault-injection testing
 - Evidence-based test strengthening and pruning without treating coverage or suite size as quality
-- Minimal replayable regressions for every confirmed defect
+- Replayable findings and durable regressions for authorized repairs
 - Explicit budgets, safety boundaries, stopping criteria, and residual-risk reporting
 
 `SKILL.md` is the canonical runbook. The references, templates, evals, validators, and presentation files support that contract without replacing it.

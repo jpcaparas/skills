@@ -5,15 +5,15 @@
     {
       "id": 1,
       "name": "bootstrap-current-date-smoke",
-      "prompt": "Before answering anything else, tell me what date and timezone this session is using right now.",
-      "expected_output": "Runs the temporal capture workflow, reports the current local and UTC context, and routes to references/bootstrap.md.",
+      "prompt": "This session has no reliable clock anchor yet. Before answering anything else, tell me what date and timezone the host is using right now.",
+      "expected_output": "Uses the capture workflow to establish the missing anchor and reports the host context without assuming it is the user's timezone.",
       "assertions": [
         {
           "text": "Uses scripts/capture_temporal_context.py to establish the session anchor",
           "type": "functional"
         },
         {
-          "text": "Routes to references/bootstrap.md",
+          "text": "Captured trace shows the clock capture, not an external web search or a mandatory recency_guard invocation",
           "type": "disclosure"
         }
       ],
@@ -30,7 +30,7 @@
       "id": 2,
       "name": "latest-model-live-verification",
       "prompt": "What is the latest OpenAI model for coding right now? Do not give me a stale answer.",
-      "expected_output": "Classifies the prompt as live-verification-required, captures the current date context, and insists on official live documentation instead of memory.",
+      "expected_output": "Recognizes a volatile external claim, reuses a sufficient time anchor or captures when needed, and consults live official documentation rather than memory. The guard command is optional.",
       "assertions": [
         {
           "text": "Treats the prompt as live-verification-required",
@@ -141,11 +141,11 @@
     {
       "id": 7,
       "name": "disclosure-bootstrap-file",
-      "prompt": "Ground this session in the current clock before you answer anything else.",
+      "prompt": "We have no reliable time anchor yet. Use the skill's bootstrap reference to ground this session in the current clock before answering.",
       "expected_output": "Routes directly to references/bootstrap.md and the capture script.",
       "assertions": [
         {
-          "text": "Routes to references/bootstrap.md",
+          "text": "Captured trace records a read of references/bootstrap.md and clock capture, with no unrelated live-source research",
           "type": "disclosure"
         }
       ],
@@ -160,12 +160,12 @@
     },
     {
       "id": 8,
-      "name": "disclosure-gpt4o-drift",
-      "prompt": "Why do some agents still talk about GPT-4o like it's the main current model family?",
-      "expected_output": "Routes to references/gotchas.md and explains model-family drift as a stale-memory problem that requires live verification.",
+      "name": "disclosure-product-version-drift",
+      "prompt": "Hypothetical example: an agent keeps treating Model A as the default even after we supplied an official release notice replacing it with Model B. Explain this failure using the skill's gotchas, without claiming anything about real current models.",
+      "expected_output": "Uses the product-version drift gotcha to explain stale-memory failure without inventing a real current model lineup or browsing an explicitly hypothetical question.",
       "assertions": [
         {
-          "text": "Routes to references/gotchas.md",
+          "text": "Captured trace records a read of references/gotchas.md, not live-model research or unrelated bootstrap tooling",
           "type": "disclosure"
         },
         {
@@ -185,7 +185,7 @@
       "id": 9,
       "name": "live-price-verification",
       "prompt": "What's Tesla stock price today?",
-      "expected_output": "Treats the prompt as live-verification-required and ties the answer to the captured local date.",
+      "expected_output": "Verifies the volatile price from a live source, reports its as-of time and market context, and uses the user's timezone where relative dates matter. Does not run redundant clock tooling when the anchor is sufficient.",
       "assertions": [
         {
           "text": "Classifies the prompt as live-verification-required",
@@ -208,7 +208,7 @@
     {
       "id": 10,
       "name": "long-horizon-refresh",
-      "prompt": "This session started this morning and now it's after midnight. Do I need to refresh the date context before I send the final answer?",
+      "prompt": "The only session clock anchor is from this morning; now it's after midnight in my timezone. Do I need to refresh the date context before I send a final answer about today's schedule?",
       "expected_output": "Routes to references/long-horizon.md and recommends rerunning the temporal capture before finalizing.",
       "assertions": [
         {
@@ -228,6 +228,39 @@
         "references/long-horizon.md",
         "scripts/capture_temporal_context.py"
       ]
+    },
+    {
+      "id": 11,
+      "name": "fresh-session-clock-no-tool-ceremony",
+      "prompt": "In this controlled session the trusted harness clock was captured seconds ago as 2026-04-09T14:00:00+12:00 in my known timezone Pacific/Auckland. No boundary is near. What is today's date here? One line, please.",
+      "expected_output": "Answers April 9, 2026 in Pacific/Auckland directly from the fresh session anchor, without recapturing or browsing.",
+      "assertions": [
+        { "text": "Output gives 2026-04-09 or April 9, 2026 in Pacific/Auckland in one line.", "type": "functional" },
+        { "text": "Captured trace contains no capture_temporal_context.py, recency_guard.py, or web call.", "type": "negative" }
+      ],
+      "tags": ["smoke", "scope", "disclosure"]
+    },
+    {
+      "id": 12,
+      "name": "user-zone-wins-at-day-boundary",
+      "prompt": "For this fixed-time exercise, the trusted clock is 2026-04-09T00:30:00Z and the orb's timezone is UTC. I am in America/Los_Angeles. What date does 'today' mean for me at that instant?",
+      "expected_output": "Uses timezone-aware boundary math for the supplied instant and answers April 8, 2026 in America/Los_Angeles (17:30 PDT), not the orb's April 9 date. Does not replace the exercise instant with actual now.",
+      "assertions": [
+        { "text": "Resolves today to 2026-04-08 in America/Los_Angeles with the correct DST offset of UTC-07:00.", "type": "functional" },
+        { "text": "Captured trace shows a timezone-aware calculation for the supplied instant; no web search is needed for clock-only math.", "type": "verification" }
+      ],
+      "tags": ["edge", "timezone", "relative-dates"]
+    },
+    {
+      "id": 13,
+      "name": "advisory-guard-does-not-force-browsing",
+      "prompt": "A recency_guard result labeled this live-verify because I said 'current': explain the current function `def twice(x): return x * 2`. All relevant code is right here.",
+      "expected_output": "Explains the supplied function directly, overriding the keyword-only classification without treating it as permission to skip verification of genuinely volatile claims.",
+      "assertions": [
+        { "text": "Explains that twice returns x multiplied by 2 without making external current-state claims.", "type": "functional" },
+        { "text": "Captured trace contains no web research or clock/guard rerun solely to satisfy the heuristic result.", "type": "negative" }
+      ],
+      "tags": ["negative", "scope"]
     }
   ]
 }

@@ -4,7 +4,7 @@
 
 This file defines the shared language and scoring boundaries for `isitagentready`.
 
-The authoritative external baseline for this skill is Cloudflare's `isitagentready.com` site plus the Cloudflare blog post published on April 17, 2026:
+The historical external baseline for this skill is Cloudflare's `isitagentready.com` site retrieved April 19, 2026, plus the blog post published April 17, 2026:
 
 - `https://isitagentready.com/`
 - `https://blog.cloudflare.com/agent-readiness/`
@@ -15,10 +15,10 @@ Use these shared conventions before reading the deeper workflow and per-signal r
 
 | Term | Meaning |
 | --- | --- |
-| official scan | The runtime result returned by `https://isitagentready.com/api/scan` for a deployed URL, including `level`, `levelName`, `checks`, and `nextLevel` |
+| official scan | The scanner's reported result for a URL and time; the April 2026 API used `https://isitagentready.com/api/scan` and fields including `level`, `levelName`, `checks`, and `nextLevel` |
 | repository assessment | The codebase-based analysis this skill produces when a live scan is unavailable or incomplete |
 | production URL | The real deployed URL that corresponds to the repository being audited |
-| scored signal | A check that contributes to the current score dimensions described in the Cloudflare blog |
+| scored signal | A check contributing to the score in the recorded scanner version or dated scoring documentation |
 | supporting signal | A useful adjacent signal, such as `llms.txt` or `llms-full.txt`, that informs readiness but may not be part of the default score |
 | neutral signal | A check the official scan can return as informational or effectively optional for some site types |
 | applicability | The reasoning for whether a signal should be treated as required, optional, neutral, or out of scope for the audited repo |
@@ -26,37 +26,37 @@ Use these shared conventions before reading the deeper workflow and per-signal r
 ## Shared Setup
 
 1. Resolve the repository root before creating files or drawing conclusions.
-2. Ask the user for the production URL when live verification is possible and they did not already provide it.
-3. Prefer a browser-first pass when `{{ skill:agent-browser }}` is available.
-4. Create the report packet locally with `python3 scripts/create_report_packet.py --repo . [--url ...]`.
-5. Use `python3 scripts/scan_site.py --url <production-url> --output <report-dir>/scan-results.json` when network access is available.
+2. Ask for a missing or ambiguous production URL when live verification is needed; continue independent source work.
+3. Choose inspection order by evidence needs and explicit user instructions; require rendered browser evidence for browser-usability claims.
+4. Create files only when requested; `scripts/create_report_packet.py` is optional.
+5. Use `scripts/scan_site.py` only for an authorized external scan, with consent before disclosing private targets and without transmitting credentials.
 6. Keep runtime evidence, repo evidence, and unknowns separate in the report.
 
 ## Score Boundaries
 
-Cloudflare's April 17, 2026 launch post says the current score is based on four dimensions:
+Cloudflare's April 17, 2026 launch post described four score dimensions:
 
 - Discoverability
 - Content
 - Bot Access Control
 - Capabilities
 
-The same post also says commerce checks are evaluated but do not currently count toward the score.
+That post described commerce checks as evaluated but non-scoring. Treat these dimensions and weights as a dated baseline; use the actual scan snapshot and current official documentation for a current scoring claim. If no version is exposed, record the scan time and say the version was not reported.
 
 Do not flatten everything into a single yes/no readiness answer. Preserve the category boundaries and note when a signal is currently non-scoring, optional, or neutral.
 
 ## Status Vocabulary
 
-Use these labels consistently in the report:
+Record source status and deployed status separately. For example, `source: pass; deployed: unknown` means implementation evidence exists but deployment has not been verified. Use these labels with their evidence scope:
 
 | Status | Meaning |
 | --- | --- |
-| pass | Confirmed in production or directly evidenced in repo and consistent with expected behavior |
-| partial | Some implementation exists, but it is incomplete, inconsistent, or unverified in production |
-| fail | Missing, contradicted, or clearly non-compliant |
+| pass | Confirmed by evidence at the named layer; a deployed pass needs runtime evidence, and browser usability needs rendered browser evidence |
+| partial | The assessed layer is demonstrably incomplete or inconsistent; do not use this merely to hide an unverified deployment |
+| fail | Missing or contradicted at the assessed layer; absent source alone is not a deployed failure |
 | neutral | Informational only for this site type, or reported as neutral by the official scan |
 | not applicable | The product does not expose the capability the signal is meant to describe |
-| unknown | Evidence was blocked or insufficient; more runtime verification is needed |
+| unknown | Evidence at this layer was blocked, not collected, or insufficient |
 
 ## Navigation Guide
 
@@ -71,4 +71,4 @@ Use these labels consistently in the report:
 
 - A live scan failure can still be a deployment or CDN issue even when the repo has the right code.
 - A source-code hit does not prove the deployed site exposes the behavior.
-- `llms.txt` and `llms-full.txt` are useful signals, but Cloudflare's default score emphasizes markdown negotiation instead.
+- In the April 2026 baseline, Cloudflare's default score emphasized markdown negotiation rather than `llms.txt` and `llms-full.txt`. These are distinct behaviors regardless of scoring changes.

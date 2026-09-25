@@ -11,7 +11,7 @@ Audit the target project first, then scaffold GitHub Copilot hooks with a determ
 What is the user asking for?
 
 - New repository-level Copilot hooks:
-  Verify the live official GitHub hook docs, audit the project, choose a hook plan, then scaffold `.github/hooks/copilot-hooks.json`.
+  Audit the project and target cloud/CLI contract, resolve uncertain semantics from relevant official docs, choose a hook plan, then scaffold `.github/hooks/copilot-hooks.json`.
 - Existing `.github/hooks/*.json`, `.github/copilot/settings*.json`, or hook scripts:
   Audit what already exists, choose `additive` or `overhaul`, then regenerate only the managed hook layer.
 - Copilot CLI user-level hooks:
@@ -21,7 +21,7 @@ What is the user asking for?
 - A prompt asks for Copilot cloud agent environment setup:
   Use `{{ skill:scaffold-github-cloud-agent-environment }}` instead; this skill is for hooks, not runner setup workflows.
 - Explanation only, not implementation:
-  Read `references/hook-events.md` and `references/scaffold-layout.md`, then answer without editing files.
+  Use the reading guide to select only the reference needed for the question, then answer without editing files.
 
 ## Quick Reference
 
@@ -38,21 +38,21 @@ What is the user asking for?
 
 ## Non-Negotiable Workflow
 
-1. Verify the live official GitHub Copilot hook docs before planning a real scaffold.
-2. Compare the live event list, config file shape, matcher rules, command fields, output decision contracts, cloud-vs-CLI support, and exit-code semantics with `assets/hook-events.json`.
+1. Use repository and installed-version evidence for stable repairs; consult relevant live official docs when evidence is insufficient, stale, or event semantics will change.
+2. Compare the affected event, config, matcher, output, cloud-vs-CLI, or exit-code contract with `assets/hook-events.json`.
 3. Audit the target project in detail before deciding which events to enable.
 4. Inspect existing `.github/hooks/*.json`, `.github/copilot/settings.json`, `.github/copilot/settings.local.json`, `.github/copilot/`, `AGENTS.md`, and related automation before choosing a merge mode.
 5. Inspect `.claude/settings*.json` only as inherited Copilot CLI context because the official docs say Copilot CLI can read cross-tool Claude settings. Do not write generated Copilot hooks there.
 6. Produce or update a concrete hook plan JSON. Keep the scaffold deterministic by putting project-specific judgment into the plan, not into the scaffold script.
 7. Prefer `.github/hooks/copilot-hooks.json` for generated repository hooks because `.github/hooks/*.json` is the documented repository-level location for both Copilot cloud agent and Copilot CLI.
 8. Prefer repo-owned shared scripts for behavior that may move to Codex, Devin, OpenCode, Git hooks, GitHub Actions, or local shell usage. Keep generated Copilot hook files as thin adapters around those scripts.
-9. Scaffold every current documented Copilot hook event as a commented bash stub under the managed hook root, even if the event stays disabled in `.github/hooks/copilot-hooks.json`.
+9. The bundled generator renders every manifest event as a commented Bash stub under the managed hook root, even if it stays disabled in `.github/hooks/copilot-hooks.json`; it has no selected-event-only layout mode.
 10. Wire only the enabled events into `.github/hooks/copilot-hooks.json` so the project does not pay runtime cost for inactive stubs.
 11. Do not copy Devin's exit-code-2 model. In Copilot, `preToolUse` denies through stdout JSON; `permissionRequest` treats exit code `2` as a CLI-only deny; other events mostly treat exit `2` as a warning or event-specific context.
 12. Regenerate `.github/copilot/hooks/README.md` so the project always has a readable event map.
 13. Tell the user to restart Copilot CLI after hook config changes because the official CLI docs say changes load when the CLI starts.
 
-## Live Docs First
+## Contract Evidence
 
 The official GitHub docs are the source of truth:
 
@@ -60,16 +60,11 @@ The official GitHub docs are the source of truth:
 - `https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks`
 - `https://docs.github.com/en/copilot/reference/hooks-reference`
 
-If the official docs and this skill disagree, follow the official docs and update the local scaffold inputs before writing project files.
+If official docs and this skill disagree, resolve the target cloud/CLI version's contract and propose a correction in the source repository. Change canonical scaffold inputs only when package maintenance is in scope; never silently patch the installed skill. Do not generate unsupported behavior while that correction is pending.
 
 ## Progressive Maintainer Drift Check
 
-When updating this skill itself:
-
-1. Live-fetch the three official GitHub Copilot hook docs pages on the day of the edit.
-2. Compare the current event list, config locations, hook entry fields, matcher rules, payload aliases, output decisions, cloud-vs-CLI differences, `COPILOT_HOME`, and exit-code semantics with `assets/hook-events.json`.
-3. If drift exists, update the whole scaffold surface together: `assets/hook-events.json`, `references/hook-events.md`, scaffold generators, templates, plan examples, validators, tests, evals, and thin wrappers.
-4. If no drift exists, still mention that the live docs were checked. Do not update this skill from memory or by copying assumptions from Claude Code, Codex, Devin, or OpenCode.
+Live-fetch the three official GitHub Copilot hook docs only when an open cross-surface contract question needs all three; otherwise read the relevant page. Record the affected passage, source/version or date, proposed change, and regression check. Follow the root `SKILL.md` maintenance route to reconcile affected canonical files only when authorized. Do not update this skill from memory or infer Copilot capability from another harness. Stable repairs and wording edits need no full docs sweep.
 
 ## Project Analysis Rules
 
@@ -113,10 +108,10 @@ Allow these parts to stay project-specific:
 
 ## Scaffold Rules
 
-- Generate bash scripts for the managed project hook runtime. Add PowerShell only when the project specifically needs Windows-native CLI hooks.
+- The bundled generator emits Bash stubs. Suitable repo-owned programs can run behind that protocol boundary through supported plan scripts/commands. A Windows-native PowerShell adapter needs separate, verified implementation; do not imply the Bash helper generates it.
 - Comment the generated bash stubs in plain language.
 - Structure generated event scripts as `main()` plus a single `handle_event()` edit point so humans and agents can see the control flow quickly.
-- Support language-agnostic `scripts` entries in the hook plan for reusable repo-owned scripts and `commands` entries for existing repo commands. Do not hard-code package managers, frameworks, or example toolchains into generated scripts.
+- The helper runs `scripts[].path` through Bash. For non-Bash programs, use a Bash wrapper or `commands[].command` with an explicit interpreter; a shebang alone does not change the helper's invocation. Do not hard-code a project's toolchain into generated scripts.
 - Put shared behavior in path-agnostic repo scripts, usually under `scripts/`, and pass a harness argument such as `copilot` when output protocols differ.
 - Default to `.github/hooks/copilot-hooks.json` for repository config and `.github/copilot/hooks/generated` for generated adapter scripts.
 - Keep one managed script per event so the event map stays obvious.
