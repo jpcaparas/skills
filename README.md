@@ -346,6 +346,16 @@ Production skill for converting YouTube video transcripts into structured dossie
 
 ### Creative
 
+#### `elevenlabs-media`
+
+`npx skills add jpcaparas/skills --skill elevenlabs-media`
+
+<p align="center">
+  <img src="skills/creative/elevenlabs-media/skill-card.png" alt="16-bit side-scrolling pixel art badge for elevenlabs-media" width="480">
+</p>
+
+ElevenLabs media generation and transformation across speech, dialogue, transcription, dubbing, sound effects, isolation, music, images and video. Includes sourced API contracts, a safe Python HTTP helper, offline regressions and explicit live-verification limits.
+
 #### `interface-design-taste`
 
 `npx skills add jpcaparas/skills --skill interface-design-taste`

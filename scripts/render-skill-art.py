@@ -47,6 +47,7 @@ SKILL_SCENES = {
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
     "devils-advocate": "two opposing debate champions facing each other across a glowing balance arena, with one mirrored argument shield, pressure-test sparks, and a central evidence gem",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
+    "elevenlabs-media": "a midnight soundstage where a glowing microphone, rippling sound ribbons, a small keyboard, and a film projector transform an amber spark into music and a luminous miniature landscape, with clear separate audio and visual paths",
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",
     "heuristic-to-deterministic": "a workshop converting fuzzy clue clouds into locked gears, check rails, and repeatable test gems",
     "idiomatic": "a working clockwork city whose tangled rails are carefully aligned with its original foundations in small bridge sections, with a protective scaffold around one delicate old mechanism, test gems at safe stopping platforms, and a clear route toward a harmonious skyline",

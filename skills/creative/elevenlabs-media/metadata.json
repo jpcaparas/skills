@@ -1,0 +1,10 @@
+{
+  "name": "elevenlabs-media",
+  "display_name": "ElevenLabs Media",
+  "version": "1.0.0",
+  "entrypoint": "SKILL.md",
+  "category": "creative",
+  "requires": {"env": ["ELEVENLABS_API_KEY"], "bins": ["python3"]},
+  "optional_bins": ["ffmpeg", "ffprobe"],
+  "runtime": "Python >=3.11, standard library only"
+}

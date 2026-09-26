@@ -1,0 +1,21 @@
+[
+  {"query":"Use ElevenLabs to narrate this product walkthrough and supply word timings.","should_trigger":true},
+  {"query":"Make a two-speaker scene with Eleven v3, preserving the interruptions.","should_trigger":true},
+  {"query":"With my ElevenLabs key, change this recording to an authorized narrator voice.","should_trigger":true},
+  {"query":"Transcribe the meeting with Scribe and separate speakers, then export subtitles.","should_trigger":true},
+  {"query":"I already have the transcript; align it with the audio using ElevenLabs.","should_trigger":true},
+  {"query":"Make a seamless rain loop with ElevenLabs sound effects.","should_trigger":true},
+  {"query":"Clean background noise off this voice note through ElevenLabs.","should_trigger":true},
+  {"query":"Compose an original instrumental bed and split its stems with Eleven Music.","should_trigger":true},
+  {"query":"Use ElevenLabs to make an image and animate it into a short video.","should_trigger":true},
+  {"query":"Dub the source video into French and correct the translation before rerendering.","should_trigger":true},
+  {"query":"Design an original ElevenLabs voice, audition it, and save only my selected preview.","should_trigger":true},
+  {"query":"Our ElevenLabs WebSocket closes before the last spoken phrase. Diagnose the protocol.","should_trigger":true},
+  {"query":"Generate a podcast from these source notes through ElevenLabs Studio.","should_trigger":true},
+  {"query":"My ElevenLabs API key can generate speech but GET /v1/models returns missing_permissions.","should_trigger":true},
+  {"query":"Create an infographic with the Gemini API directly, not ElevenLabs.","should_trigger":false},
+  {"query":"Summarize this YouTube transcript; do not create audio.","should_trigger":false},
+  {"query":"Use local FFmpeg only to trim an existing MP3. No external services.","should_trigger":false},
+  {"query":"Change ElevenLabs workspace members and billing settings.","should_trigger":false},
+  {"query":"Configure outbound phone campaigns in ElevenLabs Agents.","should_trigger":false}
+]

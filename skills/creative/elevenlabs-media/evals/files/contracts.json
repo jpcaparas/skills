@@ -1,0 +1,21 @@
+{
+  "description":"Synthetic request examples for offline checking against an explicitly downloaded official OpenAPI document. IDs are not account resources. Schema validity does not prove entitlement or cross-field runtime acceptance.",
+  "requests":[
+    {"name":"tts","path":"/v1/text-to-speech/{voice_id}","method":"post","content_type":"application/json","body":{"text":"The lantern is blue.","model_id":"eleven_multilingual_v2"}},
+    {"name":"dialogue","path":"/v1/text-to-dialogue","method":"post","content_type":"application/json","body":{"model_id":"eleven_v3","inputs":[{"text":"[curious] Ready?","voice_id":"VOICE_A"},{"text":"Absolutely.","voice_id":"VOICE_B"}],"settings":{"stability":0.5}}},
+    {"name":"sfx","path":"/v1/sound-generation","method":"post","content_type":"application/json","body":{"text":"Light rain on a metal roof.","model_id":"eleven_text_to_sound_v2","duration_seconds":4,"loop":true}},
+    {"name":"voice-design","path":"/v1/text-to-voice/design","method":"post","content_type":"application/json","body":{"voice_description":"A warm adult narrator with measured pacing and clear diction.","model_id":"eleven_ttv_v3","auto_generate_text":true}},
+    {"name":"music-prompt","path":"/v1/music","method":"post","content_type":"application/json","body":{"model_id":"music_v2_5","prompt":"Original marimba and acoustic bass.","music_length_ms":5000,"force_instrumental":true}},
+    {"name":"music-chunks","path":"/v1/music","method":"post","content_type":"application/json","body":{"model_id":"music_v2_5","composition_plan":{"chunks":[{"text":"[Intro]","duration_ms":10000,"positive_styles":["marimba","instrumental"],"negative_styles":["vocals"]},{"text":"[Outro]\nMorning light is on its way","duration_ms":5000,"positive_styles":["clear vocals"]}]}}},
+    {"name":"music-plan","path":"/v1/music/plan","method":"post","content_type":"application/json","body":{"prompt":"Original acoustic instrumental.","model_id":"music_v2_5","music_length_ms":5000}},
+    {"name":"music-reference","path":"/v1/music","method":"post","content_type":"application/json","body":{"model_id":"music_v2_5","composition_plan":{"chunks":[{"song_id":"SONG_ID","range":{"start_ms":0,"end_ms":5000}},{"text":"[Outro]","duration_ms":5000,"positive_styles":["piano"]}]}}},
+    {"name":"gemini-image","path":"/v1/flows/image","method":"post","content_type":"application/json","body":{"model_id":"gemini-3.1-flash-image","prompt":"A lantern at dusk.","aspect_ratio":"16:9","resolution":"1K"}},
+    {"name":"transparent-image","path":"/v1/flows/image","method":"post","content_type":"application/json","body":{"model_id":"gpt-image-1.5","prompt":"An isolated lantern.","background":"transparent","quality":"low","aspect_ratio":"1:1"}},
+    {"name":"video","path":"/v1/flows/video","method":"post","content_type":"application/json","body":{"model_id":"veo-3.1-fast-generate-001","prompt":"A slow camera move by a lantern.","duration_secs":4,"resolution":"720p","generate_audio":false}},
+    {"name":"video-dependency","path":"/v1/flows/video","method":"post","content_type":"application/json","body":{"model_id":"veo-3.1-fast-generate-001","prompt":"Gentle camera motion.","start_frame":{"type":"generation","generation_id":"GENERATION_ID"},"duration_secs":8}},
+    {"name":"aurora","path":"/v1/flows/video","method":"post","content_type":"application/json","body":{"model_id":"creatify-aurora","image":{"type":"asset","asset_id":"IMAGE_ASSET"},"audio":{"type":"asset","asset_id":"AUDIO_ASSET"},"resolution":"480p"}},
+    {"name":"dubbing-language","path":"/v1/dubbing/project/{project_id}/language","method":"post","content_type":"application/json","body":{"target_language":"fr"}},
+    {"name":"template-run","path":"/v1/flows/templates/{template_id}/runs","method":"post","content_type":"application/json","body":{"inputs":{"prompt":"A lantern at dusk."},"version_id":"latest"}},
+    {"name":"podcast","path":"/v1/studio/podcasts","method":"post","content_type":"application/json","body":{"model_id":"eleven_multilingual_v2","mode":{"type":"conversation","conversation":{"host_voice_id":"HOST_VOICE","guest_voice_id":"GUEST_VOICE"}},"source":{"type":"text","text":"A short original explanation of how a lighthouse works."},"quality_preset":"standard","duration_scale":"short"}}
+  ]
+}
