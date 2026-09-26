@@ -76,6 +76,16 @@ Production skill for surgically explaining codebases, subsystems, and feature fl
 
 Production skill for turning session learnings, repeated heuristics, and manual review habits into deterministic scripts, validators, normalizers, fixtures, CI checks, and hook-ready workflows that future agents can reuse instead of guessing.
 
+#### `idiomatic`
+
+`npx skills add jpcaparas/skills --skill idiomatic`
+
+<p align="center">
+  <img src="skills/engineering/idiomatic/skill-card.png" alt="16-bit side-scrolling pixel art badge for idiomatic" width="480">
+</p>
+
+Evidence-backed workspace audits and phased plans for aligning legacy code with its actual frameworks, libraries and paradigms. Protects fragile behaviour, distinguishes conventions from preferences, plans safe data preparation, and supports endorsement-first handoffs or authorised execution.
+
 #### `implicit-token-savings`
 
 `npx skills add jpcaparas/skills --skill implicit-token-savings`

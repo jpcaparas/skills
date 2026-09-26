@@ -1,0 +1,12 @@
+[
+  {"query": "Use idiomatic to plan how this Laravel and Next.js workspace should follow their native conventions.", "should_trigger": true},
+  {"query": "Our legacy app fights its framework. Propose a staged cleanup we can pause between customer work; protect the strange billing integration.", "should_trigger": true},
+  {"query": "Review this mixed-language workspace and give leadership an evidence-backed normalisation roadmap, with a handoff for future coding sessions.", "should_trigger": true},
+  {"query": "Resume the approved idiomatic plan and implement the next safe local phase without touching production.", "should_trigger": true},
+  {"query": "Assess whether our functional library needs structural changes to fit its ecosystem, without imposing a web framework.", "should_trigger": true},
+  {"query": "Explain which modules call the invoice parser. I only need an architecture map, not recommendations.", "should_trigger": false},
+  {"query": "Fix this one Laravel validation bug and add a regression. Don't audit or restructure the project.", "should_trigger": false},
+  {"query": "Format this TypeScript file with the existing formatter.", "should_trigger": false},
+  {"query": "Rewrite this email in idiomatic English.", "should_trigger": false},
+  {"query": "Review this PR for correctness; don't propose a workspace-wide framework migration.", "should_trigger": false}
+]

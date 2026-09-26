@@ -49,6 +49,7 @@ SKILL_SCENES = {
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",
     "heuristic-to-deterministic": "a workshop converting fuzzy clue clouds into locked gears, check rails, and repeatable test gems",
+    "idiomatic": "a working clockwork city whose tangled rails are carefully aligned with its original foundations in small bridge sections, with a protective scaffold around one delicate old mechanism, test gems at safe stopping platforms, and a clear route toward a harmonious skyline",
     "implicit-token-savings": "a compact token backpack moving through a narrow efficient corridor",
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",
     "isitagentready": "a checkpoint scanner testing a website gate with robot-readable path beacons",
