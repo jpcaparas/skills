@@ -7,9 +7,11 @@ import os
 import tempfile
 import unittest
 from pathlib import Path
+from typing import Literal
 from unittest.mock import patch
 
 from playwright.async_api import Error as PlaywrightError
+from playwright.async_api import Page, Response
 
 import browser_session
 from browser_session import BrowserError, open_browser_session
@@ -74,6 +76,44 @@ class BrowserClockTests(unittest.IsolatedAsyncioTestCase):
                     })
                     self.assertEqual(await session.evaluate("[Date.now(), performance.now()]"),
                                      [946684800080, 80])
+
+    async def test_navigation_pauses_before_a_native_bootstrap_tick(self) -> None:
+        navigate = Page.goto
+
+        async def navigate_with_native_tick(
+            page: Page,
+            url: str,
+            *,
+            timeout: float | None = None,
+            wait_until: Literal["commit", "domcontentloaded", "load", "networkidle"] | None = None,
+            referer: str | None = None,
+        ) -> Response | None:
+            # Reproduce the pinned driver's native ticker running before the
+            # artifact's first clock read. Drive its scheduling seam directly,
+            # without a real-time sleep or replacing the fake timer APIs.
+            # https://github.com/microsoft/playwright/blob/v1.62.0/packages/injected/src/clock.ts
+            await page.add_init_script("""(() => {
+              const clock = globalThis.__pwClock.controller;
+              if (clock._realTime) {
+                const platform = clock._embedder;
+                const nativeNow = platform.performanceNow;
+                const lateTick = clock._realTime.lastSyncTicks + 143;
+                platform.performanceNow = () => lateTick;
+                try { clock._syncRealTime(); }
+                finally { platform.performanceNow = nativeNow; }
+              }
+              window.__CLOCK_BOOTSTRAP_TICK_DELIVERED__ = true;
+            })()""")
+            return await navigate(page, url, timeout=timeout, wait_until=wait_until, referer=referer)
+
+        with patch.object(Page, "goto", new=navigate_with_native_tick):
+            async with open_browser_session(self.server.url, self.executable) as session:
+                self.assertEqual(await session.evaluate(
+                    "[window.__CLOCK_BOOTSTRAP_TICK_DELIVERED__, Date.now(), performance.now()]"
+                ), [True, 946684800000, 0])
+                await session.advance(16)
+                self.assertEqual(await session.evaluate("[Date.now(), performance.now()]"),
+                                 [946684800016, 16])
 
     async def test_async_probe_registers_before_advancing_clock(self) -> None:
         async with open_browser_session(self.server.url, self.executable) as session:

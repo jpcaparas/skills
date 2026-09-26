@@ -125,6 +125,11 @@ async def open_browser_session(url: str, executable: Path) -> AsyncIterator[Brow
                 # running interval whose RPC latency drifts performance.now on reload.
                 # https://playwright.dev/python/docs/clock
                 await page.clock.pause_at(CLOCK_EPOCH_SECONDS)
+                # Playwright 1.62 lazily replays that pause after navigation. Read
+                # before its native bootstrap ticker can advance monotonic time.
+                # Context-init registration order is a pinned-Chromium assumption
+                # covered by the forced bootstrap-tick regression.
+                await context.add_init_script("void Date.now();")
                 await page.goto(url, wait_until="load", timeout=OPERATION_TIMEOUT_SECONDS * 1000)
             yield PlaywrightSession(page)
         finally:
