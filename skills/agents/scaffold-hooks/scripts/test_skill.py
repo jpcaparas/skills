@@ -551,6 +551,14 @@ def test_skill(skill_path: Path) -> dict:
         results["errors"].append("scripts/scaffold_all_hooks.sh must be executable")
         results["passed"] = False
 
+    results["integration_checks"]["total"] += 1
+    security = run([sys.executable, str(skill_path / "scripts/test_scaffold_security.py")])
+    if security.returncode == 0:
+        results["integration_checks"]["passed"] += 1
+    else:
+        results["errors"].append(f"Scaffold security regressions failed:\n{security.stdout}\n{security.stderr}")
+        results["passed"] = False
+
     # The integration suite executes copied harness scripts. Keep its temporary
     # tree on the skill filesystem so it also works when system temp is noexec.
     with tempfile.TemporaryDirectory(

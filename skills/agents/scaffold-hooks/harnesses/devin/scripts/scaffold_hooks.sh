@@ -690,6 +690,10 @@ esac
 HOOKS_TARGET_REL="$(jq -r '.hooks_target // ".devin/hooks.v1.json"' "$PLAN_FILE")"
 MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
 
+source "$SCRIPT_DIR/scaffold_paths.sh"
+validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_TARGET_REL" hooks_target
+validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_ROOT_REL" managed_root tree
+
 case "$HOOKS_TARGET_REL" in
     .devin/hooks.v1.json)
         ;;

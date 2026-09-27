@@ -10,7 +10,7 @@ set -euo pipefail
 usage() {
     cat <<'EOF'
 Usage:
-  scaffold_hooks.sh --project DIR --plan FILE [--mode additive|overhaul] [--home DIR] [--dry-run]
+  scaffold_hooks.sh --project DIR --plan FILE [--mode additive|overhaul] [--home DIR] [--allow-global-targets] [--dry-run]
 EOF
 }
 
@@ -143,10 +143,30 @@ cleanup_legacy_plugin_scaffold() {
     local legacy_plugin_root
     legacy_plugin_root="$(resolve_target_path "$legacy_plugin_root_value" "$PROJECT_ROOT" "$HOME_ROOT")"
 
+    validate_scaffold_path "$PROJECT_ROOT" "$legacy_plugin_root_value" legacy_plugin_root tree
+    local managed_files rel_path cleanup_path
+    managed_files="$(jq -r '
+        (.managed_files // [])
+        | if type != "array" then error("managed_files must be an array")
+          elif all(.[]; type == "string" and length > 0) then .[]
+          else error("managed_files must contain non-empty paths") end
+    ' "$legacy_manifest")"
+    while IFS= read -r rel_path; do
+        [ -n "$rel_path" ] || continue
+        validate_scaffold_path "$legacy_plugin_root" "$rel_path" legacy_managed_file
+    done <<< "$managed_files"
+    for cleanup_path in .opencode/package.json .opencode/package-lock.json \
+        .opencode/bun.lock .opencode/bun.lockb .opencode/node_modules .opencode/.gitignore; do
+        validate_scaffold_path "$PROJECT_ROOT" "$cleanup_path" legacy_cleanup
+    done
+    if [ "$DRY_RUN" = "true" ]; then
+        return 0
+    fi
+
     while IFS= read -r rel_path; do
         [ -n "$rel_path" ] || continue
         rm -f "$legacy_plugin_root/$rel_path"
-    done < <(jq -r '.managed_files[]? // empty' "$legacy_manifest")
+    done <<< "$managed_files"
 
     if [ -f "$legacy_plugin_root/README.md" ] && grep -q 'OpenCode Hooks' "$legacy_plugin_root/README.md"; then
         rm -f "$legacy_plugin_root/README.md"
@@ -166,6 +186,7 @@ PLAN_FILE=""
 MODE_OVERRIDE=""
 HOME_OVERRIDE=""
 DRY_RUN="false"
+ALLOW_GLOBAL_TARGETS="false"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -184,6 +205,10 @@ while [ $# -gt 0 ]; do
         --home)
             HOME_OVERRIDE="$2"
             shift 2
+            ;;
+        --allow-global-targets)
+            ALLOW_GLOBAL_TARGETS="true"
+            shift
             ;;
         --dry-run)
             DRY_RUN="true"
@@ -287,6 +312,33 @@ HOOK_CONFIG_ABS="$(resolve_target_path "$HOOK_CONFIG_VALUE" "$PROJECT_ROOT" "$HO
 MANAGED_STATE_ABS="$(resolve_target_path "$MANAGED_STATE_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
 MANIFEST_TARGET_FILE="$MANAGED_STATE_ABS/manifest.json"
 PLAN_SNAPSHOT_FILE="$MANAGED_STATE_ABS/plan.snapshot.json"
+
+source "$SCRIPT_DIR/scaffold_paths.sh"
+if [ "$SCOPE" = "global" ]; then
+    if [ "$ALLOW_GLOBAL_TARGETS" != "true" ]; then
+        echo "Global scope requires explicit --allow-global-targets authorization." >&2
+        exit 1
+    fi
+    for target in "$CONFIG_TARGET_ABS" "$HOOK_CONFIG_ABS" "$MANAGED_STATE_ABS"; do
+        case "$target" in
+            "$HOME_ROOT/.config/opencode/"*) ;;
+            *) echo "Unsafe scaffold path: global targets must stay under ~/.config/opencode/." >&2; exit 1 ;;
+        esac
+        validate_scaffold_path "$HOME_ROOT" "${target#"$HOME_ROOT/"}" global_target
+    done
+    validate_scaffold_path "$HOME_ROOT" "${MANAGED_STATE_ABS#"$HOME_ROOT/"}" managed_state tree
+    validate_scaffold_path "$HOME_ROOT" "$(dirname "${HOOK_CONFIG_ABS#"$HOME_ROOT/"}")/README.md" readme
+else
+    validate_scaffold_path "$PROJECT_ROOT" "$CONFIG_TARGET_VALUE" config_target
+    validate_scaffold_path "$PROJECT_ROOT" "$HOOK_CONFIG_VALUE" hook_config_target
+    validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_STATE_VALUE" managed_state tree
+    validate_scaffold_path "$PROJECT_ROOT" "$(dirname "$HOOK_CONFIG_VALUE")/README.md" readme
+fi
+validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_ROOT_VALUE" hooks_root tree
+validate_scaffold_path "$PROJECT_ROOT" .opencode/plugins/.managed legacy_state tree
+# Validate every manifest-controlled removal before creating output or updating
+# configuration. The actual cleanup repeats these checks before deleting.
+DRY_RUN=true cleanup_legacy_plugin_scaffold
 
 HOOKS_JSON="$(jq -c '.hooks // []' "$PLAN_FILE")"
 if [ "$(printf '%s' "$HOOKS_JSON" | jq 'length')" -eq 0 ]; then

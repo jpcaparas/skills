@@ -18,7 +18,8 @@ const data = readJsonObject(configPath, { $schema: "https://opencode.ai/config.j
 const existing = Array.isArray(data.plugin) ? data.plugin.filter((item) => typeof item === "string") as string[] : []
 const merged = [...existing]
 for (const plugin of plugins) {
-  if (!merged.includes(plugin)) merged.push(plugin)
+  // A bare package request must not add a second, unpinned copy of an existing pin.
+  if (!merged.some((entry) => entry === plugin || entry.startsWith(`${plugin}@`))) merged.push(plugin)
 }
 
 data.plugin = merged

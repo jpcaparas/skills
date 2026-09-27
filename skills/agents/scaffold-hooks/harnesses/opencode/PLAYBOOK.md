@@ -15,7 +15,7 @@ What is the user asking for?
 - Existing custom `.opencode/plugins/*.ts`:
   Preserve unmanaged plugin files. Froggy does not replace all OpenCode plugins; it replaces only the old scaffold-owned hook adapter.
 - Personal cross-repo OpenCode hooks:
-  Use global scope so config lands under `~/.config/opencode/opencode.json` and `~/.config/opencode/hook/hooks.md`.
+  Obtain authorization, then use global scope with `--allow-global-targets` so config lands under `~/.config/opencode/opencode.json` and `~/.config/opencode/hook/hooks.md`. Global outputs are confined to `~/.config/opencode/`; project outputs must be relative and cannot traverse parents or symlinks.
 - Explanation only:
   Use the reading guide to select only the reference needed for the question, then answer without scaffolding.
 
@@ -135,7 +135,7 @@ Project plans can swap `./scripts/validate-project.sh` for `./scripts/agent-stop
 - Replace the managed block between `BEGIN scaffold-hooks managed opencode-froggy` and `END scaffold-hooks managed opencode-froggy`.
 - Append the managed block to an existing custom `hooks:` list only when it is structurally safe.
 - Refuse to overwrite unrecognized custom `hooks.md` structures.
-- Preserve unrelated entries in `opencode.json` while adding `opencode-froggy`.
+- Preserve unrelated entries and existing version-qualified `opencode-froggy` pins in `opencode.json`; do not add a bare duplicate beside a pinned plugin.
 - Preserve unmanaged local plugin files in `.opencode/plugins/`.
 - Remove old scaffold-owned plugin files when the old manifest proves ownership.
 

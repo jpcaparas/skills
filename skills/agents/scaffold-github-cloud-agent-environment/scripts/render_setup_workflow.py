@@ -46,6 +46,16 @@ def main() -> int:
         print(rendered, end="")
         return 0
 
+    # A checked-out repository may contain links that redirect a fixed relative
+    # workflow path outside the selected project. Reject them before any I/O.
+    for destination in (
+        project_root / ".github",
+        workflow_path.parent,
+        workflow_path,
+    ):
+        if destination.is_symlink():
+            raise SystemExit(f"Refusing to write through a symlink: {destination}")
+
     workflow_path.parent.mkdir(parents=True, exist_ok=True)
     backup_path = None
     changed = True

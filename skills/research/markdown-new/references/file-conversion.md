@@ -2,6 +2,8 @@
 
 Use this reference when the input is a file URL or a local file that should become Markdown.
 
+Apply the data and trust boundaries in `SKILL.md` before choosing a route. Uploading sends the entire file and its filename to markdown.new; a remote-file request sends the complete URL, including any access token in its query string. A request to convert a local file does not itself authorize third-party disclosure. Use local conversion or obtain authorization for the specific file and recipient when it is not public or synthetic.
+
 ## Supported flows
 
 | Flow | Endpoint | Verified on April 9, 2026 | Notes |

@@ -96,6 +96,7 @@ The renderer rejects any non-empty `questions` array unless `--allow-questions` 
 These are implementation constraints, not GitHub platform guarantees:
 
 - `render_setup_workflow.py` renders a whole file, not a merge. `mode` is not enforced as a no-clobber guard. Prefer minimal manual repair of custom workflows. For deliberate regeneration, preview with `--stdout`, review the diff, and ensure a recoverable backup; a changed existing file is moved to a timestamped `.bak` on write.
+- Writes reject symlinks at `.github`, `workflows`, or the workflow file, including dangling links. Inspect and resolve an unexpected link rather than bypassing the check. `--stdout` remains a read-only preview and does not touch the output path.
 - The helper accepts both `.yml` and `.yaml`, but its validation-trigger paths are hardcoded to `.yml`. GitHub's cited Copilot contract documents `.github/workflows/copilot-setup-steps.yml`; use that path rather than treating helper acceptance as evidence of platform support for `.yaml`.
 - `timeout_minutes` is converted to an integer but not range-checked. Verify it before writing: the documented maximum in the recorded contract is `59`.
 - The doctor's allowlist includes `snapshot`, but the renderer does not emit a `snapshot` plan field. It also emits only the step fields it implements (`name`, `uses`/`run`, `with`, `env`); unsupported fields may be silently omitted. Inspect the preview and use a reviewed manual patch for needed supported platform fields the helper cannot preserve.

@@ -25,8 +25,10 @@ REQUIRED_FILES = [
     "references/migration.md",
     "references/project-audit.md",
     "scripts/scaffold_all_hooks.sh",
+    "scripts/scaffold_paths.sh",
     "scripts/detect_code_extensions.py",
     "scripts/test_skill.py",
+    "scripts/test_scaffold_security.py",
     "scripts/validate.py",
     "evals/evals.json",
 ]
@@ -36,6 +38,7 @@ REQUIRED_HARNESS_FILES = [
     "assets/hook-events.json",
     "templates/hook-plan.example.json",
     "scripts/scaffold_hooks.sh",
+    "scripts/scaffold_paths.sh",
     "scripts/audit_project.sh",
     "scripts/render_hooks_readme.sh",
     "scripts/validate.py",
@@ -162,6 +165,11 @@ def validate(skill_path: Path) -> dict:
         for rel_path in REQUIRED_HARNESS_FILES:
             if not (harness_dir / rel_path).exists():
                 errors.append(f"Missing harness file: harnesses/{harness}/{rel_path}")
+        canonical_guard = skill_path / "scripts/scaffold_paths.sh"
+        bundled_guard = harness_dir / "scripts/scaffold_paths.sh"
+        if canonical_guard.is_file() and bundled_guard.is_file():
+            if canonical_guard.read_bytes() != bundled_guard.read_bytes():
+                errors.append(f"harnesses/{harness}/scripts/scaffold_paths.sh differs from the canonical guard")
         nested = run_harness_validator(harness_dir)
         for err in nested.get("errors", []):
             errors.append(f"[harnesses/{harness}] {err}")

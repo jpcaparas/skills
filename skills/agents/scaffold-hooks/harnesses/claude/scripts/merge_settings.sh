@@ -88,6 +88,8 @@ if [ ! -f "$FRAGMENT_FILE" ]; then
     exit 1
 fi
 
+source "$(dirname "${BASH_SOURCE[0]}")/scaffold_paths.sh"
+validate_scaffold_output "$SETTINGS_FILE"
 mkdir -p "$(dirname "$SETTINGS_FILE")"
 
 TEMP_INPUT="$(mktemp)"

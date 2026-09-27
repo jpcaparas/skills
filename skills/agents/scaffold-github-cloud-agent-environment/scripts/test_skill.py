@@ -22,6 +22,7 @@ PYTHON_SCRIPTS = [
     "scripts/copilot_env_lib.py",
     "scripts/suggest_plan.py",
     "scripts/render_setup_workflow.py",
+    "scripts/test_renderer_security.py",
     "scripts/doctor.py",
     "scripts/validate.py",
     "scripts/test_skill.py",
@@ -134,6 +135,14 @@ def test_skill(skill_path: Path) -> dict:
         except py_compile.PyCompileError as exc:
             results["errors"].append(f"Python compile failed for {rel_path}: {exc.msg}")
             results["passed"] = False
+
+    security_tests = run([sys.executable, str(skill_path / "scripts" / "test_renderer_security.py")])
+    results["integration_checks"]["total"] += 1
+    if security_tests.returncode == 0:
+        results["integration_checks"]["passed"] += 1
+    else:
+        results["errors"].append(f"Renderer security regressions failed: {security_tests.stderr}")
+        results["passed"] = False
 
     with tempfile.TemporaryDirectory() as tmpdir:
         tmp = Path(tmpdir)

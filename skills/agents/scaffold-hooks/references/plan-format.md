@@ -40,7 +40,15 @@ Harnesses can add more granular provenance. OpenCode records `managed_file_hashe
 
 The nested `plans.claude`, `plans.codex`, `plans.devin`, and `plans.opencode` objects intentionally mirror the dedicated skill plan files. The universal script injects the shared hook root and mode; keep harness-specific settings inside the nested plan.
 
+## Output Paths
+
+Project output fields must be relative to the selected project, without `..` components, `~`, or symlink components. Existing managed output trees must not contain symlinks: generators may rewrite or chmod descendants, and overhaul may remove managed state. Legacy manifests do not authorize output or deletion outside those roots. The universal script validates selected child plans before any migration or overhaul writes.
+
+An authorized OpenCode global plan uses `scope: global` and requires `--allow-global-targets` on either the universal or direct scaffolder. Its config, hooks, and state must stay under `~/.config/opencode/` (or the explicit `--home` override). The flag does not permit arbitrary absolute paths. Without it, the plan cannot widen a project invocation into home-directory writes.
+
 ## Scripts and Commands
+
+These fields are trusted executable configuration, not a sandbox. Output-path restrictions do not restrict runtime commands, script paths, or working directories. Review the referenced code and intended access before activation; do not execute plans copied from untrusted content just because they pass structural validation.
 
 Use `scripts` for repo-owned reusable files:
 

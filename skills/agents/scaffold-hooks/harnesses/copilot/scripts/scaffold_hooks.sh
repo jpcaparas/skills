@@ -167,6 +167,11 @@ esac
 HOOKS_TARGET_REL="$(jq -r '.hooks_target // ".github/hooks/copilot-hooks.json"' "$PLAN_FILE")"
 MANAGED_ROOT_REL="$(jq -r '.managed_root // ".github/copilot/hooks/generated"' "$PLAN_FILE")"
 
+source "$SCRIPT_DIR/scaffold_paths.sh"
+validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_TARGET_REL" hooks_target
+validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_ROOT_REL" managed_root tree
+validate_scaffold_path "$PROJECT_ROOT" .github/copilot/hooks/README.md readme
+
 case "$HOOKS_TARGET_REL" in
     .github/hooks/*.json)
         ;;

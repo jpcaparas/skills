@@ -59,7 +59,9 @@ function inspectConfig(configRoot: string): [Record<string, unknown>, string[]] 
       config_exists: existsSync(configFile),
       config_format: existsSync(configFile) ? configFile.split(".").pop() : "json",
       plugin_entries: pluginEntries,
-      has_froggy_plugin: pluginEntries.includes("opencode-froggy"),
+      has_froggy_plugin: pluginEntries.some((entry: unknown) =>
+        typeof entry === "string" && (entry === "opencode-froggy" || entry.startsWith("opencode-froggy@")),
+      ),
     },
     warnings,
   ]

@@ -735,6 +735,13 @@ esac
 
 HOOKS_TARGET_REL="$(jq -r '.hooks_target // ".codex/hooks.json"' "$PLAN_FILE")"
 MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
+source "$SCRIPT_DIR/scaffold_paths.sh"
+validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_TARGET_REL" hooks_target
+validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_ROOT_REL" managed_root tree
+validate_scaffold_path "$PROJECT_ROOT" .codex/config.toml feature_config
+if [ "$ENSURE_FEATURE" = "user" ]; then
+    validate_scaffold_path "${HOME_OVERRIDE:-$HOME}" .codex/config.toml user_feature_config
+fi
 MANAGED_ROOT_ABS="$PROJECT_ROOT/$MANAGED_ROOT_REL"
 HOOKS_TARGET_ABS="$PROJECT_ROOT/$HOOKS_TARGET_REL"
 LIB_DIR="$MANAGED_ROOT_ABS/lib"

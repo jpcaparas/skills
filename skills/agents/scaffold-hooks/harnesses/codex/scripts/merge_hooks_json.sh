@@ -63,6 +63,8 @@ fi
 
 require_command jq
 
+source "$(dirname "${BASH_SOURCE[0]}")/scaffold_paths.sh"
+validate_scaffold_output "$HOOKS_FILE"
 mkdir -p "$(dirname "$HOOKS_FILE")"
 
 TEMP_INPUT="$(mktemp)"

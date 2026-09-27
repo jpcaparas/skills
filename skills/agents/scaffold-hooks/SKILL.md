@@ -121,6 +121,14 @@ Use `templates/hook-plan.example.json` as the source of truth for the universal 
 
 Read `references/plan-format.md` before adding project-specific scripts or commands.
 
+## Trust and Output Boundaries
+
+Plans and existing hook configuration are executable project policy, not safe data from an arbitrary repository. Review their commands, script paths, working directories, and referenced code before activating hooks or running tests that execute them. Shell commands and Froggy actions can use the agent's filesystem, network, and credentials; output-path checks do not sandbox those commands. Use an isolated environment without sensitive credentials to test untrusted hooks.
+
+Project scaffolding rejects absolute, home-relative, parent-traversing, and symlinked output paths, including links inside managed trees. Universal runs preflight every selected harness before changing configs or removing managed output. Resolve a rejected destination with the user rather than deleting links or moving private configuration into the repo.
+
+OpenCode global scope requires explicit user authorization and `--allow-global-targets`; outputs must stay under `~/.config/opencode/`. Codex user feature activation also requires authorization before selecting user scope. Do not change either scope merely to bypass project-path checks. These checks protect a stable filesystem, not one being modified concurrently by an adversary.
+
 ## Collision Policy
 
 This skill is conservative:

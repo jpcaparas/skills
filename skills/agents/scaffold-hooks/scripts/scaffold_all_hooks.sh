@@ -11,7 +11,7 @@ set -euo pipefail
 usage() {
     cat <<'EOF'
 Usage:
-  scaffold_all_hooks.sh --project DIR [--plan FILE] [--mode additive|overhaul] [--harnesses LIST] [--ensure-codex-feature project|user|off] [--home DIR] [--cleanup-legacy true|false] [--dry-run]
+  scaffold_all_hooks.sh --project DIR [--plan FILE] [--mode additive|overhaul] [--harnesses LIST] [--ensure-codex-feature project|user|off] [--home DIR] [--allow-global-targets] [--cleanup-legacy true|false] [--dry-run]
 
 Options:
   --project DIR                  Target project root.
@@ -21,6 +21,7 @@ Options:
                                   Omit to refresh detected hook surfaces, or all supported harnesses in a clean repo.
   --ensure-codex-feature SCOPE   Override Codex feature enablement scope.
   --home DIR                     Home directory override for Codex/OpenCode helper scripts.
+  --allow-global-targets         Authorize an OpenCode global plan under ~/.config/opencode/.
   --cleanup-legacy true|false    Remove legacy managed generated folders after migration. Default from plan, then true.
   --dry-run                      Print intended child operations without writing files.
   -h, --help                     Show this help text.
@@ -420,6 +421,9 @@ run_child_scaffold() {
             if [ -n "$HOME_OVERRIDE" ]; then
                 args+=(--home "$HOME_OVERRIDE")
             fi
+            if [ "$ALLOW_GLOBAL_TARGETS" = "true" ]; then
+                args+=(--allow-global-targets)
+            fi
             if [ "$DRY_RUN" = "true" ]; then
                 args+=(--dry-run)
             fi
@@ -571,6 +575,7 @@ ENSURE_CODEX_FEATURE=""
 HOME_OVERRIDE=""
 CLEANUP_LEGACY_OVERRIDE=""
 DRY_RUN="false"
+ALLOW_GLOBAL_TARGETS="false"
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -597,6 +602,10 @@ while [ $# -gt 0 ]; do
         --home)
             HOME_OVERRIDE="$2"
             shift 2
+            ;;
+        --allow-global-targets)
+            ALLOW_GLOBAL_TARGETS="true"
+            shift
             ;;
         --cleanup-legacy)
             CLEANUP_LEGACY_OVERRIDE="$2"
@@ -647,10 +656,8 @@ case "$MODE" in
 esac
 
 HOOKS_ROOT="$(jq -r '.hooks_root // "hooks"' "$PLAN_FILE")"
-if [ -z "$HOOKS_ROOT" ] || [ "$HOOKS_ROOT" = "." ] || [[ "$HOOKS_ROOT" = /* ]] || [[ "$HOOKS_ROOT" == *".."* ]]; then
-    echo "hooks_root must be a safe project-relative path. Got: $HOOKS_ROOT" >&2
-    exit 1
-fi
+source "$SCRIPT_DIR/scaffold_paths.sh"
+validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_ROOT" hooks_root tree
 
 DETECTED_HARNESSES_JSON="$(detect_existing_harnesses)"
 DETECTED_HARNESS_COUNT="$(printf '%s' "$DETECTED_HARNESSES_JSON" | jq 'length')"
@@ -712,6 +719,32 @@ cleanup() {
 }
 trap cleanup EXIT
 
+# Validate all selected outputs before the first harness or legacy cleanup can
+# mutate the project. A later invalid child must not leave earlier changes.
+for harness in claude codex devin opencode copilot; do
+    if contains_harness "$harness"; then
+        child_plan="$TEMP_DIR/$harness-plan.json"
+        build_child_plan "$harness" "$child_plan"
+        DRY_RUN=true run_child_scaffold "$harness" "$child_plan" >/dev/null
+    fi
+done
+for base in .claude/hooks .codex/hooks .devin/hooks; do
+    if [ "$CLEANUP_LEGACY" = "true" ]; then
+        validate_scaffold_path "$PROJECT_ROOT" "$base/generated" legacy_generated tree
+        validate_scaffold_path "$PROJECT_ROOT" "$base/README.md" legacy_readme
+        validate_scaffold_path "$PROJECT_ROOT" "$base/plan.json" legacy_plan
+    fi
+done
+if contains_harness claude; then
+    validate_scaffold_path "$PROJECT_ROOT" .claude/settings.json legacy_config
+fi
+if contains_harness codex; then
+    validate_scaffold_path "$PROJECT_ROOT" .codex/hooks.json legacy_config
+fi
+if contains_harness devin; then
+    validate_scaffold_path "$PROJECT_ROOT" .devin/hooks.v1.json legacy_config
+fi
+
 if [ "$DRY_RUN" != "true" ]; then
     strip_legacy_config_entries
 fi
@@ -722,7 +755,6 @@ for harness in claude codex devin opencode copilot; do
     fi
 
     child_plan="$TEMP_DIR/$harness-plan.json"
-    build_child_plan "$harness" "$child_plan"
 
     if [ "$MODE" = "overhaul" ] && [ "$DRY_RUN" != "true" ]; then
         cleanup_harness_state "$harness"

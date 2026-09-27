@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 """
-test_skill.py — Lightweight skill testing (validation, not execution).
+test_skill.py — Package checks and offline tests of the bundled Python helper.
+
+This executes trusted package code; it is not a sandbox for untrusted skills.
 
 Usage:
     python3 test_skill.py <skill-path>
@@ -24,7 +26,10 @@ import json
 import importlib.util
 import os
 import re
+import subprocess
 import sys
+from pathlib import Path
+from types import ModuleType
 
 
 def extract_file_references(content: str) -> list[str]:
@@ -56,9 +61,26 @@ def extract_file_references(content: str) -> list[str]:
     return list(set(refs))
 
 
-def load_fetch_module(skill_path: str):
-    """Load fetch_transcript.py for deterministic helper probes."""
-    script_path = os.path.join(skill_path, "scripts", "fetch_transcript.py")
+def is_package_file(skill_path: str, reference: str) -> bool:
+    """Require an existing file inside the package, including after symlinks."""
+    root = Path(skill_path).resolve()
+    relative = Path(reference)
+    if relative.is_absolute():
+        return False
+    try:
+        candidate = (root / relative).resolve(strict=True)
+    except (OSError, RuntimeError):
+        return False
+    return candidate.is_relative_to(root) and candidate.is_file()
+
+
+def load_fetch_module(skill_path: str) -> ModuleType:
+    """Execute only this test suite's bundled helper, never a supplied module."""
+    script_path = Path(__file__).resolve().with_name("fetch_transcript.py")
+    if Path(skill_path).resolve() != script_path.parent.parent:
+        raise ValueError("Helper probes only execute this test suite's own package")
+    if not is_package_file(skill_path, "scripts/fetch_transcript.py"):
+        raise ValueError("fetch_transcript.py must be a file inside the package")
     spec = importlib.util.spec_from_file_location("youtube_transcript_dossier_fetch", script_path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"could not load {script_path}")
@@ -119,8 +141,8 @@ def test_skill(skill_path: str) -> dict:
 
     # --- Check evals/evals.json ---
     evals_path = os.path.join(skill_path, "evals", "evals.json")
-    if not os.path.isfile(evals_path):
-        results["errors"].append("evals/evals.json not found")
+    if not is_package_file(skill_path, "evals/evals.json"):
+        results["errors"].append("evals/evals.json not found inside the package")
         results["passed"] = False
         # Continue with other checks even if evals are missing
     else:
@@ -198,30 +220,31 @@ def test_skill(skill_path: str) -> dict:
                 files = ev.get("files", [])
                 for fpath in files:
                     results["files_verified"]["total"] += 1
-                    full_path = os.path.join(skill_path, fpath)
-                    if os.path.exists(full_path):
+                    if is_package_file(skill_path, fpath):
                         results["files_verified"]["passed"] += 1
                     else:
                         results["errors"].append(
-                            f"Eval '{eval_label}': referenced file not found: {fpath}"
+                            f"Eval '{eval_label}': referenced file missing or outside package: {fpath}"
                         )
                         results["passed"] = False
 
     # --- Check cross-references in SKILL.md ---
     skill_md_path = os.path.join(skill_path, "SKILL.md")
-    if os.path.isfile(skill_md_path):
+    if is_package_file(skill_path, "SKILL.md"):
         with open(skill_md_path, "r", encoding="utf-8") as f:
             content = f.read()
 
         refs = extract_file_references(content)
         for ref in refs:
             results["cross_references"]["total"] += 1
-            ref_path = os.path.join(skill_path, ref)
-            if os.path.exists(ref_path):
+            if is_package_file(skill_path, ref):
                 results["cross_references"]["passed"] += 1
             else:
-                results["errors"].append(f"Cross-reference not found: {ref}")
+                results["errors"].append(f"Cross-reference missing or outside package: {ref}")
                 results["passed"] = False
+    else:
+        results["errors"].append("SKILL.md not found inside the package")
+        results["passed"] = False
 
     # --- Also check cross-references in reference files ---
     refs_dir = os.path.join(skill_path, "references")
@@ -231,19 +254,22 @@ def test_skill(skill_path: str) -> dict:
                 if fname == ".gitkeep" or not fname.endswith(".md"):
                     continue
                 fpath = os.path.join(root, fname)
+                if not is_package_file(skill_path, os.path.relpath(fpath, skill_path)):
+                    results["errors"].append(f"Reference file is outside package: {fpath}")
+                    results["passed"] = False
+                    continue
                 try:
                     with open(fpath, "r", encoding="utf-8") as f:
                         ref_content = f.read()
                     ref_refs = extract_file_references(ref_content)
                     for ref in ref_refs:
                         results["cross_references"]["total"] += 1
-                        ref_path = os.path.join(skill_path, ref)
-                        if os.path.exists(ref_path):
+                        if is_package_file(skill_path, ref):
                             results["cross_references"]["passed"] += 1
                         else:
                             results["errors"].append(
                                 f"Cross-reference in {os.path.relpath(fpath, skill_path)} "
-                                f"not found: {ref}"
+                                f"missing or outside package: {ref}"
                             )
                             results["passed"] = False
                 except (OSError, UnicodeDecodeError):
@@ -254,7 +280,7 @@ def test_skill(skill_path: str) -> dict:
     return results
 
 
-def main():
+def main() -> None:
     if len(sys.argv) != 2:
         print("Usage: python3 test_skill.py <skill-path>", file=sys.stderr)
         sys.exit(1)
@@ -264,6 +290,14 @@ def main():
     if not os.path.isdir(skill_path):
         print(f"Error: '{skill_path}' is not a directory", file=sys.stderr)
         sys.exit(1)
+
+    security_tests = subprocess.run(
+        [sys.executable, str(Path(__file__).with_name("test_package_security.py"))],
+        check=False,
+        timeout=30,
+    )
+    if security_tests.returncode != 0:
+        sys.exit(security_tests.returncode)
 
     results = test_skill(skill_path)
 

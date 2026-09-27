@@ -809,6 +809,10 @@ esac
 
 SETTINGS_TARGET_REL="$(jq -r '.settings_target // ".claude/settings.json"' "$PLAN_FILE")"
 MANAGED_ROOT_REL="$(jq -r '.managed_root // "hooks"' "$PLAN_FILE")"
+source "$SCRIPT_DIR/scaffold_paths.sh"
+validate_scaffold_path "$PROJECT_ROOT" "$SETTINGS_TARGET_REL" settings_target
+validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_ROOT_REL" managed_root tree
+validate_scaffold_path "$PROJECT_ROOT" .claude .claude
 MANAGED_ROOT_ABS="$PROJECT_ROOT/$MANAGED_ROOT_REL"
 LIB_DIR="$MANAGED_ROOT_ABS/lib"
 STATE_DIR="$MANAGED_ROOT_ABS/.state/claude"
