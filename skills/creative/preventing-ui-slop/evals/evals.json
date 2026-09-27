@@ -1,0 +1,103 @@
+{
+  "skill_name": "preventing-ui-slop",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "campus-redesign-without-decorative-defaults",
+      "prompt": "Propose a UI for our campus timetable and digital ID. Students need class times, rooms, a photo and a QR code. We consolidated three internal apps; I build in Neovim and want it to look modern and polished. There is no live verification or presence API. Give a concrete layout and sample screen copy, not implementation code.",
+      "expected_output": "A task-first timetable and ID layout with specific labels. No invented active/verified claims, prompt-context slogans, decorative gradients, edge-striped card grid, emoji headings, or hype.",
+      "assertions": [
+        {"text": "Prioritises class time, room, photo and QR content rather than a dashboard welcome hero", "type": "functional"},
+        {"text": "Does not invent Live, Active or Verified state, pulsing indicators, or a verification data source", "type": "negative"},
+        {"text": "Does not turn Neovim or the internal app consolidation into public UI copy", "type": "negative"},
+        {"text": "Does not interpret modern/polished as permission for gradients, glass panels, rainbow edge-striped cards, decorative emoji or generic hype", "type": "negative"}
+      ],
+      "tags": ["smoke", "creation", "copy"]
+    },
+    {
+      "id": 2,
+      "name": "truthful-status-versus-fabricated-badge",
+      "prompt": "Review our support console design. Incident rows have red/amber severity edges AND text labels; the severity comes from the incident API. Connection status reports connected, reconnecting or offline from the socket. Every agent profile also has an animated Verified pill hardcoded true, and the logo has a pulsing Secure badge with no source. Should we delete all the badges and coloured edges to avoid AI-looking UI?",
+      "expected_output": "Preserves the meaningful severity and connection states and removes fabricated verification/security indicators. Keeps each retained state claim limited to what its data actually establishes, without flattening the interface.",
+      "assertions": [
+        {"text": "Keeps labelled severity distinctions and the API/socket-backed states rather than deleting all badges or colour edges", "type": "functional"},
+        {"text": "Removes or flags the unsupported Verified and Secure claims rather than merely stopping their animation", "type": "functional"},
+        {"text": "Distinguishes a socket connection from data freshness or security guarantees and does not recommend continuous pulse for an ordinary connected state", "type": "functional"}
+      ],
+      "tags": ["edge", "review", "truthful-state"]
+    },
+    {
+      "id": 3,
+      "name": "brand-expression-is-not-a-style-ban",
+      "prompt": "Review this brief before I implement it: a purple music-festival page with a specifically requested aurora-gradient hero, Inter body text, and a static translucent ticket panel. The ticket panel has tested contrast on every supplied background; the programme uses labelled coloured genre markers. Our approved brand reference requires these treatments. We host on Vercel and use shadcn. Does avoiding slop mean replacing it all with beige and serif fonts?",
+      "expected_output": "Preserves the explicit brand and readable, meaningful treatments while rejecting gratuitous propagation of them. Does not confuse tools or popular fonts with quality defects.",
+      "assertions": [
+        {"text": "Accepts the specified purple/gradient/translucent design and labelled genre colours based on the concrete brief and supplied contrast evidence", "type": "functional"},
+        {"text": "Does not impose beige, monochrome, a novelty font, a hosting migration or a different component library", "type": "negative"},
+        {"text": "Does not treat the approved hero as permission to add unrelated gradient controls, pulsing pills, decorative emoji or fake statuses", "type": "negative"}
+      ],
+      "tags": ["edge", "negative", "creative-freedom"]
+    },
+    {
+      "id": 4,
+      "name": "small-alignment-fix-stays-small",
+      "prompt": "In our existing light-only payroll form, the help icon in the bank-account label slips down when the label wraps on a phone. Review the likely layout fix and how to verify it. Keep the existing system font and the mandated single light theme; don't redesign the page.",
+      "expected_output": "A scoped layout/alignment recommendation and checks with long labels and narrow views, preserving the existing font and theme without claiming an unexecuted render.",
+      "assertions": [
+        {"text": "Recommends content-aware layout alignment rather than a screenshot-specific absolute offset", "type": "functional"},
+        {"text": "Does not add a theme switcher, dark theme, new font or unrelated visual redesign", "type": "negative"},
+        {"text": "Names a narrow-width/long-label rendered check and distinguishes planned from executed verification", "type": "verification"}
+      ],
+      "tags": ["edge", "scope", "alignment"]
+    },
+    {
+      "id": 5,
+      "name": "redundant-eyebrows-versus-real-sequence",
+      "prompt": "Tighten this settings page copy: widely spaced uppercase SETTINGS above the H1 Settings, followed by 'Elevate your workflow with our seamless preferences.' A separate security setup wizard has Step 2 of 3 above 'Save recovery codes'. The developer added // ACCOUNT, a rocket emoji, and a 'Crafted in Neovim with modern React' footer. Which parts should stay?",
+      "expected_output": "Removes redundant labels, hype, fake code styling, decoration and irrelevant tool trivia while preserving the meaningful wizard progress and clear task copy.",
+      "assertions": [
+        {"text": "Removes the duplicate SETTINGS eyebrow and generic subtitle instead of replacing them with equally redundant wording", "type": "functional"},
+        {"text": "Keeps the genuine Step 2 of 3 sequence and Save recovery codes task", "type": "functional"},
+        {"text": "Removes decorative // syntax, rocket emoji and irrelevant editor/framework footer without banning literal code or user-authored emoji content", "type": "functional"}
+      ],
+      "tags": ["smoke", "copy", "semantic-exception"]
+    },
+    {
+      "id": 6,
+      "name": "generator-brief-carries-constraints",
+      "prompt": "Write the prompt I should give an image generator for a new inventory dashboard concept. Staff scan low-stock items and update counts on phones and laptops. No brand has been chosen. Do not generate an image or code yet.",
+      "expected_output": "A product-specific generation brief carrying the relevant anti-slop constraints and realistic low-stock state without stock decorative dashboard chrome. Does not treat a future image as working UI.",
+      "assertions": [
+        {"text": "Carries explicit exclusions for arbitrary gradients/glass, pulsing fake status, decorative edge-striped metric cards and redundant dashboard copy into the generator prompt itself", "type": "functional"},
+        {"text": "Preserves meaningful labelled low-stock states and prioritises scanning items/updating counts at phone and laptop widths", "type": "functional"},
+        {"text": "Does not generate assets, implement code, or present a concept image as behaviour verification", "type": "negative"}
+      ],
+      "tags": ["smoke", "delegation", "concept"]
+    },
+    {
+      "id": 7,
+      "name": "review-does-not-invent-rendered-evidence",
+      "prompt": "Here is the only evidence available: a stylesheet uses backdrop-filter blur on all cards, a purple gradient on every button, and animation: pulse on the hardcoded 'Live' heading. There is no app, screenshot or browser in this environment. Review whether it is ready to ship, without pretending you can render it.",
+      "expected_output": "Identifies source-level default-pattern and truthfulness concerns, recommends concrete fixes, and reports visual and interaction verification as unavailable. No false compliance claim.",
+      "assertions": [
+        {"text": "Flags the unsupported Live claim as well as indiscriminate glass, gradients and pulse", "type": "functional"},
+        {"text": "Does not claim inspected screenshots, measured contrast, exercised states or a visual pass", "type": "negative"},
+        {"text": "Separates known source findings from rendering/interaction checks still needed before shipping", "type": "verification"}
+      ],
+      "tags": ["edge", "review", "verification-limit"]
+    },
+    {
+      "id": 8,
+      "name": "theme-preference-without-fake-accessibility-law",
+      "prompt": "Plan the theme behaviour for a new unbranded customer portal. The browser prefers light but the prototype forces dark because it looks premium. We will support both themes and a saved manual choice. Also, is providing both themes itself a universal accessibility requirement? No implementation yet.",
+      "expected_output": "Uses the saved manual choice when present, system preference otherwise, verifies readable real content in both themes, and distinguishes this product requirement from universal accessibility claims.",
+      "assertions": [
+        {"text": "Honours saved manual choice over system preference and system preference when no manual choice exists", "type": "functional"},
+        {"text": "Requires checking readable contrast and useful states in both supported treatments rather than assuming a palette inversion works", "type": "verification"},
+        {"text": "Does not claim that having two themes is universally required for accessibility or that premium justifies overriding a light preference", "type": "negative"}
+      ],
+      "tags": ["edge", "theme", "accessibility"]
+    }
+  ]
+}

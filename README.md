@@ -386,6 +386,16 @@ Production skill for Nano Banana 2 infographic prompting and verification, with 
 
 Production skill for launching one-shot website experiments through fresh isolated subagents, with a 100-prompt catalogue, same-prompt replicas, prompt provenance, and local-only static handoffs. It asks whether to run the existing gauntlet; declining produces generation-only output explicitly marked UNVERIFIED, without artifact or workspace checks.
 
+#### `preventing-ui-slop`
+
+`npx skills add jpcaparas/skills --skill preventing-ui-slop`
+
+<p align="center">
+  <img src="skills/creative/preventing-ui-slop/skill-card.png" alt="16-bit side-scrolling pixel art badge for preventing-ui-slop" width="480">
+</p>
+
+Standing guardrails for every UI task that reject decorative defaults, fake status, chat-context leakage, and redundant copy while preserving meaningful state and explicit brand intent. Requires scoped rendered verification.
+
 #### `to-diagram`
 
 `npx skills add jpcaparas/skills --skill to-diagram`

@@ -61,6 +61,7 @@ SKILL_SCENES = {
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-timeline": "a winding trail of evenly separated story beacons untangling a knot of pathways, with small framed silhouette gems alternating beside the trail and a warm lantern illuminating the next moment",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
+    "preventing-ui-slop": "a careful craftsperson removing tangled ornamental ribbons and stray sparkling trinkets from a sturdy miniature doorway, revealing clear aligned steps and a simple useful handle, with discarded decorations in a small tray beside the workbench",
     "product-question": "a side-scrolling path of user-flow tiles and glowing inquiry gems leading toward a code city skyline, with simple unlabeled connectors and no screens or papers",
     "repository-readme-writer": "a project book shrine assembled from setup tools, blank blocks, and guide rails",
     "ripgrep": "a magnifying beam racing through file shelves and lighting up matching pixels",

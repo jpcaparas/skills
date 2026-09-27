@@ -1,0 +1,12 @@
+[
+  {"query": "Build the billing settings page in our existing React app.", "should_trigger": true},
+  {"query": "The mobile save button wraps badly; fix just its layout.", "should_trigger": true},
+  {"query": "Review this dashboard screenshot for design problems.", "should_trigger": true},
+  {"query": "Write a prompt for an image model to mock up our booking app.", "should_trigger": true},
+  {"query": "Make the empty-state text on the orders screen useful.", "should_trigger": true},
+  {"query": "Add keyboard navigation to the existing dropdown.", "should_trigger": true},
+  {"query": "Fix the payment webhook signature check; no UI changes.", "should_trigger": false},
+  {"query": "Paint a purple aurora over a mountain, with no interface or text.", "should_trigger": false},
+  {"query": "Rewrite this engineering progress email for the client.", "should_trigger": false},
+  {"query": "Explain why our Vercel deployment failed at the install step.", "should_trigger": false}
+]
