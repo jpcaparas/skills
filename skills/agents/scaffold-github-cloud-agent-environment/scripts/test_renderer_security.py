@@ -39,7 +39,12 @@ class RendererPathTests(unittest.TestCase):
             command.append("--stdout")
         return subprocess.run(command, capture_output=True, text=True, timeout=10)
 
-    def test_real_project_writes_and_preserves_previous_workflow(self) -> None:
+    def test_selected_project_root_resolves_and_preserves_previous_workflow(self) -> None:
+        # macOS temporary directories have aliased parents (/var -> /private/var).
+        # Exercise a selected-root alias on every platform, not an output symlink.
+        project_alias = self.root / "project-alias"
+        project_alias.symlink_to(self.project, target_is_directory=True)
+        self.project = project_alias
         destination = self.project / WORKFLOW
         destination.parent.mkdir(parents=True)
         destination.write_text("original workflow\n", encoding="utf-8")
@@ -48,7 +53,7 @@ class RendererPathTests(unittest.TestCase):
 
         self.assertEqual(0, result.returncode, result.stderr)
         report = json.loads(result.stdout)
-        self.assertEqual(str(destination), report["workflow_path"])
+        self.assertEqual(str(destination.resolve()), report["workflow_path"])
         self.assertTrue(report["changed"])
         self.assertIn('run: "echo safe"', destination.read_text(encoding="utf-8"))
         self.assertEqual(
