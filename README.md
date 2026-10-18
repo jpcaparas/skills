@@ -322,7 +322,7 @@ Production skill for framework-agnostic SEO analysis of real codebases, covering
   <img src="skills/research/synthetic-search/skill-card.png" alt="16-bit side-scrolling pixel art badge for synthetic-search" width="480">
 </p>
 
-Production skill for Synthetic Search covering raw `curl`/`jq` search flows, quota checks, a zero-dependency Node helper, and live-tested API quirks.
+Production skill for Synthetic's zero-data-retention web search API, turning "use Synthetic search to ..." into focused queries with compact, cited results, and documenting live-measured limits: five results per search, a 4,096-character effective query, working `site:` operators, ignored body parameters, and hourly quota accounting.
 
 #### `temporal-awareness`
 

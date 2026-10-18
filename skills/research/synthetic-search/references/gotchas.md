@@ -1,87 +1,79 @@
 # Gotchas
 
-Use this file when Synthetic behaves differently from the published examples or when a clean happy-path request still gives you surprising output.
+Use this file when Synthetic Search output surprises you. Each item was reproduced live on 2026-10-18 unless marked otherwise.
 
-## 1. `published` Is Documented but Not Reliably Present
+## 1. Body parameters do nothing
 
-### Symptom
+**Symptom:** `numResults`, `includeDomains`, `startPublishedDate`, `type`, or similar keys have no effect, and the API returns no error.
 
-The docs or older skills show `results[].published`, but your live response does not include it.
+**Cause:** the endpoint reads only `query` and silently drops other keys.
 
-### Cause
+**Fix:** use query operators (`site:`, `-site:`) for scope and run more queries for more results.
 
-The Synthetic docs and older wrapper examples appear ahead of current live behavior.
+## 2. Long queries are cut at 4,096 characters without warning
 
-### Fix
+**Symptom:** a long query ignores its ending, often a trailing `site:` filter.
 
-Treat `published` as optional. Print a fallback like `(not returned by API)` and avoid schema assumptions that require the field.
+**Cause:** only the first 4,096 characters are searched. Queries up to 100,000 characters are accepted; longer ones return a blank `500`.
 
-## 2. Empty Query Returns a Blank 500
+**Fix:** keep queries short and put operators within the first 4,096 characters. The helper rejects longer queries locally.
 
-### Symptom
+## 3. Blank 500s still cost quota
 
-`{"query":""}` returns `500 Internal Server Error` with an empty body.
+**Symptom:** `500 Internal Server Error` with an empty body.
 
-### Cause
+**Cause:** an empty `query` string, a query over 100,000 characters, or a body that is not valid JSON. The first two were confirmed to consume a unit of the hourly search quota.
 
-Input validation currently handles missing `query` more cleanly than empty-string `query`.
+**Fix:** validate before sending. The helper rejects blank queries. Missing or non-string `query` returns a free `400` with a useful message.
 
-### Fix
+## 4. Whitespace queries return unrelated news
 
-Reject blank queries before sending the request. The helper script does this locally.
+**Symptom:** `{"query":"   "}` returns `200` with five front-page news results.
 
-## 3. Local Display Limits Are Not Server-Side Pagination
+**Fix:** trim and reject blank queries before sending. The call is billed.
 
-### Symptom
+## 5. There is never a "no results" response
 
-You pass `-n 3` to the helper and think the API only returned 3 results.
+**Symptom:** a nonsense or very narrow query still returns 5 results.
 
-### Cause
+**Fix:** check each result's title, URL, and highlight for relevance. Refine or narrow the query rather than presenting weak matches.
 
-The helper trims the displayed list after the request. The server still returned its full result set.
+## 6. `text` is the whole page
 
-### Fix
+**Symptom:** a single response is hundreds of kilobytes and floods the context window.
 
-Use raw JSON or `--json` when you need the untouched response. Document `--limit` as display-only.
+**Cause:** `text` holds the full page as Markdown; the largest seen was 534,088 characters.
 
-## 4. Quota Numbers Change Faster Than Docs
+**Fix:** read `highlights` first (`--compact`), save the raw response (`--save`), and extract a page's `text` with `jq` only when needed.
 
-### Symptom
+## 7. `published` is usually missing
 
-Docs prose and old examples mention one limit pattern, but your account shows different values.
+**Symptom:** results have no date.
 
-### Cause
+**Cause:** `published` is present on only a minority of results (16 of 100 sampled). The docs example implies it is always present.
 
-Limits are account-specific and can change over time.
+**Fix:** treat it as optional. Do not infer recency from rank; look for dates inside `text` or ask a narrower, time-scoped query.
 
-### Fix
+## 8. `highlights` exists but is not documented
 
-Check `GET /v2/quotas` before quoting numeric limits. Treat docs prose as orientation, not authority.
+Results include a `highlights` array with one query-relevant excerpt. Synthetic's own client, Octofriend, reads `highlights` instead of `text`. Prefer it for summaries, but tolerate its absence in case the field changes.
 
-## 5. Unauthorized Responses Are Cleaner Than Some Input Errors
+## 9. URL queries are index lookups, not fetches
 
-### Symptom
+A URL query returns that page first only when it is already indexed. Otherwise you get pages that merely mention similar words. Verify result 1 matches the URL before relying on it.
 
-Bad auth gives a useful JSON body, but some malformed inputs do not.
+## 10. `filetype:` and quoted phrases are not filters
 
-### Cause
+`filetype:pdf` returned HTML pages. Quotes and `-term` may influence ranking but did not reliably filter. Only `site:` and `-site:` behaved as filters.
 
-Different validation layers appear to generate different error responses.
+## 11. Quota and window behaviour
 
-### Fix
+**Symptom:** `429 {"error":"You've used up your hourly quota for the search API"}`, with no `Retry-After` header.
 
-Handle status codes first, then parse the body if present. Do not assume every failure returns JSON.
+**Cause:** the hourly search bucket is a hard cap in a fixed window that starts at the first search; `renewsAt` does not slide. It is separate from subscription requests and weekly credits, which 250 searches left untouched.
 
-## 6. The API Is Still Under Development
+**Fix:** stop searching and report `search.hourly.renewsAt` from `/quotas` (the helper prints it automatically). Retrying is harmless to the counter but pointless until the window renews. Plan large fan-outs against the remaining quota first.
 
-### Symptom
+## 12. The API is still under development
 
-Fields or behaviors drift from the published examples.
-
-### Cause
-
-Synthetic explicitly says the API is still under development.
-
-### Fix
-
-When a field matters operationally, verify it live with `scripts/probe_synthetic_search.py` before baking it into a workflow.
+Fields and limits may change. When a behaviour matters, re-run `scripts/probe_synthetic_search.py --mode limits` and compare with `references/evidence.md` before relying on it.

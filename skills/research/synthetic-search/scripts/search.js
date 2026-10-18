@@ -1,6 +1,15 @@
 #!/usr/bin/env node
+// Zero-dependency helper for Synthetic's /v2/search and /v2/quotas endpoints.
+// Limits and quirks enforced here are documented in references/api.md.
 
-const BASE_URL = "https://api.synthetic.new/v2";
+const BASE_URL = (process.env.SYNTHETIC_API_BASE_URL || "https://api.synthetic.new/v2").replace(/\/+$/, "");
+const REQUEST_TIMEOUT_MS = 30_000;
+
+// Synthetic silently ignores everything after the first 4,096 characters of `query`,
+// including trailing site: operators, so longer queries are rejected locally.
+const MAX_EFFECTIVE_QUERY_CHARS = 4096;
+const DEFAULT_HIGHLIGHT_CHARS = 1200;
+const DEFAULT_TEXT_CHARS = 5000;
 
 function usage() {
   console.log(`Synthetic Search helper
@@ -8,140 +17,90 @@ function usage() {
 Usage:
   node scripts/search.js "query"
   node scripts/search.js search "query"
-  node scripts/search.js quotas
+  node scripts/search.js quotas [--json]
 
 Search flags:
-  --content           Include truncated content blocks
-  --chars <n>         Max characters for --content output (default: 5000)
-  -n, --limit <n>     Max results to display locally (default: 5)
-  --json              Print raw JSON response
-  --urls              Print one URL per line
-  --titles            Print title and URL separated by a tab
-  -h, --help          Show help
-
-Quota flags:
-  --json              Print raw quota JSON
+  --site <domain>          Restrict results (adds site:<domain>; repeat for a union)
+  --exclude-site <domain>  Exclude a domain or path (adds -site:<domain>; repeatable)
+  --compact                Print JSON with url, title, published, highlights only
+  --text, --content        Include each page's full text, truncated to --chars
+  --chars <n>              Max characters per highlight/text block (default: ${DEFAULT_HIGHLIGHT_CHARS} / ${DEFAULT_TEXT_CHARS})
+  -n, --limit <n>          Max results to print (display only; the API always returns 5)
+  --json                   Print the raw API response (often 50-600 KB)
+  --urls                   Print one URL per line
+  --titles                 Print title and URL separated by a tab
+  --save <file>            Also write the raw API response to <file>
+  -h, --help               Show help
 
 Examples:
-  node scripts/search.js "rust async await"
-  node scripts/search.js --content --limit 3 --chars 1200 "rust async await"
-  node scripts/search.js --urls "nix flake tutorial"
-  node scripts/search.js quotas --json
+  node scripts/search.js "rust tokio select cancellation safety"
+  node scripts/search.js --site docs.rs --site github.com "tokio select cancellation"
+  node scripts/search.js --compact --save /tmp/results.json "httpx retry transport"
+  node scripts/search.js quotas
 `);
 }
 
-function ensureApiKey() {
-  const apiKey = process.env.SYNTHETIC_API_KEY;
-  if (!apiKey) {
-    console.error("ERROR: SYNTHETIC_API_KEY environment variable is required.");
-    process.exit(1);
+class UsageError extends Error {}
+
+class ApiError extends Error {
+  constructor(status, message) {
+    super(message);
+    this.status = status;
   }
-  return apiKey;
 }
 
 function takeValue(args, index, flag) {
-  if (!args[index + 1]) {
-    console.error(`ERROR: ${flag} requires a value.`);
-    process.exit(1);
+  const value = args[index + 1];
+  if (value === undefined || value.startsWith("--")) {
+    throw new UsageError(`${flag} requires a value.`);
   }
-  return args[index + 1];
+  return value;
 }
 
 function parsePositiveInt(value, flag) {
-  const parsed = Number.parseInt(value, 10);
-  if (!Number.isFinite(parsed) || parsed <= 0) {
-    console.error(`ERROR: ${flag} must be a positive integer.`);
-    process.exit(1);
+  if (!/^\d+$/.test(value) || Number(value) <= 0) {
+    throw new UsageError(`${flag} must be a positive integer.`);
   }
-  return parsed;
+  return Number(value);
 }
 
-async function requestJson(path, { method = "GET", body } = {}) {
-  const response = await fetch(`${BASE_URL}${path}`, {
-    method,
-    headers: {
-      Authorization: `Bearer ${ensureApiKey()}`,
-      ...(body ? { "Content-Type": "application/json" } : {}),
-    },
-    ...(body ? { body: JSON.stringify(body) } : {}),
-  });
-
-  const text = await response.text();
-  if (!response.ok) {
-    console.error(`Synthetic API error: ${response.status} ${response.statusText}`);
-    if (text) {
-      console.error(text);
-    } else {
-      console.error("(empty response body)");
-    }
-    process.exit(1);
+function parseDomain(value, flag) {
+  if (/\s/.test(value) || value.includes(":")) {
+    throw new UsageError(`${flag} expects a bare domain or domain/path, such as github.com or github.com/tokio-rs.`);
   }
-
-  return text ? JSON.parse(text) : {};
+  return value;
 }
 
-function printSearchResults(results, options) {
-  if (options.urls) {
-    for (const result of results) {
-      if (result.url) {
-        console.log(result.url);
-      }
-    }
-    return;
-  }
-
-  if (options.titles) {
-    for (const result of results) {
-      console.log(`${result.title || "(no title)"}\t${result.url || ""}`);
-    }
-    return;
-  }
-
-  for (let index = 0; index < results.length; index += 1) {
-    const result = results[index];
-    const text = (result.text || "").replace(/\s+/g, " ").trim();
-    const snippet = text.slice(0, 300);
-
-    console.log(`--- Result ${index + 1} ---`);
-    console.log(`Title: ${result.title || "(no title)"}`);
-    console.log(`URL: ${result.url || "(no url)"}`);
-    console.log(`Published: ${result.published || "(not returned by API)"}`);
-    console.log(`Snippet: ${snippet}${text.length > 300 ? "..." : ""}`);
-
-    if (options.content && text) {
-      const content = text.slice(0, options.maxChars);
-      console.log(`Content:\n${content}${text.length > options.maxChars ? "\n...(truncated)" : ""}`);
-    }
-
-    console.log("");
-  }
-}
-
-async function runSearch(args) {
+function parseSearchArgs(args) {
   const options = {
-    content: false,
-    json: false,
-    urls: false,
-    titles: false,
-    maxChars: 5000,
+    output: "readable",
+    includeText: false,
+    maxChars: undefined,
     limit: 5,
+    sites: [],
+    excludedSites: [],
+    savePath: undefined,
   };
   const queryParts = [];
 
   for (let index = 0; index < args.length; index += 1) {
     const arg = args[index];
     switch (arg) {
+      case "--text":
       case "--content":
-        options.content = true;
+        options.includeText = true;
         break;
       case "--json":
-        options.json = true;
+        options.output = "json";
+        break;
+      case "--compact":
+        options.output = "compact";
         break;
       case "--urls":
-        options.urls = true;
+        options.output = "urls";
         break;
       case "--titles":
-        options.titles = true;
+        options.output = "titles";
         break;
       case "--chars":
         options.maxChars = parsePositiveInt(takeValue(args, index, arg), arg);
@@ -152,71 +111,191 @@ async function runSearch(args) {
         options.limit = parsePositiveInt(takeValue(args, index, arg), arg);
         index += 1;
         break;
-      case "-h":
-      case "--help":
-        usage();
-        process.exit(0);
+      case "--site":
+        options.sites.push(parseDomain(takeValue(args, index, arg), arg));
+        index += 1;
+        break;
+      case "--exclude-site":
+        options.excludedSites.push(parseDomain(takeValue(args, index, arg), arg));
+        index += 1;
+        break;
+      case "--save":
+        options.savePath = takeValue(args, index, arg);
+        index += 1;
         break;
       default:
+        if (arg.startsWith("--")) {
+          throw new UsageError(`Unknown flag: ${arg}`);
+        }
         queryParts.push(arg);
         break;
     }
   }
 
-  const query = queryParts.join(" ").trim();
-  if (!query) {
-    console.error("ERROR: search query is required.");
-    usage();
-    process.exit(1);
+  const operators = [
+    ...options.sites.map((site) => `site:${site}`),
+    ...options.excludedSites.map((site) => `-site:${site}`),
+  ];
+  const baseQuery = queryParts.join(" ").trim();
+  if (!baseQuery) {
+    // Synthetic answers "" with a blank 500 and whitespace with unrelated news; both cost quota.
+    throw new UsageError("search query is required and must contain non-whitespace text.");
+  }
+  const query = [baseQuery, ...operators].join(" ");
+  if (query.length > MAX_EFFECTIVE_QUERY_CHARS) {
+    throw new UsageError(
+      `query is ${query.length} characters; Synthetic ignores everything after ${MAX_EFFECTIVE_QUERY_CHARS}. Shorten it or split it into several searches.`,
+    );
+  }
+  return { query, options };
+}
+
+function errorHint(status, text) {
+  if (status === 401) {
+    return "Check that SYNTHETIC_API_KEY is valid and sent as 'Authorization: Bearer <key>'.";
+  }
+  if (status === 429) {
+    return "The hourly search quota is spent. Stop searching until it renews; retries will keep failing.";
+  }
+  if (status >= 500 && !text) {
+    return "Synthetic returns blank 500s for empty or oversized queries and invalid JSON; these still count against the hourly search quota.";
+  }
+  return undefined;
+}
+
+async function requestJson(path, { method = "GET", body } = {}) {
+  const apiKey = process.env.SYNTHETIC_API_KEY;
+  if (!apiKey) {
+    throw new UsageError("SYNTHETIC_API_KEY environment variable is required.");
   }
 
-  const data = await requestJson("/search", {
-    method: "POST",
-    body: { query },
+  const response = await fetch(`${BASE_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      ...(body ? { "Content-Type": "application/json" } : {}),
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
 
-  if (options.json) {
+  const text = await response.text();
+  if (!response.ok) {
+    const lines = [`Synthetic API error: HTTP ${response.status}`, text || "(empty response body)"];
+    const hint = errorHint(response.status, text);
+    if (hint) lines.push(`Hint: ${hint}`);
+    throw new ApiError(response.status, lines.join("\n"));
+  }
+
+  return { data: text ? JSON.parse(text) : {}, rawText: text };
+}
+
+function truncate(text, maxChars) {
+  return text.length > maxChars ? `${text.slice(0, maxChars)}...(truncated)` : text;
+}
+
+function compactResult(result) {
+  return {
+    url: result.url,
+    title: result.title || null,
+    published: result.published || null,
+    highlights: Array.isArray(result.highlights) ? result.highlights : [],
+  };
+}
+
+function printReadable(results, options) {
+  const highlightChars = options.maxChars ?? DEFAULT_HIGHLIGHT_CHARS;
+  const textChars = options.maxChars ?? DEFAULT_TEXT_CHARS;
+
+  results.forEach((result, index) => {
+    console.log(`--- Result ${index + 1} ---`);
+    console.log(`Title: ${result.title || "(no title)"}`);
+    console.log(`URL: ${result.url || "(no url)"}`);
+    if (result.published) {
+      console.log(`Published: ${result.published}`);
+    }
+    const highlight = (Array.isArray(result.highlights) ? result.highlights.join("\n...\n") : "").trim();
+    console.log(`Highlight:\n${highlight ? truncate(highlight, highlightChars) : "(none returned)"}`);
+    if (options.includeText) {
+      const text = (result.text || "").trim();
+      console.log(`Text (${text.length} chars):\n${truncate(text, textChars)}`);
+    }
+    console.log("");
+  });
+}
+
+// Synthetic sends no Retry-After header, so look up the renewal time from the free /quotas call.
+async function explainQuotaExhaustion(error) {
+  if (error instanceof ApiError && error.status === 429) {
+    const renewsAt = await requestJson("/quotas")
+      .then(({ data }) => data.search?.hourly?.renewsAt)
+      .catch(() => undefined);
+    if (renewsAt) error.message += `\nSearch quota renews at ${renewsAt}.`;
+  }
+  throw error;
+}
+
+async function runSearch(args) {
+  const { query, options } = parseSearchArgs(args);
+  const { data, rawText } = await requestJson("/search", { method: "POST", body: { query } }).catch(
+    explainQuotaExhaustion,
+  );
+
+  if (options.savePath) {
+    const { writeFileSync } = await import("node:fs");
+    writeFileSync(options.savePath, rawText);
+    console.error(`Saved raw response to ${options.savePath}`);
+  }
+
+  if (options.output === "json") {
     console.log(JSON.stringify(data, null, 2));
     return;
   }
 
-  const results = Array.isArray(data.results) ? data.results.slice(0, options.limit) : [];
+  const results = (Array.isArray(data.results) ? data.results : []).slice(0, options.limit);
   if (results.length === 0) {
-    console.error("No results found.");
+    console.error("No results returned.");
     return;
   }
 
-  printSearchResults(results, options);
+  switch (options.output) {
+    case "compact":
+      console.log(JSON.stringify({ query, results: results.map(compactResult) }, null, 2));
+      break;
+    case "urls":
+      results.forEach((result) => result.url && console.log(result.url));
+      break;
+    case "titles":
+      results.forEach((result) => console.log(`${result.title || "(no title)"}\t${result.url || ""}`));
+      break;
+    default:
+      printReadable(results, options);
+  }
 }
 
-function formatQuotaLine(label, used, limit, renewsAt) {
-  return `${label}: ${used}/${limit}${renewsAt ? ` (renews ${renewsAt})` : ""}`;
+function formatWindow(label, bucket) {
+  if (!bucket) return `${label}: (not returned)`;
+  const renews = bucket.renewsAt ? ` (renews ${bucket.renewsAt})` : "";
+  return `${label}: ${bucket.requests ?? "?"}/${bucket.limit ?? "?"} used${renews}`;
 }
 
 async function runQuotas(args) {
-  const jsonMode = args.includes("--json");
-  if (args.includes("-h") || args.includes("--help")) {
-    usage();
-    process.exit(0);
-  }
-
-  const data = await requestJson("/quotas");
-  if (jsonMode) {
+  const { data } = await requestJson("/quotas");
+  if (args.includes("--json")) {
     console.log(JSON.stringify(data, null, 2));
     return;
   }
 
-  const subscription = data.subscription || {};
-  const hourly = data.search?.hourly || {};
-  const weekly = data.weeklyTokenLimit || {};
-  const rolling = data.rollingFiveHourLimit || {};
-
+  const rolling = data.rollingFiveHourLimit;
+  const weekly = data.weeklyTokenLimit;
   console.log("Synthetic quota summary");
-  console.log(formatQuotaLine("Subscription", subscription.requests ?? "?", subscription.limit ?? "?", subscription.renewsAt));
-  console.log(formatQuotaLine("Search hourly", hourly.requests ?? "?", hourly.limit ?? "?", hourly.renewsAt));
-  console.log(`Rolling five-hour: ${rolling.remaining ?? "?"}/${rolling.max ?? "?"}${rolling.limited === true ? " (limited)" : ""}`);
-  if (weekly.remainingCredits || weekly.maxCredits) {
-    console.log(`Weekly credits: ${weekly.remainingCredits || "?"}/${weekly.maxCredits || "?"}`);
+  console.log(formatWindow("Search (hourly)", data.search?.hourly));
+  console.log(formatWindow("Subscription requests", data.subscription));
+  if (rolling) {
+    console.log(`Rolling five-hour: ${rolling.remaining ?? "?"}/${rolling.max ?? "?"} remaining${rolling.limited ? " (limited)" : ""}`);
+  }
+  if (weekly) {
+    console.log(`Weekly credits: ${weekly.remainingCredits ?? "?"} of ${weekly.maxCredits ?? "?"} remaining`);
   }
 }
 
@@ -227,20 +306,17 @@ async function main() {
     return;
   }
 
-  const [maybeCommand, ...rest] = args;
-  if (maybeCommand === "quotas") {
+  const [command, ...rest] = args;
+  if (command === "quotas") {
     await runQuotas(rest);
-    return;
-  }
-  if (maybeCommand === "search") {
+  } else if (command === "search") {
     await runSearch(rest);
-    return;
+  } else {
+    await runSearch(args);
   }
-
-  await runSearch(args);
 }
 
 main().catch((error) => {
-  console.error(`Error: ${error.message}`);
-  process.exit(1);
+  console.error(error instanceof UsageError ? `ERROR: ${error.message}` : error.message);
+  process.exit(error instanceof UsageError ? 2 : 1);
 });

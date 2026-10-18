@@ -1,13 +1,14 @@
 {
-  "version": "1.0.0",
+  "version": "2.0.0",
   "organization": "JP Caparas",
-  "date": "April 2026",
-  "abstract": "Production skill for Synthetic Search, combining the published skills.sh examples with a verified local helper workflow. Covers raw search requests, jq-friendly extraction, quota inspection, helper scripts, and live-tested gotchas from April 9, 2026.",
+  "date": "October 2026",
+  "abstract": "Production skill for Synthetic's zero-data-retention web search API. Turns natural-language requests into focused queries with compact, cited results, and documents live-measured limits from 2026-10-18: five results per search, a 4,096-character effective query, a 100,000-character hard cap, working site: operators, silently ignored body parameters, the undocumented highlights field, and hourly search quota accounting.",
   "references": [
-    "https://skills.sh/sirn/dotfiles/synthetic-search",
     "https://dev.synthetic.new/docs/synthetic/search",
     "https://dev.synthetic.new/docs/synthetic/quotas",
-    "https://api.synthetic.new/v2/search",
-    "https://api.synthetic.new/v2/quotas"
+    "https://dev.synthetic.new/docs/api/overview",
+    "https://synthetic.new/rate-limits",
+    "https://github.com/synthetic-lab/octofriend",
+    "https://skills.sh/sirn/dotfiles/synthetic-search"
   ]
 }

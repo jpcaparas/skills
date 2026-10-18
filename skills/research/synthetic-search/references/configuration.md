@@ -1,59 +1,47 @@
 # Configuration
 
-Use this file when you need setup steps, prerequisite checks, or a quick way to confirm the environment is ready.
+Use this file for setup steps, prerequisite checks, and choosing an interface.
 
 ## Requirements
 
-- `SYNTHETIC_API_KEY`
-- `curl`
-- Optional: `jq` for filtering JSON
-- Optional: Node.js 18+ for `scripts/search.js`
-- Optional: Python 3 for `scripts/probe_synthetic_search.py`, `scripts/validate.py`, and `scripts/test_skill.py`
+- `SYNTHETIC_API_KEY` from a Synthetic subscription. All plans list the Web Search API.
+- Node.js 18 or newer for `scripts/search.js` (uses built-in `fetch`; no npm install).
+- Optional: `curl` and `jq` for raw calls.
+- Optional: Python 3.11 or newer for `scripts/probe_synthetic_search.py`, `scripts/test_helper.py`, `scripts/validate.py`, and `scripts/test_skill.py`.
 
-## Set the API Key
+## Provide the Key
 
-```bash
-export SYNTHETIC_API_KEY="your-key-here"
-```
-
-Never hard-code the key inside scripts, evals, or committed config.
-
-## Check the Environment
+Put the key in the environment through your secret manager or shell profile:
 
 ```bash
-[ -n "$SYNTHETIC_API_KEY" ] && echo "OK: SYNTHETIC_API_KEY is set" || echo "Error: SYNTHETIC_API_KEY not set"
+export SYNTHETIC_API_KEY="..."
 ```
+
+Never hard-code it in scripts, evals, committed config, command arguments, or chat. Check presence without printing it:
 
 ```bash
-command -v jq >/dev/null && echo "OK: jq installed" || echo "jq optional but useful"
+[ -n "$SYNTHETIC_API_KEY" ] && echo "SYNTHETIC_API_KEY is set" || echo "SYNTHETIC_API_KEY is missing"
 ```
+
+## Free Auth Check
+
+`/quotas` does not consume quota, so it is the safest way to confirm the key works:
 
 ```bash
-node --version
-python3 --version
+node <skill-dir>/scripts/search.js quotas
 ```
 
-## Fastest Auth Check
+A `401` means the key is wrong or the header lacks the `Bearer ` prefix.
 
-`/quotas` is safer than a search query because the docs say it does not count against subscription limits.
+## Optional Override
 
-```bash
-curl -s https://api.synthetic.new/v2/quotas \
-  -H "Authorization: Bearer $SYNTHETIC_API_KEY" | jq .
-```
+`SYNTHETIC_API_BASE_URL` (default `https://api.synthetic.new/v2`) points the helper and probe at another base URL. The offline tests use it to target a local stub; normal use never needs it.
 
-If that works, auth is set up correctly.
+## Choosing an Interface
 
-## When to Use Which Interface
-
-| Interface | Use it when | Why |
-| --- | --- | --- |
-| Raw `curl` | Another tool or script needs exact JSON | Lowest ambiguity |
-| `curl` + `jq` | You only need URLs, titles, or one field | Fast shell pipeline |
-| `node scripts/search.js` | A human wants readable output or simple quota summaries | Easier scanning |
-| `python3 scripts/probe_synthetic_search.py` | You want a structured probe for live verification | Repeatable diagnostics |
-
-## Source Docs
-
-- `https://dev.synthetic.new/docs/synthetic/search`
-- `https://dev.synthetic.new/docs/synthetic/quotas`
+| Interface | Use it when |
+| --- | --- |
+| `node scripts/search.js --compact --save FILE` | An agent needs results in context: small output, full pages kept on disk |
+| `node scripts/search.js` (default) | A person wants readable terminal output |
+| `curl` + `jq` | Node is unavailable, or another tool needs exact JSON |
+| `python3 scripts/probe_synthetic_search.py` | Re-verifying limits and error shapes after the API changes |

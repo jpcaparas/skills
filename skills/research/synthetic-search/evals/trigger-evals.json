@@ -1,0 +1,16 @@
+[
+  {"query": "Use Synthetic search to find the latest Vite release notes.", "should_trigger": true},
+  {"query": "Search the web with Synthetic for how to configure retries in httpx.", "should_trigger": true},
+  {"query": "Look this error up on Synthetic: TypeError: Cannot read properties of undefined (reading 'map').", "should_trigger": true},
+  {"query": "synthetic search tokio select cancellation safety, only GitHub results", "should_trigger": true},
+  {"query": "Can you do a zero-retention web search through my Synthetic key?", "should_trigger": true},
+  {"query": "How many Synthetic searches do I have left this hour?", "should_trigger": true},
+  {"query": "My api.synthetic.new/v2/search call keeps returning a blank 500.", "should_trigger": true},
+  {"query": "Use SYNTHETIC_API_KEY to research Postgres advisory lock patterns and cite sources.", "should_trigger": true},
+  {"query": "Use Tavily to search for recent AI startup funding rounds.", "should_trigger": false},
+  {"query": "Search the codebase for every call to fetchUser.", "should_trigger": false},
+  {"query": "Call Synthetic's chat completions endpoint with GLM.", "should_trigger": false},
+  {"query": "Open the pricing page in a browser and take a screenshot.", "should_trigger": false},
+  {"query": "Crawl docs.example.com and convert every page to Markdown.", "should_trigger": false},
+  {"query": "Generate synthetic test data for the users table.", "should_trigger": false}
+]

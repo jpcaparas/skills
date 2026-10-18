@@ -12,6 +12,7 @@ import json
 import os
 import re
 import sys
+import unittest
 
 
 def extract_file_references(content: str) -> list[str]:
@@ -120,8 +121,16 @@ def main() -> None:
         print("\nIssues:")
         for error in results["errors"]:
             print(f"  - {error}")
-    print("\nPASS: all checks passed" if results["passed"] else "\nFAIL: one or more checks failed")
-    raise SystemExit(0 if results["passed"] else 1)
+    # Offline helper regressions: a local stub server stands in for the Synthetic API.
+    suite = unittest.defaultTestLoader.discover(
+        os.path.join(os.path.abspath(sys.argv[1]), "scripts"), pattern="test_helper.py"
+    )
+    helper_passed = unittest.TextTestRunner(verbosity=1).run(suite).wasSuccessful()
+    print("Behavioural and trigger evals are structurally checked, not model-evaluated.")
+
+    passed = results["passed"] and helper_passed
+    print("\nPASS: all checks passed" if passed else "\nFAIL: one or more checks failed")
+    raise SystemExit(0 if passed else 1)
 
 
 if __name__ == "__main__":
