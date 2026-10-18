@@ -1,6 +1,6 @@
-# Nano Banana 2 Infographic
+# Nano Banana 2.1 Infographic
 
-Portable production skill for creating legible, fact-faithful Nano Banana 2 infographics for blog posts, executive decks, reports, and editorial explainers. The authoritative instructions live in `SKILL.md`.
+Portable production skill for creating legible, fact-faithful Nano Banana 2.1 infographics for blog posts, executive decks, reports, and editorial explainers. The authoritative instructions live in `SKILL.md`.
 
 ## What It Covers
 
@@ -8,13 +8,13 @@ Portable production skill for creating legible, fact-faithful Nano Banana 2 info
 - optional low-noise composition presets and a four-prompt preset builder
 - direct custom prompts when the builder's fixed style or text limits do not fit
 - material-gap questions rather than an intake questionnaire
-- Gemini request examples, dated model evidence, and conditional official-doc checks
+- Gemini request examples pinned to `gemini-nano-banana-2.1`, with measured sizes, thinking levels, and costs
 - single-image or approved concurrent batch rendering, with factual, accessibility, privacy, and spend checks
 
 ## Key Files
 
 - `SKILL.md` for the authoritative instructions
-- `references/api.md` for model IDs and request shape
+- `references/api.md` for the model ID, request shape, and settings
 - `references/patterns.md` for custom prompts and optional composition examples
 - `references/configuration.md` for supported overrides, preset limitations, and local helper scripts
 - `references/gotchas.md` for noise and text pitfalls

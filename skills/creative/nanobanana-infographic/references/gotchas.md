@@ -82,23 +82,35 @@ Some visuals should not be image-generated at all:
 
 In those cases, use a charting or vector workflow instead of forcing Gemini to behave like a layout engine.
 
-## 9. Marketing Names And API IDs Drift
+## 9. One Model Only, And Names Drift
 
-Public launch language and callable API model IDs do not always match exactly.
-
-Observed example:
-
-- Google's February 26, 2026 announcement names the product `Nano Banana 2` and describes it as `Gemini 3.1 Flash Image`.
-- A live `ListModels` call on April 9, 2026 exposed the callable Developer API model as `gemini-3.1-flash-image-preview`.
+This skill uses Nano Banana 2.1 through the callable ID `gemini-nano-banana-2.1` (confirmed with `ListModels` on 2026-10-18). Older models are not fallbacks: Nano Banana 2 (`gemini-3.1-flash-image`) shuts down on 2026-10-29, and the others cost more for worse results.
 
 Fix:
 
-- use the public name when talking to users
-- use the callable model ID when writing code
-- check official model documentation and, when authorized, `ListModels` if the naming or availability is uncertain; a similar-looking model name is not proof of identity
-- report unavailability rather than silently substituting another model
+- use the public name when talking to users and the callable ID in code
+- check official model documentation and `ListModels` if naming or availability is uncertain; a similar-looking model name is not proof of identity
+- report a failure or unavailability rather than switching models
 
-## 10. Parallelism Does Not Authorize Extra Renders
+## 10. Unrequested Labels Appear
+
+At `medium` and `high` thinking, Nano Banana 2.1 often adds captions, axis labels, or small annotations that nobody asked for. At `minimal` it is cheaper but more likely to get a fact wrong.
+
+Fix:
+
+- quote every visible string, ask for it copied character for character, and end the prompt with "No other text."
+- use `medium` for most finals and `high` for dense facts, then check every label against the brief
+- keep `minimal` for layout drafts that contain no facts to get right
+
+## 11. No Transparency
+
+Output is always JPEG. Asking for a transparent background draws a checkerboard pattern into the image.
+
+Fix:
+
+- deliver on a solid background, or render on a flat chroma colour that does not appear in the design and key it out afterwards
+
+## 12. Parallelism Does Not Authorize Extra Renders
 
 An approved multi-image pack can benefit from concurrent rendering. The preset builder's four prompts do not themselves authorize four API calls.
 

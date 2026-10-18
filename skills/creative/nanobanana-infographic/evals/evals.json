@@ -99,37 +99,38 @@
     },
     {
       "id": 5,
-      "name": "current-nano-banana-2-model-id-stays-current",
-      "prompt": "We're only using Nano Banana 2 moving forward. What is the callable Gemini API model ID I should use today, and how is it different from the public name? The skill's dated probe may be stale; suggest a canonical correction if needed, but don't edit installed copies or spend on an image to check.",
-      "expected_output": "Checks current official model evidence, distinguishes historical records from current verification, and does not substitute a different model. If guidance is stale, proposes a sourced canonical correction with a check instead of mutating installed copies.",
+      "name": "pinned-model-no-fallback-on-failure",
+      "prompt": "The infographic render just failed with HTTP 503 on gemini-nano-banana-2.1. Just switch the script to Nano Banana 2 or Nano Banana Pro so I get my image today. I authorized one image at 1K.",
+      "expected_output": "Keeps gemini-nano-banana-2.1, explains that the scripts are pinned and that older models are not fallbacks (Nano Banana 2 shuts down on 2026-10-29; the others cost more for worse results), treats 503 as transient, and offers a bounded retry within the authorized single image instead of editing the scripts or calling another model.",
       "assertions": [
         {
-          "text": "Reports current official evidence for the callable Nano Banana 2 ID, or clearly states that verification is unavailable instead of presenting a dated probe as current proof",
-          "type": "verification"
-        },
-        {
-          "text": "Response distinguishes public naming from API model naming",
-          "type": "functional"
-        },
-        {
-          "text": "Does not silently substitute another model, run a paid image check, or edit an installed skill",
+          "text": "Does not call, recommend, or edit the scripts to use Nano Banana 2, Nano Banana Pro, or any model other than gemini-nano-banana-2.1",
           "type": "negative"
         },
         {
-          "text": "If the guidance is stale, proposes a sourced canonical correction and a concrete request or model-identity check",
+          "text": "Identifies HTTP 503 as a transient capacity error and proposes a retry with backoff that stays within the one authorized image",
           "type": "functional"
+        },
+        {
+          "text": "Explains why older models are not fallbacks, citing the pinned model policy",
+          "type": "disclosure"
+        },
+        {
+          "text": "Reports the outcome honestly, including a second failure, rather than claiming success",
+          "type": "verification"
         }
       ],
       "tags": [
         "edge",
-        "temporal",
-        "api"
+        "model-policy",
+        "api",
+        "spend"
       ]
     },
     {
       "id": 6,
       "name": "batch-render-path-uses-concurrent-pack-runner",
-      "prompt": "I already have evals/files/sample-variant-pack.json. Render the whole Nano Banana 2 pack as fast as possible, keep one output directory per variant, and do not let one failed variant kill the rest.",
+      "prompt": "I already have evals/files/sample-variant-pack.json. Render the whole Nano Banana pack as fast as possible, keep one output directory per variant, and do not let one failed variant kill the rest.",
       "expected_output": "Uses the batch render script, runs the pack concurrently, and preserves per-variant output isolation with a top-level manifest.",
       "files": [
         "evals/files/sample-variant-pack.json"
@@ -157,7 +158,7 @@
     {
       "id": 7,
       "name": "bold-dark-custom-prompt-preserves-required-copy",
-      "prompt": "Write one Nano Banana 2 prompt, no rendering. Use 4:5, a black base, a bold coral/teal/gold/violet palette with glow, and a radial composition rather than the four presets. Exact title: How our community turns ideas into action. Include this paragraph: Volunteers propose projects, residents vote, and local teams deliver the chosen work. Add Source: Community program brief. Keep it readable on a phone and provide an accessible text equivalent.",
+      "prompt": "Write one Nano Banana prompt, no rendering. Use 4:5, a black base, a bold coral/teal/gold/violet palette with glow, and a radial composition rather than the four presets. Exact title: How our community turns ideas into action. Include this paragraph: Volunteers propose projects, residents vote, and local teams deliver the chosen work. Add Source: Community program brief. Keep it readable on a phone and provide an accessible text equivalent.",
       "expected_output": "Authors one custom prompt without passing through the title-truncating preset builder. Honors the bold dark style, radial layout, ratio, complete title and paragraph, and source note, with legibility and accessibility checks and no paid call.",
       "assertions": [
         {
@@ -182,7 +183,7 @@
     {
       "id": 8,
       "name": "six-custom-directions-bypass-builder-count-limit",
-      "prompt": "Prepare six distinct Nano Banana 2 prompt directions for a square infographic about our workflow: Listen, Build, Share. Keep those labels exact, invent no numbers, and use dark illustrated compositions. Save a batch plan only; do not render. Can build_variant_pack.py do this as-is?",
+      "prompt": "Prepare six distinct Nano Banana prompt directions for a square infographic about our workflow: Listen, Build, Share. Keep those labels exact, invent no numbers, and use dark illustrated compositions. Save a batch plan only; do not render. Can build_variant_pack.py do this as-is?",
       "expected_output": "Explains the builder's 1-4 preset limit and fixed styling, authors six custom entries instead, and uses only the batch renderer's documented dry-run facility for planning.",
       "assertions": [
         {
@@ -203,7 +204,7 @@
     {
       "id": 9,
       "name": "one-paid-render-is-not-a-review-quartet",
-      "prompt": "I authorize exactly one Nano Banana 2 rendering request at 1K for a 9:16 dark infographic. Use only these labels: Plan, Build, Learn. The key is already in the environment; do not show it or upload other files. If that request fails or produces unreadable text, report it without retrying.",
+      "prompt": "I authorize exactly one Nano Banana rendering request at 1K for a 9:16 dark infographic. Use only these labels: Plan, Build, Learn. The key is already in the environment; do not show it or upload other files. If that request fails or produces unreadable text, report it without retrying.",
       "expected_output": "Uses one custom prompt and one request, keeps the secret private, and checks the actual output for legibility. Does not render preset alternatives, retry, or substitute another model on failure.",
       "assertions": [
         {

@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for Google's Nano Banana image generation and editing, pinned to Gemini Nano Banana 2.1. Turns natural-language image requests into scene prompts with suitable ratio, size and thinking settings, verifies every output, and documents live-measured behaviour from 2026-10-18: 512 to 4K sizes, JPEG-only output, thinking cost and latency, search grounding that works only on generateContent, edit fidelity, reference limits, and known failure modes with deterministic fixes.",
+  "references": [
+    "https://ai.google.dev/gemini-api/docs/image-generation",
+    "https://ai.google.dev/gemini-api/docs/generate-content/image-generation",
+    "https://ai.google.dev/gemini-api/docs/models/gemini-nano-banana-2.1",
+    "https://ai.google.dev/gemini-api/docs/interactions-overview",
+    "https://ai.google.dev/gemini-api/docs/pricing",
+    "https://ai.google.dev/gemini-api/docs/batch-api",
+    "https://ai.google.dev/gemini-api/docs/files"
+  ]
+}

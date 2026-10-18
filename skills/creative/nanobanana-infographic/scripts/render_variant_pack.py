@@ -23,12 +23,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--variant-pack", required=True, help="Path to variant-pack.json.")
     parser.add_argument("--output-dir", required=True, help="Directory for batch outputs.")
-    parser.add_argument("--model", default=probe.DEFAULT_MODEL, help=f"Model ID. Default: {probe.DEFAULT_MODEL}")
-    parser.add_argument("--aspect-ratio", help="Override the aspect ratio from the pack.")
+    parser.add_argument("--aspect-ratio", choices=probe.ASPECT_RATIOS, help="Override the aspect ratio from the pack.")
     parser.add_argument(
         "--image-size",
         default=probe.DEFAULT_IMAGE_SIZE,
+        choices=probe.IMAGE_SIZES,
         help=f"Requested image size. Default: {probe.DEFAULT_IMAGE_SIZE}",
+    )
+    parser.add_argument(
+        "--thinking",
+        default=probe.DEFAULT_THINKING_LEVEL,
+        choices=probe.THINKING_LEVELS,
+        help=f"Thinking level. Default: {probe.DEFAULT_THINKING_LEVEL}",
     )
     parser.add_argument("--passes", type=int, default=1, help="How many passes per variant.")
     parser.add_argument(
@@ -58,20 +64,20 @@ def render_job(
     variant: dict,
     pass_index: int,
     output_root: Path,
-    model: str,
     aspect_ratio: str,
     image_size: str,
+    thinking_level: str,
     api_key: str,
 ) -> dict:
     variant_dir = output_root / variant["id"]
     variant_dir.mkdir(parents=True, exist_ok=True)
 
-    request_body = probe.build_request_body(variant["prompt"], aspect_ratio, image_size)
+    request_body = probe.build_request_body(variant["prompt"], aspect_ratio, image_size, thinking_level)
     request_path = variant_dir / f"request-{pass_index:02d}.json"
     write_json(request_path, request_body)
 
     try:
-        payload = probe.run_request(model, request_body, api_key)
+        payload = probe.run_request(request_body, api_key)
     except urllib.error.HTTPError as exc:
         error_body = exc.read().decode("utf-8", errors="replace")
         error_path = variant_dir / f"response-{pass_index:02d}.error.txt"
@@ -126,6 +132,10 @@ def main() -> None:
     pack = load_pack(variant_pack_path)
     brief = pack.get("brief") or {}
     aspect_ratio = args.aspect_ratio or brief.get("aspect_ratio") or "16:9"
+    if aspect_ratio not in probe.ASPECT_RATIOS:
+        raise SystemExit(
+            f"Unsupported aspect ratio {aspect_ratio!r} in the pack. Use one of: {', '.join(probe.ASPECT_RATIOS)}"
+        )
     variants = pack["variants"]
     jobs = [
         {"variant": variant, "pass_index": pass_index}
@@ -135,9 +145,10 @@ def main() -> None:
 
     batch_manifest = {
         "variant_pack": str(variant_pack_path),
-        "model": args.model,
+        "model": probe.MODEL,
         "aspect_ratio": aspect_ratio,
         "image_size": args.image_size,
+        "thinking_level": args.thinking,
         "variant_count": len(variants),
         "passes_per_variant": max(1, args.passes),
         "job_count": len(jobs),
@@ -163,9 +174,9 @@ def main() -> None:
                 variant=job["variant"],
                 pass_index=job["pass_index"],
                 output_root=output_dir,
-                model=args.model,
                 aspect_ratio=aspect_ratio,
                 image_size=args.image_size,
+                thinking_level=args.thinking,
                 api_key=api_key,
             )
             for job in jobs

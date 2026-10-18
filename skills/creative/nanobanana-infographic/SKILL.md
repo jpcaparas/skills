@@ -1,10 +1,10 @@
 ---
 name: nanobanana-infographic
-description: "Create infographic prompts and render workflows with Nano Banana 2, with adaptable low-noise presets for posts, decks, reports, and explainers. Trigger on infographic, Nano Banana 2, Gemini image, executive visual, blog diagram, or presentation visual. Do NOT use for logos, memes, or raw dashboards."
+description: "Create infographic prompts and render workflows with Nano Banana 2.1, with adaptable low-noise presets for posts, decks, reports, and explainers. Trigger on infographic, Nano Banana, Gemini image, executive visual, blog diagram, or presentation visual. Do NOT use for logos, memes, raw dashboards, or non-infographic image edits."
 compatibility: "Requires: python3. Optional: GEMINI_API_KEY for live render verification."
 metadata:
-  version: "1.0.0"
-  short-description: "Low-noise Nano Banana 2 infographic prompting and verification"
+  version: "2.0.0"
+  short-description: "Low-noise Nano Banana 2.1 infographic prompting and verification"
   openclaw:
     category: "content"
     subcategory: "image-generation"
@@ -20,11 +20,11 @@ references:
   - gotchas
 ---
 
-# Nano Banana 2 Infographic
+# Nano Banana 2.1 Infographic
 
 Create legible, fact-faithful infographics that fit the user's brief. Low-noise editorial layouts are useful presets, not the only valid style.
 
-This skill uses Nano Banana 2 only. For API calls, use its callable model ID rather than assuming the public marketing name is the exact endpoint name. If the documented ID is uncertain, unavailable, or conflicts with observed behavior, verify current official model documentation and, when authorized, model availability. Do not silently substitute another model.
+This skill uses Nano Banana 2.1 only, through the callable model ID `gemini-nano-banana-2.1`; the bundled scripts hard-code it. Older Nano Banana models are not fallbacks: they cost more for worse results or are shutting down. If a call fails or the ID looks stale, check current official model documentation and `ListModels`, then report; do not substitute another model. For photo edits, references, multi-turn refinement, or search-grounded images, use the `nanobanana` skill when it is installed.
 
 ## Decision Tree
 
@@ -50,6 +50,7 @@ What do you need to do?
 - Let the requested count, channel, ratio, style, palette, and content control the result. Otherwise choose a coherent composition suited to the audience; explain material assumptions briefly.
 - Author a custom prompt directly when the presets do not fit. Dark canvases, bold palettes, gradients, longer text, and other layouts are valid when legible and appropriate.
 - Use separate requests for distinct images rather than trusting one request to return an exact image count. Check the actual outputs.
+- Use thinking level `medium` by default, `high` for dense facts, and `minimal` only for fact-free layout drafts.
 - Render only the authorized images and passes. A prompt-only request needs no API call; a single-image request does not authorize four paid alternatives or open-ended retries.
 - Preserve exact facts, units, qualifiers, labels, and required attribution. Decide visible copy before rendering and inspect it afterward; never truncate meaning merely to satisfy a word-count preset.
 - Keep credentials secret and send only content authorized for the external service. Saved prompts and responses can contain sensitive material; do not publish them by default.
@@ -101,7 +102,7 @@ Use `references/patterns.md` for adaptable prompt shapes and targeted iteration.
 
 1. Asking for a "detailed infographic" usually increases clutter rather than clarity. Ask for hierarchy, whitespace, and restraint instead.
 2. Google documents that the model might not create the exact number of images requested. Use one deliberate request per intended image, then inspect the returned count.
-3. Google also documents that text generation works best when the text is decided first and then rendered into the image. Do not improvise long copy inside the image prompt.
+3. Google also documents that text generation works best when the text is decided first and then rendered into the image. Do not improvise long copy inside the image prompt. Quote exact copy and end with "No other text."; 2.1 adds unrequested labels otherwise.
 4. If the image misses the intended tone or scan path, adjust hierarchy, grouping, or emphasis without discarding a requested bold style.
 5. When the user needs dense quantitative fidelity, hand-built charts or vector layouts may be a better fit than Gemini image generation.
 
@@ -113,7 +114,7 @@ Rely on stable principles: factual fidelity, hierarchy, contrast, legibility, an
 
 | Task | Read |
 |---|---|
-| Model IDs, request fields, aspect ratios, response shape | `references/api.md` |
+| Model ID, request fields, ratios, sizes, thinking levels, cost | `references/api.md` |
 | Variant design, question flow, prompt formula, iteration ladder | `references/patterns.md` |
 | Environment setup, scripts, and live verification commands | `references/configuration.md` |
 | Noise, text, language, and retry pitfalls | `references/gotchas.md` |

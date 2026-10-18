@@ -1,0 +1,153 @@
+{
+  "skill_name": "nanobanana",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "natural-language-generate",
+      "prompt": "Use Nano Banana to make me a hero image for a coffee roaster's landing page: a pour-over brewing on a walnut counter, morning light.",
+      "expected_output": "Checks GEMINI_API_KEY without printing it, picks a wide ratio such as 16:9 or 21:9, 1K or 2K and medium thinking, writes a full-sentence scene prompt with purpose and lighting, runs scripts/nanobanana.py generate, inspects the saved JPEG with vision, and reports the path, settings and estimated cost.",
+      "assertions": [
+        {"text": "Uses scripts/nanobanana.py generate or an equivalent request to gemini-nano-banana-2.1", "type": "functional"},
+        {"text": "Passes an explicit --ratio suited to a landing-page hero", "type": "functional"},
+        {"text": "Inspects the generated image before reporting it", "type": "verification"},
+        {"text": "Does not call any other image model", "type": "negative"}
+      ],
+      "tags": ["smoke", "workflow"],
+      "files": ["scripts/nanobanana.py"]
+    },
+    {
+      "id": 2,
+      "name": "older-model-request",
+      "prompt": "Generate this poster with Nano Banana Pro, it's better at text: \"Harbour Lights Festival — 21 Nov\".",
+      "expected_output": "Explains the skill is pinned to Nano Banana 2.1 and does not call Pro, then generates with 2.1 using the quoted copy and the strict 'exactly these lines and nothing else' instruction, and checks the text character by character.",
+      "assertions": [
+        {"text": "Does not call gemini-3-pro-image or any non-2.1 model", "type": "negative"},
+        {"text": "Quotes the copy and adds an explicit nothing-else / keep punctuation instruction", "type": "functional"},
+        {"text": "Verifies the rendered text exactly, including the em dash", "type": "verification"}
+      ],
+      "tags": ["policy", "text"],
+      "files": ["SKILL.md", "references/prompting.md"]
+    },
+    {
+      "id": 3,
+      "name": "edit-keep-rest",
+      "prompt": "Here's living-room.jpg. Use Nano Banana to swap the grey sofa for a green velvet one and keep everything else the same.",
+      "expected_output": "Runs generate with --ref living-room.jpg and no --ratio (to keep the input shape), names the single change and lists what must stay, inspects the result for unintended changes, and notes edits regenerate the frame so pixels are close but not identical.",
+      "assertions": [
+        {"text": "Passes the photo with --ref", "type": "functional"},
+        {"text": "Prompt names the change and lists elements that must stay", "type": "functional"},
+        {"text": "Does not claim the untouched area is pixel-identical", "type": "negative"}
+      ],
+      "tags": ["edit"],
+      "files": ["references/prompting.md", "references/workflows.md"]
+    },
+    {
+      "id": 4,
+      "name": "transparent-logo",
+      "prompt": "Make a transparent PNG sticker of a green cactus mascot with Nano Banana.",
+      "expected_output": "Explains the model only outputs JPEG and that asking for transparency draws a fake checkerboard; generates on a flat magenta (#FF00FF) key because the subject is green; keys it locally with the ImageMagick recipe; composites the result over dark and light backgrounds to check edges before delivering a PNG.",
+      "assertions": [
+        {"text": "Does not rely on the model to produce transparency", "type": "negative"},
+        {"text": "Chooses a key colour absent from the subject (magenta for a green subject)", "type": "functional"},
+        {"text": "Checks the cut-out over light and dark backgrounds", "type": "verification"}
+      ],
+      "tags": ["post-processing", "edge"],
+      "files": ["references/workflows.md", "references/gotchas.md"]
+    },
+    {
+      "id": 5,
+      "name": "recent-facts-grounded",
+      "prompt": "Make a poster announcing the latest stable Node.js LTS release with its version number, using Nano Banana.",
+      "expected_output": "Uses --search because the fact is recent, which routes through generateContent at 1K or larger, reports the search queries and sources from the summary, keeps the .search.html attribution, and verifies the version text on the image against the sources.",
+      "assertions": [
+        {"text": "Uses --search (web grounding)", "type": "functional"},
+        {"text": "Does not request size 512 or --continue with search", "type": "negative"},
+        {"text": "Cites the sources returned by the summary", "type": "verification"}
+      ],
+      "tags": ["grounding"],
+      "files": ["references/workflows.md", "references/api.md"]
+    },
+    {
+      "id": 6,
+      "name": "real-species-image-search",
+      "prompt": "Create an accurate field-guide illustration of a kea (New Zealand alpine parrot) with Nano Banana.",
+      "expected_output": "Uses --image-search (optionally with --search) so appearance is grounded in real images, a portrait ratio such as 3:4, writes the species name with correct spelling, and checks species features in the output.",
+      "assertions": [
+        {"text": "Uses --image-search", "type": "functional"},
+        {"text": "Checks the rendered species against known features", "type": "verification"}
+      ],
+      "tags": ["grounding"],
+      "files": ["references/prompting.md"]
+    },
+    {
+      "id": 7,
+      "name": "iterate-character",
+      "prompt": "That mascot is great. Now give it a red scarf, then put it on a sticker sheet with four poses.",
+      "expected_output": "Uses --continue with the previous interaction_id for each step, one change per turn, restating what must persist (the scarf), and resends ratio, size and thinking each turn because they are interaction-scoped.",
+      "assertions": [
+        {"text": "Uses --continue with the stored interaction ID", "type": "functional"},
+        {"text": "Resends ratio/size/thinking on the follow-up turn", "type": "functional"},
+        {"text": "Does not use --no-store on a turn it intends to continue", "type": "negative"}
+      ],
+      "tags": ["multi-turn"],
+      "files": ["references/workflows.md", "references/gotchas.md"]
+    },
+    {
+      "id": 8,
+      "name": "left-handed-subject",
+      "prompt": "Use Nano Banana to make a photo of a left-handed painter at an easel, brush in her left hand.",
+      "expected_output": "Notes the model almost always draws the right hand; generates the scene, inspects which hand holds the brush, and if wrong and no legible text is present, flips it horizontally with magick -flop, then re-inspects.",
+      "assertions": [
+        {"text": "Checks which hand holds the brush in the output", "type": "verification"},
+        {"text": "Uses a horizontal flip only when the image has no legible text", "type": "functional"}
+      ],
+      "tags": ["edge", "known-failure"],
+      "files": ["references/prompting.md"]
+    },
+    {
+      "id": 9,
+      "name": "bulk-variants",
+      "prompt": "I need 60 product thumbnails for our catalogue overnight, Nano Banana, cheapest way.",
+      "expected_output": "Uses batch-submit with a JSONL file (one prompt per image, 1K, minimal or medium thinking) for half price, explains turnaround can be up to 24 hours, and fetches results with batch-fetch; does not ask one request for many images.",
+      "assertions": [
+        {"text": "Uses batch-submit/batch-fetch or the Batch API", "type": "functional"},
+        {"text": "Does not use size 512 in batch", "type": "negative"},
+        {"text": "States the half-price saving and asynchronous turnaround", "type": "verification"}
+      ],
+      "tags": ["batch", "cost"],
+      "files": ["references/workflows.md"]
+    },
+    {
+      "id": 10,
+      "name": "api-error-low-thinking",
+      "prompt": "My Nano Banana 2.1 call with thinking_level LOW returns 400. Why?",
+      "expected_output": "Explains 2.1 accepts minimal, medium and high in lowercase on the Interactions API; the schema lists low but the model rejects it; suggests minimal for speed and mentions the free contract command.",
+      "assertions": [
+        {"text": "Identifies that low is not supported by the model and lists the valid levels", "type": "verification"}
+      ],
+      "tags": ["errors"],
+      "files": ["references/api.md", "references/gotchas.md"]
+    },
+    {
+      "id": 11,
+      "name": "negative-infographic",
+      "prompt": "Design a low-noise executive infographic layout for our Q3 board deck.",
+      "expected_output": "Routes to nanobanana-infographic for infographic composition and presets (which itself renders with Nano Banana 2.1); this skill's request mechanics may support it.",
+      "assertions": [
+        {"text": "Does not treat this skill as the owner of infographic layout design", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 12,
+      "name": "negative-video",
+      "prompt": "Make a 6-second video of a banana dancing with Veo.",
+      "expected_output": "Does not trigger; video generation is out of scope.",
+      "assertions": [
+        {"text": "Does not run nanobanana.py", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    }
+  ]
+}

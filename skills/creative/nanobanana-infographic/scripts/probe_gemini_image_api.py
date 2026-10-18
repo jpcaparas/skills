@@ -15,8 +15,19 @@ import urllib.request
 from pathlib import Path
 
 
-DEFAULT_MODEL = "gemini-3.1-flash-image-preview"
+# Pinned on purpose: older Nano Banana models cost more for worse results, so
+# there is no override. The `nanobanana` skill owns the full model policy.
+MODEL = "gemini-nano-banana-2.1"
 DEFAULT_IMAGE_SIZE = "1K"
+DEFAULT_THINKING_LEVEL = "medium"
+# generateContent and the Batch API reject 512 for this model; only the
+# Interactions API accepts it, so these scripts offer 1K and up.
+IMAGE_SIZES = ("1K", "2K", "4K")
+THINKING_LEVELS = ("minimal", "medium", "high")
+ASPECT_RATIOS = (
+    "1:1", "2:3", "3:2", "3:4", "4:3", "4:5", "5:4",
+    "9:16", "16:9", "21:9", "1:4", "4:1", "1:8", "8:1",
+)
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
 
@@ -31,12 +42,18 @@ def parse_args() -> argparse.Namespace:
     source.add_argument("--prompt", help="Inline prompt text.")
     source.add_argument("--prompt-file", help="Path to a UTF-8 text file containing the prompt.")
     parser.add_argument("--output-dir", required=True, help="Directory to write outputs into.")
-    parser.add_argument("--model", default=DEFAULT_MODEL, help=f"Model ID. Default: {DEFAULT_MODEL}")
-    parser.add_argument("--aspect-ratio", default="16:9", help="Aspect ratio to request.")
+    parser.add_argument("--aspect-ratio", default="16:9", choices=ASPECT_RATIOS, help="Aspect ratio to request.")
     parser.add_argument(
         "--image-size",
         default=DEFAULT_IMAGE_SIZE,
+        choices=IMAGE_SIZES,
         help=f"Requested image size. Default: {DEFAULT_IMAGE_SIZE}",
+    )
+    parser.add_argument(
+        "--thinking",
+        default=DEFAULT_THINKING_LEVEL,
+        choices=THINKING_LEVELS,
+        help=f"Thinking level. Default: {DEFAULT_THINKING_LEVEL}",
     )
     parser.add_argument("--passes", type=int, default=1, help="How many separate requests to make.")
     parser.add_argument("--sleep-seconds", type=float, default=0.0, help="Sleep between passes.")
@@ -50,7 +67,7 @@ def load_prompt(args: argparse.Namespace) -> str:
     return path.read_text(encoding="utf-8").strip()
 
 
-def build_request_body(prompt: str, aspect_ratio: str, image_size: str) -> dict:
+def build_request_body(prompt: str, aspect_ratio: str, image_size: str, thinking_level: str) -> dict:
     return {
         "contents": [
             {
@@ -67,6 +84,7 @@ def build_request_body(prompt: str, aspect_ratio: str, image_size: str) -> dict:
                 "aspectRatio": aspect_ratio,
                 "imageSize": image_size,
             },
+            "thinkingConfig": {"thinkingLevel": thinking_level},
         },
     }
 
@@ -98,8 +116,8 @@ def save_inline_images(parts: list[dict], output_dir: Path, pass_index: int) -> 
     return image_paths
 
 
-def run_request(model: str, request_body: dict, api_key: str) -> dict:
-    url = API_URL.format(model=model)
+def run_request(request_body: dict, api_key: str) -> dict:
+    url = API_URL.format(model=MODEL)
     request = urllib.request.Request(
         url=url,
         data=json.dumps(request_body).encode("utf-8"),
@@ -129,20 +147,21 @@ def main() -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
 
     manifest = {
-        "model": args.model,
+        "model": MODEL,
         "aspect_ratio": args.aspect_ratio,
         "image_size": args.image_size,
+        "thinking_level": args.thinking,
         "passes": [],
     }
     image_count = 0
 
     for index in range(1, max(1, args.passes) + 1):
-        request_body = build_request_body(prompt, args.aspect_ratio, args.image_size)
+        request_body = build_request_body(prompt, args.aspect_ratio, args.image_size, args.thinking)
         request_path = output_dir / f"request-{index:02d}.json"
         request_path.write_text(json.dumps(request_body, indent=2) + "\n", encoding="utf-8")
 
         try:
-            payload = run_request(args.model, request_body, api_key)
+            payload = run_request(request_body, api_key)
         except urllib.error.HTTPError as exc:
             error_body = exc.read().decode("utf-8", errors="replace")
             (output_dir / f"response-{index:02d}.error.txt").write_text(error_body, encoding="utf-8")

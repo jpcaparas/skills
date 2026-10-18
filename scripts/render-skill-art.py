@@ -59,6 +59,7 @@ SKILL_SCENES = {
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
     "minimax-search": "a compact search beacon firing ten bright result arrows along a rate-paced conveyor of query tiles",
+    "nanobanana": "a pixel artist's easel where one glowing banana-shaped brush paints a blank canvas that blooms into a tiny landscape, with a few blank reference frames floating beside it",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-timeline": "a winding trail of evenly separated story beacons untangling a knot of pathways, with small framed silhouette gems alternating beside the trail and a warm lantern illuminating the next moment",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",

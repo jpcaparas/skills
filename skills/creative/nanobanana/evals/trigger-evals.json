@@ -1,0 +1,14 @@
+[
+  {"query": "Use Nano Banana to make a product shot of this mug.", "should_trigger": true},
+  {"query": "Edit this photo with Gemini: remove the person in the background.", "should_trigger": true},
+  {"query": "Generate a 4K panoramic image of the Southern Alps with nanobanana.", "should_trigger": true},
+  {"query": "Combine these three product photos into one flat lay using Gemini image generation.", "should_trigger": true},
+  {"query": "Make a Nano Banana image of today's weather in Wellington.", "should_trigger": true},
+  {"query": "Batch-generate 50 thumbnails with gemini-nano-banana-2.1.", "should_trigger": true},
+  {"query": "Why does my gemini image request with image_size 1k fail?", "should_trigger": true},
+  {"query": "Design an executive infographic layout for our board deck.", "should_trigger": false},
+  {"query": "Make a video of a dancing banana with Veo.", "should_trigger": false},
+  {"query": "Generate an image with DALL-E.", "should_trigger": false},
+  {"query": "Describe what is in this screenshot.", "should_trigger": false},
+  {"query": "Make a Mermaid diagram of our login flow.", "should_trigger": false}
+]

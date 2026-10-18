@@ -17,12 +17,7 @@
 
 No SDK is required. The included probe script uses Python's standard library only.
 
-Nano Banana 2 note:
-
-- public launch name: `Nano Banana 2`
-- callable Developer API model verified on April 9, 2026: `gemini-3.1-flash-image-preview`
-
-That dated verification does not guarantee current availability. If an ID or request field is uncertain or fails, use the official sources in `references/api.md`; do not silently switch models.
+Both render scripts are pinned to `gemini-nano-banana-2.1` (Nano Banana 2.1) and have no `--model` flag. If a call fails, diagnose it with `references/api.md` and report; do not switch models.
 
 ## Environment Variables
 
@@ -89,14 +84,14 @@ First inspect the job count without contacting Gemini:
 python3 scripts/render_variant_pack.py \
   --variant-pack ./out/prompt-pack/variant-pack.json \
   --output-dir ./out/renders/batch \
-  --model gemini-3.1-flash-image-preview \
-  --image-size 512 \
+  --image-size 1K \
+  --thinking medium \
   --passes 1 \
   --max-concurrency 2 \
   --dry-run
 ```
 
-Omit `--dry-run` only for an authorized live batch. `--aspect-ratio` overrides the pack's ratio, so keep the prompts consistent with it. `--model` accepts a callable ID but does not enforce Nano Banana 2 identity; that check belongs to the caller.
+Omit `--dry-run` only for an authorized live batch. `--aspect-ratio` overrides the pack's ratio, so keep the prompts consistent with it. The renderer rejects an unsupported ratio, size, or thinking level before any call. `--image-size` accepts `1K`, `2K`, or `4K`; `512` is not available on this endpoint.
 
 Batch behavior:
 
@@ -114,13 +109,13 @@ For one authorized image, save your custom prompt as `./out/custom.prompt.txt`, 
 python3 scripts/probe_gemini_image_api.py \
   --prompt-file ./out/custom.prompt.txt \
   --output-dir ./out/renders/custom \
-  --model gemini-3.1-flash-image-preview \
   --aspect-ratio 4:5 \
   --image-size 1K \
+  --thinking medium \
   --passes 1
 ```
 
-This script accepts arbitrary prompt text through `--prompt-file` or `--prompt` and supports `--model`, `--aspect-ratio`, `--image-size`, and `--passes`. It has no `--dry-run`; running it with credentials makes live requests. Keep `--passes 1` for a single-image request unless additional attempts are authorized.
+This script accepts arbitrary prompt text through `--prompt-file` or `--prompt` and supports `--aspect-ratio`, `--image-size` (`1K`, `2K`, `4K`), `--thinking` (`minimal`, `medium`, `high`; default `medium`), and `--passes`. It has no `--dry-run`; running it with credentials makes live requests. Keep `--passes 1` for a single-image request unless additional attempts are authorized.
 
 The probe writes:
 
@@ -137,9 +132,9 @@ The probe writes:
 4. For authorized renders, use the single-prompt route or a reviewed batch plan. Check request count, size, privacy, and spend before executing.
 5. Inspect returned images for factual fidelity, text, contrast, and intended composition. A successful HTTP call or manifest is not a visual-quality check.
 6. Deliver the requested count, with a text equivalent where needed. Report defects and bound additional paid attempts; do not generate extras just to fill a review sheet.
-7. Choose resolution for the delivery and budget. A lower-resolution preview can save spend when iteration is needed, but is not a mandatory extra render before a requested final image.
+7. Choose resolution and thinking level for the delivery and budget. A `1K` draft at `--thinking minimal` can save spend while iterating on layout, but is not a mandatory extra render before a requested final image. Use `medium` or `high` for the final when facts and copy matter.
 
-If the render comes back noisy, shorten the prompt and simplify the composition before raising the model size.
+If the render comes back noisy, shorten the prompt and simplify the composition before raising the image size.
 
 ## See Also
 

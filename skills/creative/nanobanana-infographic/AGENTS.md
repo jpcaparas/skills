@@ -1,4 +1,4 @@
-# Nano Banana 2 Infographic
+# Nano Banana 2.1 Infographic
 
 This wrapper exists for repository presentation. The authoritative instructions live in `SKILL.md`.
 

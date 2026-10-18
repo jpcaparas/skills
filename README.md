@@ -29,7 +29,7 @@ For one skill, use the exact command beside its card below. To install a categor
 - Hardening a codebase? Start with `maintainable-code`, `strong-types`, and `adversarial-test-sweep`.
 - Orienting yourself before a change? Try `zoom-out`, `eli12`, or `product-question`.
 - Turning source material into something useful? Try `youtube-transcript-dossier`, `better-writing`, or `to-diagram`.
-- Building visual output? Explore `interface-design-taste`, `nanobanana-infographic`, or `oneshot-websites`.
+- Building visual output? Explore `interface-design-taste`, `nanobanana`, `nanobanana-infographic`, or `oneshot-websites`.
 
 ## Category map
 
@@ -386,6 +386,16 @@ ElevenLabs media generation and transformation across speech, dialogue, transcri
 
 Production skill for shaping web, app, and desktop interfaces with stronger hierarchy, cleaner typography, tighter color and surface systems, platform-aware interaction design, and redesign-first critique workflows that avoid generic AI UI defaults.
 
+#### `nanobanana`
+
+`npx skills add jpcaparas/skills --skill nanobanana`
+
+<p align="center">
+  <img src="skills/creative/nanobanana/skill-card.png" alt="16-bit side-scrolling pixel art badge for nanobanana" width="480">
+</p>
+
+Production skill for generating and editing images with Nano Banana 2.1 only: text-to-image, photo edits, multi-reference composites, multi-turn refinement, search-grounded visuals, 512px to 4K, and half-price batch jobs, with a pinned-model helper, measured costs, and a free API drift check.
+
 #### `nanobanana-infographic`
 
 `npx skills add jpcaparas/skills --skill nanobanana-infographic`
@@ -394,7 +404,7 @@ Production skill for shaping web, app, and desktop interfaces with stronger hier
   <img src="skills/creative/nanobanana-infographic/skill-card.png" alt="16-bit side-scrolling pixel art badge for nanobanana-infographic" width="480">
 </p>
 
-Production skill for Nano Banana 2 infographic prompting and verification, with optional low-noise presets, brief-led format and art direction, and live Gemini image API probes for executive and editorial visuals.
+Production skill for Nano Banana 2.1 infographic prompting and verification, with optional low-noise presets, brief-led format and art direction, and live Gemini image API probes for executive and editorial visuals.
 
 #### `oneshot-websites`
 

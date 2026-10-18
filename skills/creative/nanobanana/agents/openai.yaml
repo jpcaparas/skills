@@ -1,0 +1,4 @@
+interface:
+  display_name: "nanobanana"
+  short_description: "Generate and edit images with Nano Banana 2.1: scene prompts, edits, references, search grounding, batch, checked outputs"
+  default_prompt: "Use Nano Banana to generate an image, edit a photo, combine reference images, ground an image in search results, or batch-generate variants"
