@@ -1,4 +1,4 @@
-Nano Banana 2 image generation prompt for the `nanobanana-infographic` README skill badge.
+Nano Banana image generation prompt for the `nanobanana-infographic` README skill badge.
 
 Create a polished rectangular raster badge for a GitHub README.
 Aspect ratio: 16:9.

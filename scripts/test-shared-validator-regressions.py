@@ -374,7 +374,7 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
             self.assertNotIn('src="skills/engineering/tarsier/skill-card.png"', updated)
             self.assertEqual(2, updated.count('<img src="skills/'))
             self.assertIn(
-                "Nano Banana 2 image generation prompt",
+                "Nano Banana image generation prompt",
                 (selected / "skill-card.prompt.md").read_text(),
             )
             self.assertEqual(

@@ -99,7 +99,7 @@ def validate_prompt(
         )
 
     required_fragments = [
-        "Nano Banana 2 image generation prompt",
+        "Nano Banana image generation prompt",
         "Aspect ratio: 16:9.",
         "side-scrolling 16-bit pixel game art",
         "rectangular raster badge",

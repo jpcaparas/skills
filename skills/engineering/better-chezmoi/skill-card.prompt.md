@@ -1,4 +1,4 @@
-Nano Banana 2 image generation prompt for the `better-chezmoi` README skill badge.
+Nano Banana image generation prompt for the `better-chezmoi` README skill badge.
 
 Create a polished rectangular raster badge for a GitHub README.
 Aspect ratio: 16:9.

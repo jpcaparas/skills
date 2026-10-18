@@ -26,7 +26,7 @@ PROMPT_FILENAME = "skill-card.prompt.md"
 CARD_WIDTH = "480"
 FINAL_WIDTH = 1024
 FINAL_HEIGHT = 576
-DEFAULT_MODEL = "gemini-3.1-flash-image-preview"
+DEFAULT_MODEL = "gemini-nano-banana-2.1"
 DEFAULT_ASPECT_RATIO = "16:9"
 DEFAULT_IMAGE_SIZE = "1K"
 API_URL = "https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -144,7 +144,7 @@ def prompt_for_skill(name: str) -> str:
         "paper, book, ticket, screen, terminal, dashboard, chart, browser, sign, "
         "speech bubble, social post, calendar, spreadsheet, map, or interface surface"
     )
-    return f"""Nano Banana 2 image generation prompt for the `{name}` README skill badge.
+    return f"""Nano Banana image generation prompt for the `{name}` README skill badge.
 
 Create a polished rectangular raster badge for a GitHub README.
 Aspect ratio: 16:9.
