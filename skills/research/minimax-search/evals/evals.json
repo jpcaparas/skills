@@ -1,0 +1,132 @@
+{
+  "skill_name": "minimax-search",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "natural-language-research",
+      "prompt": "Use MiniMax search to find how people handle cancellation safety with tokio::select!, and summarise the approaches with sources.",
+      "expected_output": "Checks MINIMAX_API_KEY without printing it, runs a few focused queries with node scripts/search.js --compact, opens promising links with a reader because snippets are short, and answers with cited links.",
+      "assertions": [
+        {"text": "Uses scripts/search.js --compact or an equivalent POST to /v1/coding_plan/search with {\"q\": ...}", "type": "functional"},
+        {"text": "Notes snippets are short and reads pages before concluding", "type": "functional"},
+        {"text": "Does not switch to another search provider", "type": "negative"}
+      ],
+      "tags": ["smoke", "workflow"],
+      "files": ["scripts/search.js"]
+    },
+    {
+      "id": 2,
+      "name": "multiple-sites",
+      "prompt": "Search MiniMax for tokio select cancellation, only from docs.rs and GitHub.",
+      "expected_output": "Explains MiniMax honours only the first site: operator, then runs one search per site (--site docs.rs, --site github.com) and merges the results.",
+      "assertions": [
+        {"text": "Runs a separate search per site instead of combining site: operators", "type": "functional"},
+        {"text": "Does not rely on an include_domains or similar body parameter", "type": "negative"}
+      ],
+      "tags": ["operators"],
+      "files": ["references/api.md", "references/patterns.md"]
+    },
+    {
+      "id": 3,
+      "name": "more-than-ten-results",
+      "prompt": "Use MiniMax search and give me 30 results about Bun vs Deno startup performance.",
+      "expected_output": "States each search returns at most 10 results with no count or page parameter, runs several distinct queries, paces them to avoid the ~50/minute rate limit, and merges by link.",
+      "assertions": [
+        {"text": "States the 10-result cap and that num/page are ignored", "type": "verification"},
+        {"text": "Uses multiple distinct queries for breadth", "type": "functional"}
+      ],
+      "tags": ["limits"],
+      "files": ["references/patterns.md"]
+    },
+    {
+      "id": 4,
+      "name": "word-truncation",
+      "prompt": "Search MiniMax for this whole 60-word error description and add site:github.com at the end.",
+      "expected_output": "Explains only the first 32 words are searched so the trailing site: would be dropped; shortens the query to the distinctive error text and keeps the operator early.",
+      "assertions": [
+        {"text": "Mentions the 32-word effective query limit", "type": "verification"},
+        {"text": "Shortens the query rather than sending all 60 words", "type": "functional"}
+      ],
+      "tags": ["limits", "edge"],
+      "files": ["references/gotchas.md"]
+    },
+    {
+      "id": 5,
+      "name": "error-1027",
+      "prompt": "MiniMax search returned base_resp 1027 output new_sensitive for my query. Did I get blocked?",
+      "expected_output": "Explains 1027 is how MiniMax reports zero results in practice, suggests broadening the query, and notes the helper returns an empty list for it.",
+      "assertions": [
+        {"text": "Interprets 1027 as zero results rather than an account block", "type": "verification"}
+      ],
+      "tags": ["errors", "edge"],
+      "files": ["references/gotchas.md"]
+    },
+    {
+      "id": 6,
+      "name": "rate-limit-2062",
+      "prompt": "I ran 80 MiniMax searches in parallel and many came back with 2062 Token Plan rate limit reached. Is my plan used up?",
+      "expected_output": "Explains 2062 and 1002 are short-term rate limits (~45 burst, ~52/minute) that clear within about a minute and are not billed; recommends smaller batches or pacing and checking quota with the free remains endpoint.",
+      "assertions": [
+        {"text": "Distinguishes the rate limit from the usage quota", "type": "verification"},
+        {"text": "Recommends pacing or smaller parallel batches", "type": "functional"}
+      ],
+      "tags": ["errors", "quota"],
+      "files": ["references/api.md"]
+    },
+    {
+      "id": 7,
+      "name": "quota-check",
+      "prompt": "How much MiniMax search quota do I have left?",
+      "expected_output": "Runs node scripts/search.js quota (or GET /v1/api/openplatform/coding_plan/remains), reports the general bucket's 5-hour and weekly remaining percentages, and notes about 50 searches use 1% of the 5-hour window.",
+      "assertions": [
+        {"text": "Uses the remains endpoint or the helper's quota command", "type": "functional"},
+        {"text": "Explains search draws on the general bucket", "type": "verification"}
+      ],
+      "tags": ["smoke", "quota"],
+      "files": ["references/api.md", "scripts/search.js"]
+    },
+    {
+      "id": 8,
+      "name": "region-mismatch",
+      "prompt": "My MiniMax key returns 2049 invalid api key for search but works in the console.",
+      "expected_output": "Explains the key and host must match region (api.minimax.io global, api.minimaxi.com mainland) and to set MINIMAX_API_HOST accordingly.",
+      "assertions": [
+        {"text": "Identifies a region/host mismatch", "type": "verification"}
+      ],
+      "tags": ["configuration", "errors"],
+      "files": ["references/configuration.md"]
+    },
+    {
+      "id": 9,
+      "name": "date-filtering",
+      "prompt": "Use MiniMax to find only results from the last week about the Vite 8 release.",
+      "expected_output": "Uses an after:YYYY-MM-DD operator computed from today's date in the query, since recency parameters are ignored, and notes dates in results are often empty or relative.",
+      "assertions": [
+        {"text": "Uses an after: operator in the query text", "type": "functional"}
+      ],
+      "tags": ["operators"],
+      "files": ["references/api.md"]
+    },
+    {
+      "id": 10,
+      "name": "negative-other-provider",
+      "prompt": "Use Synthetic search to find recent Rust release notes.",
+      "expected_output": "Does not trigger minimax-search because the user asked for Synthetic.",
+      "assertions": [
+        {"text": "Does not route to minimax-search when another provider is requested", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 11,
+      "name": "negative-minimax-media",
+      "prompt": "Generate a 6-second video with MiniMax Hailuo of a cat surfing.",
+      "expected_output": "Does not trigger minimax-search because the task is MiniMax video generation, not search.",
+      "assertions": [
+        {"text": "Does not route to minimax-search for MiniMax media generation", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    }
+  ]
+}

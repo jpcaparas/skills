@@ -1,0 +1,4 @@
+interface:
+  display_name: "zai-search"
+  short_description: "Search the web, read pages, and query GitHub repos with Z.ai's tools on Coding Plan quota, with cited results"
+  default_prompt: "Use Z.ai search to research a topic, read a page with Z.ai's reader, ask Zread about a GitHub repo, or check my Z.ai tool quota"

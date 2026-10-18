@@ -304,6 +304,16 @@ Production skill for auditing repository agent readiness against Cloudflare's si
 
 Production skill for markdown.new covering URL-to-Markdown conversion, file conversion, crawl jobs, the hosted editor, and live-tested edge cases.
 
+#### `minimax-search`
+
+`npx skills add jpcaparas/skills --skill minimax-search`
+
+<p align="center">
+  <img src="skills/research/minimax-search/skill-card.png" alt="16-bit side-scrolling pixel art badge for minimax-search" width="480">
+</p>
+
+Production skill for MiniMax's Token Plan web search API, turning "use MiniMax search to ..." into focused Google-style queries with compact, cited results, and documenting live-measured limits: at most ten results, a 32-word effective query, one honoured `site:` operator, HTTP 200 `base_resp` errors, a ~52-per-minute rate limit, and quota accounting.
+
 #### `seo-analysis`
 
 `npx skills add jpcaparas/skills --skill seo-analysis`
@@ -343,6 +353,16 @@ Production skill for grounding a session in real system time and timezone, triag
 </p>
 
 Production skill for converting YouTube video transcripts into structured dossiers with timestamped key topics, notable quotes, takeaways, and follow-up items. Fetches metadata via yt-dlp and transcripts via youtube-transcript-api, with language preference, cookie-based auth for restricted videos, and JSON/text/VTT output formats.
+
+#### `zai-search`
+
+`npx skills add jpcaparas/skills --skill zai-search`
+
+<p align="center">
+  <img src="skills/research/zai-search/skill-card.png" alt="16-bit side-scrolling pixel art badge for zai-search" width="480">
+</p>
+
+Production skill for Z.ai's web search, web reader, and Zread GitHub repository tools, routing "use Z.ai search to ..." through MCP on GLM Coding Plan quota by default, and documenting live-measured behaviour: rewritten queries, `site:` as a ranking hint, ignored domain filters, REST engines and per-call prices, a throttle at eight concurrent calls, and free quota checks.
 
 ### Creative
 

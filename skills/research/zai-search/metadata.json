@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for Z.ai's web search, web reader, and Zread tools. Routes natural-language search requests through MCP on GLM Coding Plan quota by default and the billed REST API only on request, and documents live-measured behaviour from 2026-10-18: ~10 results per search-prime query, ~40 for search_std, rewritten queries, site: as a ranking hint, ignored domain filters, a 1302 throttle at eight concurrent calls, and per-route billing.",
+  "references": [
+    "https://docs.z.ai/api-reference/tools/web-search",
+    "https://docs.z.ai/api-reference/tools/web-reader",
+    "https://docs.z.ai/devpack/mcp/search-mcp-server",
+    "https://docs.z.ai/devpack/mcp/reader-mcp-server",
+    "https://docs.z.ai/devpack/mcp/zread-mcp-server",
+    "https://docs.z.ai/devpack/notice/api-key-management",
+    "https://docs.z.ai/api-reference/api-code"
+  ]
+}

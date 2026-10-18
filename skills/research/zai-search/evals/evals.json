@@ -1,0 +1,145 @@
+{
+  "skill_name": "zai-search",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "natural-language-research",
+      "prompt": "Use Z.ai search to find how people handle cancellation safety with tokio::select!, and summarise the approaches with sources.",
+      "expected_output": "Checks Z_AI_API_KEY without printing it, runs quota (free), runs a few short queries with node scripts/zai.js search --compact over MCP, reads two or three promising pages with zai.js read because summaries are ~150 characters, and answers with cited URLs.",
+      "assertions": [
+        {"text": "Uses scripts/zai.js search (MCP route) or an equivalent web_search_prime MCP call", "type": "functional"},
+        {"text": "Reads pages with zai.js read or webReader before concluding", "type": "functional"},
+        {"text": "Does not use the billed REST route without saying it costs cash", "type": "negative"}
+      ],
+      "tags": ["smoke", "workflow"],
+      "files": ["scripts/zai.js"]
+    },
+    {
+      "id": 2,
+      "name": "site-restriction",
+      "prompt": "Search Z.ai for httpx retry transport examples, only from GitHub.",
+      "expected_output": "Uses --site github.com, explains Z.ai treats site: as a ranking hint and ignores search_domain_filter, relies on the helper's local filtering, and rephrases or runs extra queries when few on-domain results remain.",
+      "assertions": [
+        {"text": "Uses --site github.com or filters result URLs by host locally", "type": "functional"},
+        {"text": "Does not rely on search_domain_filter or a leading site: operator", "type": "negative"}
+      ],
+      "tags": ["operators"],
+      "files": ["references/gotchas.md", "references/patterns.md"]
+    },
+    {
+      "id": 3,
+      "name": "fresh-news-with-dates",
+      "prompt": "Use Z.ai to find what was announced about Vite this week, with publish dates.",
+      "expected_output": "Uses --recency oneWeek. Notes MCP results have no dates, so either reads pages to confirm dates or, after stating the $0.01 per-call cost, uses --rest whose results include publish_date.",
+      "assertions": [
+        {"text": "Uses --recency oneWeek or search_recency_filter oneWeek", "type": "functional"},
+        {"text": "States that MCP results lack publish dates", "type": "verification"}
+      ],
+      "tags": ["freshness"],
+      "files": ["references/api.md"]
+    },
+    {
+      "id": 4,
+      "name": "read-a-page",
+      "prompt": "Read https://docs.python.org/3/library/asyncio-task.html with Z.ai and tell me how TaskGroup handles exceptions.",
+      "expected_output": "Runs node scripts/zai.js read, using --save for the full page because output is capped at 20,000 characters, and answers from the page text with the URL cited.",
+      "assertions": [
+        {"text": "Uses zai.js read or the webReader MCP tool", "type": "functional"},
+        {"text": "Handles truncation with --save or --chars rather than answering from a partial page", "type": "verification"}
+      ],
+      "tags": ["reader"],
+      "files": ["scripts/zai.js", "references/patterns.md"]
+    },
+    {
+      "id": 5,
+      "name": "zread-repo-question",
+      "prompt": "Use Zread to explain how vitejs/vite propagates HMR updates.",
+      "expected_output": "Runs zai.js repo-search vitejs/vite with the question, follows up with repo-file for cited source files, and explains with links to zread.ai or GitHub paths.",
+      "assertions": [
+        {"text": "Uses repo-search (search_doc) and, when needed, repo-file (read_file)", "type": "functional"}
+      ],
+      "tags": ["zread"],
+      "files": ["scripts/zai.js", "references/api.md"]
+    },
+    {
+      "id": 6,
+      "name": "zread-unindexed-repo",
+      "prompt": "Use Zread to look at the structure of jpcaparas/skills.",
+      "expected_output": "Runs repo-tree, gets 1210 'repo not found', explains Zread only covers repositories indexed on zread.ai, and falls back to GitHub (gh or the web) instead of retrying.",
+      "assertions": [
+        {"text": "Explains that 1210 repo not found means the repository is not indexed", "type": "verification"},
+        {"text": "Does not retry the same Zread call repeatedly", "type": "negative"}
+      ],
+      "tags": ["zread", "errors"],
+      "files": ["references/gotchas.md"]
+    },
+    {
+      "id": 7,
+      "name": "quota-check",
+      "prompt": "How many Z.ai search calls do I have left this month?",
+      "expected_output": "Runs node scripts/zai.js quota, reports used, remaining, the reset time, per-tool usage, and the cash balance, and notes the call is free.",
+      "assertions": [
+        {"text": "Uses zai.js quota or GET /api/monitor/usage/quota/limit", "type": "functional"},
+        {"text": "Does not run a search just to check quota", "type": "negative"}
+      ],
+      "tags": ["smoke", "quota"],
+      "files": ["scripts/zai.js", "references/api.md"]
+    },
+    {
+      "id": 8,
+      "name": "rate-limit-1302",
+      "prompt": "I fired 20 Z.ai web_search_prime calls in parallel and half came back with error 1302. What's going on?",
+      "expected_output": "Explains 1302 is a short-lived rate limit triggered at about eight concurrent MCP calls, that throttled calls are not counted against quota, and recommends about five in flight with retry backoff (the helper retries 3, 8, 15 s).",
+      "assertions": [
+        {"text": "Identifies concurrency as the cause and recommends about five or fewer in flight", "type": "verification"},
+        {"text": "States throttled calls do not consume quota", "type": "verification"}
+      ],
+      "tags": ["errors", "limits"],
+      "files": ["references/api.md", "references/gotchas.md"]
+    },
+    {
+      "id": 9,
+      "name": "many-results",
+      "prompt": "Use Z.ai search and give me 40 results about Rust axum middleware.",
+      "expected_output": "Explains MCP and REST search-prime return at most about 10 results and count does not raise that; offers either several distinct MCP queries merged by URL (quota) or REST search_std, which returns about 40 long excerpts for about $0.0015, after stating the cost.",
+      "assertions": [
+        {"text": "States the ~10-result cap for search-prime and that count does not raise it", "type": "verification"},
+        {"text": "Uses multiple distinct queries or search_std rather than a larger count", "type": "functional"}
+      ],
+      "tags": ["limits", "rest"],
+      "files": ["references/patterns.md"]
+    },
+    {
+      "id": 10,
+      "name": "session-error",
+      "prompt": "My curl to https://api.z.ai/api/mcp/web_search_prime/mcp with tools/call returns 'Api key not found' but the key is right.",
+      "expected_output": "Explains the server needs an MCP session: initialize, keep Mcp-Session-Id, send notifications/initialized, then tools/call with the header; shows the curl sequence from references/patterns.md.",
+      "assertions": [
+        {"text": "Identifies the missing MCP session rather than blaming the key", "type": "verification"}
+      ],
+      "tags": ["errors", "mcp"],
+      "files": ["references/patterns.md", "references/gotchas.md"]
+    },
+    {
+      "id": 11,
+      "name": "negative-glm-chat",
+      "prompt": "Use GLM-5 on Z.ai to summarise this file.",
+      "expected_output": "Does not trigger; this is a chat-completion request, not search.",
+      "assertions": [
+        {"text": "Does not run zai.js search", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    },
+    {
+      "id": 12,
+      "name": "negative-other-provider",
+      "prompt": "Use Synthetic search to find Bun release notes.",
+      "expected_output": "Does not trigger; the user named another search provider.",
+      "assertions": [
+        {"text": "Does not call Z.ai", "type": "negative"}
+      ],
+      "tags": ["negative"]
+    }
+  ]
+}

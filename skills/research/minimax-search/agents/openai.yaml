@@ -1,0 +1,4 @@
+interface:
+  display_name: "minimax-search"
+  short_description: "Search the web with MiniMax's Token Plan API: Google-style operators, compact cited results, rate-limit and quota aware"
+  default_prompt: "Use MiniMax search to research a topic, restrict results to a site, check my MiniMax search quota, or debug a MiniMax search error"

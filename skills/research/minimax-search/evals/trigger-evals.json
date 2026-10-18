@@ -1,0 +1,14 @@
+[
+  {"query": "Use MiniMax search to find the latest Vite release notes.", "should_trigger": true},
+  {"query": "Search the web with MiniMax for how to configure retries in httpx.", "should_trigger": true},
+  {"query": "Look this up on MiniMax: TypeError: Cannot read properties of undefined (reading 'map').", "should_trigger": true},
+  {"query": "minimax search tokio select cancellation, only GitHub results", "should_trigger": true},
+  {"query": "How much MiniMax search quota is left?", "should_trigger": true},
+  {"query": "My coding_plan/search call returns base_resp 2062.", "should_trigger": true},
+  {"query": "Use MINIMAX_API_KEY to research Postgres advisory lock patterns and cite sources.", "should_trigger": true},
+  {"query": "Use Z.ai web search to find GLM release notes.", "should_trigger": false},
+  {"query": "Generate speech with MiniMax for this paragraph.", "should_trigger": false},
+  {"query": "Call MiniMax-M3 to summarise this file.", "should_trigger": false},
+  {"query": "Search the codebase for every call to fetchUser.", "should_trigger": false},
+  {"query": "Open the pricing page in a browser and take a screenshot.", "should_trigger": false}
+]

@@ -58,6 +58,7 @@ SKILL_SCENES = {
     "maintainable-code": "a code workshop arranging clear modular blocks, typed connector rails, test gems, and simple responsibility lanes",
     "maintainable-tests": "a testing garden of clear scenario tiles, boundary markers, legacy anchors, and readable assertion gems",
     "markdown-new": "a cloud portal turning raw fragments into neatly stacked blank content blocks",
+    "minimax-search": "a compact search beacon firing ten bright result arrows along a rate-paced conveyor of query tiles",
     "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-timeline": "a winding trail of evenly separated story beacons untangling a knot of pathways, with small framed silhouette gems alternating beside the trail and a warm lantern illuminating the next moment",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
@@ -76,6 +77,7 @@ SKILL_SCENES = {
     "temporal-awareness": "a numeral-free clock tower aligning blank date blocks and live verification beacons",
     "to-diagram": "a tangled maze of process rails entering a clarity prism and emerging as one clean branching flow with phase gates and an image crystal",
     "travel-plan-spreadsheet-generator": "a travel desk arranging route tiles, luggage, blank tickets, and grid gems",
+    "zai-search": "a triple-lens observatory where a web-orb lens, a reading lens, and a branching repository-tree lens converge into one bright search beam",
     "zoom-out": "a camera lifting above a code city to reveal modules, routes, and call paths",
     "youtube-transcript-dossier": "a play portal unfolding a ribbon of caption gems into a tidy dossier with bookmark rails and topic tiles",
 }

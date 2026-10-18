@@ -1,0 +1,14 @@
+[
+  {"query": "Use Z.ai search to find the latest Vite release notes.", "should_trigger": true},
+  {"query": "Search the web with GLM's web search for httpx retry examples.", "should_trigger": true},
+  {"query": "Read this page with Z.ai's web reader: https://example.com/docs", "should_trigger": true},
+  {"query": "Use Zread to explain how psf/requests handles sessions.", "should_trigger": true},
+  {"query": "How many Z.ai web search calls do I have left?", "should_trigger": true},
+  {"query": "web_search_prime keeps returning 1302, help.", "should_trigger": true},
+  {"query": "Use Z_AI_API_KEY to research Postgres advisory lock patterns and cite sources.", "should_trigger": true},
+  {"query": "Use MiniMax search to find GLM release notes.", "should_trigger": false},
+  {"query": "Ask GLM-5 to refactor this function.", "should_trigger": false},
+  {"query": "Generate an image with CogView on Z.ai.", "should_trigger": false},
+  {"query": "Search the codebase for every call to fetchUser.", "should_trigger": false},
+  {"query": "Open the Z.ai pricing page in a browser and take a screenshot.", "should_trigger": false}
+]

@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for MiniMax's Token Plan web search API. Turns natural-language requests into focused Google-style queries with compact, cited results, and documents live-measured limits from 2026-10-18: at most 10 results, a 32-word effective query, a 2,048-character cap, one honoured site: operator, HTTP 200 base_resp errors including 1027 for zero results, a ~52-per-minute rate limit, and general-bucket quota accounting.",
+  "references": [
+    "https://platform.minimax.io/docs/m-plan/mcp-guide",
+    "https://platform.minimax.io/docs/guides/server-tools",
+    "https://platform.minimax.io/docs/api-reference/errorcode",
+    "https://github.com/MiniMax-AI/MiniMax-Coding-Plan-MCP",
+    "https://github.com/MiniMax-AI/cli"
+  ]
+}
