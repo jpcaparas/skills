@@ -274,6 +274,16 @@ Production skill for reference-backed or clearly bounded ASD-STE100 Issue 9 rewr
 
 ### Research
 
+#### `firecrawl-efficiency`
+
+`npx skills add jpcaparas/skills --skill firecrawl-efficiency`
+
+<p align="center">
+  <img src="skills/research/firecrawl-efficiency/skill-card.png" alt="16-bit side-scrolling pixel art badge for firecrawl-efficiency" width="480">
+</p>
+
+Production skill for getting content out of Firecrawl for the fewest credits: the cheapest route per job, never `/agent` or `/extract`, a guard that prices requests before they are sent, and live-measured billing traps such as a one-page site crawl that billed 809 query-string variants.
+
 #### `google-search-ai-optimization`
 
 `npx skills add jpcaparas/skills --skill google-search-ai-optimization`
@@ -313,6 +323,16 @@ Production skill for markdown.new covering URL-to-Markdown conversion, file conv
 </p>
 
 Production skill for MiniMax's Token Plan web search API, turning "use MiniMax search to ..." into focused Google-style queries with compact, cited results, and documenting live-measured limits: at most ten results, a 32-word effective query, one honoured `site:` operator, HTTP 200 `base_resp` errors, a ~52-per-minute rate limit, and quota accounting.
+
+#### `parallel-efficiency`
+
+`npx skills add jpcaparas/skills --skill parallel-efficiency`
+
+<p align="center">
+  <img src="skills/research/parallel-efficiency/skill-card.png" alt="16-bit side-scrolling pixel art badge for parallel-efficiency" width="480">
+</p>
+
+Production skill for using Parallel (parallel.ai) at the lowest sensible cost: overrides its expensive defaults, picks the cheapest product and processor per job, prices Task, FindAll, and Monitor requests before sending, and explains uncancellable runs and notify-only spend limits.
 
 #### `seo-analysis`
 

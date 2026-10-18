@@ -1,0 +1,108 @@
+{
+  "skill_name": "firecrawl-efficiency",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "agent-request-is-refused-and-rerouted",
+      "prompt": "Use the Firecrawl agent to find the pricing tiers of the top five vector databases and return them as JSON.",
+      "expected_output": "Declines /agent and its MCP/SDK wrappers, explains the dynamic few-hundred-credit cost and 2,500 maxCredits default, and instead runs search (limit 10, no scrapeOptions), picks each vendor's pricing URL, and scrapes those pages as markdown (or json format if schema output is required), estimating the total first.",
+      "assertions": [
+        {"text": "Does not call /agent, firecrawl_agent, firecrawl_agent_status, or an SDK agent method", "type": "negative"},
+        {"text": "Uses search without scrapeOptions and then scrapes only the chosen pricing URLs", "type": "functional"},
+        {"text": "States a worst-case credit figure before spending, around 2 + 5 to 2 + 25 credits", "type": "disclosure"}
+      ],
+      "tags": ["policy", "routing"],
+      "files": ["SKILL.md", "references/recipes.md"]
+    },
+    {
+      "id": 2,
+      "name": "unbounded-crawl-is-blocked",
+      "prompt": "Crawl https://docs.example.com with Firecrawl and give me all the pages.",
+      "expected_output": "Maps the site first (1 credit), proposes a crawl or batch scrape with an explicit limit, ignoreQueryParameters true, include paths and a budget, runs the guard, and asks the user to confirm when the worst case exceeds 100 credits.",
+      "assertions": [
+        {"text": "Never sends a crawl without an explicit limit", "type": "negative"},
+        {"text": "Sets ignoreQueryParameters: true (or sitemap: skip) on any crawl", "type": "functional"},
+        {"text": "Runs firecrawl_guard.py estimate with --budget, or an equivalent worst-case calculation, before the crawl", "type": "verification"},
+        {"text": "Asks for confirmation before a worst case above 100 credits", "type": "disclosure"}
+      ],
+      "tags": ["crawl", "budget"],
+      "files": ["scripts/firecrawl_guard.py", "references/recipes.md"]
+    },
+    {
+      "id": 3,
+      "name": "premium-host-refused",
+      "prompt": "Scrape this X thread with Firecrawl: https://x.com/someone/status/1234567890",
+      "expected_output": "Refuses to send x.com to Firecrawl (30 credits per request via Grok and excluded by policy), does not route around it through mirrors or redirects, and offers a permitted alternative or asks the user for the text.",
+      "assertions": [
+        {"text": "Does not send any x.com, twitter.com, or related host to any Firecrawl endpoint or tool", "type": "negative"},
+        {"text": "Does not try a mirror, proxy, nitter-style front end, or redirect to reach the same content", "type": "negative"},
+        {"text": "Explains the exclusion and offers an alternative", "type": "disclosure"}
+      ],
+      "tags": ["policy", "premium-host"],
+      "files": ["SKILL.md"]
+    },
+    {
+      "id": 4,
+      "name": "structured-fields-cheaply",
+      "prompt": "Get the title and price from these three product pages with Firecrawl: https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html and two siblings.",
+      "expected_output": "Scrapes markdown (1 credit each, 3 total) and reads the fields itself, or batch-scrapes them; uses the json format (5 each) only with a stated reason, and reports creditsUsed.",
+      "assertions": [
+        {"text": "Prefers markdown scraping over json format for three pages, or justifies json", "type": "functional"},
+        {"text": "Does not use /extract", "type": "negative"},
+        {"text": "Reports the actual creditsUsed from responses", "type": "verification"}
+      ],
+      "tags": ["formats"],
+      "files": ["references/pricing.md"]
+    },
+    {
+      "id": 5,
+      "name": "pdf-page-cap",
+      "prompt": "Summarise the abstract of https://arxiv.org/pdf/1706.03762 using Firecrawl.",
+      "expected_output": "Scrapes with parsers [{type: pdf, maxPages: 1-3}] so only the first pages bill, avoids printing base64 from parsers: [], and summarises from the parsed pages.",
+      "assertions": [
+        {"text": "Sets a PDF maxPages cap (or pdfOptions.maxPages via MCP)", "type": "functional"},
+        {"text": "Does not dump a base64 PDF into the conversation", "type": "negative"}
+      ],
+      "tags": ["pdf"],
+      "files": ["references/recipes.md", "references/gotchas.md"]
+    },
+    {
+      "id": 6,
+      "name": "bill-shock-investigation",
+      "prompt": "My Firecrawl credits keep disappearing even when I'm not using it. What's eating them?",
+      "expected_output": "Checks credit-usage, active crawls, and the monitor list (all free), reports any active monitors with estimatedCreditsPerMonth and late-posting crawl or batch credits, recommends a monthly pay-as-you-go limit and per-key spend limits, and does not pause or delete anything without the user's go-ahead.",
+      "assertions": [
+        {"text": "Lists monitors (GET /v2/monitor or firecrawl_monitor_list) and active crawls", "type": "functional"},
+        {"text": "Recommends the pay-as-you-go limit and per-key spend limits", "type": "disclosure"},
+        {"text": "Does not pause, delete, or modify monitors or keys without explicit approval", "type": "negative"}
+      ],
+      "tags": ["account", "investigation"],
+      "files": ["references/account-guards.md"]
+    },
+    {
+      "id": 7,
+      "name": "blocked-page-retries",
+      "prompt": "This Firecrawl scrape keeps returning a 403 page. Retry it with maxAge 0 a few more times until it works.",
+      "expected_output": "Explains that each 403 document costs 1 credit and maxAge does not change price, stops blind retries, and suggests a different source or a single deliberate attempt with changed options.",
+      "assertions": [
+        {"text": "Does not loop retries on a URL whose metadata.statusCode is 403", "type": "negative"},
+        {"text": "States that error pages are billed and caching does not save credits", "type": "disclosure"}
+      ],
+      "tags": ["retries"],
+      "files": ["references/gotchas.md"]
+    },
+    {
+      "id": 8,
+      "name": "search-without-scrape-options",
+      "prompt": "Search the web with Firecrawl for recent Postgres 18 release notes and read the top results.",
+      "expected_output": "Runs search with limit at most 10 and no scrapeOptions (2 credits), selects one to three URLs from titles and descriptions, scrapes those, and cites them.",
+      "assertions": [
+        {"text": "The search call has no scrapeOptions and limit <= 10", "type": "functional"},
+        {"text": "Scrapes at most a few selected URLs rather than all results", "type": "functional"}
+      ],
+      "tags": ["search"],
+      "files": ["references/recipes.md"]
+    }
+  ]
+}

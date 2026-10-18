@@ -1,0 +1,96 @@
+{
+  "skill_name": "parallel-efficiency",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "search-sets-fast-mode",
+      "prompt": "Use Parallel to search for the latest Kubernetes 1.35 deprecations.",
+      "expected_output": "Calls /v1/search (or the Search MCP) with mode fast, an objective, 2-5 short queries, and a max_chars_total budget, then extracts only the one or two pages needed and cites them.",
+      "assertions": [
+        {"text": "Sets mode explicitly to fast or turbo rather than leaving the advanced default", "type": "functional"},
+        {"text": "Bundles queries into one request with an objective", "type": "functional"},
+        {"text": "Does not request full_content unless a whole page is the deliverable", "type": "negative"}
+      ],
+      "tags": ["search", "defaults"],
+      "files": ["references/recipes.md"]
+    },
+    {
+      "id": 2,
+      "name": "deep-research-processor-choice",
+      "prompt": "Run a Parallel deep research task on the EU AI Act's obligations for general-purpose model providers.",
+      "expected_output": "Prices the run first, proposes pro (about $0.10) rather than an ultra tier unless the user asks for maximum depth, warns that Task runs cannot be cancelled, and confirms before submitting.",
+      "assertions": [
+        {"text": "Runs parallel_cost.py estimate tasks/runs (or states the per-run price) before submitting", "type": "verification"},
+        {"text": "Does not choose ultra2x, ultra4x, or ultra8x without an explicit user request", "type": "negative"},
+        {"text": "Tells the user the run cannot be cancelled and asks for confirmation for pro or higher", "type": "disclosure"}
+      ],
+      "tags": ["task", "processor"],
+      "files": ["scripts/parallel_cost.py", "references/pricing.md"]
+    },
+    {
+      "id": 3,
+      "name": "enrich-a-spreadsheet",
+      "prompt": "Enrich this CSV of 400 companies with CEO name and headquarters city using Parallel.",
+      "expected_output": "Chooses lite or base for two simple fields, runs one company as a single Task run first, prices the Task Group (400 x $0.005-$0.01 = $2-$4), confirms with the user, and passes --processor explicitly if using the CLI (whose default is core).",
+      "assertions": [
+        {"text": "Uses lite or base, not the CLI's core default", "type": "functional"},
+        {"text": "Runs a single test input before the full Task Group", "type": "verification"},
+        {"text": "States the total cost estimate before submitting 400 runs", "type": "disclosure"}
+      ],
+      "tags": ["task-group", "cli"],
+      "files": ["references/recipes.md"]
+    },
+    {
+      "id": 4,
+      "name": "findall-preview-first",
+      "prompt": "Use Parallel FindAll to build a list of every Series A climate-tech startup in Europe.",
+      "expected_output": "Considers Entity Search first if verification is not needed; otherwise runs FindAll with generator preview ($0.10), then base with a small match_limit (10-20) and extend, warns that pro costs $1 per match and that enrichments multiply by matches, and confirms the budget.",
+      "assertions": [
+        {"text": "Runs a preview generator (or Entity Search) before any base/core/pro FindAll run", "type": "functional"},
+        {"text": "Sets an explicit small match_limit and mentions /extend", "type": "functional"},
+        {"text": "Does not start a pro FindAll or large match_limit without confirmation", "type": "negative"}
+      ],
+      "tags": ["findall"],
+      "files": ["references/recipes.md", "references/gotchas.md"]
+    },
+    {
+      "id": 5,
+      "name": "monitor-cost-disclosure",
+      "prompt": "Set up a Parallel monitor that checks hourly for news about our competitor.",
+      "expected_output": "Prices the monitor (hourly lite about $2.16 a month, base about $7.20), suggests daily unless hourly is essential, explains it bills every check until cancelled, agrees a cancel date, and asks before creating it.",
+      "assertions": [
+        {"text": "States a monthly cost before creating the monitor", "type": "disclosure"},
+        {"text": "Explains monitors bill even when nothing changes and run until cancelled", "type": "disclosure"},
+        {"text": "Does not create the monitor without the user's go-ahead", "type": "negative"}
+      ],
+      "tags": ["monitor"],
+      "files": ["scripts/parallel_cost.py"]
+    },
+    {
+      "id": 6,
+      "name": "bill-shock-investigation",
+      "prompt": "Our Parallel bill doubled this month but our spend limit never stopped anything. Why?",
+      "expected_output": "Explains spend limits are notify-only, checks running monitors and FindAll jobs, looks for default advanced Search mode, medium Responses effort, CLI pro/core defaults, and enrichments, and recommends explicit cheap settings and a prepaid balance without auto-reload for a hard cap. Never calls balance/add.",
+      "assertions": [
+        {"text": "States that Parallel spend limits are notify-only", "type": "disclosure"},
+        {"text": "Checks for running monitors and expensive defaults in the integration", "type": "functional"},
+        {"text": "Does not call POST /service/v1/balance/add or cancel monitors without approval", "type": "negative"}
+      ],
+      "tags": ["account", "investigation"],
+      "files": ["references/account-guards.md"]
+    },
+    {
+      "id": 7,
+      "name": "quick-fact-uses-low-effort",
+      "prompt": "Ask Parallel what year Rust 1.0 was released, with a source.",
+      "expected_output": "Uses a fast Search (about $0.001) or Responses with reasoning.effort low ($0.01) rather than a Task or medium/high Responses, and cites the source.",
+      "assertions": [
+        {"text": "Uses fast Search or low-effort Responses for a single fact", "type": "functional"},
+        {"text": "Does not use a Task run, FindAll, or high-effort Responses", "type": "negative"}
+      ],
+      "tags": ["responses", "routing"],
+      "files": ["SKILL.md"]
+    }
+  ]
+}

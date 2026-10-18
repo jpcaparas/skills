@@ -1,0 +1,4 @@
+interface:
+  display_name: "firecrawl-efficiency"
+  short_description: "Use Firecrawl for the fewest credits: cheapest route per job, priced before sending, never /agent"
+  default_prompt: "Use Firecrawl to get this content as cheaply as possible, and tell me the worst-case credits before spending"

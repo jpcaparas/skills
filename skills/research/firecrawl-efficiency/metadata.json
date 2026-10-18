@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for cost-efficient Firecrawl use. Routes each job to the cheapest endpoint, bans /agent, /extract and premium hosts, prices requests offline with a guard script before they are sent, and documents live-measured billing from 2026-10-18: billed error pages, free failures, cache hits that still cost a credit, per-page PDF parsing, LLM-format surcharges, search rounding, and a crawl of a one-page site that billed 809 query-string variants.",
+  "references": [
+    "https://docs.firecrawl.dev/billing",
+    "https://www.firecrawl.dev/pricing",
+    "https://docs.firecrawl.dev/rate-limits",
+    "https://docs.firecrawl.dev/api-reference/v2-openapi.json",
+    "https://docs.firecrawl.dev/features/crawl",
+    "https://docs.firecrawl.dev/features/map",
+    "https://docs.firecrawl.dev/features/search",
+    "https://docs.firecrawl.dev/features/parse",
+    "https://docs.firecrawl.dev/features/interact",
+    "https://docs.firecrawl.dev/features/monitoring",
+    "https://docs.firecrawl.dev/features/agent"
+  ]
+}

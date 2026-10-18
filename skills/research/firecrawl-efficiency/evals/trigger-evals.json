@@ -1,0 +1,14 @@
+[
+  {"query": "Scrape this docs page with Firecrawl and summarise it.", "should_trigger": true},
+  {"query": "Crawl our marketing site with firecrawl and give me every blog post.", "should_trigger": true},
+  {"query": "How many Firecrawl credits will a 500-page crawl with JSON extraction cost?", "should_trigger": true},
+  {"query": "Why did my Firecrawl bill spike this month?", "should_trigger": true},
+  {"query": "Use the Firecrawl agent to research competitors.", "should_trigger": true},
+  {"query": "Search the web with Firecrawl for Next.js 16 migration guides.", "should_trigger": true},
+  {"query": "Map all URLs on docs.stripe.com using firecrawl.", "should_trigger": true},
+  {"query": "Use Parallel's search API to find funding news.", "should_trigger": false},
+  {"query": "Write a Playwright script to log into our staging site.", "should_trigger": false},
+  {"query": "Search the web with Synthetic for Rust async guides.", "should_trigger": false},
+  {"query": "Build a BeautifulSoup scraper for this HTML table.", "should_trigger": false},
+  {"query": "Convert this URL to markdown with markdown.new.", "should_trigger": false}
+]

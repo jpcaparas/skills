@@ -1,0 +1,14 @@
+[
+  {"query": "Use Parallel search to find recent papers on retrieval-augmented generation.", "should_trigger": true},
+  {"query": "Run a parallel.ai deep research task on solid-state batteries.", "should_trigger": true},
+  {"query": "How much will a Parallel FindAll run with 500 matches cost?", "should_trigger": true},
+  {"query": "Enrich this company list with the Parallel Task API.", "should_trigger": true},
+  {"query": "Why is our Parallel Web Systems bill so high?", "should_trigger": true},
+  {"query": "Set up a Parallel monitor for changes to our competitor's pricing page.", "should_trigger": true},
+  {"query": "Use parallel-cli to research this question.", "should_trigger": true},
+  {"query": "Run these test files in parallel with pytest-xdist.", "should_trigger": false},
+  {"query": "Scrape this page with Firecrawl.", "should_trigger": false},
+  {"query": "Parallelise this for loop in Python.", "should_trigger": false},
+  {"query": "Search the web with Z.ai for GLM benchmarks.", "should_trigger": false},
+  {"query": "Use Tavily to research recent AI funding rounds.", "should_trigger": false}
+]

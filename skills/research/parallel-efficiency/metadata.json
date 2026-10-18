@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for cost-efficient Parallel (parallel.ai) use. Routes each job to the cheapest adequate product and setting, overrides expensive defaults (Search advanced, Responses medium, FindAll enrichment core, CLI pro), prices requests offline with a cost script, and documents the 2026-10-18 pricing, rate limits, free tiers, notify-only spend limits, uncancellable Task runs, FindAll multipliers, and monitor billing.",
+  "references": [
+    "https://docs.parallel.ai/getting-started/pricing",
+    "https://parallel.ai/pricing",
+    "https://docs.parallel.ai/getting-started/rate-limits",
+    "https://docs.parallel.ai/search/modes",
+    "https://docs.parallel.ai/task-api/guides/choose-a-processor",
+    "https://docs.parallel.ai/findall-api/core-concepts/findall-generator-pricing",
+    "https://docs.parallel.ai/monitor-api/monitor-quickstart",
+    "https://docs.parallel.ai/resources/faqs",
+    "https://docs.parallel.ai/integrations/cli",
+    "https://docs.parallel.ai/integrations/mcp/search-mcp",
+    "https://docs.parallel.ai/public-openapi.json"
+  ]
+}
