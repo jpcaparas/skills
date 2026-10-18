@@ -1,0 +1,13 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for DeepSeek's Search and Fetch APIs and model-side web search. Routes natural-language search requests through /v1/tools/search and /v1/tools/fetch at $0.75 per 1,000 successful requests, and documents live-measured behaviour from 2026-10-18: a 128-code-point query limit including operators, strict site: filters, year-only after: excluding the whole year, Beijing-midnight dates, backslash-escaped fetch Markdown, 404s for PDFs, a 5 QPS per-account limit, and ignored max_uses and allowed_domains on model-side search.",
+  "references": [
+    "https://api-docs.deepseek.com/guides/search",
+    "https://api-docs.deepseek.com/quick_start/pricing",
+    "https://api-docs.deepseek.com/guides/anthropic_api",
+    "https://api-docs.deepseek.com/guides/responses_api",
+    "https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code"
+  ]
+}

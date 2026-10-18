@@ -46,6 +46,7 @@ SKILL_SCENES = {
     "bootstrap-agents-md": "a repository observatory distilling many project signal paths into one durable guidance beacon with a smaller companion beacon linked beside it",
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
     "devils-advocate": "two opposing debate champions facing each other across a glowing balance arena, with one mirrored argument shield, pressure-test sparks, and a central evidence gem",
+    "deepseek-search": "a deep-sea sonar submarine sweeping a fan-shaped sonar beam across a dark seabed of glowing page-shaped reefs, with five evenly spaced pulse rings and one warm amber reef lit as the catch",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
     "elevenlabs-media": "a midnight soundstage where a glowing microphone, rippling sound ribbons, a small keyboard, and a film projector transform an amber spark into music and a luminous miniature landscape, with clear separate audio and visual paths",
     "firecrawl-efficiency": "a careful miner lowering a small lantern-lit cart into a single marked tunnel of a vast mountain, with a brass meter gauge and a few neatly stacked blank ore crates, while sealed side tunnels stay dark",

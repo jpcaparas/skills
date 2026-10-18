@@ -274,6 +274,16 @@ Production skill for reference-backed or clearly bounded ASD-STE100 Issue 9 rewr
 
 ### Research
 
+#### `deepseek-search`
+
+`npx skills add jpcaparas/skills --skill deepseek-search`
+
+<p align="center">
+  <img src="skills/research/deepseek-search/skill-card.png" alt="16-bit side-scrolling pixel art badge for deepseek-search" width="480">
+</p>
+
+Production skill for web search and page fetches through DeepSeek's Search and Fetch APIs at $0.75 per 1,000 successful requests, with live-measured traps such as dates written as midnight Beijing time, year-only `after:` filters that exclude the whole year, backslash-escaped fetch output, and a 5 requests-per-second account limit.
+
 #### `firecrawl-efficiency`
 
 `npx skills add jpcaparas/skills --skill firecrawl-efficiency`

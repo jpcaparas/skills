@@ -1,0 +1,4 @@
+interface:
+  display_name: "deepseek-search"
+  short_description: "Search the web and fetch pages with DeepSeek's Search and Fetch APIs for a fraction of a cent, with dated, cited results"
+  default_prompt: "Use DeepSeek search to research a topic, fetch a page with DeepSeek, check my DeepSeek search spend, or have a DeepSeek model search the web itself"
