@@ -1,0 +1,14 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for Gemini's Grounding with Google Search, URL context, and the Deep Research agent. Defaults to gemini-3.1-flash-lite with forced grounding and a soft 3-query cap, because Gemini 3+ bills $14 per 1,000 executed search queries after 5,000 free per month. Documents live-measured limits from 2026-10-19: skipped grounding, 20-32 query fan-outs, ungrounded long lists, 21-URL silent failure, UTF-8 byte offsets, ignored location and time filters, and measured Deep Research costs, with expensive routes gated behind explicit flags.",
+  "references": [
+    "https://ai.google.dev/gemini-api/docs/google-search",
+    "https://ai.google.dev/gemini-api/docs/generate-content/google-search",
+    "https://ai.google.dev/gemini-api/docs/url-context",
+    "https://ai.google.dev/gemini-api/docs/deep-research",
+    "https://ai.google.dev/gemini-api/docs/pricing",
+    "https://ai.google.dev/gemini-api/docs/rate-limits"
+  ]
+}

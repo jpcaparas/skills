@@ -294,6 +294,16 @@ Production skill for web search and page fetches through DeepSeek's Search and F
 
 Production skill for getting content out of Firecrawl for the fewest credits: the cheapest route per job, never `/agent` or `/extract`, a guard that prices requests before they are sent, and live-measured billing traps such as a one-page site crawl that billed 809 query-string variants.
 
+#### `gemini-search`
+
+`npx skills add jpcaparas/skills --skill gemini-search`
+
+<p align="center">
+  <img src="skills/research/gemini-search/skill-card.png" alt="16-bit side-scrolling pixel art badge for gemini-search" width="480">
+</p>
+
+Production skill for grounded, cited web search through Gemini's Grounding with Google Search and URL context at the lowest reliable cost, with live-measured traps such as skipped grounding, per-query billing fan-outs, silent 21-URL failures, and Deep Research and Pro models gated behind explicit permission.
+
 #### `google-search-ai-optimization`
 
 `npx skills add jpcaparas/skills --skill google-search-ai-optimization`

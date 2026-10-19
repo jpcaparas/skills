@@ -1,0 +1,4 @@
+interface:
+  display_name: "gemini-search"
+  short_description: "Grounded, cited Google Search answers through Gemini at the lowest reliable cost, with Deep Research and Pro models gated"
+  default_prompt: "Use Gemini search to research a topic, read pages with Gemini, estimate Gemini search cost, or request a gated Deep Research report"
