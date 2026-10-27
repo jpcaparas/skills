@@ -57,6 +57,8 @@ pnpm validate
 
 This is the canonical validator used by GitHub Actions, the pre-push hook, and agent stop hooks. It does not require Docker or invoke `act` recursively.
 
+GitHub Actions runs it as two parallel shards per OS through `SKILLS_VALIDATE_SHARD=INDEX/COUNT`: shard 1 runs the repository-wide checks, and the shards split the skill packages round-robin in catalogue order. `scripts/check-validation-entrypoint-parity.py` requires the `shard` matrix to be exactly `1..N` and the step to pass `${{ matrix.shard }}/N`. Leave the variable unset locally and in hooks so every check runs. Loopback test stubs subclass `http.server` servers to skip `HTTPServer.server_bind`'s reverse-DNS lookup, which can stall for tens of seconds on macOS.
+
 ### Local GitHub Actions preflight
 
 For a higher-fidelity preflight, install [nektos/act v0.2.89 or newer](https://github.com/nektos/act/releases/tag/v0.2.89). The full matrix requires Docker and an Apple Silicon Mac:

@@ -32,6 +32,14 @@
 #
 # Usage:
 #   bash scripts/validate-all-skills.sh
+#   SKILLS_VALIDATE_SHARD=2/3 bash scripts/validate-all-skills.sh
+#
+# SKILLS_VALIDATE_SHARD=INDEX/COUNT runs one slice so CI can spread the work
+# across parallel jobs. Shard 1 runs the repository-wide checks (steps 1-3 and
+# 5); every shard runs package step 4 for every COUNT-th package in catalogue
+# order, starting at INDEX. Running every shard from 1 to COUNT covers exactly
+# what an unsharded run covers. Leave it unset everywhere else (pre-push, stop
+# hooks, local runs) to validate everything.
 #
 
 set -euo pipefail
@@ -40,6 +48,25 @@ set -euo pipefail
 # BSD grep on macOS treats values such as --color=auto as an error, which
 # creates noisy environment-specific validation output.
 unset GREP_OPTIONS
+
+SHARD_INDEX=1
+SHARD_COUNT=1
+if [ -n "${SKILLS_VALIDATE_SHARD:-}" ]; then
+    # Reject anything malformed rather than guessing: a misread shard would
+    # silently skip packages and still exit 0.
+    if [[ ! "$SKILLS_VALIDATE_SHARD" =~ ^([1-9][0-9]*)/([1-9][0-9]*)$ ]] \
+        || [ "${BASH_REMATCH[1]}" -gt "${BASH_REMATCH[2]}" ]; then
+        echo "ERROR: SKILLS_VALIDATE_SHARD must be INDEX/COUNT with 1 <= INDEX <= COUNT, got '${SKILLS_VALIDATE_SHARD}'." >&2
+        exit 1
+    fi
+    SHARD_INDEX="${BASH_REMATCH[1]}"
+    SHARD_COUNT="${BASH_REMATCH[2]}"
+fi
+readonly SHARD_INDEX SHARD_COUNT
+
+runs_repository_checks() {
+    [ "$SHARD_INDEX" -eq 1 ]
+}
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -158,100 +185,113 @@ ln -s "$VALIDATION_NODE" "$validation_tool_bin/node"
 ln -s "$VALIDATION_NPX" "$validation_tool_bin/npx"
 export PATH="$validation_tool_bin:$PATH"
 
-echo "Checking local and CI validation entrypoint parity"
-"$VALIDATION_PYTHON" scripts/test-validation-entrypoint-parity.py
-"$VALIDATION_PYTHON" scripts/check-validation-entrypoint-parity.py
+if runs_repository_checks; then
+    echo "Checking local and CI validation entrypoint parity"
+    "$VALIDATION_PYTHON" scripts/test-validation-entrypoint-parity.py
+    "$VALIDATION_PYTHON" scripts/check-validation-entrypoint-parity.py
 
-echo "Checking executable temporary-directory selection"
-bash scripts/test-executable-temp-dir.sh
+    echo "Checking executable temporary-directory selection"
+    bash scripts/test-executable-temp-dir.sh
 
-echo "Checking the local act matrix wrapper"
-bash scripts/test-validate-ci-with-act.sh
+    echo "Checking the local act matrix wrapper"
+    bash scripts/test-validate-ci-with-act.sh
 
-echo "Checking stop-validation snapshot caching"
-bash scripts/test-agent-stop-checks.sh
+    echo "Checking stop-validation snapshot caching"
+    bash scripts/test-agent-stop-checks.sh
 
-echo "Checking namespaced skill inventory and orb lifecycle"
-"$VALIDATION_PYTHON" scripts/test-skill-catalog.py
-bash scripts/test-orb-lifecycle.sh
-bun scripts/test-repository-hooks.ts
+    echo "Checking namespaced skill inventory and orb lifecycle"
+    "$VALIDATION_PYTHON" scripts/test-skill-catalog.py
+    bash scripts/test-orb-lifecycle.sh
+    bun scripts/test-repository-hooks.ts
 
-echo "Checking README skill coverage"
-"$VALIDATION_PYTHON" scripts/test-shared-validator-regressions.py
-"$VALIDATION_PYTHON" scripts/validate-readme-skills.py
-"$VALIDATION_PYTHON" scripts/validate-skill-art.py
-"$VALIDATION_PYTHON" scripts/check-skill-description-budget.py
+    echo "Checking README skill coverage"
+    "$VALIDATION_PYTHON" scripts/test-shared-validator-regressions.py
+    "$VALIDATION_PYTHON" scripts/validate-readme-skills.py
+    "$VALIDATION_PYTHON" scripts/validate-skill-art.py
+    "$VALIDATION_PYTHON" scripts/check-skill-description-budget.py
+fi
 
 # Resolve the complete inventory before invoking any package. A failing reader
 # in process substitution would otherwise let Bash silently skip validation.
 skill_inventory="$("$VALIDATION_PYTHON" scripts/skill_catalog.py --skills-root skills)"
+echo "Validation shard ${SHARD_INDEX}/${SHARD_COUNT}"
+package_position=0
+validated_packages=0
 while IFS= read -r skill; do
+    package_position=$((package_position + 1))
+    if [ $(((package_position - 1) % SHARD_COUNT + 1)) -ne "$SHARD_INDEX" ]; then
+        continue
+    fi
     echo "Validating ${skill}"
     "$VALIDATION_PYTHON" "${skill}/scripts/validate.py" "${skill}" < /dev/null
     "$VALIDATION_PYTHON" "${skill}/scripts/test_skill.py" "${skill}" < /dev/null
+    validated_packages=$((validated_packages + 1))
 done <<<"$skill_inventory"
+echo "Validated ${validated_packages} of ${package_position} skill packages in shard ${SHARD_INDEX}/${SHARD_COUNT}"
 
-echo "Checking for leaked builder-only placement metadata"
-if grep -n -E '^## Recommended Destination$' skills/*/*/SKILL.md; then
-    echo "ERROR: remove builder-only placement sections from shipped SKILL.md files" >&2
-    exit 1
-fi
-
-# Cross-check: files under skills/ that a fresh CI checkout will NOT see.
-# This catches two classes of footgun that each skill's own validate.py
-# cannot detect, because validate.py only inspects the working tree:
-#
-#   1. A required file is hidden from git by the user's global gitignore
-#      or $GIT_DIR/info/exclude. Local validation passes (the file is on
-#      disk) but CI fails on a fresh checkout (the file was never pushed).
-#      This previously happened to the better-writing package's AGENTS.md.
-#
-#   2. A new file was created under a skill package but never `git add`ed.
-#      Same symptom: present locally, missing on CI.
-#
-# Files ignored by an in-tree .gitignore (relative path) are legitimate
-# exclusions — e.g. `__pycache__/` — and are not flagged.
-if git rev-parse --git-dir >/dev/null 2>&1; then
-    echo "Checking for skill files invisible to a fresh CI checkout"
-
-    invisible_hits=()
-
-    # (1) On-disk files hidden by an external ignore source.
-    while IFS= read -r file; do
-        [ -z "$file" ] && continue
-        source_line="$(git check-ignore -v -- "$file" 2>/dev/null || true)"
-        source_file="${source_line%%:*}"
-        if [[ "$source_file" == /* ]] || [[ "$source_file" == *".git/info/exclude" ]]; then
-            invisible_hits+=("${file} (ignored by ${source_file})")
-        fi
-    done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
-
-    # (2) On-disk files that are simply untracked (user forgot to git add).
-    # Agent stop hooks validate an in-progress working tree before the agent's
-    # final answer, so new skill files may be intentionally untracked at that
-    # point. Keep manual/CI validation strict, but let hook-mode validation
-    # validate the files on disk without forcing the agent to stage them.
-    if [ "${SKILLS_VALIDATE_ALLOW_UNTRACKED_SKILL_WORKTREE:-0}" != "1" ]; then
-        while IFS= read -r file; do
-            [ -z "$file" ] && continue
-            invisible_hits+=("${file} (untracked — run 'git add')")
-        done < <(git ls-files --others --exclude-standard skills 2>/dev/null)
-    fi
-
-    if [ "${#invisible_hits[@]}" -gt 0 ]; then
-        {
-            echo
-            echo "ERROR: skill files are invisible to a fresh CI checkout:"
-            printf '  - %s\n' "${invisible_hits[@]}"
-            echo
-            echo "A local 'git status' may still look clean if the file is hidden by"
-            echo "your global gitignore. Fix by committing the file (after adding a"
-            echo "negation to .gitignore if needed), or remove it from the working tree."
-        } >&2
+if runs_repository_checks; then
+    echo "Checking for leaked builder-only placement metadata"
+    if grep -n -E '^## Recommended Destination$' skills/*/*/SKILL.md; then
+        echo "ERROR: remove builder-only placement sections from shipped SKILL.md files" >&2
         exit 1
     fi
-fi
 
-echo "Checking skills.sh discovery and Codex skills context budget"
-bash scripts/test-codex-skills-context-budget.sh
-bash scripts/check-codex-skills-context-budget.sh
+    # Cross-check: files under skills/ that a fresh CI checkout will NOT see.
+    # This catches two classes of footgun that each skill's own validate.py
+    # cannot detect, because validate.py only inspects the working tree:
+    #
+    #   1. A required file is hidden from git by the user's global gitignore
+    #      or $GIT_DIR/info/exclude. Local validation passes (the file is on
+    #      disk) but CI fails on a fresh checkout (the file was never pushed).
+    #      This previously happened to the better-writing package's AGENTS.md.
+    #
+    #   2. A new file was created under a skill package but never `git add`ed.
+    #      Same symptom: present locally, missing on CI.
+    #
+    # Files ignored by an in-tree .gitignore (relative path) are legitimate
+    # exclusions — e.g. `__pycache__/` — and are not flagged.
+    if git rev-parse --git-dir >/dev/null 2>&1; then
+        echo "Checking for skill files invisible to a fresh CI checkout"
+
+        invisible_hits=()
+
+        # (1) On-disk files hidden by an external ignore source.
+        while IFS= read -r file; do
+            [ -z "$file" ] && continue
+            source_line="$(git check-ignore -v -- "$file" 2>/dev/null || true)"
+            source_file="${source_line%%:*}"
+            if [[ "$source_file" == /* ]] || [[ "$source_file" == *".git/info/exclude" ]]; then
+                invisible_hits+=("${file} (ignored by ${source_file})")
+            fi
+        done < <(git ls-files --others --ignored --exclude-standard skills 2>/dev/null)
+
+        # (2) On-disk files that are simply untracked (user forgot to git add).
+        # Agent stop hooks validate an in-progress working tree before the agent's
+        # final answer, so new skill files may be intentionally untracked at that
+        # point. Keep manual/CI validation strict, but let hook-mode validation
+        # validate the files on disk without forcing the agent to stage them.
+        if [ "${SKILLS_VALIDATE_ALLOW_UNTRACKED_SKILL_WORKTREE:-0}" != "1" ]; then
+            while IFS= read -r file; do
+                [ -z "$file" ] && continue
+                invisible_hits+=("${file} (untracked — run 'git add')")
+            done < <(git ls-files --others --exclude-standard skills 2>/dev/null)
+        fi
+
+        if [ "${#invisible_hits[@]}" -gt 0 ]; then
+            {
+                echo
+                echo "ERROR: skill files are invisible to a fresh CI checkout:"
+                printf '  - %s\n' "${invisible_hits[@]}"
+                echo
+                echo "A local 'git status' may still look clean if the file is hidden by"
+                echo "your global gitignore. Fix by committing the file (after adding a"
+                echo "negation to .gitignore if needed), or remove it from the working tree."
+            } >&2
+            exit 1
+        fi
+    fi
+
+    echo "Checking skills.sh discovery and Codex skills context budget"
+    bash scripts/test-codex-skills-context-budget.sh
+    bash scripts/check-codex-skills-context-budget.sh
+fi

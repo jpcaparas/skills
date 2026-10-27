@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   validate:
-    name: validate (${{ matrix.os }})
+    name: validate (${{ matrix.os }}, shard ${{ matrix.shard }}/2)
     runs-on: ${{ matrix.os }}
     env:
       # Live API probes are opt-in locally and must never run in CI or act.
@@ -20,6 +20,10 @@ jobs:
         os:
           - ubuntu-24.04
           - macos-15
+        # Each OS runs every shard, so together they cover one full validation.
+        # Keep this list as 1..N and the step's SKILLS_VALIDATE_SHARD as
+        # ".../N"; check-validation-entrypoint-parity.py enforces both.
+        shard: [1, 2]
     steps:
       - name: Check Out Repository
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -133,4 +137,6 @@ jobs:
       - name: Validate Skills
         shell: bash
         # Use the same entrypoint as native validation and the stop hooks.
+        env:
+          SKILLS_VALIDATE_SHARD: ${{ matrix.shard }}/2
         run: bash scripts/validate-all-skills.sh

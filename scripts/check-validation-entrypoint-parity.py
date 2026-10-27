@@ -34,6 +34,11 @@ ACT_PACKAGE_COMMANDS: Final[dict[str, str]] = {
     "validate:act:macos": ACT_MACOS_COMMAND,
 }
 MATRIX_RUNNER: Final = "${{ matrix.os }}"
+# CI may split validate-all-skills.sh into N parallel jobs per OS. The shard
+# list must be exactly 1..N and the step must pass "<shard>/N", or packages in
+# the missing shards would never run while CI still reports green.
+SHARD_AXIS: Final = "shard"
+SHARD_ENV: Final = "SKILLS_VALIDATE_SHARD"
 MATRIX_OPERATING_SYSTEMS: Final = ("ubuntu-24.04", "macos-15")
 HOSTED_PYTHON_VERSION: Final = "3.11"
 HOSTED_NODE_VERSION: Final = "24"
@@ -276,6 +281,16 @@ def validate_package_script(
             )
 
 
+def matrix_shard_count(shards: object) -> int | None:
+    """Return N when the shard axis is exactly [1, 2, ..., N] with N >= 2."""
+    if not isinstance(shards, list) or len(shards) < 2:
+        return None
+    # bool is an int subclass; `true` must not pass as shard 1.
+    if any(type(shard) is not int for shard in shards):
+        return None
+    return len(shards) if shards == list(range(1, len(shards) + 1)) else None
+
+
 def validate_workflow(
     errors: list[str],
     *,
@@ -310,6 +325,8 @@ def validate_workflow(
             f"runs-on: {MATRIX_RUNNER!r}"
         )
 
+    shard_axis_present = False
+    shard_count: int | None = None
     strategy = validate_job.get("strategy")
     if not isinstance(strategy, dict):
         errors.append("GitHub Actions 'validate' job must contain a strategy mapping")
@@ -324,15 +341,31 @@ def validate_workflow(
             errors.append(
                 "GitHub Actions 'validate' strategy must contain a matrix mapping"
             )
-        elif set(matrix) != {"os"}:
+        elif set(matrix) not in ({"os"}, {"os", SHARD_AXIS}):
             errors.append(
-                "GitHub Actions 'validate' matrix must contain only the 'os' axis"
+                "GitHub Actions 'validate' matrix must contain only the 'os' axis "
+                f"and an optional {SHARD_AXIS!r} axis"
             )
         elif matrix.get("os") != list(MATRIX_OPERATING_SYSTEMS):
             expected = ", ".join(MATRIX_OPERATING_SYSTEMS)
             errors.append(
                 "GitHub Actions 'validate' matrix.os must contain exactly, in "
                 f"order: {expected}"
+            )
+        elif SHARD_AXIS in matrix:
+            shard_axis_present = True
+            shard_count = matrix_shard_count(matrix[SHARD_AXIS])
+            if shard_count is None:
+                errors.append(
+                    f"GitHub Actions 'validate' matrix.{SHARD_AXIS} must list every "
+                    "shard exactly once as the integers 1 through N, with N >= 2"
+                )
+
+    for scope, env in (("workflow", workflow.get("env")), ("'validate' job", validate_job.get("env"))):
+        if isinstance(env, dict) and SHARD_ENV in env:
+            errors.append(
+                f"GitHub Actions {scope} env must not set {SHARD_ENV}; only the "
+                "'Validate Skills' step may, from the shard matrix"
             )
 
     steps = validate_job.get("steps")
@@ -576,6 +609,21 @@ def validate_workflow(
             "GitHub Actions 'Validate Skills' step must run "
             f"{CANONICAL_COMMAND!r} directly"
         )
+    step_env = validation_step.get("env")
+    step_shard = step_env.get(SHARD_ENV) if isinstance(step_env, dict) else None
+    if not shard_axis_present:
+        if step_shard is not None:
+            errors.append(
+                f"GitHub Actions 'Validate Skills' step must not set {SHARD_ENV} "
+                f"without a matrix.{SHARD_AXIS} axis"
+            )
+    elif shard_count is not None:
+        expected_shard = f"${{{{ matrix.{SHARD_AXIS} }}}}/{shard_count}"
+        if step_shard != expected_shard:
+            errors.append(
+                f"GitHub Actions 'Validate Skills' step must set {SHARD_ENV}: "
+                f"{expected_shard!r} so the shards cover every package"
+            )
     if "if" in validation_step:
         errors.append("GitHub Actions 'Validate Skills' step must not be conditional")
     if validation_step.get("continue-on-error") not in (None, False):

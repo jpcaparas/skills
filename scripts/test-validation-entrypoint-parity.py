@@ -92,6 +92,18 @@ jobs:
         run: {CANONICAL_COMMAND}
 """
 
+SHARD_STEP_ENV: Final = """\
+        env:
+          SKILLS_VALIDATE_SHARD: ${{ matrix.shard }}/2
+"""
+SHARDED_WORKFLOW: Final = VALID_WORKFLOW.replace(
+    "          - macos-15\n",
+    "          - macos-15\n        shard: [1, 2]\n",
+).replace(
+    f"        run: {CANONICAL_COMMAND}\n",
+    SHARD_STEP_ENV + f"        run: {CANONICAL_COMMAND}\n",
+)
+
 VALID_PACKAGE_JSON: Final = json.dumps(
     {
         "scripts": {
@@ -463,6 +475,49 @@ class ValidationEntrypointParityTests(unittest.TestCase):
         result = self.run_validator(workflow=workflow)
 
         self.assert_rejected(result, "matrix must contain only the 'os' axis")
+
+    def test_accepts_a_shard_axis_that_covers_every_shard(self) -> None:
+        result = self.run_validator(workflow=SHARDED_WORKFLOW)
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_rejects_shard_lists_that_would_skip_or_repeat_packages(self) -> None:
+        for shards in ("[1, 3]", "[2, 1]", "[1, 1]", "[1]", "[true, 2]", "['1', '2']"):
+            with self.subTest(shards=shards):
+                workflow = SHARDED_WORKFLOW.replace("shard: [1, 2]", f"shard: {shards}")
+
+                result = self.run_validator(workflow=workflow)
+
+                self.assert_rejected(result, "matrix.shard must list every shard exactly once")
+
+    def test_rejects_shard_env_whose_count_disagrees_with_the_matrix(self) -> None:
+        for value in ("${{ matrix.shard }}/3", "1/2", None):
+            with self.subTest(value=value):
+                if value is None:
+                    workflow = SHARDED_WORKFLOW.replace(SHARD_STEP_ENV, "")
+                else:
+                    workflow = SHARDED_WORKFLOW.replace(
+                        "${{ matrix.shard }}/2", value
+                    )
+
+                result = self.run_validator(workflow=workflow)
+
+                self.assert_rejected(result, "step must set SKILLS_VALIDATE_SHARD")
+
+    def test_rejects_shard_env_outside_the_sharded_validation_step(self) -> None:
+        unsharded_step = VALID_WORKFLOW.replace(
+            f"        run: {CANONICAL_COMMAND}\n",
+            SHARD_STEP_ENV.replace("${{ matrix.shard }}/2", "1/2")
+            + f"        run: {CANONICAL_COMMAND}\n",
+        )
+        result = self.run_validator(workflow=unsharded_step)
+        self.assert_rejected(result, "must not set SKILLS_VALIDATE_SHARD without")
+
+        job_level = SHARDED_WORKFLOW.replace(
+            "    runs-on:", "    env:\n      SKILLS_VALIDATE_SHARD: 1/1\n    runs-on:"
+        )
+        result = self.run_validator(workflow=job_level)
+        self.assert_rejected(result, "'validate' job env must not set SKILLS_VALIDATE_SHARD")
 
     def test_rejects_workflow_command_that_exists_only_in_a_comment(self) -> None:
         workflow = f"""\
