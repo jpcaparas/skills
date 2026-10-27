@@ -8,6 +8,7 @@ import asyncio
 import json
 import os
 import secrets
+import socketserver
 import stat
 import subprocess
 import sys
@@ -50,6 +51,18 @@ from runtime_contract import BoundedReadError, parse_json_bounded, read_regular_
 METADATA_MAX_BYTES = 1024 * 1024
 PAGE_READY_MILLISECONDS = 15_000
 DEFAULT_HOLD_MILLISECONDS = 400
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer without the reverse-DNS lookup of its bind address.
+
+    HTTPServer.server_bind calls socket.getfqdn(host), a reverse-DNS lookup that
+    can stall for tens of seconds on macOS. A loopback stub never needs the name.
+    """
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 @dataclass(frozen=True)
@@ -97,7 +110,7 @@ class ArtifactServer(AbstractContextManager["ArtifactServer"]):
 
     def __init__(self, artifact: Path) -> None:
         handler = partial(QuietStaticHandler, directory=str(artifact))
-        self._server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+        self._server = LoopbackHTTPServer(("127.0.0.1", 0), handler)
         self._thread = threading.Thread(target=self._server.serve_forever, daemon=True)
 
     @property

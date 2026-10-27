@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import socketserver
 import subprocess
 import threading
 import unittest
@@ -44,6 +45,18 @@ QUOTA_RESPONSE = {
     ],
     "base_resp": {"status_code": 0, "status_msg": "success"},
 }
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer without the reverse-DNS lookup of its bind address.
+
+    HTTPServer.server_bind calls socket.getfqdn(host), a reverse-DNS lookup that
+    can stall for tens of seconds on macOS. A loopback stub never needs the name.
+    """
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 def base_resp(code: int, message: str) -> bytes:
@@ -84,7 +97,7 @@ class MiniMaxSearchHelperTest(unittest.TestCase):
         cls.node = shutil.which(os.environ.get("SKILLS_VALIDATION_NODE", "node"))
         if not cls.node:
             raise RuntimeError("Node.js is required to test scripts/search.js; set SKILLS_VALIDATION_NODE if it is not on PATH.")
-        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), StubMiniMax)
+        cls.server = LoopbackHTTPServer(("127.0.0.1", 0), StubMiniMax)
         threading.Thread(target=cls.server.serve_forever, daemon=True).start()
         cls.host = f"http://127.0.0.1:{cls.server.server_address[1]}"
 

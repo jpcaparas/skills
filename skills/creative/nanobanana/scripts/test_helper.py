@@ -13,6 +13,7 @@ import importlib.util
 import io
 import json
 import os
+import socketserver
 import struct
 import sys
 import tempfile
@@ -24,6 +25,18 @@ from unittest import mock
 
 SCRIPT = Path(__file__).resolve().parent / "nanobanana.py"
 FAKE_KEY = "test-key-not-real"
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer without the reverse-DNS lookup of its bind address.
+
+    HTTPServer.server_bind calls socket.getfqdn(host), a reverse-DNS lookup that
+    can stall for tens of seconds on macOS. A loopback stub never needs the name.
+    """
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 def fake_jpeg(width: int, height: int) -> bytes:
@@ -90,7 +103,7 @@ class Stub(BaseHTTPRequestHandler):
 class HelperTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), Stub)
+        cls.server = LoopbackHTTPServer(("127.0.0.1", 0), Stub)
         threading.Thread(target=cls.server.serve_forever, daemon=True).start()
         env = {"NANOBANANA_API_ROOT": f"http://127.0.0.1:{cls.server.server_address[1]}", "GEMINI_API_KEY": FAKE_KEY}
         with mock.patch.dict(os.environ, env, clear=False):

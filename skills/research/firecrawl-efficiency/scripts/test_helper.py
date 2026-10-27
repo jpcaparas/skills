@@ -12,6 +12,7 @@ import contextlib
 import io
 import json
 import os
+import socketserver
 import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -22,6 +23,18 @@ import sys
 
 SCRIPT = Path(__file__).with_name("firecrawl_guard.py")
 FAKE_KEY = "test-key-not-real"
+
+
+class LoopbackHTTPServer(HTTPServer):
+    """HTTPServer without the reverse-DNS lookup of its bind address.
+
+    HTTPServer.server_bind calls socket.getfqdn(host), a reverse-DNS lookup that
+    can stall for tens of seconds on macOS. A loopback stub never needs the name.
+    """
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 def load_guard():
@@ -150,7 +163,7 @@ class Balance(unittest.TestCase):
             def log_message(self, *_: object) -> None:
                 pass
 
-        server = HTTPServer(("127.0.0.1", 0), Stub)
+        server = LoopbackHTTPServer(("127.0.0.1", 0), Stub)
         threading.Thread(target=server.serve_forever, daemon=True).start()
         try:
             with mock.patch.object(guard, "API_ROOT", f"http://127.0.0.1:{server.server_address[1]}"), \

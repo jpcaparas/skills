@@ -9,6 +9,7 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import socketserver
 import subprocess
 import tempfile
 import threading
@@ -18,6 +19,18 @@ from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent / "gemini_search.js"
 FAKE_KEY = "AIza-test-not-real-0123456789"
+
+
+class LoopbackHTTPServer(ThreadingHTTPServer):
+    """ThreadingHTTPServer without the reverse-DNS lookup of its bind address.
+
+    HTTPServer.server_bind calls socket.getfqdn(host), a reverse-DNS lookup that
+    can stall for tens of seconds on macOS. A loopback stub never needs the name.
+    """
+
+    def server_bind(self) -> None:
+        socketserver.TCPServer.server_bind(self)
+        self.server_name, self.server_port = self.server_address[:2]
 
 
 def grounded_response(base: str, text: str, queries: list[str], supports: list[tuple[int, int]], chunk_paths: list[str]) -> dict:
@@ -99,7 +112,7 @@ class GeminiHelperTest(unittest.TestCase):
         cls.node = shutil.which(os.environ.get("SKILLS_VALIDATION_NODE", "node"))
         if not cls.node:
             raise RuntimeError("Node.js is required to test scripts/gemini_search.js; set SKILLS_VALIDATION_NODE if it is not on PATH.")
-        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), StubGemini)
+        cls.server = LoopbackHTTPServer(("127.0.0.1", 0), StubGemini)
         threading.Thread(target=cls.server.serve_forever, daemon=True).start()
         cls.root = f"http://127.0.0.1:{cls.server.server_address[1]}"
 
