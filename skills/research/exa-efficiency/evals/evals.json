@@ -1,0 +1,107 @@
+{
+  "skill_name": "exa-efficiency",
+  "created_by": "skill-creator-advanced",
+  "evals": [
+    {
+      "id": 1,
+      "name": "search-sets-lite-and-highlights",
+      "prompt": "Use Exa to find the latest Kubernetes 1.35 deprecations.",
+      "expected_output": "Calls /search with type lite (or explains why auto is needed), contents.highlights rather than unbounded text, at most 10 results, then reads only the one or two pages it needs and cites them with the real costDollars.",
+      "assertions": [
+        {"text": "Sets type explicitly to lite rather than leaving the auto default", "type": "functional"},
+        {"text": "Requests highlights or text with maxCharacters, not unbounded text", "type": "functional"},
+        {"text": "Does not send legacy fast or set numResults above 10 without a reason", "type": "negative"}
+      ],
+      "tags": ["search", "defaults"],
+      "files": ["references/recipes.md"]
+    },
+    {
+      "id": 2,
+      "name": "lite-parameter-rejection",
+      "prompt": "Search Exa for Postgres 18 release notes with type lite, a summary of each result, and fresh pages only.",
+      "expected_output": "Recognises that lite rejects contents.summary and maxAgeHours with a 400, and either drops them (highlights instead of summary) or switches to type auto, stating the $0.007 price and the $0.001 per-result summary cost.",
+      "assertions": [
+        {"text": "Does not send summary or maxAgeHours with type lite", "type": "negative"},
+        {"text": "States the cost difference between lite with highlights and auto with summaries", "type": "disclosure"}
+      ],
+      "tags": ["search", "lite"],
+      "files": ["scripts/exa_cost.py", "references/gotchas.md"]
+    },
+    {
+      "id": 3,
+      "name": "agent-list-building-capped",
+      "prompt": "Use Exa Agent to build a list of every Series A climate-tech startup in Europe with website and funding date.",
+      "expected_output": "Prices the run with exa_cost.py, uses effort auto with budget.maxCostDollars (starting near $1) instead of the $5 default, warns that cancel discards results and that contacts or Connect providers cost extra, and confirms the budget before starting.",
+      "assertions": [
+        {"text": "Sets budget.maxCostDollars on an auto run or uses a fixed effort", "type": "functional"},
+        {"text": "Runs exa_cost.py estimate agent/runs or states the worst-case cost before starting", "type": "verification"},
+        {"text": "Does not start ultra or attach dataSources without confirmation", "type": "negative"}
+      ],
+      "tags": ["agent", "budget"],
+      "files": ["scripts/exa_cost.py", "references/recipes.md"]
+    },
+    {
+      "id": 4,
+      "name": "single-fact-uses-cheap-route",
+      "prompt": "Ask Exa which year Rust 1.0 was released, with a source.",
+      "expected_output": "Uses a lite search with highlights ($0.004) or /answer ($0.005) rather than an Agent run or deep search, and cites the source.",
+      "assertions": [
+        {"text": "Uses lite search or /answer for a single fact", "type": "functional"},
+        {"text": "Does not use Agent auto, deep search, or /answer with text true", "type": "negative"}
+      ],
+      "tags": ["answer", "routing"],
+      "files": ["SKILL.md"]
+    },
+    {
+      "id": 5,
+      "name": "contents-one-view",
+      "prompt": "Fetch these 40 documentation URLs with Exa and pull out what each says about rate limits.",
+      "expected_output": "Uses one /contents request (up to 100 URLs) with highlights and a highlights.query about rate limits, no contents wrapper, one content type ($0.04 total), and checks statuses for failed URLs instead of retrying them blindly.",
+      "assertions": [
+        {"text": "Requests a single content type, preferably highlights with a query", "type": "functional"},
+        {"text": "Does not combine text, highlights, and summary on every page", "type": "negative"},
+        {"text": "Reads statuses for failures before retrying", "type": "verification"}
+      ],
+      "tags": ["contents"],
+      "files": ["references/recipes.md"]
+    },
+    {
+      "id": 6,
+      "name": "monitor-cost-disclosure",
+      "prompt": "Set up an Exa monitor that checks hourly for news about our competitor.",
+      "expected_output": "Prices the monitor (hourly about $10.80 a month, daily about $0.45), suggests daily unless hourly is essential, explains it bills every run until deleted and that runs report no cost, needs a public webhook, agrees a delete date, and asks before creating it.",
+      "assertions": [
+        {"text": "States a monthly cost before creating the monitor", "type": "disclosure"},
+        {"text": "Explains monitors bill every run until deleted", "type": "disclosure"},
+        {"text": "Does not create the monitor without the user's go-ahead", "type": "negative"}
+      ],
+      "tags": ["monitor"],
+      "files": ["scripts/exa_cost.py", "references/account-guards.md"]
+    },
+    {
+      "id": 7,
+      "name": "bill-shock-investigation",
+      "prompt": "Our Exa bill jumped this month. What should we check?",
+      "expected_output": "Checks for searches without type (auto), legacy fast, numResults above 10, summaries, multi-type /contents, uncapped Agent auto or ultra runs, contact enrichment and Connect providers, and running monitors; recommends per-key budgetCents and auto recharge limits; notes usage history needs a service key. Does not delete monitors or cancel runs without approval.",
+      "assertions": [
+        {"text": "Names uncapped Agent runs and running monitors as likely causes", "type": "functional"},
+        {"text": "Recommends per-key budgets that return 402 when spent", "type": "disclosure"},
+        {"text": "Does not delete monitors or change keys without approval", "type": "negative"}
+      ],
+      "tags": ["account", "investigation"],
+      "files": ["references/account-guards.md", "references/gotchas.md"]
+    },
+    {
+      "id": 8,
+      "name": "mcp-free-search",
+      "prompt": "Use the Exa MCP to look up recent articles on retrieval-augmented generation evaluation.",
+      "expected_output": "Uses web_search_exa with a descriptive query and an objective, a small numResults, and web_fetch_exa with maxCharacters only on the best one or two URLs; notes keyless use is free but rate-limited and that authenticated calls bill at auto prices.",
+      "assertions": [
+        {"text": "Passes an objective and a modest numResults to web_search_exa", "type": "functional"},
+        {"text": "Fetches only the chosen URLs rather than every result", "type": "negative"}
+      ],
+      "tags": ["mcp"],
+      "files": ["references/recipes.md"]
+    }
+  ]
+}

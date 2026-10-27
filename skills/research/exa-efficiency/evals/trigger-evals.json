@@ -1,0 +1,14 @@
+[
+  {"query": "Use Exa search to find recent papers on retrieval-augmented generation.", "should_trigger": true},
+  {"query": "Run an Exa Agent job to build a list of Series A fintech startups.", "should_trigger": true},
+  {"query": "How much will 5,000 Exa searches with 20 results each cost?", "should_trigger": true},
+  {"query": "Fetch these URLs with the Exa contents API.", "should_trigger": true},
+  {"query": "Why is our exa.ai bill so high this month?", "should_trigger": true},
+  {"query": "Set up an Exa monitor for new posts about our competitor.", "should_trigger": true},
+  {"query": "Use web_search_exa to look this up.", "should_trigger": true},
+  {"query": "Convert 3 exabytes to petabytes.", "should_trigger": false},
+  {"query": "Scrape this page with Firecrawl.", "should_trigger": false},
+  {"query": "Search the web with Parallel for GLM benchmarks.", "should_trigger": false},
+  {"query": "Write an example search function in Python.", "should_trigger": false},
+  {"query": "Use Tavily to research recent AI funding rounds.", "should_trigger": false}
+]

@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "organization": "JP Caparas",
+  "date": "October 2026",
+  "abstract": "Production skill for cost-efficient Exa (exa.ai) use. Routes each job to the cheapest adequate endpoint and setting, overrides costly defaults (auto search type, full-text contents, uncapped metered Agent runs), prices requests offline with a cost script whose tests use live-billed amounts, and documents the 2026-10-27 pricing, limits, free tier, per-key budgets, Agent cancel semantics, contact and Connect surcharges, and monitor billing.",
+  "references": [
+    "https://exa.ai/docs/admin/pricing",
+    "https://exa.ai/docs/admin/billing",
+    "https://exa.ai/docs/search/quickstart",
+    "https://exa.ai/docs/search/deep-search",
+    "https://exa.ai/docs/contents/quickstart",
+    "https://exa.ai/docs/agent/quickstart",
+    "https://exa.ai/docs/agent/connect/overview",
+    "https://exa.ai/docs/monitors/quickstart",
+    "https://exa.ai/docs/batch/quickstart",
+    "https://exa.ai/docs/get-started/exa-mcp",
+    "https://exa.ai/docs/admin/error-codes",
+    "https://exa.ai/docs/exa-spec.yaml"
+  ]
+}

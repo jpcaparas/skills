@@ -49,6 +49,7 @@ SKILL_SCENES = {
     "deepseek-search": "a deep-sea sonar submarine sweeping a fan-shaped sonar beam across a dark seabed of glowing page-shaped reefs, with five evenly spaced pulse rings and one warm amber reef lit as the catch",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",
     "elevenlabs-media": "a midnight soundstage where a glowing microphone, rippling sound ribbons, a small keyboard, and a film projector transform an amber spark into music and a luminous miniature landscape, with clear separate audio and visual paths",
+    "exa-efficiency": "a falconer releasing a single falcon that dives straight to one glowing amber fruit in a dark orchard of blank glowing trees, with a small brass coin scale resting lightly on a fence post and the rest of the orchard left untouched",
     "firecrawl-efficiency": "a careful miner lowering a small lantern-lit cart into a single marked tunnel of a vast mountain, with a brass meter gauge and a few neatly stacked blank ore crates, while sealed side tunnels stay dark",
     "gemini-search": "a lighthouse lens splitting one beam into exactly three narrow searchlight rays that touch three floating blank crystal tablets, with a small brass coin meter beside the lens and a larger sealed vault door glowing faintly in the background",
     "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",

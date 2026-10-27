@@ -1,0 +1,4 @@
+interface:
+  display_name: "exa-efficiency"
+  short_description: "Use Exa for less: cheapest endpoint and setting per job, defaults overridden, priced before sending"
+  default_prompt: "Use Exa to research this as cheaply as possible, and tell me the worst-case cost before spending"

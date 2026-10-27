@@ -284,6 +284,16 @@ Production skill for reference-backed or clearly bounded ASD-STE100 Issue 9 rewr
 
 Production skill for web search and page fetches through DeepSeek's Search and Fetch APIs at $0.75 per 1,000 successful requests, with live-measured traps such as dates written as midnight Beijing time, year-only `after:` filters that exclude the whole year, backslash-escaped fetch output, and a 5 requests-per-second account limit.
 
+#### `exa-efficiency`
+
+`npx skills add jpcaparas/skills --skill exa-efficiency`
+
+<p align="center">
+  <img src="skills/research/exa-efficiency/skill-card.png" alt="16-bit side-scrolling pixel art badge for exa-efficiency" width="480">
+</p>
+
+Production skill for using Exa (exa.ai) at the lowest sensible cost: `lite` search with highlights instead of the `auto` default, single-view `/contents`, fixed-effort or capped Agent runs, manual-first monitors, and an offline estimator whose tests reuse 60 live-billed requests.
+
 #### `firecrawl-efficiency`
 
 `npx skills add jpcaparas/skills --skill firecrawl-efficiency`
