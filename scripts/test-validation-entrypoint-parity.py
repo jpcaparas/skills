@@ -70,7 +70,7 @@ jobs:
         if: ${{{{ !env.ACT || runner.os == 'Linux' }}}}
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76
         with:
-          bun-version: "1.3.11"
+          bun-version: "1.4.4"
       - name: Prepare Local macOS Toolchain (act)
         if: ${{{{ env.ACT && runner.os == 'macOS' }}}}
         shell: bash
@@ -299,15 +299,15 @@ class ValidationEntrypointParityTests(unittest.TestCase):
 
         self.assert_rejected(result, "must pin node-version to '24'")
 
-    def test_rejects_drift_from_hosted_bun_1311(self) -> None:
+    def test_rejects_drift_from_hosted_bun_144(self) -> None:
         workflow = VALID_WORKFLOW.replace(
-            'bun-version: "1.3.11"',
-            'bun-version: "1.4.0"',
+            'bun-version: "1.4.4"',
+            'bun-version: "1.4.3"',
         )
 
         result = self.run_validator(workflow=workflow)
 
-        self.assert_rejected(result, "must pin bun-version to '1.3.11'")
+        self.assert_rejected(result, "must pin bun-version to '1.4.4'")
 
     def test_rejects_bare_python_for_local_macos_bootstrap(self) -> None:
         workflow = VALID_WORKFLOW.replace(
