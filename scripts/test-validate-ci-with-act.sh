@@ -135,7 +135,7 @@ if [ "${1:-}" = "--version" ]; then
     if [ "${FAKE_BUN_STATUS:-0}" -ne 0 ]; then
         exit "$FAKE_BUN_STATUS"
     fi
-    printf '%s\n' "${FAKE_BUN_VERSION:-1.3.11}"
+    printf '%s\n' "${FAKE_BUN_VERSION:-1.4.4}"
 fi
 exit 0
 FAKE_BUN
@@ -189,7 +189,7 @@ run_wrapper() {
         "FAKE_NODE_STATUS=${FAKE_NODE_STATUS:-0}"
         "FAKE_NODE_VERSION=${FAKE_NODE_VERSION:-v26.3.0}"
         "FAKE_BUN_STATUS=${FAKE_BUN_STATUS:-0}"
-        "FAKE_BUN_VERSION=${FAKE_BUN_VERSION:-1.3.11}"
+        "FAKE_BUN_VERSION=${FAKE_BUN_VERSION:-1.4.4}"
     )
 
     if [ -n "${TEST_ACT_OS+x}" ]; then

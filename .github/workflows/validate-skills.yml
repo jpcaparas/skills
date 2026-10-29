@@ -40,7 +40,7 @@ jobs:
         if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
         with:
-          bun-version: "1.3.11"
+          bun-version: "1.4.4"
 
       - name: Install Validation Tools (Linux)
         if: runner.os == 'Linux'
