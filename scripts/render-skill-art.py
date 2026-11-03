@@ -45,6 +45,7 @@ SKILL_SCENES = {
     "better-writing": "a quill-shaped tool smoothing a jagged ribbon into a clean luminous ribbon",
     "bootstrap-agents-md": "a repository observatory distilling many project signal paths into one durable guidance beacon with a smaller companion beacon linked beside it",
     "client-report-from-commits": "commit stones merging into a polished crystal stack for a stakeholder path",
+    "data-oriented-perf": "a compact engine room where a tangled web of floating pointer threads and scattered crates is rebuilt into neat parallel conveyor lanes of evenly spaced blank cells, each lane carrying one kind of glowing block, with a single warm amber block racing along the fastest lane",
     "devils-advocate": "two opposing debate champions facing each other across a glowing balance arena, with one mirrored argument shield, pressure-test sparks, and a central evidence gem",
     "deepseek-search": "a deep-sea sonar submarine sweeping a fan-shaped sonar beam across a dark seabed of glowing page-shaped reefs, with five evenly spaced pulse rings and one warm amber reef lit as the catch",
     "eli12": "a lantern revealing a simple route through a tangled brass machine",

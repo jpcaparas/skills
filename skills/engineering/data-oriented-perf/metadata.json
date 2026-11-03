@@ -1,0 +1,18 @@
+{
+  "name": "data-oriented-perf",
+  "display_name": "Data-Oriented Perf",
+  "version": "1.0.0",
+  "license": "MIT",
+  "entrypoint": "SKILL.md",
+  "description": "Passive performance skill built on Jarred Sumner's (Bun) data-oriented design prompts: flat arrays over hash tables, indices over pointers, hot data packed into index bits, structure of arrays, and redesign instead of caching, bounded by measurement and preserved semantics.",
+  "tags": [
+    "performance",
+    "data-oriented-design",
+    "hot-paths",
+    "memory-layout",
+    "structure-of-arrays",
+    "profiling",
+    "code-quality",
+    "agent-workflows"
+  ]
+}

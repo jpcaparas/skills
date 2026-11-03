@@ -1,0 +1,4 @@
+display_name: "Data-Oriented Perf"
+short_description: "Redesign hot paths around data layout instead of adding caches"
+default_prompt: "Profile this hot path and redesign it with data-oriented design: flat arrays, indices, and structure of arrays where they help."
+icon: "gauge"

@@ -1,0 +1,12 @@
+[
+  {"query": "The profiler says this inner loop is 70% of runtime. Make it faster.", "should_trigger": true},
+  {"query": "Our ECS update tick is dropping frames; redesign the component storage.", "should_trigger": true},
+  {"query": "How do we rewrite this to better leverage data-oriented design principles?", "should_trigger": true},
+  {"query": "Should this be a structure of arrays instead of an array of structures?", "should_trigger": true},
+  {"query": "This lexer allocates a node per token and p99 latency is bad. Optimize it.", "should_trigger": true},
+  {"query": "Add a memo cache to speed up this slow lookup function.", "should_trigger": true},
+  {"query": "Add a dark mode toggle to the settings page.", "should_trigger": false},
+  {"query": "Fix the typo in the README installation section.", "should_trigger": false},
+  {"query": "Write unit tests for the password reset email flow.", "should_trigger": false},
+  {"query": "Configure Cloudflare to cache our static assets for a year.", "should_trigger": false}
+]

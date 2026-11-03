@@ -56,6 +56,16 @@ For one skill, use the exact command beside its card below. To install a categor
 
 Safe, version-aware chezmoi workflows for daily dotfile work, multi-machine templates, secrets, recovery, and searchable current official documentation.
 
+#### `data-oriented-perf`
+
+`npx skills add jpcaparas/skills --skill data-oriented-perf`
+
+<p align="center">
+  <img src="skills/engineering/data-oriented-perf/skill-card.png" alt="16-bit side-scrolling pixel art badge for data-oriented-perf" width="480">
+</p>
+
+Passive performance skill built on Jarred Sumner's (Bun) data-oriented design prompts. It applies flat arrays instead of hash tables, indices instead of pointers, hot data packed into index bits, structure of arrays, and redesign instead of caching. Measurement, preserved semantics, and a classify-before-delete rule for correctness-bearing caches keep it in bounds.
+
 #### `eli12`
 
 `npx skills add jpcaparas/skills --skill eli12`
