@@ -136,5 +136,5 @@ A clean-within-scope result requires meaningful oracles for the reviewed behavio
 
 ## See also
 
-- `SKILL.md` — full campaign and completion gate
+- `references/adversarial-sweep.md` — full campaign and completion gate
 - `references/adversarial-techniques.md` — generation, concurrency, fault, and minimization methods

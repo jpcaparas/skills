@@ -1,6 +1,6 @@
 ---
 name: maintainable-tests
-description: "Passive: apply when writing, editing or reviewing automated tests, fixtures, mocks, fakes, regression tests, flaky tests or testability refactors. Tests read as behaviour documentation with isolated side effects and assertions that can fail. Not for throwaway checks."
+description: "Passive: apply when writing, editing or reviewing automated tests, fixtures, mocks, fakes, regression tests, flaky tests or testability refactors. Also runs a bounded adversarial sweep to harden or audit an existing suite: malformed inputs, boundaries, invalid state, races, dependency failures, weak or redundant tests. Not for throwaway checks, load, chaos or penetration testing."
 compatibility: "Optional scanner script needs python3."
 ---
 
@@ -25,6 +25,10 @@ A developer returning in six months should learn the behaviour, its edge cases a
 ## Side effects, configuration, compatibility
 
 Make unintended effects fail fast: unstubbed network, real sleeps, destructive commands, writes outside a temp directory, leaked global state. Replace real waiting with a fake clock or scheduler and assert the delay or backoff when it is part of the contract. Cover configurable behaviour as decision dimensions (default, override, effect) plus environment or capability branches only where relevant. Exercise the lowest supported dependency combination and current, plus capability-present and absent paths. Assert the exact artefact (path, type, contents, unchanged-on-cancel). Read `references/side-effects-and-compatibility.md` for an unresolved isolation or compatibility risk.
+
+## Adversarial sweep
+
+When asked to harden, audit or attack an existing suite, rather than to test one change, read `references/adversarial-sweep.md` and run it as a bounded campaign: agree scope, authority and a stopping budget before generating cases, and record a baseline before any edit. A sweep does not authorise stress against shared systems, production mutation, destructive effects or exploit-seeking; load, chaos and penetration testing need their own authorised plan.
 
 ## Gotchas
 

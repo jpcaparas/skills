@@ -37,7 +37,6 @@ NO_TEXT_RULE = (
 
 SKILL_SCENES = {
     "adhd-friendly": "a focused pathway where scattered task fragments converge through a calm priority gate into one bright next-step tile, with completed progress gems behind and optional paths parked nearby",
-    "adversarial-test-sweep": "a testing gauntlet where bug-shaped hazard sprites, boundary gates, race lanes, fault sparks, and resource barriers confront a shielded formation of distinct test gems",
     "azure-devops-create-work-item": "a quest-token forge where a hammer stamps a blank glowing slab into a task gem",
     "azure-devops-wiki-markdown": "a knowledge temple linking clean geometric blocks through glowing connector paths",
     "better-chezmoi": "a dotfile workbench separating a source vault and home directory through a glowing preview gate, with template gems, a shielded secret capsule, and reversible sync rails",

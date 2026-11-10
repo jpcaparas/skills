@@ -173,5 +173,5 @@ Reduction can find a small reproducer without proving a unique root cause. Diagn
 
 ## See also
 
-- `SKILL.md` — campaign workflow and safety boundaries
+- `references/adversarial-sweep.md` — campaign workflow and safety boundaries
 - `references/suite-evidence.md` — coverage, mutation, flakes, redundancy, and pruning

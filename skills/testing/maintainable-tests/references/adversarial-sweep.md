@@ -1,13 +1,8 @@
----
-name: adversarial-test-sweep
-description: "Runs a bounded adversarial sweep of an existing test suite: malformed inputs, boundaries, invalid state, races, dependency and resource failures, weak or redundant tests, flakes, missing regressions. Use to harden or audit a suite. Not for ordinary feature tests, load, chaos or penetration testing."
----
-
 # Adversarial test sweep
 
-A finite, evidence-led campaign to falsify the product's contracts, expose tests that pass while behaviour is broken, repair confirmed defects when authorised, and turn each repaired defect into a durable regression. Use the repository's own languages, frameworks and commands. When writing individual tests, load `maintainable-tests` if available; this skill owns the campaign.
+A finite, evidence-led campaign to falsify the product's contracts, expose tests that pass while behaviour is broken, repair confirmed defects when authorised, and turn each repaired defect into a durable regression. Use the repository's own languages, frameworks and commands. The rules in `SKILL.md` still govern each individual test.
 
-Not authorised by this skill: stress against shared systems, production mutation, destructive effects, exploit-seeking. Simulate resource and dependency failures locally and keep them capped.
+Not authorised by a sweep: stress against shared systems, production mutation, destructive effects, exploit-seeking. Simulate resource and dependency failures locally and keep them capped.
 
 ## Rules
 

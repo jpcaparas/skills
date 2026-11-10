@@ -26,7 +26,7 @@ For one skill, use the exact command beside its card below. To install a categor
 
 ## Find a starting point
 
-- Hardening a codebase? Start with `maintainable-code`, `strong-types`, and `adversarial-test-sweep`.
+- Hardening a codebase? Start with `maintainable-code`, `strong-types`, and `maintainable-tests`.
 - Orienting yourself before a change? Try `zoom-out`, `eli12`, or `product-question`.
 - Turning source material into something useful? Try `youtube-transcript-dossier`, `better-writing`, or `to-diagram`.
 - Building visual output? Explore `interface-design-taste`, `modernize-ui`, `nanobanana`, or `oneshot-websites`.
@@ -148,16 +148,6 @@ Production skill for mapping unfamiliar code one layer up, covering relevant mod
 
 ### Testing
 
-#### `adversarial-test-sweep`
-
-`npx skills add jpcaparas/skills --skill adversarial-test-sweep`
-
-<p align="center">
-  <img src="skills/testing/adversarial-test-sweep/skill-card.png" alt="16-bit side-scrolling pixel art badge for adversarial-test-sweep" width="480">
-</p>
-
-Language-agnostic adversarial test hardening that builds a bounded risk ledger, attacks malformed input, state, concurrency, dependency, and resource failures, strengthens weak or flaky oracles, prunes only with comparative evidence, and preserves every confirmed defect as a replayable regression.
-
 #### `maintainable-tests`
 
 `npx skills add jpcaparas/skills --skill maintainable-tests`
@@ -166,7 +156,7 @@ Language-agnostic adversarial test hardening that builds a bounded risk ledger, 
   <img src="skills/testing/maintainable-tests/skill-card.png" alt="16-bit side-scrolling pixel art badge for maintainable-tests" width="480">
 </p>
 
-Passive production skill for writing and reviewing tests that read as living documentation, cover meaningful edge cases, explain legacy behavior, and stay maintainable for future developers.
+Passive production skill for writing and reviewing tests that read as living documentation, cover meaningful edge cases, explain legacy behavior, and stay maintainable for future developers. On request it also runs a bounded adversarial sweep of an existing suite: a risk ledger, attacks on malformed input, state, concurrency and dependency failures, stronger oracles, pruning only with comparative evidence, and a replayable regression for every confirmed defect.
 
 ### Agents
 
