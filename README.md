@@ -29,7 +29,7 @@ For one skill, use the exact command beside its card below. To install a categor
 - Hardening a codebase? Start with `maintainable-code`, `strong-types`, and `adversarial-test-sweep`.
 - Orienting yourself before a change? Try `zoom-out`, `eli12`, or `product-question`.
 - Turning source material into something useful? Try `youtube-transcript-dossier`, `better-writing`, or `to-diagram`.
-- Building visual output? Explore `interface-design-taste`, `modernize-ui`, `nanobanana`, `nanobanana-infographic`, or `oneshot-websites`.
+- Building visual output? Explore `interface-design-taste`, `modernize-ui`, `nanobanana`, or `oneshot-websites`.
 
 ## Category map
 
@@ -464,17 +464,7 @@ Reworks the interface of an existing site or app so it is faster, better looking
   <img src="skills/creative/nanobanana/skill-card.png" alt="16-bit side-scrolling pixel art badge for nanobanana" width="480">
 </p>
 
-Production skill for generating and editing images with Nano Banana 2.1 only: text-to-image, photo edits, multi-reference composites, multi-turn refinement, search-grounded visuals, 512px to 4K, and half-price batch jobs, with a pinned-model helper, measured costs, and a free API drift check.
-
-#### `nanobanana-infographic`
-
-`npx skills add jpcaparas/skills --skill nanobanana-infographic`
-
-<p align="center">
-  <img src="skills/creative/nanobanana-infographic/skill-card.png" alt="16-bit side-scrolling pixel art badge for nanobanana-infographic" width="480">
-</p>
-
-Production skill for Nano Banana 2.1 infographic prompting and verification, with optional low-noise presets, brief-led format and art direction, and live Gemini image API probes for executive and editorial visuals.
+Generates and edits images with Nano Banana 2.1 only: text-to-image, photo edits, multi-reference composites, multi-turn refinement, search-grounded visuals, infographics and other text-heavy visuals, 512px to 4K, and half-price batch jobs, with a pinned-model helper, measured costs, and a free API drift check.
 
 #### `oneshot-websites`
 

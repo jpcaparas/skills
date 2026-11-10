@@ -6,7 +6,7 @@
   {"query": "Make a Nano Banana image of today's weather in Wellington.", "should_trigger": true},
   {"query": "Batch-generate 50 thumbnails with gemini-nano-banana-2.1.", "should_trigger": true},
   {"query": "Why does my gemini image request with image_size 1k fail?", "should_trigger": true},
-  {"query": "Design an executive infographic layout for our board deck.", "should_trigger": false},
+  {"query": "Design an executive infographic layout for our board deck.", "should_trigger": true},
   {"query": "Make a video of a dancing banana with Veo.", "should_trigger": false},
   {"query": "Generate an image with DALL-E.", "should_trigger": false},
   {"query": "Describe what is in this screenshot.", "should_trigger": false},

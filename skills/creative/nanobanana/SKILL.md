@@ -1,6 +1,6 @@
 ---
 name: nanobanana
-description: "Generates and edits images with Google's Nano Banana (Gemini image API, needs GEMINI_API_KEY). Covers text-to-image, photo edits, multi-reference composites, multi-turn refinement, search-grounded visuals and batch jobs. Not for infographics (`nanobanana-infographic`), video, Imagen or other image models."
+description: "Generates and edits images with Google's Nano Banana (Gemini image API, needs GEMINI_API_KEY). Covers text-to-image, photo edits, multi-reference composites, multi-turn refinement, search-grounded visuals, batch jobs, and infographics or other text-heavy visuals for slides, posts and reports, including prompt-only work. Not for video, Imagen or other image models."
 compatibility: "Requires GEMINI_API_KEY on a billed Gemini API project (no free tier). Helper: Python 3.11+, standard library only. Optional: ImageMagick for post-processing."
 ---
 
@@ -13,6 +13,8 @@ Facts below are a 2026-10-18 live snapshot from one paid key (about 150 generati
 ## Making an image
 
 Check the key without printing it: `[ -n "$GEMINI_API_KEY" ]`. Infer the settings from context and ask only when a missing fact would change the image (exact copy, real data, brand assets).
+
+Every request and every retry is a paid call. A request for a prompt is not a request to render, and one image means one request: stay within the count, size and retries the user asked for, and report a failure that would need more.
 
 | Job | Size | Thinking | Extras |
 | --- | --- | --- | --- |
@@ -32,7 +34,7 @@ python3 <skill-dir>/scripts/nanobanana.py generate --search --image-search --rat
 
 Run `--help` for every flag. The helper validates before spending and prints a JSON summary (paths, dimensions, interaction ID, usage, estimated USD). Output is always JPEG. Do not log raw API responses; thought signatures make them several megabytes.
 
-Read `references/prompting.md` when writing or repairing a prompt, `references/workflows.md` for recipes (edits, masks, references, multi-turn, grounding, batch, transparency, post-processing), and `references/api.md` for raw REST contracts, sizes, pricing and errors.
+Read `references/prompting.md` when writing or repairing a prompt (it has a section for infographics), `references/workflows.md` for recipes (edits, masks, references, multi-turn, grounding, batch, transparency, post-processing), and `references/api.md` for raw REST contracts, sizes, pricing and errors.
 
 ## Prompt rules that matter
 

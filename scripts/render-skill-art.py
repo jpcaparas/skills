@@ -65,7 +65,6 @@ SKILL_SCENES = {
     "minimax-search": "a compact search beacon firing ten bright result arrows along a rate-paced conveyor of query tiles",
     "modernize-ui": "a renovation yard where a weathered storefront of blank panels stands beside its renewed twin drawn as a clean glowing outline with smooth empty glass panes, a surveyor's lantern on a tripod comparing the two, with three framed viewing windows of different widths lined up in front and a small footbridge keeping an older cobbled path connected to the new entrance",
     "nanobanana": "a pixel artist's easel where one glowing banana-shaped brush paints a blank canvas that blooms into a tiny landscape, with a few blank reference frames floating beside it",
-    "nanobanana-infographic": "abstract chart-like towers, simple icon gems, and one bright banana-shaped spark",
     "oneshot-timeline": "a winding trail of evenly separated story beacons untangling a knot of pathways, with small framed silhouette gems alternating beside the trail and a warm lantern illuminating the next moment",
     "oneshot-websites": "tiny blank world portals spawning different complete website landscapes",
     "parallel-efficiency": "a calm conductor at a switchboard of parallel glowing rails choosing the shortest lit track for a small courier orb, with a brass coin meter and dimmed express lines in the distance",

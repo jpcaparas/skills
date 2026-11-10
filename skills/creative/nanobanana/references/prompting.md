@@ -36,6 +36,20 @@ Show exactly these lines and nothing else. Keep capitalisation and punctuation e
 - Name orientation explicitly: "standard anatomical orientation", "north at the top", "left to right in order from the Sun". [T]
 - Describe precise geometry in words and then check it. A drawn reference did **not** fix a clock: given an exact 7:20 diagram, both renders moved the hour hand to roughly 7:35. Composite exact hands or dials afterwards. [T]
 
+## Infographics
+
+The user's count, channel, ratio, style, palette and copy win; dark, bold, long-text and multi-panel designs are fine when they stay legible. [T]
+
+- Settle the visible copy before the image. Use only the claims and figures the user supplied or you sourced; an infographic with an invented statistic is wrong however good it looks.
+- "Detailed infographic" produces clutter. Ask for a hierarchy, whitespace and a stated number of panels or blocks. [T]
+- Quote every string and end with "No other text."; `medium` and `high` add captions and labels otherwise. Use `high` for dense facts and `minimal` only for layout drafts with no facts in them. [T]
+- State the ratio in the prompt as well as in `--ratio`.
+- A dense exact chart, a strict brand diagram or text that must be vector-sharp is better built as a chart or vector graphic than generated. Say so instead of rerendering toward it.
+- Check each render for facts, wording, units, qualifiers, attribution, contrast and ratio. When it is noisy, simplify the grouping and remove callouts before raising the size. When exact wording keeps failing, propose a text overlay.
+- For publication, do not let a distinction rest on colour alone, and supply alt text or a text equivalent.
+
+Starting compositions, when the user gives no direction: one dominant claim above three or four support blocks (executive summary); tall stacked panels with thin dividers (blog or report column); an equal-weight grid or side-by-side (comparison or trade-off); one horizontal band of evenly spaced modules (wide slide opener). A quiet default for slides and blogs is 16:9, a near-white base, two or three accents, a title of about five words and one-to-three-word labels, with the explanation left to the surrounding page.
+
 ## Editing an image
 
 - Name the single change, then list what must stay: *"Replace the mint sprig with a thin slice of lemon. Keep everything else exactly the same: the cup, saucer, lighting, background and camera angle."* The rest of the image stayed near-identical (about 38 dB PSNR away from the edit), but edits regenerate the whole frame, so pixels are never bit-identical. [T]
