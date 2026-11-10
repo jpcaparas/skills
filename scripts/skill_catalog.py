@@ -43,6 +43,20 @@ class Skill:
         return f"skills/{self.category}/{self.name}"
 
 
+def read_frontmatter(entrypoint: Path) -> dict[object, object]:
+    """Resolve a SKILL.md frontmatter mapping, rejecting duplicate keys."""
+    lines = entrypoint.read_text(encoding="utf-8").splitlines()
+    if not lines or lines[0] != "---" or "---" not in lines[1:]:
+        raise ValueError(f"Missing or unclosed YAML frontmatter: {entrypoint}")
+    try:
+        frontmatter = load_unique_yaml("\n".join(lines[1 : lines.index("---", 1)]))
+    except (yaml.YAMLError, RecursionError) as exc:
+        raise ValueError(f"Invalid YAML frontmatter in {entrypoint}: {exc}") from exc
+    if not isinstance(frontmatter, dict):
+        raise ValueError(f"YAML frontmatter must be a mapping: {entrypoint}")
+    return frontmatter
+
+
 def discover_skills(skills_root: Path) -> list[Skill]:
     """Return the complete sorted inventory or fail without a partial result."""
     if skills_root.is_symlink() or not skills_root.is_dir():
@@ -79,16 +93,7 @@ def discover_skills(skills_root: Path) -> list[Skill]:
                 raise ValueError(
                     f"Missing regular SKILL.md in skill directory: {directory}"
                 )
-            lines = entrypoint.read_text(encoding="utf-8").splitlines()
-            if not lines or lines[0] != "---" or "---" not in lines[1:]:
-                raise ValueError(f"Missing or unclosed YAML frontmatter: {entrypoint}")
-            try:
-                metadata = load_unique_yaml("\n".join(lines[1 : lines.index("---", 1)]))
-            except (yaml.YAMLError, RecursionError) as exc:
-                raise ValueError(
-                    f"Invalid YAML frontmatter in {entrypoint}: {exc}"
-                ) from exc
-            if not isinstance(metadata, dict) or metadata.get("name") != directory.name:
+            if read_frontmatter(entrypoint).get("name") != directory.name:
                 raise ValueError(
                     f"Frontmatter name must match directory '{directory.name}': {entrypoint}"
                 )

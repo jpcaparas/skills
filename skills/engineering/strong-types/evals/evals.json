@@ -8,12 +8,27 @@
       "prompt": "In app/Http/Controllers/LocationController.php I have `$image = $location->preview ?? $location->banner ?? $location->thumbnail;` repeated in three controller actions. Location is an Eloquent model. Clean this up.",
       "expected_output": "A single typed accessor on the Location model (e.g. primaryImage(): Image or primaryImageOrDefault(): Image) with an explicit all-null policy, @property/cast typing for the three attributes, and all three call sites replaced with the named method. No new ?? chains at call sites.",
       "assertions": [
-        { "text": "Adds one owner method with an explicit non-ambiguous return type", "type": "functional" },
-        { "text": "States an explicit policy for the all-null case (throw, nullable-once, or placeholder)", "type": "functional" },
-        { "text": "Types the underlying model attributes via casts and/or @property annotations", "type": "functional" },
-        { "text": "Replaces the three in-scope call-site chains rather than adding a fourth", "type": "verification" }
+        {
+          "text": "Adds one owner method with an explicit non-ambiguous return type",
+          "type": "functional"
+        },
+        {
+          "text": "States an explicit policy for the all-null case (throw, nullable-once, or placeholder)",
+          "type": "functional"
+        },
+        {
+          "text": "Types the underlying model attributes via casts and/or @property annotations",
+          "type": "functional"
+        },
+        {
+          "text": "Replaces the three in-scope call-site chains rather than adding a fourth",
+          "type": "verification"
+        }
       ],
-      "tags": ["smoke", "php"]
+      "tags": [
+        "smoke",
+        "php"
+      ]
     },
     {
       "id": 2,
@@ -21,11 +36,23 @@
       "prompt": "Write a TypeScript function that fetches /api/orders/:id and returns the order. The project uses zod and has strict mode on.",
       "expected_output": "A function returning Promise<Order> where Order is inferred from a zod schema, response.json() parsed with schema.parse, no any, no as-casts on the payload.",
       "assertions": [
-        { "text": "No `any` appears, written or via cast", "type": "functional" },
-        { "text": "The JSON payload is parsed with a schema before use", "type": "functional" },
-        { "text": "Return type is a named/inferred Order type, not any or unknown", "type": "structural" }
+        {
+          "text": "No `any` appears, written or via cast",
+          "type": "functional"
+        },
+        {
+          "text": "The JSON payload is parsed with a schema before use",
+          "type": "functional"
+        },
+        {
+          "text": "Return type is a named/inferred Order type, not any or unknown",
+          "type": "structural"
+        }
       ],
-      "tags": ["smoke", "typescript"]
+      "tags": [
+        "smoke",
+        "typescript"
+      ]
     },
     {
       "id": 3,
@@ -33,12 +60,27 @@
       "prompt": "Add a webhook handler in Python (FastAPI project, mypy strict) that receives a payment event with keys 'id', 'status' (one of pending/paid/failed), and 'amount_cents', then dispatches on status.",
       "expected_output": "A typed model (pydantic or dataclass parse) for the event, an Enum or Literal for status, exhaustive match with assert_never, fully annotated signatures, no dict[str, Any] passed inward.",
       "assertions": [
-        { "text": "Event payload is parsed into a typed structure at the boundary", "type": "functional" },
-        { "text": "Status is an Enum or Literal union, not a bare str", "type": "functional" },
-        { "text": "Dispatch is exhaustive (match + assert_never or equivalent)", "type": "functional" },
-        { "text": "All function signatures include return annotations", "type": "structural" }
+        {
+          "text": "Event payload is parsed into a typed structure at the boundary",
+          "type": "functional"
+        },
+        {
+          "text": "Status is an Enum or Literal union, not a bare str",
+          "type": "functional"
+        },
+        {
+          "text": "Dispatch is exhaustive (match + assert_never or equivalent)",
+          "type": "functional"
+        },
+        {
+          "text": "All function signatures include return annotations",
+          "type": "structural"
+        }
       ],
-      "tags": ["edge", "python"]
+      "tags": [
+        "edge",
+        "python"
+      ]
     },
     {
       "id": 4,
@@ -46,11 +88,23 @@
       "prompt": "Review this diff: a new TS service adds `const cfg = JSON.parse(raw) as Config;`, two `@ts-ignore` comments, and a function `getLabel(s: string)` that switches over 'pending'|'paid' with `default: return ''`. Give me a review.",
       "expected_output": "Severity-ordered findings: S1 for the unverified as-cast on JSON.parse and the @ts-ignore suppressions, S2 for the stringly typed status and the silent default arm; each finding quotes the expression and names a concrete fix (schema parse, @ts-expect-error with reason, literal union type, exhaustive switch with never check).",
       "assertions": [
-        { "text": "Findings are ordered by severity with runtime-failure items first", "type": "functional" },
-        { "text": "Each finding quotes the exact expression and gives a concrete typed fix", "type": "functional" },
-        { "text": "The silent default arm is flagged as an exhaustiveness gap", "type": "functional" }
+        {
+          "text": "Findings are ordered by severity with runtime-failure items first",
+          "type": "functional"
+        },
+        {
+          "text": "Each finding quotes the exact expression and gives a concrete typed fix",
+          "type": "functional"
+        },
+        {
+          "text": "The silent default arm is flagged as an exhaustiveness gap",
+          "type": "functional"
+        }
       ],
-      "tags": ["review", "typescript"]
+      "tags": [
+        "review",
+        "typescript"
+      ]
     },
     {
       "id": 5,
@@ -58,22 +112,43 @@
       "prompt": "Fix this bug in our vanilla JavaScript project (no TypeScript, no build step, team wants to keep it that way): users.find returns undefined sometimes and we call .name on it.",
       "expected_output": "A guarded fix in plain JS (explicit undefined check with a named error or fallback), optionally JSDoc annotations on the touched function, and at most one short deferred suggestion about @ts-check. No TypeScript conversion, no tsconfig added, no build-step changes.",
       "assertions": [
-        { "text": "Does not convert files to TypeScript or add a compiler/build step", "type": "negative" },
-        { "text": "Fixes the bug with explicit narrowing/guarding in plain JS", "type": "functional" },
-        { "text": "Any typing suggestion is a single scoped, deferred note", "type": "negative" }
+        {
+          "text": "Does not convert files to TypeScript or add a compiler/build step",
+          "type": "negative"
+        },
+        {
+          "text": "Fixes the bug with explicit narrowing/guarding in plain JS",
+          "type": "functional"
+        },
+        {
+          "text": "Any typing suggestion is a single scoped, deferred note",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative", "edge"]
+      "tags": [
+        "negative",
+        "edge"
+      ]
     },
     {
       "id": 6,
       "name": "disclosure-routes-to-php-reference",
       "prompt": "I'm adding a new Laravel service class. What typing rules should I follow in this codebase?",
-      "expected_output": "Guidance drawn from references/php.md: declare(strict_types=1), typed constructor promotion, enums for closed sets, DTOs over associative arrays, PHPStan/Larastan generics annotations, Eloquent casts and @property annotations.",
+      "expected_output": "PHP-specific guidance: declare(strict_types=1), typed constructor promotion, enums for closed sets, DTOs over associative arrays, PHPStan/Larastan generics annotations, Eloquent casts and @property annotations.",
       "assertions": [
-        { "text": "Loads or reflects the PHP reference rather than generic advice", "type": "disclosure" },
-        { "text": "Mentions strict_types, typed properties, and DTOs over arrays", "type": "functional" }
+        {
+          "text": "Gives PHP-specific rather than generic advice",
+          "type": "functional"
+        },
+        {
+          "text": "Mentions strict_types, typed properties, and DTOs over arrays",
+          "type": "functional"
+        }
       ],
-      "tags": ["disclosure", "php"]
+      "tags": [
+        "disclosure",
+        "php"
+      ]
     },
     {
       "id": 7,
@@ -81,10 +156,19 @@
       "prompt": "Kotlin review: `val user = repository.findUser(id)!!` and later `when (user.tier) { \"gold\" -> ..., \"silver\" -> ..., else -> ... }` where tier is a String from the API. Improve typing.",
       "expected_output": "!! replaced with an explicit resolution (throwing accessor, requireNotNull with message, or nullable handling at one owner); tier parsed into an enum/sealed type at the API boundary with an exhaustive when and no else on the owned type.",
       "assertions": [
-        { "text": "Removes !! in favor of an explicit, named resolution", "type": "functional" },
-        { "text": "Converts the stringly typed tier into an enum/sealed type parsed at the boundary", "type": "functional" }
+        {
+          "text": "Removes !! in favor of an explicit, named resolution",
+          "type": "functional"
+        },
+        {
+          "text": "Converts the stringly typed tier into an enum/sealed type parsed at the boundary",
+          "type": "functional"
+        }
       ],
-      "tags": ["edge", "review"]
+      "tags": [
+        "edge",
+        "review"
+      ]
     },
     {
       "id": 8,
@@ -92,10 +176,19 @@
       "prompt": "Run the strong-types ambiguity scanner against ./src and summarize what it finds.",
       "expected_output": "Runs python3 scripts/analyze_type_strictness.py ./src (optionally --json), groups findings by kind, and frames them as review prompts rather than verdicts.",
       "assertions": [
-        { "text": "Invokes analyze_type_strictness.py with a valid path", "type": "functional" },
-        { "text": "Presents findings as prompts to investigate, not as definitive defects", "type": "functional" }
+        {
+          "text": "Invokes analyze_type_strictness.py with a valid path",
+          "type": "functional"
+        },
+        {
+          "text": "Presents findings as prompts to investigate, not as definitive defects",
+          "type": "functional"
+        }
       ],
-      "tags": ["smoke", "python"]
+      "tags": [
+        "smoke",
+        "python"
+      ]
     },
     {
       "id": 9,
@@ -103,11 +196,24 @@
       "prompt": "Fix only the None dereference in shipping.py: declared_cost is int | None, and 0 is a valid cost. Absence should raise MissingCost. This project's documented check-types command runs both mypy and pyright on the package with strict settings; passing arbitrary files is unsupported. Keep both checkers, existing dependencies and CI. A concise fix summary is enough.",
       "expected_output": "An explicit None guard with the existing typed signature and MissingCost policy, preserving zero. Runs the documented project command, keeping both checkers and strictness, and reports the consequential decision and results without a full review template or infrastructure rollout.",
       "assertions": [
-        {"text": "Narrows int | None explicitly, preserves zero, and does not use Any, an unjustified cast, or a suppression", "type": "functional"},
-        {"text": "Uses the documented package check-types invocation rather than arbitrary file arguments and preserves both configured checkers", "type": "verification"},
-        {"text": "Does not introduce baselines, dependencies or CI work, load the entire tutorial library, or print an irrelevant gate inventory", "type": "negative"}
+        {
+          "text": "Narrows int | None explicitly, preserves zero, and does not use Any, an unjustified cast, or a suppression",
+          "type": "functional"
+        },
+        {
+          "text": "Uses the documented package check-types invocation rather than arbitrary file arguments and preserves both configured checkers",
+          "type": "verification"
+        },
+        {
+          "text": "Does not introduce baselines, dependencies or CI work, load the entire tutorial library, or print an irrelevant gate inventory",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "python", "scope"]
+      "tags": [
+        "edge",
+        "python",
+        "scope"
+      ]
     },
     {
       "id": 10,
@@ -115,10 +221,20 @@
       "prompt": "Fix the unquoted pathname expansion in this POSIX shell helper. Its caller deliberately inspects command failures, and its existing error handling is part of the contract. Keep this a shell script; no typing-tool recommendation or general refactor is wanted.",
       "expected_output": "A scoped quoting fix under the existing shell and error-handling contract, with no universal set -euo pipefail addition, language migration or typing suggestion.",
       "assertions": [
-        {"text": "Fixes pathname handling without changing the caller-visible failure behavior", "type": "functional"},
-        {"text": "Does not add set -euo pipefail, a type checker, a new runtime, or an unsolicited typing recommendation", "type": "negative"}
+        {
+          "text": "Fixes pathname handling without changing the caller-visible failure behavior",
+          "type": "functional"
+        },
+        {
+          "text": "Does not add set -euo pipefail, a type checker, a new runtime, or an unsolicited typing recommendation",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative", "edge", "scope"]
+      "tags": [
+        "negative",
+        "edge",
+        "scope"
+      ]
     },
     {
       "id": 11,
@@ -126,11 +242,24 @@
       "prompt": "Refactor the fallback duplicated in the two controller actions in this patch into an existing strict PHP model's typed method. Keep the current all-null behavior: throw MissingImage. Other modules with old duplicates are out of scope. The adjacent framework serializer override is required by its installed interface to accept and return mixed; its inline comment explains that contract, and it parses values before application code uses them. Do not change framework signatures or tooling.",
       "expected_output": "A named Image-returning owner with an explicit MissingImage path and both in-scope callers updated. Preserves the justified framework mixed contract and parse boundary, and leaves unrelated callers and analyzer infrastructure alone.",
       "assertions": [
-        {"text": "Uses a typed owner and preserves the explicit all-null policy in both scoped callers", "type": "functional"},
-        {"text": "Preserves the required framework mixed signature with its justification and typed parse boundary rather than narrowing it incompatibly", "type": "functional"},
-        {"text": "Does not migrate unrelated callers or introduce analyzer/dependency changes", "type": "negative"}
+        {
+          "text": "Uses a typed owner and preserves the explicit all-null policy in both scoped callers",
+          "type": "functional"
+        },
+        {
+          "text": "Preserves the required framework mixed signature with its justification and typed parse boundary rather than narrowing it incompatibly",
+          "type": "functional"
+        },
+        {
+          "text": "Does not migrate unrelated callers or introduce analyzer/dependency changes",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "php", "scope"]
+      "tags": [
+        "edge",
+        "php",
+        "scope"
+      ]
     }
   ]
 }

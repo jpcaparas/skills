@@ -71,8 +71,7 @@
       "expected_output": "The response writes a universal plan with Stop scripts entries for Claude, Codex, and Devin, renders OpenCode Froggy bash actions that call a repo-owned validation script, and leaves validation policy in scripts/agent-stop-checks.sh.",
       "files": [
         "templates/hook-plan.example.json",
-        "references/plan-format.md",
-        "references/harness-composition.md"
+        "references/plan-format.md"
       ],
       "assertions": [
         {

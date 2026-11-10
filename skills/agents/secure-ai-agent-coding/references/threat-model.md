@@ -87,5 +87,3 @@ Choose a format that makes the in-scope assets, boundaries, threats, controls, a
 - controls mapped to each scenario
 - residual risks and owners
 - tests or monitors required before launch
-
-See also: `references/review-workflow.md` and `references/controls.md`.

@@ -11,15 +11,10 @@
         {
           "text": "Response defines the taste axes before discussing decorative details",
           "type": "functional"
-        },
-        {
-          "text": "Agent reads references/platform-adaptation.md for desktop-specific guidance",
-          "type": "disclosure"
         }
       ],
       "tags": [
         "smoke",
-        "disclosure",
         "desktop"
       ]
     },
@@ -32,10 +27,6 @@
         {
           "text": "Response prioritizes hierarchy, layout, and state model before polish changes",
           "type": "functional"
-        },
-        {
-          "text": "Agent reads references/critique-workflow.md",
-          "type": "disclosure"
         }
       ],
       "tags": [
@@ -66,16 +57,11 @@
       "expected_output": "Routes to the interaction and state guidance, emphasizing state completeness before decorative motion.",
       "assertions": [
         {
-          "text": "Agent reads references/interaction-motion-and-states.md",
-          "type": "disclosure"
-        },
-        {
           "text": "Response treats state design as higher priority than extra animation",
           "type": "functional"
         }
       ],
       "tags": [
-        "disclosure",
         "states"
       ]
     },
@@ -98,7 +84,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "creative-freedom", "accessibility"]
+      "tags": [
+        "edge",
+        "creative-freedom",
+        "accessibility"
+      ]
     },
     {
       "id": 6,
@@ -115,7 +105,11 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge", "critique", "accessibility"]
+      "tags": [
+        "edge",
+        "critique",
+        "accessibility"
+      ]
     },
     {
       "id": 7,
@@ -132,7 +126,10 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge", "maintenance"]
+      "tags": [
+        "edge",
+        "maintenance"
+      ]
     }
   ]
 }

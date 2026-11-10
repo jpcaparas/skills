@@ -1,6 +1,6 @@
 # Gemini search API contract
 
-Official sources: [Grounding with Google Search](https://ai.google.dev/gemini-api/docs/google-search), [generateContent variant](https://ai.google.dev/gemini-api/docs/generate-content/google-search), [URL context](https://ai.google.dev/gemini-api/docs/url-context), [Pricing](https://ai.google.dev/gemini-api/docs/pricing), [Rate limits](https://ai.google.dev/gemini-api/docs/rate-limits). "Live" notes are from the 2026-10-19 spike in `references/evidence.md`.
+Official sources: [Grounding with Google Search](https://ai.google.dev/gemini-api/docs/google-search), [generateContent variant](https://ai.google.dev/gemini-api/docs/generate-content/google-search), [URL context](https://ai.google.dev/gemini-api/docs/url-context), [Pricing](https://ai.google.dev/gemini-api/docs/pricing), [Rate limits](https://ai.google.dev/gemini-api/docs/rate-limits). "Live" notes are from the 2026-10-19 spike.
 
 ## Hosts and authentication
 
@@ -55,7 +55,7 @@ Interactions are stored by default (`store: true`); pass `store: false` for one-
 
 Aliases resolved live: `gemini-flash-lite-latest` → `gemini-3.5-flash-lite`, `gemini-flash-latest` → `gemini-3.8-flash`, `gemini-pro-latest` → `gemini-3.1-pro-preview`. Pin exact names.
 
-`thinkingConfig.thinkingLevel`: Flash-Lite accepts `low`, `medium`, `high`; 3.8 Flash rejects `minimal`. Higher thinking on Flash-Lite made it skip search (see `references/gotchas.md`).
+`thinkingConfig.thinkingLevel`: Flash-Lite accepts `low`, `medium`, `high`; 3.8 Flash rejects `minimal`. Higher thinking on Flash-Lite made it skip search.
 
 ## Billing
 

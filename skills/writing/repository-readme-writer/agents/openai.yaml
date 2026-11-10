@@ -1,4 +1,0 @@
-interface:
-  display_name: "repository-readme-writer"
-  short_description: "Create and improve concise, evidence-backed repository READMEs"
-  default_prompt: "Create or improve this repository README with concise first-use guidance suited to its readers and repository type"

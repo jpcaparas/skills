@@ -1,127 +1,76 @@
 ---
 name: better-chezmoi
-description: "Use for safe chezmoi setup and migration, daily dotfile sync, templates, secrets, scripts, drift/recovery, or official-doc research."
+description: "Use for chezmoi setup and migration, daily dotfile sync, templates, secrets, run_ scripts, drift and conflict recovery, or official chezmoi docs lookup. Not for dotfiles without chezmoi."
 ---
 
 # Better chezmoi
 
-Use chezmoi through an inspect, preview, apply, and verify loop. Keep source state, target state, local configuration, remote Git, and external effects distinct so a convenient command does not silently widen the user's request.
+Reference evidence: official chezmoi docs and release v2.71.0, checked 2026-07-15. Command surface exercised locally on chezmoi v2.70.2 (macOS). The installed binary owns executable syntax: run `chezmoi --version` and `chezmoi <command> --help` before using a flag that may be newer than the binary.
 
-## Operating contract
+## Authority
 
-- Current reference evidence: official chezmoi documentation and release v2.71.0, checked 2026-07-15.
-- Locally exercised command surface: chezmoi v2.70.2 on macOS, including a fully isolated source, destination, config, cache, and persistent-state harness.
-- Version rule: run `chezmoi --version` and inspect `chezmoi <command> --help` before using a version-sensitive flag. The installed binary owns executable syntax; the scraped documentation supplies current concepts, examples, and newly released behavior.
-- Authority rule: an explicit request to add, edit, apply, update, merge, or remove a named target authorizes that scoped effect. It does not authorize applying every target, enabling auto-push, rewriting remote history, exposing secrets, or destroying source and target state.
-- Portability: show PowerShell-native forms for Windows users. Do not present POSIX shell arrays, command substitution, or `mktemp` as portable Windows syntax.
+A request to add, edit, apply, update, merge or remove a named target authorizes that scoped effect only. It does not authorize applying every target, enabling `git.autoPush`, pushing, rewriting remote history, exposing secrets, or destroying source and target state. Scope commands to the named targets, and preview before any target write unless the user asked for immediate application.
 
-## Route the task
+On Windows, give PowerShell-native forms; do not offer POSIX arrays, `$(...)` or `mktemp`.
 
-| User goal | Read | Use it to |
-|---|---|---|
-| Inspect, add, edit, capture, preview, apply, or sync dotfiles | `references/daily-workflows.md` | choose the narrowest daily loop and its verification |
-| Initialize a repository, bootstrap a new machine, or separate machine-specific state | `references/setup-and-machines.md` | choose init, source/config placement, and cross-machine boundaries |
-| Build or debug templates, data, secrets, encrypted files, or scripts | `references/templates-secrets-and-scripts.md` | test rendering and keep sensitive or effectful data out of source history |
-| Diagnose drift, conflicts, locks, merges, or destructive cleanup | `references/recovery-and-safety.md` | identify state ownership and select a reversible recovery route |
-| Need exact commands, flags, output, or exit semantics | `references/commands.md` | verify the current command form and effect class |
-| Need current official detail or want to refresh/search the bundled corpus | `references/official-documentation.md` | run the deterministic scraper and inspect provenance |
+## Default loop
 
-Load only the rows needed for the task. For a simple `status` explanation, do not load setup, templates, or recovery material.
-
-## Classify effects first
-
-| Effect class | Examples | Default handling |
-|---|---|---|
-| Read/check | `--version`, `help`, `source-path`, `target-path`, `status`, `diff`, `verify`, `doctor --no-network` | run when useful; still account for template evaluation, hooks, and cached externals |
-| Source write | `add`, `edit`, `re-add`, `forget`, `init`, Git pull | scope to named targets; preview where supported; verify source diff |
-| Target write | `apply`, `edit --apply`, default `update`, `init --apply` | preview first unless the user explicitly requests immediate application |
-| Local config/state | `edit-config`, init config templates, script state, purge | inspect paths and recovery before changing them |
-| Remote/network | Git fetch/pull, externals, password managers, auto-commit/push | keep reads bounded; require explicit authority for remote writes or secret access |
-| Destructive | `destroy`, broad removal rules, `purge` | require exact scope, independent backup, preview where available, and postcondition checks |
-
-`--dry-run` guarantees that chezmoi does not modify the destination directory. It is not a universal no-side-effects mode: init can still create source Git state, hooks run even in dry-run mode, and templates or externals can invoke networked dependencies. Describe the narrower guarantee exactly.
-
-## Core workflow
-
-### 1. Inspect the active context
-
-Run the smallest useful set:
+Capture the version and `chezmoi source-path`, then edit source state (`chezmoi edit`), preview, apply, verify:
 
 ```sh
-chezmoi --version
-chezmoi source-path
-chezmoi target-path
-chezmoi status --exclude=scripts
+chezmoi diff --exclude=scripts --no-pager [target...]
+chezmoi apply --dry-run --verbose --exclude=scripts [target...]
+chezmoi apply --exclude=scripts [target...]
+chezmoi verify --exclude=scripts [target...]
 ```
 
-Use `chezmoi doctor --no-network` when setup or dependency health is in question. Inspect the relevant command's local help before introducing flags from the bundled docs.
+`--exclude=scripts` keeps scripts out of the preview; account for them separately. Report the version, scope, commands run, and any remaining drift.
 
-**Complete when:** the installed version, source and destination roots, requested target scope, and likely effect classes are known.
+## What the previews do not guarantee
 
-### 2. Inspect the difference
-
-For ordinary target drift or a source edit:
-
-```sh
-chezmoi diff --exclude=scripts --no-pager
-```
-
-For a target-write preview:
-
-```sh
-chezmoi apply --dry-run --verbose --exclude=scripts
-```
-
-If a non-interactive preview would stop for a conflict prompt, `--force` may be paired with `--dry-run` only after confirming the local help and dry-run flag. Do not carry `--force` into the real apply.
-
-**Complete when:** the proposed source or target changes are visible, scripts and hooks have been accounted for, and conflicts or unexpected targets are resolved before mutation.
-
-### 3. Perform only the authorized effect
-
-Use the narrowest target list. Prefer one file or subtree over an unscoped apply when the request is narrow. On chezmoi v2.71.0 or newer, use `--error-on-conflict` for non-interactive automation only after the local help confirms it; on older versions, stop rather than replacing conflict handling with `--force`.
-
-Enable `git.autoPush` or run a remote push only when that remote effect and scope are explicitly authorized. Keep plaintext secrets out of source history; use the user's supported encryption or secret-manager integration instead.
-
-**Complete when:** only the named source, target, config, or remote scope changed and the command returned its documented success result.
-
-### 4. Verify the postcondition
-
-Use one or more of:
-
-```sh
-chezmoi status --exclude=scripts
-chezmoi diff --exclude=scripts --no-pager
-chezmoi verify --exclude=scripts
-```
-
-Interpret results correctly: `diff` can return 0 while showing differences; `status` communicates drift in two columns; `verify` returns 0 when selected targets match and 1 when they do not.
-
-Report the version checked, source and target scope, commands run, observed effects, and any remaining drift or skipped effect.
-
-**Complete when:** the requested postcondition is independently visible and any nonzero result is classified as expected drift, conflict, operational failure, or unsupported syntax.
-
-## Official documentation corpus
-
-The package includes a searchable snapshot of selected official pages and a standard-library Python tool:
-
-```sh
-python3 scripts/official_docs.py search "error-on-conflict"
-python3 scripts/official_docs.py list
-python3 scripts/official_docs.py refresh
-```
-
-`refresh` fetches and compares without replacing the bundled snapshot. Use `--write` in the canonical checkout only when updating that corpus is authorized; it replaces local files, not the remote repository. Read `references/official-documentation.md` before refreshing or changing the source list; use it to preserve provenance, rollback-safe staged replacement, and offline validation.
-
-When an instruction fails or a snapshot conflicts with installed help, use the relevant official version-matched evidence to choose a safe alternative. Preserve uncertainty if sources are unavailable. Propose a canonical skill correction with the failed command, version/source, and isolated reproducer; do not silently rewrite an installed copy or publish the proposal.
+- `--dry-run` only guarantees the destination is untouched. `init` can still create source Git state, hooks run even in dry-run, and templates or externals can reach the network or a password manager.
+- `edit --apply` and `edit --watch` apply on every save; use them only when the user wants that.
+- `diff` exits 0 even when it shows differences, and its `--output` did not redirect on v2.70.2. `verify` exits 0 on match and 1 on mismatch; use it for drift checks. `status` has two columns: actual vs last-written state, and actual vs desired state (what `apply` would do); `A D M R` are add, delete, modify, run.
+- `--error-on-conflict` (fail closed instead of prompting) and `init --revision/--tag` arrived in v2.71.0, and docs use `-w` for `--working-tree` where v2.70.2 shows `-W`. On an older binary, stop or upgrade; never substitute `--force` for conflict handling.
 
 ## Gotchas
 
-1. `update` is not a preview. It normally pulls the source repository and applies target changes. Use `update --apply=false` or the reviewed pull → diff → apply sequence when the user wants separation.
-2. `re-add` does not update templated source files. Use `edit`, `merge`, or an intentional template change instead.
-3. Relative arguments under `--source-path` resolve from the current working directory. Use an absolute source path or run from the source directory.
-4. `managed --format=json` is not necessarily structured JSON with the default path style. Verify the exact output shape; v2.70.2 requires `--path-style=all` for the documented keyed structure.
-5. Multiple chezmoi processes can contend for persistent-state locks. Do not invoke chezmoi recursively from a chezmoi `run_` script.
+- `update` pulls and applies; it is not a preview. For review first: `chezmoi update --apply=false`, or `chezmoi git pull -- --autostash --rebase` then `diff`. Either changes the local source repository and uses the network.
+- `re-add` does not update templated sources. For a template, edit it or use `merge`.
+- Source wins: scoped `apply`. Destination wins (non-template): `re-add`. Both have changes: `merge TARGET` or `merge-all`.
+- `--source-path` reinterprets target arguments as source paths, and relative ones resolve from the current directory; pass absolute paths.
+- `managed --format=json` can still emit newline-separated paths; v2.70.2 needed `--path-style=all` for the keyed structure.
+- A template that renders empty removes its target unless the source has the `empty_` attribute.
+- `chezmoi cd` opens a child shell. Use `cd "$(chezmoi source-path)"` to move the caller.
+- `init` with `--apply` is a bootstrap. One-shot mode removes chezmoi's own source and config afterward; say so before using it.
 
-## Completion gate
+## Templates and machine differences
 
-Finish only when the local command surface has been checked, every effect stayed inside the user's scope, secrets and remote writes remained bounded, the requested state is verified, and version or network limitations are reported without being disguised as success.
+Source files ending `.tmpl` (or under `.chezmoitemplates/`) are templates. Data merges in order: built-in `.chezmoi`, `.chezmoidata` files, then config `data`, later overriding earlier. Keep portable defaults in source data and machine-specific values (email, role) in the local config. Prefer `.chezmoi.os`/`.chezmoi.arch` or named config data over hostname tests. Select targets per machine with a templated `.chezmoiignore`, checked with `chezmoi ignored` and `chezmoi diff`.
+
+Test with `chezmoi data --format=yaml`, `chezmoi execute-template '{{ .chezmoi.os }}'`, then `chezmoi cat TARGET`; preview each machine class affected. `add --autotemplate` substitutes greedily, so treat it as a draft.
+
+## Secrets
+
+Plaintext secrets never go into source history or output. Use `chezmoi add --secrets=error TARGET` when capturing files, then route the value to a password-manager template function, encrypted source (`add --encrypt`, only after recipient keys and recovery are verified), or untracked local config. `chezmoi edit` decrypts transparently; keep its temporary plaintext out of logs.
+
+## Scripts and locks
+
+- `run_` runs every apply; `run_onchange_` when rendered content changes; `run_once_` once per unique content; `before_`/`after_` set the phase, alphabetical within it. Keep scripts idempotent. A template script's `#!` must be at byte zero. A failed `run_once_`/`run_onchange_` can run again.
+- Never call chezmoi from a `run_` script: persistent-state locks make the nested call time out.
+- Write-lock commands: add, apply, edit, forget, import, init, state, unmanage, update. diff, status and verify take read locks. On a lock timeout, find the other chezmoi process or nested call and wait for or stop that owner. Delete the persistent-state database only with official guidance and a backup.
+
+## Removal
+
+`forget`/`unmanage` stop managing a target and leave it on disk. `destroy` deletes source and target permanently; `purge` removes chezmoi config, state and source. Never infer `destroy` from "stop managing"; use it only with exact targets, an independent backup and explicit confirmation. For `.chezmoiremove` patterns, dry-run verbosely and inspect each match.
+
+## Official docs
+
+`references/official-docs/` is a searchable snapshot of selected chezmoi.io pages (index in `manifest.json`):
+
+```sh
+python3 scripts/official_docs.py search "persistent state lock" --limit 20
+python3 scripts/official_docs.py refresh
+```
+
+`refresh` fetches and compares without replacing the snapshot and reports added, changed, removed and unchanged pages. `refresh --write` replaces the snapshot with a validated copy; run it only when the user has authorized updating the corpus, then `python3 scripts/official_docs.py check`. For an ad hoc refresh elsewhere, use `--output` with a scratch directory and search it with `--docs`. A network failure is not evidence the snapshot is current. The `DOCUMENT_SOURCES` tuple in the script owns the page list; add a page only when a real task needs it.

@@ -1,6 +1,6 @@
 # DeepSeek Search and Fetch API contract
 
-Official sources: [Search & Fetch guide](https://api-docs.deepseek.com/guides/search), [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing). "Live" notes are from the 2026-10-18 spike in `references/evidence.md`.
+Official sources: [Search & Fetch guide](https://api-docs.deepseek.com/guides/search), [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing). "Live" notes are from the 2026-10-18 spike.
 
 ## Authentication and hosts
 

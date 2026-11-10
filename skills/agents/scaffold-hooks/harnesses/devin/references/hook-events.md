@@ -7,7 +7,7 @@ Official sources:
 - `https://docs.devin.ai/cli/extensibility/hooks/overview`
 - `https://docs.devin.ai/cli/extensibility/hooks/lifecycle-hooks`
 
-Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official docs when installed evidence is insufficient, stale, or event semantics will change. Propose canonical updates through the root `SKILL.md` maintenance route; do not silently edit installed inputs.
+Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official docs when installed evidence is insufficient, stale, or event semantics will change.
 
 ## Hook File Format
 
@@ -125,8 +125,3 @@ Devin sets `DEVIN_PROJECT_DIR` to the project root directory for hooks. Generate
   "command": "bash \"$DEVIN_PROJECT_DIR/hooks/pre-tool-use/devin.sh\""
 }
 ```
-
-## See Also
-
-- `references/scaffold-layout.md`
-- `references/gotchas.md`

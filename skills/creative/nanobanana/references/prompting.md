@@ -1,6 +1,6 @@
 # Prompting Nano Banana
 
-Use this file when writing or repairing a prompt. Each rule says where it came from: **[G]** is Google's [image generation guide](https://ai.google.dev/gemini-api/docs/image-generation#prompt-guide), **[T]** is this skill's 2026-10-18 tests (`references/evidence.md`). Templates are starting points; adapt them to the brief.
+Use this file when writing or repairing a prompt. Each rule says where it came from: **[G]** is Google's [image generation guide](https://ai.google.dev/gemini-api/docs/image-generation#prompt-guide), **[T]** is this skill's 2026-10-18 tests. Templates are starting points; adapt them to the brief.
 
 ## Core rules
 

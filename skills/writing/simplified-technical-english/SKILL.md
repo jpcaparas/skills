@@ -1,217 +1,57 @@
 ---
 name: simplified-technical-english
-description: "Rewrite or audit ASD-STE100 procedures, descriptions, and safety instructions while preserving technical meaning and exact literals."
-compatibility: "Core instructions are portable. The optional surface scanner requires Python 3.11 or newer."
-metadata:
-  version: "1.0.0"
-references:
-  - procedures-and-safety
-  - descriptive-writing
-  - terminology-and-verification
-  - review-and-reporting
-  - research-notes
-  - gotchas
+description: "Rewrites or audits procedures, descriptions and safety instructions against ASD-STE100 Simplified Technical English, preserving technical meaning and exact literals. Use when STE governs the text. Not for general simplification or translation."
+compatibility: "Optional scripts/analyze_ste_surface.py needs Python 3.11+."
 ---
 
 # Simplified Technical English
 
-Rewrite selected technical text into a precise candidate STE form, or audit it against the applicable ASD-STE100 constraints.
+A restrictive, standard-specific skill: apply STE vocabulary, sentence, counting and safety rules only when ASD-STE100 is requested or governs the publication. Technical meaning outranks language, and a rewrite must never guess it.
 
-This is deliberately a restrictive standard-specific skill. Apply its vocabulary, sentence, counting, and safety rules when ASD-STE100 is requested or governs the publication, not as general writing preferences.
+## Mode
 
-## Route the request
+Rewrite when replacement text is asked for; audit (findings only, no replacement document) when findings are asked for. Procedures, work steps, maintenance tasks and safety text follow `references/procedures-and-safety.md`; systems, components, theory of operation and reports follow `references/descriptive-writing.md`. Segment mixed documents and apply each branch to its own blocks, then restore the original order. Read `references/terminology-and-verification.md` for every rewrite or audit: it defines the evidence modes, source precedence, the term ledger and the claim language.
 
-Choose the job and evidence mode before changing text.
+Evidence mode decides what you may claim: full reference-backed review (official issue, dictionary, governed terminology and directives all available), scoped reference-backed review (a supplied profile covers a declared subset), or Issue 9-oriented rewrite (sources incomplete; list what is unverified). "Strict", "fully compliant" or "certified" means reference-backed review; if the sources are absent, say strict verification is blocked and offer a separately labelled provisional rewrite.
 
-| Decision | Branch |
-|---|---|
-| User asks for replacement text | Rewrite |
-| User asks for findings only | Audit; do not return a full replacement |
-| Instructions, work steps, maintenance tasks, or safety text | Procedure/safety |
-| System, component, theory-of-operation, report, or explanatory text | Description |
-| Both text types occur | Segment the source and apply each branch separately |
-| All sources and review obligations in the reference-backed definition are available | Full reference-backed review |
-| A supplied rule profile and governed terminology cover a declared subset of checks | Scoped reference-backed review |
-| The standard, dictionary, or governed terminology is incomplete | Issue 9-oriented rewrite with explicit unverified items |
+## Issue and sources
 
-Map a request for “strict,” “fully compliant,” or “certified” output to reference-backed review. A bounded profile can support strict checking only for its declared scope; it cannot support a whole-standard claim. If the sources required for the requested scope are absent, say that strict verification is blocked. You may also provide a separately labelled provisional rewrite when it is safe and useful.
+Issue 9 (15 January 2025) is this skill's dated baseline, not a live status claim. Use the issue governing the user's publication and never silently upgrade or mix rules or dictionary entries across issues. Verify against official ASD/STEMG sources only when issue status is uncertain, later material is supplied or the latest issue is requested. Official sources checked 2026-07-29: https://www.asd-ste100.org/ (home, FAQ, downloads, tools guidance) and the Issue 9 PDF https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf. Do not reproduce or reconstruct the standard, dictionary, examples or cover art; paraphrase and cite.
 
-Do not use this skill for ordinary tone changes, general simplification, translation, language lessons, engineering or legal validation, or edits to source code and identifiers.
+## Preserve
 
-## Required context
+Before rewriting, identify what must not change and compare against it afterwards (a compact note for a short low-risk selection, a full ledger for safety-sensitive or review-bound work):
 
-Read only the references that the selected text needs:
+- facts, causal direction, conditions, exceptions, uncertainty, sequence; negation, polarity, comparison operators (never `<` into `≤`, `unless` into `if`, `after` into `before`, a permission into a requirement, a recommendation into a command)
+- warning level, hazard, mitigation, consequence; mandated wording
+- numbers, units, tolerances, ranges, part numbers, designators, product names, labels, abbreviations and approved terms
+- code fences, inline code, commands, paths, URLs, identifiers, schema keys, tags, placeholders, citations, quoted regulated text, headings and markers, and everything outside the selected text. Rewrite only the natural-language prose around protected literals and compare them character for character afterwards. Do not widen a selection because adjacent prose has similar problems.
 
-- Read `references/terminology-and-verification.md` for every rewrite or audit; use it to select the evidence mode, govern technical terms, and bound claims.
-- Read `references/procedures-and-safety.md` for procedures, work steps, notes, warnings, or cautions; use it to transform commands, conditions, sequence, and risk statements.
-- Read `references/descriptive-writing.md` for explanatory or descriptive text; use it to control information order, voice, sentences, and paragraphs.
-- Read `references/review-and-reporting.md` when the user requests findings, an audit trail, or a conformance report; use it to separate confirmed violations from unresolved decisions.
-- Read `references/gotchas.md` when source text contains mandated safety wording, mixed content, ambiguous references, unusually long technical terms, or conflicting directives.
-- Read `references/research-notes.md` only when source provenance, current issue status, copyright, or maintenance of this skill is in scope.
+If an ambiguity changes the action, target, condition, sequence or risk (what `it` refers to, whether two actions are simultaneous, a threshold), ask a focused question or record the alternatives; do not repair it through grammar. Stop a reference-backed rewrite when unresolved ambiguity could change safety, legality or product behaviour.
 
-## Operating workflow
+## Shared surface rules (Issue 9 baseline)
 
-### 1. Establish the rewrite contract
+Approved vocabulary only in its verified meaning and part of speech; governed technical nouns and verbs; short complete sentences without contractions; active voice (descriptive passive only when the agent is unknown); controlled verb forms and tightly limited `-ing` forms; no semicolons; one term per concept; American English spelling unless a directive requires otherwise. Limits: 20 words per procedure or safety sentence, 25 per descriptive sentence, 6 sentences per descriptive paragraph, counted under the official Issue 9 rules. Transform meaning units, not single words: order information as the reader needs it, split independent instructions, make actor, action, object, condition and result explicit, and use a vertical list when one sentence carries several items.
 
-Identify:
+## Gotchas
 
-- the exact selected text and text outside scope
-- procedure, description, safety instruction, or mixed content
-- the applicable standard issue, publication specification, company style guide, and terminology source
-- whether the user wants a rewrite, an audit, or both
-- whether the result is fully reference-backed, scoped reference-backed, or Issue 9-oriented
-- the responsible technical reviewer when the text affects safety, legality, or product behavior
+- Splitting a sentence can detach a condition, exception, negation or consequence from its action; after splitting, recheck condition scope, sequence, threshold polarity and the hazard-mitigation link, and restore explicit connectors.
+- A simple or familiar synonym is not approved by being simple. Approval depends on the dictionary entry's meaning and part of speech; if the dictionary is unavailable the decision stays unverified. An unfamiliar word is not a technical noun or verb without a drawing, parts source, specification, glossary or terminology owner.
+- Do not cut a long official technical noun into an invented short name.
+- Passive can preserve truth in descriptions; do not invent an actor to force active voice. In procedures, address the reader directly, and if the real actor is another person or system, keep that fact.
+- `-ing` is not a raw suffix ban; it can be permitted inside governed nouns or non-verb roles. Judge scanner hits in context.
+- Plain whitespace word counts do not implement the Issue 9 counting rules (parentheticals, quoted text, identifiers, numbers with units, proper nouns, labels, hyphenated words, vertical lists).
+- Mandated safety, legal, regulatory or contractual wording can override STE: keep it unchanged, record the conflict, and give any STE candidate to its owner as a proposal, never as approved.
+- A note informs and never hides a command; do not invent a work step from a fact, and do not turn description into instruction.
 
-Issue 9, dated 15 January 2025, is this package's bundled baseline, not a permanent claim about the current issue. Use the issue governing the user's publication; do not silently upgrade it. Verify official ASD/STEMG sources when issue status is uncertain, later material is supplied, or the latest issue is requested. Keep checks from different issues separate.
+## Optional scanner
 
-**Complete when:** scope, text type, evidence mode, governing sources, output form, and review owner are known or explicitly marked unavailable.
+`python3 scripts/analyze_ste_surface.py --text-type procedure|description [--format json] path` (or `-` for stdin) reports surface candidates: contractions, semicolons, probable passive, `-ing` forms, coordinated actions, and an estimated word count against the limits. It ignores code, parentheticals and quoted text, has no dictionary, and targets Issue 9 only. Every hit is a candidate to judge in context; it cannot establish conformance, and do not claim it supports another issue without evidence.
 
-### 2. Preserve meaning with proportionate traceability
+## Audits and reporting
 
-Identify the source elements that must not change. For a short, low-risk selection, direct source comparison and a compact note can suffice. For safety-sensitive, complex, or review-bound work, retain a ledger that traces every high-consequence element and literal to its source:
+An audit diagnoses the supplied text and does not silently replace it; do no engineering, safety or legal validation through language review. Classify each finding as confirmed (the available source proves it), candidate (a signal needing judgement, such as probable passive or an unclear pronoun) or unresolved (missing technical or authoritative evidence, with an owner), with a severity (blocker when a rewrite would have to guess meaning, risk or legal force; high when a confirmed issue can change action, condition, sequence or consequence; medium; low; information). Give source location, rule or source, a short exact excerpt, explanation, a local correction only if allowed, and the evidence or owner needed. Lead with scope, evidence mode and blockers; if only findings were requested, append no full rewrite.
 
-- technical facts, causal direction, conditions, exceptions, uncertainty, and sequence
-- prohibitions, permissions, required actions, warning level, hazard, mitigation, and consequence
-- numbers, units, tolerances, ranges, limits, comparison operators, and polarity
-- part numbers, reference designators, product names, labels, proper nouns, abbreviations, and approved technical terms
-- code fences, inline code, commands, paths, URLs, endpoints, identifiers, schema keys, tags, placeholders, citations, and quoted regulated text
-- headings, markers, and text outside the selected boundary
+For a rewrite, lead with the full rewritten selection, then a compact note: evidence mode, issue and terminology source, protected literals checked, unresolved terms or conflicts, and that technical, safety, legal or organisational approval needs a human reviewer.
 
-Do not “simplify” a protected term or literal. If a safety or legal sentence is controlled by another authority, preserve it or route it for authorized review.
-
-**Complete when:** every high-consequence fact and exact literal has a source value against which the result can be compared.
-
-### 3. Segment and classify
-
-Divide mixed documents into the smallest stable blocks:
-
-- procedural steps
-- descriptive paragraphs
-- safety instructions
-- notes
-- tables and labels
-- protected machine-readable or quoted material
-
-Do not apply one text type’s rules to another. A note in a procedure gives information; it does not hide an instruction. A description explains; it does not become a command.
-
-**Complete when:** each selected block has one text type and protected blocks are excluded from natural-language rewriting.
-
-### 4. Resolve technical meaning before language
-
-Track one status for each material term. Use a term ledger for complex or consequential work and a compact evidence note for a short low-risk selection:
-
-- verified approved general word, meaning, and part of speech
-- governed technical noun
-- governed technical verb
-- proper noun, identifier, abbreviation, or protected label
-- unverified candidate that needs the official dictionary or a terminology owner
-
-Keep one approved term for one concept. Do not promote an unfamiliar word to a technical term because it sounds specialized. Do not guess what a pronoun, threshold, action, or component means.
-
-When ambiguity changes the action, target, condition, sequence, or risk, ask a focused question or record the unresolved alternatives before producing a reference-backed result.
-
-**Complete when:** every consequential term and ambiguous reference is verified, protected, or reported as unresolved.
-
-### 5. Rewrite the structure
-
-Transform meaning units before replacing individual words:
-
-1. Put information in the order the reader must use it.
-2. Split independent instructions and topics. Count coordinated verbs and compound required-state checks separately; do not hide two actions inside one `make sure` command.
-3. Make actors, actions, objects, conditions, and results explicit.
-4. Replace nominalized actions with direct verbs when the governed vocabulary permits it.
-5. Remove avoidable ambiguity, hidden coordination, omitted words, and unnecessary synonym variation.
-6. Use a vertical list when one sentence would carry several related items or conditions.
-
-Use a different sentence construction when a word-for-word replacement cannot preserve clear meaning.
-
-**Complete when:** the result has explicit logic, stable terminology, and no sentence that still carries unrelated work.
-
-### 6. Apply the text-type rules
-
-For procedures and safety instructions, apply `references/procedures-and-safety.md`.
-
-For descriptions, apply `references/descriptive-writing.md`.
-
-For mixed text, complete each branch independently and then restore the original document order.
-
-Shared surface requirements include:
-
-- approved vocabulary only in its verified meaning and part of speech
-- governed technical nouns and technical verbs
-- short, complete sentences without contractions
-- active voice, except a permitted descriptive passive when the agent is unknown
-- controlled verb forms and tightly limited `-ing` forms
-- no semicolons
-- consistent terminology and wording
-- American English spelling unless an applicable directive requires another spelling
-
-These shared requirements describe the Issue 9 baseline and are not a substitute for checking the governing issue's official dictionary and full rule explanations. A different issue requires its own evidence, not relaxed interpretation of these constraints.
-
-**Complete when:** every block passes its branch checklist or has a precise exception with an owner.
-
-### 7. Verify rather than certify
-
-Compare the result with the source and any preservation ledger. Check:
-
-1. meaning, conditions, negation, thresholds, sequence, and risk
-2. selected-text boundaries and protected literals
-3. text type, voice, sentence function, word count, and paragraph structure
-4. terminology consistency
-5. approved word, meaning, part of speech, and verb form against the available governing-issue material
-6. project terminology against the governed glossary or termbase
-7. conflicts with publication, safety, legal, or regulatory directives
-
-For a file, the optional scanner can find surface candidates:
-
-```bash
-python3 scripts/analyze_ste_surface.py --text-type procedure path/to/text.md
-python3 scripts/analyze_ste_surface.py --text-type description --format json path/to/text.md
-```
-
-The scanner targets the bundled Issue 9 surface checks. It does not contain the ASD-STE100 dictionary, decide technical meaning, or establish conformance. Do not claim support for a later or different issue without evidence that the checks match it. Judge every finding in context.
-
-**Complete when:** each applicable check has evidence, each exception has an owner, and no unverified item is presented as verified.
-
-### 8. Deliver the result
-
-For a rewrite, lead with the complete rewritten selection. Preserve surrounding document structure when the user supplied a file or selection markers.
-
-Then give a compact verification note:
-
-- mode: full reference-backed review, scoped reference-backed review, or Issue 9-oriented rewrite
-- standard issue and terminology source used
-- protected literals checked
-- unresolved terminology, ambiguity, or directive conflicts
-- human review required for technical, safety, legal, or organizational approval
-
-For an audit, use the report contract in `references/review-and-reporting.md` and do not silently replace the source.
-
-Use “candidate STE rewrite,” “Issue 9-oriented rewrite,” “checked against the supplied scoped profile,” or “checked against the supplied Issue 9 materials.” State the exact scope of a bounded profile. Never claim ASD certification, endorsement, authorization, official approval, or guaranteed compliance.
-
-**Complete when:** the requested artifact is present, the evidence boundary is explicit, and the result does not overstate its authority.
-
-## Output contract
-
-Default rewrite output:
-
-1. rewritten text
-2. short verification note
-3. unresolved questions only when they affect correctness
-
-Use `templates/rewrite-report.md` when the user wants an audit trail, reviewer handoff, or batch record. Keep ordinary responses lighter.
-
-## When guidance is insufficient
-
-When bundled guidance is stale, incomplete, or conflicts with governing material, consult the applicable official ASD/STEMG issue, authorized standard copy, and governed terminology or publication owner. Apply only verified rules within that authority; disclose missing sources and block strict verification where needed. Propose a canonical skill correction with its source, issue, and a minimal example or check without redistributing protected standard text. Do not silently modify installed copies, browse on every rewrite, or treat a new issue as supported by the bundled scanner without validation.
-
-## Non-negotiables
-
-1. Preserve technical meaning before improving language.
-2. Preserve negation, conditions, thresholds, sequence, warning level, mitigation, and consequence exactly.
-3. Never invent an approved dictionary status, meaning, part of speech, technical noun, or technical verb.
-4. Never alter code, commands, identifiers, paths, URLs, tags, placeholders, or other protected literals.
-5. Never hide an instruction in a note or turn descriptive information into an unsupported command.
-6. Never claim certification, ASD approval, or guaranteed compliance.
-7. Never redistribute or reconstruct the official standard, dictionary, examples, logo, or cover art in the output.
-8. Stop a reference-backed rewrite when unresolved ambiguity could change safety, legality, or product behavior.
+Say "candidate STE rewrite", "Issue 9-oriented rewrite", "checked against the supplied scoped profile" or "checked for the listed Issue 9 constraints". Never claim ASD certification, endorsement, approval or guaranteed compliance; ASD and the STEMG treat tools, including AI, as optional aids that cannot replace the writer or the standard. Never invent an approved dictionary status, meaning or part of speech, and never present provisional word choices as dictionary-approved.

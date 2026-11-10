@@ -11,9 +11,6 @@ jobs:
   validate:
     name: validate (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
-    env:
-      # Live API probes are opt-in locally and must never run in CI or act.
-      AUDIFY_RUN_LIVE_TESTS: "0"
     strategy:
       fail-fast: false
       matrix:
@@ -25,99 +22,42 @@ jobs:
         uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Set Up Python
-        if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
         with:
           python-version: "3.11"
 
       - name: Set Up Node
-        if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
           node-version: "24"
 
       - name: Set Up Bun
-        if: ${{ !env.ACT || runner.os == 'Linux' }}
         uses: oven-sh/setup-bun@735343b667d3e6f658f44d0eca948eb6282f2b76 # v2.0.2
         with:
           bun-version: "1.4.4"
 
-      - name: Install Validation Tools (Linux)
+      # Skill scripts under test shell out to `rg`.
+      - name: Install ripgrep (Linux)
         if: runner.os == 'Linux'
-        # Required by skill probe suites that shell out to external CLIs:
-        # - skills/ripgrep/scripts/probe_ripgrep.py -> `rg --version`
-        # - skills/httpie/scripts/probe_httpie.py -> `http`, `https`, `httpie`
-        run: sudo apt-get update && sudo apt-get install -y ripgrep httpie
+        run: sudo apt-get update && sudo apt-get install -y ripgrep
 
-      - name: Install Validation Tools (macOS)
-        if: ${{ runner.os == 'macOS' && !env.ACT }}
-        # Keep macOS validation equivalent to Linux; the skill probes expect
-        # these executable names, not just Python or Node package APIs.
-        run: brew install ripgrep httpie
-
-      - name: Prepare Local macOS Toolchain (act)
-        if: ${{ env.ACT && runner.os == 'macOS' }}
-        shell: bash
-        # setup-python's downloaded macOS runtimes are not relocatable outside
-        # GitHub's hosted tool cache. Reuse the host runtimes and isolate the
-        # Python packages in act's temporary job directory instead.
-        run: |
-          set -euo pipefail
-          validation_venv="${RUNNER_TEMP:?RUNNER_TEMP must be set}/skills-validation-venv"
-          validation_python="${SKILLS_ACT_MACOS_PYTHON:-}"
-          validation_node="${SKILLS_ACT_MACOS_NODE:-}"
-          validation_npm="${SKILLS_ACT_MACOS_NPM:-}"
-          validation_npx="${SKILLS_ACT_MACOS_NPX:-}"
-          validation_bun="${SKILLS_ACT_MACOS_BUN:-}"
-          if [ -z "$validation_python" ] \
-            || [ ! -x "$validation_python" ] \
-            || ! "$validation_python" -c 'import sys, venv; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then
-            echo "Local macOS act validation requires SKILLS_ACT_MACOS_PYTHON at Python 3.11 or newer with venv support." >&2
-            exit 1
-          fi
-          if [ -z "$validation_node" ] \
-            || [ ! -x "$validation_node" ] \
-            || [ -z "$("$validation_node" --version)" ]; then
-            echo "Local macOS act validation requires a working SKILLS_ACT_MACOS_NODE runtime." >&2
-            exit 1
-          fi
-          if [ -z "$validation_npm" ] || [ ! -x "$validation_npm" ] \
-            || [ -z "$validation_npx" ] || [ ! -x "$validation_npx" ]; then
-            echo "Local macOS act validation requires working npm and npx commands for the selected Node.js runtime." >&2
-            exit 1
-          fi
-          if [ -z "$validation_bun" ] || [ ! -x "$validation_bun" ] \
-            || ! "$validation_bun" --version; then
-            echo "Local macOS act validation requires a working SKILLS_ACT_MACOS_BUN runtime." >&2
-            exit 1
-          fi
-          "$validation_python" -m venv --clear "$validation_venv"
-          "$validation_venv/bin/python3" -m pip install --upgrade pip
-          "$validation_venv/bin/python3" -m pip install -r requirements-validation.txt
-          validation_tool_bin="$(mktemp -d "${RUNNER_TEMP:?RUNNER_TEMP must be set}/skills-validation-host-tools.XXXXXX")"
-          ln -s "$validation_node" "$validation_tool_bin/node"
-          ln -s "$validation_npm" "$validation_tool_bin/npm"
-          ln -s "$validation_npx" "$validation_tool_bin/npx"
-          ln -s "$validation_bun" "$validation_tool_bin/bun"
-          printf '%s\n' "$validation_venv/bin" >> "$GITHUB_PATH"
-          printf '%s\n' "$validation_tool_bin" >> "$GITHUB_PATH"
+      - name: Install ripgrep (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ripgrep
 
       - name: Install Python Validation Packages
-        if: ${{ !env.ACT || runner.os == 'Linux' }}
-        # Includes the exact browser-driver version used by the directional gate.
         run: |
           python3 -m pip install --upgrade pip
           python3 -m pip install -r requirements-validation.txt
 
       - name: Install Pinned Chromium
         shell: bash
-        # Use Playwright's matching revision on both hosted OSes and act, never
-        # a changing runner image's Chrome. The gate uses the full Chromium binary.
+        # Playwright's pinned package selects the revision, so both runners test
+        # the same browser instead of whatever Chrome the runner image ships.
         run: python3 -m playwright install chromium --no-shell --with-deps
 
       - name: Install Locked Node Validation Packages
         shell: bash
-        # Includes the real skills installer and its transitive dependencies.
         run: scripts/run-pnpm.sh install --frozen-lockfile
 
       - name: Print Validation Tool Versions
@@ -128,9 +68,7 @@ jobs:
           npm --version
           bun --version
           rg --version | head -n 1
-          http --version
 
       - name: Validate Skills
         shell: bash
-        # Use the same entrypoint as native validation and the stop hooks.
         run: bash scripts/validate-all-skills.sh

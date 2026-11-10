@@ -19,7 +19,6 @@ install_missing_system_tools() {
     command -v git >/dev/null 2>&1 || packages+=(git)
     command -v jq >/dev/null 2>&1 || packages+=(jq)
     command -v rg >/dev/null 2>&1 || packages+=(ripgrep)
-    command -v http >/dev/null 2>&1 || packages+=(httpie)
 
     if [ "${#packages[@]}" -eq 0 ]; then
         echo "Required system tools are already installed."
@@ -100,7 +99,7 @@ step "Install missing system tools" install_missing_system_tools
 step "Create the Python validation environment" create_validation_venv
 # Playwright's pinned package selects the revision; its installer reuses a
 # matching cache. Never substitute whatever Chrome happens to be on PATH.
-step "Install the gauntlet's Chromium revision" .venv/bin/python3 -m playwright install chromium --no-shell
+step "Install the browser tests' Chromium revision" .venv/bin/python3 -m playwright install chromium --no-shell
 step "Install locked Node.js dependencies" install_node_dependencies
 step "Install repository skills into Amp" install_amp_skills
 step "Install Gemini CLI with Agent Skills support" install_gemini_cli

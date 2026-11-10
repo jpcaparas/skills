@@ -9,11 +9,11 @@
       "expected_output": "Load {{ skill:azure-devops-create-work-item }}, default to the Product Backlog Item template, create a packet in the current working directory, and produce work-item.md plus supporting artefacts.",
       "assertions": [
         {
-          "text": "Uses scripts/create_work_item_packet.py as the deterministic packet scaffold",
+          "text": "Creates a packet folder in the current directory",
           "type": "functional"
         },
         {
-          "text": "Creates or references work-item.md, context.md, sources.md, and metadata.json",
+          "text": "Packet contains work-item.md and context.md",
           "type": "verification"
         },
         {
@@ -26,9 +26,7 @@
         "pbi"
       ],
       "files": [
-        "scripts/create_work_item_packet.py",
-        "templates/product-backlog-item-template.md",
-        "references/output-packet.md"
+        "references/manual-qa.md"
       ]
     },
     {
@@ -51,8 +49,7 @@
         "bug"
       ],
       "files": [
-        "templates/bug-template.md",
-        "references/official-primitives.md"
+        "references/work-item-types.md"
       ]
     },
     {
@@ -80,8 +77,7 @@
         "pbi"
       ],
       "files": [
-        "templates/product-backlog-item-template.md",
-        "references/output-packet.md"
+        "references/manual-qa.md"
       ]
     },
     {
@@ -100,8 +96,7 @@
         "classification"
       ],
       "files": [
-        "templates/user-story-template.md",
-        "references/official-primitives.md"
+        "references/work-item-types.md"
       ]
     },
     {
@@ -139,8 +134,7 @@
         "process"
       ],
       "files": [
-        "references/official-primitives.md",
-        "references/gotchas.md"
+        "references/work-item-types.md"
       ]
     },
     {
@@ -169,8 +163,7 @@
       ],
       "files": [
         "SKILL.md",
-        "references/output-packet.md",
-        "references/gotchas.md"
+        "references/manual-qa.md"
       ]
     },
     {
@@ -207,8 +200,7 @@
       ],
       "files": [
         "SKILL.md",
-        "references/output-packet.md",
-        "references/gotchas.md"
+        "references/manual-qa.md"
       ]
     },
     {
@@ -251,9 +243,7 @@
       ],
       "files": [
         "SKILL.md",
-        "references/writing-style.md",
-        "references/output-packet.md",
-        "templates/product-backlog-item-template.md"
+        "references/manual-qa.md"
       ]
     },
     {
@@ -262,13 +252,34 @@
       "prompt": "Draft a local work item packet for the invite service. Our supplied project process export says Agile; I haven't chosen a type. Support operators need repeated POST /invites requests with the same Idempotency-Key to return the original invite ID rather than create duplicates. Use US English. This is an API-only change: QA can send requests to the local test service and inspect its documented invite store. Cover the normal request and duplicate retry; include code excerpts only if real repo evidence helps.",
       "expected_output": "Uses User Story and Agile metadata without requiring the user to name the type. Keeps the main packet fields stable, uses US English and risk-based API QA, and includes only useful evidence-backed snippets. No fabricated UI, staging mocks, or filler scenarios.",
       "assertions": [
-        { "text": "Passes --type user-story and --process agile based on supplied process evidence; does not rely on --process alone to infer type", "type": "verification" },
-        { "text": "Keeps the standard packet files and main field order and follows requested US English", "type": "structural" },
-        { "text": "QA covers observable API responses and stored invite counts using the documented test surface", "type": "functional" },
-        { "text": "Does not add UI steps, arbitrary dev-support mocks, scenario quotas, invented snippets, or live Azure DevOps writes", "type": "negative" }
+        {
+          "text": "Passes --type user-story and --process agile based on supplied process evidence; does not rely on --process alone to infer type",
+          "type": "verification"
+        },
+        {
+          "text": "Keeps the standard packet files and main field order and follows requested US English",
+          "type": "structural"
+        },
+        {
+          "text": "QA covers observable API responses and stored invite counts using the documented test surface",
+          "type": "functional"
+        },
+        {
+          "text": "Does not add UI steps, arbitrary dev-support mocks, scenario quotas, invented snippets, or live Azure DevOps writes",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "process", "manual-qa", "locale", "backend"],
-      "files": ["references/official-primitives.md", "references/output-packet.md"]
+      "tags": [
+        "edge",
+        "process",
+        "manual-qa",
+        "locale",
+        "backend"
+      ],
+      "files": [
+        "references/work-item-types.md",
+        "references/manual-qa.md"
+      ]
     }
   ]
 }

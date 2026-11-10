@@ -9,7 +9,7 @@
       "expected_output": "Uses the capture workflow to establish the missing anchor and reports the host context without assuming it is the user's timezone.",
       "assertions": [
         {
-          "text": "Uses scripts/capture_temporal_context.py to establish the session anchor",
+          "text": "Reads the system clock to establish the session anchor",
           "type": "functional"
         },
         {
@@ -21,10 +21,7 @@
         "smoke",
         "bootstrap"
       ],
-      "files": [
-        "scripts/capture_temporal_context.py",
-        "references/bootstrap.md"
-      ]
+      "files": []
     },
     {
       "id": 2,
@@ -45,11 +42,7 @@
         "smoke",
         "models"
       ],
-      "files": [
-        "scripts/recency_guard.py",
-        "references/verification-patterns.md",
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 3,
@@ -70,9 +63,7 @@
         "edge",
         "relative-dates"
       ],
-      "files": [
-        "references/verification-patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 4,
@@ -81,7 +72,7 @@
       "expected_output": "Uses the system clock plus an extra-zone lookup, not a web search, to answer the cross-zone date question.",
       "assertions": [
         {
-          "text": "Uses scripts/capture_temporal_context.py with an extra zone",
+          "text": "Reads the system clock in the extra IANA zone",
           "type": "functional"
         },
         {
@@ -93,10 +84,7 @@
         "smoke",
         "timezone"
       ],
-      "files": [
-        "scripts/capture_temporal_context.py",
-        "references/bootstrap.md"
-      ]
+      "files": []
     },
     {
       "id": 5,
@@ -117,10 +105,7 @@
         "edge",
         "historical"
       ],
-      "files": [
-        "references/recency-triage.md",
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 6,
@@ -141,11 +126,11 @@
     {
       "id": 7,
       "name": "disclosure-bootstrap-file",
-      "prompt": "We have no reliable time anchor yet. Use the skill's bootstrap reference to ground this session in the current clock before answering.",
-      "expected_output": "Routes directly to references/bootstrap.md and the capture script.",
+      "prompt": "We have no reliable time anchor yet. Ground this session in the current clock before answering.",
+      "expected_output": "Captures the current clock directly, with no unrelated live-source research.",
       "assertions": [
         {
-          "text": "Captured trace records a read of references/bootstrap.md and clock capture, with no unrelated live-source research",
+          "text": "Captured trace records a clock capture, with no unrelated live-source research",
           "type": "disclosure"
         }
       ],
@@ -153,10 +138,7 @@
         "disclosure",
         "bootstrap"
       ],
-      "files": [
-        "references/bootstrap.md",
-        "scripts/capture_temporal_context.py"
-      ]
+      "files": []
     },
     {
       "id": 8,
@@ -165,7 +147,7 @@
       "expected_output": "Uses the product-version drift gotcha to explain stale-memory failure without inventing a real current model lineup or browsing an explicitly hypothetical question.",
       "assertions": [
         {
-          "text": "Captured trace records a read of references/gotchas.md, not live-model research or unrelated bootstrap tooling",
+          "text": "Captured trace records no live-model research and no clock tooling for the hypothetical question",
           "type": "disclosure"
         },
         {
@@ -177,9 +159,7 @@
         "disclosure",
         "models"
       ],
-      "files": [
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 9,
@@ -200,21 +180,14 @@
         "smoke",
         "market-data"
       ],
-      "files": [
-        "references/recency-triage.md",
-        "references/verification-patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 10,
       "name": "long-horizon-refresh",
       "prompt": "The only session clock anchor is from this morning; now it's after midnight in my timezone. Do I need to refresh the date context before I send a final answer about today's schedule?",
-      "expected_output": "Routes to references/long-horizon.md and recommends rerunning the temporal capture before finalizing.",
+      "expected_output": "Recommends refreshing the clock anchor in the user's timezone before finalizing.",
       "assertions": [
-        {
-          "text": "Routes to references/long-horizon.md",
-          "type": "disclosure"
-        },
         {
           "text": "Recommends refreshing the temporal anchor after a day boundary",
           "type": "verification"
@@ -224,10 +197,7 @@
         "edge",
         "long-horizon"
       ],
-      "files": [
-        "references/long-horizon.md",
-        "scripts/capture_temporal_context.py"
-      ]
+      "files": []
     },
     {
       "id": 11,
@@ -235,10 +205,20 @@
       "prompt": "In this controlled session the trusted harness clock was captured seconds ago as 2026-04-09T14:00:00+12:00 in my known timezone Pacific/Auckland. No boundary is near. What is today's date here? One line, please.",
       "expected_output": "Answers April 9, 2026 in Pacific/Auckland directly from the fresh session anchor, without recapturing or browsing.",
       "assertions": [
-        { "text": "Output gives 2026-04-09 or April 9, 2026 in Pacific/Auckland in one line.", "type": "functional" },
-        { "text": "Captured trace contains no capture_temporal_context.py, recency_guard.py, or web call.", "type": "negative" }
+        {
+          "text": "Output gives 2026-04-09 or April 9, 2026 in Pacific/Auckland in one line.",
+          "type": "functional"
+        },
+        {
+          "text": "Captured trace contains no capture_temporal_context.py, recency_guard.py, or web call.",
+          "type": "negative"
+        }
       ],
-      "tags": ["smoke", "scope", "disclosure"]
+      "tags": [
+        "smoke",
+        "scope",
+        "disclosure"
+      ]
     },
     {
       "id": 12,
@@ -246,10 +226,20 @@
       "prompt": "For this fixed-time exercise, the trusted clock is 2026-04-09T00:30:00Z and the orb's timezone is UTC. I am in America/Los_Angeles. What date does 'today' mean for me at that instant?",
       "expected_output": "Uses timezone-aware boundary math for the supplied instant and answers April 8, 2026 in America/Los_Angeles (17:30 PDT), not the orb's April 9 date. Does not replace the exercise instant with actual now.",
       "assertions": [
-        { "text": "Resolves today to 2026-04-08 in America/Los_Angeles with the correct DST offset of UTC-07:00.", "type": "functional" },
-        { "text": "Captured trace shows a timezone-aware calculation for the supplied instant; no web search is needed for clock-only math.", "type": "verification" }
+        {
+          "text": "Resolves today to 2026-04-08 in America/Los_Angeles with the correct DST offset of UTC-07:00.",
+          "type": "functional"
+        },
+        {
+          "text": "Captured trace shows a timezone-aware calculation for the supplied instant; no web search is needed for clock-only math.",
+          "type": "verification"
+        }
       ],
-      "tags": ["edge", "timezone", "relative-dates"]
+      "tags": [
+        "edge",
+        "timezone",
+        "relative-dates"
+      ]
     },
     {
       "id": 13,
@@ -257,10 +247,19 @@
       "prompt": "A recency_guard result labeled this live-verify because I said 'current': explain the current function `def twice(x): return x * 2`. All relevant code is right here.",
       "expected_output": "Explains the supplied function directly, overriding the keyword-only classification without treating it as permission to skip verification of genuinely volatile claims.",
       "assertions": [
-        { "text": "Explains that twice returns x multiplied by 2 without making external current-state claims.", "type": "functional" },
-        { "text": "Captured trace contains no web research or clock/guard rerun solely to satisfy the heuristic result.", "type": "negative" }
+        {
+          "text": "Explains that twice returns x multiplied by 2 without making external current-state claims.",
+          "type": "functional"
+        },
+        {
+          "text": "Captured trace contains no web research or clock/guard rerun solely to satisfy the heuristic result.",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative", "scope"]
+      "tags": [
+        "negative",
+        "scope"
+      ]
     }
   ]
 }

@@ -1,24 +1,12 @@
 import type { PluginAPI } from '@ampcode/plugin'
 
 export const description =
-	'Runs this repository’s existing session and stop checks for Amp turns.'
+	'Runs this repository’s validation before an Amp turn finishes.'
 
-// Amp has no SessionEnd hook. Its supported turn-end continuation protocol lets
-// this adapter reuse the same fail-closed checker as the other harnesses.
+// Amp has no stop hook. Returning `continue` from agent.end sends the agent
+// back to work, which lets this adapter reuse the gate the other harnesses run.
 // https://ampcode.com/docs/plugin-api
 export default function (amp: Pick<PluginAPI, 'on'>): void {
-	amp.on('session.start', async (event, ctx) => {
-		const root = await ctx.$`git rev-parse --show-toplevel`
-		if (root.exitCode !== 0) return
-
-		const repoRoot = root.stdout.trim()
-		const result =
-			await ctx.$`env AGENT_HOOK_HARNESS=amp AGENT_HOOK_PROJECT_ROOT=${repoRoot} AGENT_HOOK_SESSION_ID=${event.thread.id} bash ${repoRoot}/scripts/agent-session-context.sh`
-		if (result.exitCode !== 0) {
-			ctx.logger.log('Amp session baseline failed', result.stderr)
-		}
-	})
-
 	amp.on('agent.end', async (event, ctx) => {
 		if (event.status !== 'done') return
 
@@ -33,7 +21,7 @@ export default function (amp: Pick<PluginAPI, 'on'>): void {
 
 		const repoRoot = root.stdout.trim()
 		const result =
-			await ctx.$`env AGENT_HOOK_HARNESS=amp AGENT_HOOK_PROJECT_ROOT=${repoRoot} AGENT_HOOK_SESSION_ID=${event.thread.id} bash ${repoRoot}/scripts/agent-stop-checks.sh ${repoRoot}`
+			await ctx.$`bash ${repoRoot}/scripts/agent-stop-checks.sh amp`
 		if (result.exitCode === 0) return
 
 		const stderr = result.stderr.trim()

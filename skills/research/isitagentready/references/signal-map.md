@@ -2,7 +2,6 @@
 
 This file maps the April 19, 2026 Cloudflare agent-readiness baseline to runtime checks and repository evidence. Table keys, candidate endpoints, scoring weights, and WebMCP API examples describe that snapshot, not permanent requirements. Verify uncertain or changed details against current official Cloudflare and protocol documentation; record the version/date used and distinguish scanner conventions from protocol validity.
 
-Use it together with `references/repo-search-playbook.md`.
 
 ## Score Structure
 

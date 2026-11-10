@@ -17,11 +17,12 @@
           "type": "verification"
         }
       ],
-      "tags": ["smoke", "verification"],
+      "tags": [
+        "smoke",
+        "verification"
+      ],
       "files": [
         "SKILL.md",
-        "references/filesystem.md",
-        "references/patterns.md",
         "scripts/probe_implicit_token_savings.py"
       ]
     },
@@ -40,10 +41,8 @@
           "type": "structural"
         }
       ],
-      "tags": ["edge"],
-      "files": [
-        "references/filesystem.md",
-        "references/gotchas.md"
+      "tags": [
+        "edge"
       ]
     },
     {
@@ -61,31 +60,28 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"],
+      "tags": [
+        "negative"
+      ],
       "files": [
-        "SKILL.md",
-        "references/filesystem.md",
-        "references/patterns.md"
+        "SKILL.md"
       ]
     },
     {
       "id": 4,
       "name": "disclosure-git-scope-review",
       "prompt": "I want the narrowest command sequence for checking staged scope and recent commit history before committing. Which part of the skill should I read and what commands should I use?",
-      "expected_output": "The response routes to references/git.md and recommends short git status, staged diff stat, and oneline log commands before full diffs.",
+      "expected_output": "The response recommends short git status, staged diff stat, and oneline log commands before full diffs.",
       "assertions": [
-        {
-          "text": "Routes the user to references/git.md for compact git workflows",
-          "type": "disclosure"
-        },
         {
           "text": "Uses git status --short, git diff --cached --stat, or git log --oneline before wider diffs",
           "type": "functional"
         }
       ],
-      "tags": ["disclosure"],
+      "tags": [
+        "disclosure"
+      ],
       "files": [
-        "references/git.md",
         "SKILL.md"
       ]
     },
@@ -104,7 +100,9 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge"]
+      "tags": [
+        "edge"
+      ]
     },
     {
       "id": 6,
@@ -117,7 +115,9 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     },
     {
       "id": 7,
@@ -134,7 +134,9 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge"]
+      "tags": [
+        "edge"
+      ]
     }
   ]
 }

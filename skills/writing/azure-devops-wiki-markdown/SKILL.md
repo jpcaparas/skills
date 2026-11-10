@@ -1,87 +1,30 @@
 ---
 name: azure-devops-wiki-markdown
-description: "Write, fix, or review Azure DevOps wiki Markdown, Mermaid, _TOC_, _TOSP_, details blocks, query tables, mentions, work-item links, KaTeX, videos, and code fences. Use for Azure DevOps surface quirks. Do NOT use for GitHub-only or non-Azure docs."
-compatibility: "Requires: python3. Optional network access for scripts/find_code_language.py refresh and live Highlight.js lookups."
+description: "Writes, fixes and reviews Azure DevOps wiki Markdown: Mermaid, [[_TOC_]], [[_TOSP_]], details blocks, query tables, mentions, work-item links, KaTeX, videos, code fences, and what renders in wiki vs PR vs README. Not for GitHub-only docs or work item packets."
+compatibility: "Optional python3 for scripts/find_code_language.py; its live refresh needs network."
 license: MIT
 ---
 
-# Azure DevOps Wiki Markdown
+# Azure DevOps wiki Markdown
 
-Route Azure DevOps Markdown questions to the right reference, with extra depth on wiki-only blocks, Mermaid-safe authoring, and code-fence language identifiers.
+Baseline: Microsoft Learn Azure DevOps Markdown guidance, the Azure Repos Sprint 259 release note (2025-07-17) and the Highlight.js supported-language table, checked 2026-04-09. Statements below describe that baseline for Services, not proof for every Server version. Where a limitation is stale or conflicts with the user's target, check Microsoft Learn for that version (use its Services/Server selector) and use verified newer syntax; an upstream Mermaid or Highlight.js feature does not prove Azure support. If you cannot verify, say so and use the compatible baseline. Propose a sourced correction rather than editing an installed copy. Do not browse for routine known syntax.
 
-Bundled baseline: checked against Microsoft Learn Azure DevOps Markdown guidance, the Azure Repos Sprint 259 release note, and the Highlight.js supported-language table on April 9, 2026. Support statements describe that baseline, not permanent bans or proof for every Server version.
+Preserve exact macros, code literals and real query or identity GUIDs; never invent identifiers. Follow the page structure the user asked for.
 
-## Decision Tree
+## Rules that differ from ordinary Markdown
 
-What do you need to do?
+- A bare Enter is not a line break. End the line with two spaces, or leave a blank line for a new paragraph.
+- Wiki-only: Mermaid, `[[_TOC_]]`, `[[_TOSP_]]`, `query-table`, HTML tags (`<span>`, `<font>`, `<video>`), `<br/>` in table cells, `<details>`. Do not assume they work in PRs, READMEs, widgets or Done fields; check `references/support-matrix.md`.
+- `[[_TOC_]]` and `[[_TOSP_]]` are case-sensitive, only the first of each renders, and they need headings or child pages.
+- Mermaid uses `::: mermaid` ... `:::`, not a triple-backtick `mermaid` fence. Use `graph TD`/`graph LR`; Microsoft warns that `flowchart` syntax is limited. Avoid HTML in labels, Font Awesome and `---->` long arrows. For a decision tree, one short question per branching node, with the recommendation, risks and next step below the diagram, not inside it. Read `references/mermaid.md` for supported diagram types and limits.
+- `<details><summary>` needs a blank line after `</summary>` and spacing after `</details>`. Markdown inside any HTML element needs a blank line after the opening tag.
+- `query-table` takes the Azure Boards query GUID, not the name or URL: `::: query-table <guid>` ... `:::`.
+- Mentions written in source use `@<{identity-guid}>`, not the alias form from the browser editor.
+- Wiki page links use the absolute form `[Text](/parent-page/child-page)`; same-page anchors use the generated heading id (`#### Team #1 : Release Wiki!` → `#team-1--release-wiki`). Repo-relative README link behaviour does not apply. Work items link as `#12345`. Attachments are editor-driven (drag, paste, paperclip); do not invent syntax.
+- Checklists (`- [x]`) work in wikis and PRs, but not inside tables.
+- KaTeX (`$...$`, `$$...$$`) is documented for PRs and wiki files only; do not extend it to READMEs or widgets without checking. JavaScript and iframes are unsupported; use links, `query-table` or HTML `<video>`.
+- Read `references/advanced-features.md` for the details of `[[_TOSP_]]`, collapsible sections, query tables, mentions, KaTeX and video.
 
-Use the quick reference directly for routine known syntax. Load the relevant reference when a platform quirk, uncertain capability, or rendering failure needs it; the routes below do not require stacked reads for every edit.
+## Code-fence languages
 
-- Draft or repair a normal wiki page -> read `references/syntax.md`
-- Check whether a feature works in Done, Widget, PR, README, or Wiki -> read `references/support-matrix.md`
-- Use wiki-only features such as `[[_TOSP_]]`, `<details>`, `query-table`, `@` mentions, KaTeX, or video embeds -> read `references/advanced-features.md`
-- Draft a proposal decision tree for a plan, rollout, ADR, or dependency discussion -> read `references/decision-trees.md` and `templates/decision-tree-proposal.md`
-- Create or debug a Mermaid diagram -> read `references/mermaid.md`
-- Pick a fenced-code language tag or alias -> read `references/code-languages.md` and optionally run `python3 scripts/find_code_language.py <query>`
-- Diagnose Azure DevOps-specific rendering surprises -> read `references/gotchas.md`
-
-## Quick Reference
-
-| Task | Use |
-| --- | --- |
-| Create a wiki TOC | `[[_TOC_]]` |
-| Create a table of subpages | `[[_TOSP_]]` |
-| Force a line break inside a paragraph | end the line with two spaces before pressing Enter |
-| Add a Mermaid diagram to a wiki page | `::: mermaid` ... `:::` |
-| Add Azure Boards query results | `::: query-table <query-guid>` ... `:::` |
-| Mention a user while editing in code | `@<{identity-guid}>` |
-| Link to another wiki page | `[Display text](/parent-page/child-page)` |
-| Force a line break in a wiki table cell | `<br/>` |
-| Verify a code-fence alias | `python3 scripts/find_code_language.py typescript` |
-
-## Reading Guide
-
-| Task | Read |
-| --- | --- |
-| Page structure, links, line breaks, tables, and standard wiki authoring | `references/syntax.md` |
-| Wiki-only features such as subpage tables, collapsible sections, query tables, mentions, KaTeX, and video embeds | `references/advanced-features.md` |
-| Proposal decision trees and rollout-plan examples | `references/decision-trees.md` |
-| Feature-by-surface support differences | `references/support-matrix.md` |
-| Supported Mermaid diagram types, syntax, and limitations | `references/mermaid.md` |
-| Safe code-fence aliases, ambiguous aliases, and local verification | `references/code-languages.md` |
-| Failure modes, symptoms, and fixes | `references/gotchas.md` |
-| Starter wiki page | `templates/wiki-page-starter.md` |
-| Starter advanced wiki page | `templates/wiki-page-advanced-starter.md` |
-| Starter proposal decision tree | `templates/decision-tree-proposal.md` |
-| Starter Mermaid snippets | `templates/mermaid-starter.md` |
-
-## Operating Rules
-
-- Treat wiki pages as the safe target for Mermaid, `[[_TOC_]]`, `[[_TOSP_]]`, `query-table`, HTML tags, table-cell `<br/>`, and collapsible `<details>` sections. Check `references/support-matrix.md` before assuming the same feature works in PRs, READMEs, widgets, or Done fields.
-- For flowchart-style Mermaid, prefer `graph TD` or `graph LR`. Microsoft documents Mermaid support but explicitly calls out `flowchart` syntax as a limitation in Azure DevOps.
-- For proposal decision trees, keep one branching question per node and put the recommendation, risks, and next step below the diagram.
-- Prefer mainstream code-fence aliases such as `bash`, `powershell`, `json`, `yml`, `ts`, `tsx`, `python`, `csharp`, `cpp`, `sql`, and `plaintext`. Use the helper script for edge cases and alias overlaps.
-- When a user edits wiki Markdown directly in source control instead of the browser editor, favor literal, documented syntax over UI-only instructions.
-- Preserve exact macros, source-code literals, and real query or identity GUIDs. Do not invent identifiers or repair code for prose style. Templates illustrate syntax and useful layouts; follow the requested page structure rather than forcing a starter's sections.
-
-## When guidance is insufficient
-
-If a limitation is stale, insufficient, or conflicts with the target, consult current Microsoft Learn documentation using its Services/Server version selector and relevant release notes. Use newly supported syntax when verified for that target and within the user's authority; an upstream Mermaid or Highlight.js feature alone does not prove Azure support. When documentation is unavailable or inconclusive, disclose the gap and use the compatible baseline or an authorized rendering check. Propose a correction to the canonical skill with the source, target version, and minimal rendering example/check. Do not browse for routine known syntax or silently modify installed copies.
-
-## Gotchas
-
-1. Azure DevOps line breaks are stricter than many Markdown renderers. Pressing Enter alone does not create an in-paragraph line break; add two trailing spaces first.
-2. Mermaid in Azure DevOps wiki pages uses `::: mermaid` blocks, not triple-backtick ```` ```mermaid ```` fences.
-3. Azure DevOps documents Mermaid support but also warns that `flowchart` syntax is limited. Convert generic Mermaid flowcharts to `graph TD` or `graph LR`.
-4. `[[_TOC_]]` and `[[_TOSP_]]` are case-sensitive, and only the first instance of each tag renders on a page.
-5. `<details><summary>` blocks need a blank line after `</summary>`, and multiple blocks need spacing after `</details>`, or the page can render incorrectly.
-6. `query-table` needs a real Azure Boards query GUID, not the query name or the full query URL.
-7. When editing in code, `@` mentions use `@<{identity-guid}>`, not the visible alias form from the browser editor.
-8. Highlight.js lists some languages as third-party packages or ambiguous aliases. Do not promise highlighting for uncommon tags until you verify them locally.
-9. KaTeX math is documented for pull requests and wiki files. Do not project that support onto README files or dashboard widgets without a separate check.
-
-## Verification
-
-- Use `python3 scripts/find_code_language.py <query>` when an uncertain language alias or overlap needs checking.
-- When maintaining this skill package (not when editing a wiki page), run `python3 scripts/validate.py .` from this skill directory.
-- For package maintenance, run `python3 scripts/test_skill.py .` to verify eval structure and cross-references locally. Neither package command proves that a user's wiki page renders.
+Azure points to Highlight.js but does not publish the exact bundle it loads. Prefer mainstream aliases (`bash`, `powershell`, `json`, `yml`, `ts`, `tsx`, `python`, `csharp`, `cpp`, `sql`, `plaintext`). Some Highlight.js languages are third-party packages and some aliases are ambiguous, so do not promise highlighting for uncommon tags until checked: `python3 scripts/find_code_language.py <query>` searches a cached copy of the upstream table offline (`--refresh` fetches the live one). Read `references/code-languages.md` for ambiguous aliases and caveats.

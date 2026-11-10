@@ -7,6 +7,7 @@ import importlib.util
 from pathlib import Path
 import sys
 import tempfile
+import unittest
 from types import ModuleType
 
 
@@ -42,7 +43,8 @@ def write_project(root: Path, agents: str, claude: str = "@AGENTS.md\n") -> None
     workflow.write_text("steps:\n  - run: ruff check\n", encoding="utf-8")
 
 
-def main() -> int:
+class ValidatorTest(unittest.TestCase):
+  def test_validator(self) -> None:
     validator = load_validator()
 
     with tempfile.TemporaryDirectory() as directory:
@@ -83,9 +85,7 @@ def main() -> int:
         assert not result["valid"]
         assert any("1200-word release ceiling" in error for error in result["errors"])
 
-    print("validate_agents_md regression tests passed")
-    return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    unittest.main()

@@ -21,7 +21,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["smoke", "planning", "prioritization"]
+      "tags": [
+        "smoke",
+        "planning",
+        "prioritization"
+      ]
     },
     {
       "id": 2,
@@ -46,7 +50,11 @@
         "evals/fixtures/null-due-date/reminder.py",
         "evals/fixtures/null-due-date/test_reminder.py"
       ],
-      "tags": ["smoke", "implementation", "autonomy"]
+      "tags": [
+        "smoke",
+        "implementation",
+        "autonomy"
+      ]
     },
     {
       "id": 3,
@@ -67,7 +75,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "explanation", "user-preference"]
+      "tags": [
+        "edge",
+        "explanation",
+        "user-preference"
+      ]
     },
     {
       "id": 4,
@@ -88,7 +100,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "continuation", "re-entry"]
+      "tags": [
+        "edge",
+        "continuation",
+        "re-entry"
+      ]
     },
     {
       "id": 5,
@@ -109,7 +125,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "estimation", "uncertainty"]
+      "tags": [
+        "edge",
+        "estimation",
+        "uncertainty"
+      ]
     },
     {
       "id": 6,
@@ -130,7 +150,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "debugging", "failure-recovery"]
+      "tags": [
+        "edge",
+        "debugging",
+        "failure-recovery"
+      ]
     },
     {
       "id": 7,
@@ -151,7 +175,11 @@
           "type": "functional"
         }
       ],
-      "tags": ["negative", "safety", "medical-boundary"]
+      "tags": [
+        "negative",
+        "safety",
+        "medical-boundary"
+      ]
     },
     {
       "id": 8,
@@ -168,7 +196,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative", "direct-answer", "scope-control"]
+      "tags": [
+        "negative",
+        "direct-answer",
+        "scope-control"
+      ]
     },
     {
       "id": 9,
@@ -185,32 +217,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["safety", "autonomy", "reminders"]
-    },
-    {
-      "id": 10,
-      "name": "loads-research-for-an-evidence-question",
-      "prompt": "Why does the adhd-friendly skill use visible progress, separated steps, and opt-in reminders? Tell me which parts are accessibility guidance, which are ADHD research, and which are just practical inference.",
-      "expected_output": "The agent reads references/research-notes.md and distinguishes W3C accessibility guidance, clinical or group-level ADHD evidence, practical agent-design inference, and personal preference.",
-      "assertions": [
-        {
-          "text": "Captured trace records a read of references/research-notes.md.",
-          "type": "disclosure"
-        },
-        {
-          "text": "Captured trace does not read unrelated package references, evals, scripts, or THIRD_PARTY_NOTICES.md.",
-          "type": "negative"
-        },
-        {
-          "text": "The response distinguishes accessibility guidance, clinical evidence, practical inference, and personal preference.",
-          "type": "functional"
-        },
-        {
-          "text": "The response does not claim that the skill is treatment or that every person with ADHD needs the defaults.",
-          "type": "negative"
-        }
-      ],
-      "tags": ["disclosure", "research", "evidence"]
+      "tags": [
+        "safety",
+        "autonomy",
+        "reminders"
+      ]
     }
   ]
 }

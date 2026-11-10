@@ -1,29 +1,33 @@
 # AGENTS.md
 
-This repository is a public source for installable agent skills.
+This repository is a public source for installable agent skills. It is the source of truth for them: change a skill here first, not in an installed copy under another skills directory.
 
 ## Conventions
 
-- Put every installable skill in `skills/<category>/<skill-name>/`, choosing the best existing primary category from `scripts/skill_catalog.py`.
+- Put every installable skill in `skills/<category>/<skill-name>/`, in the best existing category from `scripts/skill_catalog.py`. That script owns category order and package discovery; derive inventories from it, not from recursive `SKILL.md` scans.
 - Skill names are globally unique across categories. Categories organise source paths; they are not part of installation or invocation names.
-- Never put a `SKILL.md` directly in `skills/` or at category level. Nested `SKILL.md` files inside a package's eval fixtures are test data, not installable packages.
-- Treat `scripts/skill_catalog.py` as the source of truth for category order and package discovery. Update repository inventory surfaces from that helper rather than recursive `SKILL.md` scans.
-- This is a public repository used across many developer machines. Keep local and userland tooling requirements flexible: accept compatible version ranges and explicit executable overrides instead of pinning one exact Python, Node.js, Bun, or other runtime version unless compatibility truly requires it. Put deterministic exact pins at reproducible boundaries such as GitHub Actions, containers, and lockfiles, and document the distinction.
-- Treat this repository as the source of truth for existing skills. When modifying an existing skill, make the change in this repo first, not only in an installed copy under another skills directory.
-- Keep `SKILL.md` as the canonical instruction file for each skill.
-- Treat `README.md`, `AGENTS.md`, and `metadata.json` beside a skill as thin packaging wrappers, not alternate sources of truth.
-- Author outcomes, authority boundaries, and non-obvious domain knowledge. Keep exact rules for safety, standards, and tool contracts; leave implementation, aesthetics, presentation, and workflow open otherwise. Templates and numeric defaults are examples unless a consumer or user requires them.
-- Prefer evergreen guidance with a recovery route: when advice fails or a consequential fact is stale, consult installed-tool evidence and relevant official or trusted primary sources. Do not require fresh browsing when reliable evidence already resolves the task.
-- Have skills propose sourced canonical corrections or deletions when guidance loses usefulness, with an example or regression where appropriate. Do not silently rewrite installed copies or publish updates. Distinguish authored evals and structural checks from executed behavioral evidence.
-- Prefer repo-agnostic instructions. Do not hard-code a single workspace or machine path unless the user explicitly requires it.
-- When a skill creates other skills, detect whether the best destination is repo-local or global before writing files.
-- Install missing validation binaries as needed with a platform-appropriate, user-local method. Use the documented compatible version ranges and executable overrides, preserve the Ubuntu and macOS matrix, and never weaken or skip a check to compensate for missing local tooling.
+- `SKILL.md` is the only instruction file in a package. Add no README, AGENTS.md or metadata.json beside it. Name a fixture that is itself a skill `SKILL.fixture.md`, because hosts install every file named `SKILL.md` as a skill.
+- Keep each description at most 450 characters and all descriptions together under 13,000. Hosts load every description at startup, and Codex shortens and then drops skills past its budget.
+- Write what a capable model would get wrong without the skill: the outcome, what needs the user's approval, facts it would misremember, and exact rules for safety, standards and tool contracts. Leave implementation, aesthetics, presentation and workflow to the model. Templates and numeric defaults are examples unless a consumer or user requires them.
+- Give facts that can go stale a date and a source, and a recovery route: when advice fails, the skill checks the installed tool or version-matched official docs and proposes a sourced correction. A skill never rewrites an installed copy of itself.
+- Add `scripts/` only for deterministic work that is wasteful or risky to re-derive. A script that executes gets an offline standard-library `scripts/test_<name>.py`. Add no validator or test that asserts how a `SKILL.md` is worded; it proves nothing about behaviour and blocks rewording.
+- Evals under `evals/` are the behavioural specification. Authoring them, or passing structural checks, is not evidence that a model run passed; say which of the two you have.
+- Keep instructions repo-agnostic: no workspace or machine paths unless the user requires one.
+- This repository runs on many developer machines. Local tooling accepts compatible version ranges and executable overrides; exact pins belong at reproducible boundaries (GitHub Actions, lockfiles). Install a missing validation binary with a user-local method and never weaken or skip a check to compensate for one.
+
+## Adding, renaming or removing a skill
+
+A skill has three derived surfaces, and validation fails until they agree with `skills/`:
+
+- A `#### \`<name>\`` section in `README.md` under its category, with the install line, the card block and a description.
+- A 1024x576 `skill-card.png` in the package, with a scene entry in `SKILL_SCENES` in `scripts/render-skill-art.py`.
+- Every other mention of the name (README starting points, other skills that hand off to it).
+
+`python3 scripts/render-skill-art.py --readme-only` refreshes the README card blocks without network access, and `--normalize-only` strips metadata from existing cards. Generating a card calls a paid image API: it needs credentials and the user's explicit authorization, then `python3 scripts/render-skill-art.py --skill <skill-name> --force`.
 
 ## Validation
 
-### Native validation
-
-Use any compatible Python 3.11 or newer. Create a repository-local environment and install the pinned validation packages once; the canonical validator and agent hooks automatically prefer `.venv`:
+Use Python 3.11 or newer. Create the repository environment once; the validator and the agent stop gate prefer `.venv`:
 
 ```bash
 validation_python="${SKILLS_VALIDATION_PYTHON:-python3}"
@@ -35,56 +39,31 @@ python -m playwright install chromium --no-shell
 scripts/run-pnpm.sh install --frozen-lockfile
 ```
 
-Native validation also requires Bun, Node.js with `npx`, Git, `jq`, and ripgrep (`rg`). Put compatible executables on `PATH`, or select non-standard installations with `SKILLS_VALIDATION_PYTHON`, `SKILLS_VALIDATION_BUN`, `SKILLS_VALIDATION_NODE`, and `SKILLS_VALIDATION_NPX`. These userland runtimes intentionally accept compatible versions; the hosted workflow remains deterministic and currently pins Python 3.11, Node.js 24, and Bun 1.4.4. Every GitHub Action in `.github/workflows/` is pinned to an immutable commit SHA with a `# vX.Y.Z` comment recording the tag it belongs to, and `scripts/check-validation-entrypoint-parity.py` enforces the exact pinned refs; Dependabot (`.github/dependabot.yml`) proposes update PRs, so bump the SHA, its comment, and the parity-check constant together.
+Validation also needs Bun, Node.js with `npx`, Git, `jq` and ripgrep (`rg`) on `PATH`, or selected with `SKILLS_VALIDATION_PYTHON`, `SKILLS_VALIDATION_BUN`, `SKILLS_VALIDATION_NODE` and `SKILLS_VALIDATION_NPX`. On Linux, add `--with-deps` to the browser installation when system libraries are missing.
 
-The gauntlet uses the locked local skills installer and the Chromium revision belonging to the pinned Playwright package. It never downloads the latest installer during validation or discovers an arbitrary browser on `PATH`. On Linux, add `--with-deps` to the browser installation when system libraries are missing. The directional gate advances a paused clock explicitly; do not restore real-time sleeps or retry a failing fixture until it passes.
-
-Tests that execute temporary tool doubles use `scripts/executable-temp-dir.sh`. The helper probes the normal temporary filesystem and falls back to the repository filesystem when the host mounts its temporary directory with `noexec`. Set `SKILLS_EXECUTABLE_TMPDIR` to an existing writable, executable directory to select a different location explicitly.
-
-For any skill that ships scripts, run its local validators and confirm repository discovery still works:
-
-```bash
-python3 skills/<category>/<skill-name>/scripts/validate.py skills/<category>/<skill-name>
-python3 skills/<category>/<skill-name>/scripts/test_skill.py skills/<category>/<skill-name>
-npx --yes skills add . --list
-```
-
-Run the complete native repository suite before handing off a change:
+Run the whole suite before handing off a change:
 
 ```bash
 pnpm validate
 ```
 
-This is the canonical validator used by GitHub Actions, the pre-push hook, and agent stop hooks. It does not require Docker or invoke `act` recursively.
+`scripts/validate-all-skills.sh` is the one entrypoint: GitHub Actions, the pre-push hook and the agent stop gate all run it. It checks what breaks installs and hosts, not how a skill words its instructions:
 
-### Local GitHub Actions preflight
+- `scripts/validate-skills.py`: frontmatter, the description budget, stray nested `SKILL.md` files, `SKILL.md` links that are broken or leave the package, and Python that does not compile.
+- `scripts/validate-readme-skills.py` and `scripts/validate-skill-art.py`: the README catalogue and the cards.
+- Each skill's own tests. To run one skill's tests alone: `python3 -m unittest discover -s skills/<category>/<skill-name>/scripts -p 'test_*.py'`.
+- Skill files a fresh checkout would not contain (untracked, or hidden by a user-global gitignore), then `skills` installer discovery and the Codex context budget.
 
-For a higher-fidelity preflight, install [nektos/act v0.2.89 or newer](https://github.com/nektos/act/releases/tag/v0.2.89). The full matrix requires Docker and an Apple Silicon Mac:
+Browser tests use the Chromium revision that the pinned Playwright package selects, never a browser found on `PATH`, and they advance a paused clock. Do not replace that with real-time sleeps or retry a failing fixture until it passes. Tests that execute temporary tool doubles use `scripts/executable-temp-dir.sh`, which falls back to the repository filesystem when the temporary directory is mounted `noexec`; set `SKILLS_EXECUTABLE_TMPDIR` to choose another location.
 
-```bash
-pnpm validate:act
-```
+The hosted workflow is the compatibility gate. It runs `ubuntu-24.04` and `macos-15` with Python 3.11, Node.js 24 and Bun 1.4.4, and pins every GitHub Action to a commit SHA with a `# vX.Y.Z` comment. Dependabot proposes the bumps; change the SHA and its comment together.
 
-The wrapper runs Ubuntu in a pinned `linux/amd64` container, then runs the macOS job directly on the host through act's self-hosted mode. Run a single supported leg when necessary:
+## Agent stop gate
 
-```bash
-pnpm validate:act:ubuntu
-pnpm validate:act:macos
-```
-
-The Ubuntu leg requires Docker. The macOS leg requires Apple Silicon macOS plus compatible Python 3.11+, Node.js/npm/`npx`, Bun, ripgrep, and HTTPie installations. When the runtime tools are outside the normal `PATH`, set `SKILLS_ACT_MACOS_PYTHON`, `SKILLS_ACT_MACOS_NODE`, `SKILLS_ACT_MACOS_NPM`, `SKILLS_ACT_MACOS_NPX`, and `SKILLS_ACT_MACOS_BUN` to their executable paths.
-
-The wrapper isolates project and XDG act configuration, rejects an active `$HOME/.actrc`, ignores act's default environment, input, secret, and variable files, and prevents automatic GitHub-token import. The macOS leg is not sandboxed: workflow commands inherit the invoking account's filesystem, process, and environment access. Run it only for trusted worktrees on a trusted Mac; use a disposable machine or virtual machine for untrusted pull-request code.
-
-Act is a preflight, not an exact reproduction of GitHub's runners. Treat the hosted `ubuntu-24.04` and `macos-15` workflow as the authoritative compatibility gate.
-
-## Skill artwork
-
-Refresh prompt files without network access using `python3 scripts/render-skill-art.py --prompts-only`. Regenerating a card is a paid network operation and requires both credentials and explicit authorization; when approved, target it with `python3 scripts/render-skill-art.py --skill <skill-name> --force`.
+`scripts/agent-stop-checks.sh <harness>` runs the validation suite when an agent finishes with uncommitted or unpushed work, and sends the agent back with the end of the log when it fails. Each harness config (`.claude/settings.json`, `.codex/hooks.json`, `.devin/hooks.v1.json`, `.opencode/hook/hooks.md`, `.amp/plugins/repository-hooks.ts`) holds only the adapter that calls it. Put new policy in the script or the validator, not in an adapter.
 
 ## Amp orb lifecycle
 
-- `.agents/setup` prepares a new orb with required system tools, the pinned Playwright Chromium revision, the Python validation environment, locked Node dependencies, repository skills, and Gemini CLI skill links.
-- `.agents/resume` is intentionally lighter: it rechecks the repository skill links when a warm orb resumes.
-- `.amp/plugins/repository-hooks.ts` records the repository baseline on Amp `session.start` and runs the shared stop checker on successful `agent.end`. There is intentionally no second `SessionEnd` gate.
-- Changes to `.agents/setup` apply to future orbs only after they are published on the repository's default branch. Do not claim that publication, deployment, pushes, or CI occurred unless verified separately.
+- `.agents/setup` prepares a new orb: system tools, the Python validation environment, the pinned Chromium revision, locked Node dependencies, the repository skills installed into Amp, and Gemini CLI skill links.
+- `.agents/resume` only rechecks the skill links when a warm orb resumes.
+- A change to `.agents/setup` reaches future orbs only after it is on the default branch.

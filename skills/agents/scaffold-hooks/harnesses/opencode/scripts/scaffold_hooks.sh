@@ -384,7 +384,6 @@ bun "$SCRIPT_DIR/render_froggy_hooks.ts" \
 
 jq '.' "$PLAN_FILE" > "$PLAN_SNAPSHOT_FILE"
 
-SKILL_VERSION="$(jq -r '.version // "unknown"' "$UNIVERSAL_SKILL_ROOT/metadata.json" 2>/dev/null || printf 'unknown')"
 SOURCE_REPOSITORY="$(git_source_field "$UNIVERSAL_SKILL_ROOT" repository)"
 SOURCE_COMMIT="$(git_source_field "$UNIVERSAL_SKILL_ROOT" commit)"
 SOURCE_DIRTY="$(git_source_field "$UNIVERSAL_SKILL_ROOT" dirty)"
@@ -399,7 +398,6 @@ jq -n \
     --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
     --arg scope "$SCOPE" \
     --arg mode "$MODE" \
-    --arg skill_version "$SKILL_VERSION" \
     --arg source_repository "$SOURCE_REPOSITORY" \
     --arg source_commit "$SOURCE_COMMIT" \
     --argjson source_dirty "$SOURCE_DIRTY" \
@@ -424,7 +422,6 @@ jq -n \
             skill_name: "scaffold-hooks",
             harness: "opencode",
             integration: "opencode-froggy",
-            skill_version: $skill_version,
             source: {
                 repository: (if $source_repository == "" then null else $source_repository end),
                 commit: (if $source_commit == "" then null else $source_commit end),

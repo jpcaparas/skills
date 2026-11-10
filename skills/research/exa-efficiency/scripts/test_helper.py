@@ -2,7 +2,7 @@
 """Offline tests for exa_cost.py.
 
 Expected dollar figures are the costDollars.total values Exa returned for the same
-request bodies in the 2026-10-27 live spike (references/evidence.md), not values read
+request bodies in the 2026-10-27 live spike, not values read
 back from the script, so a pricing or default-handling regression fails here.
 Nothing here touches the network or reads EXA_API_KEY.
 """

@@ -21,7 +21,10 @@
           "type": "verification"
         }
       ],
-      "tags": ["smoke", "daily"]
+      "tags": [
+        "smoke",
+        "daily"
+      ]
     },
     {
       "id": 2,
@@ -42,7 +45,10 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "commands"]
+      "tags": [
+        "edge",
+        "commands"
+      ]
     },
     {
       "id": 3,
@@ -63,7 +69,11 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "daily", "safety"]
+      "tags": [
+        "edge",
+        "daily",
+        "safety"
+      ]
     },
     {
       "id": 4,
@@ -84,13 +94,17 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative", "secrets", "safety"]
+      "tags": [
+        "negative",
+        "secrets",
+        "safety"
+      ]
     },
     {
       "id": 5,
       "name": "machine-specific-template-loads-template-branch",
       "prompt": "My personal Mac and work Ubuntu laptop need different Git email addresses, but I want one chezmoi-managed ~/.gitconfig. Set up the right model and show how to test it before apply.",
-      "expected_output": "The response loads the template/machine references, keeps email as machine-local data, uses a .tmpl source with deliberate data keys, tests with data/execute-template/cat, and previews both machine classes without loading unrelated destructive-recovery detail.",
+      "expected_output": "The response keeps email as machine-local data, uses a .tmpl source with deliberate data keys, tests with data/execute-template/cat, and previews both machine classes without bringing in unrelated destructive-recovery steps.",
       "assertions": [
         {
           "text": "Response exhibits setup/template branch guidance by keeping email in machine-local data and testing a shared template before apply",
@@ -105,13 +119,17 @@
           "type": "functional"
         }
       ],
-      "tags": ["disclosure", "templates", "setup"]
+      "tags": [
+        "disclosure",
+        "templates",
+        "setup"
+      ]
     },
     {
       "id": 6,
       "name": "persistent-lock-loads-recovery-branch",
       "prompt": "chezmoi says 'timeout obtaining persistent state lock' whenever I apply. Can I just delete ~/.config/chezmoi/chezmoistate.boltdb?",
-      "expected_output": "The response loads recovery guidance, identifies another process or recursive run script first, distinguishes read and write locks, and does not delete the state database without official recovery evidence and a backup.",
+      "expected_output": "The response identifies another process or recursive run script first, distinguishes read and write locks, and does not delete the state database without official recovery evidence and a backup.",
       "assertions": [
         {
           "text": "Response exhibits recovery-branch guidance by identifying lock ownership and recursive run scripts before changing state",
@@ -130,13 +148,17 @@
           "type": "negative"
         }
       ],
-      "tags": ["disclosure", "recovery", "edge"]
+      "tags": [
+        "disclosure",
+        "recovery",
+        "edge"
+      ]
     },
     {
       "id": 7,
       "name": "official-doc-refresh-is-preview-first",
       "prompt": "From this skills repository root, refresh the better-chezmoi official documentation snapshot and tell me what changed before replacing the bundled corpus.",
-      "expected_output": "The response loads official-documentation guidance, runs refresh without --write, reports page-level added/changed/removed/unchanged results, and leaves the existing corpus unchanged until the user requests publication.",
+      "expected_output": "The response runs refresh without --write, reports page-level added/changed/removed/unchanged results, and leaves the existing corpus unchanged until the user requests publication.",
       "assertions": [
         {
           "text": "Response exhibits documentation-refresh branch guidance by using the packaged preview mode and reporting corpus-level changes",
@@ -151,7 +173,11 @@
           "type": "verification"
         }
       ],
-      "tags": ["smoke", "disclosure", "scraping"]
+      "tags": [
+        "smoke",
+        "disclosure",
+        "scraping"
+      ]
     },
     {
       "id": 8,
@@ -172,7 +198,11 @@
           "type": "verification"
         }
       ],
-      "tags": ["edge", "recovery", "safety"]
+      "tags": [
+        "edge",
+        "recovery",
+        "safety"
+      ]
     },
     {
       "id": 9,
@@ -185,7 +215,9 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     }
   ]
 }

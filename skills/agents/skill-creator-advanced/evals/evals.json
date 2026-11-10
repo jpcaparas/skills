@@ -10,7 +10,7 @@
       "files": [
         "evals/files/subscription-repo/POLICY.md",
         "evals/files/subscription-repo/docs/orbit-subscriptions-contract.md",
-        "evals/files/subscription-repo/skills/existing-helper/SKILL.md"
+        "evals/files/subscription-repo/skills/existing-helper/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Captured trace records the repository policy and 2026-06-30 contract reads before the first write", "type": "disclosure"},
@@ -28,7 +28,7 @@
       "prompt": "Improve the attached release-helper skill. It has setup, incident diagnosis, and publishing paths, but everything is mixed together and the README repeats the runbook. Preserve useful behavior, make each branch predictable, and keep diagnosis queries from loading setup or publishing instructions.",
       "expected_output": "An in-place improvement based on a complete package inventory. Shared rules remain inline, branch-only content uses condition-and-purpose pointers, vague steps gain completion criteria, the README becomes a thin wrapper, and every old behavior is accounted for.",
       "files": [
-        "evals/files/overgrown-skill/SKILL.md",
+        "evals/files/overgrown-skill/SKILL.fixture.md",
         "evals/files/overgrown-skill/README.md",
         "evals/files/overgrown-skill/evals/evals.json",
         "evals/files/overgrown-skill/references/setup.md",
@@ -105,7 +105,7 @@
       "name": "invocation-contract-with-expected-trigger-outcomes",
       "prompt": "Using the attached release-helper frontmatter, rewrite only the invocation description and return a three-row trigger matrix. The real branches are release setup, failed-release diagnosis, and authorized publishing. Include one direct positive, one implicit positive, and one adjacent UI-deployment near-miss, with the expected invoke or do-not-invoke result for each. Do not edit the body or package eval files.",
       "expected_output": "A compact description that front-loads release operations and represents each branch once, plus an explicit trigger matrix: direct and implicit release requests invoke the skill, while UI-only deployment work does not.",
-      "files": ["evals/files/overgrown-skill/SKILL.md"],
+      "files": ["evals/files/overgrown-skill/SKILL.fixture.md"],
       "assertions": [
         {"text": "Represents setup, diagnosis, and authorized publishing once each without synonym piles", "type": "functional"},
         {"text": "The direct release-setup prompt has the expected outcome invoke", "type": "verification"},
@@ -126,10 +126,10 @@
         "evals/files/library-repo/registry.json",
         "evals/files/library-repo/discovery-before.txt",
         "evals/files/tools/list_published_skills.py",
-        "evals/files/library-repo/skills/stable/changelog-writer/SKILL.md",
+        "evals/files/library-repo/skills/stable/changelog-writer/SKILL.fixture.md",
         "evals/files/library-repo/skills/stable/changelog-writer/evals/evals.json",
-        "evals/files/library-repo/skills/stable/release-publisher/SKILL.md",
-        "evals/files/library-repo/skills/stable/skill-map/SKILL.md"
+        "evals/files/library-repo/skills/stable/release-publisher/SKILL.fixture.md",
+        "evals/files/library-repo/skills/stable/skill-map/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Captured trace records a read of the attached lifecycle and publication contract before the first write", "type": "disclosure"},
@@ -146,7 +146,7 @@
       "prompt": "Improve the attached provider-api-helper after a user reports that its project curl example omitted authentication. The attached canonical gotcha already says every provider API example needs auth, while ORBIT_TOKEN is provider-specific. Fix the target package, strengthen its regression eval, and decide whether the creator needs any new reusable rule.",
       "expected_output": "The curl example is fixed with the provider's auth header, ORBIT_TOKEN remains local, the existing general rule is not duplicated, and the package eval gains a regression assertion that catches any unauthenticated provider curl example. No creator mutation or dated marker is added.",
       "files": [
-        "evals/files/provider-api-helper/SKILL.md",
+        "evals/files/provider-api-helper/SKILL.fixture.md",
         "evals/files/provider-api-helper/references/gotchas.md",
         "evals/files/provider-api-helper/evals/evals.json"
       ],
@@ -167,7 +167,7 @@
       "files": [
         "evals/files/unrelated-repo/AGENTS.md",
         "evals/files/unrelated-repo/scripts/validate_skill.py",
-        "evals/files/unrelated-repo/.agents/skills/log-analyzer/SKILL.md",
+        "evals/files/unrelated-repo/.agents/skills/log-analyzer/SKILL.fixture.md",
         "evals/files/unrelated-repo/.agents/skills/log-analyzer/scripts/parse_logs.py",
         "evals/files/unrelated-repo/.agents/skills/log-analyzer/evals/evals.json",
         "evals/files/unrelated-repo/.agents/skills/log-analyzer/evals/files/sample.ndjson"
@@ -190,7 +190,7 @@
         "evals/files/harness-docs/portable-skill-contract.md",
         "evals/files/harness-docs/manual-harness-contract.md",
         "evals/files/harness-docs/router-contract.md",
-        "evals/files/harness-docs/review-helper/SKILL.md"
+        "evals/files/harness-docs/review-helper/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Keeps only name and description frontmatter in the portable review-helper package", "type": "structural"},
@@ -208,7 +208,7 @@
       "prompt": "Audit the attached half-finished-skill scaffold for release. It still contains TODOs, its eval set is empty, and its script exits as a placeholder. Explain the lifecycle state, make the attached package release-ready, and prove that the original draft fails strict validation.",
       "expected_output": "Classifies the original as a draft, shows strict validation rejecting its instruction debt and empty evals, separately identifies the placeholder script through behavioral inspection, implements the attached read-only checker contract, and only then reports a release pass.",
       "files": [
-        "evals/files/half-finished-skill/SKILL.md",
+        "evals/files/half-finished-skill/SKILL.fixture.md",
         "evals/files/half-finished-skill/evals/evals.json",
         "evals/files/half-finished-skill/scripts/check.py",
         "evals/files/half-finished-skill/requirements.md"
@@ -258,7 +258,7 @@
       "expected_output": "A complete installable CLI skill at skills/orbitctl-deployments in the run-local repository copy. It contains a version-scoped command contract, condition-and-purpose routing, meaningful behavioral and invocation evals, safe verification evidence, and a passing release gate. It marks PowerShell and live deployment unverified.",
       "files": [
         "evals/files/cli-repo/POLICY.md",
-        "evals/files/cli-repo/skills/existing-helper/SKILL.md",
+        "evals/files/cli-repo/skills/existing-helper/SKILL.fixture.md",
         "evals/files/cli-research/orbitctl-version.txt",
         "evals/files/cli-research/orbitctl-help.txt",
         "evals/files/cli-research/orbitctl-deploy-help.txt",
@@ -286,12 +286,12 @@
         "evals/files/merge-library/CATALOG.md",
         "evals/files/merge-library/registry.json",
         "evals/files/tools/list_published_skills.py",
-        "evals/files/merge-library/skills/stable/release-notes/SKILL.md",
+        "evals/files/merge-library/skills/stable/release-notes/SKILL.fixture.md",
         "evals/files/merge-library/skills/stable/release-notes/evals/evals.json",
-        "evals/files/merge-library/skills/stable/changelog-helper/SKILL.md",
+        "evals/files/merge-library/skills/stable/changelog-helper/SKILL.fixture.md",
         "evals/files/merge-library/skills/stable/changelog-helper/evals/evals.json",
-        "evals/files/merge-library/skills/stable/release-publisher/SKILL.md",
-        "evals/files/merge-library/skills/stable/skill-map/SKILL.md"
+        "evals/files/merge-library/skills/stable/release-publisher/SKILL.fixture.md",
+        "evals/files/merge-library/skills/stable/skill-map/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Chooses merge because both attached skills own the same invocation and substantially the same process", "type": "verification"},
@@ -309,8 +309,8 @@
       "expected_output": "Chooses composition: preserve two independently reachable owners, keep one canonical release-context reference under the repository's policy, and add condition-and-purpose pointers from each consumer. It rejects both a trigger-competing merge and duplicated shared rules.",
       "files": [
         "evals/files/compose-library/POLICY.md",
-        "evals/files/compose-library/skills/stable/incident-diagnoser/SKILL.md",
-        "evals/files/compose-library/skills/stable/release-publisher/SKILL.md",
+        "evals/files/compose-library/skills/stable/incident-diagnoser/SKILL.fixture.md",
+        "evals/files/compose-library/skills/stable/release-publisher/SKILL.fixture.md",
         "evals/files/compose-library/references/release-context.md"
       ],
       "assertions": [
@@ -333,9 +333,9 @@
         "evals/files/promotion-library/registry.json",
         "evals/files/promotion-library/validation-before.txt",
         "evals/files/tools/list_published_skills.py",
-        "evals/files/promotion-library/skills/lab/package-auditor/SKILL.md",
+        "evals/files/promotion-library/skills/lab/package-auditor/SKILL.fixture.md",
         "evals/files/promotion-library/skills/lab/package-auditor/evals/evals.json",
-        "evals/files/promotion-library/skills/stable/skill-map/SKILL.md"
+        "evals/files/promotion-library/skills/stable/skill-map/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Builds an affected-surface ledger before applying the lifecycle transition", "type": "verification"},
@@ -357,10 +357,10 @@
         "evals/files/retirement-library/registry.json",
         "evals/files/retirement-library/reference-scan-before.txt",
         "evals/files/tools/list_published_skills.py",
-        "evals/files/retirement-library/skills/stable/old-lint/SKILL.md",
-        "evals/files/retirement-library/skills/stable/code-review/SKILL.md",
-        "evals/files/retirement-library/skills/stable/quality-gate/SKILL.md",
-        "evals/files/retirement-library/skills/stable/skill-map/SKILL.md"
+        "evals/files/retirement-library/skills/stable/old-lint/SKILL.fixture.md",
+        "evals/files/retirement-library/skills/stable/code-review/SKILL.fixture.md",
+        "evals/files/retirement-library/skills/stable/quality-gate/SKILL.fixture.md",
+        "evals/files/retirement-library/skills/stable/skill-map/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Migrates quality-gate from old-lint to code-review before changing old-lint's lifecycle state", "type": "functional"},
@@ -383,9 +383,9 @@
         "evals/files/removal-library/registry.json",
         "evals/files/removal-library/dependency-scan.txt",
         "evals/files/tools/list_published_skills.py",
-        "evals/files/removal-library/skills/retired/legacy-notifier/SKILL.md",
-        "evals/files/removal-library/skills/stable/notification-auditor/SKILL.md",
-        "evals/files/removal-library/skills/stable/skill-map/SKILL.md"
+        "evals/files/removal-library/skills/retired/legacy-notifier/SKILL.fixture.md",
+        "evals/files/removal-library/skills/stable/notification-auditor/SKILL.fixture.md",
+        "evals/files/removal-library/skills/stable/skill-map/SKILL.fixture.md"
       ],
       "assertions": [
         {"text": "Confirms the two-release age and zero active dependent evidence before deletion", "type": "verification"},
@@ -402,7 +402,7 @@
       "prompt": "Add one diagnosis-branch disclosure eval to the attached release-helper eval suite. The case should cover a release command failing with exit 8 after artifact upload. This is an authoring task: do not diagnose the incident, change setup, or publish anything.",
       "expected_output": "Adds a realistic behavioral eval whose positive disclosure assertion reads the diagnosis reference and whose paired negative assertions exclude setup and publishing references. It changes the eval contract only and does not execute the operational branch.",
       "files": [
-        "evals/files/overgrown-skill/SKILL.md",
+        "evals/files/overgrown-skill/SKILL.fixture.md",
         "evals/files/overgrown-skill/evals/evals.json",
         "evals/files/overgrown-skill/references/setup.md",
         "evals/files/overgrown-skill/references/diagnosis.md",
@@ -422,7 +422,7 @@
       "prompt": "Add one setup-branch disclosure eval to the attached release-helper eval suite. The case should cover configuring a fresh checkout with the existing registry and credential mechanism. This is an authoring task: do not configure a real checkout or publish anything.",
       "expected_output": "Adds a realistic behavioral eval whose positive disclosure assertion reads the setup reference and whose paired negative assertions exclude diagnosis and publishing references. It changes the eval contract only and does not execute setup.",
       "files": [
-        "evals/files/overgrown-skill/SKILL.md",
+        "evals/files/overgrown-skill/SKILL.fixture.md",
         "evals/files/overgrown-skill/evals/evals.json",
         "evals/files/overgrown-skill/references/setup.md",
         "evals/files/overgrown-skill/references/diagnosis.md",

@@ -1,148 +1,34 @@
 ---
 name: travel-plan-spreadsheet-generator
-description: "Create .xlsx travel workbooks with itinerary, preparation, or shopping sheets for trip, holiday, or conference planning. Skip prose itineraries, recommendation chat, and calendar-only scheduling."
-compatibility: "Requires: python3 with openpyxl. Optional: @oai/artifact-tool or an equivalent spreadsheet renderer for visual verification."
-references:
-  - workbook-spec
-  - intake-protocol
-  - research-policy
-  - trip-model
-  - mapping-rules
-  - gotchas
-  - cross-harness-notes
+description: "Builds an editable .xlsx travel workbook (bookings, daily plan, options, prep, pack and buy lists, sources) from messy trip inputs such as PDFs, screenshots or booking notes. Not for prose itineraries, recommendation chat or calendar-only scheduling."
+compatibility: "Requires python3 with openpyxl. Optional - a spreadsheet renderer (for example @oai/artifact-tool) for a visual check."
 ---
 
-# travel-plan-spreadsheet-generator
+# Travel plan workbook
 
-Turn messy travel inputs into a calm, editable `.xlsx` workbook with deterministic structure and pragmatic trip-planning judgment.
+The layout is deterministic and lives in code; the planning judgment is yours. Never improvise sheet order, merges, widths, formulas, validations or styling by hand: build with the script. If the user wants a layout or feature the builder does not support, say so and propose a scoped extension; do not invent flags or claim the validator certifies a different shape.
 
-## Decision Tree
+Read first, ask second. Extract everything from the user's PDFs, screenshots, notes and bookings before asking anything, and if the harness offers a spreadsheet skill, load it before spreadsheet work.
 
-What did the user actually ask for?
+## Workflow
 
-- The user wants an editable workbook, spreadsheet, tracker, or `.xlsx`
-  Use this skill.
+1. Extract facts, then split what is missing into blockers and non-blockers. Blockers make the workbook materially wrong: no usable dates, no destination or base, no way to determine the traveller set when booking coverage depends on it, a route or commitment conflict that makes the daily plan nonsense, a missing departure or return boundary. Ask for blockers in one short batch, stating what you already inferred so the user can correct it. Do not re-ask answered questions, and do not guess a critical fact to avoid asking. Follow up later only for a materially new safety or correctness issue (e.g. a transit visa that appears mid-research). Budgets, restaurant choices, flexible-day lean and per-person attraction coverage are not blockers: proceed with explicit assumptions and visible review flags.
+2. Verify volatile facts that affect this trip (see Research), then build the trip model as JSON following `templates/trip_model_schema.json`, with assumptions, sources, review flags and shopping objectives recorded. Read `references/trip-model.md` for fields and normalisation.
+3. Build: `python3 scripts/build_workbook.py --trip-model model.json [--output path.xlsx]`. `scripts/example_trip_model.json` is a complete sample.
+4. Validate: `python3 scripts/validate_workbook.py out.xlsx --trip-model model.json`. Use a renderer for a visual pass if one exists; otherwise `python3 scripts/render_check.py out.xlsx` flags likely clipping and spillover.
+5. Hand over the workbook with a short summary of open flags, assumptions and what the user still has to confirm.
 
-- The user gave PDFs, screenshots, notes, bookings, shopping asks, or conference constraints
-  Extract everything you can first. Do not ask questions that the attachments already answer.
+Read `references/workbook-spec.md` for the exact sheet architecture, filename rule and formulas, and `references/mapping-rules.md` for what belongs on which sheet.
 
-- The request is missing material facts that would make the workbook wrong
-  Consolidate known blockers into a short intake batch. Follow up if materially new safety or correctness issues emerge; do not reinterview answered context. Read `references/intake-protocol.md`.
+## Planning judgment
 
-- The request has non-blocking ambiguity
-  Proceed with explicit assumptions and visible review flags. Do not stop the build just to perfect every detail.
+- Assume the whole group travels together unless evidence says otherwise. When only part of the group is booked, build split fallbacks and flags rather than pretending coverage exists.
+- Never silently flatten contradictions (hotel says 3 adults but plan assumes 4, flight covers 2 travellers, tickets cover part of the group, pasted weekdays from another year). Make them review flags, repeated in Overview, Bookings, Prep & Compliance and the Daily Plan when they change the day.
+- Shopping stays visible in the Daily Plan, the destination options bank and the Buy List, not buried in a notes field. Pack List is what physically travels; Buy List is what is still to be bought or watched.
+- Keep days geographically sane: one or two neighbourhood clusters a day, light arrival and return days, no cross-city zig-zags.
+- Prep & Compliance holds only tasks that matter for this route, passports, medicines and commitments. No generic health scares or filler admin.
+- The architecture is general; adapt destination-specific text and status labels instead of assuming Tokyo.
 
-- The user only wants prose, lightweight recommendations, or a casual itinerary chat
-  Do not use this skill as the primary tool.
+## Research
 
-- The harness offers a spreadsheet skill or equivalent local guidance
-  Discover and load it through the harness before spreadsheet work, then apply this skill's workbook-specific contract. Do not assume a machine-specific installation path.
-
-## Quick Reference
-
-| Need | Read or run | Why |
-| --- | --- | --- |
-| Consolidated intake and material follow-ups | `references/intake-protocol.md` | Avoid both repeated questioning and unsafe guesses |
-| Deterministic workbook contract | `references/workbook-spec.md` | Sheet order, widths, merges, formulas, palette |
-| Canonical trip model fields | `references/trip-model.md` | Build the internal model before writing cells |
-| Field-to-sheet mapping | `references/mapping-rules.md` | Keep Pack vs Buy vs Prep clean |
-| Volatile travel research rules | `references/research-policy.md` | Verify visas, transit, medicine, conference dates, and other unstable facts |
-| Build the workbook | `python3 scripts/build_workbook.py --trip-model /path/to/model.json` | Generate the `.xlsx` artifact |
-| Validate the workbook | `python3 scripts/validate_workbook.py /path/to/output.xlsx --trip-model /path/to/model.json` | Check structure, formulas, validations, and row patterns |
-| Visual-risk scan | `python3 scripts/render_check.py /path/to/output.xlsx` | Catch likely clipping or spillover when a renderer is unavailable |
-| Review packaging and sample build | `python3 scripts/test_skill.py /path/to/skill` | Run the local functional smoke test |
-
-## Operating Rules
-
-1. Start with extraction, not interrogation. Read the user's PDFs, screenshots, pasted notes, flight details, hotel confirmations, shopping asks, and fixed commitments before asking anything.
-2. Separate blockers from non-blockers. Consolidate known missing essentials, then follow up only for materially new safety or correctness issues. Never guess a critical fact to meet a question limit or re-ask answered questions.
-3. Build a canonical trip model before touching the workbook. Use `templates/trip_model_schema.json` and `references/trip-model.md`.
-4. Keep the deterministic and heuristic layers separate:
-   - Use `scripts/build_workbook.py` for filename strategy, sheet order, merges, widths, formulas, validations, fills, fonts, borders, and fixed row patterns.
-   - Use judgment for extracting messy facts, reconciling contradictions, deciding pace, keeping shopping visible, pruning absurd plans, and deciding when split plans are required.
-5. Default to the whole group staying together unless the evidence clearly says otherwise. When only part of the group is booked, create split fallbacks and visible review flags instead of pretending coverage exists.
-6. Keep shopping visible across the workbook. It belongs in Daily Plan, the destination options bank, and Buy List when relevant.
-7. Research only what matters for this trip. Verify future or current entry rules, transit constraints, medicine rules, airline check-in windows, and event dates from official sources when they materially affect the plan.
-8. Do not silently flatten contradictions. A mismatch between traveller count and booking coverage must surface in Overview, Bookings, Prep & Compliance, and the Daily Plan when it changes the day's shape.
-9. Treat the workbook as the deliverable. After building it, run `scripts/validate_workbook.py`. If a renderer such as `@oai/artifact-tool` is available, do a visual pass before hand-off.
-
-## Intake Protocol
-
-Ask nothing if the message and attachments already cover the essentials.
-
-If a clarification batch is necessary, keep it short. These optional groupings may help; rename them or omit empty groups:
-
-```text
-Required to proceed
-- ...
-
-Useful but optional
-- ...
-
-Documents or screenshots that would improve accuracy
-- ...
-```
-
-Cover these only when relevant and still missing: trip name or destination, start/end dates, departure and final home arrival, cities or bases, traveller list and roles, passport nationalities when immigration matters, flights and transit, accommodation, fixed bookings, conference or family commitments, budget sensitivity, pace, mobility constraints, dietary constraints, shopping goals and requesters, group split patterns, pre-departure and recovery-day preference, official prep tasks, and preferred output filename.
-
-Read `references/intake-protocol.md` for the full checklist, blocker logic, and wording rules.
-
-## Build Workflow
-
-1. Extract facts from the user's files and notes.
-2. Consolidate known blockers into an intake batch if needed; revisit only materially new safety or correctness issues as evidence arrives.
-3. Build the canonical trip model and record assumptions, sources, review flags, and shopping objectives explicitly.
-4. Verify volatile facts that matter. Read `references/research-policy.md`.
-5. Run `scripts/build_workbook.py` to generate the workbook.
-6. Run `scripts/validate_workbook.py` on the generated `.xlsx`.
-7. If `@oai/artifact-tool` or another renderer is available, render each sheet for a quick visual check. Otherwise run `scripts/render_check.py` for a structural visual-risk pass.
-8. Hand over the workbook with a short summary of open flags, assumptions, and anything the user still needs to confirm.
-
-## Deterministic vs Heuristic Boundary
-
-| Deterministic builder responsibilities | Heuristic planner responsibilities |
-| --- | --- |
-| Workbook filename strategy | Extract facts from messy PDFs, screenshots, and notes |
-| Sheet order and naming | Decide when contradictory evidence becomes a blocker |
-| Merged ranges, widths, row heights, fills, borders, fonts | Reconcile conflicting traveller counts or date references |
-| Column headers and validation lists | Choose realistic neighbourhood clusters and fallbacks |
-| Formula generation and cross-sheet references | Protect conference or work anchors without wrecking the family plan |
-| Status vocab and chip styling | Decide when split plans are necessary because coverage is partial |
-| Source logging structure | Decide what belongs in Prep vs Pack vs Buy |
-| One-day-before and one-day-after planner window | Prune absurd routes, overpacked days, or cross-city zig-zags |
-
-Do not improvise the deterministic layer in prose. Use the builder script.
-
-If the requested workbook needs layout, styling, or features outside the supported builder contract, explain the limitation and choose a suitable alternative workflow or propose a scoped extension. Do not invent customization flags or claim the standard validator certifies a different workbook shape.
-
-## Sources and maintenance
-
-Keep the trip model, dates, formulas, coverage flags, and builder/validator contract stable. Continue the required official-source checks for material volatile travel facts. When skill or runtime guidance is insufficient, stale, or conflicting, consult relevant official documentation or trusted primary sources rather than browsing routinely. Report unresolved limits and propose a sourced correction with a sample trip model or regression case. Edit the canonical skill only when maintenance is in scope, never silently update an installed copy.
-
-## Reading Guide
-
-| Task | Read |
-| --- | --- |
-| Exact workbook architecture, merges, counters, naming rules | `references/workbook-spec.md` |
-| Intake questions, blockers, and material follow-ups | `references/intake-protocol.md` |
-| Source verification, official-source priority, and what to research | `references/research-policy.md` |
-| Canonical model fields and normalization rules | `references/trip-model.md` |
-| Sheet-mapping and categorization rules | `references/mapping-rules.md` |
-| Failure modes and anti-patterns | `references/gotchas.md` |
-| Portability and spreadsheet-runtime notes | `references/cross-harness-notes.md` |
-
-## Gotchas
-
-1. Avoid drip-fed questions by extracting first and consolidating known blockers. New safety or correctness issues justify follow-up; non-blockers can use explicit assumptions and review flags.
-2. Do not bury shopping in a note field. If shopping matters, surface it in Daily Plan, the options bank, and Buy List.
-3. Do not turn Pack List into Buy List. Pack is what physically travels. Buy is the purchase tracker.
-4. Do not silently accept partial coverage. When flights, hotel rooms, or attraction tickets cover fewer people than the plan assumes, keep the mismatch visible.
-5. Do not over-research. Only add prep or compliance tasks that actually matter for this route, these passports, these medicines, and these commitments.
-
-## Helper Files
-
-- `scripts/build_workbook.py` builds the workbook from a canonical model.
-- `scripts/validate_workbook.py` checks structure, formulas, data validations, widths, merges, and Daily Plan row patterns.
-- `scripts/render_check.py` performs a lightweight visual-risk scan when a richer renderer is unavailable.
-- `templates/trip_model_schema.json` defines the canonical trip-model contract.
-- `templates/workbook_template_spec.yaml` mirrors the deterministic layout contract for human review.
+For current or future trips, verify what the plan depends on: visa and entry rules by passport, transit requirements, customs or immigration tooling, airline check-in windows, baggage and dangerous-goods rules (medicines, batteries, power banks), health guidance, medicine import rules, and conference or event dates. Use official sources first (government, border, airline, official event and venue pages); a secondary source only points you to the official one. Use exact dates in notes, and load `temporal-awareness` if available. Every source that influenced the workbook goes in the Sources sheet with type, name, plain-text URL or file note, what it was used for, last-checked date and a practical note.

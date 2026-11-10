@@ -111,18 +111,5 @@ timeline
 | Diagram is hard to review | Nodes contain paragraphs or multiple decisions | Keep node text short and move explanation below the diagram. |
 | Entity relationship or timeline example fails in an older environment | Feature level mismatch | Check the Azure DevOps platform or server version before assuming newer support exists. |
 
-## Routing Rules
 
-- If the user needs a whole page and its syntax is uncertain, consult `references/syntax.md`.
-- If the user needs a proposal or planning decision tree, read `references/decision-trees.md`.
-- If the user is unsure whether Mermaid belongs on this surface at all, read `references/support-matrix.md`.
-- If the user wants a Mermaid-like code fence language tag, correct them: Mermaid is not a Highlight.js language alias in Azure DevOps wiki docs. Read `references/code-languages.md`.
-
-## See Also
-
-- `references/syntax.md`
-- `references/decision-trees.md`
-- `references/support-matrix.md`
-- `references/code-languages.md`
-- `references/gotchas.md`
-- `templates/mermaid-starter.md`
+- Mermaid is not a Highlight.js language alias in Azure DevOps wiki docs; do not offer it as a code-fence language tag.

@@ -1,76 +1,12 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "hooks": [
-          {
-            "type": "prompt",
-            "prompt": "You are a pre-flight check for a coding assistant. Your only job is to decide whether the user's prompt has genuine ambiguity that needs clarification before work begins.\n\nThe hook input JSON is in $ARGUMENTS. Read the `prompt` field - that is what the user just submitted. Ignore everything else.\n\nReturn {\"ok\": true} unless blocking is clearly warranted.\n\nBlock with {\"ok\": false, \"reason\": \"<instructions for Claude>\"} ONLY when the prompt has at least one of these:\n- Unclear scope (which files, which modules, which layer of the stack)\n- Pronouns or demonstratives with no referent (\"fix it\", \"update that\", \"the thing we talked about\")\n- A verb with multiple plausible interpretations that would lead to different code (\"refactor\", \"clean up\", \"optimize\" without a target)\n- Missing critical technical context (target version, environment, API, framework)\n- Vague quantifiers that would change the work significantly (\"a few\", \"most\", \"the rest\")\n- Conflicting or contradictory requirements\n- A destructive action described without a clear target\n\nDo NOT block for:\n- Questions (not action requests)\n- Short prompts with obvious intent in context\n- Continuations of an ongoing exchange\n- Prompts that explicitly say \"use your judgment\" or similar\n- Cosmetic vagueness like casual phrasing\n\nWhen blocking, the reason field must:\n- Start with \"Before starting work, ask the user clarifying questions:\"\n- List 2 to 4 specific questions, one per line\n- Be under 200 words total\n\nErr toward proceeding. Block only when there is real risk of doing the wrong thing.",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "SessionStart": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/session-start/claude.sh",
-            "async": false,
-            "timeout": 20
-          }
-        ],
-        "matcher": "startup|resume"
-      }
-    ],
-    "PreToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/pre-tool-use/claude.sh",
-            "async": false,
-            "timeout": 30
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit"
-      }
-    ],
-    "PostToolUse": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/post-tool-use/claude.sh",
-            "async": true,
-            "timeout": 180
-          }
-        ],
-        "matcher": "Edit|Write|MultiEdit"
-      }
-    ],
-    "Notification": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/notification/claude.sh",
-            "async": true,
-            "timeout": 15
-          }
-        ],
-        "matcher": ""
-      }
-    ],
     "Stop": [
       {
         "hooks": [
           {
             "type": "command",
-            "command": "\"$CLAUDE_PROJECT_DIR\"/hooks/stop/claude.sh",
-            "async": false,
-            "timeout": 300
+            "command": "\"$CLAUDE_PROJECT_DIR\"/scripts/agent-stop-checks.sh claude",
+            "timeout": 900
           }
         ]
       }

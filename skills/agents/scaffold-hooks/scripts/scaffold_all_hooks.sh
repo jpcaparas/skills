@@ -482,7 +482,6 @@ write_universal_readme() {
 
 write_universal_manifest() {
     local state_dir="$PROJECT_ROOT/$HOOKS_ROOT/.state/scaffold-hooks"
-    local skill_version
     local source_repository
     local source_commit
     local source_dirty
@@ -491,7 +490,6 @@ write_universal_manifest() {
     local plan_sha256
 
     mkdir -p "$state_dir"
-    skill_version="$(jq -r '.version // "unknown"' "$SKILL_ROOT/metadata.json" 2>/dev/null || printf 'unknown')"
     source_repository="$(git_source_field repository)"
     source_commit="$(git_source_field commit)"
     source_dirty="$(git_source_field dirty)"
@@ -503,7 +501,6 @@ write_universal_manifest() {
         --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
         --arg mode "$MODE" \
         --arg hooks_root "$HOOKS_ROOT" \
-        --arg skill_version "$skill_version" \
         --arg source_repository "$source_repository" \
         --arg source_commit "$source_commit" \
         --argjson source_dirty "$source_dirty" \
@@ -521,7 +518,6 @@ write_universal_manifest() {
             scaffold_hooks: {
                 schema_version: 1,
                 skill_name: "scaffold-hooks",
-                skill_version: $skill_version,
                 source: {
                     repository: (if $source_repository == "" then null else $source_repository end),
                     commit: (if $source_commit == "" then null else $source_commit end),

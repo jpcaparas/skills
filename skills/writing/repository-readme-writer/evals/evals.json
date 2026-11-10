@@ -17,7 +17,9 @@
           "type": "functional"
         }
       ],
-      "tags": ["smoke"]
+      "tags": [
+        "smoke"
+      ]
     },
     {
       "id": 2,
@@ -34,7 +36,9 @@
           "type": "quality"
         }
       ],
-      "tags": ["edge"]
+      "tags": [
+        "edge"
+      ]
     },
     {
       "id": 3,
@@ -47,7 +51,9 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     },
     {
       "id": 4,
@@ -56,11 +62,13 @@
       "expected_output": "Use quickstart-design guidance as needed and rewrite only the quickstart with the evidence-backed steps necessary for first use and verification.",
       "assertions": [
         {
-          "text": "Work stays scoped to the quickstart, using references/quickstart-design.md for unresolved design decisions.",
+          "text": "Work stays scoped to the quickstart.",
           "type": "disclosure"
         }
       ],
-      "tags": ["disclosure"]
+      "tags": [
+        "disclosure"
+      ]
     },
     {
       "id": 5,
@@ -68,10 +76,20 @@
       "prompt": "Write a compact README with only Summary, Data, and Status for an archived dataset. Repository evidence: data/observations.csv contains date and count columns, LICENSE is CC-BY-4.0, and ARCHIVE.md says collection ended in 2024. There are no scripts, runtime, or build files. Keep those paths.",
       "expected_output": "The requested three sections explain the dataset, schema, license, and archive status with useful source paths, without invented executable setup.",
       "assertions": [
-        {"text": "Uses only Summary, Data, and Status and preserves data/observations.csv, LICENSE, ARCHIVE.md, date, count, and 2024", "type": "functional"},
-        {"text": "Does not add quickstart commands, nine standard sections, deployment, or a generic tutorial stack", "type": "negative"}
+        {
+          "text": "Uses only Summary, Data, and Status and preserves data/observations.csv, LICENSE, ARCHIVE.md, date, count, and 2024",
+          "type": "functional"
+        },
+        {
+          "text": "Does not add quickstart commands, nine standard sections, deployment, or a generic tutorial stack",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "format-freedom", "data"]
+      "tags": [
+        "edge",
+        "format-freedom",
+        "data"
+      ]
     },
     {
       "id": 6,
@@ -79,10 +97,20 @@
       "prompt": "Review only this README paragraph for wording; do not edit files or run setup probes. Verified pyproject.toml requires Python >=3.11,<3.14; src/parser.py is a stable contributor entrypoint. Paragraph: 'Use Python >=3.11,<3.14. Contributors can start at src/parser.py.' Both details should remain.",
       "expected_output": "A scoped wording review that can recommend no change and preserves the useful compatibility range and navigation path.",
       "assertions": [
-        {"text": "Retains Python >=3.11,<3.14 and src/parser.py rather than applying a blanket no-version or no-path rule", "type": "functional"},
-        {"text": "Does not run repo_readme_probe.py, edit files, or expand into a full README audit", "type": "disclosure"}
+        {
+          "text": "Retains Python >=3.11,<3.14 and src/parser.py rather than applying a blanket no-version or no-path rule",
+          "type": "functional"
+        },
+        {
+          "text": "Does not run repo_readme_probe.py, edit files, or expand into a full README audit",
+          "type": "disclosure"
+        }
       ],
-      "tags": ["edge", "review-only", "disclosure"]
+      "tags": [
+        "edge",
+        "review-only",
+        "disclosure"
+      ]
     },
     {
       "id": 7,
@@ -90,10 +118,20 @@
       "prompt": "Fix README setup instructions. The old instructions say npm run dev, but inspected package.json has only start and check, with scripts/start.mjs providing the documented launch path. Running the service needs unavailable credentials. Suggest a canonical guidance correction if needed; do not edit installed skills.",
       "expected_output": "Uses repository-backed start guidance, labels execution unverified, and proposes a correction with the manifest and a reproducing command check instead of claiming a successful launch.",
       "assertions": [
-        {"text": "Does not retain the nonexistent dev command or claim execution; distinguishes manifest evidence from runtime verification", "type": "verification"},
-        {"text": "Proposes any canonical correction with the repository source and check without modifying installed copies", "type": "functional"}
+        {
+          "text": "Does not retain the nonexistent dev command or claim execution; distinguishes manifest evidence from runtime verification",
+          "type": "verification"
+        },
+        {
+          "text": "Proposes any canonical correction with the repository source and check without modifying installed copies",
+          "type": "functional"
+        }
       ],
-      "tags": ["edge", "source-conflict", "verification"]
+      "tags": [
+        "edge",
+        "source-conflict",
+        "verification"
+      ]
     }
   ]
 }

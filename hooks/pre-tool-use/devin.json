@@ -1,7 +1,0 @@
-{
-  "harness": "devin",
-  "event": "PreToolUse",
-  "scripts": [],
-  "commands": [],
-  "block_on_failure": true
-}

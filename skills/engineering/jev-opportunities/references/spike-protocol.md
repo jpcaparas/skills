@@ -155,7 +155,7 @@ Keep raw payloads opt-in and private. Record partial results when a cap is reach
 do not restart a run merely to replace inconvenient results.
 
 Present the baseline/candidate comparison, outcome, uncertainty, and adoption
-recommendation described in step 5 of `SKILL.md`, even when the run failed or
+recommendation described under "Report" in `SKILL.md`, even when the run failed or
 stopped early. Use prose, a table, or the project's format as appropriate; saved
 artifacts do not replace the user's decision summary.
 

@@ -1,25 +1,16 @@
 ---
 hooks:
-  # BEGIN scaffold-hooks managed opencode-froggy
-  - event: "session.created"
-    # Record the skills repo session baseline quietly.
-    conditions:
-      - "isMainSession"
-    actions:
-      - bash:
-          command: "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-session-context.sh\" >/dev/null; fi"
-          timeout: 20000
   - event: "session.idle"
-    # Run the repository stop checks after the main OpenCode session goes idle.
     conditions:
       - "isMainSession"
     actions:
       - bash:
-          command: "if [ -f \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" ]; then AGENT_HOOK_HARNESS=opencode AGENT_HOOK_PROJECT_ROOT=\"$OPENCODE_PROJECT_DIR\" AGENT_HOOK_SESSION_ID=\"$OPENCODE_SESSION_ID\" bash \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" \"$OPENCODE_PROJECT_DIR\"; fi"
-          timeout: 600000
-  # END scaffold-hooks managed opencode-froggy
+          command: "bash \"$OPENCODE_PROJECT_DIR/scripts/agent-stop-checks.sh\" opencode"
+          timeout: 900000
 ---
 
-# OpenCode Froggy Hooks
+# OpenCode hooks
 
-Managed by scaffold-hooks (scaffold-hooks/opencode-froggy). Edit the scaffold plan and rerun /scaffold-hooks to refresh this block.
+`opencode.json` loads `opencode-froggy`, which reads the hook above. When the main session goes idle it runs the repository stop gate, the same script every other harness runs.
+
+Froggy can only block on `tool.before.*` events, so a failing gate is reported here, not enforced.

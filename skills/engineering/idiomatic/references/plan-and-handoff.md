@@ -12,7 +12,7 @@ Use layered detail:
 
 - **Decision brief:** outcome, recommendation, expected benefit versus measured benefit, scope, tradeoffs and approval requested.
 - **Evidence and target:** coverage map, consequential findings and preserved exceptions, current-to-proposed responsibilities and version-applicable sources.
-- **Phased delivery:** stable phase IDs, dependencies, concrete actions and the phase contract from `SKILL.md`. Expand the next executable phase; keep uncertain later phases conditional.
+- **Phased delivery:** stable phase IDs, dependencies, concrete actions and the per-phase facts listed in `SKILL.md`. Expand the next executable phase; keep uncertain later phases conditional.
 - **Technical appendix:** evidence anchors, tests/check commands, unresolved facts and the continuation prompt below.
 
 These are content needs, not compulsory headings. A small library may need a few paragraphs rather than a programme. A workspace-wide enterprise plan needs coverage across its applications, not merely its most obvious controller. Keep coverage and later phases compact; detail is earned by a current decision or execution need. Shared invariants, authority limits and verification rules belong once in the human plan, with phase-specific exceptions beside the phase. Defer speculative command designs and test matrices rather than filling every later phase with them.

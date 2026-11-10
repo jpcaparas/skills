@@ -1,221 +1,43 @@
 ---
 name: better-writing
-description: "Draft, rewrite, review, humanise, or adapt prose without losing facts, voice, or uncertainty. Use for technical docs, wikis, product, editorial, marketing, personal, or AI-like writing. Skip code-only tasks."
-compatibility: "Core instructions are portable. Optional diagnostics and package checks require Python 3.10+."
-metadata:
-  version: "2.4.0"
-references:
-  - operating-contract
-  - revision-pass-stack
-  - natural-structure-and-digestibility
-  - foundations
-  - voice-and-rhythm
-  - punctuation-and-sentence-flow
-  - genericity-and-stiffness
-  - ai-isms-and-humanisation
-  - formulaic-language-catalogue
-  - genre-modes
-  - technical-documentation-and-wikis
-  - style-bundles
-  - quality-gates
-  - research-notes
-  - gotchas
+description: "Drafts, rewrites, reviews, humanises and adapts prose (docs, wikis, product copy, memos, essays, email, UI text) without losing facts, uncertainty or voice, and rebuilds formulaic or AI-sounding language. Not for code-only work or authorship detection."
+compatibility: "Optional scripts/scan_aiisms.py needs python3 3.10+."
 ---
 
 # Better writing
 
-Make prose clear, faithful, specific, well-shaped, and recognisably owned by its writer.
+Make prose clear, faithful, specific and recognisably the writer's own. Fidelity to the source and to the requested output beats polish at every scale.
 
-## Route the request
+## Scope
 
-Choose the job before touching the prose.
+- Edit only natural-language prose. Never alter code, identifiers, selectors, config keys, paths, commands or other machine-readable text, even to satisfy a diction rule; in mixed content, protect it exactly.
+- Protect facts, numbers, dates, names, quotations, citations, legal or technical terms, explicit uncertainty and lines that carry the writer's voice. Never turn uncertainty into confidence, and never invent experience, quotations, evidence, approval, customer language or proof. Unsupported praise is not a fact to preserve; if removing it leaves nothing, surface the evidence gap or ask for the mechanism instead of rearranging the same abstractions.
+- Ask only when a missing choice would materially change the result (reader, outcome, how much change is allowed, source authority). Empty input: ask for the material. A tiny edit: do it and stop.
+- Review-only requests get a diagnosis, not a rewrite: exact passages, ranked by reader impact, with a rewrite only as a labelled example.
+- Fix the right layer first: whole piece (genre, order, thesis), section, paragraph (mixed jobs, buried point), sentence (unclear actor, abstraction), surface (grammar, house style). Preserve what already works; stop when remaining changes are merely different, not better. Do not compress every sentence: clipped notes lose the connective logic.
+- Follow repository, organisation or locale style and exact terminology before any general guidance. Dialect, accessibility choices and second-language voice are identity, not defects.
+- Human signal comes from judgement, selection and concrete detail, not fake typos, random slang or forced informality. Do not mimic a named writer's signature; translate the request into high-level traits.
+- Never claim a passage was AI-written, and never use a phrase list or detector score as proof of authorship.
 
-| Job | Use it when | Primary references |
-|---|---|---|
-| Draft | The user needs new prose from notes, evidence, or a brief | `references/operating-contract.md`, `references/genre-modes.md` |
-| Rewrite | A draft exists and may be restructured or recast | `references/revision-pass-stack.md`, `references/quality-gates.md` |
-| Line edit | The shape works; sentences need clarity, rhythm, or economy | `references/foundations.md`, `references/voice-and-rhythm.md` |
-| Review | The user wants diagnosis or comments, not a rewritten artefact | `references/quality-gates.md` |
-| Humanise | The prose feels generic, machine-smooth, formulaic, or unlike its author | `references/ai-isms-and-humanisation.md`, `references/genericity-and-stiffness.md`; add `references/formulaic-language-catalogue.md` for explicit avoidance or dense formulae |
-| Adapt | The substance should stay while audience, genre, channel, length, or voice changes | `references/genre-modes.md`, `references/style-bundles.md` |
+## Formulaic and AI-sounding language
 
-Mixed requests can use more than one job. The references are available when an issue needs guidance, not a required reading stack. Keep scope clean: if a request combines a code fix with an error-message rewrite, this skill may revise the user-facing words but does not edit the surrounding source, syntax, or code behaviour. Never rename, rewrite, or reinterpret code constructs to satisfy a style or diction rule. In mixed documentation, edit only the natural-language prose and preserve machine-readable material exactly.
+Identify what a formula hides (the actor, mechanism, evidence, consequence) and rebuild the sentence from supported meaning. Never swap in a synonym: "bridge the gap" does not become "close the divide"; say what is missing and what changes it. "Marks a significant shift" needs the before and after; "plays a critical role", "unlocks value" and "research shows" need a supported action, result or source. If the source lacks the substance, delete, narrow or query the claim. Ordinary words, punctuation, courtesy and deliberate rhetoric are not defects, and literal, technical, legal, measured, quoted and writer-owned uses stay.
 
-For an explicit request to remove, replace, limit, or standardise em dashes, semicolons, or colons, read `references/punctuation-and-sentence-flow.md`. Load it conditionally; ordinary line editing and humanisation do not imply a punctuation ban.
+Read `references/ai-isms-and-humanisation.md` when the diagnosis of generic or machine-smooth prose is uncertain, and `references/formulaic-language-catalogue.md` for phrase families, natural rewrite moves and protected uses. Do not load both just because a sentence is being edited.
 
-For technical documentation or wiki entries, consult `references/technical-documentation-and-wikis.md` when documentation conventions need attention; consult `references/genre-modes.md` when the page shape is uncertain. Follow repository or organisation style, locale, exact terminology, and destination constraints before the adapted Google developer documentation guidance.
+`python3 scripts/scan_aiisms.py path/to/draft.md` lists pattern matches from an explicit corpus (`--format json` for automation, `--gate` for a conservative multi-pattern cluster gate). It cannot tell whether a use is exact, genre-appropriate or evidence of authorship; judge each hit against its exceptions, and refresh the scan after edits if you rely on it.
 
-Use another workflow for code-only implementation, standalone fact-checking, or authorship classification. This skill may rewrite prose produced alongside those tasks, but it does not perform them.
+## Punctuation
 
-## Operating workflow
+Only on an explicit request to remove, replace, limit or standardise em dashes, semicolons or colons: read `references/punctuation-and-sentence-flow.md`. Classify the relation before changing a mark, let a conjunction or clause name the logic, and protect literal punctuation in code, URLs, times, ratios, quotations and labels. Ordinary line editing implies no punctuation ban.
 
-Choose only the passes needed for the edit scope and risk. A sentence correction can go straight from understanding the request to editing and comparing with the source. A substantial recast may need structural, evidence, voice, and delivery checks. The sections below are a menu in useful order, not eight compulsory passes or required process artefacts. Fidelity and the user's requested output remain mandatory at every scale.
+## Technical documentation and wikis
 
-### 1. Establish the writing contract
+Establish reader, starting state, terminology and finish line before styling. Follow repository or organisation style, locale and destination constraints before the adapted Google developer documentation guidance in `references/technical-documentation-and-wikis.md`, which covers headings, procedures, links, accessibility and global-audience clarity.
 
-Infer what the supplied context already settles. Identify:
+## Gotchas
 
-- reader, deliverable, and desired outcome
-- source material and factual authority
-- required length, format, locale, house style, and deadline
-- whether the user wants a draft, rewrite, review, humanisation pass, or adaptation
-- how much change is allowed
-
-For an existing draft, protect facts, numbers, dates, names, quotations, citations, commands, paths, API identifiers, legal or technical terms, explicit uncertainty, and lines that carry the writer's voice. Record a preservation ledger only when complexity, high consequences, or handoff needs make direct source comparison insufficient.
-
-Ask only when a missing choice would materially change the result. Never invent evidence, experience, approval, customer language, or confidence the source does not contain.
-
-Do not treat unsupported praise or marketing posture as a factual invariant. If removing vague claims leaves too little to write, surface the evidence gap or ask for the missing mechanism instead of rearranging the same abstractions.
-
-Read `references/operating-contract.md` when the source is sensitive, highly constrained, collaborative, or likely to lose important detail.
-
-**Complete when:** the reader, outcome, edit freedom, source authority, and protected material are known or explicitly marked unknown.
-
-### 2. Diagnose before rewriting
-
-Name the failure at the right scale:
-
-- whole-piece: wrong genre, audience, order, thesis, or scope
-- section: missing step, evidence, turn, or decision
-- paragraph: mixed jobs, buried point, repetition, weak transition
-- sentence: unclear actor, abstraction, drag, monotony, or false emphasis
-- surface: grammar, spelling, punctuation, formatting, or house style
-
-Preserve what already works. A good edit is not a demonstration that every sentence can be changed.
-
-**Complete when:** the smallest responsible layer and the draft's strongest material are both identified.
-
-### 3. Fix shape before style
-
-When restructuring is in scope, choose a shape that serves the reader and requested format; `references/genre-modes.md` offers defaults, not fixed templates. Give each section and paragraph a clear job. Order evidence so the reader never has to guess why it is present.
-
-For documentation and wikis, establish the reader, starting state, canonical terminology, and finish line before styling the page. Use the documentation reference for headings, procedures, links, accessibility, global-audience clarity, and maintenance boundaries.
-
-Read `references/natural-structure-and-digestibility.md` when the request calls for a substantial structural recast, a more natural flow, or repair of dense, wall-of-text, or over-chunked prose. Use its worked transformations to split at changes of job, not at arbitrary lengths.
-
-For review-only work, stop short of rewriting: report the diagnosis, cite exact passages, rank issues by reader impact, and offer a rewrite only as a clearly labelled example.
-
-**Complete when:** the opening establishes the right contract, the middle advances it without echoing itself, and the ending performs the genre's real closing task.
-
-### 4. Edit clarity at the affected scale
-
-For complex revisions, `references/revision-pass-stack.md` offers a pass order. Combine or skip passes that add no value:
-
-1. **Paragraph pass:** one job per paragraph, visible logic, no repeated claim, evidence beside the claim it supports.
-2. **Sentence pass:** clear actor and action, concrete nouns and verbs, related words together, honest qualifications, informative emphasis.
-
-Do not compress every sentence. Restore connective tissue when the page starts to read like chopped notes. When a long passage needs reshaping, choose paragraphs, lists, headings, or tables from the information's real shape; formatting cannot replace reasoning.
-
-When punctuation is the edit target, classify the relation before changing the mark. A colon fulfils a promise, a semicolon balances close independent clauses, and a conjunction or subordinate clause should name logic that punctuation would otherwise leave implicit. Protect literal punctuation in code, URLs, times, ratios, quotations, labels, and configuration.
-
-**Complete when:** a reader can follow the argument or procedure on the first read without losing the draft's meaning or cadence.
-
-### 5. Restore voice and specificity
-
-Use `references/voice-and-rhythm.md` for stance, cadence, sentence movement, and read-aloud repair. Use `references/style-bundles.md` to calibrate a voice from samples or declared traits without imitating a living writer's signature.
-
-Human signal comes from judgement, selection, detail, and position—not fake typos, random slang, decorative swearing, invented anecdotes, or forced informality.
-
-**Complete when:** the prose has a discernible point of view, sentence movement suits the thought, and the writer's high-signal details remain intact.
-
-### 6. Diagnose formulaic language when relevant
-
-When formulaic language is an actual problem, identify what it obscures. Do not introduce unsupported benefit language or a formula that hides the actor, mechanism, evidence, or consequence. Ordinary words, punctuation, courtesy, and intentional rhetoric are not defects by themselves.
-
-For humanisation or explicit formulaic-language requests, consult `references/ai-isms-and-humanisation.md` when the diagnosis is uncertain and `references/formulaic-language-catalogue.md` for phrase-family examples or exceptions. Do not load both merely because a sentence is being edited.
-
-Treat the catalogue's action levels as contextual diagnostics, not bans:
-
-- remove empty wrappers and stage directions that add no useful function
-- rewrite canned semantic frames from supported meaning when they obscure it, even when they occur once
-- review ordinary words and structural signals in context or clusters
-- protect literal, technical, legal, measured, quoted, and writer-owned uses, including intentional rhetoric and legitimate genre conventions
-
-Never perform a synonym swap to satisfy an avoidance rule. This applies across the catalogue, not only to individual watch words. `Bridge the gap` does not become `close the divide`; identify what is missing and what action changes it. `Marks a significant shift` does not become `signals a major transformation`; state the before and after. `Plays a critical role`, `unlocks value`, and `research shows` likewise need a supported action, result, or source. If the source lacks the necessary substance, delete, narrow, or query the claim.
-
-If locating repeated patterns would help resolve the issue in a file-backed draft, optionally run:
-
-```bash
-python3 scripts/scan_aiisms.py path/to/draft.md
-```
-
-Use `--format json` for automation and `--gate` only as a conservative multi-pattern cluster gate. A normal scan already surfaces single remove-, rewrite-, and review-labelled matches. Judge those matches against their exceptions; the scanner cannot determine whether a use is exact, suitable for its genre, or evidence of authorship. Treat an em dash, polished sentence, or ordinary word as context—not proof.
-
-Rewrite the thought, not just the flagged token. Preserve dialect, accessibility choices, second-language voice, quoted material, literal terminology, and intentional rhetoric.
-
-**Complete when:** remove and rewrite rules are resolved or deliberately retained, review-only clusters have been judged in context, and the revision reads better by ordinary editorial standards—not merely less detectable.
-
-### 7. Calibrate the deliverable
-
-Apply the target genre, audience, locale, and house style. Check headings, lists, calls to action, examples, and ending shape. Keep formatting proportional to the material; not every paragraph wants a heading and not every thought wants a bullet.
-
-For documentation and wiki pages, use the relevant checks in `references/technical-documentation-and-wikis.md` when those aspects changed. Do not replace an established locale or project convention with a Google-specific preference.
-
-**Complete when:** the artefact looks and sounds native to its destination without losing factual or personal identity.
-
-### 8. Compare with the source and stop
-
-Always check changed prose for fidelity and the requested format. For broader or high-risk work, select relevant checks from `references/quality-gates.md`:
-
-1. fidelity
-2. logic and evidence
-3. clarity and cadence
-4. voice and humanisation
-5. genre and mechanics
-6. final proof
-
-Compare the revision against the source and any ledger used. If relying on a diagnostic result, refresh it after changes that could invalidate it; scanning is not a universal completion condition. Stop when every remaining change is merely different, not better.
-
-**Complete when:** the deliverable passes every applicable gate, protected material matches the source, and no known critical issue remains.
-
-## Output contract
-
-Lead with the requested artefact or review outcome. Keep process notes brief unless the user asked for an edit log. When useful, report:
-
-- important structural choices
-- protected facts or literals
-- unresolved factual questions
-- deliberate exceptions to a diagnostic signal
-
-Do not claim a passage was AI-written. Do not turn stylistic preference into an accusation.
-
-## When guidance is insufficient
-
-If a consequential usage, documentation convention, or factual authority is stale or conflicts with this guidance, consult the applicable house style, current primary documentation, or a trusted editorial reference. Use verified guidance within the user's edit authority; disclose unresolved gaps instead of guessing. Propose a correction to the canonical skill source with the source and a before/after example or regression check. Do not browse for routine edits or silently modify an installed skill copy.
-
-## Quick reference
-
-| Need | Read or run |
-|---|---|
-| Brief, preservation ledger, and edit freedom | `references/operating-contract.md` |
-| Optional revision passes and loopbacks | `references/revision-pass-stack.md` |
-| Natural structure, paragraph architecture, and long-prose digestibility | `references/natural-structure-and-digestibility.md` |
-| Grammar, clarity, and modern usage baseline | `references/foundations.md` |
-| Cadence, stance, and voice repair | `references/voice-and-rhythm.md` |
-| Em-dash replacement, semicolon and colon judgement, and sentence-flow repair | `references/punctuation-and-sentence-flow.md` |
-| Generic, corporate, ceremonial, or inflated prose | `references/genericity-and-stiffness.md` |
-| AI-like patterns, humanisation, false positives, and scanner use | `references/ai-isms-and-humanisation.md` |
-| Contextual avoid rules, phrase families, natural rewrites, and protected uses | `references/formulaic-language-catalogue.md` |
-| Docs, PRs, specs, memos, reports, essays, email, UI, and copy | `references/genre-modes.md` |
-| Technical documentation and wiki headings, procedures, links, accessibility, and maintenance | `references/technical-documentation-and-wikis.md` |
-| Personal voice sheets and style calibration | `references/style-bundles.md` |
-| Acceptance criteria and final proof | `references/quality-gates.md` |
-| Research basis and limits | `references/research-notes.md` |
-| Failure recovery | `references/gotchas.md` |
-
-## Templates
-
-- `templates/rewrite-worksheet.md` optionally records the brief, preservation ledger, pass results, and final checks for complex work.
-- `templates/personal-style-sheet.md` captures a writer's real habits from samples before revision smooths them away.
-
-## Non-negotiables
-
-1. Never improve style by changing the facts.
-2. Never convert uncertainty into confidence without evidence.
-3. Never invent personal experience, quotations, citations, proof, or customer language.
-4. Never mimic a named writer's signature; translate the request into high-level traits.
-5. Never use a phrase list or detector score as proof of authorship.
-6. Never sand away dialect, accessibility, or second-language identity to make prose look statistically “human.”
-7. Never satisfy a formulaic-language rule through synonym substitution alone.
-8. Never keep editing after the applicable gates pass and the remaining options are taste-equivalent.
-9. Never alter code, identifiers, selectors, configuration keys, or other machine-readable constructs; revise only the natural-language prose in scope.
+- A smoother edit that moved a number, condition, causal claim or degree of certainty: restore the source and make the smallest edit for the original language problem.
+- Over-editing flattens cadence and grandeur replaces clarity; reread aloud and restore connective tissue.
+- Chopping long prose into bullets or headings does not repair reasoning. Split at changes of job, not at arbitrary lengths, and choose paragraphs, lists or tables from the information's real shape.
+- If a usage or documentation convention appears stale or conflicts with this guidance, check the applicable house style or current primary documentation, disclose unresolved gaps, and propose a sourced correction rather than editing an installed copy.

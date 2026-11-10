@@ -30,7 +30,6 @@ Research can show that a word or structure became more common across millions of
 
 Do not add errors, slang, fragments, anecdotes, or punctuation variance to “look human.” Restore authorship through truthful selection, stance, detail, structure, and voice.
 
-Read `references/research-notes.md` for the evidence and its limits.
 
 ## Editorial avoidance policy
 
@@ -233,7 +232,6 @@ After, when the source supports the mechanism:
 
 The revision removes a decorative three-part list because the ideas were not useful peers. If the source contains three genuinely comparable measures, a list or table may still be the clearest form.
 
-For paragraph-level formulae, repeated section silhouettes, or wall-of-text repair, read `references/natural-structure-and-digestibility.md` and rebuild the order as well as the sentences.
 
 ## Signal taxonomy
 

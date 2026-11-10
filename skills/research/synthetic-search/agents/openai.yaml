@@ -1,4 +1,0 @@
-interface:
-  display_name: "synthetic-search"
-  short_description: "Search the web with Synthetic's zero-retention API: focused queries, site: filters, compact cited results, quota-aware"
-  default_prompt: "Use Synthetic search to research a topic, restrict results to specific sites, check my hourly search quota, or debug a Synthetic search response"

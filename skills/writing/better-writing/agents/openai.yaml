@@ -1,4 +1,0 @@
-interface:
-  display_name: "better-writing"
-  short_description: "Draft and revise faithful prose, docs, and wikis"
-  default_prompt: "Help me draft, rewrite, review, humanise, or adapt this prose, documentation, or wiki entry while preserving its facts, exact literals, uncertainty, locale, and voice, and rebuild formulaic language from supported meaning."

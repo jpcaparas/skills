@@ -79,10 +79,7 @@
         "operators",
         "fan-out"
       ],
-      "files": [
-        "references/gotchas.md",
-        "references/patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 4,
@@ -103,9 +100,7 @@
         "operators",
         "dates"
       ],
-      "files": [
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 5,
@@ -125,9 +120,7 @@
       "tags": [
         "dates"
       ],
-      "files": [
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 6,
@@ -180,8 +173,7 @@
         "rate-limit"
       ],
       "files": [
-        "scripts/deepseek_search.js",
-        "references/patterns.md"
+        "scripts/deepseek_search.js"
       ]
     },
     {
@@ -234,9 +226,7 @@
         "fetch",
         "failure"
       ],
-      "files": [
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 10,
@@ -256,10 +246,7 @@
       "tags": [
         "fetch"
       ],
-      "files": [
-        "references/gotchas.md",
-        "references/patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 11,
@@ -306,9 +293,7 @@
         "operators",
         "debugging"
       ],
-      "files": [
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 13,
@@ -333,9 +318,7 @@
         "verification",
         "billing"
       ],
-      "files": [
-        "references/gotchas.md"
-      ]
+      "files": []
     },
     {
       "id": 14,
@@ -430,10 +413,7 @@
       "tags": [
         "localization"
       ],
-      "files": [
-        "references/gotchas.md",
-        "references/patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 18,
@@ -458,9 +438,7 @@
         "multilingual",
         "dates"
       ],
-      "files": [
-        "references/patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 19,
@@ -480,9 +458,7 @@
       "tags": [
         "security"
       ],
-      "files": [
-        "references/patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 20,
@@ -526,9 +502,7 @@
         "billing",
         "content"
       ],
-      "files": [
-        "references/patterns.md"
-      ]
+      "files": []
     },
     {
       "id": 22,
@@ -578,7 +552,7 @@
       "id": 24,
       "name": "stale-guidance-recovery",
       "prompt": "Your DeepSeek skill says count can be up to 50, but my calls with count 30 now return 400. What should we do?",
-      "expected_output": "Trusts the live response over the skill snapshot, reproduces with the probes in references/evidence.md, reads the current official Search & Fetch guide, and proposes a sourced correction to the canonical skill (api.md, the helper's MAX_COUNT, evidence.md) instead of silently editing an installed copy.",
+      "expected_output": "Trusts the live response over the skill snapshot, reproduces with a fresh cheap probe, reads the current official Search & Fetch guide, and proposes a sourced correction to the canonical skill (api.md, the helper's MAX_COUNT) instead of silently editing an installed copy.",
       "assertions": [
         {
           "text": "Reproduces or checks current official docs before concluding",
@@ -592,9 +566,7 @@
       "tags": [
         "maintenance"
       ],
-      "files": [
-        "references/evidence.md"
-      ]
+      "files": []
     }
   ]
 }

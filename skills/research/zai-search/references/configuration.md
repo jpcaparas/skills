@@ -33,9 +33,3 @@ The three servers are plain streamable-HTTP MCP servers with a Bearer header, so
 ```
 
 Adapt the shape to the client's config format (Amp `amp.mcpServers`, Claude Code `claude mcp add --transport http`, and so on). Keep the key in the environment, not in a committed file.
-
-## Prerequisites
-
-- Helper: Node.js 18+ (global `fetch`).
-- Raw calls: `curl` and `jq`.
-- Package tests: Python 3.11+ and Node.js; they use a local stub and never contact Z.ai.

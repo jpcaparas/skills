@@ -123,5 +123,3 @@ A review is complete when the in-scope risks are evidenced or explicitly unresol
 - model output cannot directly drive shell, code, SQL, file, API, or UI sinks without validation
 - failures stop, roll back, or require deliberate recovery
 - monitoring and tests can detect safety regressions
-
-See also: `references/controls.md`, `references/threat-model.md`, and `references/gotchas.md`.

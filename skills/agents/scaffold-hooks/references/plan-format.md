@@ -27,7 +27,6 @@ Use `--harnesses` when intentionally adding harnesses. A bare re-run on a repo w
 
 Every universal run writes `hooks/.state/scaffold-hooks/manifest.json`. It records:
 
-- `scaffold_hooks.skill_version`
 - `scaffold_hooks.source`
 - `scaffold_hooks.generator.sha256`
 - `scaffold_hooks.harness_manifest_sha256`

@@ -1,39 +1,36 @@
 #!/usr/bin/env python3
-"""Focused regressions for shared README, PNG, and description validators."""
+"""Regressions for the shared README, skill-card, and skill-package validators."""
 
 from __future__ import annotations
 
 import importlib.util
-import struct
 import subprocess
 import sys
 import tempfile
 import unittest
-import zlib
-from collections.abc import Sequence
+from collections.abc import Mapping
 from pathlib import Path
 from types import ModuleType
 from typing import Protocol, cast
 
-from png_validation import PNG_SIGNATURE, parse_png
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
+
 from skill_catalog import Skill
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 EXAMPLE = Skill("example", "engineering", Path("skills/engineering/example"))
+CARD_SIZE = (1024, 576)
 
 
 class ReadmeValidator(Protocol):
-    """Typed surface used from the hyphenated README validator script."""
-
     def validate_readme_catalog(
         self, readme: str, skills: list[Skill]
     ) -> list[str]: ...
 
 
 class ArtValidator(Protocol):
-    """Typed surface used from the hyphenated artwork validator script."""
-
     def validate_png(self, path: Path, errors: list[str]) -> None: ...
 
     def validate_readme_art(
@@ -44,26 +41,17 @@ class ArtValidator(Protocol):
     ) -> None: ...
 
 
-class DescriptionValidator(Protocol):
-    """Typed surface used from the hyphenated description validator script."""
-
+class PackageValidator(Protocol):
     MAX_DESCRIPTION_CHARS: int
+    MAX_TOTAL_DESCRIPTION_CHARS: int
 
-    def collect(self, repo_root: Path) -> list[DescriptionRecord]: ...
+    def read_description(self, entrypoint: Path) -> str: ...
 
     def description_budget_errors(
-        self,
-        repo_root: Path,
-        descriptions: Sequence[DescriptionRecord],
+        self, descriptions: Mapping[str, str]
     ) -> list[str]: ...
 
-    def parse_description(self, path: Path) -> str: ...
-
-
-class DescriptionRecord(Protocol):
-    """Description field consumed by the repository budget calculation."""
-
-    description: str
+    def validate(self, skills_root: Path) -> list[str]: ...
 
 
 def load_script(filename: str, module_name: str) -> ModuleType:
@@ -87,12 +75,9 @@ ART_VALIDATOR = cast(
     ArtValidator,
     load_script("validate-skill-art.py", "validate_skill_art_regression"),
 )
-DESCRIPTION_VALIDATOR = cast(
-    DescriptionValidator,
-    load_script(
-        "check-skill-description-budget.py",
-        "check_skill_description_budget_regression",
-    ),
+PACKAGE_VALIDATOR = cast(
+    PackageValidator,
+    load_script("validate-skills.py", "validate_skills_regression"),
 )
 
 
@@ -116,44 +101,6 @@ def readme_with_section(section: str) -> str:
     """Place a catalog section after the required visible global command."""
 
     return f"# Test skills\n\n`npx skills add jpcaparas/skills`\n\n{section}"
-
-
-def png_chunk(chunk_type: bytes, payload: bytes, *, valid_crc: bool = True) -> bytes:
-    """Build one PNG chunk, optionally retaining the historical bad CRC."""
-
-    crc = zlib.crc32(chunk_type)
-    crc = zlib.crc32(payload, crc) & 0xFFFFFFFF if valid_crc else 0
-    return (
-        struct.pack(">I", len(payload)) + chunk_type + payload + struct.pack(">I", crc)
-    )
-
-
-def rgb_png(width: int, height: int, compressed_scanlines: bytes) -> bytes:
-    """Build a correctly framed RGB PNG around supplied compressed scanlines."""
-
-    ihdr = struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0)
-    return (
-        PNG_SIGNATURE
-        + png_chunk(b"IHDR", ihdr)
-        + png_chunk(b"IDAT", compressed_scanlines)
-        + png_chunk(b"IEND", b"")
-    )
-
-
-def indexed_png(
-    *,
-    palette: bytes,
-    palette_after_idat: bool = False,
-) -> bytes:
-    """Build a 1-bit indexed PNG with configurable PLTE placement."""
-
-    ihdr = struct.pack(">IIBBBBB", 1, 1, 1, 3, 0, 0, 0)
-    image_data = png_chunk(b"IDAT", zlib.compress(b"\x00\x00"))
-    palette_chunk = png_chunk(b"PLTE", palette)
-    body = (
-        image_data + palette_chunk if palette_after_idat else palette_chunk + image_data
-    )
-    return PNG_SIGNATURE + png_chunk(b"IHDR", ihdr) + body + png_chunk(b"IEND", b"")
 
 
 class ReadmeCommentRegressionTests(unittest.TestCase):
@@ -326,31 +273,31 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
             errors,
         )
 
-    def test_offline_art_refresh_preserves_images_and_copy_and_uses_namespace_paths(
+    def test_readme_refresh_keeps_images_and_copy_and_uses_namespace_paths(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory(prefix="art refresh ") as directory:
             root = Path(directory)
-            selected = root / "skills/engineering/maintainable-code"
-            other = root / "skills/fun/oneshot-timeline"
-            for package in (selected, other):
+            packages = (
+                root / "skills/engineering/maintainable-code",
+                root / "skills/fun/oneshot-timeline",
+            )
+            for package in packages:
                 package.mkdir(parents=True)
                 (package / "SKILL.md").write_text(
                     f"---\nname: {package.name}\ndescription: Test.\n---\n",
                     encoding="utf-8",
                 )
                 (package / "skill-card.png").write_bytes(b"preserve existing artwork")
-                (package / "skill-card.prompt.md").write_text(
-                    "original prompt", encoding="utf-8"
-                )
-            fixture = selected / "evals/broken"
-            fixture.mkdir(parents=True)
-            (fixture / "SKILL.md").write_text(
-                "not an installable package", encoding="utf-8"
-            )
             readme = readme_with_section(readme_skill_section("maintainable-code"))
+            readme = readme.replace(
+                "skills/engineering/maintainable-code/skill-card.png",
+                "skills/testing/maintainable-code/skill-card.png",
+            )
             readme += "Editorial description that must survive.\n\n### Fun\n\n"
-            readme += readme_skill_section("oneshot-timeline").split("### Engineering\n\n", 1)[1]
+            readme += readme_skill_section("oneshot-timeline").split(
+                "### Engineering\n\n", 1
+            )[1]
             readme_path = root / "README.md"
             readme_path.write_text(readme, encoding="utf-8")
 
@@ -359,9 +306,7 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
                 str(SCRIPT_DIR / "render-skill-art.py"),
                 "--repo-root",
                 str(root),
-                "--prompts-only",
-                "--skill",
-                "maintainable-code",
+                "--readme-only",
             ]
             result = subprocess.run(
                 command, text=True, capture_output=True, check=False
@@ -370,20 +315,19 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
             self.assertEqual(0, result.returncode, result.stderr)
             updated = readme_path.read_text(encoding="utf-8")
             self.assertIn("Editorial description that must survive.", updated)
-            self.assertIn('src="skills/fun/oneshot-timeline/skill-card.png"', updated)
-            self.assertNotIn('src="skills/engineering/tarsier/skill-card.png"', updated)
-            self.assertEqual(2, updated.count('<img src="skills/'))
             self.assertIn(
-                "Nano Banana image generation prompt",
-                (selected / "skill-card.prompt.md").read_text(),
+                'src="skills/engineering/maintainable-code/skill-card.png"', updated
             )
-            self.assertEqual(
-                "original prompt", (other / "skill-card.prompt.md").read_text()
-            )
-            for package in (selected, other):
+            self.assertIn('src="skills/fun/oneshot-timeline/skill-card.png"', updated)
+            self.assertEqual(2, updated.count('<img src="skills/'))
+            for package in packages:
                 self.assertEqual(
                     b"preserve existing artwork",
                     (package / "skill-card.png").read_bytes(),
+                )
+                self.assertEqual(
+                    ["SKILL.md", "skill-card.png"],
+                    sorted(path.name for path in package.iterdir()),
                 )
             repeat = subprocess.run(
                 command, text=True, capture_output=True, check=False
@@ -392,133 +336,86 @@ class NamespacedCatalogRegressionTests(unittest.TestCase):
             self.assertEqual(updated, readme_path.read_text(encoding="utf-8"))
 
 
-class PngRegressionTests(unittest.TestCase):
-    """Reject files that only imitate PNG signatures, fields, and chunk names."""
+class SkillCardImageTests(unittest.TestCase):
+    """A card must be a fully decodable, metadata-free PNG of the README size."""
 
-    def test_accepts_a_decodable_png_with_valid_chunks_and_crc(self) -> None:
-        scanline = b"\x00\x11\x22\x33"
-        png = rgb_png(1, 1, zlib.compress(scanline))
-
-        metadata = parse_png(png)
-
-        self.assertIsNotNone(metadata)
-
-    def test_rejects_the_old_fake_header_false_positive(self) -> None:
-        ihdr = struct.pack(">IIBBBBB", 1024, 576, 8, 2, 0, 0, 0)
-        fake = (
-            PNG_SIGNATURE
-            + png_chunk(b"IHDR", ihdr, valid_crc=False)
-            + png_chunk(b"IDAT", b"", valid_crc=False)
-            + png_chunk(b"IEND", b"", valid_crc=False)
-        ).ljust(10_000, b"\x00")
-
-        with tempfile.TemporaryDirectory(prefix="shared-validator-png-") as temp_dir:
-            path = Path(temp_dir) / "skill-card.png"
-            path.write_bytes(fake)
+    def card_errors(self, write_card) -> list[str]:
+        with tempfile.TemporaryDirectory(prefix="skill-card-") as directory:
+            path = Path(directory) / "skill-card.png"
+            write_card(path)
             errors: list[str] = []
-
             ART_VALIDATOR.validate_png(path, errors)
+        return errors
 
-        self.assertTrue(
-            any("must be a valid PNG raster image" in error for error in errors)
+    def test_accepts_a_clean_card(self) -> None:
+        errors = self.card_errors(
+            lambda path: Image.new("RGB", CARD_SIZE, "navy").save(path, "PNG")
         )
 
-    def test_rejects_valid_chunk_labels_without_decodable_image_data(self) -> None:
-        fake = rgb_png(1, 1, b"not a zlib stream")
+        self.assertEqual([], errors)
 
-        with self.assertRaisesRegex(ValueError, "IDAT data is not a valid zlib stream"):
-            parse_png(fake)
+    def test_rejects_a_card_cut_off_mid_download(self) -> None:
+        def write_truncated(path: Path) -> None:
+            Image.radial_gradient("L").resize(CARD_SIZE).save(path, "PNG")
+            complete = path.read_bytes()
+            path.write_bytes(complete[: len(complete) // 2])
 
-    def test_rejects_crc_mismatch_on_otherwise_decodable_png(self) -> None:
-        ihdr = struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0)
-        fake = (
-            PNG_SIGNATURE
-            + png_chunk(b"IHDR", ihdr, valid_crc=False)
-            + png_chunk(b"IDAT", zlib.compress(b"\x00\x11\x22\x33"))
-            + png_chunk(b"IEND", b"")
+        errors = self.card_errors(write_truncated)
+
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("must be a decodable PNG image", errors[0])
+
+    def test_rejects_a_card_too_heavy_for_the_readme(self) -> None:
+        errors = self.card_errors(
+            lambda path: Image.effect_noise(CARD_SIZE, 64).convert("RGB").save(path, "PNG")
         )
 
-        with self.assertRaisesRegex(ValueError, "IHDR chunk CRC does not match"):
-            parse_png(fake)
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("is larger than 750000 bytes", errors[0])
 
-    def test_accepts_valid_indexed_palette_before_image_data(self) -> None:
-        metadata = parse_png(indexed_png(palette=b"\x00\x00\x00\xff\xff\xff"))
-
-        self.assertIn("PLTE", metadata.chunks)
-
-    def test_rejects_palette_after_image_data(self) -> None:
-        fake = indexed_png(
-            palette=b"\x00\x00\x00\xff\xff\xff",
-            palette_after_idat=True,
+    def test_rejects_a_jpeg_saved_with_a_png_name(self) -> None:
+        errors = self.card_errors(
+            lambda path: Image.new("RGB", CARD_SIZE, "navy").save(path, "JPEG")
         )
 
-        with self.assertRaisesRegex(
-            ValueError, "PLTE must appear before the first IDAT"
-        ):
-            parse_png(fake)
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("must be a PNG image; found JPEG", errors[0])
 
-    def test_rejects_malformed_palette_shape(self) -> None:
-        fake = indexed_png(palette=b"\x00\x00\x00\xff")
-
-        with self.assertRaisesRegex(ValueError, "PLTE must contain between 1 and 256"):
-            parse_png(fake)
-
-    def test_bounds_decompression_to_declared_raster_size(self) -> None:
-        oversized_scanline = zlib.compress(b"\x00" * 1_000_000)
-        fake = rgb_png(1, 1, oversized_scanline)
-
-        with self.assertRaisesRegex(
-            ValueError, "expands beyond the declared image dimensions"
-        ):
-            parse_png(fake)
-
-    def test_rejects_truncated_stream_after_expected_pixels_are_emitted(self) -> None:
-        complete_stream = zlib.compress(b"\x00\x11\x22\x33")
-        fake = rgb_png(1, 1, complete_stream[:-1])
-
-        with self.assertRaisesRegex(ValueError, "IDAT zlib stream is incomplete"):
-            parse_png(fake)
-
-
-class DescriptionBudgetRegressionTests(unittest.TestCase):
-    """Count YAML scalar values after anchors and aliases are resolved."""
-
-    def test_yaml_alias_is_resolved_before_budget_counting(self) -> None:
-        resolved_description = "x" * (DESCRIPTION_VALIDATOR.MAX_DESCRIPTION_CHARS + 1)
-        skill_markdown = (
-            "---\n"
-            "name: example\n"
-            f"shared_description: &shared '{resolved_description}'\n"
-            "description: *shared\n"
-            "---\n\n"
-            "# Example\n"
+    def test_rejects_the_unscaled_model_output_size(self) -> None:
+        errors = self.card_errors(
+            lambda path: Image.new("RGB", (1376, 768), "navy").save(path, "PNG")
         )
 
-        with tempfile.TemporaryDirectory(prefix="shared-validator-yaml-") as temp_dir:
-            repo_root = Path(temp_dir)
-            skill_dir = repo_root / "skills" / "engineering" / "example"
-            skill_dir.mkdir(parents=True)
-            (skill_dir / "SKILL.md").write_text(skill_markdown, encoding="utf-8")
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("must be 1024x576; found 1376x768", errors[0])
 
-            descriptions = DESCRIPTION_VALIDATOR.collect(repo_root)
-            errors = DESCRIPTION_VALIDATOR.description_budget_errors(
-                repo_root,
-                descriptions,
-            )
+    def test_rejects_generator_metadata(self) -> None:
+        def write_with_metadata(path: Path) -> None:
+            metadata = PngInfo()
+            metadata.add_text("Software", "image generator")
+            Image.new("RGB", CARD_SIZE, "navy").save(path, "PNG", pnginfo=metadata)
 
-        self.assertEqual(1, len(descriptions))
-        self.assertEqual(resolved_description, descriptions[0].description)
-        self.assertTrue(any("451 chars > 450" in error for error in errors), errors)
+        errors = self.card_errors(write_with_metadata)
 
-    def test_rejects_duplicate_description_keys(self) -> None:
-        skill_markdown = (
-            "---\ndescription: first value\ndescription: second value\n---\n"
-        )
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("carries metadata (Software)", errors[0])
 
-        self.assert_description_error(skill_markdown, "duplicate key 'description'")
 
-    def test_resolves_folded_and_literal_description_scalars(self) -> None:
+class DescriptionTests(unittest.TestCase):
+    """Budget what hosts load: the description after YAML resolves it."""
+
+    def read_description(self, content: str) -> str:
+        with tempfile.TemporaryDirectory(prefix="skill-description-") as directory:
+            entrypoint = Path(directory) / "SKILL.md"
+            entrypoint.write_text(content, encoding="utf-8")
+            return PACKAGE_VALIDATOR.read_description(entrypoint)
+
+    def test_alias_and_block_scalars_resolve_to_the_text_hosts_load(self) -> None:
         cases = {
+            "alias": (
+                "---\nshared: &shared 'aliased text'\ndescription: *shared\n---\n",
+                "aliased text",
+            ),
             "folded": (
                 "---\ndescription: >-\n  first line\n  second line\n---\n",
                 "first line second line",
@@ -527,65 +424,145 @@ class DescriptionBudgetRegressionTests(unittest.TestCase):
                 "---\ndescription: |-\n  first line\n  second line\n---\n",
                 "first line\nsecond line",
             ),
-            "quoted empty": ('---\ndescription: ""\n---\n', ""),
         }
 
-        for name, (skill_markdown, expected) in cases.items():
+        for name, (content, expected) in cases.items():
             with self.subTest(name=name):
-                self.assertEqual(expected, self.parse_description(skill_markdown))
+                self.assertEqual(expected, self.read_description(content))
 
-    def test_rejects_empty_untyped_description_scalar(self) -> None:
-        self.assert_description_error(
-            "---\ndescription:\n---\n",
-            "description must resolve to a string",
+    def test_rejects_descriptions_a_host_cannot_use(self) -> None:
+        cases = {
+            "missing value": (
+                "---\ndescription:\n---\n",
+                "description must be a non-empty string",
+            ),
+            "quoted empty": (
+                '---\ndescription: ""\n---\n',
+                "description must be a non-empty string",
+            ),
+            "whitespace only": (
+                "---\ndescription: '   '\n---\n",
+                "description must be a non-empty string",
+            ),
+            "list": (
+                "---\ndescription:\n  - list item\n---\n",
+                "description must be a non-empty string",
+            ),
+            "duplicate key": (
+                "---\ndescription: first\ndescription: second\n---\n",
+                "duplicate key 'description'",
+            ),
+            "malformed YAML": (
+                "---\ndescription: [unterminated\n---\n",
+                "Invalid YAML frontmatter",
+            ),
+        }
+
+        for name, (content, message) in cases.items():
+            with self.subTest(name=name):
+                with self.assertRaisesRegex(ValueError, message):
+                    self.read_description(content)
+
+    def test_budget_limits_are_inclusive(self) -> None:
+        per_skill = PACKAGE_VALIDATOR.MAX_DESCRIPTION_CHARS
+        at_limit = {"at-limit": "x" * per_skill}
+        over_limit = {"over-limit": "x" * (per_skill + 1)}
+
+        self.assertEqual([], PACKAGE_VALIDATOR.description_budget_errors(at_limit))
+        self.assertEqual(
+            [f"over-limit: description is {per_skill + 1} characters; the limit is {per_skill}."],
+            PACKAGE_VALIDATOR.description_budget_errors(over_limit),
         )
 
-    def test_rejects_malformed_yaml(self) -> None:
-        self.assert_description_error(
-            "---\ndescription: [unterminated\n---\n",
-            "invalid YAML frontmatter",
+    def test_total_budget_counts_every_skill(self) -> None:
+        total = PACKAGE_VALIDATOR.MAX_TOTAL_DESCRIPTION_CHARS
+        size = 400
+        full = {f"skill-{index}": "x" * size for index in range(total // size)}
+        remainder = total - size * len(full)
+        full["remainder"] = "x" * remainder
+
+        self.assertEqual([], PACKAGE_VALIDATOR.description_budget_errors(full))
+
+        full["remainder"] += "x"
+        errors = PACKAGE_VALIDATOR.description_budget_errors(full)
+
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn(f"total {total + 1} characters", errors[0])
+
+
+class PackageLayoutTests(unittest.TestCase):
+    """A package must still work after an installer copies only its directory."""
+
+    def package_errors(
+        self, skill_markdown_body: str, files: Mapping[str, str]
+    ) -> list[str]:
+        with tempfile.TemporaryDirectory(prefix="skill-package-") as directory:
+            skills_root = Path(directory) / "skills"
+            package = skills_root / "engineering/example"
+            package.mkdir(parents=True)
+            (package / "SKILL.md").write_text(
+                "---\nname: example\ndescription: Example.\n---\n\n"
+                + skill_markdown_body,
+                encoding="utf-8",
+            )
+            (skills_root / "shared.md").write_text("shared", encoding="utf-8")
+            for relative, content in files.items():
+                path = package / relative
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(content, encoding="utf-8")
+            return PACKAGE_VALIDATOR.validate(skills_root)
+
+    def test_accepts_links_that_resolve_inside_the_package(self) -> None:
+        body = (
+            "Read [the guide](references/guide.md#setup), "
+            "[a spaced name](references/two%20words.md), "
+            "[the docs](https://example.com/docs), [a heading](#usage) "
+            "and `[not a link](missing.md)`.\n\n"
+            "```markdown\n[example only](also-missing.md)\n```\n"
+        )
+        files = {
+            "references/guide.md": "guide",
+            "references/two words.md": "spaced",
+        }
+
+        self.assertEqual([], self.package_errors(body, files))
+
+    def test_rejects_a_link_to_a_file_the_package_does_not_ship(self) -> None:
+        errors = self.package_errors("See [the guide](references/guide.md).\n", {})
+
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("linked file does not exist: references/guide.md", errors[0])
+
+    def test_rejects_a_link_to_an_existing_file_outside_the_package(self) -> None:
+        errors = self.package_errors("See [shared notes](../../shared.md).\n", {})
+
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("link leaves the package", errors[0])
+
+    def test_rejects_a_fixture_that_hosts_would_install_as_a_skill(self) -> None:
+        errors = self.package_errors(
+            "", {"evals/files/broken/SKILL.md": "not an installable package"}
         )
 
-    def test_rejects_non_string_description(self) -> None:
-        self.assert_description_error(
-            "---\ndescription:\n  - list item\n---\n",
-            "description must resolve to a string",
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("rename evals/files/broken/SKILL.md", errors[0])
+
+    def test_accepts_the_same_fixture_under_another_filename(self) -> None:
+        errors = self.package_errors(
+            "", {"evals/files/broken/SKILL.fixture.md": "not an installable package"}
         )
 
-    def test_rejects_symlinked_skill_entrypoint(self) -> None:
-        with tempfile.TemporaryDirectory(
-            prefix="shared-validator-description-"
-        ) as temp_dir:
-            repo_root = Path(temp_dir)
-            skill_dir = repo_root / "skills" / "engineering" / "example"
-            skill_dir.mkdir(parents=True)
-            outside = repo_root / "outside.md"
-            outside.write_text("---\ndescription: external\n---\n", encoding="utf-8")
-            (skill_dir / "SKILL.md").symlink_to(outside)
+        self.assertEqual([], errors)
 
-            with self.assertRaisesRegex(ValueError, "must be a regular file"):
-                DESCRIPTION_VALIDATOR.collect(repo_root)
+    def test_rejects_a_shipped_script_that_does_not_compile(self) -> None:
+        broken = "def broken(:\n"
+        errors = self.package_errors(
+            "",
+            {"scripts/probe.py": broken, "evals/files/broken.py": broken},
+        )
 
-    def parse_description(self, content: str) -> str:
-        """Parse one isolated SKILL.md fixture."""
-
-        with tempfile.TemporaryDirectory(
-            prefix="shared-validator-description-"
-        ) as temp_dir:
-            path = Path(temp_dir) / "SKILL.md"
-            path.write_text(content, encoding="utf-8")
-            return DESCRIPTION_VALIDATOR.parse_description(path)
-
-    def assert_description_error(self, content: str, message: str) -> None:
-        """Require one isolated SKILL.md fixture to fail with a useful reason."""
-
-        with tempfile.TemporaryDirectory(
-            prefix="shared-validator-description-"
-        ) as temp_dir:
-            path = Path(temp_dir) / "SKILL.md"
-            path.write_text(content, encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, message):
-                DESCRIPTION_VALIDATOR.parse_description(path)
+        self.assertEqual(1, len(errors), errors)
+        self.assertIn("scripts/probe.py: does not compile", errors[0])
 
 
 if __name__ == "__main__":

@@ -1,4 +1,0 @@
-interface:
-  display_name: "isitagentready"
-  short_description: "Audit repository agent readiness with source and runtime evidence at the requested scope"
-  default_prompt: "Help me run /isitagentready against this repository, separating source findings from verified runtime behavior and reporting priorities, applicability, and limits."

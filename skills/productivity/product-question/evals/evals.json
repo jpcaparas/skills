@@ -21,7 +21,11 @@
           "type": "structural"
         }
       ],
-      "tags": ["smoke", "product", "share-ready"]
+      "tags": [
+        "smoke",
+        "product",
+        "share-ready"
+      ]
     },
     {
       "id": 2,
@@ -38,7 +42,10 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "uncertainty"]
+      "tags": [
+        "edge",
+        "uncertainty"
+      ]
     },
     {
       "id": 3,
@@ -51,24 +58,25 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     },
     {
       "id": 4,
       "name": "loads-answer-contract",
       "prompt": "I already found the relevant files. Turn this behavior into a forwardable PM answer with a clear short answer, rules, and confidence note.",
-      "expected_output": "The agent should load references/answer-contract.md or templates/product-answer.md and produce a polished share-ready response.",
+      "expected_output": "Produces a polished share-ready answer with a clear short answer, rules and a confidence note.",
       "assertions": [
-        {
-          "text": "Agent reads references/answer-contract.md or templates/product-answer.md",
-          "type": "disclosure"
-        },
         {
           "text": "Output is structured for direct sharing",
           "type": "structural"
         }
       ],
-      "tags": ["disclosure", "answer-contract"]
+      "tags": [
+        "disclosure",
+        "answer-contract"
+      ]
     },
     {
       "id": 5,
@@ -76,9 +84,15 @@
       "prompt": "Rewrite this birthday message so I can forward it to our team: Happy birthday Jo, have a lovely day!",
       "expected_output": "Handles the prose request without activating app-behavior investigation or searching a repository.",
       "assertions": [
-        { "text": "Does not treat forwardability alone as a reason to inspect code or use the product-answer template", "type": "negative" }
+        {
+          "text": "Does not treat forwardability alone as a reason to inspect code or use the product-answer template",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative", "invocation"]
+      "tags": [
+        "negative",
+        "invocation"
+      ]
     },
     {
       "id": 6,
@@ -86,11 +100,24 @@
       "prompt": "Use product-question. The behavior is in src/billing/cancel.ts and tests/billing/cancel.test.ts; start there. Explain cancellation eligibility to a technical PM in one paragraph, keeping the exact status enum and a short relevant code excerpt if it helps. Do not use a five-section template.",
       "expected_output": "Starts from the supplied owning files, verifies the actual behavior and exceptions, and gives a shareable paragraph with useful technical detail and compact traceable evidence rather than enforcing a search order or template.",
       "assertions": [
-        { "text": "Reads the known owning files before expanding discovery only as needed", "type": "verification" },
-        { "text": "Preserves product meaning, material conditions, and traceable evidence in the requested form", "type": "functional" },
-        { "text": "Does not ban useful technical terms or code, force labels, or claim unseen behavior", "type": "negative" }
+        {
+          "text": "Reads the known owning files before expanding discovery only as needed",
+          "type": "verification"
+        },
+        {
+          "text": "Preserves product meaning, material conditions, and traceable evidence in the requested form",
+          "type": "functional"
+        },
+        {
+          "text": "Does not ban useful technical terms or code, force labels, or claim unseen behavior",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "presentation", "evidence"]
+      "tags": [
+        "edge",
+        "presentation",
+        "evidence"
+      ]
     }
   ]
 }

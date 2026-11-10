@@ -120,12 +120,6 @@ Supported target values are `agents`, `codex`, `copilot`, `gemini`, and `opencod
 
 The helper requires an existing directory for `--cwd`. When `--skill-name` is supplied, it enforces the portable 1–64 character lowercase, digit, and single-hyphen name contract before composing a destination.
 
-The scaffold helper does not forward `--target-harness`. When scaffolding, infer first and pass the result explicitly:
-
-```bash
-bash scripts/scaffold.sh <skill-name> --output-root <recommended-root>
-```
-
 Compatibility is a discovery contract, not a branding guess:
 
 - `skills/` publication lanes are repository source layouts, not claims that every harness discovers them directly.
@@ -208,9 +202,3 @@ This is conversational guidance for the author before scaffolding. Do not write 
 Then proceed unless the user overrides the destination.
 
 Placement is complete when the chosen root follows an explicit user target or the strongest compatible repository convention, incompatible library counts cannot affect the result, the recommendation is stated before writes, and fresh skill discovery can see the resulting path.
-
-## See Also
-
-- `references/curation.md` — lifecycle state and publication surfaces affected by a move or rename
-- `references/anatomy.md` — package layout inside the chosen root
-- `references/cross-harness.md` — platform discovery paths and portability constraints

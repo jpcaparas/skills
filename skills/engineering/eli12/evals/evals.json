@@ -6,21 +6,20 @@
       "id": 1,
       "name": "broad_flow_smoke",
       "prompt": "Walk me through what happens when a user signs in across this codebase, and keep it simple.",
-      "expected_output": "Traces the sign-in flow and explains it simply with concrete file anchors, using references or independent explorers only where they help.",
+      "expected_output": "Traces the sign-in flow and explains it simply with concrete file anchors, using independent explorers only where they help.",
       "assertions": [
         {
           "text": "Explains the observed sign-in path from entrypoint to result, with file or symbol anchors and explicit uncertainty where wiring is unverified",
           "type": "functional"
         },
         {
-          "text": "Uses only references relevant to an actual need, if any; neither reference preloads nor a fixed number of explorers are required for a broad flow",
+          "text": "Does not require a fixed number of explorers for a broad flow",
           "type": "disclosure"
         }
       ],
-      "tags": ["smoke", "disclosure"],
-      "files": [
-        "references/explorer-prompt.md",
-        "references/explainer-prompt.md"
+      "tags": [
+        "smoke",
+        "disclosure"
       ]
     },
     {
@@ -30,17 +29,13 @@
       "expected_output": "Keeps the explanation accessible, uses one grounded analogy, and ties that analogy back to the real cache implementation.",
       "assertions": [
         {
-          "text": "Uses an audience-appropriate analogy and states any important mismatch, consulting references/analogy-patterns.md only if useful",
-          "type": "functional"
-        },
-        {
           "text": "Reconnects the analogy to exact code roles instead of leaving it abstract",
           "type": "functional"
         }
       ],
-      "tags": ["edge", "disclosure"],
-      "files": [
-        "references/analogy-patterns.md"
+      "tags": [
+        "edge",
+        "disclosure"
       ]
     },
     {
@@ -54,24 +49,24 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     },
     {
       "id": 4,
       "name": "narrow_symbol_direct",
       "prompt": "Explain this auth middleware simply.",
-      "expected_output": "Explains the middleware's actual checks and continuation or rejection behavior directly, without unnecessary delegation or reference reads.",
+      "expected_output": "Explains the middleware's actual checks and continuation or rejection behavior directly, without unnecessary delegation.",
       "assertions": [
         {
           "text": "Grounds the explanation in the middleware's code and defines jargon rather than inventing behavior from its name",
           "type": "functional"
-        },
-        {
-          "text": "Can answer directly from the relevant code without preloading references/explainer-prompt.md or creating explorers",
-          "type": "disclosure"
         }
       ],
-      "tags": ["smoke"]
+      "tags": [
+        "smoke"
+      ]
     },
     {
       "id": 5,
@@ -84,13 +79,13 @@
           "type": "functional"
         },
         {
-          "text": "Does not require a gotchas reference preload or a quota of clarification questions before resolving the target",
+          "text": "Does not require a quota of clarification questions before resolving the target",
           "type": "disclosure"
         }
       ],
-      "tags": ["edge", "disclosure"],
-      "files": [
-        "references/gotchas.md"
+      "tags": [
+        "edge",
+        "disclosure"
       ]
     },
     {
@@ -104,11 +99,14 @@
           "type": "functional"
         },
         {
-          "text": "Does not treat broad wording or the probe's clarify/fanout hint as a requirement to ask questions, preload references, or delegate",
+          "text": "Does not treat broad wording or the probe's clarify/fanout hint as a requirement to ask questions or delegate",
           "type": "functional"
         }
       ],
-      "tags": ["edge", "smoke"]
+      "tags": [
+        "edge",
+        "smoke"
+      ]
     }
   ]
 }

@@ -1,5 +1,0 @@
-display_name: "Azure DevOps Wiki Markdown"
-short_description: "Write and fix Azure DevOps wiki Markdown, Mermaid, TOC, TOSP, and code fences"
-default_prompt: "Help me write or repair an Azure DevOps wiki page, Mermaid diagram, query-table block, or code fence"
-icon: "book-open"
-

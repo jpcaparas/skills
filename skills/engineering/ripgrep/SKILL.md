@@ -1,119 +1,43 @@
 ---
 name: ripgrep
-description: "Uses ripgrep (`rg`) for local text and path search, including code symbols, literals, regexes, filename discovery, and machine-readable matches. Use when searching repository files or local logs; not for web search, full-file reads, or structured JSON queries better handled by jq."
-compatibility: "Requires: rg. Optional: python3 for probe and validation scripts. PCRE2-specific patterns require an rg build compiled with PCRE2."
-metadata:
-  version: "1.0.0"
-  short-description: "Prefer rg over grep for fast recursive search"
-  openclaw:
-    category: "development"
-    subcategory: "search"
-    requires:
-      bins: [rg, python3]
-    cliHelp: "rg --help"
-    tags: ["ripgrep", "rg", "grep", "search", "codebase", "regex"]
-references:
-  - commands
-  - configuration
-  - patterns
-  - gotchas
+description: "Uses ripgrep (`rg`) for local text and path search: code symbols, literals, regexes, filename discovery, machine-readable matches. Use when searching repository files or local logs. Not for web search, reading a known file, or JSON queries better handled by jq."
+compatibility: "Requires rg. `-P` needs an rg build with PCRE2 (check `rg --pcre2-version`)."
 ---
 
 # ripgrep
 
-Prefer `rg` over `grep` for text search, and prefer `rg --files` over `find | grep` when the real task is path discovery.
+Use `rg` instead of `grep` for recursive text search, and `rg --files` instead of `find | grep` for path discovery (`rg --files | rg '(^|/)Dockerfile$'`). Fall back to `grep` only when `rg` is missing or exact POSIX behaviour is the requirement. Read a known file directly rather than searching for it. Behaviour below was verified on ripgrep 15.1.0 (2026-04-10); if an example disagrees with the installed build, check `rg --version` and `rg --help`.
 
-Verified locally against `ripgrep 15.1.0` on April 10, 2026. The skill is repo-agnostic, but the examples assume a Unix-like shell and an `rg` binary in `PATH`.
+## Defaults
 
-## Decision Tree
+- `-F` for literals, especially user-supplied strings with punctuation; single-quote patterns and replacements so the shell does not touch `$1`, `!` or backslashes.
+- Narrow early with a path plus `-t type` or `-g glob` (`-T` excludes a type).
+- `rg -l` to find files before opening them; `--count-matches` counts matches, `-c` counts matching lines.
+- For scripts: `-n --color never --no-heading`, `--json` (JSON Lines: begin/match/end/summary), `-0` or `-l` for file lists, and `--sort path` only when determinism matters (it forces single-threaded search).
+- Exit codes: 0 match, 1 no match, 2 error; `-q` when only the code matters.
 
-What kind of search do you need?
+## Missing results
 
-- Search file contents for text, symbols, regexes, or literals
-  - Start with `rg`
-  - Read `references/commands.md`
+`rg` skips what is ignored (`.gitignore`, `.ignore`, `.rgignore`, precedence in that reverse order), hidden, binary, and symlinked. Choose the override that matches the suspicion instead of a ladder of retries:
 
-- Find filenames or paths without reading file contents
-  - Start with `rg --files [path]`
-  - Then filter that list with a second `rg` if needed
-  - Read `references/patterns.md`
+```bash
+rg --hidden 'pattern' config/              # hidden, ignores still apply
+rg -u 'pattern' logs/                      # ignored, hidden still skipped
+rg --hidden --no-ignore 'pattern' .cache/  # both, known subtree
+rg -n -F 'needle' .cache/result.txt        # explicit file path overrides ignore and globs
+rg --debug 'pattern' src/                  # unknown skip reason
+```
 
-- Search only specific languages, globs, hidden files, ignored files, compressed data, or multiline blocks
-  - Read `references/commands.md`
-  - If results seem wrong or missing, read `references/gotchas.md`
-
-- Make ripgrep behavior repeatable with config files, aliases, or custom file types
-  - Read `references/configuration.md`
-
-- Feed results into automation, scripts, editors, or other tools
-  - Prefer `--json`, `-0`, `-l`, `--count-matches`, or `--sort path` as appropriate
-  - Read `references/patterns.md`
-
-- The user wants full-file reading, structured JSON queries, or filesystem metadata
-  - Do not force `rg` into a role it is bad at
-  - Read the file directly, or use `jq`, `find`, or `fd`
-
-## Default Operating Rules
-
-1. Use `rg` first for text search. Only fall back to `grep` when `rg` is unavailable or exact POSIX grep behavior is the real requirement.
-2. Use `-F` for user-provided literals unless the user clearly asked for regex semantics.
-3. Narrow the search early with an explicit path plus `-t` or `-g` instead of searching the entire tree and cleaning up later.
-4. Use `rg --files` for path discovery, then pipe into another `rg` for filename filtering instead of composing `find ... | grep ...`.
-5. Choose ignore handling for the known scope: normal traversal, `--hidden` for hidden entries, `-u` or `--no-ignore` for ignored entries, or both when needed. Search a known file directly; do not run failed intermediate searches merely to reach it. Reserve binary overrides such as `-uuu` for an actual binary-search need.
-6. Use `--debug` when results are missing and you need to know what ripgrep skipped.
-7. Use `--json` or `-n --color never --no-heading` for machine consumption. Prefer `--sort path` when deterministic output matters more than maximum speed.
-
-## Quick Reference
-
-| Need | Command | Notes |
-| --- | --- | --- |
-| Literal text search | `rg -n -F 'needle' path/` | Best default for user-provided strings with punctuation |
-| Regex search | `rg -n 'foo\\s+bar' path/` | Use single quotes so the shell does not interfere |
-| Filenames only | `rg --files path/` | Respects ignore files by default |
-| Filter filenames | `rg --files | rg '(^|/)Dockerfile$'` | Good replacement for `find . | grep ...` |
-| Match specific languages | `rg -n -t py 'pattern' src/` | `-t` includes, `-T` excludes |
-| Match specific globs | `rg -n -g '*.tsx' 'pattern' src/` | Later globs override earlier ones |
-| Search hidden or ignored content | `rg --hidden 'pattern' path/`, `rg -u 'pattern' path/`, or `rg --hidden --no-ignore 'pattern' path/` | Choose the needed filter override directly; a known file path can be searched explicitly |
-| Files with matches | `rg -l 'pattern' path/` | Use before opening files |
-| Count individual matches | `rg --count-matches 'pattern' path/` | `-c` counts matching lines, not matches |
-| Machine-readable output | `rg --json 'pattern' path/` | Best for tools and scripts |
-| Lookaround or backreferences | `rg -P '...' path/` | Requires PCRE2 support in the build |
-| Multiline blocks | `rg -U '(?s)start.*end' file` | Multiline is slower and more memory-hungry |
-| Diagnose skipped files | `rg --debug 'pattern' path/` | Shows ignore and skip reasons |
-
-## Reading Guide
-
-| Task | Read |
-| --- | --- |
-| Correct command, flag, or output mode | `references/commands.md` |
-| Config files, aliases, custom types, and environment setup | `references/configuration.md` |
-| Agent search workflows, filename discovery, shell pipelines, and deterministic output | `references/patterns.md` |
-| Missing results, quoting issues, multiline surprises, JSON limits, and other traps | `references/gotchas.md` |
-
-## Verified Behaviors
-
-1. `rg --files` respects ignore rules by default and excluded an ignored `logs/app.log` in local probes.
-2. `.rgignore` overrode `.ignore`, and `--no-ignore` restored access to the same ignored file.
-3. `--hidden` surfaced hidden content without turning off ignore handling.
-4. The order of `-g` flags changed the result set exactly as upstream documents: later globs overrode earlier ones.
-5. `RIPGREP_CONFIG_PATH` successfully loaded `--smart-case` and a custom `web` type from a config file.
-6. `--json` emitted `begin`, `match`, `end`, and `summary` messages in JSON Lines format.
-7. `-U '(?s)...'` matched across lines, and `-P` lookaround worked on this machine because the local build includes PCRE2.
+`-uuu` also searches binary files; use it only for that. `--no-ignore` does not imply hidden. Later `-g` globs override earlier ones, so `-g '!*.txt' -g '*.txt'` and the reverse differ.
 
 ## Gotchas
 
-1. `rg` is not a byte-for-byte drop-in replacement for POSIX `grep`; it is the default search tool when speed, recursion, ignore handling, or Unicode-aware regex matter.
-2. Missing results are usually an ignore, hidden-file, glob-order, or quoting problem before they are a ripgrep bug. Choose the relevant correction directly when known; use `--debug` when skip reasons are unclear.
-3. `--replace` changes printed output only. It never edits files.
-4. `--json` is for search results, not every output mode. It does not combine with `--files`, `-l`, or `-c`.
-5. `-P` and `-U` are powerful but costlier than the default engine and normal line-oriented search. Use them deliberately.
+- `--replace` / `-r` only changes printed output; it never edits files. Use `rg` to locate, then an editor or codemod to write.
+- `--json` does not combine with `--files`, `-l`, `-c` or `--count-matches`.
+- `-P` (lookaround, backreferences) needs PCRE2 and is slower; `-U` multiline (`-U '(?s)start.*end'`) reads more into memory. Use each only when the match needs it.
+- Counts and file lists can disagree on binary-heavy input; rerun with `--binary` or `-a`.
+- `rg` is recursive when given directories, and has no PCRE2 by default.
 
-## Helper Scripts
+## Configuration
 
-- `scripts/probe_ripgrep.py` builds a temporary corpus and verifies real `rg` behavior such as ignore precedence, JSON output, multiline matching, and PCRE2 support.
-- `scripts/validate.py` checks structure, frontmatter, references, required files, and Python syntax.
-- `scripts/test_skill.py` runs validation, checks eval coverage, verifies cross-references, and executes the ripgrep probe suite.
-
-## When Guidance Stops Helping
-
-If an example disagrees with the installed build, inspect `rg --version`, `rg --help`, active configuration, and relevant official docs. Use a small non-sensitive corpus to distinguish a version change from an ignore or quoting mistake. Propose a canonical skill correction with that evidence and reproducer, leaving unsupported behavior explicit. Do not silently edit an installed copy or broaden the search into secret-bearing paths to prove a point.
+ripgrep reads no config unless `RIPGREP_CONFIG_PATH` points at a file: one argument per line, `#` comments, disabled per command with `--no-config`. Reasonable defaults are `--smart-case`, `--no-heading` for scripts, and a `--type-add=web:*.{html,css,js,jsx,ts,tsx}` style type for languages searched constantly; do not set `--hidden`, `--no-ignore`, `-u`, `-P` or `-U` globally. Inspect types with `rg --type-list`; clear a built-in before redefining it with `--type-clear json --type-add 'json:*.json5'`. Keep aliases transparent (`alias rgl='rg -n -F'`).

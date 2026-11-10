@@ -1,6 +1,0 @@
-{
-  "harness": "claude",
-  "event": "StopFailure",
-  "scripts": [],
-  "commands": []
-}

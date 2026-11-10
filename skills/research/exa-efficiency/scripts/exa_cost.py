@@ -8,7 +8,7 @@
 Offline only. Prints a JSON verdict with a worst-case USD figure and exits 0 (ok),
 2 (warnings: read them), or 3 (blocked: do not send). Prices are the 2026-10-27 snapshot
 of https://exa.ai/docs/admin/pricing, cross-checked against the costDollars that Exa
-returned in a live spike (references/evidence.md). Recheck when Exa changes its pricing.
+returned in a live spike. Recheck when Exa changes its pricing.
 """
 
 from __future__ import annotations

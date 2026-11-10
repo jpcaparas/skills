@@ -1,16 +1,5 @@
 # Nano Banana 2.1 Gemini API Reference For Infographics
 
-## Table of Contents
-
-- [Overview](#overview)
-- [Model Policy](#model-policy)
-- [Base URL and Headers](#base-url-and-headers)
-- [Request Shape](#request-shape)
-- [Image And Thinking Settings](#image-and-thinking-settings)
-- [Response Handling](#response-handling)
-- [Cost](#cost)
-- [Common Failures](#common-failures)
-
 ## Overview
 
 This skill renders through Gemini `generateContent` with the model `gemini-nano-banana-2.1` (public name Nano Banana 2.1). The facts below were measured live on 2026-10-18.
@@ -24,11 +13,11 @@ The `nanobanana` skill, when installed, owns the full model mechanics: the Inter
 
 Official sources for disputed details: [image generation](https://ai.google.dev/gemini-api/docs/image-generation), [model page](https://ai.google.dev/gemini-api/docs/models/gemini-nano-banana-2.1), [generateContent reference](https://ai.google.dev/api/generate-content), and [pricing](https://ai.google.dev/gemini-api/docs/pricing). Ordinary prompt drafting does not need a fresh lookup.
 
-## Model Policy
+## Model policy
 
 Use `gemini-nano-banana-2.1` only. The bundled scripts hard-code it and have no `--model` flag.
 
-- Nano Banana 2 (`gemini-3.1-flash-image`; this skill previously called `gemini-3.1-flash-image-preview`) shuts down on 2026-10-29.
+- Nano Banana 2 (`gemini-3.1-flash-image`; this skill previously called `gemini-3.1-flash-image-preview`) shut down on 2026-10-29.
 - Nano Banana Pro, Nano Banana 2 Lite, `gemini-2.5-flash-image`, and Imagen cost more for worse results or are gone.
 - If 2.1 fails, diagnose and report. Do not fall back to another model.
 - When Google ships a newer Nano Banana, confirm it from official documentation and `ListModels`, then propose a sourced update to the canonical skill rather than editing an installed copy.
@@ -138,8 +127,3 @@ Diagnose before retrying and keep further paid calls within the authorized scope
 | `429` | Quota or rate limit | Slow down, lower `--max-concurrency`, retry later |
 | `500`, `503`, `504` | Transient backend or capacity issue | Retry with backoff within the authorized budget |
 
-## See Also
-
-- `references/patterns.md` for custom compositions and optional presets
-- `references/configuration.md` for the local scripts
-- `references/gotchas.md` for text and clutter pitfalls

@@ -8,12 +8,26 @@
       "prompt": "Use Synthetic search to find out how people handle cancellation safety with tokio::select!, and summarise the main approaches with sources.",
       "expected_output": "Checks SYNTHETIC_API_KEY without printing it, runs one or more focused queries with node scripts/search.js --compact --save, reads highlights first, opens full text from the saved file only when needed, discards irrelevant results, and answers with cited URLs.",
       "assertions": [
-        {"text": "Uses scripts/search.js --compact (or an equivalent highlights-only projection) rather than dumping raw JSON into context", "type": "functional"},
-        {"text": "Cites the result URLs used in the answer", "type": "functional"},
-        {"text": "Does not switch to a different search provider when Synthetic was requested", "type": "negative"}
+        {
+          "text": "Uses scripts/search.js --compact (or an equivalent highlights-only projection) rather than dumping raw JSON into context",
+          "type": "functional"
+        },
+        {
+          "text": "Cites the result URLs used in the answer",
+          "type": "functional"
+        },
+        {
+          "text": "Does not switch to a different search provider when Synthetic was requested",
+          "type": "negative"
+        }
       ],
-      "tags": ["smoke", "workflow"],
-      "files": ["scripts/search.js"]
+      "tags": [
+        "smoke",
+        "workflow"
+      ],
+      "files": [
+        "scripts/search.js"
+      ]
     },
     {
       "id": 2,
@@ -21,11 +35,22 @@
       "prompt": "Search Synthetic for tokio select cancellation, but only from docs.rs and GitHub.",
       "expected_output": "Puts site:docs.rs site:github.com in the query string (or uses --site twice), and explains that body parameters such as includeDomains are silently ignored.",
       "assertions": [
-        {"text": "Restricts with site: operators in the query or the helper's --site flag", "type": "functional"},
-        {"text": "Does not rely on includeDomains or another body parameter", "type": "negative"}
+        {
+          "text": "Restricts with site: operators in the query or the helper's --site flag",
+          "type": "functional"
+        },
+        {
+          "text": "Does not rely on includeDomains or another body parameter",
+          "type": "negative"
+        }
       ],
-      "tags": ["operators"],
-      "files": ["references/api.md", "references/patterns.md"]
+      "tags": [
+        "operators"
+      ],
+      "files": [
+        "references/api.md",
+        "references/patterns.md"
+      ]
     },
     {
       "id": 3,
@@ -33,11 +58,21 @@
       "prompt": "Use Synthetic search and give me 20 results about Bun vs Deno startup performance.",
       "expected_output": "Explains each search returns exactly 5 results and numResults-style parameters are ignored, then runs several distinct focused queries (in parallel), merges them by URL, and checks quota first if the batch is large.",
       "assertions": [
-        {"text": "States that the API returns a fixed 5 results per search", "type": "verification"},
-        {"text": "Achieves breadth with multiple distinct queries rather than a count parameter", "type": "functional"}
+        {
+          "text": "States that the API returns a fixed 5 results per search",
+          "type": "verification"
+        },
+        {
+          "text": "Achieves breadth with multiple distinct queries rather than a count parameter",
+          "type": "functional"
+        }
       ],
-      "tags": ["limits"],
-      "files": ["references/patterns.md"]
+      "tags": [
+        "limits"
+      ],
+      "files": [
+        "references/patterns.md"
+      ]
     },
     {
       "id": 4,
@@ -45,11 +80,20 @@
       "prompt": "Paste this entire 9,000-character stack trace into a Synthetic search and add site:github.com at the end.",
       "expected_output": "Explains that only the first 4,096 characters are searched, so the trailing site: filter would be dropped; extracts the distinctive error line and keeps the operator inside the limit.",
       "assertions": [
-        {"text": "Mentions the 4,096-character effective query limit", "type": "verification"},
-        {"text": "Shortens the query to the distinctive error text instead of sending the full trace", "type": "functional"}
+        {
+          "text": "Mentions the 4,096-character effective query limit",
+          "type": "verification"
+        },
+        {
+          "text": "Shortens the query to the distinctive error text instead of sending the full trace",
+          "type": "functional"
+        }
       ],
-      "tags": ["limits", "edge"],
-      "files": ["references/gotchas.md"]
+      "tags": [
+        "limits",
+        "edge"
+      ],
+      "files": []
     },
     {
       "id": 5,
@@ -57,11 +101,23 @@
       "prompt": "How many Synthetic searches do I have left this hour, and do searches eat into my model credits?",
       "expected_output": "Runs node scripts/search.js quotas or GET /v2/quotas (free), reads search.hourly.requests/limit/renewsAt, and explains searches only consume the hourly search bucket, not subscription requests or weekly credits.",
       "assertions": [
-        {"text": "Uses /v2/quotas or the helper's quotas command and notes it is free", "type": "functional"},
-        {"text": "Explains searches count only against search.hourly", "type": "verification"}
+        {
+          "text": "Uses /v2/quotas or the helper's quotas command and notes it is free",
+          "type": "functional"
+        },
+        {
+          "text": "Explains searches count only against search.hourly",
+          "type": "verification"
+        }
       ],
-      "tags": ["smoke", "quotas"],
-      "files": ["references/api.md", "scripts/search.js"]
+      "tags": [
+        "smoke",
+        "quotas"
+      ],
+      "files": [
+        "references/api.md",
+        "scripts/search.js"
+      ]
     },
     {
       "id": 6,
@@ -69,11 +125,20 @@
       "prompt": "The Synthetic docs show a published date, but most of my results don't have one. Which should I trust?",
       "expected_output": "Explains published is optional and present on a minority of results, recommends treating it as optional and not inferring recency from rank.",
       "assertions": [
-        {"text": "Treats published as optional", "type": "verification"},
-        {"text": "Routes to references/gotchas.md or references/api.md", "type": "disclosure"}
+        {
+          "text": "Treats published as optional",
+          "type": "verification"
+        },
+        {
+          "text": "Routes to references/api.md",
+          "type": "disclosure"
+        }
       ],
-      "tags": ["edge", "schema"],
-      "files": ["references/gotchas.md"]
+      "tags": [
+        "edge",
+        "schema"
+      ],
+      "files": []
     },
     {
       "id": 7,
@@ -81,11 +146,20 @@
       "prompt": "Synthetic search returns a blank 500 when my script sends query: \"\". Is it free to retry?",
       "expected_output": "Explains empty queries return a blank 500 that still costs hourly search quota, recommends validating non-blank queries locally, and notes missing or non-string query returns a free 400.",
       "assertions": [
-        {"text": "States the blank 500 still counts against the hourly search quota", "type": "verification"},
-        {"text": "Recommends local validation before sending", "type": "functional"}
+        {
+          "text": "States the blank 500 still counts against the hourly search quota",
+          "type": "verification"
+        },
+        {
+          "text": "Recommends local validation before sending",
+          "type": "functional"
+        }
       ],
-      "tags": ["edge", "errors"],
-      "files": ["references/gotchas.md"]
+      "tags": [
+        "edge",
+        "errors"
+      ],
+      "files": []
     },
     {
       "id": 8,
@@ -93,10 +167,15 @@
       "prompt": "I searched Synthetic for an obscure internal codename and got 5 results that look unrelated. Did it find anything?",
       "expected_output": "Explains the API always returns 5 results even when nothing matches, so the results should be judged for relevance and likely mean no real match; suggests refining or narrowing the query.",
       "assertions": [
-        {"text": "States that Synthetic never returns an empty result set", "type": "verification"}
+        {
+          "text": "States that Synthetic never returns an empty result set",
+          "type": "verification"
+        }
       ],
-      "tags": ["edge"],
-      "files": ["references/gotchas.md"]
+      "tags": [
+        "edge"
+      ],
+      "files": []
     },
     {
       "id": 9,
@@ -104,23 +183,43 @@
       "prompt": "Use Synthetic to grab the content of https://docs.astral.sh/uv/concepts/projects/.",
       "expected_output": "Uses the URL as the query, checks that result 1 matches the URL, reads its text from a saved response, and explains this works only for indexed pages and is not a live fetch.",
       "assertions": [
-        {"text": "Verifies result 1 is the requested URL before using its text", "type": "verification"},
-        {"text": "Explains URL queries are index lookups rather than live fetches", "type": "verification"}
+        {
+          "text": "Verifies result 1 is the requested URL before using its text",
+          "type": "verification"
+        },
+        {
+          "text": "Explains URL queries are index lookups rather than live fetches",
+          "type": "verification"
+        }
       ],
-      "tags": ["patterns"],
-      "files": ["references/patterns.md"]
+      "tags": [
+        "patterns"
+      ],
+      "files": [
+        "references/patterns.md"
+      ]
     },
     {
       "id": 10,
       "name": "structured-probe",
       "prompt": "Synthetic search seems to behave differently from the skill. Re-verify the limits in a machine-readable way.",
-      "expected_output": "Runs python3 scripts/probe_synthetic_search.py --mode limits (and optionally errors/quotas), compares output to references/evidence.md, and proposes a sourced correction rather than silently editing the installed skill.",
+      "expected_output": "Runs python3 scripts/probe_synthetic_search.py --mode limits (and optionally errors/quotas), compares output to the limits recorded in SKILL.md, and proposes a sourced correction rather than silently editing the installed skill.",
       "assertions": [
-        {"text": "Uses the probe script and states its quota cost", "type": "functional"},
-        {"text": "Compares against references/evidence.md", "type": "disclosure"}
+        {
+          "text": "Uses the probe script and states its quota cost",
+          "type": "functional"
+        },
+        {
+          "text": "Compares against the limits recorded in SKILL.md",
+          "type": "disclosure"
+        }
       ],
-      "tags": ["probe"],
-      "files": ["scripts/probe_synthetic_search.py", "references/evidence.md"]
+      "tags": [
+        "probe"
+      ],
+      "files": [
+        "scripts/probe_synthetic_search.py"
+      ]
     },
     {
       "id": 11,
@@ -128,11 +227,22 @@
       "prompt": "Node isn't installed. Give me a curl command for Synthetic search that won't flood my terminal.",
       "expected_output": "Gives a curl POST to https://api.synthetic.new/v2/search with the Bearer header and a jq-built JSON body, piped to a jq projection of title, url, published, and a trimmed highlight.",
       "assertions": [
-        {"text": "Uses POST https://api.synthetic.new/v2/search with Authorization: Bearer", "type": "functional"},
-        {"text": "Projects away the full text field with jq", "type": "functional"}
+        {
+          "text": "Uses POST https://api.synthetic.new/v2/search with Authorization: Bearer",
+          "type": "functional"
+        },
+        {
+          "text": "Projects away the full text field with jq",
+          "type": "functional"
+        }
       ],
-      "tags": ["api", "jq"],
-      "files": ["references/patterns.md"]
+      "tags": [
+        "api",
+        "jq"
+      ],
+      "files": [
+        "references/patterns.md"
+      ]
     },
     {
       "id": 12,
@@ -140,9 +250,14 @@
       "prompt": "Use Tavily to search for recent AI startup funding rounds.",
       "expected_output": "Does not trigger synthetic-search because the user explicitly asked for Tavily.",
       "assertions": [
-        {"text": "Does not route to synthetic-search when another provider is requested", "type": "negative"}
+        {
+          "text": "Does not route to synthetic-search when another provider is requested",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     },
     {
       "id": 13,
@@ -150,9 +265,14 @@
       "prompt": "Open this site, click around the navigation, and capture a screenshot of the pricing tab.",
       "expected_output": "Does not trigger synthetic-search because the task is browser automation.",
       "assertions": [
-        {"text": "Does not route to synthetic-search for browser automation", "type": "negative"}
+        {
+          "text": "Does not route to synthetic-search for browser automation",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     }
   ]
 }

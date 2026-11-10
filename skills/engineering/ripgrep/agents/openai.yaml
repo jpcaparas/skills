@@ -1,5 +1,0 @@
-interface:
-  display_name: "ripgrep"
-  short_description: "Prefer rg over grep for fast, ignore-aware text and filename search"
-  default_prompt: "Find the right ripgrep command for this search task and explain any important flags or gotchas"
-

@@ -1,23 +1,5 @@
 # Scaffold Layout
 
-## Managed Target Layout
-
-```text
-.github/
-├── workflows/
-│   └── copilot-setup-steps.yml
-└── copilot-instructions.md        # Optional but strongly recommended companion file
-```
-
-This skill only scaffolds the environment workflow directly. It may recommend adding `.github/copilot-instructions.md` when build, test, and validation guidance is missing.
-
-## Why This Layout
-
-- The official GitHub Docs contract points to a single workflow path.
-- The job name remains obvious and easy to inspect in session logs.
-- The workflow stays small and purpose-built: dependency bootstrapping and environment preparation, not full CI.
-- The plan file keeps repo-specific judgment explicit.
-
 ## Plan File Shape
 
 Use `templates/plan.example.json` as the starting point.
@@ -46,8 +28,6 @@ Top-level fields:
   "runs_on": "ubuntu-latest"
 }
 ```
-
-Use `kind` to explain the decision, not only the final label.
 
 `ubuntu-latest` and the action versions below are bundled example defaults. Select compatible runner labels and action refs from repository evidence and relevant official contracts; do not automatically upgrade repository pins.
 

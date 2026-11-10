@@ -138,11 +138,3 @@ Guidance:
 | Mention text stays literal | Used alias syntax while editing raw Markdown in code | Replace the alias form with `@<{identity-guid}>`. |
 | Math renders as plain text | Wrong surface or missing `$` delimiters | Use single or double dollar signs and keep the feature to PRs or wiki files. |
 | Video does not play | Used an iframe or a page URL instead of a media file | Use `<video>` with a direct media source URL. |
-
-## See Also
-
-- `references/syntax.md`
-- `references/support-matrix.md`
-- `references/gotchas.md`
-- `templates/wiki-page-advanced-starter.md`
-

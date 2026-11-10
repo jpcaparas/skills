@@ -1,6 +1,6 @@
 # Firecrawl Pricing (2026-10-18)
 
-Sources: [billing](https://docs.firecrawl.dev/billing), [pricing](https://www.firecrawl.dev/pricing) ("Effective September 4, 2026"), [rate limits](https://docs.firecrawl.dev/rate-limits), the [v2 OpenAPI spec](https://docs.firecrawl.dev/api-reference/v2-openapi.json), and the feature pages linked below. **Live** marks a figure Firecrawl actually billed in this skill's spike (`references/evidence.md`); everything else is documentation only.
+Sources: [billing](https://docs.firecrawl.dev/billing), [pricing](https://www.firecrawl.dev/pricing) ("Effective September 4, 2026"), [rate limits](https://docs.firecrawl.dev/rate-limits), the [v2 OpenAPI spec](https://docs.firecrawl.dev/api-reference/v2-openapi.json), and the feature pages linked below. **Live** marks a figure Firecrawl actually billed in this skill's spike; everything else is documentation only.
 
 ## Table of Contents
 

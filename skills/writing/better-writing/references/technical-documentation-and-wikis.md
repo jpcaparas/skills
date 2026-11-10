@@ -1,6 +1,6 @@
 # Technical documentation and wikis
 
-Use this reference when drafting, rewriting, or reviewing technical documentation or wiki entries. Use `references/genre-modes.md` to choose the page shape; this file adds documentation-specific style and maintenance rules.
+Use this reference when drafting, rewriting, or reviewing technical documentation or wiki entries. This file adds documentation-specific style and maintenance rules.
 
 The guidance adapts the durable parts of the Google developer documentation style guide. It does not import Google's product terminology, US English requirement, word list, or platform-specific formatting.
 
@@ -20,7 +20,7 @@ Depart from a preference when the audience or domain needs something clearer. Ke
 Before drafting, identify:
 
 - the reader and what they are trying to accomplish or understand
-- the page mode: task, reference, explanation, decision, runbook, or another mode from `references/genre-modes.md`
+- the page mode: task, reference, explanation, decision, runbook,
 - the starting state, prerequisites, permissions, and tools
 - the canonical terminology and any terms that need definition
 - the evidence source, owner, status, and review date when the wiki supports those fields

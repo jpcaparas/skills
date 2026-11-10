@@ -1,6 +1,0 @@
-{
-  "harness": "claude",
-  "event": "PostCompact",
-  "scripts": [],
-  "commands": []
-}

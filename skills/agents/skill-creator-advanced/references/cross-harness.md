@@ -100,26 +100,10 @@ Manual-only flags, slash commands, and skill-to-skill invocation are harness con
 These surfaces may coexist, but they do different jobs:
 
 - `SKILL.md` frontmatter belongs to the selected skill format.
-- `agents/openai.yaml` is a repository-specific Codex UI manifest.
-- `metadata.json` is packaging or catalog metadata when repository policy defines it.
 - owner-specific frontmatter extensions belong only to the contract that documents them.
 - `evals/evals.json` is test data for a runner that explicitly supports its schema.
 
 Do not move keys between these files, nest one owner's extension under another owner's namespace, or assume a registry field changes harness discovery.
-
-### Codex UI manifest used by this repository
-
-When this repository's packaging contract calls for Codex UI metadata, use the nested shape:
-
-```yaml
-# agents/openai.yaml
-interface:
-  display_name: "API Integration Helper"
-  short_description: "Create and verify a safe API integration"
-  default_prompt: "Help me create and verify a safe API integration."
-```
-
-Do not flatten the fields to the document root. The manifest is optional presentation metadata; it does not replace `SKILL.md` or establish discovery and invocation behavior. Validate it against the current repository or installed-harness schema before release.
 
 For any other extension, copy the exact documented schema from its owner and record which harness, registry, or installer consumes it. Omit speculative metadata.
 
@@ -174,9 +158,3 @@ Release a cross-harness claim only when:
 - owner-specific metadata is isolated and schema-checked
 - unsupported capabilities have a safe fallback or are excluded from the promise
 - eval evidence is valid for the named runner and harness
-
-## See Also
-
-- `references/curation.md` — invocation ownership, routers, hard and soft dependencies, and lifecycle surfaces
-- `references/anatomy.md` — portable core and earned support artifacts
-- `references/testing.md` — target-harness invocation and portability evidence

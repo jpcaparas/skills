@@ -67,5 +67,13 @@ class DockerProbeTests(unittest.TestCase):
         self.assertFalse(result["skipped"])
 
 
+class ProbeSuiteTests(unittest.TestCase):
+    def test_compact_command_fixtures_behave_as_documented(self) -> None:
+        suite = probe_implicit_token_savings.run_suite()
+
+        failing = [item["name"] for item in suite["checks"] if not item["passed"]]
+        self.assertEqual(failing, [])
+
+
 if __name__ == "__main__":
     unittest.main()

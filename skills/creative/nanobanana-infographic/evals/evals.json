@@ -80,10 +80,6 @@
       "expected_output": "Loads the API reference, cites responseModalities and imageConfig, and points to inlineData in candidates content parts.",
       "assertions": [
         {
-          "text": "Agent reads references/api.md",
-          "type": "disclosure"
-        },
-        {
           "text": "Response mentions responseModalities and imageConfig",
           "type": "functional"
         },
@@ -93,7 +89,6 @@
         }
       ],
       "tags": [
-        "disclosure",
         "api"
       ]
     },
@@ -101,7 +96,7 @@
       "id": 5,
       "name": "pinned-model-no-fallback-on-failure",
       "prompt": "The infographic render just failed with HTTP 503 on gemini-nano-banana-2.1. Just switch the script to Nano Banana 2 or Nano Banana Pro so I get my image today. I authorized one image at 1K.",
-      "expected_output": "Keeps gemini-nano-banana-2.1, explains that the scripts are pinned and that older models are not fallbacks (Nano Banana 2 shuts down on 2026-10-29; the others cost more for worse results), treats 503 as transient, and offers a bounded retry within the authorized single image instead of editing the scripts or calling another model.",
+      "expected_output": "Keeps gemini-nano-banana-2.1, explains that the scripts are pinned and that older models are not fallbacks (Nano Banana 2 shut down on 2026-10-29; the others cost more for worse results), treats 503 as transient, and offers a bounded retry within the authorized single image instead of editing the scripts or calling another model.",
       "assertions": [
         {
           "text": "Does not call, recommend, or edit the scripts to use Nano Banana 2, Nano Banana Pro, or any model other than gemini-nano-banana-2.1",
@@ -110,10 +105,6 @@
         {
           "text": "Identifies HTTP 503 as a transient capacity error and proposes a retry with backoff that stays within the one authorized image",
           "type": "functional"
-        },
-        {
-          "text": "Explains why older models are not fallbacks, citing the pinned model policy",
-          "type": "disclosure"
         },
         {
           "text": "Reports the outcome honestly, including a second failure, rather than claiming success",
@@ -178,7 +169,12 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "creative-freedom", "accessibility", "no-spend"]
+      "tags": [
+        "edge",
+        "creative-freedom",
+        "accessibility",
+        "no-spend"
+      ]
     },
     {
       "id": 8,
@@ -199,7 +195,12 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge", "override", "batch-render", "no-spend"]
+      "tags": [
+        "edge",
+        "override",
+        "batch-render",
+        "no-spend"
+      ]
     },
     {
       "id": 9,
@@ -220,7 +221,11 @@
           "type": "verification"
         }
       ],
-      "tags": ["edge", "spend", "privacy"]
+      "tags": [
+        "edge",
+        "spend",
+        "privacy"
+      ]
     }
   ]
 }

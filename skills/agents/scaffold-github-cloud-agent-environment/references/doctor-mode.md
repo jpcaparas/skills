@@ -1,69 +1,18 @@
-# Doctor Mode
+# Doctor mode
 
-Doctor mode is for real failures from real Copilot cloud agent runs.
+Start from the user's symptom, the current `copilot-setup-steps.yml` and, when available, the session logs, before editing any YAML. Run `scripts/doctor.py` and map its findings. Its parser is indentation-based, not a YAML or schema validator, so confirm findings against the real file.
 
-Start with:
+Session logs: check the installed `gh` help first. Earlier docs used `gh agent-task list`, `gh agent-task view --repo OWNER/REPO PR_NUMBER` and `... --log --follow`; do not upgrade the CLI to match them. Logs are also reachable from GitHub, IDE integrations and Raycast.
 
-1. the user's symptom
-2. the current repo state
-3. the current `copilot-setup-steps.yml` file
-4. the live session logs if available
+| Symptom | Inspect first | Usual cause |
+|---|---|---|
+| Workflow ignored | path, job name, default-branch status | wrong path or job name; not merged |
+| Dependencies fail | workflow and logs | install before checkout; wrong package manager or version; registry auth |
+| Network or registry blocked | PR warning, logs, firewall settings | allowlist; firewall on self-hosted runner; proxy or internal host |
+| Run stuck | logs, troubleshooting doc | long setup, blocked network, eventual timeout |
+| CI did not run after Copilot pushed | PR UI, repo settings | workflow approval |
+| Works locally, not in the cloud | instructions, runner, secrets | missing `copilot` variables; wrong runner; thin instructions |
 
-Run `python3 scripts/doctor.py --project /path/to/project --symptom "describe the failure" --json`, then map the output to the actions below.
+Repo-local fixes: missing file or job, unsupported job keys, timeout over 59, install before checkout, LFS without `lfs: true`, package-manager mismatch. Settings fixes: self-hosted runner with firewall on, Windows without a network plan, org runner policy overriding `runs-on`, workflows waiting for **Approve and run workflows**, missing `copilot` secrets or variables.
 
-## Symptom Map
-
-| Symptom | First evidence to inspect | Likely cause classes |
-|---------|---------------------------|----------------------|
-| Workflow seems ignored | file path, job name, default-branch status | wrong path, wrong job name, workflow not merged to default branch |
-| Dependencies fail to install | setup workflow plus session logs | missing checkout, wrong package manager, missing toolchain version, private registry auth |
-| Network or registry access is blocked | PR warning, session logs, firewall settings | firewall allowlist, self-hosted runner firewall incompatibility, proxy or internal-host setup |
-| Agent run starts but gets stuck | session logs, troubleshooting doc | long-running setup, blocked network, normal long-running behavior, eventual timeout |
-| CI workflows did not run after Copilot pushed | pull request UI and repo settings | workflow approval requirement |
-| Copilot can build locally but not in the cloud environment | custom instructions, runner choice, secrets | missing `copilot` environment variables, wrong runner, underspecified instructions |
-
-## Use Session Logs Early
-
-The official docs say you can inspect session logs from GitHub, IDE integrations, Raycast, or the GitHub CLI.
-
-Inspect the installed GitHub CLI's help/version first. Earlier docs used the commands below; verify that the installed release supports them before use, and consult the relevant session documentation only if the supported interface is unclear:
-
-- `gh agent-task list`
-- `gh agent-task view --repo OWNER/REPO PR_NUMBER`
-- `gh agent-task view --repo OWNER/REPO PR_NUMBER --log --follow`
-
-Use a supported read-only session/log interface to understand what Copilot actually tried before editing the workflow. Do not upgrade the CLI just to match a historical command example.
-
-## Findings That Usually Mean Repo Changes
-
-- missing `.github/workflows/copilot-setup-steps.yml`
-- missing `copilot-setup-steps` job
-- unsupported job keys in the setup job
-- `timeout-minutes` over `59`
-- install commands that run before checkout
-- LFS repo without `lfs: true`
-- obvious package-manager mismatch
-
-## Findings That Usually Mean Settings Changes
-
-- self-hosted runners with the integrated firewall still enabled
-- Windows runners without an explicit network-control decision
-- repository-level `runs-on` intent overridden by organization policy
-- CI workflows waiting for **Approve and run workflows**
-- missing `copilot` environment secrets or variables for registry auth or proxies
-
-## Recommended Doctor Sequence
-
-1. Confirm the workflow path and job name.
-2. Inspect session logs before rewriting YAML.
-3. Separate repo-local fixes from repo or org settings fixes.
-4. Patch local files minimally when the problem is local and clear, preserving custom steps and pins. The helper's parser and renderer have limits described in `references/scaffold-layout.md`; do not mistake their output for complete platform validation.
-5. Ask the user for settings access or confirmation when the fix lives outside the repository.
-6. Re-run the workflow manually or validate in a pull request after patching.
-
-## What Not To Do
-
-- Do not rewrite the workflow because the agent was merely slow once.
-- Do not disable the firewall casually to paper over missing allowlist design.
-- Do not move a repo to self-hosted runners without confirming that internal-resource access is actually required.
-- Do not assume a CI failure means the environment workflow failed; Actions approval is often the real blocker.
+Do not rewrite the workflow because one run was slow, and do not assume a CI failure means the setup workflow failed. After patching, re-run the workflow manually or validate in a pull request.

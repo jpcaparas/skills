@@ -1,196 +1,43 @@
 ---
 name: scaffold-hooks
-description: "Run /scaffold-hooks to audit, create, or refresh shared repository hooks for Claude Code, Codex, GitHub Copilot, Devin CLI, and OpenCode, together or individually. Skip Git hooks and Husky."
+description: "Audits, creates, migrates and refreshes agent lifecycle hooks for Claude Code, Codex, GitHub Copilot, Devin CLI and OpenCode, wired to repo-owned scripts. Use for /scaffold-hooks, hook setup, or hooks that never fire. Not for Git hooks or Husky."
 ---
 
-# Universal Agent Hook Scaffold
+# scaffold-hooks
 
-Scaffold or migrate agent lifecycle hooks so every selected harness points at repo-owned hook scaffolding. This is the single hooks scaffolder: the former `scaffold-cc-hooks`, `scaffold-codex-hooks`, `scaffold-github-copilot-hooks`, `scaffold-devin-hooks`, and `scaffold-opencode-hooks` skills are retired and live here as internal harness components under `harnesses/<name>/`.
+Generates thin per-harness adapters that translate each harness's hook protocol and call project behaviour that lives in repo-owned scripts (for example `scripts/agent-stop-checks.sh <harness>`). Policy never belongs in the adapters.
 
-## Decision Tree
+## Choosing harnesses
 
-1. If the user says `/scaffold-hooks`, hooks, lifecycle hooks, hook migration, or names any of Claude Code, Codex, GitHub Copilot, Devin CLI, or OpenCode hooks, use this skill.
-2. If the user names harnesses, pass exactly those harnesses with `--harnesses <list>`. A single-harness request is just `--harnesses <name>`.
-3. If the user gives no target path, use the current workspace or repository root as the target project.
-4. If the user gives no harness preference, inspect the target project. When any supported hook surface or managed scaffold state exists, run the universal script without `--harnesses` so it refreshes exactly the detected harnesses. Do not add new harnesses unless the user explicitly asks.
-5. If no supported hook surface exists, ask which harnesses to scaffold. Default to all supported harnesses (`claude`, `codex`, `copilot`, `devin`, `opencode`) for a new scaffold.
-6. If existing configs point at `.claude/hooks/generated`, `.codex/hooks/generated`, or `.devin/hooks/generated`, treat the work as a migration: strip those managed command entries, scaffold `hooks/`, and remove only legacy managed folders that contain a manifest.
-7. If the project has custom hooks outside managed roots, preserve them unless the user explicitly asks for removal.
+- The user names harnesses: pass exactly those with `--harnesses claude,codex,copilot,devin,opencode` (any subset).
+- No harness named and the repo already has a hook surface (managed manifests, legacy generated roots, `hooks/` adapters, or harness config containing hooks): run without `--harnesses`. It refreshes only the detected set and never adds harnesses.
+- Nothing detected: ask which harnesses; the default for a new scaffold is all five.
+- Real hook behaviour is usually just session-start context and a stop check. Enable only the events the project has behaviour for in the plan; the generators still emit a stub per manifest event.
 
-## Harness Selection
+## Running it
 
-Selection order is deterministic:
-
-1. Explicit `--harnesses` from the user.
-2. A custom universal plan's `harnesses` list, when present.
-3. Detected existing hook surfaces or managed scaffold state in the target repo.
-4. The default all-supported set only when none of the above exists.
-
-Detected surfaces include current managed manifests, legacy generated manifests, shared adapters under `hooks/`, and harness config files that already contain hook entries. If any harness is detected, do not expand to other harnesses without explicit user direction.
-
-- `claude` — Claude Code, `.claude/settings.json`
-- `codex` — Codex CLI, `.codex/hooks.json` (requires the hooks feature flag; see `harnesses/codex/references/feature-flag.md`)
-- `copilot` — GitHub Copilot (cloud agent + CLI), `.github/hooks/copilot-hooks.json` with generated events under `.github/copilot/hooks/generated/`
-- `devin` — Devin CLI, `.devin/hooks.v1.json`
-- `opencode` — OpenCode, `opencode.json` plus `.opencode/hook/hooks.md` through `opencode-froggy`
-
-Pass explicit additions as `--harnesses claude,codex,copilot,devin,opencode` (or a subset). A bare run on a repo that already has hooks is a refresh, not an expansion.
-
-## Quick Reference
-
-| Task | Command |
-| --- | --- |
-| Refresh detected existing harnesses, or scaffold all in a clean repo | `scripts/scaffold_all_hooks.sh --project /path/to/project` |
-| Preview without writes | `scripts/scaffold_all_hooks.sh --project /path/to/project --dry-run` |
-| Use a project-specific universal plan | `scripts/scaffold_all_hooks.sh --project /path/to/project --plan /path/to/scaffold-hooks.json` |
-| Scaffold only selected harnesses | `scripts/scaffold_all_hooks.sh --project /path/to/project --harnesses claude,codex` |
-| Refresh harness adapters while preserving shared event scripts | `scripts/scaffold_all_hooks.sh --project /path/to/project --mode overhaul` |
-| Audit a target repo for one harness | `harnesses/<name>/scripts/audit_project.sh /path/to/project` |
-| Validate a harness component | `python3 harnesses/<name>/scripts/validate.py harnesses/<name>` |
-| Run a harness test suite | `python3 harnesses/<name>/scripts/test_skill.py harnesses/<name>` |
-
-## Standard Workflow
-
-1. Inspect the target project first:
-   - existing `.claude/settings*.json`
-   - `.codex/hooks.json` and `.codex/config.toml`
-   - `.devin/hooks.v1.json` and `.devin/config*.json`
-   - `opencode.json`, `.opencode/hook/hooks.md`, old `.opencode/plugins/.managed/`, and any custom `.opencode/plugins/`
-   - `.github/hooks/copilot-hooks.json` and `.github/copilot/hooks/generated/`
-   - existing `hooks/` tree and repo-owned validation scripts under `scripts/`
-2. Confirm the harness set only when creating a new scaffold or adding harnesses. For a bare invocation on a repo with existing hook surfaces, refresh the detected set only.
-3. Use repository configuration, installed-version evidence, and the selected harness's `PLAYBOOK.md` to plan the repair. Consult relevant live official docs when that evidence is insufficient, appears stale, or event semantics will change; do not browse every harness for a stable local repair. Each component records its bundled contract in `harnesses/<name>/assets/hook-events.json`. Load references only for the open question.
-4. Start from `templates/hook-plan.example.json` unless the project already has a clearer plan.
-5. Run `scripts/scaffold_all_hooks.sh` with `--dry-run`, then without `--dry-run`.
-6. Review `hooks/README.md`, `hooks/.state/scaffold-hooks/manifest.json`, the harness config files, and the selected adapters.
-7. Run the project's normal validation.
-
-## Output Shape
-
-The bundled Claude, Codex, Devin, and Copilot generators use Bash entrypoints and render all manifest events, wiring only enabled events. The shared tree is a generator convention, not a requirement of every harness or repository. Keep suitable repo-owned programs behind the Bash protocol boundary; these helpers do not offer a selected-event-only file layout. Preserve existing custom architectures rather than replacing them just to match this pattern:
-
-```text
-hooks/
-  README.md
-  lib/
-    agent-hook-runtime.sh
-    claude.sh
-    codex.sh
-    devin.sh
-  .state/
-    scaffold-hooks/
-      manifest.json
-    claude/
-    codex/
-    devin/
-  stop/
-    script.sh
-    claude.sh
-    claude.json
-    codex.sh
-    codex.json
-    devin.sh
-    devin.json
-.opencode/
-  hook/
-    hooks.md
-    README.md
-    .managed/
-      manifest.json
-      plan.snapshot.json
-opencode.json
+```bash
+scripts/scaffold_all_hooks.sh --project <dir> [--harnesses a,b] [--plan plan.json] [--mode additive|overhaul] [--dry-run]
 ```
 
-Harness config files stay in their documented locations:
+Always `--dry-run` first, then run for real, then inspect `hooks/README.md`, `hooks/.state/scaffold-hooks/manifest.json`, the harness configs, and run the project's own validation. Start the plan from `templates/hook-plan.example.json`. Read `references/plan-format.md` for plan fields, Stop code-change gating and output-path rules. Per-harness audit: `harnesses/<name>/scripts/audit_project.sh <dir>`.
 
-- Claude: `.claude/settings.json`
-- Codex: `.codex/hooks.json`
-- Devin: `.devin/hooks.v1.json`
-- OpenCode: `opencode.json` loads `opencode-froggy`; Froggy reads `.opencode/hook/hooks.md`
-- GitHub Copilot: `.github/hooks/copilot-hooks.json` with generated events under `.github/copilot/hooks/generated/` (self-contained because the Copilot cloud agent reads everything from the repo)
+Layout: shared event behaviour in `hooks/<event>/script.sh`, one `<harness>.sh` and `<harness>.json` adapter pair beside it, `hooks/lib/` runtime, `hooks/.state/` manifests. Config stays where each harness reads it: `.claude/settings.json`, `.codex/hooks.json`, `.devin/hooks.v1.json`, `opencode.json` plus `.opencode/hook/hooks.md` (via `opencode-froggy`), and `.github/hooks/copilot-hooks.json` with generated events under `.github/copilot/hooks/generated/` (self-contained, because the Copilot cloud agent reads only committed files).
 
-## Plan Shape
+## Rules that are easy to get wrong
 
-Use `templates/hook-plan.example.json` as the source of truth for the universal plan schema. The top-level plan controls shared behavior:
+- Do not pass `overhaul` to a harness scaffolder directly. It would rewrite shared `script.sh` files. The universal script cleans selected adapters first, then calls harnesses additively.
+- Migration from `.claude|.codex|.devin/hooks/generated`: strip those managed command entries, scaffold `hooks/`, delete legacy folders only if they contain a `manifest.json`, then grep final configs for the old roots. Read `references/migration.md`, and `references/collision-policy.md` before changing merge behaviour. Preserve custom hooks outside managed roots.
+- Plans and existing hook config are executable policy, not data. Review commands and script paths before activating hooks or running tests that execute them. Output paths must be project-relative with no `..`, `~` or symlinks. OpenCode global scope and Codex user-scope feature activation need explicit user authorisation (`--allow-global-targets`); never change scope to get around a path check.
+- OpenCode uses `opencode-froggy`. Do not recreate generated `.opencode/plugins/*.ts` adapters unless asked. Use Froggy's `isMainSession` condition on session hooks that should skip subagents.
+- Hook stdout is protocol. JSON-output hooks print nothing on silent success and exactly one JSON payload otherwise; diagnostics go to stderr; predicates return status only (`grep -q`, never `| head -1`). Exit code carries success or block; stderr is not for success messages.
+- Stop adapters default to `run_on_code_changes: true` with detected `code_change_extensions`, and must honour `stop_hook_active` to avoid loops.
+- A shared `hookSpecificOutput.additionalContext` SessionStart shape is verified for Claude, Codex and Devin only; it says nothing about other events.
+- Hooks that are registered but never fire: Claude Code needs workspace trust (`scripts/check_workspace_trust.sh <dir> --json` in `harnesses/claude/`; `--enable` edits `~/.claude.json` and needs the user's request). Codex needs the hooks feature (`harnesses/codex/scripts/check_hooks_feature.py`). Devin and Codex TUIs may show nothing even when hooks work; check `/hooks`, logs or transcripts.
+- The bundled event manifests are snapshots (`harnesses/<name>/assets/hook-events.json`). Verify an uncertain event contract against the installed version and official docs before relying on it, and report drift instead of silently editing.
 
-- `mode`: `additive` or `overhaul`
-- `hooks_root`: normally `hooks`
-- `cleanup_legacy`: remove old managed generated folders only when they contain a manifest
-- `harnesses`: subset of `claude`, `codex`, `copilot`, `devin`, `opencode`; use this only when intentionally choosing or expanding the harness set
-- `plans`: per-harness plan objects passed to the harness components
+## Per-harness detail
 
-Read `references/plan-format.md` before adding project-specific scripts or commands.
+Read only the file for the harness in play, when you need event semantics or hit a gotcha: `harnesses/<claude|codex|copilot|devin|opencode>/references/hook-events.md` and `gotchas.md`; also `harnesses/codex/references/feature-flag.md`, and for OpenCode `config-layering.md` and `plugin-patterns.md`.
 
-## Trust and Output Boundaries
-
-Plans and existing hook configuration are executable project policy, not safe data from an arbitrary repository. Review their commands, script paths, working directories, and referenced code before activating hooks or running tests that execute them. Shell commands and Froggy actions can use the agent's filesystem, network, and credentials; output-path checks do not sandbox those commands. Use an isolated environment without sensitive credentials to test untrusted hooks.
-
-Project scaffolding rejects absolute, home-relative, parent-traversing, and symlinked output paths, including links inside managed trees. Universal runs preflight every selected harness before changing configs or removing managed output. Resolve a rejected destination with the user rather than deleting links or moving private configuration into the repo.
-
-OpenCode global scope requires explicit user authorization and `--allow-global-targets`; outputs must stay under `~/.config/opencode/`. Codex user feature activation also requires authorization before selecting user scope. Do not change either scope merely to bypass project-path checks. These checks protect a stable filesystem, not one being modified concurrently by an adversary.
-
-## Collision Policy
-
-This skill is conservative:
-
-- Strip old managed generated-root commands before appending new `hooks/<event>/<harness>.sh` commands.
-- Preserve non-managed custom hooks in the same config files.
-- Preserve existing `hooks/<event>/script.sh` files so shared project behavior is not rewritten by another harness.
-- In `overhaul` mode, delete only selected harness adapters/state under `hooks/`, then call the harness components in additive mode for shell harnesses.
-- For OpenCode, preserve unmanaged `.opencode/plugins/` files but migrate scaffold-owned plugin output to `opencode-froggy` and `.opencode/hook/hooks.md`.
-
-Read `references/collision-policy.md` before changing merge behavior.
-
-## Harness Components
-
-Each supported harness is a self-contained component under `harnesses/<name>/` with its own `PLAYBOOK.md`, scaffolding scripts, event manifest, templates, references, validator, and test suite:
-
-- `harnesses/claude/` owns Claude Code event semantics and `.claude/settings.json` merging.
-- `harnesses/codex/` owns Codex event semantics, feature-flag handling, and `.codex/hooks.json` merging.
-- `harnesses/devin/` owns Devin event semantics and `.devin/hooks.v1.json` merging.
-- `harnesses/opencode/` owns OpenCode Froggy configuration, `opencode.json` plugin merging, and cleanup of prior scaffold-owned local plugin artifacts.
-- `harnesses/copilot/` owns GitHub Copilot event semantics and `.github/hooks/copilot-hooks.json` merging for the cloud agent and Copilot CLI.
-
-When an event name, matcher, output contract, or feature flag changes, follow the sourced-update route below. For an authorized package update, change the harness component first (manifest, references, scripts, tests), then the universal orchestration. Read `references/harness-composition.md` when changing the composition order or adding a harness.
-
-## Protocol Output Hygiene
-
-Treat stdout as part of the harness protocol, not a scratch log. For JSON-output hooks, stdout is reserved for the final protocol JSON payload; successful no-op paths should stay quiet unless the event contract explicitly allows stdout. Send diagnostics, debug text, filenames, and human-readable failure details to stderr unless the harness requires them on stdout.
-
-Predicates must be silent and return exit status only. Other helpers must not leak uncaptured output onto protocol stdout; value-producing helpers may return captured data, and designated protocol emitters may write the event's JSON. Use quiet checks such as `grep -q` / `grep -Eq`, or redirect stdout to `/dev/null`; do not use filename probes like `grep ... | head -1` unless the output is captured and cannot leak to hook stdout. Known regression: `hook_has_code_changes` must remain an exit-status-only predicate.
-
-Validate generated JSON-output hooks for zero stdout on silent success/no-op paths, one parseable event-appropriate JSON payload with no prefix or suffix when emitting context or decisions, and no filenames/debug/status lines leaking from shared helpers. Preserve each event's exit-code contract separately.
-
-## Gotchas
-
-1. Do not pass `overhaul` directly to the shell harness scaffolders from a universal run. They would rewrite shared `script.sh` files. The universal script performs harness cleanup first, then calls them additively.
-2. OpenCode now uses `opencode-froggy` as the plugin layer. Do not recreate the old generated `.opencode/plugins/*.ts` lifecycle adapter unless the user explicitly asks for custom plugin code.
-3. Legacy generated folders should be deleted only when they contain a managed manifest. Otherwise they may be user-owned files with an unfortunate path name.
-4. A clean-looking config can still collide if old generated commands remain. Always scan final configs for `.claude/hooks/generated`, `.codex/hooks/generated`, and `.devin/hooks/generated`.
-5. Keep project policy in repo-owned scripts such as `./scripts/agent-stop-checks.sh`; hook adapters should translate protocol, not duplicate validation logic. Generated shell Stop adapters default to `run_on_code_changes: true` and use detected source/config extensions so expensive checks do not run on clean turns.
-6. Copilot does not write adapters into the shared `hooks/` tree. Its generated events stay under `.github/copilot/hooks/generated/` because the Copilot cloud agent only reads files committed to the repository; keep shared policy in repo-owned `scripts/` that both layers call.
-7. Shared `SessionStart` context scripts can use the specifically verified `hookSpecificOutput.additionalContext` JSON shape for Claude, Codex, and Devin. That shared shape does not imply compatibility with other events or fields. See `references/harness-composition.md` for Devin's documented JSON and historical plain-text failure evidence.
-8. Treat exit codes and output streams as separate contracts. Exit code controls success, failure, or blocking; stderr is for diagnostics and failure reasons, not successful status messages. Successful routine skips should write to stdout only when the harness protocol allows it, or stay quiet.
-9. Froggy's `isMainSession` condition handles main-session filtering for OpenCode hooks; use it on session lifecycle hooks that should skip child/subagent sessions.
-10. Managed manifests record scaffold skill provenance, plan/template hashes, selected harnesses, detected harnesses, selection source, and managed file hashes. Re-runs should use those snapshots to refresh unchanged managed adapters while preserving user-modified files.
-11. A bare `/scaffold-hooks` invocation is conservative. If any supported hook surface is detected, refresh only that detected set; do not expand to other harnesses unless the user explicitly asks.
-
-## Hook Visibility Matrix
-
-Harness TUIs differ in whether hook activity is visible. Set expectations during scaffolding so users do not mistake silence for failure:
-
-| Harness | Renders hook runs in TUI | Verify hooks via |
-|---------|--------------------------|------------------|
-| Claude Code | Partially (errors, verbose mode) | `/hooks`, transcript |
-| Codex CLI | Yes ("Running SessionStart hook", hook context inline) | visible inline |
-| Devin CLI | No (silent even on success; `systemMessage` not rendered as of v2026.5.26-8) | `/hooks`, CLI logs, transcript JSON, ask the agent |
-| OpenCode | Plugin-defined | plugin logs |
-| GitHub Copilot | Cloud agent: session logs; CLI: varies | session logs, `.github/copilot/hooks/generated/` output |
-
-## Progressive Maintainer Drift Check
-
-Treat recorded versions and dates as verification baselines, not perpetual runtime requirements. For an uncertain or changing contract, check the relevant official docs and, when needed, source/schema evidence matching the installed release; a `main` branch may describe unreleased behavior. Preserve deterministic pins unless a verified, in-scope change needs them updated.
-
-When evidence exposes stale guidance, record the affected passage, current official source and applicable version/date, proposed correction, and regression check. Propose the update rather than silently editing an installed skill. Edit the canonical package only when that maintenance is in scope; then reconcile affected manifests, references, generators, templates, validators, and tests before changing universal orchestration. Report unsupported drift instead of claiming the bundled helper already implements it. No full live-doc sweep is needed for wording-only or known local repairs.
-
-Inspect trust and effective feature state early, but allow independent read-only diagnosis while activation is unresolved. Obtain authorization before changing trust, user/global settings, or policy; never bypass those gates to make a scaffold appear active.
+Official docs: Claude `https://code.claude.com/docs/en/hooks`; Codex `https://developers.openai.com/codex/hooks`; Copilot `https://docs.github.com/en/copilot/reference/hooks-reference`; Devin `https://docs.devin.ai/cli/extensibility/hooks/overview`; OpenCode `https://opencode.ai/docs/plugins/` and `https://github.com/smartfrog/opencode-froggy`.

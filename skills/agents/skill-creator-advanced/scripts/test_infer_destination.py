@@ -12,6 +12,7 @@ import stat
 import subprocess
 import sys
 import tempfile
+import unittest
 from typing import Iterator
 from unittest import mock
 
@@ -942,6 +943,19 @@ def main() -> int:
         return 1
     print(f"PASS: {len(tests)} infer_destination regression groups")
     return 0
+
+
+class InferDestinationTests(unittest.TestCase):
+    def test_regression_groups(self) -> None:
+        groups = [
+            (name, fn)
+            for name, fn in sorted(globals().items())
+            if name.startswith("test_") and callable(fn)
+        ]
+        self.assertTrue(groups)
+        for name, fn in groups:
+            with self.subTest(name):
+                fn()
 
 
 if __name__ == "__main__":

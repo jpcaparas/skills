@@ -1,6 +1,6 @@
 # Gotchas
 
-Runtime details below describe the bundled `0.133.0` baseline, not every later release. See `PLAYBOOK.md` for known drift and the evidence-led update route.
+Runtime details below describe the bundled `0.133.0` baseline, not every later release.
 
 ## 1. The feature flag is `hooks`
 

@@ -17,9 +17,6 @@
           "type": "style"
         }
       ],
-      "files": [
-        "templates/client-report-template.md"
-      ],
       "tags": [
         "smoke"
       ]
@@ -34,9 +31,6 @@
           "text": "Workflow accepts an explicit repo path when the current directory is not the repo.",
           "type": "functional"
         }
-      ],
-      "files": [
-        "references/workflow.md"
       ],
       "tags": [
         "edge"
@@ -53,9 +47,6 @@
           "type": "negative"
         }
       ],
-      "files": [
-        "references/gotchas.md"
-      ],
       "tags": [
         "negative"
       ]
@@ -71,10 +62,6 @@
           "type": "disclosure"
         }
       ],
-      "files": [
-        "references/output-format.md",
-        "templates/client-report-template.md"
-      ],
       "tags": [
         "disclosure"
       ]
@@ -85,11 +72,24 @@
       "prompt": "Trusted clock: 2026-09-25 10:00 UTC. Summarize work since yesterday in one email paragraph, no headings or bullets. Direct git log and diff evidence for 2026-09-24 through now shows a saved-address selector added to checkout and overdue invoices added to reporting. There is no deployment or usage evidence.",
       "expected_output": "A single concise paragraph stating the resolved 2026-09-24 UTC boundary and grouping the two supported changes by feature without asking for confirmation or rerunning a collector.",
       "assertions": [
-        {"text": "Resolves yesterday to 2026-09-24 in UTC and proceeds without asking the user to spell or confirm that date", "type": "functional"},
-        {"text": "Returns one paragraph without mandatory headings, bullet counts, or collector invocation", "type": "structural"},
-        {"text": "Does not claim deployment, faster checkout, customer adoption, or measured impact", "type": "negative"}
+        {
+          "text": "Resolves yesterday to 2026-09-24 in UTC and proceeds without asking the user to spell or confirm that date",
+          "type": "functional"
+        },
+        {
+          "text": "Returns one paragraph without mandatory headings, bullet counts, or collector invocation",
+          "type": "structural"
+        },
+        {
+          "text": "Does not claim deployment, faster checkout, customer adoption, or measured impact",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "date-resolution", "format-freedom"]
+      "tags": [
+        "edge",
+        "date-resolution",
+        "format-freedom"
+      ]
     },
     {
       "id": 6,
@@ -97,9 +97,15 @@
       "prompt": "Make the client report for this week. I split my work between Los Angeles and Tokyo, and our reporting week may start on Sunday or Monday. No timezone or week-start policy is supplied.",
       "expected_output": "A focused request for the timezone and week boundary or exact date range, without choosing a convenient interpretation.",
       "assertions": [
-        {"text": "Asks for the material missing boundary rather than assuming timezone or week start", "type": "negative"}
+        {
+          "text": "Asks for the material missing boundary rather than assuming timezone or week start",
+          "type": "negative"
+        }
       ],
-      "tags": ["edge", "date-resolution"]
+      "tags": [
+        "edge",
+        "date-resolution"
+      ]
     },
     {
       "id": 7,
@@ -107,10 +113,20 @@
       "prompt": "Draft a client report since 2026-04-01. The repository is shallow and only contains commits from September; fetching older history is unavailable. The bundled collection recipe returned zero April commits. Do not modify installed skills.",
       "expected_output": "Discloses incomplete evidence instead of reporting no changes, and proposes a canonical shallow-history check with repository evidence or official Git guidance.",
       "assertions": [
-        {"text": "Distinguishes unavailable history from a verified empty reporting window and does not invent accomplishments", "type": "verification"},
-        {"text": "Proposes a sourced canonical correction with a shallow-repository example/check, without editing installed copies or claiming unavailable history was verified", "type": "functional"}
+        {
+          "text": "Distinguishes unavailable history from a verified empty reporting window and does not invent accomplishments",
+          "type": "verification"
+        },
+        {
+          "text": "Proposes a sourced canonical correction with a shallow-repository example/check, without editing installed copies or claiming unavailable history was verified",
+          "type": "functional"
+        }
       ],
-      "tags": ["edge", "evidence-gap", "source-conflict"]
+      "tags": [
+        "edge",
+        "evidence-gap",
+        "source-conflict"
+      ]
     }
   ]
 }

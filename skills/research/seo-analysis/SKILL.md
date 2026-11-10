@@ -1,137 +1,41 @@
 ---
 name: seo-analysis
-description: "Audit real codebases for SEO: metadata, rendering, crawlability, canonicals, schema, OG/social previews, i18n, sitemaps, robots, internal links, and AI-era search readiness. Trigger on SEO audit, schema, canonical, hreflang, sitemap, title/meta, or AI Overviews. Do NOT use for ads or link building."
-compatibility: "Optional: python3 for packaged helpers, command-line access to the target repo, local build/test tooling, and browser or HTTP tooling for rendered-page verification."
+description: "Audit real codebases for SEO: metadata, rendering, crawlability, canonicals, schema, OG/social previews, i18n, hreflang, sitemaps, robots, internal links, and AI-era search readiness. Do NOT use for ads or link building."
+compatibility: "Optional: command-line access to the target repo, build/test tooling, and browser or HTTP tooling for rendered-page verification."
 ---
 
 # seo-analysis
 
-Audit a codebase for search visibility risks at the requested scope. Provide an implementation handoff when requested or useful, not as a prerequisite to answering a focused question.
+Audit a codebase for search visibility risks at the requested scope, starting from the live repository and rendered output rather than assumptions about the framework. A focused question gets a focused answer with its evidence and limits; write files only when asked.
 
-This skill is framework- and language-agnostic. Start from the live repository and rendered output, not from assumptions about React, Next.js, Rails, Laravel, Astro, WordPress, or any other stack.
+## How to audit
 
-## Decision Tree
+- Find the delivery model (SSR, SSG, ISR, CSR, mixed), the route map, layout and head/metadata abstractions, and the sitemap, robots, canonical, structured-data and image helpers. Review page types, not single pages: home, landing, category, detail, article/docs, paginated/filtered, and auth/account/utility. SEO failures usually come from shared template logic, so one broken helper can explain hundreds of pages. Deduplicate to root causes before prioritising.
+- Verify rendered behaviour for runtime claims; SSR, hydration and edge rendering change what crawlers receive. When limited to source, label the result source-only and list the runtime checks still needed.
+- Crawlability, renderability and canonicalisation come first; title tweaks do not matter if pages are blocked, duplicated or undiscoverable.
+- Separate intentional exclusions from mistakes: login, cart, account, internal search, preview environments and thin utility pages are often meant to be `noindex`. Missing meta description is a preview-quality issue, not a blocker; a missing sitemap is minor on a small well-linked site; missing `hreflang` is fine for single-locale sites.
+- Search titles, social titles, canonicals and schema serve different consumers; check search previews and OG/X previews separately.
+- Schema must be truthful, valid and aligned with visible content. Rich-result eligibility is a separate question from validity, and "add more schema" is not a universal fix.
+- AI-answer visibility is crawl access, renderable HTML, clear metadata, explicit facts and original content, plus preview controls (`nosnippet`, `data-nosnippet`, restrictive `max-snippet`) that do not suppress useful text. Do not invent AI-ranking guarantees or "AI keywords".
 
-What SEO problem are you solving?
+Each finding carries severity (blocker: pages that should rank cannot be crawled, rendered, indexed or canonicalised; high: indexable but systematically conflicting or weak signals; medium: missing or inconsistent supporting signals; low: polish), category, scope (route pattern, page type or template), evidence (code path, rendered markup, headers or runtime observation), impact and the smallest safe fix. "Metadata could be better" is not a finding. A full audit also lists which page types were and were not covered.
 
-- Need a full technical and on-page audit of a codebase
-  - Read `references/methodology.md`
-  - Then read `references/technical-audit.md`
+## Traps
 
-- Need metadata, social preview, canonicals, or indexability checks
-  - Read `references/metadata-and-previews.md`
+- `robots.txt` disallow on a duplicate stops crawlers seeing its canonical or `noindex`; never recommend it for canonicalisation.
+- Client-only metadata can look right in components and be absent from fetched HTML.
+- Faceted navigation is often the largest silent footprint in an otherwise healthy site.
+- OG images fail when URLs are relative, private, expiring or only transformed at runtime.
+- Structural duplication (programmatic pages, faceted variants, token-swapped location pages) is fixed in routing, canonicals, indexing rules or template logic, not copy edits. The usual content problem is low information gain, not length.
 
-- Need schema.org / JSON-LD / entity / rich result analysis
-  - Read `references/structured-data-and-entities.md`
+## Fix-session handoff
 
-- Need content quality, information architecture, internal linking, or template-level page targeting analysis
-  - Read `references/content-and-information-architecture.md`
+Only when asked or clearly useful, give the implementing session an implementation brief: objective, repo path and stack, templates inspected, confirmed findings (severity, category, scope, evidence, desired end state), constraints (preserve intentional `noindex`, prefer shared abstraction fixes, keep search/social/canonical/schema aligned per page type), ordered work items grouped by root cause, acceptance checks in rendered HTML or generated files, and build/test commands. Name real files, include only evidence-backed findings as confirmed, and keep unverified hypotheses separate. The implementer should revalidate against the current checkout and deployment before editing. Do not hand off isolated page bugs when one helper caused them, and do not ask for copy rewrites when the issue is indexation.
 
-- Need AI-era search guidance for crawl/render controls, preview controls, and answer-engine readiness
-  - Read `references/agentic-search-and-ai-surfaces.md`
+## References
 
-- Need the exact remediation handoff format for another session
-  - Read `references/fix-prompt-spec.md`
-  - Use `templates/fix-prompt-template.md`
-  - Optionally generate a draft with `python3 scripts/build_fix_prompt.py --input findings.json`
+Dated baseline: Google Search Central and the Open Graph protocol as of April 2026. When these are stale, uncertain or conflicting, consult current Google Search Central, schema.org or protocol documentation and trusted target evidence, record the source and date, and propose a sourced correction instead of editing the installed skill.
 
-- Need edge cases, policy traps, or common false positives
-  - Read `references/gotchas.md`
-
-## Quick Reference
-
-| Task | Use | Outcome |
-| --- | --- | --- |
-| Run a full repo audit | `references/methodology.md` | Ordered checklist and evidence collection flow |
-| Check indexability and rendering | `references/technical-audit.md` | Crawl, render, canonical, robots, sitemap, and status-code findings |
-| Check titles, meta descriptions, OG, X cards, favicons, site names | `references/metadata-and-previews.md` | SERP and social preview findings |
-| Check structured data and entity signals | `references/structured-data-and-entities.md` | Rich-result and graph readiness findings |
-| Check content and link architecture | `references/content-and-information-architecture.md` | Content gaps, duplication, orphan pages, weak anchors |
-| Check AI-era search readiness | `references/agentic-search-and-ai-surfaces.md` | Preview controls, crawl access, citation readiness |
-| Produce a fix session prompt | `references/fix-prompt-spec.md` + `templates/fix-prompt-template.md` | Copy-paste prompt for a second implementation session |
-| Generate an optional prompt draft from findings JSON | `python3 scripts/build_fix_prompt.py --input findings.json` (put `repo` in the JSON) | Draft to review for evidence, constraints, and acceptance criteria |
-
-## Core Workflow
-
-1. Match the user's scope and requested output form. Inspect the relevant routing, templates, layout files, and head/metadata abstractions before drawing conclusions; broaden only to trace shared causes.
-2. Inspect representative URLs or templates for the page types in scope. For a full audit, include home, category, product/service, article/docs, auth/account, paginated/filter pages, and utility pages where applicable.
-3. Separate findings by severity and by layer:
-   - Crawl/index controls
-   - Render/discovery/canonicalization
-   - Metadata/social preview
-   - Structured data/entity signals
-   - Content/internal linking/information architecture
-   - Performance/page experience
-   - AI-era search surface readiness
-4. For every finding, capture evidence from code, built HTML, or runtime behavior. Do not speculate when you can verify.
-5. Deduplicate root causes before prioritizing fixes. One broken metadata abstraction can explain hundreds of bad pages. If a handoff is requested or useful within scope, use `references/fix-prompt-spec.md`; the helper is optional and its draft is not evidence.
-
-## Audit Deliverables
-
-Match the requested form: a scoped answer, findings table, full report, or implementation handoff. Create files only when requested. A full audit normally includes:
-
-1. **Executive summary** — the observed risks to search visibility, without inventing ranking effects.
-2. **Findings table** — severity, URL/template scope, evidence, impact, fix direction.
-3. **Page-type coverage map** — which templates or routes were checked and which were not.
-4. **Remediation sequence** — what to fix first, second, and later.
-5. **Limits and unknowns** — unavailable runtime checks, evidence dates, and unresolved questions.
-
-A focused answer can be much shorter, but retain the evidence and limitations needed to support its conclusion. Add an implementation prompt only when requested or useful; do not expand a scoped request into a full report packet.
-
-## Analysis Rules
-
-1. Verify rendered behavior when making runtime claims. SSR, SSG, CSR, hydration, and edge rendering change what crawlers receive. When offline or limited to source, label the result source-only and list runtime checks still needed.
-2. Treat crawlability, renderability, and canonicalization as prerequisites. Title tweaks do not matter if important pages are blocked, duplicated, or undiscoverable.
-3. Evaluate page types, not just single pages. SEO failures usually come from shared template logic.
-4. Distinguish intentional exclusions from mistakes. Login, cart, internal search, faceted combinations, and thin utility pages are often meant to be `noindex`.
-5. Check both search-result previews and social previews. Missing or conflicting Open Graph data is a distribution problem even when classic SEO looks acceptable.
-6. Prefer truthful, valid schema.org markup aligned to visible content and page purpose. Assess current search rich-result eligibility separately; ineligible does not mean invalid or misleading.
-7. Treat AI-answer visibility as an extension of crawlability, metadata clarity, structured facts, and trustworthy content. Do not invent ranking or AI-visibility guarantees.
-
-## Reading Guide
-
-| If the task is... | Read |
-| --- | --- |
-| Full audit from code to implementation handoff | `references/methodology.md`, then `references/fix-prompt-spec.md` |
-| Diagnose a rendering, canonical, robots, sitemap, hreflang, or internal-link issue | `references/technical-audit.md` |
-| Diagnose bad titles, snippets, link previews, or OG/X metadata | `references/metadata-and-previews.md` |
-| Diagnose missing or invalid schema and weak entity markup | `references/structured-data-and-entities.md` |
-| Diagnose weak topical targeting, duplication, orphan pages, or anchor text problems | `references/content-and-information-architecture.md` |
-| Discuss AI Overviews, citation surfaces, or answer-engine readiness | `references/agentic-search-and-ai-surfaces.md` |
-| Avoid overreaching or false positives | `references/gotchas.md` |
-
-## Verified External Baseline
-
-The guidance in this skill was grounded against current primary sources in April 2026, including:
-
-- Google Search Central on SEO basics, helpful content, JavaScript SEO, robots meta directives, canonicalization, snippets, structured data, sitemaps, site names, favicons, and preferred sources.
-- The Open Graph protocol specification for required OG fields and image metadata.
-
-Keep the stable evidence and safety principles above. Bundled references are a dated baseline, not a substitute for current official guidance. When they are inadequate, uncertain, stale, or conflicting, consult the relevant Google Search Central, schema.org, or protocol documentation and trusted target evidence. Record the source and version or retrieval date; if offline, disclose the uncertainty rather than inventing a current rule.
-
-Propose a canonical repository update with the exact stale passage, replacement source/version, and a concrete example or regression test. Do not silently edit an installed skill while auditing a site.
-
-## Gotchas
-
-1. **Missing SEO is often a shared abstraction bug**: a single layout, metadata helper, or head component can poison every route.
-2. **Do not treat every `noindex` as wrong**: many utility surfaces should stay out of the index.
-3. **Do not recommend `robots.txt` for canonicalization**: blocking a duplicate URL in `robots.txt` can prevent crawlers from seeing the canonical signal at all.
-4. **Do not assume OG tags equal SEO tags**: search titles, social titles, canonicals, and schema each serve different consumers.
-5. **Do not confuse “AI SEO” with hidden hacks**: the durable wins are still crawl access, strong facts, clear metadata, and useful original content.
-6. **Do not hand off a fix prompt without evidence**: the second session should receive concrete files, page types, and acceptance criteria, not generic SEO advice.
-
-## Helper Files
-
-- `references/methodology.md` — end-to-end audit workflow and evidence model.
-- `references/technical-audit.md` — crawl, rendering, canonicals, robots, sitemaps, hreflang, pagination, internal-link discovery.
-- `references/metadata-and-previews.md` — titles, descriptions, OG, X cards, favicons, site names, image previews.
-- `references/structured-data-and-entities.md` — JSON-LD strategy and validation priorities.
-- `references/content-and-information-architecture.md` — content quality, duplication, template targeting, and link architecture.
-- `references/agentic-search-and-ai-surfaces.md` — AI-era search interpretation without hype.
-- `references/fix-prompt-spec.md` — exact handoff prompt contract.
-- `references/gotchas.md` — high-value traps and anti-patterns.
-- `templates/fix-prompt-template.md` — copy-ready handoff prompt shell.
-- `scripts/build_fix_prompt.py` — deterministic prompt builder from findings JSON.
-- `scripts/probe_seo_analysis.py` — local regression checks for issue normalization and prompt generation.
-- `scripts/validate.py` — structural validator for this skill.
-- `scripts/test_skill.py` — packaging and deterministic probe test runner.
+- `references/technical-audit.md`: crawl, rendering, canonicals, robots, sitemaps, hreflang, pagination and internal-link discovery. Read it for indexability or rendering diagnosis.
+- `references/metadata-and-previews.md`: titles, descriptions, OG, X cards, favicons, site names, image previews. Read it for snippet and link-preview problems.
+- `references/structured-data-and-entities.md`: JSON-LD strategy and validation priorities. Read it for schema work.

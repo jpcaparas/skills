@@ -2,8 +2,6 @@
 
 How `scripts/fetch_transcript.py` acquires video metadata and transcript data.
 
-Use it only when transcript or metadata evidence is missing and needed. A supplied transcript can support a summary directly without tool installation, network calls, or metadata enrichment.
-
 ## Architecture
 
 The script uses two tools in sequence:
@@ -155,8 +153,3 @@ For version/API failures, check the installed version and [youtube-transcript-ap
 | 1 | Usage error — bad URL or invalid arguments |
 | 2 | Transcript unavailable — no captions, video removed, or language not found |
 | 3 | Dependency missing — `youtube-transcript-api` is not installed |
-
-## See Also
-
-- `references/dossier-format.md` — how to structure the synthesized dossier
-- `references/gotchas.md` — troubleshooting transcript quality and availability

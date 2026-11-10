@@ -61,15 +61,8 @@
       "id": 4,
       "name": "disclosure-config-guidance",
       "prompt": "Give me a ripgrep config file that enables smart-case and adds a shared web file type for html, css, js, jsx, ts, and tsx.",
-      "expected_output": "Routes to the configuration reference and template, and produces a valid ripgrep config file.",
-      "files": [
-        "templates/ripgreprc.example"
-      ],
+      "expected_output": "Produces a valid ripgrep config file.",
       "assertions": [
-        {
-          "text": "Agent reads references/configuration.md",
-          "type": "disclosure"
-        },
         {
           "text": "Output includes smart-case and a web type-add entry",
           "type": "functional"
@@ -111,7 +104,10 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge", "search"]
+      "tags": [
+        "edge",
+        "search"
+      ]
     },
     {
       "id": 7,
@@ -124,7 +120,9 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     }
   ]
 }

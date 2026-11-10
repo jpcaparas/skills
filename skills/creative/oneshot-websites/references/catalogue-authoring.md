@@ -25,7 +25,7 @@ For a selected entry, use its goal as source material and internalize only the g
 
 Append new entries at the end. Assign the next unused numeric ID and never renumber or reuse an existing ID. Entries `ow-001` through `ow-100` are the validator-frozen seed: do not edit, delete, replace, or reorder them. Categories may grow; the catalogue has a minimum release floor of 100 entries, not a maximum.
 
-Schema 1.1 deliberately migrated the original seed's display titles and added plain descriptions while preserving every ID, slug, category, source prompt, and tag. Schema 1.2 added the root `completionMandate`; its use follows the exact-prompt and scope precedence in `SKILL.md`, without changing implementation-open source goals. A future user-authorized migration of an existing display contract must bump both the catalogue schema and package version, update the frozen digest, reconcile every title reference and eval, and document which compatibility fields remained stable. Ordinary catalogue additions never rebaseline the seed.
+Schema 1.1 deliberately migrated the original seed's display titles and added plain descriptions while preserving every ID, slug, category, source prompt, and tag. Schema 1.2 added the root `completionMandate`; its use follows the exact-prompt and scope precedence in the skill, without changing implementation-open source goals. A future user-authorized migration of an existing display contract must bump both the catalogue schema and package version, update the frozen digest, reconcile every title reference and eval, and document which compatibility fields remained stable. Ordinary catalogue additions never rebaseline the seed.
 
 Write browsing metadata for speed. Keep titles at most six words and 48 characters; name the recognizable format directly, such as `First-Person Shooter Game`, `City Sound Map`, or `Bicycle Maintenance Club`. Keep descriptions at most 18 words and 140 characters. Say what the visitor does in ordinary language. Avoid lore names, coined brands, metaphors, mood-only labels, and decorative words that force readers to inspect the full prompt before understanding the option.
 
@@ -58,8 +58,3 @@ Treat matching as relevance-gated. Offer an entry only when its core experience 
 5. Render the new entry through `scripts/list_prompts.py` and confirm it is understandable without surrounding notes.
 
 The addition is complete when the JSON parses, every identity field is unique, each namespace and prompt renders with a plain title and scan-friendly description, the source prompt is goal-led and implementation-open, and existing entries are unchanged.
-
-## See Also
-
-- `references/research-notes.md` — inspiration and benchmark evidence
-- `references/execution-protocol.md` — how a selected prompt becomes an isolated run

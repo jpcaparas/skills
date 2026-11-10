@@ -47,19 +47,3 @@ This matrix is the April 9, 2026 baseline, not a permanent support contract. Whe
 ## Mermaid Scope
 
 The Learn page checked for this baseline documents Mermaid under wiki pages. The Azure Repos Sprint 259 release note says Azure DevOps added expanded Mermaid support in wiki pages and file preview, specifically including Entity Relationship and Timeline diagrams. Treat that release note as useful background, but use wiki pages as the canonical authoring surface unless the user explicitly only cares about file preview behavior.
-
-## Practical Routing Rules
-
-- If the task is a normal wiki page, read `references/syntax.md`.
-- If the task depends on a wiki-only block or embed, read `references/advanced-features.md`.
-- If the task is about diagrams, read `references/mermaid.md`.
-- If the task is about code fences or language aliases, read `references/code-languages.md`.
-- If the syntax looks plausible but a surface still refuses to render it, read `references/gotchas.md`.
-
-## See Also
-
-- `references/syntax.md`
-- `references/advanced-features.md`
-- `references/mermaid.md`
-- `references/code-languages.md`
-- `references/gotchas.md`

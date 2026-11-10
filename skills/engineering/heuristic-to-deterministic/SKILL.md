@@ -1,129 +1,38 @@
 ---
 name: heuristic-to-deterministic
-description: "Convert repeated heuristics into deterministic behavior: validator scripts, normalizer tools, generators, fixtures, manifests, CI jobs, and hook-ready checks. Use to codify learnings and prevent future guessing. Do NOT use for pure brainstorming or one-off edits."
-compatibility: "Requires: python3 for validation scripts. Generated checks may require the target repository's existing toolchain."
-metadata:
-  version: "1.0.0"
-references:
-  - conversion-patterns
-  - verification
-  - gotchas
+description: "Converts repeated heuristics and session learnings into deterministic checks: validators, normalizers, generators, fixtures, manifests, hook or CI adapters. Use when a mistake keeps recurring and has a measurable invariant. Not for brainstorming or one-off edits."
 ---
 
 # Heuristic to Deterministic
 
-Turn session learnings and repeated review heuristics into repeatable checks, normalizers, generators, fixtures, CI jobs, and hook-ready workflows.
+Write the observed failure as one sentence, reduce it to an inspectable invariant (file exists, width equals 480, command appears before image, runtime supports a flag), then pick the smallest mechanism that enforces that invariant and leaves unrelated choices open.
 
-## Decision Tree
+## Choosing the mechanism
 
-What kind of heuristic are you converting?
+- Required or forbidden structure: a validator.
+- Noisy but exact desired state (metadata, key order, image size, line endings): a normalizer, run before validation.
+- Repeated scaffold: a generator driven by a manifest or explicit plan. Fix only the shape the output contract needs.
+- Several adapters need one list (events, routes, hooks): a manifest as the single source.
+- Something broke once: a fixture or golden test that fails before the fix, with a negative case.
+- Model output (art, prose): keep the prompt as source and add checks for what code can inspect (path, format, dimensions, byte size, prompt drift). The creative content stays non-deterministic.
+- Taste with no measurable signal: do not fake it. Capture examples, ask for acceptance criteria, or leave it as review guidance.
 
-- A rule about required or forbidden structure
-  Use or extend a validator. Consult `references/conversion-patterns.md` when artifact selection needs detail.
+Reuse before building: if the repository already has a formatter, schema, linter or check mode for the invariant, configure it and code only the missing part. Keep new checks portable: take a root path or discover it, no machine-specific absolute paths, standard library where practical, `LC_ALL=C` when shell sort order matters, no GNU-only flags unless installed.
 
-- A rule about canonical formatting, image shape, generated output, or metadata cleanup
-  Reuse a normalizer where available, then verify its postconditions.
+## Rules
 
-- A repeated scaffold or generated file layout
-  Use or extend a generator from a manifest or explicit plan. Fix only the shape required by the output contract; leave incidental file organization editable.
-
-- A flaky environment or cross-platform failure
-  Select runtime discovery, version checks, fixtures, or CI coverage for the failure. Consult `references/verification.md` when proof depth needs detail.
-
-- A prompt guideline for generated media or model output
-  Keep the prompt harness as source, then add deterministic post-generation checks for the properties a script can inspect.
-
-- A taste or judgment call with no measurable signal
-  Do not pretend it is deterministic. Capture examples, ask for acceptance criteria, or leave it as review guidance.
-
-## Quick Reference
-
-| Need | Artifact | First action |
-|---|---|---|
-| Prevent a missing file, README block, hook, or config | Validator | Encode the invariant and fail with actionable output |
-| Make outputs consistent across machines | Normalizer | Strip metadata, sort keys, resize, format, or canonicalize before validation |
-| Avoid hand-copying a scaffold | Generator | Use a manifest or plan file as source of truth |
-| Stop repeated regressions | Fixture or golden test | Add positive and negative examples that fail before the fix |
-| Reuse the check in hooks and CI | Thin wrapper | Keep the core command portable and callable from multiple adapters |
-| Convert model art or prose rules | Prompt harness plus post-check | Persist the prompt, then verify dimensions, paths, format, or required metadata |
-
-## Operating Contract
-
-1. Start with the learning, not the tool. Write the observed failure as a sentence before choosing an artifact.
-2. Convert only stable claims. Support relevant unstable API or product claims with appropriate authoritative evidence: versioned docs, installed-tool help, a feature probe, or current primary docs. Refresh when freshness matters to the rule.
-3. Separate judgment from enforcement. Let humans or agents decide policy in a small plan; let scripts enforce shape, paths, schema, size, and compatibility.
-4. Keep checks portable within their intended scope. Reuse the tool's project-root discovery or accept a target path; avoid machine-specific absolute paths.
-5. Follow the tool's documented exit semantics and the caller's contract. Use exit code `2` for hook-blocking failures only when that caller expects it; adapt codes at the boundary when needed.
-6. Print the repair path. A deterministic failure should tell the next agent which command or file fixes the drift.
-
-## Workflow
-
-1. Inventory the heuristic.
-   - What did we learn?
-   - What repeated mistake or drift does it prevent?
-   - What is stable enough to enforce?
-   - What remains subjective?
-
-2. Choose the smallest mechanism that reliably enforces the stable invariant while leaving unrelated choices open.
-   - Validator for yes/no structure.
-   - Normalizer for canonical representation.
-   - Generator for repeatable creation.
-   - Fixture for regression behavior.
-   - Manifest for shared source of truth.
-   - CI or hook adapter for enforcement timing.
-
-3. Reuse before building.
-   - Check the repository's existing formatter, checker, schema, or generator for the invariant.
-   - Configure or extend it where sufficient; code only the missing behavior.
-   - Keep new code portable and avoid hidden global state.
-   - Make generators and normalizers idempotent where the output contract permits.
-
-4. Add proof.
-   - Select checks by risk and artifact; use existing tests or add focused fixtures.
-   - Show the invariant passes and a relevant violation is detected.
-   - Check repeat runs for writers and macOS/Ubuntu compatibility when claimed.
-
-5. Wire adapters when enforcement timing is in scope.
-   - Stop hooks, Git hooks, and GitHub Actions should call the same core command.
-   - Keep adapter files thin so behavior does not fork by environment.
-
-## Determinism Ladder
-
-Use this ladder to avoid over-promising:
-
-1. Structural: file exists, JSON schema matches, README block is present.
-2. Canonical: sorted keys, normalized PNG, formatted code, stripped metadata.
-3. Behavioral: fixture input produces expected output or exit code.
-4. Environmental: dependency versions and feature flags are detected before use.
-5. External: authoritative evidence establishes the supported contract before freezing a spec-sensitive rule; check live sources when freshness matters.
-6. Subjective: examples and review rubrics only; no hard failure unless criteria become measurable.
-
-## Helper
-
-Use `scripts/classify_conversion.py` for a quick deterministic first pass:
-
-```bash
-python3 scripts/classify_conversion.py "README cards must be below install commands and hooks should block drift"
-```
-
-The classifier is intentionally simple. Treat it as a planning aid, not as proof that the chosen artifact is sufficient.
-
-## When Guidance Stops Helping
-
-If a proposed invariant conflicts with repository behavior or a current tool contract, inspect the installed tool and official version-matched sources before encoding it. Do not freeze a stale workaround into a validator. Propose a canonical skill correction with the failed advice, source/version, and a distinguishing fixture; do not silently update installed copies or claim unavailable evidence is verified.
-
-## Reference Guide
-
-| Need | Read |
-|---|---|
-| Artifact patterns and when to choose each one | `references/conversion-patterns.md` |
-| Verification depth, fixtures, CI, hooks, and exit codes | `references/verification.md` |
-| Common ways deterministic checks become brittle | `references/gotchas.md` |
+- Convert only stable claims. For tool- or version-specific behaviour, check the installed version or probe the feature, or read versioned primary docs; do not freeze a workaround into a validator.
+- Policy lives in a small plan; scripts enforce shape, paths, schema, size and compatibility.
+- Failures print the invariant that broke and the command or file that repairs it. A strict check with no repair path teaches agents to bypass it.
+- Preserve the underlying tool's exit codes. For a new script, use 0 success, 1 usage or tool error, 2 policy failure only when the calling hook expects 2 (Claude Code-style stop hooks block on 2); translate at the adapter boundary otherwise.
+- Hooks, Git hooks and CI call the same core command. Adapters stay thin so behaviour does not fork between local and CI.
+- Writers and normalizers are idempotent: run twice, then `git diff --exit-code` on managed files. A normalizer that always rewrites hides drift; validate after normalizing, or offer a check mode that fails on dirty output.
+- Show the check passes on valid input and fails on a relevant violation (missing block, wrong extension, unsupported flag, drifted prompt, wrong dimensions, duplicated managed block).
 
 ## Gotchas
 
-1. Do not encode a workaround as truth. If a behavior is tool-version-specific, check the version or probe the feature.
-2. A generated asset can be constrained deterministically without making its creative content deterministic. Validate dimensions, format, prompt file drift, size, and placement.
-3. Avoid duplicate enforcement logic. Hook, CI, and local commands should delegate to the same script.
-4. A validator that only checks the current dirty worktree can still fail in CI if files are untracked or globally ignored. Include git visibility checks when packaging matters.
-5. A strict check with no repair command trains agents to bypass it. Make failures actionable.
+- Overfitting one incident: if the invariant cannot be stated without naming one temporary file, use a regression fixture, not a global rule.
+- Runtime flags exist on one runner and not another ("bad option"): pin the runtime, install it in CI, or feature-detect, and print the version in a preflight.
+- Local validation passes because a file exists but CI fails because it is untracked or globally ignored; add a git-visibility check for files that must exist in a fresh checkout.
+- Prompt guidance ("no text", "16-bit") with no script checking the output is not enforcement.
+- "Not beautiful enough" is not a gate; convert only measurable parts.

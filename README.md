@@ -342,7 +342,7 @@ Production skill for implementing Google-grounded SEO/GEO optimization in web de
   <img src="skills/research/isitagentready/skill-card.png" alt="16-bit side-scrolling pixel art badge for isitagentready" width="480">
 </p>
 
-Production skill for auditing repository agent readiness against Cloudflare's signals, combining scoped source and runtime evidence, optional official scan capture, and optional deterministic Markdown report packets.
+Production skill for auditing repository agent readiness against Cloudflare's signals, combining scoped source and runtime evidence with optional official scan capture.
 
 #### `markdown-new`
 
@@ -382,7 +382,7 @@ Production skill for using Parallel (parallel.ai) at the lowest sensible cost: o
   <img src="skills/research/seo-analysis/skill-card.png" alt="16-bit side-scrolling pixel art badge for seo-analysis" width="480">
 </p>
 
-Production skill for framework-agnostic SEO analysis of real codebases, covering crawlability, rendering, canonicals, robots directives, sitemaps, metadata, OG and social previews, structured data, information architecture, and AI-era search readiness, with a deterministic handoff prompt for another session to implement fixes.
+Production skill for framework-agnostic SEO analysis of real codebases, covering crawlability, rendering, canonicals, robots directives, sitemaps, metadata, OG and social previews, structured data, information architecture, and AI-era search readiness, with a handoff prompt for another session to implement fixes.
 
 #### `synthetic-search`
 
@@ -516,7 +516,7 @@ Portable ADHD-friendly communication and task support that reduces activation an
   <img src="skills/productivity/azure-devops-create-work-item/skill-card.png" alt="16-bit side-scrolling pixel art badge for azure-devops-create-work-item" width="480">
 </p>
 
-Production skill for drafting local Azure DevOps work item packets from loose context, using official Azure Boards work item primitives and reusable templates for Agile epics, features, user stories, tasks, issues, and bugs.
+Production skill for drafting local Azure DevOps work item packets from loose context, using official Azure Boards work item types across the Agile, Scrum, CMMI and Basic processes, with manual QA scenarios.
 
 #### `devils-advocate`
 

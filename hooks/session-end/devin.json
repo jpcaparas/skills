@@ -1,7 +1,0 @@
-{
-  "harness": "devin",
-  "event": "SessionEnd",
-  "scripts": [],
-  "commands": [],
-  "block_on_failure": false
-}

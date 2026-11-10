@@ -1,9 +1,0 @@
-# Lowercase patterns become case-insensitive. Patterns with uppercase stay case-sensitive.
---smart-case
-
-# Shared frontend bundle.
---type-add=web:*.{html,css,js,jsx,ts,tsx}
-
-# Keep headings off in scripts unless explicitly requested.
---no-heading
-

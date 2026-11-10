@@ -147,8 +147,3 @@ Exception: `preToolUse` command hooks are fail-closed. A crash, timeout, or non-
 - Environment includes `GITHUB_COPILOT_API_TOKEN`, `GITHUB_COPILOT_GIT_TOKEN`, `COPILOT_AGENT_PROMPT`, and `HOME=/root`.
 - `permissionRequest` has no effect because tools are pre-approved.
 - `notification` does not fire because no user is present.
-
-## See Also
-
-- `references/scaffold-layout.md`
-- `references/gotchas.md`

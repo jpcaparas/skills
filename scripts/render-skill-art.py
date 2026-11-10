@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate README skill-card prompts and optional Nano Banana raster images."""
+"""Render README skill cards with Nano Banana and keep README card blocks current."""
 
 from __future__ import annotations
 
@@ -22,7 +22,6 @@ from pathlib import Path
 from skill_catalog import Skill, discover_skills
 
 CARD_FILENAME = "skill-card.png"
-PROMPT_FILENAME = "skill-card.prompt.md"
 CARD_WIDTH = "480"
 FINAL_WIDTH = 1024
 FINAL_HEIGHT = 576
@@ -126,7 +125,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--passes", type=int, default=1, help="Render attempts per skill. Default: 1.")
     parser.add_argument("--skill", action="append", default=[], help="Render only this skill. Repeat for multiple skills.")
     parser.add_argument("--force", action="store_true", help="Regenerate existing PNG files.")
-    parser.add_argument("--prompts-only", action="store_true", help="Only write prompt files and README blocks.")
+    parser.add_argument("--readme-only", action="store_true", help="Only refresh README card blocks; no network or image work.")
     parser.add_argument(
         "--normalize-only",
         action="store_true",
@@ -375,14 +374,10 @@ def main() -> int:
         print(f"Missing skill-art scene descriptions: {', '.join(missing)}", file=sys.stderr)
         return 2
 
-    for name in names:
-        skill_dir = by_name[name].directory
-        (skill_dir / PROMPT_FILENAME).write_text(prompt_for_skill(name), encoding="utf-8")
-
     update_readme_cards(repo_root / "README.md", skills)
 
-    if args.prompts_only:
-        print(f"Wrote {len(names)} skill-card prompts and updated README.md.")
+    if args.readme_only:
+        print("Updated README.md skill-card blocks.")
         return 0
 
     if args.normalize_only:

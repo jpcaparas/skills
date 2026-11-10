@@ -34,10 +34,6 @@
       "expected_output": "The agent identifies stable responsibilities, reuses adequate behavior coverage, adds characterization only for gaps, and extracts helpers only where boundaries improve readability. It consults decomposition guidance only for unresolved design decisions.",
       "assertions": [
         {
-          "text": "Consults references/decomposition.md when boundary choices remain non-obvious; otherwise uses local evidence without unrelated reference reads",
-          "type": "disclosure"
-        },
-        {
           "text": "Does not split solely by line count",
           "type": "negative"
         },
@@ -58,10 +54,6 @@
       "prompt": "Review this PR for maintainability. The diff adds a generic RuleEngine class, removes three explicit functions, and has no tests for the new configuration format.",
       "expected_output": "The agent leads with concrete findings ordered by impact, calls out abstraction and test risks with file/line evidence, and avoids nit-only review output or unnecessary report sections.",
       "assertions": [
-        {
-          "text": "Consults references/review-rubric.md only for unresolved review judgments rather than requiring a reference read or fixed format",
-          "type": "disclosure"
-        },
         {
           "text": "Findings are ordered by maintainer impact rather than style preference",
           "type": "functional"
@@ -84,10 +76,6 @@
       "expected_output": "The agent produces a self-contained plan with grounded scope, affected boundaries, observable completion criteria, verification, and material stop conditions. It chooses a useful structure rather than eight mandatory sections.",
       "assertions": [
         {
-          "text": "Consults references/implementation-plans.md only when handoff complexity needs additional guidance; does not load unrelated reference stacks",
-          "type": "disclosure"
-        },
-        {
           "text": "Plan is self-contained and does not refer to conversation context",
           "type": "functional"
         },
@@ -107,10 +95,6 @@
       "prompt": "Improve a GitHub Actions workflow step that fetches artifacts with gh api, filters them with jq, de-duplicates with sort -u, then downloads each artifact. Keep the script maintainable for a junior maintainer with good fundamentals.",
       "expected_output": "The agent keeps shell/YAML idiomatic and comments on non-obvious artifact contracts, data flow, and failure rationale where names and structure are insufficient, without narrating syntax or requiring a comment at every phase.",
       "assertions": [
-        {
-          "text": "Consults references/commenting.md only for non-obvious comment decisions, not merely because the file is shell or YAML",
-          "type": "disclosure"
-        },
         {
           "text": "Preserves non-obvious artifact and failure-handling rationale in comments where code structure does not express it",
           "type": "functional"
@@ -133,10 +117,6 @@
       "expected_output": "The agent evaluates the requested comments across application code, database code, and UI markup, preserves contract or invariant rationale, and removes or replaces syntax narration. Reference reads depend on unresolved questions, not the number of languages.",
       "assertions": [
         {
-          "text": "Consults references/commenting.md only where a non-obvious comment decision needs it, without mandatory language-by-language reference reads",
-          "type": "disclosure"
-        },
-        {
           "text": "Differentiates syntax narration from invariant, tradeoff, data-shape, or layout-context comments",
           "type": "functional"
         },
@@ -158,10 +138,6 @@
       "prompt": "Add maintainability comments to a Laravel model accessor, a typed TypeScript retry policy property, and a Next.js route handler. Include docblocks or comments wherever they help a junior maintainer, and link official sources for framework claims.",
       "expected_output": "The agent comments at useful scopes with concise, understandable rationale and no forced layout. It verifies and links official documentation for the requested framework claims for the actual project stack, paraphrasing rather than inventing details.",
       "assertions": [
-        {
-          "text": "Consults references/commenting.md only when comment placement or explanation is non-obvious; official-source verification requested by the user remains required",
-          "type": "disclosure"
-        },
         {
           "text": "Places comments at the smallest useful scope for non-obvious rationale rather than filling a class/method/property/block quota",
           "type": "functional"
@@ -188,10 +164,6 @@
       "prompt": "Document a webhook processing function that validates payloads, enqueues accepted events, retries transient queue failures, and rejects malformed requests. Use comments or docblocks that a junior maintainer can scan quickly, including an ASCII diagram if it helps. The existing comment says malformed requests are retried, but the code now rejects them immediately.",
       "expected_output": "The agent corrects stale prose and adds an ASCII diagram only if useful. Any diagram labels and prose must agree with the actual validation/enqueue/retry/reject behavior; the fix does not require a reference read.",
       "assertions": [
-        {
-          "text": "Consults references/commenting.md only when non-obvious documentation choices remain unresolved; does not read unrelated resilience references for a comment-only correction",
-          "type": "disclosure"
-        },
         {
           "text": "Uses an ASCII diagram when it clarifies a non-obvious flow",
           "type": "functional"
@@ -464,10 +436,6 @@
       "expected_output": "The agent preserves behavior, separates framework formatting from policy, uses narrow replacement points for external collaborators, avoids unnecessary interfaces, and fills consequential test gaps with suitable fakes or stubs.",
       "assertions": [
         {
-          "text": "Consults references/dependency-boundaries.md for unresolved boundary choices, not as a mandatory stack alongside every refactor reference",
-          "type": "disclosure"
-        },
-        {
           "text": "Does not add interfaces for every class or helper",
           "type": "negative"
         },
@@ -489,10 +457,6 @@
       "expected_output": "The agent recommends the least powerful doubles that prove behavior, such as a capturing email sender, audit repository fake, and captured queue, with adequate existing or added contract coverage for risky adapters.",
       "assertions": [
         {
-          "text": "Consults references/test-doubles.md only for non-obvious substitution or drift decisions; no extra reference reads are required for a well-supported choice",
-          "type": "disclosure"
-        },
-        {
           "text": "Chooses doubles based on behavior and interaction risk, not a blanket mocking rule",
           "type": "functional"
         },
@@ -513,10 +477,6 @@
       "prompt": "Review this PR for testability. The diff adds a static FraudService.getInstance(), calls fetch() inside the pricing rules, reads System.getenv() in three methods, and replaces a behavior test with strict mock call ordering.",
       "expected_output": "The agent leads with high-impact findings about hidden globals and side effects in policy code, explains how strict mock ordering makes tests brittle, and proposes narrow repair directions with relevant verification notes.",
       "assertions": [
-        {
-          "text": "Consults references/review-rubric.md only for unresolved review judgments; does not require its output template",
-          "type": "disclosure"
-        },
         {
           "text": "Findings are ordered by testability and safety impact rather than style preference",
           "type": "functional"
@@ -551,7 +511,12 @@
           "type": "disclosure"
         }
       ],
-      "tags": ["smoke", "small-edit", "disclosure", "scope"]
+      "tags": [
+        "smoke",
+        "small-edit",
+        "disclosure",
+        "scope"
+      ]
     },
     {
       "id": 23,
@@ -572,7 +537,12 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "jobs", "scope", "verification"]
+      "tags": [
+        "edge",
+        "jobs",
+        "scope",
+        "verification"
+      ]
     }
   ]
 }

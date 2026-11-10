@@ -17,7 +17,11 @@
           "type": "functional"
         }
       ],
-      "tags": ["smoke", "callers", "codebase"]
+      "tags": [
+        "smoke",
+        "callers",
+        "codebase"
+      ]
     },
     {
       "id": 2,
@@ -34,7 +38,10 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge", "monorepo"]
+      "tags": [
+        "edge",
+        "monorepo"
+      ]
     },
     {
       "id": 3,
@@ -51,24 +58,24 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     },
     {
       "id": 4,
-      "name": "loads-caller-mapping-reference",
+      "name": "verified-versus-textual-callers",
       "prompt": "Who calls PaymentIntentBuilder? I need to know the caller chain, but I only trust verified paths, not random grep hits.",
-      "expected_output": "Reads the caller mapping reference and distinguishes inspected invocation or runtime wiring from unverified imports and textual matches, using labels or clear prose.",
+      "expected_output": "Distinguishes inspected invocation or runtime wiring from unverified imports and textual matches, using labels or clear prose.",
       "assertions": [
-        {
-          "text": "Agent reads references/caller-mapping.md",
-          "type": "disclosure"
-        },
         {
           "text": "Response states which caller relationships are verified and which remain uncertain, without requiring fixed label names",
           "type": "functional"
         }
       ],
-      "tags": ["disclosure", "callers"]
+      "tags": [
+        "callers"
+      ]
     },
     {
       "id": 5,
@@ -85,7 +92,9 @@
           "type": "structural"
         }
       ],
-      "tags": ["structural"]
+      "tags": [
+        "structural"
+      ]
     },
     {
       "id": 6,
@@ -102,7 +111,9 @@
           "type": "functional"
         }
       ],
-      "tags": ["edge"]
+      "tags": [
+        "edge"
+      ]
     }
   ]
 }

@@ -53,7 +53,7 @@
         {"text": "Checks the cut-out over light and dark backgrounds", "type": "verification"}
       ],
       "tags": ["post-processing", "edge"],
-      "files": ["references/workflows.md", "references/gotchas.md"]
+      "files": ["references/workflows.md"]
     },
     {
       "id": 5,
@@ -91,7 +91,7 @@
         {"text": "Does not use --no-store on a turn it intends to continue", "type": "negative"}
       ],
       "tags": ["multi-turn"],
-      "files": ["references/workflows.md", "references/gotchas.md"]
+      "files": ["references/workflows.md"]
     },
     {
       "id": 8,
@@ -127,7 +127,7 @@
         {"text": "Identifies that low is not supported by the model and lists the valid levels", "type": "verification"}
       ],
       "tags": ["errors"],
-      "files": ["references/api.md", "references/gotchas.md"]
+      "files": ["references/api.md"]
     },
     {
       "id": 11,

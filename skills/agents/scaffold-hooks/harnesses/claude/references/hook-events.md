@@ -7,7 +7,7 @@ Official sources:
 - `https://code.claude.com/docs/en/hooks`
 - `https://code.claude.com/docs/en/hooks-guide`
 
-Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official docs when installed-version evidence is insufficient, stale, or event semantics will change. Propose canonical updates through the root `SKILL.md` maintenance route; do not edit installed inputs silently.
+Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official docs when installed-version evidence is insufficient, stale, or event semantics will change.
 
 ## Support Matrix
 

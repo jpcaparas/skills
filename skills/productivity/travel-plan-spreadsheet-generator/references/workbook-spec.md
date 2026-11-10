@@ -1,6 +1,6 @@
 # Workbook Spec
 
-This file describes the deterministic workbook contract. `scripts/build_workbook.py` is the runtime source of truth, and `templates/workbook_template_spec.yaml` is the human-readable mirror.
+This file describes the deterministic workbook contract. `scripts/build_workbook.py` is the runtime source of truth.
 
 ## Non-Negotiable Deterministic Rules
 

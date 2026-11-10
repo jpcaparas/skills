@@ -65,7 +65,7 @@ The finished output root keeps this generated `index.html` as an exact-case, rea
 "${ONESHOT_WEBSITES_PYTHON:-python3}" scripts/validate_catalog.py "<output-root>"
 ```
 
-`ONESHOT_WEBSITES_PYTHON` follows the compatible Python 3.11-or-newer helper-runtime contract in `SKILL.md`; it is an executable path or command name, not a version pin or a constraint on the generated website.
+`ONESHOT_WEBSITES_PYTHON` follows the compatible Python 3.11-or-newer helper-runtime contract in the helper-runtime rule in the skill; it is an executable path or command name, not a version pin or a constraint on the generated website.
 
 Validation checks the flat slugged-timestamp layout, its agreement with the experiment name, raw-name identity keys, globally unique run IDs, acyclic rerun links, one-to-one committed receipt inventory, prompt bytes and digest, the run-local temporary lifecycle and quality-gauntlet contracts for current-schema runs, exact manifest paths and filename casing, status evidence, the current readable aggregate root index, the root `artifact/index.html`, provider-size bounds, local HTML and SVG resources, and transitive CSS resources. For a newly prepared applicable directional run, it also requires passing `KeyA`, `ArrowLeft`, `KeyD`, and `ArrowRight` browser evidence from `scripts/verify_directional_controls.py`, checks the semantic signs and browser input transport, and recomputes the complete artifact-tree digest, file count, and byte count so stale evidence cannot bless a later edit. It requires `.tmp/` to remain an exact ordinary directory for non-`OK` current runs and to be absent in its entirety for `OK` 3.3 runs. It continues to read flat 3.0, 3.1, and 3.2 and legacy nested 2.0 and 2.1 output roots without retroactively imposing the new opt-in receipt field or the 3.3 cleanup lifecycle; an `OK` 3.2 run may retain its historical exact directory or safely omit it after same-run recovery cleanup. It accepts relative and root-relative browser resources against the portable artifact root. It rejects `.tmp/`, project, cache, provider-filtered, source-only, and server state anywhere in the final folder while accepting any source framework, dependency, project shape, and build process in `workspace/`.
 
@@ -80,8 +80,3 @@ Use stable statuses: `PLANNED`, `RUNNING`, `OK`, `UNVERIFIED`, `PARTIAL`, `BLOCK
 Use `autonomous-one-shot` for the original lead assignment. Use `rerun` or `curated-attempt` for separately dispatched later runs. Internal edits, tests, and revisions by the same owning lead remain part of `autonomous-one-shot`.
 
 Keep partial and failed runs visible. Honest failure evidence is more useful than a polished catalogue that silently replaces weak attempts.
-
-## See Also
-
-- `references/execution-protocol.md` — run layout and delegation rules
-- `templates/run.json` — initial manifest shape

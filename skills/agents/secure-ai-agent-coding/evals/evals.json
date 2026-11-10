@@ -9,7 +9,7 @@
       "expected_output": "Runs or recommends the pattern scanner when code is available, then produces findings using the review workflow with controls for prompt boundaries, tool authorization, output validation, rollback, logging, and tests.",
       "assertions": [
         {
-          "text": "Output uses references/review-workflow.md and references/controls.md for the review shape.",
+          "text": "Output follows the review workflow: findings with severity, evidence, risk and fix",
           "type": "disclosure"
         },
         {
@@ -19,7 +19,6 @@
       ],
       "files": [
         "references/review-workflow.md",
-        "references/controls.md",
         "scripts/scan_patterns.py"
       ],
       "tags": ["smoke", "review", "disclosure"]
@@ -61,7 +60,7 @@
       "id": 4,
       "name": "rag-poisoning-edge-case",
       "prompt": "Our RAG agent indexes customer-uploaded PDFs and can call internal admin APIs. What should we threat model?",
-      "expected_output": "Loads the threat model and governance references, treats retrieved PDF text as untrusted data, covers RAG poisoning, provenance, source controls, tool authorization, data minimization, monitoring, and deletion or re-indexing.",
+      "expected_output": "Uses the threat model reference, treats retrieved PDF text as untrusted data, covers RAG poisoning, provenance, source controls, tool authorization, data minimization, monitoring, and deletion or re-indexing.",
       "assertions": [
         {
           "text": "Output uses references/threat-model.md for RAG and tool misuse scenarios.",
@@ -73,8 +72,7 @@
         }
       ],
       "files": [
-        "references/threat-model.md",
-        "references/governance.md"
+        "references/threat-model.md"
       ],
       "tags": ["edge", "rag", "disclosure"]
     },

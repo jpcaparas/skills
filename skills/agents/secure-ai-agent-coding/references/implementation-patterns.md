@@ -221,5 +221,3 @@ Add tests for:
 - rate limit exceeded
 - rollback after partial failure
 - model output containing shell, SQL, HTML, or API payloads
-
-See also: `references/controls.md` and `references/gotchas.md`.

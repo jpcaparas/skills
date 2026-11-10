@@ -21,7 +21,12 @@
           "type": "functional"
         }
       ],
-      "tags": ["smoke", "behavior", "php", "pest"]
+      "tags": [
+        "smoke",
+        "behavior",
+        "php",
+        "pest"
+      ]
     },
     {
       "id": 2,
@@ -30,7 +35,7 @@
       "expected_output": "Writes the requested characterization test, labels uncertainty, explains why behavior is pinned, and avoids presenting it as a permanent domain rule. Consults legacy guidance only if the preservation decision remains unclear.",
       "assertions": [
         {
-          "text": "Consults references/legacy-and-characterization.md only when preservation or uncertainty needs further guidance; does not load unrelated references",
+          "text": "Keeps characterization tests to important gaps and labels intentional legacy behaviour with a rationale",
           "type": "disclosure"
         },
         {
@@ -42,7 +47,12 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "legacy", "characterization", "disclosure"]
+      "tags": [
+        "edge",
+        "legacy",
+        "characterization",
+        "disclosure"
+      ]
     },
     {
       "id": 3,
@@ -51,7 +61,7 @@
       "expected_output": "Inspects existing safe seams for gateway construction, time, and receipts. Uses framework overrides or scoped, restored doubles where sufficient; otherwise proposes the smallest proportionate production refactor and respects authorization. Tests prove totals and important effects without real charges or email, reusing adequate adapter coverage.",
       "assertions": [
         {
-          "text": "Consults references/doubles-and-boundaries.md only for unresolved seam or test-double choices, not as a required prelude to every test",
+          "text": "Uses existing safe seams and the least powerful test double rather than a heavy mock setup",
           "type": "disclosure"
         },
         {
@@ -67,7 +77,12 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "boundary", "testability", "mocking"]
+      "tags": [
+        "edge",
+        "boundary",
+        "testability",
+        "mocking"
+      ]
     },
     {
       "id": 4,
@@ -76,7 +91,7 @@
       "expected_output": "Uses severity-first review, calls out misleading tests, weak assertions, and brittle implementation coupling, then suggests behavior names, observable assertions, and narrower doubles.",
       "assertions": [
         {
-          "text": "Consults references/review-rubric.md only for unresolved review judgments; a severity-first review does not require its template",
+          "text": "Leads the review with tests that can pass while behaviour is broken, before style",
           "type": "disclosure"
         },
         {
@@ -88,7 +103,12 @@
           "type": "functional"
         }
       ],
-      "tags": ["review", "mocking", "assertions", "disclosure"]
+      "tags": [
+        "review",
+        "mocking",
+        "assertions",
+        "disclosure"
+      ]
     },
     {
       "id": 5,
@@ -109,14 +129,20 @@
           "type": "negative"
         }
       ],
-      "tags": ["edge", "datasets", "fixtures"]
+      "tags": [
+        "edge",
+        "datasets",
+        "fixtures"
+      ]
     },
     {
       "id": 6,
       "name": "review-false-positive-artifact-assertions",
       "prompt": "Review evals/files/publish-config.spec.ts against this contract: production writes formatter.ts with `export default { mode: \"strict\" };`, writes formatter.ts.backup only when backup is true, and the backup must equal the old bytes. Identify tests that can pass while the contract is broken and show the smallest repair.",
       "expected_output": "The agent catches the boolean-versus-content assertion and formatter.json.backup path drift, recommends reading exact destination and backup bytes, and preserves valid backup-content coverage. Additional reference reads depend on an unresolved design question.",
-      "files": ["evals/files/publish-config.spec.ts"],
+      "files": [
+        "evals/files/publish-config.spec.ts"
+      ],
       "assertions": [
         {
           "text": "Consults references/side-effects-and-compatibility.md only if an isolation or assertion decision needs it; does not require extra reads for defects already clear from the supplied contract",
@@ -143,7 +169,13 @@
           "type": "negative"
         }
       ],
-      "tags": ["review", "edge", "disclosure", "effects", "assertions"]
+      "tags": [
+        "review",
+        "edge",
+        "disclosure",
+        "effects",
+        "assertions"
+      ]
     },
     {
       "id": 7,
@@ -172,7 +204,14 @@
           "type": "functional"
         }
       ],
-      "tags": ["smoke", "edge", "disclosure", "isolation", "compatibility", "side-effects"]
+      "tags": [
+        "smoke",
+        "edge",
+        "disclosure",
+        "isolation",
+        "compatibility",
+        "side-effects"
+      ]
     },
     {
       "id": 8,
@@ -185,7 +224,10 @@
           "type": "negative"
         }
       ],
-      "tags": ["negative", "near-miss"]
+      "tags": [
+        "negative",
+        "near-miss"
+      ]
     },
     {
       "id": 9,
@@ -210,7 +252,14 @@
           "type": "verification"
         }
       ],
-      "tags": ["edge", "regression", "tests-only", "boundary", "isolation", "scope"]
+      "tags": [
+        "edge",
+        "regression",
+        "tests-only",
+        "boundary",
+        "isolation",
+        "scope"
+      ]
     },
     {
       "id": 10,
@@ -235,7 +284,12 @@
           "type": "verification"
         }
       ],
-      "tags": ["smoke", "small-edit", "disclosure", "scope"]
+      "tags": [
+        "smoke",
+        "small-edit",
+        "disclosure",
+        "scope"
+      ]
     }
   ]
 }

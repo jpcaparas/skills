@@ -8,12 +8,27 @@
       "prompt": "Our Rust simulation step is slow. The profile shows 60% of time in HashMap<u64, Entity> lookups inside update_positions(), which reads only position and velocity for every entity each tick. Entity IDs are assigned by us at spawn time. Make it faster.",
       "expected_output": "Records a baseline, replaces the hot-path HashMap with dense IDs indexing contiguous storage, considers structure of arrays for the position/velocity fields read every tick, states the invariant for removed or reused IDs, and reports before/after numbers from the same harness.",
       "assertions": [
-        { "text": "Proposes dense integer IDs and flat array indexing instead of the hash lookup on the hot path", "type": "functional" },
-        { "text": "Considers structure of arrays or a hot/cold split because the loop reads only two fields", "type": "functional" },
-        { "text": "States how stale or reused IDs are prevented (generations, append-only, or equivalent)", "type": "functional" },
-        { "text": "Measures before and after with the same workload rather than asserting a speedup", "type": "verification" }
+        {
+          "text": "Proposes dense integer IDs and flat array indexing instead of the hash lookup on the hot path",
+          "type": "functional"
+        },
+        {
+          "text": "Considers structure of arrays or a hot/cold split because the loop reads only two fields",
+          "type": "functional"
+        },
+        {
+          "text": "States how stale or reused IDs are prevented (generations, append-only, or equivalent)",
+          "type": "functional"
+        },
+        {
+          "text": "Measures before and after with the same workload rather than asserting a speedup",
+          "type": "verification"
+        }
       ],
-      "tags": ["smoke", "passive"]
+      "tags": [
+        "smoke",
+        "passive"
+      ]
     },
     {
       "id": 2,
@@ -21,11 +36,23 @@
       "prompt": "resolveModulePath() in our bundler is slow on big monorepos. Just wrap it in an LRU cache so the benchmark goes green.",
       "expected_output": "Does not silently add the cache. Investigates why resolution is slow (repeated string hashing, filesystem walks, pointer-heavy lookup tables), proposes a redesign of the base path, and presents a cache only as an explicit tradeoff the user can opt in to.",
       "assertions": [
-        { "text": "Asks or measures why the uncached path is slow before choosing a fix", "type": "functional" },
-        { "text": "Proposes a redesign of the underlying lookup instead of defaulting to a cache", "type": "functional" },
-        { "text": "If a cache is still offered, it is presented as an explicit user decision with its tradeoff", "type": "functional" }
+        {
+          "text": "Asks or measures why the uncached path is slow before choosing a fix",
+          "type": "functional"
+        },
+        {
+          "text": "Proposes a redesign of the underlying lookup instead of defaulting to a cache",
+          "type": "functional"
+        },
+        {
+          "text": "If a cache is still offered, it is presented as an explicit user decision with its tradeoff",
+          "type": "functional"
+        }
       ],
-      "tags": ["edge", "caching"]
+      "tags": [
+        "edge",
+        "caching"
+      ]
     },
     {
       "id": 3,
@@ -33,11 +60,24 @@
       "prompt": "Jarred says caching is cope for a slow design, so delete every cache in our payments service: the in-memory price memo, the idempotency-key store, and the cache in front of the paid FX-rate API.",
       "expected_output": "Classifies each cache. The price memo is a performance memo and a removal candidate once a measured redesign makes it unnecessary. The idempotency-key store is correctness-bearing and stays. The FX-rate cache protects cost and rate limits and stays. Both kept caches are reported as decisions for the user.",
       "assertions": [
-        { "text": "Does not remove the idempotency-key store", "type": "negative" },
-        { "text": "Does not remove the cache in front of the paid external API without an explicit user decision", "type": "negative" },
-        { "text": "Treats the price memo as removable only after a redesign is measured to be at least as fast", "type": "functional" }
+        {
+          "text": "Does not remove the idempotency-key store",
+          "type": "negative"
+        },
+        {
+          "text": "Does not remove the cache in front of the paid external API without an explicit user decision",
+          "type": "negative"
+        },
+        {
+          "text": "Treats the price memo as removable only after a redesign is measured to be at least as fast",
+          "type": "functional"
+        }
       ],
-      "tags": ["edge", "authority", "caching"]
+      "tags": [
+        "edge",
+        "authority",
+        "caching"
+      ]
     },
     {
       "id": 4,
@@ -45,10 +85,19 @@
       "prompt": "The tokenizer drops the last token when input has no trailing newline, and it's also kind of slow. Rewrite it to be data-oriented.",
       "expected_output": "Fixes the dropped-token bug first with a regression test, then applies data-oriented changes only if a measurement shows the tokenizer is a meaningful cost, preserving output semantics.",
       "assertions": [
-        { "text": "Fixes and tests the correctness bug before any performance rewrite", "type": "functional" },
-        { "text": "Does not change tokenizer output semantics during the optimisation", "type": "negative" }
+        {
+          "text": "Fixes and tests the correctness bug before any performance rewrite",
+          "type": "functional"
+        },
+        {
+          "text": "Does not change tokenizer output semantics during the optimisation",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative", "correctness"]
+      "tags": [
+        "negative",
+        "correctness"
+      ]
     },
     {
       "id": 5,
@@ -56,10 +105,19 @@
       "prompt": "The orders page takes 4 seconds. Can we convert the Order objects to a structure of arrays to speed it up? The trace shows 3.6s spent in 400 sequential SQL queries.",
       "expected_output": "Points out that the measured bottleneck is the N+1 query pattern, not memory layout, recommends batching or joining the queries, and does not restructure Order into SoA.",
       "assertions": [
-        { "text": "Identifies the database queries as the measured bottleneck", "type": "functional" },
-        { "text": "Does not convert Order to structure of arrays", "type": "negative" }
+        {
+          "text": "Identifies the database queries as the measured bottleneck",
+          "type": "functional"
+        },
+        {
+          "text": "Does not convert Order to structure of arrays",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative", "measurement"]
+      "tags": [
+        "negative",
+        "measurement"
+      ]
     },
     {
       "id": 6,
@@ -67,23 +125,43 @@
       "prompt": "I switched our parser's node list to SoA and a 10-element microbenchmark is 3x faster. Ship it?",
       "expected_output": "Explains that a 10-element benchmark fits in cache regardless of layout and may not reflect the real workload, asks for or runs a representative workload, and recommends shipping only if it wins there without semantic changes.",
       "assertions": [
-        { "text": "Flags the tiny benchmark as unrepresentative", "type": "functional" },
-        { "text": "Requires a representative end-to-end measurement before recommending the change", "type": "verification" }
+        {
+          "text": "Flags the tiny benchmark as unrepresentative",
+          "type": "functional"
+        },
+        {
+          "text": "Requires a representative end-to-end measurement before recommending the change",
+          "type": "verification"
+        }
       ],
-      "tags": ["edge", "measurement"]
+      "tags": [
+        "edge",
+        "measurement"
+      ]
     },
     {
       "id": 7,
       "name": "pack-bits-into-index",
       "prompt": "Every AST lookup in our Zig compiler first checks the node's kind. Nodes are referenced by u32 index. Can we pack the kind into the index?",
-      "expected_output": "Reads references/patterns.md, sizes the bit split against the maximum node count, centralises masks and shifts behind named functions, adds a compile-time or construction-time capacity check, and measures the change.",
+      "expected_output": "Sizes the bit split against the maximum node count, centralises masks and shifts behind named functions, adds a compile-time or construction-time capacity check, and measures the change.",
       "assertions": [
-        { "text": "Chooses the bit split from capacity requirements and enforces it with an assertion or checked constructor", "type": "functional" },
-        { "text": "Keeps masks and shifts behind named helpers rather than scattering bit arithmetic", "type": "functional" },
-        { "text": "Uses the bundled patterns reference for the packing approach", "type": "disclosure" }
+        {
+          "text": "Chooses the bit split from capacity requirements and enforces it with an assertion or checked constructor",
+          "type": "functional"
+        },
+        {
+          "text": "Keeps masks and shifts behind named helpers rather than scattering bit arithmetic",
+          "type": "functional"
+        },
+        {
+          "text": "Splits the index into a kind field and an index field with a stated capacity",
+          "type": "disclosure"
+        }
       ],
-      "files": ["references/patterns.md"],
-      "tags": ["disclosure", "smoke"]
+      "tags": [
+        "disclosure",
+        "smoke"
+      ]
     },
     {
       "id": 8,
@@ -91,10 +169,19 @@
       "prompt": "Add a `visited` flag check to the inner loop of our graph traversal in traverse.go. It runs per edge.",
       "expected_output": "Makes the small edit and briefly considers whether the flag belongs in a dense bitset or parallel array next to the node index rather than on a pointer-heavy struct. Mentions only decisions that change the implementation; does not launch a full redesign or report.",
       "assertions": [
-        { "text": "Keeps the response proportional to a small edit, without an unrequested full redesign", "type": "functional" },
-        { "text": "Considers data layout for the per-edge flag only where it changes the implementation", "type": "functional" }
+        {
+          "text": "Keeps the response proportional to a small edit, without an unrequested full redesign",
+          "type": "functional"
+        },
+        {
+          "text": "Considers data layout for the per-edge flag only where it changes the implementation",
+          "type": "functional"
+        }
       ],
-      "tags": ["passive", "edge"]
+      "tags": [
+        "passive",
+        "edge"
+      ]
     },
     {
       "id": 9,
@@ -102,9 +189,14 @@
       "prompt": "Add a settings page to our admin dashboard that lets admins rename their workspace.",
       "expected_output": "Does not apply data-oriented performance guidance; builds the feature with normal maintainable code.",
       "assertions": [
-        { "text": "Does not introduce flat arrays, bit packing, SoA, or cache removal into ordinary feature work", "type": "negative" }
+        {
+          "text": "Does not introduce flat arrays, bit packing, SoA, or cache removal into ordinary feature work",
+          "type": "negative"
+        }
       ],
-      "tags": ["negative"]
+      "tags": [
+        "negative"
+      ]
     }
   ]
 }

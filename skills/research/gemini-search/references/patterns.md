@@ -1,55 +1,6 @@
 # Gemini search patterns
 
-Run the helper from the skill directory: `node scripts/gemini_search.js <command>`. It reads `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and never prints it.
-
-## Helper recipes
-
-```bash
-# Grounded answer with resolved sources, queries, coverage, and cost
-node scripts/gemini_search.js search "Is the Vite 8 environment API stable yet?"
-
-# Machine-readable summary for an agent
-node scripts/gemini_search.js search --json "What did the latest Kubernetes release deprecate?" |
-  jq '{grounded, coverage, queries, sources: [.sources[].url]}'
-
-# One site only (prompt-level site: plus local flagging of off-site sources)
-node scripts/gemini_search.js search --site docs.rs "tokio select cancellation safety"
-
-# Tighter budget: one query
-node scripts/gemini_search.js search --max-queries 1 "Current RBNZ official cash rate"
-
-# Sharper queries for a hard lookup, still ungated
-node scripts/gemini_search.js search --model gemini-3.8-flash "Exact release dates of Go 1.27.0 and 1.27.1"
-
-# Read specific pages (no search fee; page tokens bill as input)
-node scripts/gemini_search.js read --ask "List the breaking changes." https://vite.dev/guide/migration.html
-node scripts/gemini_search.js read --ask "Summarise the abstract." https://arxiv.org/pdf/1706.03762
-```
-
-Exit codes: `0` ok, `1` API error, `2` refused or invalid input (nothing was sent), `3` ungrounded answer, `4` no URL could be read.
-
-## Search, then read
-
-1. `search` to find candidate sources and a first answer.
-2. If coverage is low or the question needs detail, `read` the two or three best resolved URLs with a precise `--ask`.
-3. Cite the resolved URLs.
-
-Search plus URL context in one call did not make the model read pages, so keep the two steps separate.
-
-## Lists and comparisons
-
-Batch entities in groups of about five and run calls in parallel (the measured project handled 30 grounded calls at once; lower tiers throttle sooner, and the helper retries 429):
-
-```bash
-for group in "PostgreSQL, MySQL, SQLite" "Redis, Valkey, KeyDB" "Kafka, Redpanda, NATS"; do
-  node scripts/gemini_search.js search --json "Latest stable version and release date of each: $group" > "/tmp/gs-$(echo "$group" | tr -cd 'a-zA-Z').json" &
-done; wait
-jq -s 'map({grounded, coverage, queries: (.queries | length)})' /tmp/gs-*.json
-```
-
-## Dates, regions, and freshness
-
-The API ignores location and time filters, so state them in the question: "published since 2026-10-12 (today is 2026-10-19)", "for savers in New Zealand". The model then writes dated or regional queries ("Kubernetes news October 12 2026 to October 19 2026").
+The helper reads `GEMINI_API_KEY` (or `GOOGLE_API_KEY`) and never prints it.
 
 ## Structured output
 

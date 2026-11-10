@@ -175,4 +175,3 @@ Reduction can find a small reproducer without proving a unique root cause. Diagn
 
 - `SKILL.md` — campaign workflow and safety boundaries
 - `references/suite-evidence.md` — coverage, mutation, flakes, redundancy, and pruning
-- `templates/risk-ledger.md` — technique, oracle, budget, and disposition record

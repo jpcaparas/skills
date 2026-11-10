@@ -27,7 +27,6 @@ Inventory the affected surfaces. A collection-wide reorganization needs the whol
 - the repository's draft, published, private, and retired states
 - catalogs, manifests, registries, installer lists, generated docs, and discovery commands
 - router or setup skills that name other skills
-- thin wrappers such as `README.md`, `AGENTS.md`, and metadata files
 - tests, evals, scripts, templates, and dependents
 - local instructions governing naming, placement, promotion, or deprecation
 
@@ -74,7 +73,6 @@ For a multi-package change, a branch-and-artifact ledger can track current and p
 
 A strong context pointer says both when to load a file and what decision or action it supports:
 
-> Read `references/cross-harness.md` when target-specific invocation controls are in scope; use it to select and verify a supported invocation contract.
 
 Keep must-have material inline if every branch needs it or repeated disclosure tests show the pointer is unreliable. Co-locate a concept's rule, caveat, and example so the agent does not assemble one decision from scattered fragments.
 
@@ -131,7 +129,7 @@ Build an affected-surface ledger before editing:
 | Surface | Question |
 |---|---|
 | Canonical skill | Is `SKILL.md` still the single behavioral source of truth? |
-| Catalog or README | Does the entry accurately orient a human without copying the runbook? |
+| Catalog | Does the entry accurately describe the skill without copying the runbook? |
 | Registry or manifest | Does it include exactly the skills this lifecycle state publishes? |
 | Router | Does each route point to a current, reachable owner? |
 | Installer or discovery | Can a fresh consumer find the intended skill and exclude retired drafts? |
@@ -141,7 +139,6 @@ Build an affected-surface ledger before editing:
 
 Update these surfaces atomically. A canonical skill change is incomplete while a derived catalog, router, or registry still lies about it.
 
-Keep wrappers thin. Human-facing docs orient and situate; they do not duplicate operational steps. Generate or validate derived surfaces when their format is regular enough.
 
 ## Separate Reusable Behavior From Local Configuration
 
@@ -179,7 +176,6 @@ Useful checks include:
 - published skills appear in every governed catalog or registry
 - draft and retired skills are absent from active discovery surfaces
 - routers mention current reachable skills and no removed ones
-- wrapper metadata matches canonical name, version, and short description
 - every local pointer and eval fixture resolves inside the package
 - a fresh installer or discovery command sees the intended set when the repository contract exposes one
 
@@ -199,11 +195,3 @@ Release or promote only when:
 - required release validation and discovery checks pass, and behavioral claims are supported by executed evals rather than structural preflight alone
 
 Keep incomplete behavioral evidence visible. A reviewed local improvement with unrun model evals is not a behaviorally certified release. Do not block a harmless local correction on unrelated platform experiments, or disguise missing evidence as success.
-
-## See Also
-
-- `references/anatomy.md` — portable package anatomy and earned resources
-- `references/patterns.md` — disclosure, granularity, and context-pointer patterns
-- `references/testing.md` — trigger, disclosure, differential, and behavioral evals
-- `references/self-improvement.md` — evidence-backed feedback curation
-- `references/cross-harness.md` — harness-specific invocation and portability constraints

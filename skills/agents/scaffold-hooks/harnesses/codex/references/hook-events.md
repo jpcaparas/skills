@@ -13,7 +13,7 @@ Primary sources:
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/hooks/src/events/permission_request.rs`
 - `https://raw.githubusercontent.com/openai/codex/main/codex-rs/core/src/tools/hook_names.rs`
 
-Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official release docs and version-matched schemas/source when installed evidence is insufficient, stale, or event semantics will change; `main` may include unreleased behavior. Follow the root `SKILL.md` maintenance route for proposed canonical updates, not silent installed edits. See `PLAYBOOK.md` for known later-release drift beyond the bundled helper.
+Use `assets/hook-events.json` as the deterministic scaffold input. Consult relevant official release docs and version-matched schemas/source when installed evidence is insufficient, stale, or event semantics will change; `main` may include unreleased behavior.
 
 ## Bundled Runtime Baseline
 
@@ -157,3 +157,7 @@ Use `assets/hook-events.json` as the deterministic scaffold input. Consult relev
 - Plain text stdout is invalid for this event when the hook exits `0`.
 - `decision: "block"` tells Codex to continue and creates a new continuation prompt using your `reason`.
 - If a matching `Stop` hook returns `continue: false`, that takes precedence over continuation decisions from other matching `Stop` hooks.
+
+## Known drift
+
+The official hooks page reviewed on 2026-09-25 documents `SessionEnd`, `Interrupt`, async command hooks, and MCP tool hooks beyond this bundled baseline. The generator does not implement them; supporting them needs a version-matched manifest, generator and test update.

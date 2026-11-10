@@ -74,4 +74,4 @@ section "Sensitive Or High-Impact Paths"
 list_existing '(^|/)(\.env|\.env\..*|.*secret.*|.*credential.*|migrations|infra|terraform|pulumi|deploy|generated|dist|build)(/|$)' | head -200
 
 section "Suggested Next Read"
-printf '%s\n' 'Read references/project-analysis.md, then choose enabled events in a hook plan JSON.'
+printf '%s\n' 'Choose enabled events in a hook plan JSON.'

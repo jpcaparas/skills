@@ -146,22 +146,3 @@ Observed live behavior:
 - `DELETE /crawl/status/<cached-completed-job>` returned HTTP 500
 
 Do not depend on detailed error payloads from crawl endpoints. Validate obvious bad inputs before you send them.
-
-## Browser UI observations
-
-Browser automation verified that:
-
-- `https://markdown.new/crawl` exposes a URL textbox and `Start Crawl`
-- Starting a crawl from the UI navigates to `/crawl/status/<jobId>`
-- The status page exposes `Re-crawl`, `Download .md`, `Copy All`, and `New Crawl`
-
-That makes the crawl UI usable for humans, but agents should prefer the HTTP endpoints for deterministic work.
-
-## Helper script
-
-```bash
-python3 scripts/probe_markdown_new.py --mode crawl-start 'https://example.com' --limit 1 --depth 1
-python3 scripts/probe_markdown_new.py --mode crawl-status '6fe0760d-e75e-4616-ad9a-ad2d2665af2c' --json-response
-```
-
-See also `references/gotchas.md` for cache and delete quirks.
