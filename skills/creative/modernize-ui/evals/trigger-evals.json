@@ -1,0 +1,66 @@
+[
+  {
+    "query": "/modernize-ui",
+    "should_trigger": true
+  },
+  {
+    "query": "Our marketing site was built in 2020 on Bootstrap 4 and it shows. Keep the brand and colours but bring the whole thing up to date, and make sure it holds up on phones and in Safari.",
+    "should_trigger": true
+  },
+  {
+    "query": "Give this admin app a complete visual overhaul. New look for every screen and component, and show me what each page will look like before you touch the code.",
+    "should_trigger": true
+  },
+  {
+    "query": "The design is signed off and must not change, but the front end is janky: layout shifts, a menu you cannot reach by keyboard, slow first paint. Clean all of that up across the site.",
+    "should_trigger": true
+  },
+  {
+    "query": "Audit the UI of this storefront across browsers and screen sizes and tell me everything that is dated, broken or inaccessible before we decide how far to take a facelift.",
+    "should_trigger": true
+  },
+  {
+    "query": "Refresh the whole front end with current CSS, but we still have customers on Safari 13 and old Firefox ESR, so add whatever fallbacks or polyfills are needed so nothing breaks for them.",
+    "should_trigger": true
+  },
+  {
+    "query": "Make this whole site snappier and sexier and get it through WCAG, tested in every browser and viewport you can install.",
+    "should_trigger": true
+  },
+  {
+    "query": "Before and after renders please: I want to see a proposed facelift of each page of our docs site next to how it looks today, then pick which changes go ahead.",
+    "should_trigger": true
+  },
+  {
+    "query": "Build a landing page from scratch for a new product called Tidewater. There is no existing site.",
+    "should_trigger": false
+  },
+  {
+    "query": "The submit button on the checkout form is 2px lower than the input next to it. Fix the alignment.",
+    "should_trigger": false
+  },
+  {
+    "query": "Upgrade this project from React 17 to React 19 and fix whatever breaks in the build.",
+    "should_trigger": false
+  },
+  {
+    "query": "Write Playwright end-to-end tests for the sign-up flow and run them in CI on Chromium and WebKit.",
+    "should_trigger": false
+  },
+  {
+    "query": "Our Babel config ships core-js to everyone. Trim the polyfills in the bundle to match our browserslist and report the size saved.",
+    "should_trigger": false
+  },
+  {
+    "query": "Generate three concept images for a modern coffee brand homepage that I can show a client.",
+    "should_trigger": false
+  },
+  {
+    "query": "Review this pull request's CSS changes for anything that looks like generic AI styling.",
+    "should_trigger": false
+  },
+  {
+    "query": "Run an SEO audit of the site: titles, canonicals, structured data and the sitemap.",
+    "should_trigger": false
+  }
+]

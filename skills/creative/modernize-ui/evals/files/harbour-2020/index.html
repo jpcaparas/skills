@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Harbour Roasters | Home</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="js/site.js"></script>
+</head>
+<body>
+<div class="topbar">Free shipping on orders over $40! <a href="menu.html">Click here</a></div>
+<div class="navbar">
+  <div class="container">
+    <a class="brand" href="index.html"><img src="img/logo.svg"> Harbour Roasters</a>
+    <div class="nav-toggle" onclick="toggleNav()">&#9776;</div>
+    <div class="nav-links" id="navLinks">
+      <a class="active" href="index.html">Home</a>
+      <a href="menu.html">Coffee</a>
+      <a href="menu.html#plans">Subscriptions</a>
+      <a href="#wholesale">Wholesale</a>
+      <a class="btn btn-warning btn-sm" href="menu.html#plans">Sign Up</a>
+    </div>
+  </div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <div class="slide" id="slide0">
+      <h1>Freshly roasted in Lyttelton, delivered to your door</h1>
+      <p class="lead">Small-batch beans roasted every Tuesday and Friday. Order by 2pm for same-day dispatch.</p>
+      <a class="btn btn-warning btn-lg" href="menu.html">Shop Coffee</a>
+      <a class="btn btn-outline btn-lg" href="menu.html#plans">View Plans</a>
+    </div>
+    <div class="slide" id="slide1" style="display:none">
+      <h1>Subscribe and save 15% on every bag</h1>
+      <p class="lead">Pause, skip or cancel whenever you like. No lock-in contracts.</p>
+      <a class="btn btn-warning btn-lg" href="menu.html#plans">View Plans</a>
+    </div>
+    <div class="dots"><span class="dot on" onclick="showSlide(0)"></span><span class="dot" onclick="showSlide(1)"></span></div>
+  </div>
+</div>
+
+<div class="container">
+  <h3 class="section-title">This week's roasts</h3>
+  <div class="row">
+    <div class="col-4">
+      <div class="card">
+        <img class="card-img" src="img/bag-dark.svg">
+        <div class="card-body">
+          <h5>Breakwater Espresso</h5>
+          <p class="muted">Dark chocolate, toasted hazelnut, molasses</p>
+          <p class="price">$16.50 <small>/ 250g</small></p>
+          <a class="btn btn-primary btn-block" href="menu.html">Add to cart</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="card">
+        <span class="ribbon">NEW</span>
+        <img class="card-img" src="img/bag-light.svg">
+        <div class="card-body">
+          <h5>Guji Natural, Ethiopia</h5>
+          <p class="muted">Blueberry, jasmine, lemon curd</p>
+          <p class="price">$21.00 <small>/ 250g</small></p>
+          <a class="btn btn-primary btn-block" href="menu.html">Add to cart</a>
+        </div>
+      </div>
+    </div>
+    <div class="col-4">
+      <div class="card">
+        <img class="card-img" src="img/bag-mid.svg">
+        <div class="card-body">
+          <h5>Quail Island Decaf</h5>
+          <p class="muted">Caramel, red apple, cocoa. Swiss Water process</p>
+          <p class="price">$18.00 <small>/ 250g</small></p>
+          <a class="btn btn-primary btn-block" href="menu.html">Add to cart</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <h3 class="section-title">Why Harbour?</h3>
+  <div class="row features">
+    <div class="col-4"><div class="icon-circle">1</div><h5>Roasted to order</h5><p class="muted">Nothing sits on a shelf. Your bag is roasted at most three days before it ships.</p></div>
+    <div class="col-4"><div class="icon-circle">2</div><h5>Traceable lots</h5><p class="muted">Every bag names the farm, the washing station and the price we paid the grower.</p></div>
+    <div class="col-4"><div class="icon-circle">3</div><h5>Compostable packaging</h5><p class="muted">Bags and mailers break down in a home compost bin within 26 weeks.</p></div>
+  </div>
+
+  <div class="well" id="wholesale">
+    <h3>Wholesale enquiries</h3>
+    <p class="muted">Cafes and offices: tell us how much you go through and we will send a price list.</p>
+    <form class="form-inline" action="#" onsubmit="return submitEnquiry()">
+      <input type="text" name="name" placeholder="Your name">
+      <input type="text" name="email" placeholder="Email address">
+      <select name="volume"><option>Kg per week</option><option>Under 5</option><option>5 to 20</option><option>Over 20</option></select>
+      <input type="submit" class="btn btn-primary" value="Send">
+    </form>
+    <div id="formMsg" class="form-msg"></div>
+  </div>
+</div>
+
+<div class="footer">
+  <div class="container">
+    <div class="row">
+      <div class="col-4"><b>Harbour Roasters</b><br>14 Norwich Quay, Lyttelton 8082<br>Open Tue to Sat, 7am to 2pm</div>
+      <div class="col-4"><a href="menu.html">Coffee</a> | <a href="menu.html#plans">Subscriptions</a> | <a href="#wholesale">Wholesale</a></div>
+      <div class="col-4 text-right">&copy; 2020 Harbour Roasters Ltd</div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

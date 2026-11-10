@@ -29,7 +29,7 @@ For one skill, use the exact command beside its card below. To install a categor
 - Hardening a codebase? Start with `maintainable-code`, `strong-types`, and `adversarial-test-sweep`.
 - Orienting yourself before a change? Try `zoom-out`, `eli12`, or `product-question`.
 - Turning source material into something useful? Try `youtube-transcript-dossier`, `better-writing`, or `to-diagram`.
-- Building visual output? Explore `interface-design-taste`, `nanobanana`, `nanobanana-infographic`, or `oneshot-websites`.
+- Building visual output? Explore `interface-design-taste`, `modernize-ui`, `nanobanana`, `nanobanana-infographic`, or `oneshot-websites`.
 
 ## Category map
 
@@ -445,6 +445,16 @@ ElevenLabs media generation and transformation across speech, dialogue, transcri
 </p>
 
 Production skill for shaping web, app, and desktop interfaces with stronger hierarchy, cleaner typography, tighter color and surface systems, platform-aware interaction design, and redesign-first critique workflows that avoid generic AI UI defaults.
+
+#### `modernize-ui`
+
+`npx skills add jpcaparas/skills --skill modernize-ui`
+
+<p align="center">
+  <img src="skills/creative/modernize-ui/skill-card.png" alt="16-bit side-scrolling pixel art badge for modernize-ui" width="480">
+</p>
+
+Reworks the interface of an existing site or app so it is faster, better looking, accessible and consistent across browsers and viewports, with fallbacks and polyfills for older browsers. Four dials set the job: audit first, a mode (`preserve`, `refresh` or `reimagine`), the pages, and the browser floor. Before it edits anything it builds a catalogue of every planned change beside before and after renders from real browsers, and it rebuilds that catalogue against the finished work to catch regressions.
 
 #### `nanobanana`
 
