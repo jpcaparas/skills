@@ -2,8 +2,10 @@
 #
 # scaffold_hooks.sh
 #
-# Install the opencode-froggy plugin and render its hooks.md configuration.
-#
+# Render or refresh the generated OpenCode plugin that runs the plan's scripts and
+# commands. Only plan events that have scripts or commands are emitted; a plan
+# without any writes no plugin. Managed output of the earlier opencode-froggy
+# scaffold is removed.
 
 set -euo pipefail
 
@@ -20,47 +22,6 @@ require_command() {
         echo "Required command is missing: $name" >&2
         exit 1
     fi
-}
-
-sha256_file() {
-    local file="$1"
-    if [ ! -f "$file" ]; then
-        printf ''
-        return 0
-    fi
-    if command -v shasum >/dev/null 2>&1; then
-        shasum -a 256 "$file" | awk '{print $1}'
-    elif command -v sha256sum >/dev/null 2>&1; then
-        sha256sum "$file" | awk '{print $1}'
-    elif command -v openssl >/dev/null 2>&1; then
-        openssl dgst -sha256 "$file" | awk '{print $NF}'
-    else
-        printf ''
-    fi
-}
-
-git_source_field() {
-    local root="$1"
-    local field="$2"
-    case "$field" in
-        repository)
-            git -C "$root" config --get remote.origin.url 2>/dev/null || true
-            ;;
-        commit)
-            git -C "$root" rev-parse HEAD 2>/dev/null || true
-            ;;
-        dirty)
-            if git -C "$root" rev-parse --show-toplevel >/dev/null 2>&1; then
-                if [ -n "$(git -C "$root" status --short -- . 2>/dev/null)" ]; then
-                    printf 'true'
-                else
-                    printf 'false'
-                fi
-            else
-                printf 'null'
-            fi
-            ;;
-    esac
 }
 
 resolve_target_path() {
@@ -181,6 +142,47 @@ cleanup_legacy_plugin_scaffold() {
     remove_legacy_dependency_artifacts
 }
 
+
+# Froggy-era output: the managed hooks.md block and the opencode-froggy plugin
+# entry, removed only when the scaffold's own state proves it wrote them.
+cleanup_froggy_scaffold() {
+    local state="$CONFIG_DIR/hook/.managed"
+    local hooks_file="$CONFIG_DIR/hook/hooks.md"
+    local config_file="$FROGGY_CONFIG_FILE"
+    local remaining tmp
+
+    if [ -f "$hooks_file" ] && grep -q '# BEGIN scaffold-hooks managed opencode-froggy' "$hooks_file"; then
+        [ "$DRY_RUN" = "true" ] && return 0
+        tmp="$(mktemp)"
+        sed '/# BEGIN scaffold-hooks managed opencode-froggy/,/# END scaffold-hooks managed opencode-froggy/d' "$hooks_file" > "$tmp"
+        remaining="$(grep -vE '^(---|hooks:|# OpenCode Froggy Hooks|Managed by scaffold-hooks.*)?[[:space:]]*$' "$tmp" || true)"
+        if [ -z "$remaining" ]; then
+            rm -f "$hooks_file"
+        else
+            mv "$tmp" "$hooks_file"
+        fi
+        rm -f "$tmp"
+        rmdir "$CONFIG_DIR/hook" 2>/dev/null || true
+    fi
+
+    if [ -f "$state/manifest.json" ]; then
+        [ "$DRY_RUN" = "true" ] && return 0
+        if [ -f "$config_file" ] && jq -e 'type == "object"' "$config_file" >/dev/null 2>&1; then
+            tmp="$(mktemp)"
+            jq '
+                if (.plugin | type) == "array" then
+                    .plugin |= map(select(. != "opencode-froggy"))
+                    | if (.plugin | length) == 0 then del(.plugin) else . end
+                else . end
+                | if (keys - ["$schema"]) == [] then empty else . end
+            ' "$config_file" > "$tmp"
+            if [ -s "$tmp" ]; then mv "$tmp" "$config_file"; else rm -f "$tmp" "$config_file"; fi
+        fi
+        rm -rf "$state"
+        rmdir "$CONFIG_DIR/hook" 2>/dev/null || true
+    fi
+}
+
 PROJECT_ROOT=""
 PLAN_FILE=""
 MODE_OVERRIDE=""
@@ -190,34 +192,13 @@ ALLOW_GLOBAL_TARGETS="false"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --project)
-            PROJECT_ROOT="$2"
-            shift 2
-            ;;
-        --plan)
-            PLAN_FILE="$2"
-            shift 2
-            ;;
-        --mode)
-            MODE_OVERRIDE="$2"
-            shift 2
-            ;;
-        --home)
-            HOME_OVERRIDE="$2"
-            shift 2
-            ;;
-        --allow-global-targets)
-            ALLOW_GLOBAL_TARGETS="true"
-            shift
-            ;;
-        --dry-run)
-            DRY_RUN="true"
-            shift
-            ;;
-        -h|--help)
-            usage
-            exit 0
-            ;;
+        --project) PROJECT_ROOT="$2"; shift 2 ;;
+        --plan) PLAN_FILE="$2"; shift 2 ;;
+        --mode) MODE_OVERRIDE="$2"; shift 2 ;;
+        --home) HOME_OVERRIDE="$2"; shift 2 ;;
+        --allow-global-targets) ALLOW_GLOBAL_TARGETS="true"; shift ;;
+        --dry-run) DRY_RUN="true"; shift ;;
+        -h|--help) usage; exit 0 ;;
         *)
             echo "Unknown argument: $1" >&2
             exit 1
@@ -231,21 +212,16 @@ if [ -z "$PROJECT_ROOT" ] || [ -z "$PLAN_FILE" ]; then
 fi
 
 require_command jq
-require_command bun
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 UNIVERSAL_SKILL_ROOT="$(cd "$SKILL_ROOT/../.." && pwd -P)"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
+PLUGIN_TEMPLATE="$SKILL_ROOT/templates/plugin.ts.tmpl"
+GENERATED_MARKER="// Generated by scaffold-hooks."
 
-PROJECT_ROOT="$(
-    cd "$PROJECT_ROOT"
-    pwd -P
-)"
-PLAN_FILE="$(
-    cd "$(dirname "$PLAN_FILE")"
-    printf '%s/%s\n' "$(pwd -P)" "$(basename "$PLAN_FILE")"
-)"
+PROJECT_ROOT="$(cd "$PROJECT_ROOT" && pwd -P)"
+PLAN_FILE="$(cd "$(dirname "$PLAN_FILE")" && printf '%s/%s\n' "$(pwd -P)" "$(basename "$PLAN_FILE")")"
 
 if [ ! -f "$PLAN_FILE" ]; then
     echo "Plan file does not exist: $PLAN_FILE" >&2
@@ -253,9 +229,7 @@ if [ ! -f "$PLAN_FILE" ]; then
 fi
 
 MODE="$(jq -r '.mode // "additive"' "$PLAN_FILE")"
-if [ -n "$MODE_OVERRIDE" ]; then
-    MODE="$MODE_OVERRIDE"
-fi
+[ -z "$MODE_OVERRIDE" ] || MODE="$MODE_OVERRIDE"
 case "$MODE" in
     additive|overhaul) ;;
     *)
@@ -273,201 +247,119 @@ case "$SCOPE" in
         ;;
 esac
 
-PLUGIN_NAME="$(jq -r '.plugin_name // "opencode-froggy"' "$PLAN_FILE")"
-if [ "$PLUGIN_NAME" != "opencode-froggy" ]; then
-    echo "The OpenCode scaffold is Froggy-backed and only supports plugin_name=opencode-froggy. Got: $PLUGIN_NAME" >&2
+# Malformed events fail before any write, whether or not they would be emitted.
+if ! jq -e --slurpfile manifest "$MANIFEST_SOURCE" '
+    def valid_args: if has("args") then ((.args | type) == "array" and all(.args[]; type == "string")) else true end;
+    def valid_cwd: if has("cwd") then (.cwd | type) == "string" else true end;
+    def nonempty: type == "string" and length > 0;
+    def valid_script: type == "object" and ((.path? // .script? // null) | nonempty) and valid_args and valid_cwd;
+    def valid_command: type == "object" and ((.command? // null) | nonempty) and valid_cwd;
+    def valid_event:
+        type == "object"
+        and (.name as $name | $manifest[0].events | map(.name) | index($name) != null)
+        and (if has("scripts") then ((.scripts | type) == "array" and all(.scripts[]; valid_script)) else true end)
+        and (if has("commands") then ((.commands | type) == "array" and all(.commands[]; valid_command)) else true end);
+    type == "object"
+    and (if has("enabled_events") then ((.enabled_events | type) == "array" and all(.enabled_events[]; valid_event)
+        and ((.enabled_events | map(.name) | unique | length) == (.enabled_events | length))) else true end)
+' "$PLAN_FILE" >/dev/null 2>&1; then
+    echo "Plan file has invalid events, scripts or commands configuration." >&2
+    echo "Expected event names from assets/hook-events.json, each used once, with arrays of objects holding non-empty paths/commands, string args and string cwd values." >&2
     exit 1
 fi
 
 HOME_ROOT="${HOME_OVERRIDE:-$HOME}"
-CONFIG_TARGET_VALUE="$(jq -r '.config_target // empty' "$PLAN_FILE")"
-HOOK_CONFIG_VALUE="$(jq -r '.hook_config_target // empty' "$PLAN_FILE")"
-MANAGED_STATE_VALUE="$(jq -r '.managed_state_dir // empty' "$PLAN_FILE")"
-HOOKS_ROOT_VALUE="$(jq -r '.hooks_root // "hooks"' "$PLAN_FILE")"
-
-if [ -z "$CONFIG_TARGET_VALUE" ]; then
-    if [ "$SCOPE" = "global" ]; then
-        CONFIG_TARGET_VALUE="~/.config/opencode/opencode.json"
-    else
-        CONFIG_TARGET_VALUE="opencode.json"
-    fi
-fi
-if [ -z "$HOOK_CONFIG_VALUE" ]; then
-    if [ "$SCOPE" = "global" ]; then
-        HOOK_CONFIG_VALUE="~/.config/opencode/hook/hooks.md"
-    else
-        HOOK_CONFIG_VALUE=".opencode/hook/hooks.md"
-    fi
-fi
-if [ -z "$MANAGED_STATE_VALUE" ]; then
-    if [ "$SCOPE" = "global" ]; then
-        MANAGED_STATE_VALUE="~/.config/opencode/hook/.managed"
-    else
-        MANAGED_STATE_VALUE=".opencode/hook/.managed"
-    fi
-fi
-
-CONFIG_TARGET_ABS="$(resolve_target_path "$CONFIG_TARGET_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
-HOOK_CONFIG_ABS="$(resolve_target_path "$HOOK_CONFIG_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
-MANAGED_STATE_ABS="$(resolve_target_path "$MANAGED_STATE_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
-MANIFEST_TARGET_FILE="$MANAGED_STATE_ABS/manifest.json"
-PLAN_SNAPSHOT_FILE="$MANAGED_STATE_ABS/plan.snapshot.json"
-
 source "$SCRIPT_DIR/scaffold_paths.sh"
+HOOKS_ROOT_VALUE="$(jq -r '.hooks_root // "hooks"' "$PLAN_FILE")"
+validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_ROOT_VALUE" hooks_root tree
+PLUGIN_TARGET_VALUE="$(jq -r '.plugin_target // empty' "$PLAN_FILE")"
+if [ "$SCOPE" = "global" ]; then
+    CONFIG_DIR="$HOME_ROOT/.config/opencode"
+    FROGGY_CONFIG_FILE="$CONFIG_DIR/opencode.json"
+    [ -n "$PLUGIN_TARGET_VALUE" ] || PLUGIN_TARGET_VALUE="~/.config/opencode/plugins/scaffold-hooks.ts"
+else
+    CONFIG_DIR="$PROJECT_ROOT/.opencode"
+    FROGGY_CONFIG_FILE="$PROJECT_ROOT/opencode.json"
+    [ -n "$PLUGIN_TARGET_VALUE" ] || PLUGIN_TARGET_VALUE=".opencode/plugins/scaffold-hooks.ts"
+fi
+PLUGIN_TARGET_ABS="$(resolve_target_path "$PLUGIN_TARGET_VALUE" "$PROJECT_ROOT" "$HOME_ROOT")"
+
 if [ "$SCOPE" = "global" ]; then
     if [ "$ALLOW_GLOBAL_TARGETS" != "true" ]; then
         echo "Global scope requires explicit --allow-global-targets authorization." >&2
         exit 1
     fi
-    for target in "$CONFIG_TARGET_ABS" "$HOOK_CONFIG_ABS" "$MANAGED_STATE_ABS"; do
-        case "$target" in
-            "$HOME_ROOT/.config/opencode/"*) ;;
-            *) echo "Unsafe scaffold path: global targets must stay under ~/.config/opencode/." >&2; exit 1 ;;
-        esac
-        validate_scaffold_path "$HOME_ROOT" "${target#"$HOME_ROOT/"}" global_target
-    done
-    validate_scaffold_path "$HOME_ROOT" "${MANAGED_STATE_ABS#"$HOME_ROOT/"}" managed_state tree
+    case "$PLUGIN_TARGET_ABS" in
+        "$HOME_ROOT/.config/opencode/"*) ;;
+        *) echo "Unsafe scaffold path: global targets must stay under ~/.config/opencode/." >&2; exit 1 ;;
+    esac
+    validate_scaffold_path "$HOME_ROOT" "${PLUGIN_TARGET_ABS#"$HOME_ROOT/"}" plugin_target
+    validate_scaffold_path "$HOME_ROOT" .config/opencode/opencode.json froggy_config
+    validate_scaffold_path "$HOME_ROOT" .config/opencode/hook froggy_state tree
 else
-    validate_scaffold_path "$PROJECT_ROOT" "$CONFIG_TARGET_VALUE" config_target
-    validate_scaffold_path "$PROJECT_ROOT" "$HOOK_CONFIG_VALUE" hook_config_target
-    validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_STATE_VALUE" managed_state tree
+    validate_scaffold_path "$PROJECT_ROOT" "$PLUGIN_TARGET_VALUE" plugin_target
+    validate_scaffold_path "$PROJECT_ROOT" opencode.json froggy_config
+    validate_scaffold_path "$PROJECT_ROOT" .opencode/hook froggy_state tree
 fi
-validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_ROOT_VALUE" hooks_root tree
 validate_scaffold_path "$PROJECT_ROOT" .opencode/plugins/.managed legacy_state tree
-# Validate every manifest-controlled removal before creating output or updating
-# configuration. The actual cleanup repeats these checks before deleting.
+# Validate every manifest-controlled removal before creating output.
 DRY_RUN=true cleanup_legacy_plugin_scaffold
 
-HOOKS_JSON="$(jq -c '(.hooks // []) | map(select((.actions // []) | length > 0))' "$PLAN_FILE")"
+detect_code_change_extensions() {
+    python3 "$UNIVERSAL_SKILL_ROOT/scripts/detect_code_extensions.py" --project "$PROJECT_ROOT" --hooks-root hooks 2>/dev/null \
+        || printf '["js","jsx","ts","tsx","py","go","rs","java","php","rb","cs","sh"]\n'
+}
 
-SETUP_ARGS=(--project "$PROJECT_ROOT" --json)
-if [ -n "$HOME_OVERRIDE" ]; then
-    SETUP_ARGS+=(--home "$HOME_OVERRIDE")
-fi
-SETUP_STATUS_JSON="$(bun "$SCRIPT_DIR/check_plugin_setup.ts" "${SETUP_ARGS[@]}")"
+# An event is emitted only when the plan gives it scripts or commands.
+EVENTS_JSON="$(
+    jq -c --argjson detected "$(detect_code_change_extensions)" '
+        [(.enabled_events // [])[]
+            | select(((.scripts // []) + (.commands // [])) | length > 0)
+            | {name, matcher, timeout, scripts: (.scripts // []), commands: (.commands // []), run_on_code_changes, code_change_extensions: (.code_change_extensions // $detected)}
+            | with_entries(select(.value != null))]
+    ' "$PLAN_FILE"
+)"
+EVENT_COUNT="$(printf '%s' "$EVENTS_JSON" | jq 'length')"
 
 if [ "$DRY_RUN" = "true" ]; then
     cat <<EOF
 scaffold_hooks.sh dry run
-  project root:       $PROJECT_ROOT
-  scope:              $SCOPE
-  mode:               $MODE
-  plugin:             $PLUGIN_NAME
-  config target:      $CONFIG_TARGET_VALUE
-  hook config target: $HOOK_CONFIG_VALUE
-  managed state:      $MANAGED_STATE_VALUE
-  hooks:              $(printf '%s' "$HOOKS_JSON" | jq 'length')
-  legacy cleanup:     $([ -f "$PROJECT_ROOT/.opencode/plugins/.managed/manifest.json" ] && printf 'detected' || printf 'not-detected')
+  project root:   $PROJECT_ROOT
+  scope:          $SCOPE
+  mode:           $MODE
+  plugin target:  $PLUGIN_TARGET_VALUE
+  events:         $EVENT_COUNT
 EOF
     exit 0
 fi
 
-cleanup_legacy_plugin_scaffold
+if [ -f "$PLUGIN_TARGET_ABS" ] && ! head -n 1 "$PLUGIN_TARGET_ABS" | grep -qF "$GENERATED_MARKER"; then
+    echo "Refusing to overwrite $PLUGIN_TARGET_VALUE: it was not generated by scaffold-hooks." >&2
+    exit 1
+fi
 
-if [ "$(printf '%s' "$HOOKS_JSON" | jq 'length')" -eq 0 ]; then
-    bun "$SCRIPT_DIR/render_froggy_hooks.ts" \
-        --hooks-file "$HOOK_CONFIG_ABS" \
-        --hooks-json '[]' \
-        --mode "$MODE" >/dev/null
-    rm -rf "$MANAGED_STATE_ABS"
-    echo "No plan hook has actions; no OpenCode hooks were scaffolded." >&2
+cleanup_legacy_plugin_scaffold
+cleanup_froggy_scaffold
+
+if [ "$EVENT_COUNT" -eq 0 ]; then
+    rm -f "$PLUGIN_TARGET_ABS"
+    rmdir "$(dirname "$PLUGIN_TARGET_ABS")" "$CONFIG_DIR" 2>/dev/null || true
+    echo "No plan event has scripts or commands; no OpenCode plugin was scaffolded." >&2
     exit 0
 fi
 
-mkdir -p "$MANAGED_STATE_ABS"
-
-bun "$SCRIPT_DIR/merge_opencode_config.ts" \
-    --config-file "$CONFIG_TARGET_ABS" \
-    --plugins "$PLUGIN_NAME" >/dev/null
-
-bun "$SCRIPT_DIR/render_froggy_hooks.ts" \
-    --hooks-file "$HOOK_CONFIG_ABS" \
-    --hooks-json "$HOOKS_JSON" \
-    --mode "$MODE" \
-    --managed-id "scaffold-hooks/opencode-froggy" >/dev/null
-
-jq '.' "$PLAN_FILE" > "$PLAN_SNAPSHOT_FILE"
-
-SOURCE_REPOSITORY="$(git_source_field "$UNIVERSAL_SKILL_ROOT" repository)"
-SOURCE_COMMIT="$(git_source_field "$UNIVERSAL_SKILL_ROOT" commit)"
-SOURCE_DIRTY="$(git_source_field "$UNIVERSAL_SKILL_ROOT" dirty)"
-PLAN_SHA256="$(sha256_file "$PLAN_FILE")"
-GENERATOR_SHA256="$(sha256_file "$SCRIPT_DIR/scaffold_hooks.sh")"
-RENDERER_SHA256="$(sha256_file "$SCRIPT_DIR/render_froggy_hooks.ts")"
-EVENT_MANIFEST_SHA256="$(sha256_file "$MANIFEST_SOURCE")"
-HOOK_CONFIG_SHA256="$(sha256_file "$HOOK_CONFIG_ABS")"
-CONFIG_SHA256="$(sha256_file "$CONFIG_TARGET_ABS")"
-
-jq -n \
-    --arg generated_at "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
-    --arg scope "$SCOPE" \
-    --arg mode "$MODE" \
-    --arg source_repository "$SOURCE_REPOSITORY" \
-    --arg source_commit "$SOURCE_COMMIT" \
-    --argjson source_dirty "$SOURCE_DIRTY" \
-    --arg plan_sha256 "$PLAN_SHA256" \
-    --arg generator_sha256 "$GENERATOR_SHA256" \
-    --arg renderer_sha256 "$RENDERER_SHA256" \
-    --arg event_manifest_sha256 "$EVENT_MANIFEST_SHA256" \
-    --arg plugin_name "$PLUGIN_NAME" \
-    --arg config_target "$CONFIG_TARGET_VALUE" \
-    --arg hook_config_target "$HOOK_CONFIG_VALUE" \
-    --arg managed_state_dir "$MANAGED_STATE_VALUE" \
-    --arg config_sha256 "$CONFIG_SHA256" \
-    --arg hook_config_sha256 "$HOOK_CONFIG_SHA256" \
-    --argjson setup_status "$SETUP_STATUS_JSON" \
-    --argjson hooks "$HOOKS_JSON" \
-    --slurpfile source "$MANIFEST_SOURCE" \
-    --slurpfile plan "$PLAN_FILE" '
-    $source[0] + {
-        generated_at: $generated_at,
-        scaffold_hooks: {
-            schema_version: 2,
-            skill_name: "scaffold-hooks",
-            harness: "opencode",
-            integration: "opencode-froggy",
-            source: {
-                repository: (if $source_repository == "" then null else $source_repository end),
-                commit: (if $source_commit == "" then null else $source_commit end),
-                dirty: $source_dirty
-            },
-            generator: {
-                path: "harnesses/opencode/scripts/scaffold_hooks.sh",
-                sha256: (if $generator_sha256 == "" then null else $generator_sha256 end)
-            },
-            renderer: {
-                path: "harnesses/opencode/scripts/render_froggy_hooks.ts",
-                sha256: (if $renderer_sha256 == "" then null else $renderer_sha256 end)
-            },
-            plan_sha256: (if $plan_sha256 == "" then null else $plan_sha256 end),
-            event_manifest_sha256: (if $event_manifest_sha256 == "" then null else $event_manifest_sha256 end)
-        },
-        scope: $scope,
-        mode: $mode,
-        plugin_name: $plugin_name,
-        config_target: $config_target,
-        hook_config_target: $hook_config_target,
-        managed_state_dir: $managed_state_dir,
-        hooks: $hooks,
-        managed_files: [$hook_config_target],
-        managed_file_hashes: {
-            ($hook_config_target): (if $hook_config_sha256 == "" then null else $hook_config_sha256 end)
-        },
-        merged_config_hashes: {
-            ($config_target): (if $config_sha256 == "" then null else $config_sha256 end)
-        },
-        setup_status: $setup_status,
-        plan: $plan[0]
-    }
-    ' > "$MANIFEST_TARGET_FILE"
+PLACEHOLDER_LINE="$(grep -n '@@PLAN@@' "$PLUGIN_TEMPLATE" | cut -d: -f1)"
+mkdir -p "$(dirname "$PLUGIN_TARGET_ABS")"
+{
+    head -n "$((PLACEHOLDER_LINE - 1))" "$PLUGIN_TEMPLATE"
+    printf 'const PLAN: { events: PlanEvent[] } = %s\n' "$(jq -nc --argjson events "$EVENTS_JSON" '{events: $events}')"
+    tail -n "+$((PLACEHOLDER_LINE + 1))" "$PLUGIN_TEMPLATE"
+} > "$PLUGIN_TARGET_ABS"
 
 cat <<EOF
 scaffold_hooks.sh complete
-  project root:       $PROJECT_ROOT
-  scope:              $SCOPE
-  mode:               $MODE
-  plugin:             $PLUGIN_NAME
-  config target:      $CONFIG_TARGET_VALUE
-  hook config target: $HOOK_CONFIG_VALUE
-  managed state:      $MANAGED_STATE_VALUE
+  project root:   $PROJECT_ROOT
+  scope:          $SCOPE
+  plugin:         $PLUGIN_TARGET_VALUE
+  events:         $(printf '%s' "$EVENTS_JSON" | jq -r 'map(.name) | join(",")')
 EOF

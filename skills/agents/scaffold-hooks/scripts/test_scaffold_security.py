@@ -20,12 +20,7 @@ OUTPUTS = {
         "hooks_target": ".github/hooks/copilot-hooks.json",
     },
     "devin": {"managed_root": "hooks", "hooks_target": ".devin/hooks.v1.json"},
-    "opencode": {
-        "hooks_root": "hooks",
-        "config_target": "opencode.json",
-        "hook_config_target": ".opencode/hook/hooks.md",
-        "managed_state_dir": ".opencode/hook/.managed",
-    },
+    "opencode": {"plugin_target": ".opencode/plugins/scaffold-hooks.ts"},
 }
 MERGERS = {
     "claude": ("merge_settings.sh", "--settings-file"),
@@ -125,14 +120,13 @@ class ScaffoldSecurityTests(unittest.TestCase):
         for harness, fields in OUTPUTS.items():
             for field, relative in fields.items():
                 for at_parent in (False, True):
-                    # opencode.json is at the selected root, which is not an output.
                     if at_parent and len(Path(relative).parts) == 1:
                         continue
                     with self.subTest(harness=harness, field=field, at_parent=at_parent):
                         self.project = self.new_project()
                         link = self.project / (Path(relative).parent if at_parent else relative)
                         link.parent.mkdir(parents=True, exist_ok=True)
-                        is_directory = at_parent or field in {"managed_root", "managed_state_dir", "hooks_root"}
+                        is_directory = at_parent or field == "managed_root"
                         target = self.outside if is_directory else self.sentinel
                         link.symlink_to(target, target_is_directory=is_directory)
                         self.assert_rejected(self.scaffold_command(harness, self.plan(harness)))
@@ -143,7 +137,7 @@ class ScaffoldSecurityTests(unittest.TestCase):
             "codex": "hooks/lib/codex.sh",
             "devin": "hooks/lib/devin.sh",
             "copilot": ".github/copilot/hooks/generated/lib/common.sh",
-            "opencode": ".opencode/hook/.managed/plan.snapshot.json",
+            "opencode": ".opencode/plugins/scaffold-hooks.ts",
         }
         for harness, relative in leaves.items():
             for mode in ("additive", "overhaul"):
@@ -203,7 +197,7 @@ class ScaffoldSecurityTests(unittest.TestCase):
                 plan["harnesses"] = ["claude", "opencode"]
                 plan["plans"] = {
                     "claude": self.plan("claude"),
-                    "opencode": {**self.plan("opencode"), "config_target": target},
+                    "opencode": {**self.plan("opencode"), "plugin_target": target},
                 }
                 self.assert_rejected(self.scaffold_command("universal", plan, "--mode", "overhaul"))
 
@@ -239,8 +233,6 @@ class ScaffoldSecurityTests(unittest.TestCase):
 
     def test_global_opencode_requires_authorization_and_stays_in_config_root(self) -> None:
         plan = self.plan("opencode")
-        for field in ("config_target", "hook_config_target", "managed_state_dir"):
-            del plan[field]
         plan["scope"] = "global"
         self.assert_rejected(
             self.scaffold_command("opencode", plan), "requires explicit --allow-global-targets",
@@ -248,14 +240,14 @@ class ScaffoldSecurityTests(unittest.TestCase):
         for target in ("~/.ssh/config", "~/.config/opencode/../../../outside/private.json"):
             with self.subTest(target=target):
                 self.assert_rejected(self.scaffold_command(
-                    "opencode", {**plan, "config_target": target}, "--allow-global-targets",
+                    "opencode", {**plan, "plugin_target": target}, "--allow-global-targets",
                 ))
         result = self.run_command(self.scaffold_command("opencode", plan, "--allow-global-targets"))
         self.assertEqual(0, result.returncode, result.stderr)
-        config = self.home / ".config/opencode/opencode.json"
-        self.assertEqual(["opencode-froggy"], json.loads(config.read_text(encoding="utf-8"))["plugin"])
-        self.assertIn("session.idle", (config.parent / "hook/hooks.md").read_text(encoding="utf-8"))
-        self.assertFalse((self.project / "opencode.json").exists())
+        plugin = self.home / ".config/opencode/plugins/scaffold-hooks.ts"
+        self.assertIn("session.idle", plugin.read_text(encoding="utf-8"))
+        self.assertFalse((self.project / ".opencode").exists())
+        plugin.unlink()
 
         universal = self.plan("universal")
         universal.update({"harnesses": ["opencode"], "plans": {"opencode": plan}})
@@ -264,8 +256,8 @@ class ScaffoldSecurityTests(unittest.TestCase):
         )
         result = self.run_command(self.scaffold_command("universal", universal, "--allow-global-targets"))
         self.assertEqual(0, result.returncode, result.stderr)
-        self.assertEqual(["opencode-froggy"], json.loads(config.read_text(encoding="utf-8"))["plugin"])
-        self.assertFalse((self.project / "opencode.json").exists())
+        self.assertTrue(plugin.is_file())
+        self.assertFalse((self.project / ".opencode").exists())
 
     def test_valid_nested_root_and_unselected_config_are_preserved(self) -> None:
         unrelated = self.project / ".codex/hooks.json"
@@ -279,23 +271,6 @@ class ScaffoldSecurityTests(unittest.TestCase):
         self.assertTrue((self.project / "nested/hooks..safe/stop/claude.sh").is_file())
         self.assertTrue(unrelated.is_symlink())
         self.assertEqual(outside_before, snapshot(self.outside))
-
-    def test_refresh_keeps_pinned_opencode_plugin_without_bare_duplicate(self) -> None:
-        config = self.project / "opencode.json"
-        plugins = ["opencode-froggy-extra", "opencode-froggy@0.12.0", "@example/other@1.2.3"]
-        write(config, json.dumps({"plugin": plugins, "model": "provider/model"}))
-        for _ in range(2):
-            result = self.run_command(self.scaffold_command("opencode", self.plan("opencode")))
-            self.assertEqual(0, result.returncode, result.stderr)
-            data = json.loads(config.read_text(encoding="utf-8"))
-            self.assertEqual(plugins, data["plugin"])
-            self.assertEqual("provider/model", data["model"])
-        result = self.run_command([
-            "bun", str(SKILL / "harnesses/opencode/scripts/check_plugin_setup.ts"),
-            "--project", str(self.project), "--json",
-        ])
-        self.assertEqual(0, result.returncode, result.stderr)
-        self.assertTrue(json.loads(result.stdout)["project"]["has_froggy_plugin"])
 
 
 if __name__ == "__main__":

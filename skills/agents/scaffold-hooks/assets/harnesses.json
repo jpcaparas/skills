@@ -49,12 +49,12 @@
     },
     {
       "name": "opencode",
-      "config": "opencode.json + .opencode/hook/hooks.md",
-      "adapter_suffix": "froggy bash action",
-      "state_dir": ".opencode/hook/.managed",
+      "config": ".opencode/plugins/scaffold-hooks.ts",
+      "adapter_suffix": "native plugin",
+      "state_dir": null,
       "official_docs": [
         "https://opencode.ai/docs/plugins/",
-        "https://opencode.ai/docs/config/"
+        "https://opencode.ai/docs/build/plugins/server"
       ],
       "component": "harnesses/opencode"
     }

@@ -4,7 +4,7 @@
 #
 # Compose the bundled Claude Code, Codex, GitHub Copilot, Devin CLI, and
 # OpenCode harness scaffolders (harnesses/<name>/) into one shared repo-owned
-# hooks/ tree (Copilot and OpenCode keep their own documented config surfaces).
+# hooks/ tree (Copilot and OpenCode keep their own documented surfaces).
 
 set -euo pipefail
 
@@ -418,7 +418,7 @@ write_universal_readme() {
             printf -- '- Devin CLI: `.devin/hooks.v1.json`\n'
         fi
         if contains_documented_harness opencode; then
-            printf -- '- OpenCode: `opencode.json` loads `opencode-froggy`, with hooks in `.opencode/hook/hooks.md`\n'
+            printf -- '- OpenCode: generated plugin `.opencode/plugins/scaffold-hooks.ts`\n'
         fi
         if contains_documented_harness copilot; then
             printf -- '- GitHub Copilot: `.github/hooks/copilot-hooks.json`, generated events under `.github/copilot/hooks/generated/`\n'
@@ -683,9 +683,6 @@ if contains_harness codex; then
     require_command git
     require_command python3
 fi
-if contains_harness opencode; then
-    require_command bun
-fi
 
 # Validate all selected outputs before the first harness or legacy cleanup can
 # mutate the project. A later invalid child must not leave earlier changes.
@@ -700,8 +697,8 @@ HOOK_COUNT=0
 for harness in claude codex devin opencode copilot; do
     if contains_harness "$harness"; then
         HOOK_COUNT=$((HOOK_COUNT + $(
-            jq '((.enabled_events // []) + (.hooks // []))
-                | map(select(((.scripts // []) + (.commands // []) + (.actions // [])) | length > 0))
+            jq '(.enabled_events // [])
+                | map(select(((.scripts // []) + (.commands // [])) | length > 0))
                 | length' "$TEMP_DIR/$harness-plan.json"
         )))
     fi

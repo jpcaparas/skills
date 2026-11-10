@@ -4,7 +4,7 @@ Start from `templates/hook-plan.example.json`.
 
 ## Which Events Are Emitted
 
-An event is scaffolded only when its plan entry has behaviour: at least one item in `scripts` or `commands`. For OpenCode, a `hooks` entry needs at least one item in `actions`. An entry without behaviour (empty arrays, or none of the fields) writes no files and no config entry, so listing an event is not enough to get it. Malformed `scripts`, `commands`, event names or paths still fail the run before any write, whether or not the event would have been emitted.
+An event is scaffolded only when its plan entry has behaviour: at least one item in `scripts` or `commands`. An entry without behaviour (empty arrays, or none of the fields) writes no files and no config entry, so listing an event is not enough to get it. Malformed `scripts`, `commands`, event names or paths still fail the run before any write, whether or not the event would have been emitted.
 
 | Plan | Result |
 | --- | --- |
@@ -46,7 +46,7 @@ Every universal run writes `hooks/.state/scaffold-hooks/manifest.json`. It recor
 - `scaffold_hooks.plan_sha256`
 - selected `mode`, `hooks_root`, `harnesses`, detected harnesses, harness selection source, and `cleanup_legacy`
 
-Harnesses can add more granular provenance. OpenCode records `managed_file_hashes` and `preserved_file_hashes` so additive re-runs can apply template improvements to unchanged managed plugin files while preserving local edits.
+Harnesses can add more granular provenance.
 
 ## Per-Harness Plans
 
@@ -56,7 +56,7 @@ The nested `plans.claude`, `plans.codex`, `plans.copilot`, `plans.devin`, and `p
 
 Project output fields must be relative to the selected project, without `..` components, `~`, or symlink components. Existing managed output trees must not contain symlinks: generators may rewrite or chmod descendants, and overhaul may remove managed state. Legacy manifests do not authorize output or deletion outside those roots. The universal script validates selected child plans before any migration or overhaul writes.
 
-An authorized OpenCode global plan uses `scope: global` and requires `--allow-global-targets` on either the universal or direct scaffolder. Its config, hooks, and state must stay under `~/.config/opencode/` (or the explicit `--home` override). The flag does not permit arbitrary absolute paths. Without it, the plan cannot widen a project invocation into home-directory writes.
+An authorized OpenCode global plan uses `scope: global` and requires `--allow-global-targets` on either the universal or direct scaffolder. Its plugin (`~/.config/opencode/plugins/scaffold-hooks.ts`, or `plugin_target`) must stay under `~/.config/opencode/` (or the explicit `--home` override). The flag does not permit arbitrary absolute paths. Without it, the plan cannot widen a project invocation into home-directory writes.
 
 ## Removal on Refresh
 
@@ -66,6 +66,10 @@ Every run makes the managed output match the plan:
 - Per event, the harness adapter pair (`<harness>.sh`, `<harness>.json`) is deleted. `hooks/<event>/script.sh` is deleted only when no other harness adapter remains and it is still the generated runner; a `script.sh` with edited code is kept.
 - `hooks/lib/` helpers are deleted once no adapter needs them. Copilot's generated `events/*.sh` files are deleted when they carry the generated header, and hand-written files beside them are kept.
 - Files outside the managed roots, and config entries that are not managed commands, are never touched.
+
+## OpenCode Plan
+
+OpenCode takes `enabled_events` like the other harnesses, with names `session.created`, `session.idle`, `tool.execute.before` and `tool.execute.after`, optional `matcher` (regex over the tool name), `timeout` (seconds), and for `session.idle` the same `run_on_code_changes` and `code_change_extensions` as Stop. `plugin_target` overrides the output path. See `harnesses/opencode/references/hook-events.md`.
 
 ## Scripts and Commands
 

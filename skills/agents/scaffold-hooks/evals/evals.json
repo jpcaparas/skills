@@ -4,7 +4,7 @@
       "id": 1,
       "name": "universal_four_harness_scaffold",
       "prompt": "Run /scaffold-hooks in this repo. Scaffold Claude Code, Codex, Devin CLI, and OpenCode hook configuration into one shared hooks/ directory without duplicating event behavior.",
-      "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh runners with claude/codex/devin adapters only for the events the plan gives scripts or commands, enables opencode-froggy in opencode.json with hooks in .opencode/hook/hooks.md, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
+      "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh runners with claude/codex/devin adapters only for the events the plan gives scripts or commands, writes one native OpenCode plugin .opencode/plugins/scaffold-hooks.ts, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
       "files": [
         "SKILL.md",
         "scripts/scaffold_all_hooks.sh",
@@ -22,7 +22,7 @@
           "text": "Preserves non-managed custom hook entries"
         },
         {
-          "text": "Uses opencode-froggy for OpenCode hook scaffolding"
+          "text": "Writes one native OpenCode plugin under .opencode/plugins/ with no opencode-froggy entry and no hooks.md"
         },
         {
           "text": "Emits files and config entries only for plan events that have scripts or commands"
@@ -71,7 +71,7 @@
       "id": 4,
       "name": "project_specific_stop_check",
       "prompt": "Use /scaffold-hooks and make every harness call scripts/agent-stop-checks.sh at Stop without copying that validation logic into four hook files.",
-      "expected_output": "The response writes a universal plan with Stop scripts entries for Claude, Codex, and Devin, renders OpenCode Froggy bash actions that call a repo-owned validation script, and leaves validation policy in scripts/agent-stop-checks.sh.",
+      "expected_output": "The response writes a universal plan with Stop scripts entries for Claude, Codex, and Devin, emits an OpenCode plugin whose session.idle event calls a repo-owned validation script, and leaves validation policy in scripts/agent-stop-checks.sh.",
       "files": [
         "templates/hook-plan.example.json",
         "references/plan-format.md"
@@ -147,6 +147,27 @@
         },
         {
           "text": "States that a scaffold without a plan, or whose events lack behaviour, writes nothing"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "name": "opencode_froggy_refresh",
+      "prompt": "This repo's OpenCode hooks were scaffolded with opencode-froggy and no longer run on current Froggy. Fix it with /scaffold-hooks.",
+      "expected_output": "The response re-runs the scaffold for opencode with the real plan. A native plugin appears at .opencode/plugins/scaffold-hooks.ts, the managed Froggy block in .opencode/hook/hooks.md and the opencode-froggy entry in opencode.json are removed, user-written hooks and config are kept, and it says session.idle cannot hard-block in OpenCode.",
+      "files": [
+        "harnesses/opencode/references/hook-events.md",
+        "references/collision-policy.md"
+      ],
+      "assertions": [
+        {
+          "text": "Managed Froggy output is removed and user content kept"
+        },
+        {
+          "text": "No pin of opencode-froggy is proposed"
+        },
+        {
+          "text": "States that OpenCode stop behaviour resumes the session once rather than blocking"
         }
       ]
     }

@@ -551,6 +551,45 @@ class PlanValidationTests(unittest.TestCase):
         self.assertEqual([], manifest_row_stream_errors(SKILL, tmp_root(self)))
 
 
+OPENCODE_DRIVER = r"""
+const [file, scenarioJson] = process.argv.slice(2)
+const scenario = JSON.parse(scenarioJson)
+const mod = (await import(file)).default
+const prompts = []
+const results = []
+const sessions = scenario.sessions ?? {}
+if (scenario.api === "v2") {
+  const toolHooks = {}
+  const subscribed = []
+  const ctx = {
+    location: { directory: scenario.directory },
+    session: {
+      get: async ({ sessionID }) => sessions[sessionID],
+      prompt: async (input) => { prompts.push(input) },
+    },
+    tool: { hook: async (name, cb) => { toolHooks[name] = cb } },
+    event: { subscribe: (options) => { subscribed.push(...options.types); return (async function* () { for (const e of scenario.events ?? []) yield e })() } },
+  }
+  await mod.setup(ctx)
+  await new Promise((resolve) => setTimeout(resolve, 500))
+  console.log(JSON.stringify({ keys: Object.keys(toolHooks), subscribed, prompts }))
+} else {
+  const client = { session: { get: async ({ path }) => ({ data: sessions[path.id] }), promptAsync: async (o) => { prompts.push(o) } } }
+  const hooks = await mod.server({ directory: scenario.directory, client })
+  for (const call of scenario.calls ?? []) {
+    try {
+      if (call.event) await hooks.event({ event: call.event })
+      else await hooks[call.hook](call.input, call.output ?? {})
+      results.push({ threw: null })
+    } catch (error) {
+      results.push({ threw: String(error.message ?? error) })
+    }
+  }
+  console.log(JSON.stringify({ keys: Object.keys(hooks), results, prompts }))
+}
+"""
+
+
 def universal_plan(tmp: Path, edit=lambda plan: None, name: str = "universal-plan.json") -> Path:
     plan = load_json(EXAMPLE_PLAN)
     edit(plan)
@@ -619,11 +658,10 @@ class EmissionTests(unittest.TestCase):
         tmp, project = self.new_project()
 
         def strip_behaviour(plan: dict) -> None:
-            for harness in SHELL_PLAN_HARNESSES:
+            for harness in (*SHELL_PLAN_HARNESSES, "opencode"):
                 for item in plan["plans"][harness]["enabled_events"]:
                     item["scripts"] = []
                     item["commands"] = []
-            plan["plans"]["opencode"]["hooks"] = [{"event": "session.idle", "actions": []}]
 
         scaffold_all(project, "--plan", str(universal_plan(tmp, strip_behaviour)), "--harnesses", ALL_HARNESSES)
         self.assertEqual(set(), event_dirs(project))
@@ -708,6 +746,190 @@ class EmissionTests(unittest.TestCase):
         )
 
 
+PLUGIN = Path(".opencode") / "plugins" / "scaffold-hooks.ts"
+
+
+def opencode_event(name: str, **fields: object) -> dict:
+    return {"name": name, "timeout": 20, "scripts": [], "commands": [], **fields}
+
+
+class OpenCodePluginTests(unittest.TestCase):
+    """The generated native plugin, loaded by Bun and called the way OpenCode calls it."""
+
+    def setUp(self) -> None:
+        self.tmp = tmp_root(self)
+        self.project = self.tmp / "project"
+        self.project.mkdir()
+        run(["git", "init", "-q"], cwd=self.project)
+        write(self.project / "src" / "example.ts", "export const example = true;\n")
+        self.marker = self.project / "ran.marker"
+        write(
+            self.project / "scripts" / "check.sh",
+            '#!/usr/bin/env bash\nprintf "%s %s\\n" "$AGENT_HOOK_EVENT" "$(cat | jq -r .hook_event_name)" >> ran.marker\n'
+            '[ -z "${CHECK_FAILS:-}" ] || { echo "check failed loudly" >&2; exit 3; }\n',
+        )
+        write(self.tmp / "driver.ts", OPENCODE_DRIVER)
+
+    def scaffold(self, events: list[dict], *extra: str) -> Path:
+        plan = {"scope": "project", "enabled_events": events}
+        path = self.tmp / "opencode-plan.json"
+        path.write_text(json.dumps(plan), encoding="utf-8")
+        result = run(
+            ["bash", str(SKILL / "harnesses" / "opencode" / "scripts" / "scaffold_hooks.sh"), "--project", str(self.project), "--plan", str(path), *extra]
+        )
+        if result.returncode != 0:
+            raise AssertionError(f"opencode scaffold failed:\n{result.stdout}\n{result.stderr}")
+        return self.project / PLUGIN
+
+    def drive(self, scenario: dict, env: dict[str, str] | None = None) -> dict:
+        plugin = self.project / PLUGIN
+        result = run(
+            ["bun", str(self.tmp / "driver.ts"), str(plugin), json.dumps({"directory": str(self.project), **scenario})],
+            cwd=self.project,
+            env=env,
+        )
+        self.assertEqual(0, result.returncode, result.stderr)
+        return json.loads(result.stdout.strip().splitlines()[-1])
+
+    def script(self, **extra: object) -> dict:
+        return {"label": "check", "path": "scripts/check.sh", "args": [], "cwd": ".", **extra}
+
+    def idle(self, session: str = "main") -> dict:
+        return {"event": {"type": "session.idle", "properties": {"sessionID": session}}}
+
+    def test_plugin_registers_handlers_only_for_planned_events(self) -> None:
+        self.scaffold([opencode_event("session.idle", scripts=[self.script()]), opencode_event("tool.execute.after", scripts=[self.script()])])
+        self.assertEqual({"event", "tool.execute.after"}, set(self.drive({})["keys"]))
+
+    def test_event_without_behaviour_emits_no_handler_and_no_plan_writes_no_plugin(self) -> None:
+        self.scaffold([opencode_event("session.idle", scripts=[self.script()]), opencode_event("tool.execute.before")])
+        self.assertEqual(["event"], self.drive({})["keys"])
+        self.scaffold([opencode_event("session.idle")])
+        self.assertFalse((self.project / PLUGIN).exists())
+        self.assertFalse((self.project / ".opencode").exists())
+        self.assertFalse((self.project / "opencode.json").exists())
+
+    def test_idle_runs_the_planned_script_on_code_changes_and_skips_a_clean_tree(self) -> None:
+        self.scaffold([opencode_event("session.idle", scripts=[self.script()])])
+        main = {"main": {"id": "main"}}
+        self.drive({"sessions": main, "calls": [self.idle()]})
+        self.assertEqual("session.idle session.idle\n", self.marker.read_text(encoding="utf-8"))
+
+        self.marker.unlink()
+        run(["git", "add", "."], cwd=self.project)
+        run(["git", "-c", "user.name=t", "-c", "user.email=t@example.com", "commit", "--no-gpg-sign", "-qm", "fixture"], cwd=self.project)
+        self.drive({"sessions": main, "calls": [self.idle()]})
+        self.assertFalse(self.marker.exists())
+
+    def test_failing_idle_check_resumes_the_session_once_then_lets_it_stop(self) -> None:
+        self.scaffold([opencode_event("session.idle", scripts=[self.script()])])
+        out = self.drive(
+            {"sessions": {"main": {"id": "main"}}, "calls": [self.idle(), self.idle(), self.idle()]},
+            env={"CHECK_FAILS": "1"},
+        )
+        self.assertEqual(2, len(out["prompts"]))
+        self.assertIn("check failed loudly", out["prompts"][0]["body"]["parts"][0]["text"])
+        self.assertEqual("main", out["prompts"][0]["path"]["id"])
+        self.assertEqual(["session.idle session.idle"] * 2, self.marker.read_text(encoding="utf-8").splitlines())
+
+    def test_subagent_sessions_are_ignored(self) -> None:
+        self.scaffold([opencode_event("session.idle", scripts=[self.script()])])
+        self.drive({"sessions": {"child": {"id": "child", "parentID": "main"}}, "calls": [self.idle("child")]})
+        self.assertFalse(self.marker.exists())
+
+    def test_session_created_runs_for_main_sessions_only(self) -> None:
+        self.scaffold([opencode_event("session.created", scripts=[self.script()])])
+        created = lambda sid: {"event": {"type": "session.created", "properties": {"info": {"id": sid}}}}
+        sessions = {"main": {"id": "main"}, "child": {"id": "child", "parentID": "main"}}
+        self.drive({"sessions": sessions, "calls": [created("child"), created("main")]})
+        self.assertEqual(["session.created session.created"], self.marker.read_text(encoding="utf-8").splitlines())
+
+    def test_failing_before_hook_blocks_the_tool_and_matcher_filters(self) -> None:
+        self.scaffold([opencode_event("tool.execute.before", matcher="^(bash|edit)$", scripts=[self.script()])])
+        call = lambda tool: {"hook": "tool.execute.before", "input": {"tool": tool, "sessionID": "main", "callID": "c"}, "output": {"args": {"command": "ls"}}}
+        out = self.drive({"calls": [call("bash"), call("read")]}, env={"CHECK_FAILS": "1"})
+        self.assertIn("check failed loudly", out["results"][0]["threw"])
+        self.assertIsNone(out["results"][1]["threw"])
+        self.assertEqual(1, len(self.marker.read_text(encoding="utf-8").splitlines()))
+
+    def test_after_hook_failure_does_not_throw(self) -> None:
+        self.scaffold([opencode_event("tool.execute.after", scripts=[self.script()])])
+        out = self.drive(
+            {"calls": [{"hook": "tool.execute.after", "input": {"tool": "bash", "sessionID": "main", "callID": "c", "args": {}}}]},
+            env={"CHECK_FAILS": "1"},
+        )
+        self.assertIsNone(out["results"][0]["threw"])
+
+    def test_malformed_plan_fails_before_writing_a_plugin(self) -> None:
+        for bad in (None, "scripts/check.sh", [False], [{"path": "x", "args": {}}]):
+            with self.subTest(scripts=bad):
+                plan = self.tmp / "bad.json"
+                plan.write_text(json.dumps({"enabled_events": [opencode_event("session.idle", scripts=bad)]}), encoding="utf-8")
+                result = run(["bash", str(SKILL / "harnesses" / "opencode" / "scripts" / "scaffold_hooks.sh"), "--project", str(self.project), "--plan", str(plan)])
+                self.assertNotEqual(0, result.returncode)
+                self.assertIn("invalid events, scripts or commands", result.stderr)
+                self.assertFalse((self.project / ".opencode").exists())
+
+    def test_unknown_event_name_is_rejected(self) -> None:
+        plan = self.tmp / "bad.json"
+        plan.write_text(json.dumps({"enabled_events": [opencode_event("session.deleted", scripts=[self.script()])]}), encoding="utf-8")
+        result = run(["bash", str(SKILL / "harnesses" / "opencode" / "scripts" / "scaffold_hooks.sh"), "--project", str(self.project), "--plan", str(plan)])
+        self.assertNotEqual(0, result.returncode)
+
+    def test_v2_runtime_registers_planned_hooks_and_subscribes_to_planned_events(self) -> None:
+        self.scaffold([opencode_event("session.idle", scripts=[self.script()]), opencode_event("tool.execute.before", scripts=[self.script()])])
+        out = self.drive(
+            {"api": "v2", "sessions": {"main": {"id": "main"}}, "events": [{"type": "session.idle", "data": {"sessionID": "main"}}]},
+            env={"CHECK_FAILS": "1"},
+        )
+        self.assertEqual(["execute.before"], out["keys"])
+        self.assertEqual(["session.idle"], out["subscribed"])
+        self.assertEqual(1, len(out["prompts"]))
+        self.assertIn("check failed loudly", out["prompts"][0]["text"])
+
+    def test_refusing_to_overwrite_a_plugin_the_user_wrote(self) -> None:
+        write(self.project / PLUGIN, "export default {}\n")
+        plan = self.tmp / "plan.json"
+        plan.write_text(json.dumps({"enabled_events": [opencode_event("session.idle", scripts=[self.script()])]}), encoding="utf-8")
+        result = run(["bash", str(SKILL / "harnesses" / "opencode" / "scripts" / "scaffold_hooks.sh"), "--project", str(self.project), "--plan", str(plan)])
+        self.assertNotEqual(0, result.returncode)
+        self.assertEqual("export default {}\n", (self.project / PLUGIN).read_text(encoding="utf-8"))
+
+    def test_refresh_removes_the_froggy_output_and_keeps_user_content(self) -> None:
+        write(
+            self.project / "opencode.json",
+            json.dumps({"$schema": "https://opencode.ai/config.json", "model": "p/m", "plugin": ["opencode-froggy", "@example/other@1.2.3"]}),
+        )
+        write(
+            self.project / ".opencode" / "hook" / "hooks.md",
+            "---\nhooks:\n  - event: tool.before.bash\n    actions:\n      - bash: echo mine\n"
+            "  # BEGIN scaffold-hooks managed opencode-froggy\n  - event: session.idle\n    actions:\n      - bash: ./x\n"
+            "  # END scaffold-hooks managed opencode-froggy\n---\n\n# OpenCode Froggy Hooks\n",
+        )
+        write(self.project / ".opencode" / "hook" / ".managed" / "manifest.json", "{}\n")
+        plugin = self.scaffold([opencode_event("session.idle", scripts=[self.script()])])
+        self.assertTrue(plugin.exists())
+        config = load_json(self.project / "opencode.json")
+        self.assertEqual(["@example/other@1.2.3"], config["plugin"])
+        self.assertEqual("p/m", config["model"])
+        hooks = (self.project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
+        self.assertIn("echo mine", hooks)
+        self.assertNotIn("opencode-froggy", hooks)
+        self.assertFalse((self.project / ".opencode" / "hook" / ".managed").exists())
+
+    def test_refresh_of_a_froggy_only_scaffold_leaves_nothing_behind(self) -> None:
+        write(self.project / "opencode.json", json.dumps({"$schema": "https://opencode.ai/config.json", "plugin": ["opencode-froggy"]}))
+        write(
+            self.project / ".opencode" / "hook" / "hooks.md",
+            "---\nhooks:\n  # BEGIN scaffold-hooks managed opencode-froggy\n  - event: session.idle\n    actions:\n      - bash: ./x\n"
+            "  # END scaffold-hooks managed opencode-froggy\n---\n\n# OpenCode Froggy Hooks\n\nManaged by scaffold-hooks (scaffold-hooks/opencode-froggy). Edit.\n",
+        )
+        write(self.project / ".opencode" / "hook" / ".managed" / "manifest.json", "{}\n")
+        self.scaffold([opencode_event("session.idle")])
+        self.assertFalse((self.project / "opencode.json").exists())
+        self.assertFalse((self.project / ".opencode").exists())
+
+
 class HarnessSelectionTests(unittest.TestCase):
     def test_bare_run_refreshes_only_the_detected_harness(self) -> None:
         tmp = tmp_root(self)
@@ -766,10 +988,11 @@ class UniversalMigrationTests(unittest.TestCase):
             ".codex/hooks.json",
             ".devin/hooks.v1.json",
             ".github/hooks/copilot-hooks.json",
-            "opencode.json",
-            ".opencode/hook/hooks.md",
+            ".opencode/plugins/scaffold-hooks.ts",
         ]:
             self.assertTrue((self.project / relative).exists(), relative)
+        self.assertFalse((self.project / "opencode.json").exists())
+        self.assertFalse((self.project / ".opencode" / "hook").exists())
 
     def test_manifest_records_provenance_and_selection_source(self) -> None:
         manifest = load_json(self.project / "hooks" / ".state" / "scaffold-hooks" / "manifest.json")
@@ -784,11 +1007,7 @@ class UniversalMigrationTests(unittest.TestCase):
         for legacy in (".claude", ".codex", ".devin"):
             self.assertFalse((self.project / legacy / "hooks" / "generated").exists(), legacy)
 
-    def test_opencode_legacy_plugin_is_replaced_by_froggy(self) -> None:
-        config = load_json(self.project / "opencode.json")
-        self.assertIn("opencode-froggy", config["plugin"])
-        hooks = (self.project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
-        self.assertIn("# BEGIN scaffold-hooks managed opencode-froggy", hooks)
+    def test_opencode_legacy_plugin_is_replaced_by_the_native_plugin(self) -> None:
         for legacy in [
             ".opencode/plugins/.managed",
             ".opencode/plugins/opencode_hook_project_session_lifecycle.ts",
@@ -811,7 +1030,7 @@ class UniversalMigrationTests(unittest.TestCase):
         self.assertIn("${CLAUDE_PROJECT_DIR}/hooks/stop/claude.sh", commands)
         self.assertFalse([command for command in commands if '"$CLAUDE_PROJECT_DIR"' in command])
 
-    def test_rerun_keeps_custom_codex_hook_and_one_froggy_block(self) -> None:
+    def test_rerun_keeps_custom_codex_hook_and_rewrites_one_plugin(self) -> None:
         codex_path = self.project / ".codex" / "hooks.json"
         original = codex_path.read_text(encoding="utf-8")
         self.addCleanup(codex_path.write_text, original, encoding="utf-8")
@@ -826,8 +1045,8 @@ class UniversalMigrationTests(unittest.TestCase):
         )
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("echo custom-session-start", codex_path.read_text(encoding="utf-8"))
-        hooks = (self.project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
-        self.assertEqual(1, hooks.count("BEGIN scaffold-hooks managed opencode-froggy"))
+        plugins = sorted(path.name for path in (self.project / ".opencode" / "plugins").iterdir())
+        self.assertEqual(["scaffold-hooks.ts"], plugins)
 
     def test_shared_runtimes_fail_closed_on_malformed_plans(self) -> None:
         for runtime, accessors in [
