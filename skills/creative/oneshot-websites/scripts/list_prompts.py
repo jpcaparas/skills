@@ -124,10 +124,8 @@ def load_catalogue(path: Path = CATALOGUE_PATH) -> Catalogue:
     if not isinstance(loaded, dict):
         raise CatalogueError("catalogue root must be a JSON object")
 
-    raw_categories = loaded.get("categories", [])
-    raw_entries = loaded.get("prompts", loaded.get("entries", loaded.get("items")))
-    if raw_entries is None:
-        raise CatalogueError("catalogue must contain a prompts array")
+    raw_categories = loaded.get("categories")
+    raw_entries = loaded.get("prompts")
     if not isinstance(raw_categories, list):
         raise CatalogueError("catalogue categories must be an array")
     if not isinstance(raw_entries, list):
@@ -155,7 +153,7 @@ def parse_category(value: object, index: int) -> Category:
     if not isinstance(value, dict):
         raise CatalogueError(f"category {index} must be an object")
     identifier = required_string(value, "id", f"category {index}")
-    title = optional_string(value, "title") or optional_string(value, "name") or humanize(identifier)
+    title = required_string(value, "title", f"category {index}")
     description = required_string(value, "description", f"category {index}")
     return Category(identifier=identifier, title=title, description=description)
 
@@ -188,24 +186,6 @@ def required_string(value: dict[str, Any], field: str, context: str) -> str:
     if not isinstance(result, str) or not result.strip():
         raise CatalogueError(f"{context} {field} must be a non-empty string")
     return result.strip()
-
-
-def optional_string(value: dict[str, Any], field: str) -> Optional[str]:
-    """Read an optional string, rejecting malformed explicit values."""
-
-    result = value.get(field)
-    if result is None:
-        return None
-    if not isinstance(result, str):
-        raise CatalogueError(f"{field} must be a string when supplied")
-    stripped = result.strip()
-    return stripped or None
-
-
-def humanize(identifier: str) -> str:
-    """Produce a stable fallback label for an undeclared category."""
-
-    return re.sub(r"[-_]+", " ", identifier).strip().title() or "Uncategorized"
 
 
 def one_line(value: str) -> str:
@@ -301,19 +281,13 @@ def first_position(field: str, query: str) -> int:
 def group_entries(
     categories: Sequence[Category], entries: Sequence[PromptEntry]
 ) -> list[tuple[Category, list[PromptEntry]]]:
-    """Keep declared category order and append undeclared categories predictably."""
+    """Group entries under their declared categories, in declaration order."""
 
-    grouped: dict[str, list[PromptEntry]] = {}
-    for entry in entries:
-        grouped.setdefault(entry.category, []).append(entry)
-
-    result: list[tuple[Category, list[PromptEntry]]] = []
-    for category in categories:
-        if category.identifier in grouped:
-            result.append((category, grouped.pop(category.identifier)))
-    for identifier in sorted(grouped, key=str.casefold):
-        result.append((Category(identifier, humanize(identifier), f"Prompts grouped under {humanize(identifier)}."), grouped[identifier]))
-    return result
+    return [
+        (category, grouped)
+        for category in categories
+        if (grouped := [entry for entry in entries if entry.category == category.identifier])
+    ]
 
 
 def markdown_output(catalogue: Catalogue, entries: Sequence[PromptEntry]) -> str:

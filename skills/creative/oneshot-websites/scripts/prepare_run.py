@@ -28,7 +28,10 @@ from directional_controls import (
 from runtime_contract import (
     BoundedReadError,
     COORDINATOR_MONITORING_CONTRACT,
+    METADATA_MAX_BYTES,
+    TEMPORARY_CONTRACT,
     VerificationMode,
+    exact_child,
     experiment_slug,
     find_likely_mojibake,
     identity_key,
@@ -40,7 +43,6 @@ from runtime_contract import (
 
 
 CLASSIFICATIONS = ("autonomous-one-shot", "rerun", "curated-attempt")
-METADATA_MAX_BYTES = 1024 * 1024
 PROMPT_MAX_BYTES = 5 * 1024 * 1024
 TECHNICAL_PROMPT_MAX_BYTES = 1024 * 1024
 RUN_NAME_RE = re.compile(
@@ -83,8 +85,9 @@ def parse_arguments(argv: Optional[Sequence[str]] = None) -> argparse.Namespace:
     parser.add_argument("--prompt-file", required=True, type=Path, help="UTF-8 prompt file to preserve verbatim")
     parser.add_argument(
         "--verification",
+        required=True,
         choices=("gauntlet", "none"),
-        help="Explicit user choice; omission retains historical gauntlet compatibility only",
+        help="The user's explicit verification choice; silence is not consent",
     )
     parser.add_argument(
         "--classification",
@@ -176,15 +179,6 @@ def resolved_root(path: Path) -> Path:
     return root
 
 
-def exact_child(parent: Path, name: str) -> Optional[Path]:
-    """Return a direct child only when its stored casing is exact."""
-
-    try:
-        return next((entry for entry in parent.iterdir() if entry.name == name), None)
-    except OSError:
-        return None
-
-
 def read_json_object_bounded(path: Path, label: str) -> dict[str, Any]:
     """Read a small regular JSON object without following special files."""
 
@@ -271,10 +265,8 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
             except (OSError, ValueError) as error:
                 raise RunPreparationError(f"prior run must stay within output root: {root}") from error
             raise RunPreparationError("prior run could not be mapped to exact output-root path components")
-    if len(relative.parts) not in {1, 4} or any(part in {"", ".", ".."} for part in relative.parts):
-        raise RunPreparationError(
-            "prior run must use one timestamp directory or exact legacy model/harness/experiment/run components"
-        )
+    if len(relative.parts) != 1 or any(part in {"", ".", ".."} for part in relative.parts):
+        raise RunPreparationError("prior run must be exactly one run directory directly under the output root")
     prior = root
     for part in relative.parts:
         stored_part = exact_child(prior, part)
@@ -288,7 +280,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
     require_within_root(prior, root, "prior run")
     run_manifest = exact_child(prior, "run.json")
     if run_manifest is None or not run_manifest.is_file() or run_manifest.is_symlink():
-        raise RunPreparationError("prior run must be a timestamped or legacy run directory containing run.json")
+        raise RunPreparationError("prior run must be a run directory containing run.json")
 
     # A run is dispatch-ready only after its coordinator-owned receipt and
     # final empty commit marker exist outside the worker-writable directory.
@@ -309,7 +301,7 @@ def prior_run_path(value: Optional[Path], root: Path) -> Optional[str]:
         raise RunPreparationError("prior run is missing its coordinator provenance receipt")
     receipt = read_json_object_bounded(receipt_path, "prior run coordinator provenance receipt")
     if (
-        receipt.get("schemaVersion") not in {"1.0", "1.1", "2.0", "2.1", "2.2", "2.3", "2.4", "2.5"}
+        receipt.get("schemaVersion") != "2.5"
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != prior_relative
     ):
@@ -449,12 +441,12 @@ def run_document(
     prior_run: Optional[str],
     receipt_path: str,
     directional_controls: dict[str, Any],
-    verification: VerificationMode | None = None,
+    verification: VerificationMode,
 ) -> dict[str, Any]:
     """Build the durable run metadata, following templates/run.json's contract."""
 
-    document: dict[str, Any] = {
-        "schemaVersion": "3.5" if verification is not None else "3.4",
+    return {
+        "schemaVersion": "3.5",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -464,11 +456,7 @@ def run_document(
         "classification": classification,
         "status": "PLANNED",
         "prompt": {"path": "artifact/PROMPT.md", "sha256": prompt_digest, "preservation": "verbatim"},
-        "temporary": {
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "lifecycle": "retain-until-successful-finalization",
-        },
+        "temporary": dict(TEMPORARY_CONTRACT),
         "workspace": {"path": "workspace/"},
         "artifact": {"path": "artifact/", "entrypoint": "artifact/index.html", "deployment": "static-folder"},
         "execution": {
@@ -481,10 +469,8 @@ def run_document(
         "interaction": {"directionalControls": directional_controls},
         "priorRun": prior_run,
         "provenanceReceipt": receipt_path,
+        "verificationMode": verification,
     }
-    if verification is not None:
-        document["verificationMode"] = verification
-    return document
 
 
 def provenance_receipt(
@@ -498,15 +484,15 @@ def provenance_receipt(
     prompt_bytes: int,
     prior_run: Optional[str],
     directional_controls: dict[str, Any],
-    verification: VerificationMode | None = None,
+    verification: VerificationMode,
 ) -> dict[str, Any]:
     """Anchor pre-dispatch identity and prompt evidence outside the worker-owned run."""
 
-    document = {
-        "schemaVersion": "2.5" if verification is not None else "2.4",
+    return {
+        "schemaVersion": "2.5",
         "runId": run_id,
         "runPath": paths.run.relative_to(paths.root).as_posix(),
-        "runSchemaVersion": "3.5" if verification is not None else "3.4",
+        "runSchemaVersion": "3.5",
         "identity": {
             "model": {"name": model.name, "key": model.key},
             "harness": {"name": harness.name, "key": harness.key},
@@ -515,29 +501,24 @@ def provenance_receipt(
         "classification": classification,
         "priorRun": prior_run,
         "prompt": {"sha256": prompt_digest, "bytes": prompt_bytes},
-        "temporary": {
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "lifecycle": "retain-until-successful-finalization",
-        },
+        "temporary": dict(TEMPORARY_CONTRACT),
         "qualityGauntlet": {
-            "required": verification != "none",
+            "required": verification == "gauntlet",
             "contractVersion": "1.0",
             "reportSchemaVersion": "2.1",
         },
         "coordinatorMonitoring": dict(COORDINATOR_MONITORING_CONTRACT),
         "directionalControls": directional_controls,
+        "verificationMode": verification,
     }
-    if verification is not None:
-        document["verificationMode"] = verification
-    return document
 
 
-def initial_worker_report(run_id: str, verification: VerificationMode | None = None) -> dict[str, Any]:
+def initial_worker_report(run_id: str, verification: VerificationMode) -> dict[str, Any]:
     """Reserve an honest, editable report without inventing worker telemetry."""
 
     document = {
         "schemaVersion": "2.1",
+        "verificationMode": verification,
         "runId": run_id,
         "status": "PLANNED",
         "summary": None,
@@ -574,8 +555,6 @@ def initial_worker_report(run_id: str, verification: VerificationMode | None = N
             "livenessEvents": [],
         },
     }
-    if verification is not None:
-        document["verificationMode"] = verification
     if verification == "none":
         document["qualityGauntlet"] = None
     return document
@@ -688,7 +667,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         json.dumps(
             {
                 "runDirectory": str(run.resolve()),
-                "verificationMode": manifest.get("verificationMode", "gauntlet"),
+                "verificationMode": manifest["verificationMode"],
                 "directionalControlsRequired": directional_controls.get("required") is True,
                 "technicalPromptPath": (
                     str((run / DIRECTIONAL_TECHNICAL_PROMPT_PATH).resolve())

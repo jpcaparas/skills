@@ -113,7 +113,7 @@
       "id": 10,
       "name": "artifact-validation",
       "prompt": "Explain the oneshot-websites validation workflow you would apply before publishing an output root. Assume one successful run was built from a framework workspace and exported as static files.",
-      "expected_output": "Routes to the catalogue validator and explains that it checks the current flat slugged-timestamp run layout, independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace and supported historical runs, and would report any missing successful entrypoint or unsafe final artifact.",
+      "expected_output": "Routes to the catalogue validator and explains that it checks the current flat slugged-timestamp run layout, independent prompt receipt, status evidence, fixed local paths, Drop bounds, and artifact/index.html. It accepts the framework workspace, and would report any missing successful entrypoint or unsafe final artifact.",
       "assertions": [
         {"text": "Identifies artifact/PROMPT.md and artifact/index.html as validation targets", "type": "functional"},
         {"text": "Does not impose a vanilla or single-file implementation rule", "type": "negative"}
@@ -1372,11 +1372,11 @@
       "id": 110,
       "name": "recovery-preserves-receipt-verification-choice",
       "prompt": "Resume this interrupted run. Its immutable receipt says verificationMode none; the worker report now says gauntlet.",
-      "expected_output": "Treats the mode mismatch as a metadata recovery blocker, never reinterprets it as consent, and preserves the same run and single-writer boundary. Once metadata agrees with the receipt, recovery continues generation only with no adapter or verification. Historical missing mode remains gauntlet, not none.",
+      "expected_output": "Treats the mode mismatch as a metadata recovery blocker, never reinterprets it as consent, and preserves the same run and single-writer boundary. Once metadata agrees with the receipt, recovery continues generation only with no adapter or verification.",
       "assertions": [
         {"text": "Rejects worker-only mode changes without inspecting artifact behavior", "type": "negative"},
         {"text": "Preserves receipt choice and same-run single-writer recovery", "type": "structural"},
-        {"text": "Never interprets a historical missing mode as an opt-out", "type": "negative"}
+        {"text": "Never interprets a missing mode as an opt-out", "type": "negative"}
       ],
       "tags": ["verification", "recovery", "provenance", "negative"]
     },

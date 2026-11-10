@@ -20,8 +20,11 @@ from typing import Any, Iterator, Optional, Tuple
 from runtime_contract import (
     BoundedReadError,
     EXPERIMENT_SLUG_MAX_CHARS,
+    METADATA_MAX_BYTES,
+    exact_child,
     is_abandoned_run_reservation,
     is_appledouble_sidecar,
+    object_value,
     parse_json_bounded,
     read_regular_file_bounded,
     resolve_existing_or_new,
@@ -32,19 +35,11 @@ from runtime_contract import (
 TEMPLATE_PATH = Path(__file__).resolve().parent.parent / "templates" / "catalog-index.html"
 PLACEHOLDER_RE = re.compile(r"\{\{(?:CATALOG_TITLE|CATALOG_DESCRIPTION|META_CHIPS|FAIRNESS_NOTE|ROWS|FOOTER_NOTE)\}\}")
 STALE_INDEX_RE = re.compile(r"^\.oneshot-index-.+\.tmp$")
-NAMESPACE_TEMP_RE = re.compile(r"^\.oneshot-namespace-.+\.tmp$")
-LEGACY_RUN_ID_RE = re.compile(
-    r"^\d{8}T\d{6}Z-[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$",
-    re.IGNORECASE,
-)
 FLAT_RUN_ID_RE = re.compile(
     r"^(?P<timestamp>\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})"
-    r"(?:(?:-(?P<legacy_collision>\d+))|"
-    r"(?:-(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)(?:--(?P<slug_collision>\d+))?))?$"
+    r"-(?P<slug>[a-z0-9]+(?:-[a-z0-9]+)*)(?:--(?P<collision>\d+))?$"
 )
-IDENTITY_MARKER = ".oneshot-identity.json"
 CATALOGUE_LOCK = ".oneshot-catalogue.lock"
-METADATA_MAX_BYTES = 1024 * 1024
 ROOT_INDEX_MAX_BYTES = 5 * 1024 * 1024
 IDENTITY_DISPLAY_CHARS = 512
 OUTCOME_DISPLAY_CHARS = 1_024
@@ -64,15 +59,15 @@ class RunCandidate:
 
 @dataclass(frozen=True)
 class FlatRunId:
-    """Parsed current or historical flat run-directory identity."""
+    """Parsed run-directory identity: a real local timestamp, the experiment slug and an optional collision number."""
 
     timestamp: datetime
-    slug: Optional[str]
+    slug: str
     collision: Optional[int]
 
 
 def parse_flat_run_id(value: str) -> Optional[FlatRunId]:
-    """Parse a real timestamp with a historical or slugged collision suffix."""
+    """Parse `YYYY-MM-DD-HH-MM-SS-slug[--NN]`, rejecting impossible dates and non-canonical collision numbers."""
 
     match = FLAT_RUN_ID_RE.fullmatch(value)
     if match is None:
@@ -85,9 +80,9 @@ def parse_flat_run_id(value: str) -> Optional[FlatRunId]:
     if timestamp.strftime("%Y-%m-%d-%H-%M-%S") != timestamp_text:
         return None
     slug = match.group("slug")
-    if slug is not None and len(slug) > EXPERIMENT_SLUG_MAX_CHARS:
+    if len(slug) > EXPERIMENT_SLUG_MAX_CHARS:
         return None
-    collision_text = match.group("legacy_collision") or match.group("slug_collision")
+    collision_text = match.group("collision")
     if collision_text is None:
         return FlatRunId(timestamp=timestamp, slug=slug, collision=None)
     collision = int(collision_text)
@@ -97,9 +92,9 @@ def parse_flat_run_id(value: str) -> Optional[FlatRunId]:
 
 
 def is_supported_run_id(value: str) -> bool:
-    """Return whether a run ID is a valid current timestamp or legacy ID."""
+    """Return whether a name is a valid run ID."""
 
-    return parse_flat_run_id(value) is not None or LEGACY_RUN_ID_RE.fullmatch(value) is not None
+    return parse_flat_run_id(value) is not None
 
 
 def esc(value: object) -> str:
@@ -107,11 +102,6 @@ def esc(value: object) -> str:
     raw = str(value if value is not None else "")
     safe = raw.encode("utf-8", errors="replace").decode("utf-8")
     return html.escape(safe, quote=True)
-
-
-def object_value(value: object) -> dict[str, Any]:
-    """Return a JSON object value, treating other JSON values as absent."""
-    return value if isinstance(value, dict) else {}
 
 
 def text_value(value: object, fallback: str = "") -> str:
@@ -152,7 +142,7 @@ def load_object(path: Path) -> Tuple[dict[str, Any], Optional[str]]:
 
 
 def discover_runs(root: Path) -> list[RunCandidate]:
-    """Find flat and legacy manifests without following or silently skipping directories."""
+    """Find run manifests without following or silently skipping directories."""
 
     candidates: list[RunCandidate] = []
 
@@ -164,7 +154,7 @@ def discover_runs(root: Path) -> list[RunCandidate]:
             raise CatalogueBuildError(f"unable to inspect namespace directory: {directory.name or '.'}") from error
 
     def record_run(entry: os.DirEntry[str], path: Path) -> None:
-        """Record one flat or legacy run without letting worker damage hide siblings."""
+        """Record one run without letting worker damage hide siblings."""
 
         run_path = path / "run.json"
         try:
@@ -207,114 +197,44 @@ def discover_runs(root: Path) -> list[RunCandidate]:
         else:
             candidates.append(RunCandidate(manifest_path))
 
-    def walk(directory: Path, depth: int) -> None:
-        for entry in entries(directory):
-            path = Path(entry.path)
-            if is_appledouble_sidecar(path):
-                continue
-            if depth == 0 and entry.name == CATALOGUE_LOCK:
-                try:
-                    if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
-                        raise CatalogueBuildError("catalogue lock path is not a regular file")
-                except OSError as error:
-                    raise CatalogueBuildError("unable to inspect catalogue lock path") from error
-                continue
-            if depth == 0 and entry.name in {"index.html", ".oneshot-provenance"}:
-                continue
-            if depth == 0 and STALE_INDEX_RE.fullmatch(entry.name):
-                try:
-                    if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
-                        raise CatalogueBuildError(
-                            f"reserved catalogue temporary path is not a regular file: {entry.name}"
-                        )
-                except OSError as error:
+    for entry in entries(root):
+        path = Path(entry.path)
+        if is_appledouble_sidecar(path):
+            continue
+        if entry.name == CATALOGUE_LOCK:
+            try:
+                if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
+                    raise CatalogueBuildError("catalogue lock path is not a regular file")
+            except OSError as error:
+                raise CatalogueBuildError("unable to inspect catalogue lock path") from error
+            continue
+        if entry.name in {"index.html", ".oneshot-provenance"}:
+            continue
+        if STALE_INDEX_RE.fullmatch(entry.name):
+            try:
+                if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
                     raise CatalogueBuildError(
-                        f"unable to inspect reserved catalogue temporary file: {entry.name}"
-                    ) from error
-                continue
-            if depth == 0 and FLAT_RUN_ID_RE.fullmatch(entry.name):
-                if parse_flat_run_id(entry.name) is None:
-                    raise CatalogueBuildError(f"invalid flat run directory name: {entry.name}")
-                record_run(entry, path)
-                continue
-            if depth in {0, 1, 2} and NAMESPACE_TEMP_RE.fullmatch(entry.name):
-                try:
-                    if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
-                        raise CatalogueBuildError(
-                            f"reserved namespace temporary path is not a directory: {entry.name}"
-                        )
-                except OSError as error:
-                    raise CatalogueBuildError(
-                        f"unable to inspect reserved namespace temporary path: {entry.name}"
-                    ) from error
-                temporary_entries = [
-                    candidate
-                    for candidate in entries(path)
-                    if not is_appledouble_sidecar(Path(candidate.path))
-                ]
-                if any(candidate.name != IDENTITY_MARKER for candidate in temporary_entries):
-                    raise CatalogueBuildError(
-                        f"reserved namespace temporary directory contains unexpected state: {entry.name}"
+                        f"reserved catalogue temporary path is not a regular file: {entry.name}"
                     )
-                for candidate in temporary_entries:
-                    try:
-                        if candidate.is_symlink() or not candidate.is_file(follow_symlinks=False):
-                            raise CatalogueBuildError(
-                                f"reserved namespace temporary marker is not a regular file: {entry.name}"
-                            )
-                    except OSError as error:
-                        raise CatalogueBuildError(
-                            f"unable to inspect reserved namespace temporary marker: {entry.name}"
-                        ) from error
-                continue
-            if depth in {1, 2, 3} and entry.name == IDENTITY_MARKER:
-                continue
-            if depth == 3 and LEGACY_RUN_ID_RE.fullmatch(entry.name):
-                record_run(entry, path)
-                continue
-            try:
-                if entry.is_symlink():
-                    raise CatalogueBuildError(f"namespace must not contain symbolic links: {entry.name}")
-                is_directory = entry.is_dir(follow_symlinks=False)
-                mode = entry.stat(follow_symlinks=False).st_mode if is_directory else 0
             except OSError as error:
-                raise CatalogueBuildError(f"unable to inspect namespace entry: {entry.name}") from error
-            if not is_directory:
-                raise CatalogueBuildError(f"unexpected file outside a run: {entry.name}")
-            if not any(mode & mask == mask for mask in (0o500, 0o050, 0o005)):
-                raise CatalogueBuildError(f"namespace directory is not readable and traversable: {entry.name}")
-            if depth < 3:
-                walk(path, depth + 1)
-                continue
-            run_entries = entries(path)
-            manifest_entries = [candidate for candidate in run_entries if candidate.name == "run.json"]
-            if len(manifest_entries) != 1:
-                if not run_entries and is_supported_run_id(entry.name):
-                    continue
-                raise CatalogueBuildError(f"run directory is missing exact-case run.json: {entry.name}")
-            manifest = manifest_entries[0]
-            try:
-                if manifest.is_symlink() or not manifest.is_file(follow_symlinks=False):
-                    raise CatalogueBuildError(f"run.json must be a regular file: {entry.name}")
-            except OSError as error:
-                raise CatalogueBuildError(f"unable to inspect run.json: {entry.name}") from error
-            candidates.append(RunCandidate(Path(manifest.path)))
-
-    walk(root, 0)
+                raise CatalogueBuildError(
+                    f"unable to inspect reserved catalogue temporary file: {entry.name}"
+                ) from error
+            continue
+        if FLAT_RUN_ID_RE.fullmatch(entry.name):
+            if parse_flat_run_id(entry.name) is None:
+                raise CatalogueBuildError(f"invalid run directory name: {entry.name}")
+            record_run(entry, path)
+            continue
+        if entry.is_symlink():
+            raise CatalogueBuildError(f"output root must not contain symbolic links: {entry.name}")
+        raise CatalogueBuildError(f"unexpected entry outside a run: {entry.name}")
     return candidates
 
 
 def relative_href(out_path: Path, target: Path) -> str:
     """Create a portable relative link from the generated index to a run file."""
     return Path(os.path.relpath(target, start=out_path.parent)).as_posix()
-
-
-def exact_child(parent: Path, name: str) -> Optional[Path]:
-    """Find a child by its stored spelling, even on case-insensitive filesystems."""
-    try:
-        return next((child for child in parent.iterdir() if child.name == name), None)
-    except OSError:
-        return None
 
 
 def is_exact_artifact_file(target: Path) -> bool:
@@ -459,8 +379,6 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
         model = object_value(identity.get("model"))
         harness = object_value(identity.get("harness"))
         experiment = object_value(identity.get("experiment"))
-        relative_parts = run_dir.relative_to(root).parts
-        legacy_fallbacks = relative_parts if len(relative_parts) == 4 else ()
 
         status = bounded_text(
             run.get("status"), "INVALID" if run_error else "UNKNOWN", 64
@@ -475,11 +393,9 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
                 raise ValueError("generation-only completion must be UNVERIFIED, never OK")
             if mode == "gauntlet" and status == "UNVERIFIED":
                 raise ValueError("UNVERIFIED requires receipt-anchored verificationMode none")
-            if run.get("schemaVersion") == "3.5" and receipt_error:
-                raise ValueError(receipt_error)
         except ValueError as error:
             status = "INVALID"
-            row_error = str(error)
+            row_error = row_error or str(error)
         if candidate.discovery_error is None:
             site_link = file_link(out_path, run_dir / "artifact" / "index.html", "Artifact entry")
             prompt_link = file_link(out_path, run_dir / "artifact" / "PROMPT.md", "PROMPT.md")
@@ -491,9 +407,9 @@ def build_rows(root: Path, out_path: Path) -> tuple[str, int]:
 
         rows.append(
             "        <tr>\n"
-            f'          <td data-label="Model"><span class="identity">{esc(identity_name(model, legacy_fallbacks[0] if legacy_fallbacks else "Unknown model"))}</span></td>\n'
-            f'          <td data-label="Harness"><span class="identity">{esc(identity_name(harness, legacy_fallbacks[1] if legacy_fallbacks else "Unknown harness"))}</span></td>\n'
-            f'          <td data-label="Experiment"><span class="identity">{esc(identity_name(experiment, legacy_fallbacks[2] if legacy_fallbacks else "Unknown experiment"))}</span></td>\n'
+            f'          <td data-label="Model"><span class="identity">{esc(identity_name(model, "Unknown model"))}</span></td>\n'
+            f'          <td data-label="Harness"><span class="identity">{esc(identity_name(harness, "Unknown harness"))}</span></td>\n'
+            f'          <td data-label="Experiment"><span class="identity">{esc(identity_name(experiment, "Unknown experiment"))}</span></td>\n'
             f'          <td data-label="Artifact">{site_link}</td>\n'
             f'          <td data-label="Prompt">{prompt_link}</td>\n'
             f'          <td data-label="Run">{run_link}</td>\n'

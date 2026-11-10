@@ -32,8 +32,6 @@ from build_catalog_index import (
     CATALOGUE_LOCK,
     CatalogueBuildError,
     FLAT_RUN_ID_RE,
-    LEGACY_RUN_ID_RE,
-    NAMESPACE_TEMP_RE,
     STALE_INDEX_RE,
     build_html,
     is_supported_run_id,
@@ -42,12 +40,17 @@ from build_catalog_index import (
 from runtime_contract import (
     BoundedReadError,
     COORDINATOR_MONITORING_CONTRACT,
+    METADATA_MAX_BYTES,
+    TEMPORARY_CONTRACT,
     VerificationMode,
+    exact_child,
     experiment_slug,
     find_likely_mojibake,
     identity_key,
     is_abandoned_run_reservation,
     is_appledouble_sidecar,
+    is_passed_verification,
+    object_value,
     parse_json_bounded,
     read_regular_file_bounded,
     require_unverified_report,
@@ -67,7 +70,6 @@ GAUNTLET_STOP_REASONS = {
 }
 SUCCESSFUL_GAUNTLET_STOP_REASONS = {"bar-met", "no-material-actionable-gap"}
 GAUNTLET_BAR_VALIDATION_RESULTS = {"accepted", "revised", "fallback-reviewed"}
-IDENTITY_MARKER = ".oneshot-identity.json"
 DROP_MAX_FILES = 1_000
 DROP_MAX_FILE_BYTES = 5 * 1024 * 1024
 DROP_MAX_TOTAL_BYTES = 100 * 1024 * 1024
@@ -77,7 +79,6 @@ MAX_LOCAL_REFERENCE_CHECKS = DROP_MAX_FILES * 4
 MAX_REFERENCE_DISPLAY_CHARS = 240
 MAX_LOCAL_REFERENCE_TEXT_CHARS = 512 * 1024
 MAX_CSS_SCAN_BYTES = 20 * 1024 * 1024
-METADATA_MAX_BYTES = 1024 * 1024
 PREPROCESS_ONLY_SUFFIXES = {
     ".astro",
     ".jsx",
@@ -213,16 +214,9 @@ class QualityGauntletEvidence:
 class PreparedRunContracts:
     """Coordinator-anchored contracts that worker-owned files cannot downgrade."""
 
-    temporary: bool
-    temporary_cleanup_allowed_on_success: bool
-    temporary_cleanup_on_success: bool
-    quality_gauntlet: bool
-    coordinator_monitoring: bool
+    verification: VerificationMode
     directional_controls_required: bool
-    directional_contract_version: str
-    directional_technical_prompt_required: bool
     directional_evidence_path: Optional[str]
-    verification: VerificationMode | None = None
 
 
 class LocalReferenceParser(HTMLParser):
@@ -357,11 +351,6 @@ def srcset_references(value: str) -> Iterator[str]:
             yield candidate
 
 
-def object_value(value: object) -> dict[str, Any]:
-    """Return a JSON object value, treating other JSON values as absent."""
-    return value if isinstance(value, dict) else {}
-
-
 def text_value(value: object) -> Optional[str]:
     """Return a meaningful string or None for malformed manifest fields."""
     return value.strip() if isinstance(value, str) and value.strip() else None
@@ -429,17 +418,6 @@ def parse_worker_identity(
     if not valid:
         return None
     return WorkerIdentity(lead=lead, descendants=tuple(descendants))
-
-
-def is_passed_verification(value: object) -> bool:
-    """Recognize concrete structured evidence for a successful artifact."""
-
-    if not isinstance(value, dict):
-        return False
-    result = text_value(value.get("result"))
-    kind = text_value(value.get("kind"))
-    evidence = text_value(value.get("evidence"))
-    return result is not None and result.casefold() in {"ok", "passed", "success"} and kind is not None and evidence is not None
 
 
 def is_failed_verification(value: object) -> bool:
@@ -859,15 +837,6 @@ def load_object(path: Path, errors: list[str]) -> Optional[dict[str, Any]]:
     return value
 
 
-def exact_child(parent: Path, name: str) -> Optional[Path]:
-    """Return a direct child only when its directory-entry casing is exact."""
-
-    try:
-        return next((entry for entry in parent.iterdir() if entry.name == name), None)
-    except OSError:
-        return None
-
-
 def exact_descendant(root: Path, relative: str) -> Optional[Path]:
     """Resolve a POSIX relative path through exact-cased directory entries."""
 
@@ -890,34 +859,15 @@ def is_safe_relative_path(value: object) -> bool:
     return not path.is_absolute() and all(part not in {"", ".", ".."} for part in path.parts)
 
 
-def validate_manifest_paths(
-    run_path: Path,
-    run: dict[str, Any],
-    require_temporary: bool,
-    require_temporary_cleanup: bool,
-    errors: list[str],
-) -> None:
+def validate_manifest_paths(run_path: Path, run: dict[str, Any], errors: list[str]) -> None:
     """Enforce the fixed handoff paths without constraining the source project."""
     prompt = object_value(run.get("prompt"))
     prompt_path = prompt.get("path")
     if prompt_path != "artifact/PROMPT.md":
         errors.append(f"{run_path}: prompt.path must be exactly artifact/PROMPT.md")
 
-    temporary = object_value(run.get("temporary"))
-    temporary_path = temporary.get("path")
-    if require_temporary:
-        if temporary_path != ".tmp/":
-            errors.append(f"{run_path}: temporary.path must be exactly .tmp/")
-        if temporary.get("routing") != "best-effort-run-local":
-            errors.append(f"{run_path}: temporary.routing must be exactly best-effort-run-local")
-        if require_temporary_cleanup:
-            if temporary.get("lifecycle") != "retain-until-successful-finalization":
-                errors.append(
-                    f"{run_path}: temporary.lifecycle must be exactly "
-                    "retain-until-successful-finalization"
-                )
-        elif temporary.get("preservation") != "retain":
-            errors.append(f"{run_path}: temporary.preservation must be exactly retain")
+    if run.get("temporary") != TEMPORARY_CONTRACT:
+        errors.append(f"{run_path}: temporary must be exactly {TEMPORARY_CONTRACT}")
 
     workspace = object_value(run.get("workspace"))
     if workspace.get("path") != "workspace/":
@@ -929,16 +879,6 @@ def validate_manifest_paths(
         errors.append(f"{run_path}: artifact.entrypoint must be exactly artifact/index.html")
     if artifact.get("deployment") != "static-folder":
         errors.append(f"{run_path}: artifact.deployment must be exactly static-folder")
-
-    for label, value in (
-        ("prompt.path", prompt_path),
-        ("temporary.path", temporary_path),
-        ("workspace.path", workspace.get("path")),
-        ("artifact.path", artifact.get("path")),
-        ("artifact.entrypoint", artifact.get("entrypoint")),
-    ):
-        if value is not None and not is_safe_relative_path(value):
-            errors.append(f"{run_path}: {label} is not a safe relative path")
 
 
 def has_url_control_character(value: str) -> bool:
@@ -1461,8 +1401,10 @@ def validate_provenance_receipt(
     run: dict[str, Any],
     prompt_bytes: Optional[bytes],
     errors: list[str],
-) -> PreparedRunContracts:
-    """Compare worker-writable metadata with its pre-dispatch coordinator receipt."""
+) -> Optional[PreparedRunContracts]:
+    """Compare worker-writable metadata with its pre-dispatch coordinator receipt.
+
+    Returns None when the receipt cannot anchor the run, so nothing worker-written is trusted."""
 
     run_id = run_path.parent.name
     expected_relative = f".oneshot-provenance/{run_id}.json"
@@ -1477,198 +1419,79 @@ def validate_provenance_receipt(
             errors.append(f"{commit_path}: unable to inspect provenance commit marker: {error}")
     receipt_path = root / expected_relative
     if not is_regular_file_within(receipt_path, root, "provenance receipt", errors):
-        return PreparedRunContracts(
-            temporary=False,
-            temporary_cleanup_allowed_on_success=False,
-            temporary_cleanup_on_success=False,
-            quality_gauntlet=False,
-            coordinator_monitoring=False,
-            directional_controls_required=False,
-            directional_contract_version="1.0",
-            directional_technical_prompt_required=False,
-            directional_evidence_path=None,
-        )
+        return None
     receipt = load_object(receipt_path, errors)
     if receipt is None:
-        return PreparedRunContracts(
-            temporary=False,
-            temporary_cleanup_allowed_on_success=False,
-            temporary_cleanup_on_success=False,
-            quality_gauntlet=False,
-            coordinator_monitoring=False,
-            directional_controls_required=False,
-            directional_contract_version="1.0",
-            directional_technical_prompt_required=False,
-            directional_evidence_path=None,
-        )
-    receipt_schema = receipt.get("schemaVersion")
-    receipt_contracts = {
-        "1.0": ("2.0", False, False, False, False),
-        "1.1": ("2.1", True, False, False, False),
-        "2.0": ("3.0", True, False, False, False),
-        "2.1": ("3.1", True, False, False, True),
-        "2.2": ("3.2", True, True, False, True),
-        "2.3": ("3.3", True, True, True, True),
-        "2.4": ("3.4", True, True, True, True),
-        "2.5": ("3.5", True, True, True, True),
-    }
-    receipt_contract = receipt_contracts.get(receipt_schema) if isinstance(receipt_schema, str) else None
-    if receipt_contract is None:
-        errors.append(
-            f"{receipt_path}: schemaVersion must be 1.0, 1.1, 2.0, 2.1, 2.2, 2.3, 2.4, or 2.5"
-        )
-    (
-        expected_run_schema,
-        current_temporary_contract,
-        temporary_cleanup_allowed_on_success,
-        temporary_cleanup_on_success,
-        current_quality_gauntlet_contract,
-    ) = receipt_contract or (None, False, False, False, False)
-    if run.get("schemaVersion") != expected_run_schema:
-        errors.append(
-            f"{receipt_path}: receipt schema {receipt_schema!r} requires run schema {expected_run_schema}"
-        )
-    mode: VerificationMode | None = None
+        return None
     try:
         mode = verification_mode(receipt, run)
     except ValueError as error:
         errors.append(f"{receipt_path}: {error}")
-    if isinstance(receipt_schema, str) and receipt_schema in {"1.1", "2.0", "2.1", "2.2", "2.3", "2.4", "2.5"}:
-        if receipt.get("runSchemaVersion") != expected_run_schema:
-            errors.append(f"{receipt_path}: runSchemaVersion must be exactly {expected_run_schema}")
-        receipt_temporary = object_value(receipt.get("temporary"))
-        expected_temporary = (
-            {
-                "path": ".tmp/",
-                "routing": "best-effort-run-local",
-                "lifecycle": "retain-until-successful-finalization",
-            }
-            if temporary_cleanup_on_success
-            else {
-                "path": ".tmp/",
-                "routing": "best-effort-run-local",
-                "preservation": "retain",
-            }
-        )
-        if receipt_temporary != expected_temporary:
-            errors.append(f"{receipt_path}: temporary contract does not match the prepared run")
-    if current_quality_gauntlet_contract:
-        expected_quality_gauntlet = {
-            "required": mode != "none",
-            "contractVersion": "1.0",
-            "reportSchemaVersion": "2.1",
-        }
-        if receipt.get("qualityGauntlet") != expected_quality_gauntlet:
-            errors.append(
-                f"{receipt_path}: qualityGauntlet contract does not match the prepared run"
-            )
-    current_coordinator_monitoring_contract = receipt_schema in ("2.4", "2.5")
-    if current_coordinator_monitoring_contract:
-        if receipt.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
-            errors.append(
-                f"{receipt_path}: coordinatorMonitoring contract does not match the prepared run"
-            )
-        execution = object_value(run.get("execution"))
-        if execution.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
-            errors.append(
-                f"{run_path}: execution.coordinatorMonitoring must match the coordinator receipt"
-            )
-    expected_run_path = run_path.parent.relative_to(root).as_posix()
+        return None
+
+    if receipt.get("temporary") != TEMPORARY_CONTRACT:
+        errors.append(f"{receipt_path}: temporary contract does not match the prepared run")
+    if receipt.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
+        errors.append(f"{receipt_path}: coordinatorMonitoring contract does not match the prepared run")
+    if object_value(run.get("execution")).get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT:
+        errors.append(f"{run_path}: execution.coordinatorMonitoring must match the coordinator receipt")
     if receipt.get("runId") != run_id:
         errors.append(f"{receipt_path}: runId must match {run_id!r}")
-    if receipt.get("runPath") != expected_run_path:
-        errors.append(f"{receipt_path}: runPath must match {expected_run_path!r}")
+    if receipt.get("runPath") != run_id:
+        errors.append(f"{receipt_path}: runPath must match {run_id!r}")
     for field in ("identity", "classification", "priorRun"):
         if receipt.get(field) != run.get(field):
             errors.append(f"{receipt_path}: {field} does not match the pre-dispatch run record")
     receipt_prompt = object_value(receipt.get("prompt"))
-    run_prompt = object_value(run.get("prompt"))
-    if receipt_prompt.get("sha256") != run_prompt.get("sha256"):
+    if receipt_prompt.get("sha256") != object_value(run.get("prompt")).get("sha256"):
         errors.append(f"{receipt_path}: prompt digest does not match the pre-dispatch receipt")
     if prompt_bytes is not None:
         if receipt_prompt.get("sha256") != hashlib.sha256(prompt_bytes).hexdigest():
             errors.append(f"{receipt_path}: artifact/PROMPT.md differs from the pre-dispatch prompt")
         if receipt_prompt.get("bytes") != len(prompt_bytes):
             errors.append(f"{receipt_path}: prompt byte count does not match artifact/PROMPT.md")
+
     directional_controls_required = False
-    directional_technical_prompt_required = False
     directional_evidence_path: Optional[str] = None
-    expected_directional_contract_version = (
-        DIRECTIONAL_CONTROL_CONTRACT_VERSION if receipt_schema in ("2.4", "2.5") else "1.0"
-    )
     receipt_directional = receipt.get("directionalControls")
-    if receipt_schema in ("2.4", "2.5") and receipt_directional is None:
-        errors.append(f"{receipt_path}: current receipt is missing directionalControls")
-    if receipt_directional is not None:
-        if not isinstance(receipt_directional, dict):
-            errors.append(f"{receipt_path}: directionalControls must be an object")
-        else:
-            required = receipt_directional.get("required")
-            basis = receipt_directional.get("basis")
-            signals = receipt_directional.get("signals")
-            evidence_path = receipt_directional.get("evidencePath")
-            if not isinstance(required, bool):
-                errors.append(f"{receipt_path}: directionalControls.required must be true or false")
-            else:
-                directional_controls_required = required
-            if receipt_directional.get("contractVersion") != expected_directional_contract_version:
-                errors.append(
-                    f"{receipt_path}: directionalControls.contractVersion must be exactly "
-                    f"{expected_directional_contract_version}"
-                )
-            allowed_bases = {"verification-disabled"} if mode == "none" else {"prepared-prompt-analysis", "coordinator-required"}
-            if mode == "none" and required is not False:
-                errors.append(f"{receipt_path}: generation-only runs cannot require a directional gate")
-            if basis not in allowed_bases:
-                errors.append(f"{receipt_path}: directionalControls.basis is invalid")
-            if not isinstance(signals, list) or not all(
-                isinstance(signal, str) and bool(signal.strip()) for signal in signals
-            ):
-                errors.append(
-                    f"{receipt_path}: directionalControls.signals must be an array of non-blank strings"
-                )
-            expected_evidence = (
-                f".oneshot-provenance/{run_id}{DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX}"
-                if required is True
-                else None
-            )
-            if evidence_path != expected_evidence:
-                errors.append(
-                    f"{receipt_path}: directionalControls.evidencePath must be {expected_evidence!r}"
-                )
-            elif isinstance(evidence_path, str):
-                directional_evidence_path = evidence_path
-            if receipt_schema in ("2.4", "2.5"):
-                expected_technical_prompt = (
-                    {
-                        "path": DIRECTIONAL_TECHNICAL_PROMPT_PATH,
-                        "lifecycle": DIRECTIONAL_TECHNICAL_PROMPT_LIFECYCLE,
-                    }
-                    if required is True
-                    else None
-                )
-                if receipt_directional.get("technicalPrompt") != expected_technical_prompt:
-                    errors.append(
-                        f"{receipt_path}: directionalControls.technicalPrompt does not match the prepared run"
-                    )
-                directional_technical_prompt_required = required is True
-            interaction = object_value(run.get("interaction"))
-            if interaction.get("directionalControls") != receipt_directional:
-                errors.append(
-                    f"{run_path}: interaction.directionalControls must match the coordinator receipt"
-                )
-    return PreparedRunContracts(
-        temporary=current_temporary_contract,
-        temporary_cleanup_allowed_on_success=temporary_cleanup_allowed_on_success,
-        temporary_cleanup_on_success=temporary_cleanup_on_success,
-        quality_gauntlet=current_quality_gauntlet_contract,
-        coordinator_monitoring=current_coordinator_monitoring_contract,
-        directional_controls_required=directional_controls_required,
-        directional_contract_version=expected_directional_contract_version,
-        directional_technical_prompt_required=directional_technical_prompt_required,
-        directional_evidence_path=directional_evidence_path,
-        verification=mode,
+    if not isinstance(receipt_directional, dict):
+        errors.append(f"{receipt_path}: directionalControls must be an object")
+        return PreparedRunContracts(mode, False, None)
+    required = receipt_directional.get("required")
+    basis = receipt_directional.get("basis")
+    signals = receipt_directional.get("signals")
+    evidence_path = receipt_directional.get("evidencePath")
+    if not isinstance(required, bool):
+        errors.append(f"{receipt_path}: directionalControls.required must be true or false")
+    else:
+        directional_controls_required = required
+    if receipt_directional.get("contractVersion") != DIRECTIONAL_CONTROL_CONTRACT_VERSION:
+        errors.append(
+            f"{receipt_path}: directionalControls.contractVersion must be exactly "
+            f"{DIRECTIONAL_CONTROL_CONTRACT_VERSION}"
+        )
+    allowed_bases = {"verification-disabled"} if mode == "none" else {"prepared-prompt-analysis", "coordinator-required"}
+    if basis not in allowed_bases:
+        errors.append(f"{receipt_path}: directionalControls.basis is invalid")
+    if not isinstance(signals, list) or not all(isinstance(signal, str) and bool(signal.strip()) for signal in signals):
+        errors.append(f"{receipt_path}: directionalControls.signals must be an array of non-blank strings")
+    expected_evidence = (
+        f".oneshot-provenance/{run_id}{DIRECTIONAL_CONTROL_EVIDENCE_SUFFIX}" if required is True else None
     )
+    if evidence_path != expected_evidence:
+        errors.append(f"{receipt_path}: directionalControls.evidencePath must be {expected_evidence!r}")
+    elif isinstance(evidence_path, str):
+        directional_evidence_path = evidence_path
+    expected_technical_prompt = (
+        {"path": DIRECTIONAL_TECHNICAL_PROMPT_PATH, "lifecycle": DIRECTIONAL_TECHNICAL_PROMPT_LIFECYCLE}
+        if required is True
+        else None
+    )
+    if receipt_directional.get("technicalPrompt") != expected_technical_prompt:
+        errors.append(f"{receipt_path}: directionalControls.technicalPrompt does not match the prepared run")
+    if object_value(run.get("interaction")).get("directionalControls") != receipt_directional:
+        errors.append(f"{run_path}: interaction.directionalControls must match the coordinator receipt")
+    return PreparedRunContracts(mode, directional_controls_required, directional_evidence_path)
 
 
 def validate_directional_control_evidence(
@@ -1706,9 +1529,9 @@ def validate_directional_control_evidence(
         errors.append(
             f"{evidence_path}: schemaVersion must be exactly {DIRECTIONAL_CONTROL_EVIDENCE_SCHEMA}"
         )
-    if evidence.get("contractVersion") != contracts.directional_contract_version:
+    if evidence.get("contractVersion") != DIRECTIONAL_CONTROL_CONTRACT_VERSION:
         errors.append(
-            f"{evidence_path}: contractVersion must be exactly {contracts.directional_contract_version}"
+            f"{evidence_path}: contractVersion must be exactly {DIRECTIONAL_CONTROL_CONTRACT_VERSION}"
         )
     if evidence.get("runId") != run_id:
         errors.append(f"{evidence_path}: runId must match {run_id!r}")
@@ -1783,44 +1606,26 @@ def validate_run(
     errors: list[str],
     warnings: list[str],
 ) -> None:
-    """Validate one flat or legacy run against its identity and artifact contract."""
-    relative = run_path.relative_to(root)
-    directory_parts = relative.parts[:-1]
-    if len(directory_parts) == 1:
-        layout = "flat"
-        run_id = directory_parts[0]
-        legacy_keys: tuple[str, ...] = ()
-    elif len(directory_parts) == 4:
-        layout = "legacy"
-        *legacy_identity_keys, run_id = directory_parts
-        legacy_keys = tuple(legacy_identity_keys)
-    else:
-        errors.append(f"{run_path}: run must use one timestamp directory or the legacy four-level layout")
-        return
+    """Validate one run against its identity, receipt and artifact contract."""
+    run_id = run_path.parent.name
     if not is_regular_file_within(run_path, root, "run manifest", errors):
         return
     run = load_object(run_path, errors)
     if run is None:
         return
 
-    schema_version = run.get("schemaVersion")
-    expected_schemas = {"3.0", "3.1", "3.2", "3.3", "3.4", "3.5"} if layout == "flat" else {"2.0", "2.1"}
-    if not isinstance(schema_version, str) or schema_version not in expected_schemas:
+    if run.get("schemaVersion") != "3.5":
+        errors.append(f"{run_path}: run schemaVersion must be exactly 3.5")
+    parsed_run_id = parse_flat_run_id(run_id)
+    if parsed_run_id is None:
         errors.append(
-            f"{run_path}: {layout} run schemaVersion must be one of {sorted(expected_schemas)}"
+            f"{run_path}: run directory must use a real YYYY-MM-DD-HH-MM-SS timestamp "
+            "with a canonical experiment slug and optional --02 collision suffix"
         )
-    parsed_flat_run_id = parse_flat_run_id(run_id) if layout == "flat" else None
-    if layout == "flat" and parsed_flat_run_id is None:
-        errors.append(
-            f"{run_path}: flat run directory must use a real YYYY-MM-DD-HH-MM-SS timestamp "
-            "with a canonical experiment slug and optional --02 collision suffix, or a supported historical form"
-        )
-    if layout == "legacy" and LEGACY_RUN_ID_RE.fullmatch(run_id) is None:
-        errors.append(f"{run_path}: legacy run directory does not use the supported UTC-and-UUID format")
 
     identity = object_value(run.get("identity"))
     experiment_name: Optional[str] = None
-    for index, field in enumerate(("model", "harness", "experiment")):
+    for field in ("model", "harness", "experiment"):
         identity_part = object_value(identity.get(field))
         key_value = identity_part.get("key")
         name_value = identity_part.get("name")
@@ -1830,48 +1635,21 @@ def validate_run(
             experiment_name = name
         if name is None:
             errors.append(f"{run_path}: identity.{field}.name must be a non-empty raw name")
-        else:
-            try:
-                expected_key = identity_key(name)
-            except UnicodeEncodeError:
-                errors.append(f"{run_path}: identity.{field}.name must be valid UTF-8 text")
-            else:
-                if key != expected_key:
-                    errors.append(f"{run_path}: identity.{field}.key does not match the raw-name digest")
-        if layout == "legacy":
-            expected_key = legacy_keys[index]
-            namespace_directory = run_path.parents[3 - index]
-            if key != expected_key:
-                errors.append(f"{run_path}: identity.{field}.key must match namespace segment {expected_key!r}")
-            marker_path = exact_child(namespace_directory, IDENTITY_MARKER)
-            if marker_path is None:
-                errors.append(f"{namespace_directory}: missing exact-case {IDENTITY_MARKER}")
-            elif is_regular_file_within(marker_path, root, f"{field} namespace identity marker", errors):
-                marker = load_object(marker_path, errors)
-                if marker is not None:
-                    expected_marker = {"schemaVersion": "1.0", "name": name_value, "key": key_value}
-                    if marker != expected_marker:
-                        errors.append(f"{marker_path}: marker does not match run identity.{field}")
-    if layout == "flat" and parsed_flat_run_id is not None:
-        if isinstance(schema_version, str) and schema_version in {"3.2", "3.3", "3.4", "3.5"}:
-            try:
-                expected_slug = experiment_slug(experiment_name) if experiment_name is not None else None
-            except UnicodeEncodeError:
-                expected_slug = None
-            if parsed_flat_run_id.slug is None:
-                errors.append(
-                    f"{run_path}: run schema {schema_version} requires an experiment slug in the run directory"
-                )
-            elif expected_slug is not None and parsed_flat_run_id.slug != expected_slug:
-                errors.append(
-                    f"{run_path}: run-directory slug must match experiment name as {expected_slug!r}"
-                )
-        elif (
-            isinstance(schema_version, str)
-            and schema_version in {"3.0", "3.1"}
-            and parsed_flat_run_id.slug is not None
-        ):
-            errors.append(f"{run_path}: historical flat run schema {schema_version} requires a timestamp-only run ID")
+            continue
+        try:
+            expected_key = identity_key(name)
+        except UnicodeEncodeError:
+            errors.append(f"{run_path}: identity.{field}.name must be valid UTF-8 text")
+            continue
+        if key != expected_key:
+            errors.append(f"{run_path}: identity.{field}.key does not match the raw-name digest")
+    if parsed_run_id is not None and experiment_name is not None:
+        try:
+            expected_slug: Optional[str] = experiment_slug(experiment_name)
+        except UnicodeEncodeError:
+            expected_slug = None
+        if expected_slug is not None and parsed_run_id.slug != expected_slug:
+            errors.append(f"{run_path}: run-directory slug must match experiment name as {expected_slug!r}")
     if text_value(run.get("runId")) != run_id:
         errors.append(f"{run_path}: runId must match run directory {run_id!r}")
 
@@ -1886,13 +1664,11 @@ def validate_run(
     if classification == "autonomous-one-shot" and prior_run is not None:
         errors.append(f"{run_path}: autonomous-one-shot must not declare priorRun")
     if classification in {"rerun", "curated-attempt"}:
-        if not is_safe_relative_path(prior_run):
-            errors.append(f"{run_path}: {classification} must declare a safe priorRun path")
-        elif len(PurePosixPath(str(prior_run)).parts) not in {1, 4}:
-            errors.append(f"{run_path}: priorRun must use one timestamp directory or the legacy four-level order")
-        elif str(prior_run) == run_path.parent.relative_to(root).as_posix():
+        if not is_safe_relative_path(prior_run) or len(PurePosixPath(str(prior_run)).parts) != 1:
+            errors.append(f"{run_path}: {classification} must declare a priorRun naming one run directory")
+        elif prior_run == run_id:
             errors.append(f"{run_path}: priorRun must not point to the current run")
-        elif str(prior_run) not in canonical_runs:
+        elif prior_run not in canonical_runs:
             errors.append(f"{run_path}: priorRun does not point to an exact canonical run")
 
     prompt = object_value(run.get("prompt"))
@@ -1907,132 +1683,84 @@ def validate_run(
         errors.append(f"{run_path}: run is missing an exact-case ordinary artifact/ directory")
     prompt_path = exact_child(artifact_directory, "PROMPT.md") if artifact_directory is not None else None
     prompt_bytes: Optional[bytes] = None
-    if not digest or not re.fullmatch(r"[0-9a-fA-F]{64}", digest):
+    digest_is_valid = bool(digest) and re.fullmatch(r"[0-9a-fA-F]{64}", digest) is not None
+    if not digest_is_valid:
         errors.append(f"{run_path}: prompt.sha256 must be a SHA-256 hex digest")
-    if prompt_path is not None:
-        if is_regular_file_within(prompt_path, run_path.parent, "preserved prompt", errors):
-            try:
-                prompt_bytes = read_regular_file_bounded(prompt_path, DROP_MAX_FILE_BYTES)
-                decoded_prompt = prompt_bytes.decode("utf-8")
-            except BoundedReadError as error:
-                if "exceeds" in str(error):
-                    errors.append(f"{prompt_path}: file exceeds the conservative 5 MiB folder-drop limit")
-                else:
-                    errors.append(f"{prompt_path}: preserved prompt is not readable UTF-8: {error}")
-            except UnicodeDecodeError as error:
-                errors.append(f"{prompt_path}: preserved prompt is not readable UTF-8: {error}")
-            else:
-                if not decoded_prompt.strip():
-                    errors.append(f"{prompt_path}: preserved prompt must not be blank")
-                if schema_version in ("3.4", "3.5"):
-                    try:
-                        reject_internal_directional_contract_in_prompt(decoded_prompt)
-                    except DirectionalControlError as error:
-                        errors.append(f"{prompt_path}: {error}")
-                mojibake = find_likely_mojibake(decoded_prompt)
-                if mojibake is not None:
-                    errors.append(
-                        f"{prompt_path}: preserved prompt contains likely mojibake at character "
-                        f"offset {mojibake.offset} ({mojibake.codepoints}); correct the prepared "
-                        "prompt at its source and preserve it as UTF-8"
-                    )
-                if digest and re.fullmatch(r"[0-9a-fA-F]{64}", digest):
-                    actual = hashlib.sha256(prompt_bytes).hexdigest()
-                    if actual.lower() != digest.lower():
-                        errors.append(f"{run_path}: prompt SHA-256 does not match artifact/PROMPT.md")
-    else:
+    if prompt_path is None:
         errors.append(f"{run_path}: run is missing exact-case artifact/PROMPT.md")
+    elif is_regular_file_within(prompt_path, run_path.parent, "preserved prompt", errors):
+        try:
+            prompt_bytes = read_regular_file_bounded(prompt_path, DROP_MAX_FILE_BYTES)
+            decoded_prompt = prompt_bytes.decode("utf-8")
+        except BoundedReadError as error:
+            if "exceeds" in str(error):
+                errors.append(f"{prompt_path}: file exceeds the conservative 5 MiB folder-drop limit")
+            else:
+                errors.append(f"{prompt_path}: preserved prompt is not readable UTF-8: {error}")
+        except UnicodeDecodeError as error:
+            errors.append(f"{prompt_path}: preserved prompt is not readable UTF-8: {error}")
+        else:
+            if not decoded_prompt.strip():
+                errors.append(f"{prompt_path}: preserved prompt must not be blank")
+            try:
+                reject_internal_directional_contract_in_prompt(decoded_prompt)
+            except DirectionalControlError as error:
+                errors.append(f"{prompt_path}: {error}")
+            mojibake = find_likely_mojibake(decoded_prompt)
+            if mojibake is not None:
+                errors.append(
+                    f"{prompt_path}: preserved prompt contains likely mojibake at character "
+                    f"offset {mojibake.offset} ({mojibake.codepoints}); correct the prepared "
+                    "prompt at its source and preserve it as UTF-8"
+                )
+            if digest_is_valid and hashlib.sha256(prompt_bytes).hexdigest() != digest.lower():
+                errors.append(f"{run_path}: prompt SHA-256 does not match artifact/PROMPT.md")
 
-    prepared_contracts = validate_provenance_receipt(
-        root,
-        run_path,
-        run,
-        prompt_bytes,
-        errors,
-    )
-    generation_only = prepared_contracts.verification == "none"
+    validate_manifest_paths(run_path, run, errors)
+    contracts = validate_provenance_receipt(root, run_path, run, prompt_bytes, errors)
+    if contracts is None:
+        return  # Without a trustworthy receipt, nothing else the worker wrote is trusted or inspected.
+    generation_only = contracts.verification == "none"
     if generation_only and status == "OK":
         errors.append(f"{run_path}: generation-only completion must be UNVERIFIED, never OK")
     if not generation_only and status == "UNVERIFIED":
         errors.append(f"{run_path}: UNVERIFIED requires receipt-anchored verificationMode none")
-    validate_manifest_paths(
-        run_path,
-        run,
-        prepared_contracts.temporary,
-        prepared_contracts.temporary_cleanup_on_success,
-        errors,
-    )
-    if prepared_contracts.verification is None:
-        return  # Path safety still applies; invalid consent never authorizes artifact inspection.
-    temporary_directory = exact_child(run_path.parent, ".tmp")
-    if prepared_contracts.temporary:
-        if prepared_contracts.temporary_cleanup_allowed_on_success and status in {"OK", "UNVERIFIED"}:
-            try:
-                temporary_candidates = [
-                    entry for entry in run_path.parent.iterdir() if entry.name.casefold() == ".tmp"
-                ]
-            except OSError as error:
-                errors.append(f"{run_path}: unable to inspect run-local temporary state: {error}")
-            else:
-                if prepared_contracts.temporary_cleanup_on_success and temporary_candidates:
-                    errors.append(
-                        f"{run_path}: successful run must delete its run-local .tmp/ directory in its entirety"
-                    )
-                elif temporary_candidates and (
-                    len(temporary_candidates) != 1
-                    or temporary_directory is None
-                    or not temporary_directory.is_dir()
-                    or temporary_directory.is_symlink()
-                ):
-                    errors.append(
-                        f"{run_path}: retained historical .tmp/ must be one exact-case ordinary directory"
-                    )
-        elif (
-            temporary_directory is None
-            or not temporary_directory.is_dir()
-            or temporary_directory.is_symlink()
-        ):
-            errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
 
-    if schema_version in ("3.4", "3.5") and status not in {"OK", "UNVERIFIED"} and temporary_directory is not None:
+    finished = status in {"OK", "UNVERIFIED"}
+    try:
+        temporary_candidates = [entry for entry in run_path.parent.iterdir() if entry.name.casefold() == ".tmp"]
+    except OSError as error:
+        errors.append(f"{run_path}: unable to inspect run-local temporary state: {error}")
+        temporary_candidates = []
+    temporary_directory = exact_child(run_path.parent, ".tmp")
+    if finished:
+        if temporary_candidates:
+            errors.append(f"{run_path}: successful run must delete its run-local .tmp/ directory in its entirety")
+    elif temporary_directory is None or not temporary_directory.is_dir() or temporary_directory.is_symlink():
+        errors.append(f"{run_path}: run is missing an exact-case ordinary .tmp/ directory")
+    elif status in STATUSES:
         technical_prompt_path = exact_child(temporary_directory, "TECHNICAL_PROMPT.md")
-        if prepared_contracts.directional_technical_prompt_required:
+        if contracts.directional_controls_required:
             if technical_prompt_path is None or not is_regular_file_within(
-                technical_prompt_path,
-                run_path.parent,
-                "transient directional technical prompt",
-                errors,
+                technical_prompt_path, run_path.parent, "transient directional technical prompt", errors
             ):
-                errors.append(
-                    f"{run_path}: applicable active run requires exact-case "
-                    ".tmp/TECHNICAL_PROMPT.md"
-                )
+                errors.append(f"{run_path}: applicable active run requires exact-case .tmp/TECHNICAL_PROMPT.md")
             else:
                 try:
                     technical_prompt_text = read_regular_file_bounded(
-                        technical_prompt_path,
-                        METADATA_MAX_BYTES,
+                        technical_prompt_path, METADATA_MAX_BYTES
                     ).decode("utf-8")
                     validate_directional_technical_prompt_contract(technical_prompt_text)
                 except (BoundedReadError, UnicodeDecodeError, DirectionalControlError) as error:
                     errors.append(f"{technical_prompt_path}: {error}")
         elif technical_prompt_path is not None:
-            errors.append(
-                f"{run_path}: non-applicable run must not create .tmp/TECHNICAL_PROMPT.md"
-            )
+            errors.append(f"{run_path}: non-applicable run must not create .tmp/TECHNICAL_PROMPT.md")
 
     execution = object_value(run.get("execution"))
     if execution.get("recursiveDelegation") != "allowed":
         errors.append(f"{run_path}: execution.recursiveDelegation must be exactly allowed")
     if execution.get("skillImposedLimits") != "none":
         errors.append(f"{run_path}: execution.skillImposedLimits must be exactly none")
-    if (
-        prepared_contracts.coordinator_monitoring
-        and execution.get("coordinatorMonitoring") != COORDINATOR_MONITORING_CONTRACT
-    ):
-        errors.append(
-            f"{run_path}: execution.coordinatorMonitoring must preserve the prepared contract"
-        )
     run_worker_identity = parse_worker_identity(execution, run_path, "execution", errors)
 
     report_path = exact_child(run_path.parent, "worker-report.json")
@@ -2045,60 +1773,45 @@ def validate_run(
         if status == "OK":
             errors.append(f"{run_path}: successful run is missing worker-report.json")
     else:
-        expected_report_schema = (
-            "2.1" if prepared_contracts.quality_gauntlet else "2.0"
-        )
-        if report.get("schemaVersion") != expected_report_schema:
-            errors.append(
-                f"{report_path}: schemaVersion must be exactly {expected_report_schema}"
-            )
-        if schema_version == "3.5" and report.get("verificationMode") != prepared_contracts.verification:
+        if report.get("schemaVersion") != "2.1":
+            errors.append(f"{report_path}: schemaVersion must be exactly 2.1")
+        if report.get("verificationMode") != contracts.verification:
             errors.append(f"{report_path}: verificationMode must match the coordinator receipt")
-        elif schema_version != "3.5" and report.get("verificationMode", "gauntlet") != "gauntlet":
-            errors.append(f"{report_path}: historical runs cannot downgrade verificationMode")
         if text_value(report.get("runId")) != run_id:
-            errors.append(f"{report_path}: runId must match namespace segment {run_id!r}")
+            errors.append(f"{report_path}: runId must match run directory {run_id!r}")
         report_worker_identity = parse_worker_identity(report, report_path, "", errors)
         if (
             run_worker_identity is not None
             and report_worker_identity is not None
             and report_worker_identity != run_worker_identity
         ):
-            errors.append(
-                f"{report_path}: worker IDs must exactly match run.json execution worker IDs"
-            )
+            errors.append(f"{report_path}: worker IDs must exactly match run.json execution worker IDs")
         report_status = text_value(report.get("status"))
         if report_status not in STATUSES:
             errors.append(f"{report_path}: status must be one of {sorted(STATUSES)}")
         elif status in STATUSES and report_status != status:
             errors.append(f"{report_path}: status must match run.json status {status!r}")
-        if prepared_contracts.coordinator_monitoring:
-            liveness_events = object_value(report.get("observations")).get("livenessEvents")
-            if not isinstance(liveness_events, list) or not all(
-                isinstance(event, dict) for event in liveness_events
-            ):
+        liveness_events = object_value(report.get("observations")).get("livenessEvents")
+        if not isinstance(liveness_events, list) or not all(isinstance(event, dict) for event in liveness_events):
+            errors.append(f"{report_path}: observations.livenessEvents must be an array of objects")
+        report_temporary = object_value(report.get("temporary"))
+        if report_temporary.get("path") != ".tmp/":
+            errors.append(f"{report_path}: temporary.path must be exactly .tmp/")
+        routing_applied = report_temporary.get("routingApplied")
+        if routing_applied is not None and not isinstance(routing_applied, bool):
+            errors.append(f"{report_path}: temporary.routingApplied must be true, false, or null")
+        external_exceptions = report_temporary.get("externalExceptions")
+        if not isinstance(external_exceptions, list) or not all(
+            isinstance(item, str) and bool(item.strip()) for item in external_exceptions
+        ):
+            errors.append(f"{report_path}: temporary.externalExceptions must be an array of non-blank strings")
+        elif finished:
+            if not isinstance(routing_applied, bool):
+                errors.append(f"{report_path}: successful run must record temporary.routingApplied as true or false")
+            elif routing_applied is False and not external_exceptions:
                 errors.append(
-                    f"{report_path}: observations.livenessEvents must be an array of objects"
+                    f"{report_path}: successful run with temporary routing disabled must record an external exception"
                 )
-        if prepared_contracts.temporary:
-            report_temporary = object_value(report.get("temporary"))
-            if report_temporary.get("path") != ".tmp/":
-                errors.append(f"{report_path}: temporary.path must be exactly .tmp/")
-            routing_applied = report_temporary.get("routingApplied")
-            if routing_applied is not None and not isinstance(routing_applied, bool):
-                errors.append(f"{report_path}: temporary.routingApplied must be true, false, or null")
-            external_exceptions = report_temporary.get("externalExceptions")
-            if not isinstance(external_exceptions, list) or not all(
-                isinstance(item, str) and bool(item.strip()) for item in external_exceptions
-            ):
-                errors.append(f"{report_path}: temporary.externalExceptions must be an array of non-blank strings")
-            elif status in {"OK", "UNVERIFIED"}:
-                if not isinstance(routing_applied, bool):
-                    errors.append(f"{report_path}: successful run must record temporary.routingApplied as true or false")
-                elif routing_applied is False and not external_exceptions:
-                    errors.append(
-                        f"{report_path}: successful run with temporary routing disabled must record an external exception"
-                    )
         report_artifact = object_value(report.get("artifact"))
         if report_artifact.get("entrypoint") != "artifact/index.html":
             errors.append(f"{report_path}: artifact.entrypoint must be exactly artifact/index.html")
@@ -2112,25 +1825,15 @@ def validate_run(
                 require_unverified_report(report)
             except ValueError as error:
                 errors.append(f"{report_path}: {error}")
-        elif (
-            prepared_contracts.quality_gauntlet
-            and "qualityGauntlet" not in report
-        ):
-            errors.append(
-                f"{report_path}: current run is missing required qualityGauntlet"
-            )
+        elif "qualityGauntlet" not in report:
+            errors.append(f"{report_path}: current run is missing required qualityGauntlet")
         else:
             validate_quality_gauntlet(
-                report.get("qualityGauntlet"),
-                report_path,
-                report_status,
-                report_worker_identity,
-                errors,
+                report.get("qualityGauntlet"), report_path, report_status, report_worker_identity, errors
             )
         verification = report.get("verification")
         if status == "OK" and (
-            not isinstance(verification, list)
-            or not any(is_passed_verification(item) for item in verification)
+            not isinstance(verification, list) or not any(is_passed_verification(item) for item in verification)
         ):
             errors.append(f"{report_path}: successful run must record structured passed verification evidence")
         if status == "OK" and isinstance(verification, list) and any(
@@ -2158,14 +1861,7 @@ def validate_run(
         errors.append(f"{run_path}: successful run is missing exact-case artifact/index.html")
     if is_index_file and artifact_tree_valid:
         validate_local_assets(index_path, errors)
-    validate_directional_control_evidence(
-        root,
-        run_path,
-        artifact_directory,
-        status,
-        prepared_contracts,
-        errors,
-    )
+    validate_directional_control_evidence(root, run_path, artifact_directory, status, contracts, errors)
 
 
 def validate_prior_graph(root: Path, run_paths: list[Path], errors: list[str]) -> None:
@@ -2178,7 +1874,7 @@ def validate_prior_graph(root: Path, run_paths: list[Path], errors: list[str]) -
             continue
         if not isinstance(run.get("priorRun"), str):
             continue
-        edges[run_path.parent.relative_to(root).as_posix()] = run["priorRun"]
+        edges[run_path.parent.name] = run["priorRun"]
 
     completed: set[str] = set()
     reported: set[tuple[str, ...]] = set()
@@ -2201,130 +1897,72 @@ def validate_prior_graph(root: Path, run_paths: list[Path], errors: list[str]) -
 
 
 def discover_run_paths(root: Path, errors: list[str]) -> list[Path]:
-    """Enumerate flat and legacy runs without silently skipping unreadable subtrees."""
+    """List each run directory's run.json, reporting everything else under the root that does not belong."""
 
     run_paths: list[Path] = []
+    try:
+        with os.scandir(root) as iterator:
+            children = sorted(iterator, key=lambda entry: entry.name)
+    except OSError as error:
+        errors.append(f"{root}: unable to inspect output root: {error}")
+        return run_paths
 
-    def entries(directory: Path) -> Optional[list[os.DirEntry[str]]]:
+    for entry in children:
+        path = Path(entry.path)
+        if is_appledouble_sidecar(path):
+            continue
+        if entry.name == CATALOGUE_LOCK:
+            try:
+                lock_stat = entry.stat(follow_symlinks=False)
+                if entry.is_symlink() or not stat.S_ISREG(lock_stat.st_mode) or lock_stat.st_nlink != 1:
+                    errors.append(f"{path}: catalogue lock path must be a private regular file")
+            except OSError as error:
+                errors.append(f"{path}: unable to inspect catalogue lock path: {error}")
+            continue
+        if entry.name in {"index.html", ".oneshot-provenance"}:
+            continue
+        if STALE_INDEX_RE.fullmatch(entry.name):
+            try:
+                if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
+                    errors.append(f"{path}: reserved catalogue temporary path must be a regular file")
+            except OSError as error:
+                errors.append(f"{path}: unable to inspect reserved catalogue temporary file: {error}")
+            continue
         try:
-            with os.scandir(directory) as iterator:
-                return sorted(iterator, key=lambda entry: entry.name)
+            if entry.is_symlink():
+                errors.append(f"{path}: output root must not contain symbolic links")
+                continue
+            is_directory = entry.is_dir(follow_symlinks=False)
+            directory_mode = entry.stat(follow_symlinks=False).st_mode
         except OSError as error:
-            errors.append(f"{directory}: unable to inspect namespace directory: {error}")
-            return None
-
-    def walk(directory: Path, depth: int) -> None:
-        children = entries(directory)
-        if children is None:
-            return
-        for entry in children:
-            path = Path(entry.path)
-            if is_appledouble_sidecar(path):
-                continue
-            if depth == 0 and entry.name == CATALOGUE_LOCK:
-                try:
-                    lock_stat = entry.stat(follow_symlinks=False)
-                    if (
-                        entry.is_symlink()
-                        or not stat.S_ISREG(lock_stat.st_mode)
-                        or lock_stat.st_nlink != 1
-                    ):
-                        errors.append(f"{path}: catalogue lock path must be a private regular file")
-                except OSError as error:
-                    errors.append(f"{path}: unable to inspect catalogue lock path: {error}")
-                continue
-            if depth == 0 and entry.name in {"index.html", ".oneshot-provenance"}:
-                continue
-            if depth == 0 and STALE_INDEX_RE.fullmatch(entry.name):
-                try:
-                    if entry.is_symlink() or not entry.is_file(follow_symlinks=False):
-                        errors.append(f"{Path(entry.path)}: reserved catalogue temporary path must be a regular file")
-                except OSError as error:
-                    errors.append(f"{Path(entry.path)}: unable to inspect reserved catalogue temporary file: {error}")
-                continue
-            if depth in {0, 1, 2} and NAMESPACE_TEMP_RE.fullmatch(entry.name):
-                try:
-                    if entry.is_symlink() or not entry.is_dir(follow_symlinks=False):
-                        errors.append(f"{path}: reserved namespace temporary path must be a directory")
-                        continue
-                except OSError as error:
-                    errors.append(f"{path}: unable to inspect reserved namespace temporary path: {error}")
-                    continue
-                temporary_entries = entries(path)
-                if temporary_entries is None:
-                    continue
-                temporary_entries = [
-                    candidate
-                    for candidate in temporary_entries
-                    if not is_appledouble_sidecar(Path(candidate.path))
-                ]
-                if any(candidate.name != IDENTITY_MARKER for candidate in temporary_entries):
-                    errors.append(f"{path}: reserved namespace temporary directory contains unexpected state")
-                    continue
-                for candidate in temporary_entries:
-                    try:
-                        if candidate.is_symlink() or not candidate.is_file(follow_symlinks=False):
-                            errors.append(f"{Path(candidate.path)}: reserved namespace temporary marker must be a regular file")
-                    except OSError as error:
-                        errors.append(f"{Path(candidate.path)}: unable to inspect reserved namespace temporary marker: {error}")
-                continue
-            if depth in {1, 2, 3} and entry.name == IDENTITY_MARKER:
-                continue
-            try:
-                if entry.is_symlink():
-                    errors.append(f"{path}: namespace directories must not be symbolic links")
-                    continue
-                is_directory = entry.is_dir(follow_symlinks=False)
-            except OSError as error:
-                errors.append(f"{path}: unable to inspect namespace entry: {error}")
-                continue
-            if not is_directory:
-                if entry.name == "run.json":
-                    errors.append(f"{path}: run.json is outside a timestamped or legacy run directory")
-                else:
-                    errors.append(f"{path}: unexpected file outside a run, receipt inventory, or root catalogue")
-                continue
-            try:
-                directory_mode = entry.stat(follow_symlinks=False).st_mode
-            except OSError as error:
-                errors.append(f"{path}: unable to inspect namespace directory metadata: {error}")
-                continue
-            if not directory_has_read_and_traverse_mode(directory_mode):
-                errors.append(f"{path}: namespace directory must have a readable and traversable mode")
-            is_flat_candidate = depth == 0 and FLAT_RUN_ID_RE.fullmatch(entry.name) is not None
-            is_flat_run = depth == 0 and parse_flat_run_id(entry.name) is not None
-            if is_flat_candidate and not is_flat_run:
-                errors.append(
-                    f"{path}: invalid flat run directory name; expected a real YYYY-MM-DD-HH-MM-SS "
-                    "timestamp with a canonical experiment slug and optional --02 collision suffix, "
-                    "or a supported historical form"
-                )
-                is_flat_run = True
-            is_legacy_run = depth == 3
-            if not is_flat_run and not is_legacy_run and depth < 3:
-                walk(path, depth + 1)
-                continue
-            if not is_flat_run and not is_legacy_run:
-                errors.append(f"{path}: unexpected directory outside a run")
-                continue
-            commit_path = root / ".oneshot-provenance" / f"{path.name}.commit"
-            if is_supported_run_id(path.name) and is_abandoned_run_reservation(path, commit_path):
-                continue
-            manifest = exact_child(path, "run.json")
-            if manifest is None:
-                errors.append(f"{path}: run directory is missing exact-case regular run.json")
-                continue
-            try:
-                is_manifest = manifest.is_file() and not manifest.is_symlink()
-            except OSError as error:
-                errors.append(f"{manifest}: unable to inspect run manifest: {error}")
-                continue
-            if not is_manifest:
-                errors.append(f"{path}: run directory is missing exact-case regular run.json")
-                continue
-            run_paths.append(manifest)
-
-    walk(root, 0)
+            errors.append(f"{path}: unable to inspect output root entry: {error}")
+            continue
+        if not is_directory:
+            errors.append(f"{path}: unexpected file outside a run, receipt inventory, or root catalogue")
+            continue
+        if FLAT_RUN_ID_RE.fullmatch(entry.name) is None:
+            errors.append(f"{path}: unexpected directory outside a run")
+            continue
+        if parse_flat_run_id(entry.name) is None:
+            errors.append(
+                f"{path}: invalid run directory name; expected a real YYYY-MM-DD-HH-MM-SS "
+                "timestamp with a canonical experiment slug and optional --02 collision suffix"
+            )
+        if not directory_has_read_and_traverse_mode(directory_mode):
+            errors.append(f"{path}: run directory must have a readable and traversable mode")
+        commit_path = root / ".oneshot-provenance" / f"{path.name}.commit"
+        if is_supported_run_id(path.name) and is_abandoned_run_reservation(path, commit_path):
+            continue
+        manifest = exact_child(path, "run.json")
+        try:
+            is_manifest = manifest is not None and manifest.is_file() and not manifest.is_symlink()
+        except OSError as error:
+            errors.append(f"{manifest}: unable to inspect run manifest: {error}")
+            continue
+        if manifest is None or not is_manifest:
+            errors.append(f"{path}: run directory is missing exact-case regular run.json")
+            continue
+        run_paths.append(manifest)
     return run_paths
 
 
@@ -2456,21 +2094,10 @@ def validate(root: Path) -> dict[str, Any]:
     warnings: list[str] = []
     run_paths = discover_run_paths(root, errors)
     if not run_paths:
-        errors.append("no run.json files found in a timestamped or legacy run directory")
+        errors.append("no run directories with a run.json found")
 
-    canonical_runs = {run_path.parent.relative_to(root).as_posix() for run_path in run_paths}
-    seen_paths: set[str] = set()
-    seen_run_ids: set[str] = set()
+    canonical_runs = {run_path.parent.name for run_path in run_paths}
     for run_path in run_paths:
-        relative_path = run_path.parent.relative_to(root).as_posix()
-        if relative_path in seen_paths:
-            errors.append(f"duplicate run path: {relative_path}")
-            continue
-        seen_paths.add(relative_path)
-        run_id = run_path.parent.name
-        if run_id in seen_run_ids:
-            errors.append(f"duplicate global run ID: {run_id}")
-        seen_run_ids.add(run_id)
         validate_run(root, run_path, canonical_runs, errors, warnings)
 
     validate_prior_graph(root, run_paths, errors)

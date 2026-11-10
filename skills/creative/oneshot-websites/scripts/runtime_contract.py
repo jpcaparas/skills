@@ -12,13 +12,19 @@ import stat
 import unicodedata
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Mapping
+from typing import Any, Literal, Mapping, Optional
 
 
 APPLEDOUBLE_MAGIC = b"\x00\x05\x16\x07"
 JSON_NESTING_MAX = 256
 JSON_NUMBER_TOKEN_MAX_CHARS = 256
 EXPERIMENT_SLUG_MAX_CHARS = 64
+METADATA_MAX_BYTES = 1024 * 1024
+TEMPORARY_CONTRACT: dict[str, str] = {
+    "path": ".tmp/",
+    "routing": "best-effort-run-local",
+    "lifecycle": "retain-until-successful-finalization",
+}
 COORDINATOR_MONITORING_CONTRACT: dict[str, object] = {
     "required": True,
     "contractVersion": "1.0",
@@ -41,39 +47,42 @@ def verification_mode(
     run: Mapping[str, object],
     report: Mapping[str, object] | None = None,
 ) -> VerificationMode:
-    """Resolve consent from coordinator metadata, never from a worker downgrade."""
+    """Resolve consent from the coordinator receipt, never from a worker-writable downgrade."""
 
-    if receipt.get("schemaVersion") == "2.5":
-        mode = receipt.get("verificationMode")
-        if mode not in ("gauntlet", "none"):
-            raise ValueError("receipt verificationMode must be gauntlet or none")
-        if receipt.get("runSchemaVersion") != "3.5" or run.get("schemaVersion") != "3.5":
-            raise ValueError("verification selection requires receipt 2.5 and run 3.5")
-        if run.get("verificationMode") != mode:
-            raise ValueError("run verificationMode must match the coordinator receipt")
-        if report is not None and report.get("verificationMode") != mode:
-            raise ValueError("report verificationMode must match the coordinator receipt")
-        if receipt.get("qualityGauntlet") != {
-            "required": mode == "gauntlet", "contractVersion": "1.0", "reportSchemaVersion": "2.1"
-        }:
-            raise ValueError("receipt qualityGauntlet must agree with verificationMode")
-        if mode == "none":
-            directional = receipt.get("directionalControls")
-            if not isinstance(directional, dict) or (
-                directional.get("required") is not False
-                or directional.get("technicalPrompt") is not None
-                or directional.get("evidencePath") is not None
-            ):
-                raise ValueError("verificationMode none cannot require directional verification")
-        return "none" if mode == "none" else "gauntlet"
-    if run.get("schemaVersion") == "3.5":
-        raise ValueError("run 3.5 requires a verificationMode anchored by receipt 2.5")
-    # Missing historical consent is not an opt-out. Old scripts retain their
-    # gauntlet default; new canonical dispatch must pass the user's choice.
-    for document in (receipt, run, report):
-        if document is not None and document.get("verificationMode", "gauntlet") != "gauntlet":
-            raise ValueError("historical runs cannot downgrade verificationMode")
-    return "gauntlet"
+    mode = receipt.get("verificationMode")
+    if mode not in ("gauntlet", "none"):
+        raise ValueError("receipt verificationMode must be gauntlet or none")
+    if receipt.get("schemaVersion") != "2.5" or receipt.get("runSchemaVersion") != "3.5" or run.get("schemaVersion") != "3.5":
+        raise ValueError("verification selection requires receipt 2.5 and run 3.5")
+    if run.get("verificationMode") != mode:
+        raise ValueError("run verificationMode must match the coordinator receipt")
+    if report is not None and report.get("verificationMode") != mode:
+        raise ValueError("report verificationMode must match the coordinator receipt")
+    if receipt.get("qualityGauntlet") != {
+        "required": mode == "gauntlet", "contractVersion": "1.0", "reportSchemaVersion": "2.1"
+    }:
+        raise ValueError("receipt qualityGauntlet must agree with verificationMode")
+    if mode == "none":
+        directional = receipt.get("directionalControls")
+        if not isinstance(directional, dict) or (
+            directional.get("required") is not False
+            or directional.get("technicalPrompt") is not None
+            or directional.get("evidencePath") is not None
+        ):
+            raise ValueError("verificationMode none cannot require directional verification")
+    return mode
+
+
+def is_passed_verification(value: object) -> bool:
+    """Recognize one concrete structured check that passed with evidence."""
+
+    if not isinstance(value, dict):
+        return False
+    result, kind, evidence = (
+        value.get(field) if isinstance(value.get(field), str) else ""
+        for field in ("result", "kind", "evidence")
+    )
+    return result.strip().casefold() in {"ok", "passed", "success"} and bool(kind.strip()) and bool(evidence.strip())
 
 
 def require_unverified_report(report: Mapping[str, object]) -> None:
@@ -282,6 +291,20 @@ def read_regular_file_bounded(path: Path, max_bytes: int) -> bytes:
             os.close(descriptor)
         except OSError:
             pass
+
+
+def object_value(value: object) -> dict[str, Any]:
+    """Return a JSON object value, treating other JSON values as absent."""
+    return value if isinstance(value, dict) else {}
+
+
+def exact_child(parent: Path, name: str) -> Optional[Path]:
+    """Return a direct child only when its stored casing is exact, even on case-insensitive filesystems."""
+
+    try:
+        return next((entry for entry in parent.iterdir() if entry.name == name), None)
+    except OSError:
+        return None
 
 
 def is_appledouble_sidecar(path: Path) -> bool:

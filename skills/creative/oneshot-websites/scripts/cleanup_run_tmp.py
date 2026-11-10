@@ -10,12 +10,13 @@ import os
 import shutil
 import stat
 import sys
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Sequence
 
 from runtime_contract import (
     BoundedReadError,
+    TEMPORARY_CONTRACT,
+    is_passed_verification,
     parse_json_bounded,
     read_regular_file_bounded,
     require_unverified_report,
@@ -23,51 +24,8 @@ from runtime_contract import (
 )
 
 
-
-@dataclass(frozen=True)
-class FinalizationContract:
-    """One receipt-anchored run schema whose scratch can be safely finalized."""
-
-    receipt_schema: str
-    temporary: Mapping[str, str]
-
-
-FINALIZATION_CONTRACTS: Mapping[str, FinalizationContract] = {
-    "3.2": FinalizationContract(
-        receipt_schema="2.2",
-        temporary={
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "preservation": "retain",
-        },
-    ),
-    "3.3": FinalizationContract(
-        receipt_schema="2.3",
-        temporary={
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "lifecycle": "retain-until-successful-finalization",
-        },
-    ),
-    "3.4": FinalizationContract(
-        receipt_schema="2.4",
-        temporary={
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "lifecycle": "retain-until-successful-finalization",
-        },
-    ),
-    "3.5": FinalizationContract(
-        receipt_schema="2.5",
-        temporary={
-            "path": ".tmp/",
-            "routing": "best-effort-run-local",
-            "lifecycle": "retain-until-successful-finalization",
-        },
-    ),
-}
-
-
+RUN_SCHEMA = "3.5"
+RECEIPT_SCHEMA = "2.5"
 class TemporaryCleanupError(ValueError):
     """Raised when cleanup cannot prove its target and completion preconditions."""
 
@@ -127,23 +85,6 @@ def require_ordinary_directory(path: Path, label: str) -> Path:
         raise TemporaryCleanupError(f"{label} cannot be resolved safely: {path}: {error}") from error
 
 
-def has_passed_verification(report: Mapping[str, object]) -> bool:
-    """Return whether the worker report contains at least one structured passing check."""
-
-    verification = report.get("verification")
-    if not isinstance(verification, list):
-        return False
-    return any(
-        isinstance(item, dict)
-        and item.get("result") == "passed"
-        and isinstance(item.get("kind"), str)
-        and bool(str(item["kind"]).strip())
-        and isinstance(item.get("evidence"), str)
-        and bool(str(item["evidence"]).strip())
-        for item in verification
-    )
-
-
 def validate_cleanup_target(run_path: Path) -> tuple[Path, Path | None]:
     """Prove current-run identity and return the exact safe temporary target."""
 
@@ -156,16 +97,11 @@ def validate_cleanup_target(run_path: Path) -> tuple[Path, Path | None]:
     report = read_json_object(report_path, "worker report")
 
     run_id = run_path.name
-    run_schema = run.get("schemaVersion")
-    contract = FINALIZATION_CONTRACTS.get(run_schema) if isinstance(run_schema, str) else None
-    if contract is None or run.get("runId") != run_id:
+    if run.get("schemaVersion") != RUN_SCHEMA or run.get("runId") != run_id:
         raise TemporaryCleanupError(
-            "cleanup requires supported run schema {} whose runId matches {!r}".format(
-                ", ".join(sorted(FINALIZATION_CONTRACTS)),
-                run_id,
-            )
+            f"cleanup requires run schema {RUN_SCHEMA} whose runId matches {run_id!r}"
         )
-    if run.get("temporary") != contract.temporary:
+    if run.get("temporary") != TEMPORARY_CONTRACT:
         raise TemporaryCleanupError("run temporary-storage contract does not authorize completion cleanup")
 
     root = run_path.parent
@@ -184,11 +120,11 @@ def validate_cleanup_target(run_path: Path) -> tuple[Path, Path | None]:
     receipt = read_json_object(receipt_path, "provenance receipt")
     expected_run_path = run_path.relative_to(root).as_posix()
     if (
-        receipt.get("schemaVersion") != contract.receipt_schema
+        receipt.get("schemaVersion") != RECEIPT_SCHEMA
         or receipt.get("runId") != run_id
         or receipt.get("runPath") != expected_run_path
-        or receipt.get("runSchemaVersion") != run_schema
-        or receipt.get("temporary") != contract.temporary
+        or receipt.get("runSchemaVersion") != RUN_SCHEMA
+        or receipt.get("temporary") != TEMPORARY_CONTRACT
     ):
         raise TemporaryCleanupError("coordinator receipt does not match the current run and cleanup contract")
     try:
@@ -213,28 +149,28 @@ def validate_cleanup_target(run_path: Path) -> tuple[Path, Path | None]:
         report_artifact = report.get("artifact")
         if not isinstance(report_artifact, dict) or report_artifact.get("staticDeploymentVerified") is not True:
             raise TemporaryCleanupError("worker report must record successful local static-handoff verification")
-        if not has_passed_verification(report):
+        verification = report.get("verification")
+        if not isinstance(verification, list) or not any(is_passed_verification(item) for item in verification):
             raise TemporaryCleanupError("worker report must contain structured passed verification evidence")
-    if run_schema == "3.5":
-        for field in ("identity", "classification", "priorRun"):
-            if run.get(field) != receipt.get(field):
-                raise TemporaryCleanupError(f"run {field} differs from coordinator receipt")
-        if report.get("runId") != run_id or report.get("schemaVersion") != "2.1":
-            raise TemporaryCleanupError("worker report identity or schema differs from prepared run")
-        if run.get("workspace") != {"path": "workspace/"}:
-            raise TemporaryCleanupError("run workspace path must remain workspace/")
-        require_ordinary_directory(run_path / "workspace", "workspace directory")
-        require_ordinary_directory(run_path / "artifact", "artifact directory")
-        # Prompt identity is a provenance check, not an artifact-content scan.
-        try:
-            prompt_bytes = read_regular_file_bounded(run_path / "artifact" / "PROMPT.md", 5 * 1024 * 1024)
-        except BoundedReadError as error:
-            raise TemporaryCleanupError(str(error)) from error
-        digest = hashlib.sha256(prompt_bytes).hexdigest()
-        if receipt.get("prompt") != {"sha256": digest, "bytes": len(prompt_bytes)} or run.get("prompt") != {
-            "path": "artifact/PROMPT.md", "sha256": digest, "preservation": "verbatim"
-        }:
-            raise TemporaryCleanupError("sealed prompt identity differs from coordinator receipt")
+    for field in ("identity", "classification", "priorRun"):
+        if run.get(field) != receipt.get(field):
+            raise TemporaryCleanupError(f"run {field} differs from coordinator receipt")
+    if report.get("runId") != run_id or report.get("schemaVersion") != "2.1":
+        raise TemporaryCleanupError("worker report identity or schema differs from prepared run")
+    if run.get("workspace") != {"path": "workspace/"}:
+        raise TemporaryCleanupError("run workspace path must remain workspace/")
+    require_ordinary_directory(run_path / "workspace", "workspace directory")
+    require_ordinary_directory(run_path / "artifact", "artifact directory")
+    # Prompt identity is a provenance check, not an artifact-content scan.
+    try:
+        prompt_bytes = read_regular_file_bounded(run_path / "artifact" / "PROMPT.md", 5 * 1024 * 1024)
+    except BoundedReadError as error:
+        raise TemporaryCleanupError(str(error)) from error
+    digest = hashlib.sha256(prompt_bytes).hexdigest()
+    if receipt.get("prompt") != {"sha256": digest, "bytes": len(prompt_bytes)} or run.get("prompt") != {
+        "path": "artifact/PROMPT.md", "sha256": digest, "preservation": "verbatim"
+    }:
+        raise TemporaryCleanupError("sealed prompt identity differs from coordinator receipt")
 
     try:
         casefold_matches = [entry for entry in run_path.iterdir() if entry.name.casefold() == ".tmp"]
