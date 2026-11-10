@@ -7,11 +7,11 @@ description: "Modernises the UI of an existing website or app: faster, better lo
 
 Reworks the interface of an existing project so it is faster, better looking, usable to WCAG 2.2 AA and the same in every browser and viewport, without breaking the browsers it works in today.
 
-The project is edited only after the user approves a catalogue: one page that lists every intended change beside renders of each page before and after. Skip the catalogue only when the user says to.
+The project is edited only after the user approves a catalogue: one page that lists every intended change beside renders of each page before and after. When the user says to skip the catalogue, only the approval is skipped: still capture the untouched site before the first edit, and finish with the comparison in step 6.
 
 ## Dials
 
-Take each dial from the request when it is there. Ask for the others in one message, with the host's question tool if it has one, and show the default for each. Go ahead on the defaults when the user says to.
+Take each dial from the request when it is there. Before capturing or editing anything, ask for the others in one message, with the host's question tool if it has one. Show the default for each and say in a line what each mode lets change. A default stands in for an answer only when the user says to use the defaults.
 
 - **Audit first** (default: no). Capture the site, build the catalogue from that run alone, report what is wrong with the measurements behind it, change nothing, then ask for the mode.
 - **Mode** (default: `refresh`). The mode sets what may visibly change.
@@ -34,13 +34,13 @@ python scripts/build_catalogue.py --before runs/before --after runs/after --plan
 ```
 
 1. Capture the untouched site first. Its numbers are the evidence for every change, and they cannot be recovered after an edit.
-2. Write `plan.json` with one entry for each change the user could approve or strike on its own. `why` quotes what the before run measured ("home overflows by 295px at 320 wide"), not a general principle. A medium or high risk needs a `risk_note` saying what could break.
+2. Write `plan.json` with one entry for each change the user could approve or strike on its own; a language attribute, a skip link and a moved banner are three entries, not one "landmarks" entry. `why` quotes what the before run measured ("home overflows by 295px at 320 wide"), or the line of the project's source that shows the defect when the manifest has no number for it ("`.col { float: left }` in style.css"), not a general principle. A medium or high risk needs a `risk_note` saying what could break.
 3. Build the proposal without editing the project's working tree. Inject a stylesheet and script into the live pages with `--overlay-css` and `--overlay-js` when that is enough; otherwise change a copy of the project (a git worktree or a scratch copy), serve it on another port and capture it with `--mockup`. The after renders are real HTML and CSS in real browsers. A generated image or a description is not a dry run.
-4. Build the catalogue and give the user `catalogue/index.html`, served or opened. In the reply, give the totals, the changes by id, two or three before and after pairs, and anything that was not rendered. Ask which ids to drop.
+4. Build the catalogue and give the user `catalogue/index.html`, served or opened. In the reply, give the totals, the changes by id, two or three before and after pairs, anything that was not rendered, and each number the after run makes worse with its reason, for example transfer size raised by a web font. Ask which ids to drop.
 5. Approval covers the listed ids. A change found later is added to the plan and asked about.
 6. Implement in the project the way the project is written: its components, tokens, build and tests. Capture the real implementation as a new after run and rebuild with `--fail-on-regression`, which exits 1 when the after run has a new accessibility failure, console error, failed request, sideways scroll or missing render.
 
-Done means that build exits 0 on current engines and on the floor engines, the project's own checks pass, and every approved id is implemented or reported as not done. Report a number that got worse for a good reason with the reason, for example a larger stylesheet that replaced a script.
+Done means that build exits 0 on current engines and on the floor engines, the project's own checks pass, and every approved id is implemented or reported as not done. The closing reply covers the real after run the way step 4 covers the proposal.
 
 Keep runs, plans and catalogues in a scratch or ignored directory, not in the project's tracked files.
 
@@ -54,7 +54,7 @@ tools/venv/bin/python -m playwright install --with-deps chromium firefox webkit
 npm install --prefix tools axe-core
 ```
 
-- The default run is Chromium, Firefox and WebKit at 320x568, 390x844, 768x1024, 1366x768 and 1920x1080. Widen it when the project calls for it; do not narrow it to save time. `--viewports` takes space-separated sizes. `chrome` and `msedge` are the branded builds (`playwright install chrome msedge`).
+- The default run is Chromium, Firefox and WebKit at 320x568, 390x844, 768x1024, 1366x768 and 1920x1080. Widen it when the project calls for it; do not narrow it to save time. A browser that will not launch names the system library it lacks: install it (`playwright install-deps <browser>` with sudo, or unpack the package into the scratch directory and add it to `LD_LIBRARY_PATH`) before leaving the browser out, and name any browser left out in the reply. `--viewports` takes space-separated sizes. `chrome` and `msedge` are the branded builds (`playwright install chrome msedge`).
 - Render a state by giving a page entry a `prepare` script that opens the menu or triggers the error. On a live site `prepare` must not submit a form or change data.
 - A site with a dark theme or motion gets extra runs with `--color-scheme dark` and `--reduced-motion`, each paired into its own catalogue. Signed-in pages take `--storage-state`.
 - Install Chromium without `--only-shell`; the script launches the full browser because the headless shell renders less like Chrome.
@@ -66,7 +66,7 @@ npm install --prefix tools axe-core
 
 The floor is the oldest set of browsers the result must work in. Take it from the user's answer, then the project's browserslist (`npx browserslist` prints it), then its build targets, and otherwise from the engines the current site works in. Modernising never raises the floor on its own: raising it is the user's decision, shown as its own `compatibility` change that says what stops working and for whom.
 
-Each feature the floor lacks gets one of these, in this order of preference, and each is a `compatibility` change in the plan:
+Each feature the floor lacks gets one of these, in this order of preference. Each is its own `compatibility` change in the plan that names the feature and the browsers that need it, not a note inside the change that uses the feature:
 
 1. A fallback in the code itself: the older declaration first and the newer one after it, an `@supports` block, or a feature test in the script. It costs nothing in current browsers and cannot fail to load.
 2. A build-time transform with tooling the project already has, pointed at its browserslist (Autoprefixer, postcss-preset-env, Lightning CSS, Babel or SWC with core-js by usage). Adding a build step to a project that has none is a `code` change with its own risk.
@@ -92,7 +92,7 @@ PLAYWRIGHT_BROWSERS_PATH=tools/browsers-old tools/venv-old/bin/python -m playwri
 PLAYWRIGHT_BROWSERS_PATH=tools/browsers-old tools/venv-old/bin/python scripts/capture.py --pages pages.json --out runs/before-old --browsers chromium firefox
 ```
 
-Playwright 1.30 carries Chromium 110, Firefox 108 and WebKit 16.4 (early 2023). On Python 3.11 the oldest release that runs `capture.py` is 1.27 (Chromium 107, Firefox 105); earlier ones do not install or hang. An old WebKit build may not launch on a current Linux because it needs system libraries the distribution has dropped; use the Playwright Docker image of the same version, or macOS. The catalogue names the engine versions each run used.
+Playwright 1.30 carries Chromium 110, Firefox 108 and WebKit 16.4 (early 2023). On Python 3.11 the oldest release that runs `capture.py` is 1.27 (Chromium 107, Firefox 105); earlier ones do not install or hang. An old WebKit build may not launch on a current Linux because it needs system libraries the distribution has dropped (WebKit 16.4 on Debian 12, checked 2026-11-10); use the Playwright Docker image of the same version, or macOS. Render in every old engine that does launch, and report the rest by name. The catalogue names the engine versions each run used.
 
 Internet Explorer 11, Safari before 16 and other engines older than these cannot be rendered this way. They need a real device or a cloud browser service the user provides access to. Without one, report them by name as "checked statically, not rendered" and do not claim they work.
 

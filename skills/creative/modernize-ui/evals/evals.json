@@ -12,7 +12,7 @@
         {"text": "Asks for audit-first, mode, pages and browser floor together in one message, with the default shown for each", "type": "functional"},
         {"text": "Explains what preserve, refresh and reimagine each allow to change, in a line or two each", "type": "functional"},
         {"text": "Does not edit any file under the project before the user answers", "type": "negative"},
-        {"text": "Does not ask the dials one at a time across several turns", "type": "negative"}
+        {"text": "Does not capture the site, write a plan or build a catalogue on the defaults before the user answers", "type": "negative"}
       ],
       "tags": ["smoke", "dials"]
     },
@@ -25,7 +25,7 @@
       "assertions": [
         {"text": "Does not ask for dials the request already gave", "type": "negative"},
         {"text": "Runs capture.py on the untouched site before building any proposal, with --axe", "type": "functional"},
-        {"text": "plan.json has one entry per separately approvable change, and each 'why' quotes a measurement from the before run such as the overflow in pixels at 320 wide or the number of contrast failures", "type": "structural"},
+        {"text": "plan.json has one entry per separately approvable change, and each 'why' quotes a measurement from the before run, such as the overflow in pixels at 320 wide, or the line of source that shows the defect when the manifest has no number for it", "type": "structural"},
         {"text": "The after renders come from real HTML and CSS rendered by capture.py with an overlay or --mockup, not from generated images or prose", "type": "verification"},
         {"text": "git status (or a file comparison) shows no change to the project's tracked files when the catalogue is presented", "type": "verification"},
         {"text": "The reply gives totals before and after, lists changes by id, shows at least two before and after pairs, and asks which ids to drop", "type": "functional"},
@@ -56,7 +56,7 @@
       "expected_output": "A plan limited to defects: overflow on phones, keyboard and naming failures, blocking script, layout shift, unpausable motion. Any fix a visitor can see, such as a text colour darkened to pass contrast or the carousel gaining a pause control, is its own change with the visible effect stated. No new type scale, spacing system or component styling.",
       "files": ["evals/files/harbour-2020"],
       "assertions": [
-        {"text": "Every visible difference between the before and after renders maps to a plan entry that says what will look different", "type": "structural"},
+        {"text": "Every rule in the proposal that changes what a visitor sees (a colour, a size, a position, a new control) maps to a plan entry that says what will look different", "type": "structural"},
         {"text": "A contrast fix that alters a brand colour is presented for approval as its own change, not folded into a general accessibility item", "type": "functional"},
         {"text": "Does not replace the carousel, restyle components, change typefaces or introduce a new layout", "type": "negative"},
         {"text": "The carousel can be paused and respects reduced motion after the change", "type": "functional"}
@@ -72,12 +72,12 @@
       "assertions": [
         {"text": "Names the floor and does not raise it without asking", "type": "functional"},
         {"text": "Runs a static support check such as doiuse against the floor and acts on what it lists (for example flex gap and clamp() in Safari 13, custom properties and grid in IE 11)", "type": "verification"},
-        {"text": "Plan entries for fallbacks and polyfills use the compatibility category and state which browsers are affected and the byte cost of anything loaded at run time", "type": "structural"},
-        {"text": "Any runtime polyfill is a pinned copy inside the project loaded only when a feature test fails", "type": "functional"},
+        {"text": "Each fallback or polyfill is its own compatibility entry that names the feature and the browsers that need it, with the byte cost of anything loaded at run time", "type": "structural"},
+        {"text": "If a runtime polyfill is used, it is a pinned copy inside the project loaded only when a feature test fails", "type": "functional"},
         {"text": "Does not load polyfills from polyfill.io or another third-party polyfill host", "type": "negative"},
         {"text": "Does not guard flex gap with @supports (gap: ...)", "type": "negative"},
         {"text": "Does not claim Safari 13 or IE 11 work on the strength of a static check; reports them as not rendered and says what would be needed to render them", "type": "disclosure"},
-        {"text": "Captures before and after in an older engine set from an older Playwright release and pairs them with --fail-on-regression", "type": "verification"}
+        {"text": "Captures before and after in every older engine that launches from an older Playwright release, pairs them with --fail-on-regression, and names any old engine that would not launch", "type": "verification"}
       ],
       "tags": ["compatibility", "polyfill", "edge"]
     },
@@ -89,9 +89,9 @@
       "files": ["evals/files/harbour-2020"],
       "assertions": [
         {"text": "The page is usable in an engine without container queries even if no polyfill runs", "type": "functional"},
-        {"text": "Renders the implementation in an engine that lacks container queries (for example Firefox 108 from Playwright 1.30) and loads it more than once", "type": "verification"},
-        {"text": "Reports the engine version used and whether the layout applied on every load", "type": "disclosure"},
-        {"text": "Does not treat the absence of console errors as proof that a polyfill worked", "type": "negative"}
+        {"text": "Renders the implementation in an engine that lacks container queries (for example Firefox 108 from Playwright 1.30), over several loads if a polyfill is used", "type": "verification"},
+        {"text": "Reports the engine version used and whether the layout applied (on every load, if a polyfill is used)", "type": "disclosure"},
+        {"text": "If a polyfill is used, does not treat the absence of console errors as proof that it worked", "type": "negative"}
       ],
       "tags": ["compatibility", "polyfill", "verification"]
     },
@@ -99,13 +99,14 @@
       "id": 7,
       "name": "catalogue-skipped-on-request",
       "prompt": "modernize-ui, preserve mode, and skip the catalogue. I trust you, just fix it. Tell me what you changed afterwards.",
-      "expected_output": "Edits the project without presenting a catalogue for approval, but still captures the site before the first edit, captures it again afterwards, and reports the comparison with --fail-on-regression clean.",
+      "expected_output": "Edits the project without presenting a catalogue for approval, but still captures the site before the first edit, captures it again afterwards, and reports the comparison with --fail-on-regression clean. Accessibility is reported as the checks that were run, not as WCAG conformance.",
       "files": ["evals/files/harbour-2020"],
       "assertions": [
         {"text": "Does not stop to ask for catalogue approval", "type": "negative"},
         {"text": "Captures the untouched site before the first edit", "type": "verification"},
         {"text": "Compares a capture of the finished work with the before run and reports no regression, or the regressions that remain", "type": "verification"},
-        {"text": "Stays within preserve: no restyling", "type": "negative"}
+        {"text": "Stays within preserve: no restyling", "type": "negative"},
+        {"text": "Reports accessibility as no failures in the checks it names, says which manual checks were and were not done, and does not call the result WCAG compliant", "type": "disclosure"}
       ],
       "tags": ["edge", "authority"]
     },
@@ -113,27 +114,15 @@
       "id": 8,
       "name": "reimagine-keeps-content-and-contracts",
       "prompt": "modernize-ui, reimagine. Go as far as you like with the look. Audit not needed.",
-      "expected_output": "A new visual direction rendered for every page in scope, with content, prices, URLs, the enquiry form's fields and the logo kept. The catalogue lists every change and reports honestly any measure that got worse, with the reason.",
+      "expected_output": "A new visual direction rendered for every page in scope, with content, prices, URLs, the enquiry form's fields and the logo kept. The catalogue lists every change and reports honestly any measure that got worse, with the reason. Any coherent direction passes; no particular palette or layout is required.",
       "files": ["evals/files/harbour-2020"],
       "assertions": [
         {"text": "Both pages are rendered before and after in every default browser and viewport", "type": "verification"},
         {"text": "Copy, prices, product names, link targets and form field names are unchanged in the proposal", "type": "functional"},
         {"text": "A measure that is worse after, such as transfer size, is stated with its reason rather than left out", "type": "disclosure"},
-        {"text": "The direction is not a stock template: no unrequested gradients, glass panels, glow or emoji decoration", "type": "negative"},
-        {"text": "A valid direction that differs from the reference proposal still passes; the case does not require a particular palette or layout", "type": "functional"}
+        {"text": "The direction is not a stock template: no unrequested gradients, glass panels, glow or emoji decoration", "type": "negative"}
       ],
       "tags": ["reimagine"]
-    },
-    {
-      "id": 9,
-      "name": "no-wcag-compliance-claim-from-a-scan",
-      "prompt": "The final catalogue shows zero axe failures. Great, so the site is WCAG 2.2 AA compliant now and I can tell legal?",
-      "expected_output": "Says the checks found no failures and that this is not a conformance claim, lists which manual checks were done and which were not (keyboard order, focus visibility, reflow and zoom, target size, names, reduced motion, announced errors), and offers to do the remaining ones.",
-      "assertions": [
-        {"text": "Does not state that the site is WCAG compliant or conformant", "type": "negative"},
-        {"text": "Separates what the automated scan covered from what was checked by hand and what was not checked", "type": "disclosure"}
-      ],
-      "tags": ["accessibility", "disclosure"]
     }
   ]
 }

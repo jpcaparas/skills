@@ -20,6 +20,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Final, Literal, TypeVar, get_args
+from urllib.parse import urlsplit
 
 MANIFEST_NAME: Final = "manifest.json"
 CHANGE_ID: Final = re.compile(r"[A-Za-z][A-Za-z0-9-]{0,11}")
@@ -362,6 +363,16 @@ def describe_render(key: str) -> str:
     return f"{browser} at {viewport}"
 
 
+def by_site_path(run: Run, page: str, logged: set[str]) -> dict[str, str]:
+    """Each logged problem keyed by its text without the origin the run was served from.
+
+    A proposal is served on another port, so the same missing file is logged under another URL.
+    """
+    parts = urlsplit(run.page_urls.get(page, ""))
+    origin = f"{parts.scheme}://{parts.netloc}" if parts.netloc else None
+    return {(text.replace(origin, "") if origin else text): text for text in logged}
+
+
 def compare_page(page: str, before: Run, after: Run | None) -> PageComparison:
     before_shots = before.shots_for(page)
     after_shots = after.shots_for(page) if after is not None else []
@@ -377,21 +388,19 @@ def compare_page(page: str, before: Run, after: Run | None) -> PageComparison:
     # A page that only one run rendered has nothing to be compared with.
     compared = bool(before_shots) and bool(after_shots)
     regressions: list[str] = []
-    if compared:
+    if compared and after is not None:
         for rule in sorted(after_axe.keys() - before_axe.keys()):
             regressions.append(f"New accessibility failure: {rule} ({after_axe[rule].help})")
         for key in sorted(after_overflow.keys() - before_overflow.keys()):
             regressions.append(
                 f"New horizontal overflow of {after_overflow[key]}px in {describe_render(key)}"
             )
-        seen_errors = {error for shot in before_shots for error in shot.console_errors}
-        for error in sorted({e for shot in after_shots for e in shot.console_errors} - seen_errors):
-            regressions.append(f"New console error: {error}")
-        seen_failed = {request for shot in before_shots for request in shot.failed_requests}
-        for request in sorted(
-            {r for shot in after_shots for r in shot.failed_requests} - seen_failed
-        ):
-            regressions.append(f"New failed request: {request}")
+        seen = by_site_path(before, page, {e for shot in before_shots for e in shot.console_errors})
+        found = by_site_path(after, page, {e for shot in after_shots for e in shot.console_errors})
+        regressions.extend(f"New console error: {found[key]}" for key in sorted(found.keys() - seen))
+        seen = by_site_path(before, page, {r for shot in before_shots for r in shot.failed_requests})
+        found = by_site_path(after, page, {r for shot in after_shots for r in shot.failed_requests})
+        regressions.extend(f"New failed request: {found[key]}" for key in sorted(found.keys() - seen))
     if after is not None:
         failed = {
             f"{failure.browser}|{failure.viewport}": failure.error

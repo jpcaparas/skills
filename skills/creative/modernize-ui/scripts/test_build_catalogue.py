@@ -74,6 +74,7 @@ def write_run(
     failures: tuple[Entry, ...] = (),
     viewports: tuple[str, ...] | None = None,
     browsers: dict[str, str | None] | None = None,
+    origin: str = "http://localhost:3000",
 ) -> Path:
     """Write a capture.py run: a manifest and a file for each screenshot it names."""
     directory.mkdir(parents=True)
@@ -88,7 +89,7 @@ def write_run(
         "browsers": browsers or {str(entry["browser"]): "151.0" for entry in rendered},
         "viewports": list(viewports or dict.fromkeys(str(entry["viewport"]) for entry in rendered)),
         "pages": [
-            {"id": page, "url": f"http://localhost:3000/{page}", "prepare": None} for page in pages
+            {"id": page, "url": f"{origin}/{page}", "prepare": None} for page in pages
         ],
         "shots": shots,
         "failures": list(failures),
@@ -203,6 +204,45 @@ class ComparingAPageAcrossTwoRuns(TemporaryDirectoryTest):
             comparison.regressions,
             ("New console error: cart is not defined", "New failed request: 404 /fonts/inter.woff2"),
         )  # fmt: skip
+
+    def test_resource_already_missing_is_not_new_when_the_proposal_is_served_elsewhere(self) -> None:
+        site, proposal = "http://localhost:3000", "http://localhost:8102"
+        before = write_run(
+            self.tmp / "before",
+            [
+                shot(
+                    "home",
+                    console_errors=(f"Failed to load resource: 404 ({site}/favicon.ico)",),
+                    failed_requests=(f"404 {site}/favicon.ico", "404 https://cdn.example/a.js"),
+                )
+            ],
+            origin=site,
+        )
+        after = write_run(
+            self.tmp / "after",
+            [
+                shot(
+                    "home",
+                    console_errors=(f"Failed to load resource: 404 ({proposal}/favicon.ico)",),
+                    failed_requests=(
+                        f"404 {proposal}/favicon.ico",
+                        f"404 {proposal}/fonts/inter.woff2",
+                        "404 https://cdn.example/b.js",
+                    ),
+                )
+            ],
+            origin=proposal,
+        )
+
+        comparison = compare_page("home", load_run(before), load_run(after))
+
+        self.assertEqual(
+            comparison.regressions,
+            (
+                f"New failed request: 404 {proposal}/fonts/inter.woff2",
+                "New failed request: 404 https://cdn.example/b.js",
+            ),
+        )
 
     def test_render_the_second_run_lacks_is_reported_once_with_its_cause(self) -> None:
         before = [
