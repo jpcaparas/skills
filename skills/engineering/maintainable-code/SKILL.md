@@ -1,6 +1,6 @@
 ---
 name: maintainable-code
-description: "Passive: use when writing, refactoring or reviewing production source, jobs, webhooks, APIs, CI or config. Covers naming, decomposition, comments, safe defaults, idempotency, bounded retries, queue recovery, observability, dependency boundaries and quality gates. Not for disposable scripts."
+description: "Passive: use when writing, refactoring or reviewing production source, jobs, webhooks, APIs, CI or config. Covers naming, decomposition, comments, safe defaults, idempotency, bounded retries, queue recovery, observability, dependency boundaries and quality gates, and turning a recurring mistake or session learning into a validator, normalizer, fixture or CI check. Not for disposable scripts."
 compatibility: "Optional smell-scanner scripts need python3."
 ---
 
@@ -43,6 +43,10 @@ Use the least powerful test double that proves the behaviour: a stub for canned 
 ## Defaults and quality gates
 
 Read `references/guardrails-and-quality-gates.md` when choosing strict runtime defaults, environment-scoped safety rails, dangerous operations, compatibility policy or repository quality gates. The rules that matter: dangerous capabilities are off by default and a `force` flag skips only the prompt, never authorization, validation or recovery; configured, applicable, selected and applied are different states; a stricter default is a behaviour migration to inventory and stage; provide one non-mutating check command composing format, lint, analysis, safe refactor dry-run and tests, and test the lowest supported dependency combination as well as the current one.
+
+## Recurring mistakes
+
+When the same mistake keeps coming back, or the user asks to codify a learning, read `references/deterministic-checks.md`. Convert it into a check only when it reduces to an invariant code can inspect; enforce it with the smallest mechanism the repository already has (formatter, schema, linter, check mode) before writing a new one, and leave taste as review guidance.
 
 ## Reviewing and plans
 

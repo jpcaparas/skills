@@ -1,9 +1,4 @@
----
-name: heuristic-to-deterministic
-description: "Converts repeated heuristics and session learnings into deterministic checks: validators, normalizers, generators, fixtures, manifests, hook or CI adapters. Use when a mistake keeps recurring and has a measurable invariant. Not for brainstorming or one-off edits."
----
-
-# Heuristic to Deterministic
+# Turning a recurring mistake into a deterministic check
 
 Write the observed failure as one sentence, reduce it to an inspectable invariant (file exists, width equals 480, command appears before image, runtime supports a flag), then pick the smallest mechanism that enforces that invariant and leaves unrelated choices open.
 

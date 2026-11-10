@@ -76,16 +76,6 @@ Passive performance skill built on Jarred Sumner's (Bun) data-oriented design pr
 
 Production skill for surgically explaining codebases, subsystems, and feature flows in accessible language, using grounded real-world analogies and concrete file anchors without flattening the technical truth.
 
-#### `heuristic-to-deterministic`
-
-`npx skills add jpcaparas/skills --skill heuristic-to-deterministic`
-
-<p align="center">
-  <img src="skills/engineering/heuristic-to-deterministic/skill-card.png" alt="16-bit side-scrolling pixel art badge for heuristic-to-deterministic" width="480">
-</p>
-
-Production skill for turning session learnings, repeated heuristics, and manual review habits into deterministic scripts, validators, normalizers, fixtures, CI checks, and hook-ready workflows that future agents can reuse instead of guessing.
-
 #### `idiomatic`
 
 `npx skills add jpcaparas/skills --skill idiomatic`
@@ -124,7 +114,7 @@ Explicitly invoked audits for applications without Jev: scrape live documentatio
   <img src="skills/engineering/maintainable-code/skill-card.png" alt="16-bit side-scrolling pixel art badge for maintainable-code" width="480">
 </p>
 
-Passive production skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, resilient to production failures (jobs, queues, retries, observability), and easy to isolate in tests through replaceable dependency boundaries.
+Passive production skill for keeping generated code maintainable, properly decomposed, strongly typed where the codebase supports it, resilient to production failures (jobs, queues, retries, observability), and easy to isolate in tests through replaceable dependency boundaries. It also covers turning a recurring mistake into a validator, normalizer, fixture or CI check.
 
 #### `ripgrep`
 
