@@ -241,7 +241,7 @@ class DeepSeekHelperTest(unittest.TestCase):
         result_ = self.run_helper("search", "rust")
         self.assertEqual(result_.returncode, 1)
         self.assertEqual(len(self.searches()), 4)
-        self.assertIn("5 Search and 5 Fetch requests per second", result_.stderr)
+        self.assertIn("per-second Search and Fetch limit shared across all keys", result_.stderr)
 
     def test_insufficient_balance_is_not_retried(self) -> None:
         StubDeepSeek.replies["/v1/tools/fetch"] = [(402, error("Insufficient Balance"))]
@@ -266,7 +266,7 @@ class DeepSeekHelperTest(unittest.TestCase):
         self.assertIn("'query' must not be empty", payload["runs"][3]["error"])
         self.assertIn("1 of 4 queries failed", result_.stderr)
         starts = [r["at"] for r in self.searches()]
-        # Unpaced Promise.all bursts hit the 5 QPS limit live (10 of 15 concurrent searches got 429).
+        # Unpaced Promise.all bursts hit the account limit live on 2026-10-18 (10 of 15 concurrent searches got 429).
         self.assertTrue(all(later - earlier >= 0.2 for earlier, later in zip(starts, starts[1:])), starts)
 
     def test_batch_validates_every_query_before_spending(self) -> None:

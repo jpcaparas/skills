@@ -23,7 +23,7 @@ Record source status and deployed status separately, for example `source: pass; 
 
 Capture homepage status, content type and `Link` headers; `/robots.txt`, `/sitemap.xml`, `/llms.txt` and `/llms-full.txt` when relevant; `Accept: text/markdown` behaviour on representative pages (check raw headers and returned content type); `.well-known` documents; auth redirects; WebMCP registration in a rendered browser. Keep verification read-only: no form submissions, mutating tools, weakened secure headers or bypassed access controls to get a pass.
 
-`python3 <skill-dir>/scripts/scan_site.py --url https://example.com --output scan-results.json` POSTs to `https://isitagentready.com/api/scan` and returns `level`, `levelName`, `checks`, `nextLevel` (shape verified against example.com on 2026-04-19). Submitting a URL discloses it to a third party: get consent for private, staging, internal or credential-bearing targets, and never send credentials, cookies or signed tokens. Without consent, use direct checks and a labelled source assessment.
+`python3 <skill-dir>/scripts/scan_site.py --url https://example.com --output scan-results.json` POSTs to `https://isitagentready.com/api/scan` and returns `level`, `levelName`, `checks`, `nextLevel` (shape verified against example.com on 2026-04-19 and again on 2026-11-10: `level`, `levelName`, `checks`, `nextLevel` still present, plus `isCommerce` and `commerceSignals`, and new check keys listed in `references/signal-map.md`). Submitting a URL discloses it to a third party: get consent for private, staging, internal or credential-bearing targets, and never send credentials, cookies or signed tokens. Without consent, use direct checks and a labelled source assessment.
 
 ## Searching the repo
 

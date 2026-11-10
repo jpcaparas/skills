@@ -1,4 +1,4 @@
-# Exa Pricing (2026-10-27)
+# Exa Pricing (2026-10-27; re-read 2026-11-10, only Monitors changed)
 
 Sources: [pricing](https://exa.ai/docs/admin/pricing), [billing and rate limits](https://exa.ai/docs/admin/billing), [search quickstart](https://exa.ai/docs/search/quickstart), [Agent quickstart](https://exa.ai/docs/agent/quickstart), [Exa Connect](https://exa.ai/docs/agent/connect/overview), [monitors](https://exa.ai/docs/monitors/quickstart), [batch](https://exa.ai/docs/batch/quickstart), [x402](https://exa.ai/docs/integrations/payments/x402/quickstart), [error codes](https://exa.ai/docs/admin/error-codes), and the OpenAPI spec (`https://exa.ai/docs/exa-spec.yaml`). "Live" marks a figure confirmed by the `costDollars` of a real request on 2026-10-27; everything else is documentation.
 
@@ -29,7 +29,7 @@ Base URL `https://api.exa.ai`, header `x-api-key: $EXA_API_KEY` (or `Authorizati
 | AI page summaries | `contents.summary` on `/search` | $1 / 1K pages | 5 → +$0.005, 15 → +$0.015 |
 | Contents | `POST /contents` | $1 / 1K pages **per content type** (`text`, `highlights`, `summary`) | 1, 2, 3 types on one page → $0.001, $0.002, $0.003 |
 | Answer | `POST /answer` (also `/chat/completions` with `model: "exa"`) | $5 / 1K | $0.005 for `exa`, `exa-pro`, `exa-research`, `exa-fast` |
-| Monitors | `POST /monitors` (per run) | $15 / 1K runs; +$1 / 1K results above 10; +$1 / 1K summaries | not measurable: run objects carry no cost |
+| Monitors | `POST /monitors` (per run) | $2 / 1K runs (was $15 in the 2026-10-27 snapshot); +$1 / 1K results above 10; +$1 / 1K summaries | not measurable: run objects carry no cost |
 | Agent | `POST /agent/runs` | see [Agent](#agent) | |
 | Batch | `POST /batches` (Enterprise beta, header `Exa-Beta: batches-2026-06-06`) | no documented price or discount; items bill at their endpoint's rate (inferred) | 403 `FEATURE_DISABLED` on pay-as-you-go |
 | Websets | `https://api.exa.ai/websets/v0/...` | separate Websets plan credits; per-credit prices only behind login | not tested |

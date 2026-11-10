@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/password-managers/
 
 Branch: secrets
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `704a45881228459527c2c76fe674ab6014da6e3f450b72d2e84b07ed08b06a83`
+Article SHA-256: `b74f9fc0ec501acf60d87f6f2d3d34ce8ed9afe3ee626fd0289ed8abab447121`
 
 ---
 
@@ -18,14 +18,14 @@ When chezmoi applies a template with a secret referenced from a password manager
 
 Example
 
-Here's a practical example of a `.zshrc.tmpl` file that retrieves an CloudFlare API token from 1Password while maintaining other standard shell configurations:
+Here's a practical example of a `.zshrc.tmpl` file that retrieves a Cloudflare API token from 1Password while maintaining other standard shell configurations:
 
 ```
 # set up $PATH
 # …
 
 # Cloudflare API Token retrieved from 1Password for use with flarectl
-export CF_API_TOKEN='{{ onepasswordRead "op://Personal/cloudlfare-api-token/password" }}'
+export CF_API_TOKEN='{{ onepasswordRead "op://Personal/cloudflare-api-token/password" }}'
 
 # set up aliases and useful functions
 ```

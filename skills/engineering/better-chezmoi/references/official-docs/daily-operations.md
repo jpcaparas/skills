@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/daily-operations/
 
 Branch: daily
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `c91e47844c491f76d4c8d7d67a0d8109577068828062d7b75121809b96bbb0a9`
+Article SHA-256: `23668d269a0710ad36f42639b94c116a047eb3bf201417e7f7b3147f63f3a23e`
 
 ---
 
@@ -20,7 +20,7 @@ Edit a dotfile with:
 chezmoi edit $FILENAME
 ```
 
-This will edit `$FILENAME`'s source file in your source directory. chezmoi will not make any changes to the actual dotfile until you run `chezmoi apply`.
+This will edit `$FILENAME`'s source file in your source directory. chezmoi will not make any changes to the actual dotfile until you run [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) .
 
 To automatically run `chezmoi apply` when you quit your editor, run:
 
@@ -34,9 +34,19 @@ To automatically run `chezmoi apply` whenever you save the file in your editor, 
 chezmoi edit --watch $FILENAME
 ```
 
-You don't have to use `chezmoi edit` to edit your dotfiles. For more information, see [Do I have to use `chezmoi edit` to edit my dotfiles?](https://www.chezmoi.io/user-guide/frequently-asked-questions/usage/#how-do-i-edit-my-dotfiles-with-chezmoi) .
+You don't have to use [`chezmoi edit`](https://www.chezmoi.io/reference/commands/edit/) to edit your dotfiles. For more information, see [Do I have to use `chezmoi edit` to edit my dotfiles?](https://www.chezmoi.io/user-guide/frequently-asked-questions/usage/#how-do-i-edit-my-dotfiles-with-chezmoi) .
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo W->>W: chezmoi edit W->>H: chezmoi apply W->>H: chezmoi edit --apply W->>H: chezmoi edit --watch
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    W->>W: chezmoi edit
+    W->>H: chezmoi apply
+    W->>H: chezmoi edit --apply
+    W->>H: chezmoi edit --watch
+```
 
 ## Pull the latest changes from your repo and apply them
 
@@ -48,7 +58,14 @@ chezmoi update
 
 This runs `git pull --autostash --rebase` in your source directory and then `chezmoi apply`.
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>H: chezmoi update
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>H: chezmoi update
+```
 
 ## Pull the latest changes from your repo and see what would change, without actually applying the changes
 
@@ -68,7 +85,85 @@ chezmoi apply
 
 to apply them.
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>W: chezmoi git pull W-->>H: chezmoi diff W->>H: chezmoi apply
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>W: chezmoi git pull
+    W-->>H: chezmoi diff
+    W->>H: chezmoi apply
+```
+
+## Push all changes in your source state to your repo
+
+You can push all changes in your source state to your repo with a single command:
+
+```
+chezmoi push
+```
+
+By default, [`chezmoi push`](https://www.chezmoi.io/reference/commands/push/) will generate a commit message based on the files changed. You can override this by setting the `git.commitMessageTemplate` configuration variable. For example, to have chezmoi prompt you for a commit message each time, use:
+
+TOML YAML JSON ~/.config/chezmoi/chezmoi.toml
+
+```
+[git]
+    commitMessageTemplate = "{{ promptString \"Commit message\" }}"
+```
+
+~/.config/chezmoi/chezmoi.yaml
+
+```
+git:
+  commitMessageTemplate: '{{ promptString "Commit message" }}'
+```
+
+~/.config/chezmoi/chezmoi.json
+
+```
+{
+    "git": {
+        "commitMessageTemplate": "{{ promptString \"Commit message\" }}"
+    }
+}
+```
+
+If your commit message is longer than fits in a string then you can set `git.commitMessageTemplateFile` to specify a path to the commit message template relative to the source directory, for example:
+
+TOML YAML JSON ~/.config/chezmoi/chezmoi.toml
+
+```
+[git]
+    commitMessageTemplateFile = ".commit_message.tmpl"
+```
+
+~/.config/chezmoi/chezmoi.yaml
+
+```
+git:
+  commitMessageTemplateFile: .commit_message.tmpl
+```
+
+~/.config/chezmoi/chezmoi.json
+
+```
+{
+    "git": {
+        "commitMessageTemplateFile": ".commit_message.tmpl"
+    }
+}
+```
+
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    W->>R: chezmoi push
+```
 
 ## Automatically commit and push changes to your repo
 
@@ -103,74 +198,24 @@ git:
 
 Whenever a change is made to your source directory, chezmoi will commit the changes with an automatically-generated commit message (if `autoCommit` is true) and push them to your repo (if `autoPush` is true). `autoPush` implies `autoCommit`, i.e. if `autoPush` is true then chezmoi will auto-commit your changes. If you only set `autoCommit` to true then changes will be committed but not pushed.
 
-By default, `autoCommit` will generate a commit message based on the files changed. You can override this by setting the `git.commitMessageTemplate` configuration variable. For example, to have chezmoi prompt you for a commit message each time, use:
-
-TOML YAML JSON ~/.config/chezmoi/chezmoi.toml
-
-```
-[git]
-    autoCommit = true
-    commitMessageTemplate = "{{ promptString \"Commit message\" }}"
-```
-
-~/.config/chezmoi/chezmoi.yaml
-
-```
-git:
-  autoCommit: true
-  commitMessageTemplate: '{{ promptString "Commit message" }}'
-```
-
-~/.config/chezmoi/chezmoi.json
-
-```
-{
-    "git": {
-        "autoCommit": true,
-        "commitMessageTemplate": "{{ promptString \"Commit message\" }}"
-    }
-}
-```
-
-If your commit message is longer than fits in a string then you can set `git.commitMessageTemplateFile` to specify a path to the commit message template relative to the source directory, for example:
-
-TOML YAML JSON ~/.config/chezmoi/chezmoi.toml
-
-```
-[git]
-    autoCommit = true
-    commitMessageTemplateFile = ".commit_message.tmpl"
-```
-
-~/.config/chezmoi/chezmoi.yaml
-
-```
-git:
-  autoCommit: true
-  commitMessageTemplateFile: .commit_message.tmpl
-```
-
-~/.config/chezmoi/chezmoi.json
-
-```
-{
-    "git": {
-        "autoCommit": true,
-        "commitMessageTemplateFile": ".commit_message.tmpl"
-    }
-}
-```
-
 Be careful when using `autoPush`. If your dotfiles repo is public and you accidentally add a secret in plain text, that secret will be pushed to your public repo.
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo W->>L: autoCommit W->>R: autoPush
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    W->>L: autoCommit
+    W->>R: autoPush
+```
 
 ## Install chezmoi and your dotfiles on a new machine with a single command
 
-chezmoi's install script can run `chezmoi init` for you by passing extra arguments to the newly installed chezmoi binary. If your dotfiles repo is `github.com/$GITHUB_USERNAME/dotfiles` then installing chezmoi, running `chezmoi init`, and running `chezmoi apply` can be done in a single line of shell:
+chezmoi's install script can run [`chezmoi init`](https://www.chezmoi.io/reference/commands/init/) for you by passing extra arguments to the newly installed chezmoi binary. If your dotfiles repo is `github.com/$YOUR_GITHUB_USERNAME/dotfiles` then installing chezmoi, running `chezmoi init`, and running [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) can be done in a single line of shell:
 
 ```
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply $GITHUB_USERNAME
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --apply $YOUR_GITHUB_USERNAME
 ```
 
 If your dotfiles repo has a different name to `dotfiles`, or if you host your dotfiles on a different service, then see the [reference manual for `chezmoi init`](https://www.chezmoi.io/reference/commands/init/) .
@@ -178,7 +223,16 @@ If your dotfiles repo has a different name to `dotfiles`, or if you host your do
 For setting up transitory environments (e.g. short-lived Linux containers) you can install chezmoi, install your dotfiles, and then remove all traces of chezmoi, including the source directory and chezmoi's configuration directory, with a single command:
 
 ```
-sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --one-shot $GITHUB_USERNAME
+sh -c "$(curl -fsLS https://get.chezmoi.io)" -- init --one-shot $YOUR_GITHUB_USERNAME
 ```
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>W: chezmoi init $GITHUB_USERNAME R->>H: chezmoi init --apply $GITHUB_USERNAME R->>H: chezmoi init --one-shot $GITHUB_USERNAME
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>W: chezmoi init $YOUR_GITHUB_USERNAME
+    R->>H: chezmoi init --apply $YOUR_GITHUB_USERNAME
+    R->>H: chezmoi init --one-shot $YOUR_GITHUB_USERNAME
+```

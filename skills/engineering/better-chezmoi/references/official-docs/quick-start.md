@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/quick-start/
 
 Branch: setup
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `47e2762fb9fde418b3017586292c5c9b5a557943a4393dae5af1906fc12abd65`
+Article SHA-256: `7c08e179b4290b8beadbb37e3ba26b834f0fe4563783e9c6629c9f03658a7ee9`
 
 ---
 
@@ -71,7 +71,7 @@ git commit -m "Initial commit"
 [Create a new repository on GitHub](https://github.com/new) called `dotfiles` and then push your repo:
 
 ```
-git remote add origin git@github.com:$GITHUB_USERNAME/dotfiles.git
+git remote add origin git@github.com:$YOUR_GITHUB_USERNAME/dotfiles.git
 git branch -M main
 git push -u origin main
 ```
@@ -90,14 +90,30 @@ exit
 
 These commands are summarized in this sequence diagram:
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo H->>L: chezmoi init H->>W: chezmoi add $FILE W->>W: chezmoi edit $FILE W-->>H: chezmoi diff W->>H: chezmoi apply H-->>W: chezmoi cd W->>L: git add W->>L: git commit L->>R: git push W-->>H: exit
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    H->>L: chezmoi init
+    H->>W: chezmoi add $FILE
+    W->>W: chezmoi edit $FILE
+    W-->>H: chezmoi diff
+    W->>H: chezmoi apply
+    H-->>W: chezmoi cd
+    W->>L: git add
+    W->>L: git commit
+    L->>R: git push
+    W-->>H: exit
+```
 
 ## Using chezmoi across multiple machines
 
 On a second machine, initialize chezmoi with your dotfiles repo:
 
 ```
-chezmoi init https://github.com/$GITHUB_USERNAME/dotfiles.git
+chezmoi init https://github.com/$YOUR_GITHUB_USERNAME/dotfiles.git
 ```
 
 Hint
@@ -105,7 +121,7 @@ Hint
 Private GitHub repos require other [authentication methods](https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#cloning-with-https-urls) :
 
 ```
-chezmoi init git@github.com:$GITHUB_USERNAME/dotfiles.git
+chezmoi init git@github.com:$YOUR_GITHUB_USERNAME/dotfiles.git
 ```
 
 This will check out the repo and any submodules and optionally create a chezmoi config file for you.
@@ -142,20 +158,32 @@ chezmoi update -v
 
 These commands are summarized in this sequence diagram:
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>W: chezmoi init $REPO W-->>H: chezmoi diff W->>H: chezmoi apply W->>W: chezmoi edit $FILE W->>W: chezmoi merge $FILE R->>H: chezmoi update
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>W: chezmoi init $REPO
+    W-->>H: chezmoi diff
+    W->>H: chezmoi apply
+    W->>W: chezmoi edit $FILE
+    W->>W: chezmoi merge $FILE
+    R->>H: chezmoi update
+```
 
 ## Set up a new machine with a single command
 
 You can install your dotfiles on new machine with a single command:
 
 ```
-chezmoi init --apply https://github.com/$GITHUB_USERNAME/dotfiles.git
+chezmoi init --apply https://github.com/$YOUR_GITHUB_USERNAME/dotfiles.git
 ```
 
 If you use GitHub and your dotfiles repo is called `dotfiles` then this can be shortened to:
 
 ```
-chezmoi init --apply $GITHUB_USERNAME
+chezmoi init --apply $YOUR_GITHUB_USERNAME
 ```
 
 Hint
@@ -163,12 +191,19 @@ Hint
 Private GitHub repos require other [authentication methods](https://docs.github.com/en/get-started/getting-started-with-git/about-remote-repositories#cloning-with-https-urls) :
 
 ```
-chezmoi init --apply git@github.com:$GITHUB_USERNAME/dotfiles.git
+chezmoi init --apply git@github.com:$YOUR_GITHUB_USERNAME/dotfiles.git
 ```
 
 This command is summarized in this sequence diagram:
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>H: chezmoi init --apply $REPO
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>H: chezmoi init --apply $REPO
+```
 
 ## Next steps
 

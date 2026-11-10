@@ -2,7 +2,7 @@
 // Zero-dependency helper for DeepSeek's Search and Fetch APIs (POST /v1/tools/search and
 // /v1/tools/fetch). Both bill $0.75 per 1,000 successful requests; empty searches and failed
 // fetches are free. It validates input locally, normalises dates and duplicate URLs, paces
-// batches under the 5 QPS account limit, and retries 408, 429, and 5xx. See references/api.md.
+// batches at four per second, and retries 408, 429, and 5xx. See references/api.md.
 
 const API_ROOT = (process.env.DEEPSEEK_API_ROOT || "https://api.deepseek.com").replace(/\/+$/, "");
 const REQUEST_TIMEOUT_MS = 90_000;
@@ -14,7 +14,8 @@ const DEFAULT_FETCH_CHARS = 20_000;
 // The documented retry set: wait and retry 408, 429, and 5xx; never retry other 4xx unchanged.
 const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 const RETRY_DELAYS_MS = [1_000, 2_500, 5_000];
-// Search and Fetch each allow 5 requests per second per account, across all keys.
+// Four starts per second stayed under the 5 QPS limit measured on 2026-10-18. The docs listed
+// 100 Search and 25 Fetch QPS on 2026-11-10; that was not re-measured, so the pace is unchanged.
 const BATCH_START_INTERVAL_MS = 250;
 // Non-null `date` values arrive as midnight Beijing time written in UTC (T16:00:00Z the day before).
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;
@@ -181,7 +182,7 @@ function errorHint(status, path) {
         ? "\nHint: DeepSeek could not extract this page. PDFs, images, error pages, dead hosts, and some JavaScript apps fail. Failed fetches are not billed; try another source."
         : "";
     case 429:
-      return "\nHint: the account allows 5 Search and 5 Fetch requests per second across all keys; pace parallel calls.";
+      return "\nHint: the account has a per-second Search and Fetch limit shared across all keys (docs 2026-11-10: 100 and 25); pace parallel calls.";
     default:
       return "";
   }

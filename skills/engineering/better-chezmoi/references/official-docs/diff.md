@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/diff/
 
 Branch: daily
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `13ba0f0c1812b0a89e10e746e66e60eac93b9b7e1ac6deef0d957cb3bbd8bc87`
 

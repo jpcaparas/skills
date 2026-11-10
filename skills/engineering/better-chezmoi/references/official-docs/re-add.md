@@ -4,15 +4,15 @@ Official source: https://www.chezmoi.io/reference/commands/re-add/
 
 Branch: daily
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `1ce428bcde5a2ff0a19a86061d65670ab3216bc704ec9269520dea8077d46c7b`
+Article SHA-256: `36cee08f75084d54948dff26bca80a907ce506d7f6c9de1a7b7d2b9e62f38930`
 
 ---
 
 # `re-add` [target ...]
 
-Re-add modified files in the target state, preserving any `encrypted_` attributes. chezmoi will not overwrite templates, and all entries that are not files are ignored. Directories are recursed into by default.
+Re-add modified files in the target state, preserving any `encrypted_` attributes. chezmoi will not overwrite templates, and all entries that are either externals or not files are ignored. Directories are recursed into by default.
 
 If no target s are specified then all modified files are re-added. If one or more target s are given then only those targets are re-added.
 

@@ -6,7 +6,7 @@
     exa_cost.py estimate monitors monitor.json          # also prints monthly_usd
 
 Offline only. Prints a JSON verdict with a worst-case USD figure and exits 0 (ok),
-2 (warnings: read them), or 3 (blocked: do not send). Prices are the 2026-10-27 snapshot
+2 (warnings: read them), or 3 (blocked: do not send). Prices are the 2026-10-27 snapshot (Monitors re-read 2026-11-10)
 of https://exa.ai/docs/admin/pricing, cross-checked against the costDollars that Exa
 returned in a live spike. Recheck when Exa changes its pricing.
 """
@@ -39,7 +39,7 @@ CONTENTS_PER_PAGE_PER_TYPE = 0.001
 CONTENT_TYPES = ("text", "highlights", "summary")
 MAX_CONTENTS_URLS = 100
 ANSWER_PRICE = 0.005
-MONITOR_RUN = 0.015
+MONITOR_RUN = 0.002
 AGENT_FIXED_EFFORT = {"minimal": 0.012, "low": 0.025, "medium": 0.10, "high": 0.50, "xhigh": 1.00}
 AGENT_METERED_DEFAULT_CAP = {"auto": 5.0, "ultra": 20.0}
 AGENT_BUDGET_RANGE = (1.0, 100.0)

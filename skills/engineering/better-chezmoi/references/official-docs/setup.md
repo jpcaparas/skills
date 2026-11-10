@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/setup/
 
 Branch: setup
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `14ba46c9e626d6a538c389bac3e16c0214857b1a158bd943341257b53c9f2e7c`
+Article SHA-256: `ef7a4dd16fbcb66465897a9283d3ab8b11b58b2f7d773170c13bc1a30d747e37`
 
 ---
 
@@ -28,7 +28,7 @@ chezmoi relies on your version control system and hosted repo to share changes a
 
 ```
 chezmoi cd
-git remote add origin https://github.com/$GITHUB_USERNAME/dotfiles.git
+git remote add origin https://github.com/$YOUR_GITHUB_USERNAME/dotfiles.git
 git push -u origin main
 exit
 ```
@@ -36,7 +36,7 @@ exit
 On another machine you can checkout this repo:
 
 ```
-chezmoi init https://github.com/$GITHUB_USERNAME/dotfiles.git
+chezmoi init https://github.com/$YOUR_GITHUB_USERNAME/dotfiles.git
 ```
 
 You can then see what would be changed:
@@ -54,12 +54,22 @@ chezmoi apply
 The above commands can be combined into a single command to initialize, checkout, and apply:
 
 ```
-chezmoi init --apply --verbose https://github.com/$GITHUB_USERNAME/dotfiles.git
+chezmoi init --apply --verbose https://github.com/$YOUR_GITHUB_USERNAME/dotfiles.git
 ```
 
 These commands are summarized in this sequence diagram:
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>W: chezmoi init $REPO W-->>H: chezmoi diff W->>H: chezmoi apply R->>H: chezmoi init --apply $REPO
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>W: chezmoi init $REPO
+    W-->>H: chezmoi diff
+    W->>H: chezmoi apply
+    R->>H: chezmoi init --apply $REPO
+```
 
 ## Use a private repo to store your dotfiles
 
@@ -73,7 +83,7 @@ When using a private repo on GitHub without `--ssh`, when prompted for a passwor
 
 ## Create a config file on a new machine automatically
 
-`chezmoi init` can also create a config file automatically, if one does not already exist. If your repo contains a file called `.chezmoi.$FORMAT.tmpl` where `$FORMAT` is one of the supported config file formats (`json`, `jsonc`, `toml`, or `yaml`) then `chezmoi init` will execute that template to generate your initial config file.
+[`chezmoi init`](https://www.chezmoi.io/reference/commands/init/) can also create a config file automatically, if one does not already exist. If your repo contains a file called `.chezmoi.$FORMAT.tmpl` where `$FORMAT` is one of the supported config file formats (`json`, `jsonc`, `toml`, or `yaml`) then `chezmoi init` will execute that template to generate your initial config file.
 
 Specifically, if you have `.chezmoi.toml.tmpl` that looks like this:
 
@@ -88,7 +98,7 @@ Specifically, if you have `.chezmoi.toml.tmpl` that looks like this:
 
 Then `chezmoi init` will create an initial `chezmoi.toml` using this template. `promptStringOnce` is a special function that prompts the user (you) for a value if it is not already set in your `data`.
 
-To test this template, use `chezmoi execute-template` with the `--init` and `--promptString` flags, for example:
+To test this template, use [`chezmoi execute-template`][execute-template-command] with the `--init` and `--promptString` flags, for example:
 
 ```
 chezmoi execute-template --init --promptString "Email address=me@home.org" < ~/.local/share/chezmoi/.chezmoi.toml.tmpl

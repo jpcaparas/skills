@@ -12,6 +12,7 @@ Examples are REST JSON/form contracts. Replace symbolic voice IDs with accessibl
 
 | Need | Model/route consideration |
 | --- | --- |
+| Newest highest-quality / real-time models | `eleven_v4` (most expressive, 90+ languages, 10,000-character limit) and `eleven_v4_turbo` (about 100 ms median latency); both listed on the [models page](https://elevenlabs.io/docs/overview/models) on 2026-11-10 and not exercised by this skill, so confirm capabilities and `voice_settings` support before copying v3 or v2.5 settings |
 | Consistent long-form narration | `eleven_multilingual_v2` is the documented HTTP default |
 | Low-latency speech | `eleven_flash_v2_5`; check the voice/model capabilities |
 | Expressive delivery/audio tags | `eleven_v3`; use natural-language tags such as `[whispering]` |
@@ -23,7 +24,7 @@ Examples are REST JSON/form contracts. Replace symbolic voice IDs with accessibl
 
 TTS uses `voice_settings` (e.g. stability, similarity boost, style, speed, speaker boost); controls are model-specific. Discover supported capabilities instead of copying every setting onto v3. Supply `language_code` only where supported; Multilingual v2 does not enforce this parameter. `seed` is best-effort, not deterministic reproduction.
 
-The overview lists v3 5,000, Multilingual v2 10,000, Flash v2.5 40,000 characters per request; prefer discovered `maximum_text_length_per_request`. Avoid chopping a sentence mid-word to meet a limit. For chunk continuity use surrounding `previous_text`/`next_text`, or preceding/following request IDs (up to three on each side); IDs take precedence. Keep continuity within the same compatible voice/model/settings.
+The models page (re-read 2026-11-10) lists v3 5,000, Multilingual v2 10,000, Flash v2.5 40,000 characters per request; prefer discovered `maximum_text_length_per_request`. Avoid chopping a sentence mid-word to meet a limit. For chunk continuity use surrounding `previous_text`/`next_text`, or preceding/following request IDs (up to three on each side); IDs take precedence. Keep continuity within the same compatible voice/model/settings.
 
 Pronunciation is model-specific. V3 does not support SSML `<break>` and documents native slash-delimited IPA; older XML phoneme examples do not imply universal multilingual support. Use dictionaries/aliases where supported, and listen to names/numbers rather than assuming normalization was correct. `apply_text_normalization` is `auto|on|off`; Japanese language normalization can add substantial latency.
 
@@ -75,7 +76,7 @@ Sources: [STS contract](https://elevenlabs.io/docs/api-reference/speech-to-speec
 {"text":"Light rain tapping on a hollow metal roof, no voices or music.","model_id":"eleven_text_to_sound_v2","duration_seconds":4,"loop":true,"prompt_influence":0.3}
 ```
 
-V2 supports loops; duration is 0.5–30 seconds or omitted for automatic selection. Specify the event, environment, texture, perspective, progression and loop requirement rather than a rigid prose template. Listen at the seam to assess whether a requested loop is usable. A low-latency UI cue and a cinematic ambience need different envelopes.
+The models page of 2026-11-10 also lists `eleven_text_to_sound_v3` (closer prompt following); its request contract was not checked here, so keep v2 unless the user asks for v3 and its docs are read. V2 supports loops; duration is 0.5–30 seconds or omitted for automatic selection. Specify the event, environment, texture, perspective, progression and loop requirement rather than a rigid prose template. Listen at the seam to assess whether a requested loop is usable. A low-latency UI cue and a cinematic ambience need different envelopes.
 
 Source: [sound effects](https://elevenlabs.io/docs/api-reference/text-to-sound-effects/convert).
 

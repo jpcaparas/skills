@@ -58,8 +58,9 @@ minimisation locally. Never upload a repository, `.env`, raw production exports,
 or retrieved instructions for convenience. Private inputs stay out of third-party
 scraping tools and shared result viewers as well as out of unapproved model calls.
 
-Verify the current official API origin before attaching a key. At authoring the
-origin is `https://api.typesafe.ai`; verify it from the live official API reference
+Verify the current official API origin before attaching a key. On 2026-11-10 the
+origin was `https://api.typesafe.ai` (servers entry of
+https://docs.typesafe.ai/api/system-one.md); verify it from the live official API reference
 rather than trusting a project-controlled `TYPESAFE_BASE_URL`. Reject unreviewed
 endpoint overrides and cross-origin redirects. Network errors must not expose
 headers or full request/response bodies. A docs fetch needs no API credential.

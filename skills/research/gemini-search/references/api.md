@@ -42,7 +42,7 @@ Google now recommends the Interactions API. The helper uses generateContent for 
 
 Interactions are stored by default (`store: true`); pass `store: false` for one-off calls (no `id` is returned). Agents with `background: true` require `store: true`; delete them with `DELETE /interactions/{id}` after reading.
 
-## Models (2026-10-19)
+## Models (live 2026-10-19; list prices re-read from the [pricing page](https://ai.google.dev/gemini-api/docs/pricing) on 2026-11-10, unchanged)
 
 | Model | Search | URL context | USD per 1M tokens, Standard paid (input / output incl. thinking) | Live latency, one grounded answer |
 | --- | --- | --- | --- | --- |
@@ -59,7 +59,7 @@ Aliases resolved live: `gemini-flash-lite-latest` → `gemini-3.5-flash-lite`, `
 
 ## Billing
 
-- **Search (Gemini 3 and newer):** each executed query; 5,000 free per month shared across all Gemini 3+ models in the project, then $14 per 1,000. Not available on the free tier for most models.
+- **Search (Gemini 3 and newer):** each executed query; 5,000 free per month shared across all Gemini 3+ models in the project, then $14 per 1,000, with a default daily cap of 1,500 search requests per project on the paid tier (per the [pricing page](https://ai.google.dev/gemini-api/docs/pricing#pricing-for-tools) and [grounding docs](https://ai.google.dev/gemini-api/docs/google-search), 2026-11-10; submit an AI Studio request to raise it). Not available on the free tier for most models.
 - **Search content:** not billed as tokens (a grounded call reported 24 prompt tokens).
 - **URL context:** no per-call fee; retrieved content bills as input tokens (one PostgreSQL release page was about 11,000 tokens; RFC 9110 was 91,622; 20 Wikipedia pages were 164,912).
 - **Deep Research:** model tokens at list rates plus each search; see `references/expensive-routes.md`.
@@ -67,7 +67,7 @@ Aliases resolved live: `gemini-flash-lite-latest` → `gemini-3.5-flash-lite`, `
 
 ## Rate limits
 
-Limits are per project, by usage tier, visible in AI Studio. Paid tiers also have rolling 10-minute spend caps ($10 on Tier 1, $50 Tier 2, $200 Tier 3), returned as `429 RESOURCE_EXHAUSTED`. Live on this project: 250 simultaneous Flash-Lite requests and 30 simultaneous grounded calls all succeeded, so the test project sits on a high tier; lower tiers will throttle much sooner. Retry 429 and 5xx with backoff; never retry 400 or 404 unchanged.
+Limits are per project, by usage tier, visible in AI Studio. Paid tiers also have rolling 10-minute spend caps ($10 on Tier 1, $200 on Tier 2 and Tier 3 per the [rate-limits page](https://ai.google.dev/gemini-api/docs/rate-limits), 2026-11-10; the earlier snapshot said $50 for Tier 2), returned as `429 RESOURCE_EXHAUSTED`. Live on this project: 250 simultaneous Flash-Lite requests and 30 simultaneous grounded calls all succeeded, so the test project sits on a high tier; lower tiers will throttle much sooner. Retry 429 and 5xx with backoff; never retry 400 or 404 unchanged.
 
 ## Errors seen
 

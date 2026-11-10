@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/forget/
 
 Branch: recovery
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `3c3f34389fef7ade23a431d368599e85f442ad832fe9ac5410692e0b01849f60`
 

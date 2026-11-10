@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/init/
 
 Branch: setup
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `bf10a3e42b0e094a749126f24b3560f403b941e8723a3b44c2e63da340de1fb3`
 

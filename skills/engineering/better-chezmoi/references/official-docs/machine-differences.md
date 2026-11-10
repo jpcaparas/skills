@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/manage-machine-to-machine-dif
 
 Branch: setup
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `a124d2df8c092f11ef6368b1df334318cc680c7f19c5ad52bf9eee5358abbb84`
+Article SHA-256: `c39c83258f5420161323bc52bbed3062c717a597afe391a60cd85e9c19de9a1f`
 
 ---
 
@@ -107,7 +107,7 @@ chezmoi data
 
 For more advanced usage, you can use the full power of the [`text/template`](https://pkg.go.dev/text/template) language. chezmoi includes all of the text functions from [sprig](http://masterminds.github.io/sprig/) and its own [functions](https://www.chezmoi.io/reference/templates/functions/) for interacting with [password managers](https://www.chezmoi.io/user-guide/password-managers/) .
 
-Templates can be executed directly from the command line, without the need to create a file on disk, with the `execute-template` command, for example:
+Templates can be executed directly from the command line, without the need to create a file on disk, with the [`execute-template` command][execute-template-command], for example:
 
 ```
 chezmoi execute-template "{{ .chezmoi.os }}/{{ .chezmoi.arch }}"

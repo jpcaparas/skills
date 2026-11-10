@@ -1,4 +1,6 @@
-# Parallel Pricing (2026-10-18)
+# Parallel Pricing (2026-10-18; re-read 2026-11-10: all prices and limits below unchanged)
+
+New on the 2026-11-10 pricing page and not covered by the estimator: Place Search (`POST /v1/places/search`, fast $1 / advanced $5 per 1K, up to 20 results, 300 per min) and Decisions (`POST /v1/decisions`, $1 per 1K requests, up to 100 questions, 600 per min).
 
 Sources: [pricing](https://docs.parallel.ai/getting-started/pricing), [parallel.ai/pricing](https://parallel.ai/pricing), [rate limits](https://docs.parallel.ai/getting-started/rate-limits), [search modes](https://docs.parallel.ai/search/modes), [choose a processor](https://docs.parallel.ai/task-api/guides/choose-a-processor), [FindAll pricing](https://docs.parallel.ai/findall-api/core-concepts/findall-generator-pricing), [Monitor quickstart](https://docs.parallel.ai/monitor-api/monitor-quickstart), [FAQs](https://docs.parallel.ai/resources/faqs), [warnings and errors](https://docs.parallel.ai/resources/warnings-and-errors), and the public OpenAPI spec. All figures are documentation; none was billed live for this skill.
 

@@ -8,7 +8,8 @@
 const API_ROOT = (process.env.GEMINI_API_ROOT || "https://generativelanguage.googleapis.com/v1beta").replace(/\/+$/, "");
 const REQUEST_TIMEOUT_MS = 180_000;
 const DEFAULT_MODEL = "gemini-3.1-flash-lite";
-// Paid Standard tier, USD per 1M tokens, valid through 2026 (3.6 and 3.8 Flash double on 2027-01-01).
+// Paid Standard tier, USD per 1M tokens, re-read 2026-11-10 from https://ai.google.dev/gemini-api/docs/pricing: valid through 2026 (3.6 and 3.8 Flash double on 2027-01-01).
+// gemini-4-argon doubles to 4.0/20.0 on 2026-12-01; update GATED_MODELS and its test together then.
 const CHEAP_MODELS = {
   "gemini-3.1-flash-lite": { input: 0.25, output: 1.5 },
   "gemini-3.5-flash-lite": { input: 0.3, output: 2.5 },

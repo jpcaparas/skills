@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/use-scripts-to-perform-action
 
 Branch: automation
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `fe6b451a524747ef21d4f018813e1818d549a15df01eaef23ed5d66079b7e507`
+Article SHA-256: `479ee3da47bac10b9320c594801fa17957494c17bdf80cbfbff627c9ba4c503d`
 
 ---
 
@@ -18,7 +18,7 @@ chezmoi supports scripts that are executed when you run [`chezmoi apply`](https:
 
 Scripts are any file in the source directory with the prefix `run_`, and they are executed in alphabetical order.
 
-- `run_` scripts : These scripts are executed every time you run `chezmoi apply`.
+- `run_` scripts : These scripts are executed every time you run [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) .
 - `run_onchange_` scripts : These scripts are only executed if their content has changed since the last time they were run successfully.
 - `run_once_` scripts : These scripts are executed once for each unique version of the content. If the script is a template, the content is hashed after template execution. chezmoi tracks the content's SHA256 hash and stores it in a database. If the content has been run successfully before (even under a different filename), the script will not run again unless the content itself changes.
 
@@ -68,7 +68,7 @@ chezmoi sets a number of environment variables when running scripts, including `
 
 ## Don't show scripts that would run in `chezmoi diff`/`chezmoi status`
 
-By default, `chezmoi diff` will print the contents of scripts that would be run by `chezmoi apply`. To exclude scripts from the output of `chezmoi diff`, set `diff.exclude` in your configuration file, for example:
+By default, [`chezmoi diff`](https://www.chezmoi.io/reference/commands/diff/) will print the contents of scripts that would be run by [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) . To exclude scripts from the output of `chezmoi diff`, set `diff.exclude` in your configuration file, for example:
 
 TOML YAML JSON ~/.config/chezmoi/chezmoi.toml
 
@@ -97,7 +97,7 @@ diff:
 }
 ```
 
-Similarly, `chezmoi status` will print the names of the scripts that it will execute with the status `R`. This can similarly disabled by setting `status.exclude` to `["scripts"]` in your configuration file.
+Similarly, [`chezmoi status`](https://www.chezmoi.io/reference/commands/status/) will print the names of the scripts that it will execute with the status `R`. This can similarly disabled by setting `status.exclude` to `["scripts"]` in your configuration file.
 
 ## Install packages with scripts
 
@@ -108,7 +108,7 @@ Change to the source directory and create a file called `run_onchange_install-pa
 sudo apt install ripgrep
 ```
 
-The next time you run [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) or [`chezmoi update`](https://www.chezmoi.io/reference/commands/update/) this script will be run. As it has the `run_onchange_` prefix, it will not be run again unless its contents change, for example if you add more packages to be installed.
+The next time you run [`chezmoi apply`][apply] or [`chezmoi update`](https://www.chezmoi.io/reference/commands/update/) this script will be run. As it has the `run_onchange_` prefix, it will not be run again unless its contents change, for example if you add more packages to be installed.
 
 This script can also be a template. For example, if you create `run_onchange_install-packages.sh.tmpl` with the contents:
 
@@ -128,9 +128,9 @@ This will install `ripgrep` on both Debian/Ubuntu Linux systems and macOS.
 
 ## Run a script when the contents of another file changes
 
-chezmoi's `run_` scripts are run every time you run [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) , whereas `run_onchange_` scripts are run only when their contents have changed, after executing them as templates. You can use this to cause a `run_onchange_` script to run when the contents of another file has changed by including a checksum of the other file's contents in the script.
+chezmoi's `run_` scripts are run every time you run [`chezmoi apply`][apply], whereas `run_onchange_` scripts are run only when their contents have changed, after executing them as templates. You can use this to cause a `run_onchange_` script to run when the contents of another file has changed by including a checksum of the other file's contents in the script.
 
-For example, if your [dconf](https://wiki.gnome.org/Projects/dconf) settings are stored in `dconf.ini` in your source directory then you can make `chezmoi apply` only load them when the contents of `dconf.ini` has changed by adding the following script as `run_onchange_dconf-load.sh.tmpl`:
+For example, if your [dconf](https://wiki.gnome.org/Projects/dconf) settings are stored in `dconf.ini` in your source directory then you can make [`chezmoi apply`](https://www.chezmoi.io/reference/commands/apply/) only load them when the contents of `dconf.ini` has changed by adding the following script as `run_onchange_dconf-load.sh.tmpl`:
 
 ~/.local/share/chezmoi/run_onchange_dconf-load.sh.tmpl
 

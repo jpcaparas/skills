@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/configuration-file/hooks/
 
 Branch: automation
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `d43535bfde6ca83ed3b503a26233296547d384a9a460077d0c1595429ca0b9a1`
 

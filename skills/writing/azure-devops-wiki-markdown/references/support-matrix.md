@@ -34,7 +34,7 @@ This matrix is the April 9, 2026 baseline, not a permanent support contract. Whe
 
 | Feature | Wiki | Notes |
 | --- | --- | --- |
-| Mermaid diagrams | yes | Use `::: mermaid` blocks. Treat wiki pages as the safe authoring surface. |
+| Mermaid diagrams | yes | Prefer `::: mermaid` blocks; the Learn page of 2026-11-10 also documents a fenced `mermaid` code block. Treat wiki pages as the safe authoring surface. |
 | Table of contents | yes | Use `[[_TOC_]]`. Case-sensitive. |
 | Table of subpages | yes | Use `[[_TOSP_]]`. Case-sensitive. |
 | Collapsible sections | yes | Use `<details><summary>`. Blank lines matter. |

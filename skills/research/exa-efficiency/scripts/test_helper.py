@@ -178,9 +178,9 @@ class Guards(unittest.TestCase):
     def test_monitor_monthly_cost_and_required_webhook(self) -> None:
         hook = {"url": "https://hooks.example.org/exa"}
         _, hourly = run("monitors", {"search": {"query": "q"}, "webhook": hook, "trigger": {"type": "interval", "period": "1h"}})
-        self.assertEqual((hourly["worst_case_usd"], hourly["monthly_usd"]), (0.015, 10.8))
+        self.assertEqual((hourly["worst_case_usd"], hourly["monthly_usd"]), (0.002, 1.44))
         _, daily = run("monitors", {"search": {"query": "q", "numResults": 20}, "webhook": hook, "trigger": {"period": "1d"}})
-        self.assertEqual(daily["monthly_usd"], 0.75)
+        self.assertEqual(daily["monthly_usd"], 0.36)
         _, manual = run("monitors", {"search": {"query": "q"}, "webhook": hook})
         self.assertEqual(manual["monthly_usd"], 0.0)
         code, _ = run("monitors", {"search": {"query": "q"}})
@@ -201,7 +201,7 @@ class Guards(unittest.TestCase):
         code, status = run("agent/runs/agent_run_7be6bd32b5594f06b3cbc67c5fcd6455", {})
         self.assertEqual((code, status["worst_case_usd"]), (0, 0.0), "polling a run is free")
         _, trigger = run("monitors/01m5xraxx17qk1j04rgyhdapv6/trigger", {})
-        self.assertEqual(trigger["worst_case_usd"], 0.015)
+        self.assertEqual(trigger["worst_case_usd"], 0.002)
 
     def test_responses_has_no_budget_so_the_default_cap_applies(self) -> None:
         code, verdict = run("responses", {"model": "exa-agent", "input": "q", "reasoning": {"effort": "auto"}})

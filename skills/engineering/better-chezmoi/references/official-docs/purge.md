@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/purge/
 
 Branch: recovery
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `8cea99cbb09714df7ce057736c1eff02f152d49c537b8c81d3bd4d97e2fff0e3`
 

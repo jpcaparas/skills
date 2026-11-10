@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/command-line-flags/common/
 
 Branch: commands
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `c0a473995ea196581169844bcf537677d0c3c998bd3b18f1c6d7aee0178ecbb5`
 

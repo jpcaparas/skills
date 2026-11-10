@@ -38,7 +38,7 @@ Each step is either an action step or a shell step:
 ```json
 {
   "name": "Checkout code",
-  "uses": "actions/checkout@v5",
+  "uses": "actions/checkout@v7",
   "with": {
     "lfs": true
   }

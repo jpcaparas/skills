@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/encryption/
 
 Branch: secrets
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `7b29ac3decd66ef0f93495ab594b568ddcb478d8b920ffade9fc91c3dab91f27`
+Article SHA-256: `44060b9329683dc7e09c754ea0496aaf64094830e1695af5bafefa2a740989cd`
 
 ---
 
@@ -22,4 +22,4 @@ Add files to be encrypted with the `--encrypt` flag, for example:
 chezmoi add --encrypt ~/.ssh/id_rsa
 ```
 
-`chezmoi edit` will transparently decrypt the file before editing and re-encrypt it afterwards.
+[`chezmoi edit`](https://www.chezmoi.io/reference/commands/edit/) will transparently decrypt the file before editing and re-encrypt it afterwards.

@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/destroy/
 
 Branch: recovery
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `0b77b9653c28afb20afac71ac46ea07d3a2c162f1eda5f65972aa7eaade1805e`
 

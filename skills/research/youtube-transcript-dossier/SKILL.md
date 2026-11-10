@@ -18,7 +18,7 @@ python3 <skill-dir>/scripts/fetch_transcript.py "<url-or-11-char-id>" [--lang es
 
 Metadata comes from yt-dlp and the transcript from youtube-transcript-api; either can fail alone. Exit codes: 1 bad input, 2 transcript unavailable (disabled, removed, language not found), 3 dependency missing. Manual captions are preferred over auto-generated. JSON keeps exact snippet text and numeric timing; the text format collapses whitespace and rounds timestamps, so use JSON or the original file when exactness matters. Read `references/fetching.md` for input formats, metadata fields and cookie handling.
 
-Age-restricted, members-only or private videos: do not promise access. Cookie support depends on the installed upstream version and was reported unavailable in its README on 2026-09-25. Use only a cookie file the user supplied, never export browser cookies, never print the file, and otherwise ask for a transcript the user is authorized to provide.
+Age-restricted, members-only or private videos: do not promise access. Cookie support depends on the installed upstream version and was reported unavailable in its README on 2026-09-25 and still on 2026-11-10. Use only a cookie file the user supplied, never export browser cookies, never print the file, and otherwise ask for a transcript the user is authorized to provide.
 
 ## Writing the output
 

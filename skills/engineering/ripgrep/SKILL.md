@@ -6,7 +6,7 @@ compatibility: "Requires rg. `-P` needs an rg build with PCRE2 (check `rg --pcre
 
 # ripgrep
 
-Use `rg` instead of `grep` for recursive text search, and `rg --files` instead of `find | grep` for path discovery (`rg --files | rg '(^|/)Dockerfile$'`). Fall back to `grep` only when `rg` is missing or exact POSIX behaviour is the requirement. Read a known file directly rather than searching for it. Behaviour below was verified on ripgrep 15.1.0 (2026-04-10); if an example disagrees with the installed build, check `rg --version` and `rg --help`.
+Use `rg` instead of `grep` for recursive text search, and `rg --files` instead of `find | grep` for path discovery (`rg --files | rg '(^|/)Dockerfile$'`). Fall back to `grep` only when `rg` is missing or exact POSIX behaviour is the requirement. Read a known file directly rather than searching for it. Behaviour below was re-verified on ripgrep 15.2.0 (released 2026-07-15) on 2026-11-10 against the [ripgrep CHANGELOG](https://github.com/BurntSushi/ripgrep/blob/master/CHANGELOG.md) and a local run; if an example disagrees with the installed build, check `rg --version` and `rg --help`.
 
 ## Defaults
 

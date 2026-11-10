@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/source-path/
 
 Branch: commands
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `88b35a0e35a5aed5acf211118e80667ce1b133193b9e74476097bba51698b141`
 

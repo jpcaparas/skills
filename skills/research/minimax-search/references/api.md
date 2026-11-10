@@ -2,7 +2,7 @@
 
 Use this file for the exact MiniMax search contract: what the endpoint accepts, what it returns, how it fails, and how quota and rate limits work.
 
-Observed live on 2026-10-18. Official sources: the [Web search MCP guide](https://platform.minimax.io/docs/m-plan/mcp-guide), the [error codes](https://platform.minimax.io/docs/api-reference/errorcode), and the open-source [MiniMax-Coding-Plan-MCP](https://github.com/MiniMax-AI/MiniMax-Coding-Plan-MCP) and [`mmx` CLI](https://github.com/MiniMax-AI/cli), which both call this endpoint.
+Observed live on 2026-10-18; the documented parts (the `query` contract, the Token Plan key requirement, error codes 1002, 1004, 1008, 2013 and 2049) were re-read on 2026-11-10 and are unchanged, but the burst, quota-percentage and length-limit observations were not re-measured because that spends plan quota. Official sources: the [Web search MCP guide](https://platform.minimax.io/docs/m-plan/mcp-guide), the [error codes](https://platform.minimax.io/docs/api-reference/errorcode), and the open-source [MiniMax-Coding-Plan-MCP](https://github.com/MiniMax-AI/MiniMax-Coding-Plan-MCP) and [`mmx` CLI](https://github.com/MiniMax-AI/cli), which both call this endpoint.
 
 ## Hosts and Authentication
 

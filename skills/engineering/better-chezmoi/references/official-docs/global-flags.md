@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/reference/command-line-flags/global/
 
 Branch: commands
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `30b33cbf9664b504dc8d13103d2d1a5b275c7903d15fda605257633cb6b74b4e`
+Article SHA-256: `19eeed881eec3843b440e5be2728c9221ce76fc5832afb0829c2dbe5a621ae20`
 
 ---
 
@@ -106,6 +106,10 @@ Control the refresh of the externals cache. value can be any of `always`, `auto`
 
 `never` (or any other falsy value accepted by `parseBool`) means only download if no cached external is available.
 
+### `--skip-secrets`
+
+Skip all templates containing secrets.
+
 ### `-S`, `--source` directory
 
 >
@@ -130,7 +134,7 @@ Configuration: `useBuiltinAge`
 
 Use chezmoi's builtin [age encryption](https://age-encryption.org) instead of an external `age` command. value can be `on`, `off`, `auto`, or any boolean-like value recognized by `promptBool`. The default is `auto` which will only use the builtin age if `age.command` cannot be found in `$PATH`.
 
-The builtin `age` command does not support passphrases, symmetric encryption, or the use of SSH keys.
+The builtin [`age` command](https://www.chezmoi.io/reference/commands/age/) does not support passphrases, symmetric encryption, or the use of SSH keys.
 
 ### `--use-builtin-diff` [bool ]
 

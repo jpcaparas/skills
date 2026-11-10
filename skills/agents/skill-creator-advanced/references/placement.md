@@ -130,7 +130,7 @@ Compatibility is a discovery contract, not a branding guess:
 - If neither a target nor a current family resolves compatibility, recommend a shared root and present only neutral alternatives.
 - Other recognized roots may be retained as an existing repository convention or exact current installation family, but the helper does not infer cross-family compatibility for them.
 
-The compatibility table was checked on 2026-07-12 against primary documentation for [GitHub Copilot](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skill-locations), [Gemini CLI](https://geminicli.com/docs/cli/creating-skills/), and [OpenCode](https://opencode.ai/docs/skills/#place-files), plus the current installed Codex environment for its local mapping. Re-check the target harness before expanding it.
+The Copilot, Gemini CLI and OpenCode rows of the compatibility table were re-checked on 2026-11-10 against primary documentation for [GitHub Copilot](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skill-locations), [Gemini CLI](https://geminicli.com/docs/cli/creating-skills/), and [OpenCode](https://opencode.ai/docs/skills/#place-files). The Codex mapping comes from an installed Codex environment observed on 2026-07-12; [OpenAI's Codex skills page](https://developers.openai.com/codex/skills) on 2026-11-10 documents `.agents/skills`, `$HOME/.agents/skills` and `/etc/codex/skills` and lists neither `.codex/skills` root, so confirm on the user's install before placing a skill under `.codex/skills`. Re-check the target harness before expanding it.
 
 ---
 

@@ -13,7 +13,7 @@
 | --- | --- | --- |
 | Lite / Pro / Max | Monthly `TIME_LIMIT` counter; 4,000 calls on Max | 1.2 credits per MCP tool call; 5-hour credits 2k / 12k / 28k; weekly 10k / 60k / 140k |
 
-Peak hours (Mon–Fri 14:00–18:00 UTC+8) may cost more on credit-based plans. Plan details change; trust `quota` and the [coding plan overview](https://docs.z.ai/devpack/overview) over this table.
+Peak hours (Mon–Fri 14:00–18:00 UTC+8) may cost more on credit-based plans. Re-read on 2026-11-10 against the [coding plan overview](https://docs.z.ai/devpack/overview) (5-hour credits 2,000 / 12,000 / 28,000, weekly 10,000 / 60,000 / 140,000, 1.2 credits per MCP call, peak Mon-Fri 14:00-18:00 UTC+8, off-peak model usage at 50%) and the [pricing page](https://docs.z.ai/guides/overview/pricing) (Web Search $0.01 per use): unchanged. The 4,000-call Max figure is an observation from the tested account and was not re-checked. Plan details change; trust `quota` and the [coding plan overview](https://docs.z.ai/devpack/overview) over this table.
 
 ## Hosts
 

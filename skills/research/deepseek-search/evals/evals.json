@@ -153,10 +153,10 @@
       "id": 7,
       "name": "parallel-fan-out",
       "prompt": "Run these 20 DeepSeek searches in parallel as fast as possible: bun 1.3 release, bun 1.3 node compat, bun 1.3 benchmark, ... (17 more similar queries).",
-      "expected_output": "Uses the helper's batch command (or equivalent pacing at about four starts per second) instead of 20 simultaneous calls, explaining the 5 QPS per-account Search limit that made 10 of 15 simultaneous searches fail. Merges duplicate URLs and reports billable requests and approximate cost.",
+      "expected_output": "Uses the helper's batch command (or equivalent pacing at about four starts per second) instead of 20 simultaneous calls, explaining that Search has an account-level rate limit shared by every key: documented as 100 QPS on 2026-11-10, but 5 QPS when last measured on 2026-10-18, when 10 of 15 simultaneous searches failed. Merges duplicate URLs and reports billable requests and approximate cost.",
       "assertions": [
         {
-          "text": "Uses batch or explicit pacing at or below 5 requests per second",
+          "text": "Uses batch or explicit pacing at about four requests per second",
           "type": "functional"
         },
         {
@@ -164,7 +164,7 @@
           "type": "negative"
         },
         {
-          "text": "Mentions the 5 QPS account limit",
+          "text": "Mentions the account-level Search rate limit and that the documented 100 QPS was not re-measured",
           "type": "disclosure"
         }
       ],
@@ -180,14 +180,14 @@
       "id": 8,
       "name": "debug-429s",
       "prompt": "My service fires 12 concurrent requests to api.deepseek.com/v1/tools/search and about half come back 429. I gave each worker its own API key and it didn't help. What's going on?",
-      "expected_output": "Explains the 5 QPS Search limit is per account across all keys (Fetch has its own 5 QPS plus a per-domain limit), that 429 responses carry no Retry-After and are not billed, and recommends a shared rate limiter below 5 per second with exponential backoff on 408, 429, and 5xx only.",
+      "expected_output": "Explains that the Search limit is per account across all keys (Fetch has its own limit plus a per-domain limit), so extra keys cannot help; that 429 responses carry no Retry-After and are not billed; and that the docs listed 100 Search QPS on 2026-11-10 while 5 was measured on 2026-10-18, so the observed 429s, not the documented figure, set the safe rate. Recommends one shared rate limiter below the rate that triggers 429s, with exponential backoff on 408, 429, and 5xx only.",
       "assertions": [
         {
           "text": "States that the limit is per account, so extra keys do not help",
           "type": "verification"
         },
         {
-          "text": "Recommends a shared limiter below 5 requests per second plus backoff",
+          "text": "Recommends one shared limiter below the rate that triggers 429s, plus backoff",
           "type": "functional"
         },
         {

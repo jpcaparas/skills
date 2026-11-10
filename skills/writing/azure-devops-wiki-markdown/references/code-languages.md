@@ -22,7 +22,7 @@ Inference from those sources:
 
 - Treat common aliases as safe defaults.
 - Treat uncommon or third-party aliases as "verify before promising."
-- Do not treat Mermaid as a code-fence language identifier. In Azure DevOps wiki pages, Mermaid is a separate `::: mermaid` block type.
+- Mermaid is not a Highlight.js language, and `::: mermaid` is the preferred block. The Learn page of 2026-11-10 also documents a ```` ```mermaid ```` fence as rendering a diagram in wikis.
 
 ## Recommended Aliases
 
@@ -59,7 +59,7 @@ Highlight.js explicitly documents alias overlaps. Prefer the full language name 
 
 | Query | Current upstream status | Guidance |
 | --- | --- | --- |
-| `mermaid` | not in the current Highlight.js table | Use `::: mermaid` blocks instead of a code-fence tag. |
+| `mermaid` | not in the current Highlight.js table | Prefer `::: mermaid` blocks; a `mermaid` fence is also documented for wikis (2026-11-10). |
 | `kusto` or `kql` | not found in the current upstream table | Prefer `sql` or `plaintext` unless the user has confirmed a working renderer in their environment. |
 | `KaTeX` | documented in Azure DevOps examples for formula syntax | Use `$...$` or `$$...$$` for rendered math. Do not treat `katex` as your default code-fence recommendation. |
 | obscure alias | unknown | Run the helper script and show the result before claiming support. |

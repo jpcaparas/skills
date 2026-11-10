@@ -3,6 +3,8 @@
 This file maps the April 19, 2026 Cloudflare agent-readiness baseline to runtime checks and repository evidence. Table keys, candidate endpoints, scoring weights, and WebMCP API examples describe that snapshot, not permanent requirements. Verify uncertain or changed details against current official Cloudflare and protocol documentation; record the version/date used and distinguish scanner conventions from protocol validity.
 
 
+**Delta re-read on 2026-11-10** (homepage `https://isitagentready.com/` and one `POST /api/scan` of https://example.com): the scanner now has five categories, and its `checks` object has keys `discoverability` (`robotsTxt`, `sitemap`, `linkHeaders`, `dnsAid`), `contentAccessibility` (`markdownNegotiation`), `botAccessControl` (`robotsTxtAiRules`, `contentSignals`, `webBotAuth`), `discovery` (`apiCatalog`, `oauthDiscovery`, `oauthProtectedResource`, `authMd`, `mcpServerCard`, `a2aAgentCard`, `agentSkills`, `webMcp`, `ard`, `personalAgentProtocol`) and `commerce` (`x402`, `mpp`, `ucp`, `acp`, `ap2`). DNS-AID, Auth.md, ARD, the Personal Agent Protocol (Poppy), MPP and AP2 are not in the April tables below; treat them as unmapped and read the scanner's own `requirements` for them. The tables below remain the April baseline.
+
 ## Score Structure
 
 Cloudflare's April 17, 2026 blog groups the score into four dimensions:

@@ -8,7 +8,7 @@ compatibility: "Requires `FIRECRAWL_API_KEY` for live calls (Firecrawl MCP, CLI,
 
 Get the content the user needs from Firecrawl for the fewest credits, and never let one request spend more than the user agreed to.
 
-Prices and behaviour are a **2026-10-18 snapshot** of the billing docs plus paid spikes. Firecrawl changes pricing often (its own pages disagreed on four points that day). When a figure matters and looks stale, check `https://docs.firecrawl.dev/billing` and the response's `creditsUsed`, trust those, and report the discrepancy.
+Prices and behaviour are a **2026-10-18 snapshot** of the billing docs plus paid spikes. The documented plans, credit costs and rate limits were re-read against the billing, pricing and rate-limits pages on 2026-11-10 and are unchanged; the paid-spike observations were not repeated. Firecrawl changes pricing often (its own pages disagreed on four points that day). When a figure matters and looks stale, check `https://docs.firecrawl.dev/billing` and the response's `creditsUsed`, trust those, and report the discrepancy.
 
 ## Hard rules
 

@@ -2,7 +2,7 @@
 
 Use this route only when the user wants a DeepSeek model to decide what to search and to write the answer itself. For research you are doing, call the Search and Fetch APIs directly: they are cheaper, faster, controllable, and return URLs you can cite.
 
-Sources: [Anthropic API guide](https://api-docs.deepseek.com/guides/anthropic_api), [Responses API guide](https://api-docs.deepseek.com/guides/responses_api), [Claude Code integration](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code), [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing). Live notes are from 2026-10-18.
+Sources: [Anthropic API guide](https://api-docs.deepseek.com/guides/anthropic_api), [Responses API guide](https://api-docs.deepseek.com/guides/responses_api), [Claude Code integration](https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code), [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing). Live notes are from 2026-10-18; pricing and billing re-read on 2026-11-10.
 
 ## Route choice
 
@@ -51,7 +51,7 @@ Check that a `web_search_call` item exists before trusting the answer. Without o
 ## Cost
 
 - Model tokens at the pricing page's rates (per 1M tokens, off-peak and peak): `deepseek-flash` input $0.15 and $0.30 on a cache miss, output $0.60 and $1.20; `deepseek-v4-pro` input $0.66 and $1.32, output $1.98 and $3.96. Peak hours are 01:00-04:00 and 06:00-10:00 UTC on weekdays, excluding Chinese public holidays.
-- Searches made by DeepSeek Harness, Claude Code, or Codex on DeepSeek models are free until 00:00 Beijing time on 1 November 2026, then billed at Search API rates. DeepSeek's Claude Code page also notes extra model tokens for summarising results. Whether direct API calls with the server tool are billed per search before November was not verified.
+- Searches made by DeepSeek Harness, Claude Code, or Codex on DeepSeek models were free until 00:00 Beijing time on 1 November 2026 and are now billed at Search API rates (confirmed in the 2026-11-10 Claude Code and Search & Fetch docs). DeepSeek's Claude Code page also notes extra model tokens for summarising results. Whether direct API calls with the server tool are billed per search before November was not verified.
 - Live usage on a Sunday (off-peak): Flash with 3 searches used 15,391 uncached input tokens, 9,984 cached, and 582 output tokens in 4.8 s, about $0.003. V4 Pro with 2 searches used 3,114 uncached, 3,200 cached, and 1,011 output tokens in 10.2 s, about $0.004. One direct search costs $0.00075.
 
 ## Claude Code on DeepSeek

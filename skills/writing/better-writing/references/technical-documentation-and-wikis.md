@@ -119,7 +119,7 @@ A documentation or wiki page passes when:
 
 ## Source adaptation
 
-This reference was reviewed against the following official Google developer documentation style pages on 2026-08-19:
+This reference was reviewed against the following official Google developer documentation style pages on 2026-08-19 (all the URLs below still returned HTTP 200 on 2026-11-10; their text was not re-diffed):
 
 - [About this guide](https://developers.google.com/style/)
 - [Highlights](https://developers.google.com/style/highlights)

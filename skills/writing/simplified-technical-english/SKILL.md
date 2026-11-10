@@ -16,7 +16,7 @@ Evidence mode decides what you may claim: full reference-backed review (official
 
 ## Issue and sources
 
-Issue 9 (15 January 2025) is this skill's dated baseline, not a live status claim. Use the issue governing the user's publication and never silently upgrade or mix rules or dictionary entries across issues. Verify against official ASD/STEMG sources only when issue status is uncertain, later material is supplied or the latest issue is requested. Official sources checked 2026-07-29: https://www.asd-ste100.org/ (home, FAQ, downloads, tools guidance) and the Issue 9 PDF https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf. Do not reproduce or reconstruct the standard, dictionary, examples or cover art; paraphrase and cite.
+Issue 9 (15 January 2025) is this skill's dated baseline, not a live status claim. Use the issue governing the user's publication and never silently upgrade or mix rules or dictionary entries across issues. Verify against official ASD/STEMG sources only when issue status is uncertain, later material is supplied or the latest issue is requested. Official sources checked 2026-07-29 and the home page re-read on 2026-11-10 (still shows Issue 9, January 15, 2025; the Issue 9 PDF URL still returns HTTP 200): https://www.asd-ste100.org/ (home, FAQ, downloads, tools guidance) and the Issue 9 PDF https://www.asd-ste100.org/assets/files/ASD-STE100_ISSUE9.pdf. Do not reproduce or reconstruct the standard, dictionary, examples or cover art; paraphrase and cite.
 
 ## Preserve
 

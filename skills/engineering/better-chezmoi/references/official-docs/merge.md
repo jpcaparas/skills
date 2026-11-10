@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/merge/
 
 Branch: recovery
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `b2b2c489fa066f1600bb9fb0955085b8803dd9dc7be66b2cb3c0f8379ffc3975`
 

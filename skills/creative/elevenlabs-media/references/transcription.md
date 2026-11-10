@@ -21,7 +21,7 @@ Source: [batch endpoint](https://elevenlabs.io/docs/api-reference/speech-to-text
 
 Use `use_multi_channel=true`, `diarize=false` for one known speaker per channel, at most five channels. Ordinary multichannel output wraps `transcripts[]`; `multichannel_output_style=combined` merges timestamped words with `channel_index`. Combined output requires timestamps and is incompatible with entity detection/redaction. Billing scales per channel.
 
-Docs disagree on upload/duration limits: the endpoint schema says under 5 GB while the capability page says 3 GB; multichannel duration guidance also conflicts. Use the stricter documented limit until verified, not the largest number found. Very short input must contain at least 100 ms of audio. For splitting, retain overlap and absolute offsets, deduplicate boundary text deliberately, and disclose that independent chunks may reset speaker IDs.
+Docs disagree on upload/duration limits: on 2026-11-10 the capability page says files up to 3 GB while the endpoint reference says an HTTPS `cloud_storage_url` file must be under 2 GB (the earlier snapshot said 5 GB for the endpoint); multichannel duration guidance also conflicts. Use the stricter documented limit until verified, not the largest number found. Very short input must contain at least 100 ms of audio. For splitting, retain overlap and absolute offsets, deduplicate boundary text deliberately, and disclose that independent chunks may reset speaker IDs.
 
 Source: [multichannel guide](https://elevenlabs.io/docs/eleven-api/guides/how-to/speech-to-text/batch/multichannel-transcription).
 

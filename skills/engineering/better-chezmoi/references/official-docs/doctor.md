@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/doctor/
 
 Branch: recovery
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `09cc254fd84ce53c9bc8312ec2c8173bbb8b53e3c3a031c3e9242154453b21e8`
 

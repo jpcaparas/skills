@@ -131,7 +131,7 @@ Not all fields are present for every video. Check for null/missing before using.
 
 ## Cookie File Support
 
-The [official upstream README's Cookie Authentication section](https://github.com/jdepoix/youtube-transcript-api#cookie-authentication), checked on September 25, 2026, reports cookie authentication unavailable after YouTube API changes. This is a verified documentation baseline, not a permanent version claim; a cookie flag or CLI example alone does not establish working support.
+The [official upstream README's Cookie Authentication section](https://github.com/jdepoix/youtube-transcript-api#cookie-authentication), checked on September 25, 2026 and again on November 10, 2026, reports cookie authentication unavailable after YouTube API changes. This is a verified documentation baseline, not a permanent version claim; a cookie flag or CLI example alone does not establish working support.
 
 The bundled helper attempts `YouTubeTranscriptApi(cookie_path=...)`. If that constructor argument is unsupported, it falls back to an unauthenticated client. It does not pass the cookie file to the separate yt-dlp metadata call. Do not promise age-restricted, members-only, private, or region-locked access.
 

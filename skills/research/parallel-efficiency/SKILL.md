@@ -8,7 +8,7 @@ compatibility: "Requires `PARALLEL_API_KEY` for the REST API, SDK, CLI or Task M
 
 Use the cheapest Parallel product and setting that delivers the answer; never let a default or a forgotten job decide the bill.
 
-Prices and behaviour are a **2026-10-18 snapshot** of Parallel's docs and pricing page plus a context-size spike through the Search MCP. Billing itself was not measured live (no API key was available). When a figure matters and looks stale, check `https://docs.parallel.ai/getting-started/pricing` and the response's `usage` array, trust those, and report the discrepancy.
+Prices and behaviour are a **2026-10-18 snapshot** (prices, processors and rate limits re-read against the pricing and rate-limits pages on 2026-11-10, unchanged) of Parallel's docs and pricing page plus a context-size spike through the Search MCP. Billing itself was not measured live (no API key was available). When a figure matters and looks stale, check `https://docs.parallel.ai/getting-started/pricing` and the response's `usage` array, trust those, and report the discrepancy.
 
 ## Hard rules
 

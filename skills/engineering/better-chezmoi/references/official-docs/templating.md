@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/templating/
 
 Branch: templates
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `ab80b94e23d9aa793cdc6c339bf89745a7b1cc580d7341aeb3710ed0c57f3dc4`
+Article SHA-256: `1098a27c6ef94c5bdfb1d1f59bf0776081f3beb020d6368c2af2e998c1959fcf`
 
 ---
 
@@ -131,7 +131,7 @@ chezmoi edit --apply ~/.zshrc
 
 ## Testing templates
 
-Templates can be tested and debugged with `chezmoi execute-template`, which treats each of its arguments as a template and executes it. The templates are interpreted and the results are output to standard output, making it useful for testing small template fragments:
+Templates can be tested and debugged with [`chezmoi execute-template`](https://www.chezmoi.io/reference/commands/execute-template/) , which treats each of its arguments as a template and executes it. The templates are interpreted and the results are output to standard output, making it useful for testing small template fragments:
 
 ```
 chezmoi execute-template '{{ .chezmoi.hostname }}'
@@ -329,7 +329,7 @@ Create other files using the template `~/.local/share/chezmoi/small-font.yml.tmp
 {{- template "alacritty" 18 -}}
 ```
 
-Here we're calling the shared `alacritty` template with the font size as the `.` value passed in. You can test this with `chezmoi cat`:
+Here we're calling the shared `alacritty` template with the font size as the `.` value passed in. You can test this with [`chezmoi cat`](https://www.chezmoi.io/reference/commands/cat/) :
 
 ```
 $ chezmoi cat ~/small-font.yml
@@ -414,7 +414,7 @@ And connect them with `~/.local/share/chezmoi/small-font.yml.tmpl`:
 
 At the moment, this means that you'll have to duplicate the alacritty data in the config file on every machine, but a feature will be added to avoid this.
 
-#### By passing a dictionary
+#### Bypassing a dictionary
 
 Using the same alacritty configuration as above, you can pass the arguments to it with a dictionary, for example `~/.local/share/chezmoi/small-font.yml.tmpl`:
 

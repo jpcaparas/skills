@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/edit/
 
 Branch: daily
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `e477c574b92dc07fe02e3f59c3ea0f2ce166209be667e6116e698f2342a6eb40`
 

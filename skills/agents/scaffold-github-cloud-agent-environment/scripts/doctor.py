@@ -128,7 +128,7 @@ def doctor(audit: dict[str, Any], symptom: str | None, script_dir: Path) -> dict
                 code="missing-lfs",
                 title="Repository uses Git LFS but checkout does not enable it",
                 evidence=["`.gitattributes` contains `filter=lfs`, but checkout is not configured with `lfs: true`."],
-                fix="Use `actions/checkout@v5` with `lfs: true` in the setup workflow.",
+                fix="Use `actions/checkout@v7` with `lfs: true` in the setup workflow.",
                 can_fix_in_repo=True,
             )
 

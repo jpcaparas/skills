@@ -8,7 +8,7 @@ compatibility: "Requires: `EXA_API_KEY` for the REST API and SDKs; the hosted MC
 
 Use the cheapest Exa endpoint and setting that delivers the answer; never let a default, an uncapped Agent run, or a forgotten monitor decide the bill.
 
-Prices and behaviour are a **2026-10-27 snapshot** of Exa's docs and OpenAPI spec, checked by a live spike of 60 billed requests (about $1.31) whose Search, Contents, Answer, and fixed-effort Agent `costDollars` matched the pricing page. When a figure matters and looks stale, check `https://exa.ai/docs/admin/pricing` and the response's `costDollars`, trust those, and report the discrepancy.
+Prices and behaviour are a **2026-10-27 snapshot** of Exa's docs and OpenAPI spec, checked by a live spike of 60 billed requests (about $1.31) whose Search, Contents, Answer, and fixed-effort Agent `costDollars` matched the pricing page. Re-read against the pricing and billing pages on 2026-11-10: unchanged except Monitors, now $2 per 1K runs (was $15); rate limits unchanged (10 QPS search/answer, 5 deep and agent, 100 contents, 50 active agent runs). Not re-measured live (that spends money). When a figure matters and looks stale, check `https://exa.ai/docs/admin/pricing` and the response's `costDollars`, trust those, and report the discrepancy.
 
 ## Hard rules
 
@@ -41,7 +41,7 @@ Prices and behaviour are a **2026-10-27 snapshot** of Exa's docs and OpenAPI spe
 | People or company lookup | `/search` `lite` with `category: "people"` or `"company"` | $0.004 |
 | One entity's fields, verified | Agent `minimal` or `low` with an `outputSchema` | $0.012–$0.025 |
 | A list of unknown size | Agent `auto` with `budget.maxCostDollars`; a 26-row NZ list cost $0.67 live | ≤ the cap |
-| Watch for new results | Monitor, `1d` or slower, manual-only while testing | $0.015 a run |
+| Watch for new results | Monitor, `1d` or slower, manual-only while testing | $0.002 a run |
 
 Results above 10 add $0.001 each on every search type, billed on results actually returned. Fewer than 10 results cost the same as 10, so do not shrink `numResults` to save money; shrink it to save context. Summaries add $0.001 a result; highlights, bounded text, `outputSchema` on `auto`, `additionalQueries`, `extras`, and live fetching (`maxAgeHours: 0`) added nothing live.
 

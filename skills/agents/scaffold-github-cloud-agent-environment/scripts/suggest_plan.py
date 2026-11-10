@@ -82,7 +82,7 @@ def add_node_steps(
 
     setup_step: dict[str, Any] = {
         "name": "Set up Node.js",
-        "uses": "actions/setup-node@v4",
+        "uses": "actions/setup-node@v7",
         "with": {
             "cache": package_manager,
         },
@@ -133,7 +133,7 @@ def add_python_steps(
 
     setup_step: dict[str, Any] = {
         "name": "Set up Python",
-        "uses": "actions/setup-python@v5",
+        "uses": "actions/setup-python@v7",
         "with": {},
     }
     if python_version_file:
@@ -167,7 +167,7 @@ def add_go_steps(project_root: Path, steps: list[dict[str, Any]]) -> None:
     steps.append(
         {
             "name": "Set up Go",
-            "uses": "actions/setup-go@v5",
+            "uses": "actions/setup-go@v7",
             "with": {
                 "go-version-file": "go.mod",
             },
@@ -199,7 +199,7 @@ def suggest_plan(audit: dict[str, Any]) -> dict[str, Any]:
 
     checkout_step: dict[str, Any] = {
         "name": "Checkout code",
-        "uses": "actions/checkout@v5",
+        "uses": "actions/checkout@v7",
     }
     if audit.get("lfs_detected"):
         checkout_step["with"] = {"lfs": True}

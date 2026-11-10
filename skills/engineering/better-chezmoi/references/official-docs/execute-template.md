@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/execute-template/
 
 Branch: templates
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `83c770a5026999614a14229fa1c6bdf4e7466ec791d3c8750eef5a3a732c90fc`
 

@@ -1,6 +1,6 @@
 # DeepSeek Search and Fetch API contract
 
-Official sources: [Search & Fetch guide](https://api-docs.deepseek.com/guides/search), [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing). "Live" notes are from the 2026-10-18 spike.
+Official sources: [Search & Fetch guide](https://api-docs.deepseek.com/guides/search), [Models & Pricing](https://api-docs.deepseek.com/quick_start/pricing), re-read on 2026-11-10. "Live" notes are from the 2026-10-18 spike.
 
 ## Authentication and hosts
 
@@ -76,7 +76,7 @@ Errors use the OpenAI format: `{"error": {"message": "... (request_id: <uuid>)",
 | 404 | Fetch could not produce Markdown: unavailable URL, site policy, target error, unsupported type such as PDF or image, or nothing extractable | Try another source; not billed |
 | 408 | Reading the request body timed out | Retry with backoff |
 | 413 | Body too large | Shrink the request |
-| 429 | Search or Fetch QPS exceeded | Retry with backoff; pace below 5 per second |
+| 429 | Search or Fetch QPS exceeded | Retry with backoff; the helper paces batches at four per second, well under the documented limits |
 | 500, 504 | Internal error or downstream timeout | Retry with backoff |
 
 Live `429` bodies said "Too many requests. Please pace your requests reasonably..." and carried no `Retry-After` header. The helper waits about 1, 2.5, then 5 seconds.
@@ -85,14 +85,14 @@ Live `429` bodies said "Too many requests. Please pace your requests reasonably.
 
 - $0.75 per 1,000 successful Search requests and the same for Fetch (the Chinese docs list ¥5 per 1,000).
 - Billable means HTTP 200 with a non-empty `results` array, or Fetch content. Empty searches, errors, and timeouts are free. `count` does not change the price.
-- Search and Fetch called by DeepSeek Harness, Claude Code, or Codex on DeepSeek models are free until 00:00 Beijing time on 1 November 2026, then billed per request.
+- Search and Fetch called by DeepSeek Harness, Claude Code, or Codex on DeepSeek models were free until 00:00 Beijing time on 1 November 2026; the 2026-11-10 docs say they are now billed per successful request, including Codex Alpha Search.
 - Deductions come from the granted balance first, then the topped-up balance. Live debits appeared in whole cents and lagged by minutes, so the balance is a coarse spend meter.
 
 ## Rate limits
 
-- Search 5 QPS and Fetch 5 QPS per account, independent of each other, shared by every key on the account, and separate from model concurrency limits.
+- Documented on 2026-11-10: Search 100 QPS and Fetch 25 QPS per account, independent of each other, shared by every key on the account, and separate from model concurrency limits. The 2026-10-18 spike measured 5 and 5 (below); treat the live behaviour as unverified since.
 - Fetch also has an undisclosed per-domain limit. Five concurrent fetches to one domain all succeeded in the spike.
-- Live: 15 simultaneous searches gave 5 successes and 10 `429`s; 8 gave 5 and 3. Fetch bursts behaved the same.
+- Live on 2026-10-18, under the old limits: 15 simultaneous searches gave 5 successes and 10 `429`s; 8 gave 5 and 3. Fetch bursts behaved the same.
 
 ## Balance
 

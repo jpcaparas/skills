@@ -4,9 +4,9 @@ Official source: https://www.chezmoi.io/user-guide/command-overview/
 
 Branch: daily
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
-Article SHA-256: `fc944a2c52c684b4773f6a319a6b0b273261a7614f4ca0c572b6f173a3e80a2c`
+Article SHA-256: `72dc976c73bcb82b425816460d4b192c896d1dfd6cae22c025d7cd26cc25c195`
 
 ---
 
@@ -52,17 +52,30 @@ Article SHA-256: `fc944a2c52c684b4773f6a319a6b0b273261a7614f4ca0c572b6f173a3e80a
 
 [`chezmoi cd`](https://www.chezmoi.io/reference/commands/cd/) opens a subshell in the source directory.
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo H->>W: chezmoi add $FILE W->>W: chezmoi edit $FILE W-->>H: chezmoi status W-->>H: chezmoi diff W->>H: chezmoi apply W->>H: chezmoi edit --apply $FILE H-->>W: chezmoi cd
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    H->>W: chezmoi add $FILE
+    W->>W: chezmoi edit $FILE
+    W-->>H: chezmoi status
+    W-->>H: chezmoi diff
+    W->>H: chezmoi apply
+    W->>H: chezmoi edit --apply $FILE
+    H-->>W: chezmoi cd
+```
 
 ## Using chezmoi across multiple machines
 
 -
 
-[`chezmoi init $GITHUB_USERNAME`](https://www.chezmoi.io/reference/commands/init/) clones your dotfiles from GitHub into the source directory.
+[`chezmoi init $YOUR_GITHUB_USERNAME`](https://www.chezmoi.io/reference/commands/init/) clones your dotfiles from GitHub into the source directory.
 
 -
 
-[`chezmoi init --apply $GITHUB_USERNAME`](https://www.chezmoi.io/reference/commands/init/) clones your dotfiles from GitHub into the source directory and runs `chezmoi apply`.
+[`chezmoi init --apply $YOUR_GITHUB_USERNAME`](https://www.chezmoi.io/reference/commands/init/) clones your dotfiles from GitHub into the source directory and runs `chezmoi apply`.
 
 -
 
@@ -72,7 +85,18 @@ sequenceDiagram participant H as home directory participant W as working copy pa
 
 Use normal git commands to add, commit, and push changes to your remote repo.
 
-sequenceDiagram participant H as home directory participant W as working copy participant L as local repo participant R as remote repo R->>W: chezmoi init $GITHUB_USERNAME R->>H: chezmoi init --apply $GITHUB_USERNAME R->>H: chezmoi update $GITHUB_USERNAME W->>L: git commit L->>R: git push
+```
+sequenceDiagram
+    participant H as home directory
+    participant W as working copy
+    participant L as local repo
+    participant R as remote repo
+    R->>W: chezmoi init $YOUR_GITHUB_USERNAME
+    R->>H: chezmoi init --apply $YOUR_GITHUB_USERNAME
+    R->>H: chezmoi update $YOUR_GITHUB_USERNAME
+    W->>L: git commit
+    L->>R: git push
+```
 
 ## Working with templates
 

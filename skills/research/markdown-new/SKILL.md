@@ -6,7 +6,7 @@ compatibility: "Requires public URLs reachable by markdown.new; curl for the exa
 
 # markdown.new
 
-A hosted conversion service (not the source site's own Markdown endpoint, and not an authenticated Cloudflare API). Behaviour below was verified on 2026-04-09 with curl, browser automation and failure probes; it is a snapshot. When a route fails or docs conflict, consult current markdown.new documentation, use a bounded public or synthetic probe, and report the discrepancy with the old claim, source and date. Never upload private files or credentials merely to diagnose.
+A hosted conversion service (not the source site's own Markdown endpoint, and not an authenticated Cloudflare API). Behaviour below was verified on 2026-04-09 with curl, browser automation and failure probes, and spot-checked again on 2026-11-10 against the [markdown.new homepage](https://markdown.new/) and four public requests (GET text/markdown for example.com, `?format=json` shape, percent-encoded GET path still HTTP 400, POST with a query-string target HTTP 200; the 500 requests per day limit and the 100-versus-500 crawl page inconsistency are still on the site); it is a snapshot. The 10 MB and 30 s limits were not re-checked. When a route fails or docs conflict, consult current markdown.new documentation, use a bounded public or synthetic probe, and report the discrepancy with the old claim, source and date. Never upload private files or credentials merely to diagnose.
 
 ## Data boundary
 

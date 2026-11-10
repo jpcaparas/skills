@@ -28,7 +28,7 @@ The Sprint 259 release note specifically calls out Entity Relationship and Timel
 
 ## Azure-Safe Authoring Rules
 
-1. Use `::: mermaid` blocks, not triple-backtick Mermaid fences.
+1. Prefer `::: mermaid` blocks. As of the Learn page re-read on 2026-11-10, a standard fenced code block with the `mermaid` language identifier is also documented as supported; keep the container form unless the user's page already uses fences.
 2. Use `graph` for flowchart-style diagrams. Microsoft explicitly warns that Azure DevOps has limited support for `flowchart` syntax and recommends `graph` instead.
 3. Keep labels plain. Azure DevOps documents limited Mermaid support and calls out most HTML tags, Font Awesome, and LongArrow `---->` as unsupported.
 4. Treat wiki pages as the reliable rendering target. File preview support exists in release notes, but wiki authoring remains the documented primary surface.
@@ -105,11 +105,11 @@ timeline
 
 | Symptom | Likely cause | Fix |
 | --- | --- | --- |
-| Diagram renders as plain text | Wrong fence type or wrong surface | Use `::: mermaid` inside a wiki page. |
+| Diagram renders as plain text | Wrong block type or wrong surface | Use `::: mermaid` inside a wiki page. |
 | Flowchart example fails | Copied a generic Mermaid `flowchart` snippet | Rewrite it as `graph TD`, `graph LR`, and so on. |
 | Icons or styled HTML disappear | Azure DevOps limited Mermaid syntax support | Remove HTML tags, Font Awesome, and unsupported arrow variants. |
 | Diagram is hard to review | Nodes contain paragraphs or multiple decisions | Keep node text short and move explanation below the diagram. |
 | Entity relationship or timeline example fails in an older environment | Feature level mismatch | Check the Azure DevOps platform or server version before assuming newer support exists. |
 
 
-- Mermaid is not a Highlight.js language alias in Azure DevOps wiki docs; do not offer it as a code-fence language tag.
+- Mermaid is not in the Highlight.js table; the 2026-11-10 Learn page nonetheless documents a ```` ```mermaid ```` fence as a Mermaid block, so do not call it an error, but prefer `::: mermaid` when writing new pages.

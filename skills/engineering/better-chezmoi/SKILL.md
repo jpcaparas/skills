@@ -5,7 +5,7 @@ description: "Use for chezmoi setup and migration, daily dotfile sync, templates
 
 # Better chezmoi
 
-Reference evidence: official chezmoi docs and release v2.71.0, checked 2026-07-15. Command surface exercised locally on chezmoi v2.70.2 (macOS). The installed binary owns executable syntax: run `chezmoi --version` and `chezmoi <command> --help` before using a flag that may be newer than the binary.
+Reference evidence: official chezmoi docs and release v2.74.0 ([releases](https://github.com/twpayne/chezmoi/releases), published 2026-11-01), checked 2026-11-10; the bundled docs snapshot was refreshed the same day. Command surface exercised on chezmoi v2.74.0 (Linux, 2026-11-10) and earlier on v2.70.2 (macOS). The installed binary owns executable syntax: run `chezmoi --version` and `chezmoi <command> --help` before using a flag that may be newer than the binary.
 
 ## Authority
 
@@ -30,8 +30,8 @@ chezmoi verify --exclude=scripts [target...]
 
 - `--dry-run` only guarantees the destination is untouched. `init` can still create source Git state, hooks run even in dry-run, and templates or externals can reach the network or a password manager.
 - `edit --apply` and `edit --watch` apply on every save; use them only when the user wants that.
-- `diff` exits 0 even when it shows differences, and its `--output` did not redirect on v2.70.2. `verify` exits 0 on match and 1 on mismatch; use it for drift checks. `status` has two columns: actual vs last-written state, and actual vs desired state (what `apply` would do); `A D M R` are add, delete, modify, run.
-- `--error-on-conflict` (fail closed instead of prompting) and `init --revision/--tag` arrived in v2.71.0, and docs use `-w` for `--working-tree` where v2.70.2 shows `-W`. On an older binary, stop or upgrade; never substitute `--force` for conflict handling.
+- `diff` exits 0 even when it shows differences, and its `--output` did not redirect on v2.70.2 or v2.74.0. `verify` exits 0 on match and 1 on mismatch; use it for drift checks. `status` has two columns: actual vs last-written state, and actual vs desired state (what `apply` would do); `A D M R` are add, delete, modify, run.
+- `--error-on-conflict` (fail closed instead of prompting) and `init --revision/--tag` arrived in v2.71.0, and docs use `-w` for `--working-tree` where the v2.70.2 and v2.74.0 binaries show `-W`. On an older binary, stop or upgrade; never substitute `--force` for conflict handling.
 
 ## Gotchas
 
@@ -39,7 +39,7 @@ chezmoi verify --exclude=scripts [target...]
 - `re-add` does not update templated sources. For a template, edit it or use `merge`.
 - Source wins: scoped `apply`. Destination wins (non-template): `re-add`. Both have changes: `merge TARGET` or `merge-all`.
 - `--source-path` reinterprets target arguments as source paths, and relative ones resolve from the current directory; pass absolute paths.
-- `managed --format=json` can still emit newline-separated paths; v2.70.2 needed `--path-style=all` for the keyed structure.
+- `managed --format=json` can still emit newline-separated paths; v2.70.2 and v2.74.0 needed `--path-style=all` for the keyed structure.
 - A template that renders empty removes its target unless the source has the `empty_` attribute.
 - `chezmoi cd` opens a child shell. Use `cd "$(chezmoi source-path)"` to move the caller.
 - `init` with `--apply` is a bootstrap. One-shot mode removes chezmoi's own source and config afterward; say so before using it.

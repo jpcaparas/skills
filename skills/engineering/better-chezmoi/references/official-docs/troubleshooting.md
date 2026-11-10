@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/user-guide/frequently-asked-questions/tr
 
 Branch: recovery
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `439380edf22e606ed915571d1038bbacb0498d0b11e60a7702546191424bfc53`
 

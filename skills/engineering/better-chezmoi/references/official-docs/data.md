@@ -4,7 +4,7 @@ Official source: https://www.chezmoi.io/reference/commands/data/
 
 Branch: templates
 
-Site last modified: 2026-07-07
+Site last modified: 2026-11-01
 
 Article SHA-256: `e16b906cc930c36b5da5adbe58203488cfb46d334720cdf5dbca1b01d1cbd25d`
 
