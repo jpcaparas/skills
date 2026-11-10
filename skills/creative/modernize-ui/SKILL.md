@@ -21,7 +21,7 @@ Take each dial from the request. A request that names a mode, asks for an audit 
 - **Pages** (default: all of them). Every route, one page per template when a template repeats, plus the states a visitor meets: open menu, dialog, form error, empty list, signed-in view.
 - **Browser floor** (default: what the project supports today). See Older browsers.
 
-No mode touches copy, prices, legal text, routes, form submission, analytics, SEO metadata or the backend unless the user asks. List them under `out_of_scope` in the plan so the user sees the boundary.
+No mode touches copy, prices, legal text, routes, form submission, analytics, SEO metadata or the backend unless the user asks. List them under `out_of_scope` in the plan so the user sees the boundary. Copy is every word a visitor already reads, down to option text, placeholders and button labels. A fix that has to add wording, such as a label, alt text or an error message, quotes the new words in its plan entry.
 
 ## The catalogue
 
@@ -34,7 +34,7 @@ python scripts/build_catalogue.py --before runs/before --after runs/after --plan
 ```
 
 1. Capture the untouched site first. Its numbers are the evidence for every change, and they cannot be recovered after an edit.
-2. Write `plan.json` with one entry per defect and its fix, so the user can strike any one of them. Missing alt text, unlabelled fields and missing `autocomplete` are three entries, not one "forms and images" entry; the same fix on several elements is one entry. A title that joins two fixes with "and" or a semicolon is two entries. `why` quotes what the before run measured ("home overflows by 295px at 320 wide"), or the line of the project's source that shows the defect when the manifest has no number for it ("`.col { float: left }` in style.css"), not a general principle. A medium or high risk needs a `risk_note` saying what could break.
+2. Write `plan.json` with one entry per defect and its fix, so the user can strike any one of them. Missing alt text, unlabelled fields and missing `autocomplete` are three entries, not one "forms and images" entry; the same fix on several elements is one entry. `why` quotes what the before run measured ("home overflows by 295px at 320 wide"), or the line of the project's source that shows the defect when the manifest has no number for it ("`.col { float: left }` in style.css"), not a general principle. A medium or high risk needs a `risk_note` saying what could break.
 3. Build the proposal without editing the project's working tree. Inject a stylesheet and script into the live pages with `--overlay-css` and `--overlay-js` when that is enough; otherwise change a copy of the project (a git worktree or a scratch copy), serve it on another port and capture it with `--mockup`. The after renders are real HTML and CSS in real browsers. A generated image or a description is not a dry run.
 4. Build the catalogue and give the user `catalogue/index.html`, served or opened. In the reply, give the totals, the changes by id, two or three before and after pairs, anything that was not rendered, and each number the after run makes worse with its reason, for example transfer size raised by a web font. Ask which ids to drop.
 5. Approval covers the listed ids. A change found later is added to the plan and asked about.
@@ -66,11 +66,11 @@ npm install --prefix tools axe-core
 
 The floor is the oldest set of browsers the result must work in. Take it from the user's answer, then the project's browserslist (`npx browserslist` prints it), then its build targets, and otherwise from the engines the current site works in. Modernising never raises the floor on its own: raising it is the user's decision, shown as its own `compatibility` change that says what stops working and for whom.
 
-Each feature the floor lacks gets one of these, in this order of preference. Each is its own `compatibility` change in the plan that names the feature and the browsers that need it, not a note inside the change that uses the feature:
+Each feature the floor lacks gets one of these, in this order of preference. The plan change that uses the feature names the feature, the browsers that lack it and which of the three covers them:
 
 1. A fallback in the code itself: the older declaration first and the newer one after it, an `@supports` block, or a feature test in the script. It costs nothing in current browsers and cannot fail to load.
 2. A build-time transform with tooling the project already has, pointed at its browserslist (Autoprefixer, postcss-preset-env, Lightning CSS, Babel or SWC with core-js by usage). Adding a build step to a project that has none is a `code` change with its own risk.
-3. A runtime polyfill, when the result without it is not acceptable in the floor browsers. Copy a pinned version into the project and load it only when a feature test fails, so current browsers download nothing. State in the plan which browsers load it and how many bytes it is. Do not load polyfills from `polyfill.io`; that domain changed hands and served malware in June 2024.
+3. A runtime polyfill, when the result without it is not acceptable in the floor browsers. Copy a pinned version into the project and load it only when a feature test fails, so current browsers download nothing. It is its own `compatibility` change that states which browsers load it and how many bytes it is. Do not load polyfills from `polyfill.io`; that domain changed hands and served malware in June 2024.
 
 Unsupported code does not always degrade one declaration at a time, and these are the breaks to look for:
 
