@@ -146,7 +146,7 @@ For disclosure, pair the positive assertion with a negative one and name the cap
 
 ## evals.json Schema
 
-This package uses an advanced, typed schema for local release preflight. Do not pass it directly to a behavioral or trigger runner without checking that runner's current schema. The adapter rule is simple: preserve each prompt, expected outcome, and fixture, then map each `assertions[].text` value into the evaluator's assertion or expectation field; keep `type` as grading metadata when supported.
+This package uses a typed assertion schema. Do not pass it directly to a behavioral or trigger runner without checking that runner's current schema. The adapter rule is simple: preserve each prompt, expected outcome, and fixture, then map each `assertions[].text` value into the evaluator's assertion or expectation field; keep `type` as grading metadata when supported.
 
 ```json
 {
@@ -234,7 +234,7 @@ Verify that the response obtained and reported evidence before declaring complet
 
 ```json
 {"text": "Reports the inspected CLI version and relevant help output", "type": "verification"}
-{"text": "Runs release validation and distinguishes a blocked live check from a passing check", "type": "verification"}
+{"text": "Runs the package's script tests and distinguishes a blocked live check from a passing check", "type": "verification"}
 ```
 
 ---
@@ -315,7 +315,7 @@ Use this workflow for a behavioral comparison, not as a prerequisite for every l
 
 1. Create a workspace outside the skill package. For an improvement, capture a recoverable baseline there before the first target write. If work already began without one, recover the old package from an immutable version-control revision or stop rather than comparing against the edited package.
 2. For every behavioral case, launch the with-skill run and its baseline in the same batch. The baseline is no skill for a new package and the preserved old version for an improvement.
-3. Copy committed fixtures into a separate `inputs/` directory for every run, then give both configurations the same prompt, fixture contents, output contract, and authority boundaries. Never let an eval edit the canonical package or `evals/files/` tree. When an assertion claims a file was or was not loaded, also capture the harness tool trace, read log, or transcript. If the harness exposes no such evidence, rewrite the assertion around a branch-specific observable consequence.
+3. Copy committed fixtures into a separate `inputs/` directory for every run, renaming each `SKILL.fixture.md` to `SKILL.md` in the copy (fixture text and fixture scripts refer to it by that name), then give both configurations the same prompt, fixture contents, output contract, and authority boundaries. Never let an eval edit the canonical package or `evals/files/` tree. When an assertion claims a file was or was not loaded, also capture the harness tool trace, read log, or transcript. If the harness exposes no such evidence, rewrite the assertion around a branch-specific observable consequence.
 4. Translate this package's typed assertion texts to the evaluator's current assertion or expectation field. Do not discard the type; retain it in metadata or the grader brief.
 5. Grade both outputs with evidence, aggregate the benchmark, and inspect assertions that pass equally well without the skill.
 
