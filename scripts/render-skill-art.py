@@ -51,7 +51,6 @@ SKILL_SCENES = {
     "exa-efficiency": "a falconer releasing a single falcon that dives straight to one glowing amber fruit in a dark orchard of blank glowing trees, with a small brass coin scale resting lightly on a fence post and the rest of the orchard left untouched",
     "firecrawl-efficiency": "a careful miner lowering a small lantern-lit cart into a single marked tunnel of a vast mountain, with a brass meter gauge and a few neatly stacked blank ore crates, while sealed side tunnels stay dark",
     "gemini-search": "a lighthouse lens splitting one beam into exactly three narrow searchlight rays that touch three floating blank crystal tablets, with a small brass coin meter beside the lens and a larger sealed vault door glowing faintly in the background",
-    "google-search-ai-optimization": "a search tower sending clear signals to crawler fireflies and answer crystals",
     "idiomatic": "a working clockwork city whose tangled rails are carefully aligned with its original foundations in small bridge sections, with a protective scaffold around one delicate old mechanism, test gems at safe stopping platforms, and a clear route toward a harmonious skyline",
     "implicit-token-savings": "a compact token backpack moving through a narrow efficient corridor",
     "interface-design-taste": "a refined workbench arranging blank layout panels, color swatches, and spacing rails",

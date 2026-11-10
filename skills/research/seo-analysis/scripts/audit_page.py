@@ -85,7 +85,7 @@ def read_input(target: str, timeout: int) -> tuple[str, dict[str, Any]]:
     if re.match(r"^https?://", target):
         req = urllib.request.Request(
             target,
-            headers={"User-Agent": "google-search-ai-optimization-skill/1.0"},
+            headers={"User-Agent": "seo-analysis-skill/1.0"},
         )
         try:
             with urllib.request.urlopen(req, timeout=timeout) as response:

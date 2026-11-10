@@ -304,16 +304,6 @@ Production skill for getting content out of Firecrawl for the fewest credits: th
 
 Production skill for grounded, cited web search through Gemini's Grounding with Google Search and URL context at the lowest reliable cost, with live-measured traps such as skipped grounding, per-query billing fan-outs, silent 21-URL failures, and Deep Research and Pro models gated behind explicit permission.
 
-#### `google-search-ai-optimization`
-
-`npx skills add jpcaparas/skills --skill google-search-ai-optimization`
-
-<p align="center">
-  <img src="skills/research/google-search-ai-optimization/skill-card.png" alt="16-bit side-scrolling pixel art badge for google-search-ai-optimization" width="480">
-</p>
-
-Production skill for implementing Google-grounded SEO/GEO optimization in web development, covering Search generative AI features, crawlability, indexability, snippets, structured data, content quality, ecommerce/local details, and agentic website readiness without unsupported AI-search hacks.
-
 #### `isitagentready`
 
 `npx skills add jpcaparas/skills --skill isitagentready`
@@ -362,7 +352,7 @@ Production skill for using Parallel (parallel.ai) at the lowest sensible cost: o
   <img src="skills/research/seo-analysis/skill-card.png" alt="16-bit side-scrolling pixel art badge for seo-analysis" width="480">
 </p>
 
-Production skill for framework-agnostic SEO analysis of real codebases, covering crawlability, rendering, canonicals, robots directives, sitemaps, metadata, OG and social previews, structured data, information architecture, and AI-era search readiness, with a handoff prompt for another session to implement fixes.
+Production skill for framework-agnostic SEO analysis and fixes in real codebases, covering crawlability, rendering, canonicals, robots directives, sitemaps, metadata, OG and social previews, structured data and information architecture, with a handoff brief for another session. It also carries Google's own dated guidance for AI Overviews and AI Mode, ecommerce and local details, and agent browsing, without unsupported AI-search hacks, plus a static page probe.
 
 #### `synthetic-search`
 
