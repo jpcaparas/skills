@@ -44,7 +44,7 @@ REQUEST_TIMEOUT_SECONDS = 300
 RETRY_DELAYS_SECONDS = (5, 15)
 RETRYABLE_STATUSES = {429, 500, 503, 504}
 
-# List prices in USD per token (Gemini API pricing page, checked 2026-10-18). Batch is half.
+# List prices in USD per token (Gemini API pricing page, checked 2026-11-10). Batch is half.
 PRICE_INPUT = 1.50 / 1_000_000
 PRICE_TEXT_AND_THINKING = 7.50 / 1_000_000
 PRICE_IMAGE_OUTPUT = 30.00 / 1_000_000

@@ -322,11 +322,11 @@
     {
       "id": 15,
       "name": "google-ai-uncertain-policy-proposes-canonical-update",
-      "prompt": "A teammate says Google's snippet policy changed after this skill's May 2026 baseline. Explain whether our existing nosnippet can stay while we seek AI Mode visibility. If the skill is stale, suggest a correction; do not edit files or our Search Console property.",
+      "prompt": "A teammate says Google's snippet policy changed after this skill's recorded baseline. Explain whether our existing nosnippet can stay while we seek AI Mode visibility. If the skill is stale, suggest a correction; do not edit files or our Search Console property.",
       "expected_output": "Consults relevant official documentation when available, explains the supported tradeoff without removing controls or promising visibility, and proposes a sourced canonical correction with an example/check. If verification is unavailable, states the gap instead of inventing a policy change.",
       "assertions": [
         {
-          "text": "Cites retrieved official policy evidence or clearly identifies unavailable verification; does not describe the May 2026 baseline as permanently current.",
+          "text": "Cites retrieved official policy evidence or clearly identifies unavailable verification; does not describe the recorded baseline as permanently current.",
           "type": "verification"
         },
         {
