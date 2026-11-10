@@ -36,6 +36,7 @@ Command hooks support `bash`, `powershell`, or `command`. Cloud agent honors `ba
 | `sessionStart` | `SessionStart` | Fires once per job | Optional `additionalContext` | none |
 | `sessionEnd` | `SessionEnd` | Fires once per job | No | none |
 | `userPromptSubmitted` | `UserPromptSubmit` | Fires at most once | No | none |
+| `userPromptTransformed` | none documented | Fires | Yes, `modifiedTransformedPrompt` rewrites model-facing content | none |
 | `preToolUse` | `PreToolUse` | Fires | Yes, permission decision | `toolName` |
 | `postToolUse` | `PostToolUse` | Fires after success | Yes, result/context modification | none |
 | `postToolUseFailure` | `PostToolUseFailure` | Fires after failure | Yes, recovery context | none |
@@ -47,7 +48,9 @@ Command hooks support `bash`, `powershell`, or `command`. Cloud agent honors `ba
 | `permissionRequest` | none documented | CLI only | Yes, allow/deny | `toolName` |
 | `notification` | none documented | CLI only | Optional `additionalContext` | `notification_type` |
 
-Use canonical camelCase event names for generated config unless the project explicitly needs VS Code-compatible snake_case payloads.
+Use canonical camelCase event names for generated config unless the project explicitly needs VS Code-compatible snake_case payloads. The event name picks the payload format: a PascalCase name such as `SessionStart` receives snake_case fields.
+
+Copilot CLI also reads inline `hooks` blocks in `.github/copilot/settings.json`, `.github/copilot/settings.local.json` and `~/.copilot/settings.json`; this scaffold writes `.github/hooks/*.json` only. Reference re-verified on 2026-11-10 against `https://docs.github.com/en/copilot/reference/hooks-reference`.
 
 ## Matcher Rules
 

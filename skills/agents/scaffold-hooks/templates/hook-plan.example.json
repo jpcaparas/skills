@@ -18,61 +18,35 @@
           "matcher": "startup|resume|clear|compact",
           "async": false,
           "timeout": 20,
-          "scripts": [],
+          "scripts": [
+            {
+              "label": "session context",
+              "path": "scripts/agent-session-context.sh",
+              "args": [
+                "claude"
+              ],
+              "cwd": "."
+            }
+          ],
           "commands": [],
-          "notes": "Bootstrap lightweight shared context for Claude sessions."
-        },
-        {
-          "name": "PreToolUse",
-          "matcher": "Bash|Edit|Write|MultiEdit",
-          "async": false,
-          "timeout": 30,
-          "scripts": [],
-          "commands": [],
-          "notes": "Hard policy and safety gate."
-        },
-        {
-          "name": "PostToolUse",
-          "matcher": "Bash|Edit|Write|MultiEdit",
-          "async": true,
-          "timeout": 180,
-          "scripts": [],
-          "commands": [],
-          "notes": "Formatting, logging, and lightweight post-tool validation."
-        },
-        {
-          "name": "UserPromptSubmit",
-          "async": false,
-          "timeout": 20,
-          "scripts": [],
-          "commands": [],
-          "notes": "Prompt policy or context injection before Claude processes a user prompt."
-        },
-        {
-          "name": "PermissionRequest",
-          "matcher": "Bash|Edit|Write|MultiEdit",
-          "async": false,
-          "timeout": 20,
-          "scripts": [],
-          "commands": [],
-          "notes": "Permission decision hook for commands and file edits."
-        },
-        {
-          "name": "Notification",
-          "matcher": "",
-          "async": true,
-          "timeout": 15,
-          "scripts": [],
-          "commands": [],
-          "notes": "Optional desktop or remote notification hook."
+          "notes": "Print additional context for the session; the repo script writes the hookSpecificOutput JSON."
         },
         {
           "name": "Stop",
           "async": false,
-          "timeout": 45,
-          "scripts": [],
+          "timeout": 300,
+          "scripts": [
+            {
+              "label": "shared stop checks",
+              "path": "scripts/agent-stop-checks.sh",
+              "args": [
+                "claude"
+              ],
+              "cwd": "."
+            }
+          ],
           "commands": [],
-          "notes": "End-of-turn quality gate."
+          "notes": "End-of-turn quality gate; skipped when no code changed or stop_hook_active is set."
         }
       ]
     },
@@ -85,50 +59,33 @@
           "matcher": "startup|resume|clear",
           "timeout": 20,
           "status_message": "Loading shared agent hook context",
-          "scripts": [],
+          "scripts": [
+            {
+              "label": "session context",
+              "path": "scripts/agent-session-context.sh",
+              "args": [
+                "codex"
+              ],
+              "cwd": "."
+            }
+          ],
           "commands": [],
-          "notes": "Bootstrap lightweight shared context for Codex sessions."
-        },
-        {
-          "name": "PreToolUse",
-          "matcher": "Bash|apply_patch",
-          "timeout": 20,
-          "status_message": "Checking shared tool policy",
-          "scripts": [],
-          "commands": [],
-          "notes": "Hard policy and safety gate."
-        },
-        {
-          "name": "PostToolUse",
-          "matcher": "Bash|apply_patch",
-          "timeout": 90,
-          "status_message": "Running shared post-tool hook",
-          "scripts": [],
-          "commands": [],
-          "notes": "Post-tool validation or context."
-        },
-        {
-          "name": "UserPromptSubmit",
-          "timeout": 15,
-          "status_message": "Reviewing prompt context",
-          "scripts": [],
-          "commands": [],
-          "notes": "Prompt policy or context injection."
-        },
-        {
-          "name": "PermissionRequest",
-          "matcher": "Bash|apply_patch",
-          "timeout": 20,
-          "status_message": "Checking approval request",
-          "scripts": [],
-          "commands": [],
-          "notes": "Permission decision hook."
+          "notes": "Print additional context for the session."
         },
         {
           "name": "Stop",
-          "timeout": 45,
-          "status_message": "Running shared end-of-turn hook",
-          "scripts": [],
+          "timeout": 300,
+          "status_message": "Running shared end-of-turn checks",
+          "scripts": [
+            {
+              "label": "shared stop checks",
+              "path": "scripts/agent-stop-checks.sh",
+              "args": [
+                "codex"
+              ],
+              "cwd": "."
+            }
+          ],
           "commands": [],
           "notes": "End-of-turn quality gate."
         }
@@ -140,54 +97,36 @@
         {
           "name": "SessionStart",
           "matcher": "",
-          "timeout": 10,
-          "block_on_failure": false,
-          "scripts": [],
-          "commands": [],
-          "notes": "Bootstrap lightweight shared context for Devin sessions."
-        },
-        {
-          "name": "PreToolUse",
-          "matcher": "^exec$",
-          "timeout": 30,
-          "block_on_failure": true,
-          "scripts": [],
-          "commands": [],
-          "notes": "Hard policy and safety gate before shell commands."
-        },
-        {
-          "name": "PostToolUse",
-          "matcher": "^(edit|exec)$",
-          "timeout": 120,
-          "block_on_failure": false,
-          "scripts": [],
-          "commands": [],
-          "notes": "Post-tool validation or logging."
-        },
-        {
-          "name": "UserPromptSubmit",
-          "matcher": "",
-          "timeout": 15,
-          "block_on_failure": false,
-          "scripts": [],
-          "commands": [],
-          "notes": "Prompt policy or context injection."
-        },
-        {
-          "name": "PermissionRequest",
-          "matcher": "^exec$",
           "timeout": 20,
-          "block_on_failure": true,
-          "scripts": [],
+          "block_on_failure": false,
+          "scripts": [
+            {
+              "label": "session context",
+              "path": "scripts/agent-session-context.sh",
+              "args": [
+                "devin"
+              ],
+              "cwd": "."
+            }
+          ],
           "commands": [],
-          "notes": "Permission decision hook."
+          "notes": "Print additional context for the session."
         },
         {
           "name": "Stop",
           "matcher": "",
-          "timeout": 45,
+          "timeout": 300,
           "block_on_failure": true,
-          "scripts": [],
+          "scripts": [
+            {
+              "label": "shared stop checks",
+              "path": "scripts/agent-stop-checks.sh",
+              "args": [
+                "devin"
+              ],
+              "cwd": "."
+            }
+          ],
           "commands": [],
           "notes": "End-of-turn quality gate."
         }
@@ -237,25 +176,8 @@
       "managed_root": ".github/copilot/hooks/generated",
       "enabled_events": [
         {
-          "name": "preToolUse",
-          "matcher": "bash|edit|create",
-          "timeoutSec": 15,
-          "block_on_failure": true,
-          "scripts": [],
-          "commands": [],
-          "notes": "Use this for hard policy and safety gates. Deny through stdout JSON, not a Devin-style exit-code-2 block."
-        },
-        {
-          "name": "postToolUseFailure",
-          "timeoutSec": 30,
-          "block_on_failure": false,
-          "scripts": [],
-          "commands": [],
-          "notes": "Use this for recovery guidance after failed tools."
-        },
-        {
           "name": "agentStop",
-          "timeoutSec": 30,
+          "timeoutSec": 300,
           "block_on_failure": true,
           "scripts": [
             {
@@ -265,11 +187,11 @@
                 "copilot"
               ],
               "cwd": ".",
-              "notes": "Reusable repo-owned script that can also be called by CI or other agent adapters."
+              "notes": "Reusable repo-owned script that CI and other adapters can call too."
             }
           ],
           "commands": [],
-          "notes": "Use this to keep the agent from stopping before required repo checks are complete."
+          "notes": "Keep the agent from stopping before required repo checks pass."
         }
       ]
     }

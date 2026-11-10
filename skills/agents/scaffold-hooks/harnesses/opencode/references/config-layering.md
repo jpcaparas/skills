@@ -1,5 +1,7 @@
 # Config Layering
 
+> **Drift, 2026-11-10 (unresolved).** `opencode-froggy` 1.7.0+ no longer loads `.opencode/hook/hooks.md`, and OpenCode marks the `plugin` config key deprecated in favour of `plugins`. This scaffold still targets the 0.12.0-era Froggy behaviour below. Evidence and open questions: `assets/hook-events.json` under `drift_2026_11_10`. Until the owner decides (pin a hook-capable Froggy, or move to a native OpenCode plugin), do not tell a user the generated hooks will run on a current Froggy; check with `opencode plugin list` and a live session.
+
 Verified on 2026-06-21 against the OpenCode plugin/config docs and `opencode-froggy@0.12.0`.
 
 This is a historical verification baseline, not a required installation version. Resolve uncertain or changing behavior against official OpenCode docs and trusted Froggy source for the installed version; preserve deterministic pins unless an authorized, verified update needs them changed.

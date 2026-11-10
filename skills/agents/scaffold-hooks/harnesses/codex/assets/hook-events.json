@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-06-12",
+  "verified_on": "2026-11-10",
   "verified_with": {
     "codex_cli_version": "codex-cli 0.133.0",
     "codex_source_commit": "8a94430bb273623be42b68f144f1ab1df343bb53",
@@ -43,7 +43,9 @@
     ],
     "secondary_sources": [
       "https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b"
-    ]
+    ],
+    "docs_reviewed_on": "2026-11-10",
+    "baseline_not_reverified": "codex_cli_version and codex_source_commit are the 2026-05-26 baseline. The 2026-11-10 update follows the official hooks page only; no newer Codex CLI or source checkout was available to confirm runtime behaviour."
   },
   "feature_flag": {
     "canonical_name": "hooks",
@@ -54,13 +56,14 @@
     "default_enabled": true
   },
   "supported_handler_types": [
-    "command"
+    "command",
+    "mcp_tool"
   ],
   "unsupported_handler_types": [
     "prompt",
     "agent"
   ],
-  "async_supported": false,
+  "async_supported": true,
   "default_timeout_seconds": 600,
   "timeout_aliases": [
     "timeoutSec"
@@ -68,22 +71,24 @@
   "merge_behavior": [
     "Matching hooks from multiple files all run.",
     "Multiple matching command hooks for the same event are launched concurrently, so one hook cannot prevent another matching hook from starting.",
-    "Non-managed command hooks must be reviewed and trusted before they run.",
+    "Non-managed hooks must be reviewed and trusted before they run.",
     "Project-local hooks load only when the project .codex/ layer is trusted."
   ],
   "events": [
     {
       "name": "SessionStart",
       "script_name": "session_start.sh",
-      "description": "Bootstrap session context or run lightweight environment checks when a Codex session starts, resumes, or clears.",
+      "description": "Bootstrap session context or run lightweight environment checks when a Codex session starts, resumes, clears, compacts, or forks.",
       "matcher_supported": true,
       "matcher_target": "source",
       "current_matcher_values": [
         "startup",
         "resume",
-        "clear"
+        "clear",
+        "compact",
+        "fork"
       ],
-      "matcher_guidance": "Match the `source` field. Current values are `startup`, `resume`, and `clear`. `*` and an empty matcher both mean match all.",
+      "matcher_guidance": "Match the `source` field. Current values are `startup`, `resume`, `clear`, `compact`, and `fork`. `*` and an empty matcher both mean match all.",
       "output_guidance": "Plain text stdout is added as extra developer context. JSON can return common output fields and `hookSpecificOutput.additionalContext`.",
       "blocking_guidance": "There is no dedicated block shape for this event. Keep it lightweight and context-oriented."
     },
@@ -217,6 +222,53 @@
       "matcher_guidance": "Current runtime ignores `matcher` for this event.",
       "output_guidance": "When exiting `0`, stdout must be JSON. JSON supports common output fields. `decision: \"block\"` continues Codex with your `reason` as a new continuation prompt.",
       "blocking_guidance": "Treat `block` on `Stop` as 'continue and do one more pass', not as a normal reject decision. `continue: false` takes precedence over continuation decisions from other matching Stop hooks."
+    },
+    {
+      "name": "PreModelRequest",
+      "script_name": "pre_model_request.sh",
+      "description": "Runs before each model request attempt, including retries within a turn. Diagnostic only.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Matcher is not supported for this event.",
+      "output_guidance": "Output is diagnostic only; it cannot change the model context.",
+      "blocking_guidance": "Cannot block a request."
+    },
+    {
+      "name": "PostModelRequest",
+      "script_name": "post_model_request.sh",
+      "description": "Runs after each model request attempt with its status (completed, failed or cancelled), error and token usage. Diagnostic only.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Matcher is not supported for this event.",
+      "output_guidance": "Output is diagnostic only; it cannot change the model context.",
+      "blocking_guidance": "Cannot block anything."
+    },
+    {
+      "name": "Interrupt",
+      "script_name": "interrupt.sh",
+      "description": "Runs when an active turn is interrupted. Does not run for subagents. Default timeout 1 second, maximum 3 seconds.",
+      "matcher_supported": false,
+      "matcher_target": null,
+      "current_matcher_values": [],
+      "matcher_guidance": "Matcher is ignored for this event.",
+      "output_guidance": "Use the same event-specific JSON output as other hooks; keep it short.",
+      "blocking_guidance": "Cannot block the interrupt."
+    },
+    {
+      "name": "SessionEnd",
+      "script_name": "session_end.sh",
+      "description": "Runs when the main thread ends, for example to save final notes or clean up files. Does not run for subagents and always runs synchronously.",
+      "matcher_supported": true,
+      "matcher_target": "reason",
+      "current_matcher_values": [
+        "other"
+      ],
+      "matcher_guidance": "Match the `reason` field. Today the only value is `other`; omit the matcher or use `other` to run on every SessionEnd. Default timeout 1 second, maximum 3 seconds.",
+      "output_guidance": "MCP tool hooks are not supported for this event.",
+      "blocking_guidance": "Cannot block session end."
     }
-  ]
+  ],
+  "async_note": "`async: true` runs a command hook in the background; it cannot block, approve or rewrite the triggering operation. SessionEnd always runs synchronously. The scaffolder does not emit `async`."
 }

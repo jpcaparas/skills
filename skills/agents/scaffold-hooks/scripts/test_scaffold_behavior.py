@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Behavioural tests for the scaffolders and the hooks they generate.
 
-Everything runs offline in disposable projects: malformed plans are rejected
-before any write, legacy generated roots are migrated without losing custom
-hooks, and the generated Stop/permission hooks translate failures into each
-harness's protocol.
+Everything runs offline in disposable projects: only events with scripts or
+commands are emitted, malformed plans are rejected before any write, stubs and
+legacy generated roots are migrated away without losing custom hooks, and the
+generated Stop/permission hooks translate failures into each harness's protocol.
 """
 
 from __future__ import annotations
@@ -21,6 +21,7 @@ from pathlib import Path
 
 SKILL = Path(__file__).resolve().parents[1]
 SCAFFOLD_ALL = SKILL / "scripts" / "scaffold_all_hooks.sh"
+EXAMPLE_PLAN = SKILL / "templates" / "hook-plan.example.json"
 SHELL_PLAN_HARNESSES = ("claude", "codex", "copilot", "devin")
 ALL_HARNESSES = "claude,codex,copilot,devin,opencode"
 STOP_PAYLOAD = json.dumps({"hook_event_name": "Stop", "stop_hook_active": False})
@@ -550,6 +551,163 @@ class PlanValidationTests(unittest.TestCase):
         self.assertEqual([], manifest_row_stream_errors(SKILL, tmp_root(self)))
 
 
+def universal_plan(tmp: Path, edit=lambda plan: None, name: str = "universal-plan.json") -> Path:
+    plan = load_json(EXAMPLE_PLAN)
+    edit(plan)
+    path = tmp / name
+    path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+    return path
+
+
+def scaffold_all(project: Path, *args: str) -> subprocess.CompletedProcess[str]:
+    result = run([str(SCAFFOLD_ALL), "--project", str(project), *args])
+    if result.returncode != 0:
+        raise AssertionError(f"universal scaffold failed:\n{result.stdout}\n{result.stderr}")
+    return result
+
+
+def event_dirs(project: Path) -> set[str]:
+    return {path.parent.name for path in (project / "hooks").glob("*/script.sh")}
+
+
+def files_under(project: Path) -> set[str]:
+    return {
+        str(path.relative_to(project))
+        for path in project.rglob("*")
+        if path.is_file() and ".git" not in path.relative_to(project).parts
+    }
+
+
+class EmissionTests(unittest.TestCase):
+    """Only events the plan gives scripts or commands get files and config."""
+
+    def new_project(self) -> tuple[Path, Path]:
+        tmp = tmp_root(self)
+        project = tmp / "project"
+        project.mkdir()
+        run(["git", "init", "-q"], cwd=project)
+        return tmp, project
+
+    def test_only_events_with_behaviour_are_emitted(self) -> None:
+        def add_empty_events(plan: dict) -> None:
+            plan["plans"]["claude"]["enabled_events"].append(
+                {"name": "PreToolUse", "matcher": "Bash", "timeout": 30, "scripts": [], "commands": []}
+            )
+            plan["plans"]["codex"]["enabled_events"].append({"name": "PermissionRequest", "scripts": [], "commands": []})
+            plan["plans"]["devin"]["enabled_events"].append({"name": "PreToolUse", "matcher": "^exec$"})
+            plan["plans"]["copilot"]["enabled_events"].append({"name": "preToolUse", "scripts": [], "commands": []})
+
+        tmp, project = self.new_project()
+        scaffold_all(project, "--plan", str(universal_plan(tmp, add_empty_events)), "--harnesses", ALL_HARNESSES)
+
+        self.assertEqual({"session-start", "stop"}, event_dirs(project))
+        self.assertEqual({"SessionStart", "Stop"}, set(load_json(project / ".claude" / "settings.json")["hooks"]))
+        self.assertEqual({"SessionStart", "Stop"}, set(load_json(project / ".codex" / "hooks.json")["hooks"]))
+        self.assertEqual({"SessionStart", "Stop"}, set(load_json(project / ".devin" / "hooks.v1.json")))
+        self.assertEqual({"agentStop"}, set(load_json(project / ".github" / "hooks" / "copilot-hooks.json")["hooks"]))
+        generated = project / ".github" / "copilot" / "hooks" / "generated" / "events"
+        self.assertEqual({"agent-stop.sh"}, {path.name for path in generated.iterdir()})
+
+    def test_no_plan_on_a_fresh_project_writes_nothing(self) -> None:
+        _, project = self.new_project()
+        before = files_under(project)
+        result = run([str(SCAFFOLD_ALL), "--project", str(project), "--harnesses", ALL_HARNESSES])
+        self.assertEqual(0, result.returncode, result.stderr)
+        self.assertEqual(before, files_under(project))
+
+    def test_plan_without_any_behaviour_writes_nothing(self) -> None:
+        tmp, project = self.new_project()
+
+        def strip_behaviour(plan: dict) -> None:
+            for harness in SHELL_PLAN_HARNESSES:
+                for item in plan["plans"][harness]["enabled_events"]:
+                    item["scripts"] = []
+                    item["commands"] = []
+            plan["plans"]["opencode"]["hooks"] = [{"event": "session.idle", "actions": []}]
+
+        scaffold_all(project, "--plan", str(universal_plan(tmp, strip_behaviour)), "--harnesses", ALL_HARNESSES)
+        self.assertEqual(set(), event_dirs(project))
+        self.assertFalse((project / "hooks").exists())
+        self.assertFalse((project / ".github" / "copilot").exists())
+        self.assertFalse((project / ".opencode").exists())
+
+    def test_rerun_without_a_plan_keeps_the_recorded_behaviour(self) -> None:
+        tmp, project = self.new_project()
+        scaffold_all(project, "--plan", str(universal_plan(tmp)), "--harnesses", "claude,codex")
+        scaffold_all(project)
+        self.assertEqual({"session-start", "stop"}, event_dirs(project))
+        self.assertEqual({"SessionStart", "Stop"}, set(load_json(project / ".claude" / "settings.json")["hooks"]))
+
+    def test_event_dropped_from_the_plan_is_removed_with_its_config_entry(self) -> None:
+        tmp, project = self.new_project()
+        scaffold_all(project, "--plan", str(universal_plan(tmp)), "--harnesses", ALL_HARNESSES)
+
+        def drop_session_start(plan: dict) -> None:
+            for harness in ("claude", "codex", "devin"):
+                plan["plans"][harness]["enabled_events"] = [
+                    item for item in plan["plans"][harness]["enabled_events"] if item["name"] != "SessionStart"
+                ]
+
+        scaffold_all(
+            project, "--plan", str(universal_plan(tmp, drop_session_start, "smaller.json")), "--harnesses", ALL_HARNESSES
+        )
+        self.assertEqual({"stop"}, event_dirs(project))
+        self.assertFalse((project / "hooks" / "session-start").exists())
+        self.assertEqual({"Stop"}, set(load_json(project / ".claude" / "settings.json")["hooks"]))
+        self.assertEqual({"Stop"}, set(load_json(project / ".codex" / "hooks.json")["hooks"]))
+
+    def test_refresh_removes_old_stubs_and_keeps_custom_work(self) -> None:
+        tmp, project = self.new_project()
+        stub_code = (SKILL / "harnesses" / "claude" / "templates" / "event-script.sh.tmpl").read_text(encoding="utf-8")
+        old_stub = "# Canonical event script for PreToolUse.\n" + stub_code.replace("{{EVENT_NAME}}", "PreToolUse")
+        for harness in ("claude", "codex", "devin"):
+            write(
+                project / "hooks" / "pre-tool-use" / f"{harness}.sh",
+                f'#!/usr/bin/env bash\nexport AGENT_HOOK_HARNESS="{harness}"\nexport AGENT_HOOK_EVENT="PreToolUse"\n',
+            )
+            write(project / "hooks" / "pre-tool-use" / f"{harness}.json", '{"scripts": [], "commands": []}\n')
+        write(project / "hooks" / "pre-tool-use" / "script.sh", old_stub)
+        edited = old_stub.replace("    return 0\n", "    echo custom-notification-logic >&2\n    return 0\n")
+        write(project / "hooks" / "notification" / "script.sh", edited)
+        write(project / "hooks" / "notification" / "claude.sh", '#!/usr/bin/env bash\nexport AGENT_HOOK_HARNESS="claude"\n')
+        write(project / "hooks" / "my-own-tool" / "run.sh", "#!/usr/bin/env bash\n")
+        write(
+            project / ".claude" / "settings.json",
+            json.dumps(
+                {
+                    "hooks": {
+                        "PreToolUse": [
+                            {"matcher": "Bash", "hooks": [{"type": "command", "command": "${CLAUDE_PROJECT_DIR}/hooks/pre-tool-use/claude.sh"}]},
+                            {"matcher": "Bash", "hooks": [{"type": "command", "command": "echo my-custom-guard"}]},
+                        ]
+                    }
+                }
+            ),
+        )
+        events = project / ".github" / "copilot" / "hooks" / "generated" / "events"
+        write(
+            events / "pre-tool-use.sh",
+            "#!/usr/bin/env bash\n# Generated by scaffold-hooks for the GitHub Copilot preToolUse hook.\nPROJECT_SCRIPTS_JSON='[]'\n",
+        )
+        write(events / "handwritten.sh", "#!/usr/bin/env bash\n")
+
+        scaffold_all(project, "--plan", str(universal_plan(tmp)), "--harnesses", "claude,codex,copilot,devin")
+
+        self.assertFalse((project / "hooks" / "pre-tool-use").exists())
+        self.assertFalse((events / "pre-tool-use.sh").exists())
+        self.assertTrue((events / "handwritten.sh").exists())
+        self.assertTrue((project / "hooks" / "my-own-tool" / "run.sh").exists())
+        self.assertIn("custom-notification-logic", (project / "hooks" / "notification" / "script.sh").read_text(encoding="utf-8"))
+        self.assertFalse((project / "hooks" / "notification" / "claude.sh").exists())
+        settings = json.dumps(load_json(project / ".claude" / "settings.json"))
+        self.assertIn("echo my-custom-guard", settings)
+        self.assertNotIn("pre-tool-use/claude.sh", settings)
+        self.assertEqual(
+            {"session-start", "stop"},
+            {path.parent.name for path in (project / "hooks").glob("*/claude.sh") if path.parent.name != "lib"},
+        )
+
+
 class HarnessSelectionTests(unittest.TestCase):
     def test_bare_run_refreshes_only_the_detected_harness(self) -> None:
         tmp = tmp_root(self)
@@ -580,7 +738,9 @@ class UniversalMigrationTests(unittest.TestCase):
         cls.project = Path(cls._directory.name) / "project"
         cls.project.mkdir()
         seed_legacy_project(cls.project)
-        result = run([str(SCAFFOLD_ALL), "--project", str(cls.project), "--harnesses", ALL_HARNESSES])
+        result = run(
+            [str(SCAFFOLD_ALL), "--project", str(cls.project), "--plan", str(EXAMPLE_PLAN), "--harnesses", ALL_HARNESSES]
+        )
         if result.returncode != 0:
             raise AssertionError(f"universal scaffold failed:\n{result.stdout}\n{result.stderr}")
 
@@ -661,7 +821,9 @@ class UniversalMigrationTests(unittest.TestCase):
         )
         codex_path.write_text(json.dumps(data), encoding="utf-8")
 
-        result = run([str(SCAFFOLD_ALL), "--project", str(self.project), "--harnesses", "codex,opencode"])
+        result = run(
+            [str(SCAFFOLD_ALL), "--project", str(self.project), "--plan", str(EXAMPLE_PLAN), "--harnesses", "codex,opencode"]
+        )
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertIn("echo custom-session-start", codex_path.read_text(encoding="utf-8"))
         hooks = (self.project / ".opencode" / "hook" / "hooks.md").read_text(encoding="utf-8")
@@ -743,6 +905,9 @@ class ClaudeStopHookTests(unittest.TestCase):
                     "cwd": ".",
                 }
             ]
+            plan["enabled_events"].append(
+                {**stop, "name": "SubagentStop", "run_on_code_changes": False}
+            )
 
         scaffold_harness("claude", self.project, plan_with("claude", self.tmp, edit))
         self.root = self.project / "hooks"
@@ -786,11 +951,6 @@ class ClaudeStopHookTests(unittest.TestCase):
         self.assertEqual(set(), self.effects())
 
     def test_subagent_stop_entry_honours_the_active_stop_guard(self) -> None:
-        subagent_config = self.root / "subagent-stop" / "claude.json"
-        stop = json.loads(self.stop_config.read_text(encoding="utf-8"))
-        config = json.loads(subagent_config.read_text(encoding="utf-8"))
-        config.update(scripts=stop["scripts"], commands=stop["commands"], run_on_code_changes=False)
-        subagent_config.write_text(json.dumps(config), encoding="utf-8")
         result = self.run_stop(active=True, event_script=self.root / "subagent-stop" / "claude.sh")
         self.assertEqual(0, result.returncode, result.stderr)
         self.assertEqual(set(), self.effects())
@@ -883,9 +1043,16 @@ class HarnessProtocolTests(unittest.TestCase):
         write(project / "scripts" / "agent-stop-checks.sh", "#!/usr/bin/env bash\nexit 0\n")
 
         def edit(plan: dict) -> None:
-            event(plan, "preToolUse")["commands"] = [
-                {"label": "deny", "command": "printf 'pretool policy failed\\n' >&2; exit 7", "cwd": "."}
-            ]
+            plan["enabled_events"].append(
+                {
+                    "name": "preToolUse",
+                    "matcher": "bash|edit|create",
+                    "timeoutSec": 15,
+                    "block_on_failure": True,
+                    "scripts": [],
+                    "commands": [{"label": "deny", "command": "printf 'pretool policy failed\\n' >&2; exit 7", "cwd": "."}],
+                }
+            )
             plan["enabled_events"].append(
                 {
                     "name": "permissionRequest",

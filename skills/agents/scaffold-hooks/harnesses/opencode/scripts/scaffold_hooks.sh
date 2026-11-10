@@ -327,12 +327,10 @@ if [ "$SCOPE" = "global" ]; then
         validate_scaffold_path "$HOME_ROOT" "${target#"$HOME_ROOT/"}" global_target
     done
     validate_scaffold_path "$HOME_ROOT" "${MANAGED_STATE_ABS#"$HOME_ROOT/"}" managed_state tree
-    validate_scaffold_path "$HOME_ROOT" "$(dirname "${HOOK_CONFIG_ABS#"$HOME_ROOT/"}")/README.md" readme
 else
     validate_scaffold_path "$PROJECT_ROOT" "$CONFIG_TARGET_VALUE" config_target
     validate_scaffold_path "$PROJECT_ROOT" "$HOOK_CONFIG_VALUE" hook_config_target
     validate_scaffold_path "$PROJECT_ROOT" "$MANAGED_STATE_VALUE" managed_state tree
-    validate_scaffold_path "$PROJECT_ROOT" "$(dirname "$HOOK_CONFIG_VALUE")/README.md" readme
 fi
 validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_ROOT_VALUE" hooks_root tree
 validate_scaffold_path "$PROJECT_ROOT" .opencode/plugins/.managed legacy_state tree
@@ -340,11 +338,7 @@ validate_scaffold_path "$PROJECT_ROOT" .opencode/plugins/.managed legacy_state t
 # configuration. The actual cleanup repeats these checks before deleting.
 DRY_RUN=true cleanup_legacy_plugin_scaffold
 
-HOOKS_JSON="$(jq -c '.hooks // []' "$PLAN_FILE")"
-if [ "$(printf '%s' "$HOOKS_JSON" | jq 'length')" -eq 0 ]; then
-    echo "Plan file must define at least one Froggy hook in .hooks." >&2
-    exit 1
-fi
+HOOKS_JSON="$(jq -c '(.hooks // []) | map(select((.actions // []) | length > 0))' "$PLAN_FILE")"
 
 SETUP_ARGS=(--project "$PROJECT_ROOT" --json)
 if [ -n "$HOME_OVERRIDE" ]; then
@@ -368,9 +362,19 @@ EOF
     exit 0
 fi
 
-mkdir -p "$MANAGED_STATE_ABS"
-
 cleanup_legacy_plugin_scaffold
+
+if [ "$(printf '%s' "$HOOKS_JSON" | jq 'length')" -eq 0 ]; then
+    bun "$SCRIPT_DIR/render_froggy_hooks.ts" \
+        --hooks-file "$HOOK_CONFIG_ABS" \
+        --hooks-json '[]' \
+        --mode "$MODE" >/dev/null
+    rm -rf "$MANAGED_STATE_ABS"
+    echo "No plan hook has actions; no OpenCode hooks were scaffolded." >&2
+    exit 0
+fi
+
+mkdir -p "$MANAGED_STATE_ABS"
 
 bun "$SCRIPT_DIR/merge_opencode_config.ts" \
     --config-file "$CONFIG_TARGET_ABS" \
@@ -456,11 +460,6 @@ jq -n \
         plan: $plan[0]
     }
     ' > "$MANIFEST_TARGET_FILE"
-
-bash "$SCRIPT_DIR/render_hooks_readme.sh" \
-    --project "$PROJECT_ROOT" \
-    --plan "$PLAN_FILE" \
-    ${HOME_OVERRIDE:+--home "$HOME_OVERRIDE"}
 
 cat <<EOF
 scaffold_hooks.sh complete

@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-06-21",
+  "verified_on": "2026-11-10",
   "verified_with": {
     "official_docs": [
       "https://opencode.ai/docs/plugins/",
@@ -21,9 +21,10 @@
     },
     "froggy_package": {
       "name": "opencode-froggy",
-      "latest_version": "0.12.0",
-      "checked_via": "npm view opencode-froggy --json",
-      "source_commit": "ca3e228d53b62be2cd882c91a0eb091d94909371"
+      "latest_version": "1.8.0",
+      "checked_via": "npm view opencode-froggy version (2026-11-10)",
+      "source_commit": "ca3e228d53b62be2cd882c91a0eb091d94909371",
+      "note": "source_commit and checked_paths below describe the 0.12.0 baseline, which is the last version recorded as hook-capable here; see drift_2026_11_10."
     },
     "checked_paths": [
       "src/index.ts",
@@ -79,5 +80,16 @@
       "tool_args"
     ],
     "blocking_exit_code": 2
+  },
+  "drift_2026_11_10": {
+    "summary": "The Froggy hooks.md loader this scaffold targets was removed in opencode-froggy 1.7.0 (published 2026-11-01). The generator still writes .opencode/hook/hooks.md and an unpinned opencode-froggy plugin entry, so a fresh scaffold installs a Froggy that ignores those hooks. Not changed here; needs an owner decision.",
+    "evidence": [
+      "npm tarballs inspected 2026-11-10: opencode-froggy 0.12.0 through 1.6.2 (published 2026-10-24) ship a hooks.md loader (dist/loaders.js and dist/config-paths.js mention hooks.md); 1.7.0 (published 2026-11-01) and 1.8.0 do not.",
+      "opencode-froggy@1.8.0 dist/plugin.test.js has the test 'ignores legacy %s hook configuration' (global and project hooks.md must not run) and 'does not register the removed tool automation hooks'.",
+      "https://github.com/smartfrog/opencode-froggy README (1.8.0) documents agents, memory and tools only, and says it requires OpenCode V2.",
+      "The OpenCode config schema (https://opencode.ai/config.json) marks the `plugin` key deprecated; the current key is `plugins` (https://opencode.ai/docs/config/ and https://opencode.ai/docs/plugins/). The generator still writes `plugin`."
+    ],
+    "last_hook_capable_froggy_version_checked": "1.6.2",
+    "not_verified": "Whether opencode-froggy 1.6.2 runs on the OpenCode release a user has installed (1.0.0+ README says it requires OpenCode V2), and whether OpenCode still accepts the deprecated `plugin` key at runtime."
   }
 }

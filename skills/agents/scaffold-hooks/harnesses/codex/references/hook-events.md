@@ -1,6 +1,6 @@
 # Hook Events
 
-Bundled Codex hook baseline, verified on 2026-05-26 against the official docs, generated schemas, local Codex CLI 0.133.0, and open-source runtime code at `8a94430bb273623be42b68f144f1ab1df343bb53`. This is historical evidence, not a required version or a complete catalog for later releases; runtime claims below refer to that baseline.
+Bundled Codex hook baseline. Runtime claims were verified on 2026-05-26 against Codex CLI 0.133.0 and open-source runtime code at `8a94430bb273623be42b68f144f1ab1df343bb53`. The event catalog and handler facts were re-checked on 2026-11-10 against the official hooks page only (`https://developers.openai.com/codex/hooks`); runtime behaviour of the events added since then is as documented there, not tested.
 
 Primary sources:
 
@@ -17,21 +17,22 @@ Use `assets/hook-events.json` as the deterministic scaffold input. Consult relev
 
 ## Bundled Runtime Baseline
 
-- Current source-backed events: `SessionStart`, `SubagentStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `SubagentStop`, `Stop`
-- Current supported handler type in practice: `command`
-- `prompt` and `agent` parse in config but the runtime skips them
-- `async` parses in config but the runtime skips it
-- Default timeout: `600` seconds
+- Documented events (2026-11-10): `SessionStart`, `SubagentStart`, `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, `PostCompact`, `UserPromptSubmit`, `SubagentStop`, `Stop`, `PreModelRequest`, `PostModelRequest`, `Interrupt`, `SessionEnd`
+- Supported handler types: `command` and `mcp_tool`
+- `prompt` and `agent` parse in config but are skipped
+- `async: true` runs a command hook in the background; it cannot block or control the triggering operation, and `SessionEnd` always runs synchronously. The scaffolder does not emit `async`
+- Hooks live in `hooks.json` or inline `[hooks]` tables in `config.toml`; a layer holding both merges them and warns
+- Default timeout: `600` seconds; `SessionEnd` and `Interrupt` default to `1` and allow at most `3`
 - Timeout alias: `timeoutSec`
 - Canonical feature key: `hooks`; legacy alias: `codex_hooks`
 - Hooks are enabled by default unless config, requirements, or policy turns `[features].hooks` off
-- Non-managed command hooks require review and trust before Codex runs them
+- Non-managed hooks require review and trust before Codex runs them; `--dangerously-bypass-hook-trust` skips persisted trust for one invocation
 
 ## Support Matrix
 
 | Event | Matcher support | Matcher target today | Plain text stdout | JSON stdout | Blocking / control note |
 |------|------------------|----------------------|-------------------|-------------|-------------------------|
-| `SessionStart` | Yes | `source` (`startup`, `resume`, `clear`) | Added as additional developer context | Common fields plus `hookSpecificOutput.additionalContext` | No dedicated block shape |
+| `SessionStart` | Yes | `source` (`startup`, `resume`, `clear`, `compact`, `fork`) | Added as additional developer context | Common fields plus `hookSpecificOutput.additionalContext` | No dedicated block shape |
 | `SubagentStart` | Yes | `agent_type` | Added as additional developer context for the subagent | Common fields plus `hookSpecificOutput.additionalContext` | `continue: false` is parsed but does not stop startup |
 | `UserPromptSubmit` | No | Matcher ignored | Added as additional developer context | `additionalContext` or `decision: "block"` | Can block the prompt before it is sent |
 | `PreToolUse` | Yes | `tool_name` plus aliases | Ignored | `additionalContext`, `permissionDecision: "deny"`, `permissionDecision: "allow"` plus `updatedInput`, or legacy `decision: "block"` | Can block or rewrite supported tool calls before they run |
@@ -40,6 +41,9 @@ Use `assets/hook-events.json` as the deterministic scaffold input. Consult relev
 | `PreCompact` | Yes | `trigger` (`manual` or `auto`) | Ignored | Common fields; `continue: false` stops compaction | `decision: "block"` is invalid |
 | `PostCompact` | Yes | `trigger` (`manual` or `auto`) | Ignored | Common fields; `continue: false` stops follow-on processing | `decision: "block"` is invalid |
 | `SubagentStop` | Yes | `agent_type` | Invalid when exiting `0` | `decision: "block"` or shared output fields | `decision: "block"` means "continue the subagent with this new prompt" |
+| `PreModelRequest` / `PostModelRequest` | No | Matcher not supported | Ignored | Diagnostic only | Run per model request attempt, including retries; cannot change context or block |
+| `Interrupt` | No | Matcher ignored | Ignored | Common output fields | Does not run for subagents; 1 s default, 3 s maximum |
+| `SessionEnd` | Yes | `reason` (only `other` today) | Ignored | Common output fields | Main thread only; always synchronous; no MCP tool hooks |
 | `Stop` | No | Matcher ignored | Invalid when exiting `0` | `decision: "block"` or shared output fields | `decision: "block"` means "continue Codex with this new prompt" |
 
 ## Important Limits
@@ -160,4 +164,4 @@ Use `assets/hook-events.json` as the deterministic scaffold input. Consult relev
 
 ## Known drift
 
-The official hooks page reviewed on 2026-09-25 documents `SessionEnd`, `Interrupt`, async command hooks, and MCP tool hooks beyond this bundled baseline. The generator does not implement them; supporting them needs a version-matched manifest, generator and test update.
+The scaffolder emits the `command` handler only and does not set `async`, `additionalContextLimit` or `commandWindows`. A manifest event is scaffolded only when a plan gives it scripts or commands, so the four events added in 2026-11-10 (`PreModelRequest`, `PostModelRequest`, `Interrupt`, `SessionEnd`) cost nothing until used. Their runtime behaviour was not tested against an installed CLI.

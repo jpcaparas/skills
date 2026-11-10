@@ -1,34 +1,9 @@
 #!/usr/bin/env bash
 #
-# script.sh
-#
-# Canonical event script for {{EVENT_NAME}}.
-#
-# What this event is for:
-#   {{EVENT_DESCRIPTION}}
-#
-# Recommended starting style:
-#   {{ASYNC_GUIDANCE}}
-#
-# Ports/adapters layout:
-#   - script.sh is the shared, editable project behavior for this lifecycle event.
-#   - <harness>.sh files are thin protocol adapters invoked by harness config.
-#   - <harness>.json files carry harness-specific plan data such as commands,
-#     reusable scripts, matchers, and blocking preferences.
-#
-# How this script is organized:
-#   1. main() reads the active harness JSON payload from stdin exactly once.
-#   2. read_adapter_config() loads the active <harness>.json plan data.
-#   3. run_hook_event() applies shared skip policy before custom or plan effects.
-#   4. handle_event() contains the shared project-specific logic.
-#   5. run_configured_scripts() and run_configured_commands() execute plan data.
-#   6. Protocol-specific output helpers live in hooks/lib/<harness>.sh.
-#
-# Safe editing rule:
-#   Start by editing handle_event(). Keep protocol-specific stdout/stderr logic
-#   in hooks/lib/<harness>.sh so this script can serve every harness that maps
-#   to this event.
-#
+# Shared behaviour for the {{EVENT_NAME}} hook, run by every harness adapter in this
+# directory. The scripts and commands come from <harness>.json; protocol output
+# helpers live in hooks/lib/<harness>.sh. Keep stdout empty unless sending JSON
+# to the harness, and log to stderr.
 
 set -euo pipefail
 
@@ -47,9 +22,6 @@ HOOK_INPUT=""
 ADAPTER_CONFIG_JSON="{}"
 
 handle_event() {
-    # Project-specific logic belongs here.
-    # Use config_scripts_json and config_commands_json for plan-managed
-    # reusable behavior, then add any local event logic below those calls.
     if ! run_configured_scripts "$(config_scripts_json)"; then
         handle_project_command_failure "$AGENT_HOOK_EVENT" "$(configured_command_failure_message)"
         return $?
@@ -60,16 +32,6 @@ handle_event() {
         return $?
     fi
 
-    # Useful helpers from hooks/lib/agent-hook-runtime.sh:
-    #   hook_json FILTER [FALLBACK]
-    #   config_value FILTER [FALLBACK]
-    #   run_project_script LABEL SCRIPT_PATH ARGS_JSON [CWD]
-    #   run_project_command LABEL COMMAND [CWD]
-    #
-    # Useful protocol helpers come from hooks/lib/${AGENT_HOOK_HARNESS}.sh.
-    #
-    # Keep stdout empty unless this hook intentionally sends JSON back to the
-    # active harness. Plain logging should go to stderr.
     return 0
 }
 

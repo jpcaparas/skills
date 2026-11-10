@@ -124,7 +124,8 @@ jq \
                 )
                 | map(select((.hooks | length) > 0))
             )
-        ));
+        )
+        | with_entries(select((.value | length) > 0)));
 
     def append_generated_groups($generated):
         reduce (($generated.hooks // {}) | to_entries[]) as $entry ((.hooks // {});

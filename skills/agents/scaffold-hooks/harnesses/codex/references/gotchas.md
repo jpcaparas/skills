@@ -1,6 +1,6 @@
 # Gotchas
 
-Runtime details below describe the bundled `0.133.0` baseline, not every later release.
+Runtime details below describe the bundled `0.133.0` baseline, not every later release; the event catalog was refreshed on 2026-11-10 (see `hook-events.md`).
 
 ## 1. The feature flag is `hooks`
 
@@ -60,7 +60,7 @@ Codex requires review and trust for non-managed command hooks before they run. A
 - `PreToolUse`, `PermissionRequest`, `PostToolUse`, `PreCompact`, and `PostCompact` ignore plain text stdout.
 - `SubagentStop` and `Stop` require JSON on stdout when exiting `0`.
 
-Write the event-specific output contract into the generated stub comments and follow it.
+Follow the event-specific output contract in the repo-owned scripts the plan calls.
 
 ## 15. There is no documented per-hook verbosity flag
 

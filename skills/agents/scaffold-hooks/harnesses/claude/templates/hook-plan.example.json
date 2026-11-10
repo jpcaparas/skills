@@ -4,39 +4,39 @@
   "mode": "additive",
   "enabled_events": [
     {
-      "name": "PreToolUse",
-      "matcher": "Bash|Edit|Write|MultiEdit",
+      "name": "SessionStart",
+      "matcher": "startup|resume|clear|compact",
       "async": false,
-      "timeout": 30,
-      "if": "",
-      "scripts": [],
+      "timeout": 20,
+      "scripts": [
+        {
+          "label": "session context",
+          "path": "scripts/agent-session-context.sh",
+          "args": [
+            "claude"
+          ],
+          "cwd": "."
+        }
+      ],
       "commands": [],
-      "notes": "Use this for hard policy and safety gates."
-    },
-    {
-      "name": "PostToolUse",
-      "matcher": "Edit|Write|MultiEdit|Bash",
-      "async": true,
-      "timeout": 180,
-      "if": "",
-      "scripts": [],
-      "commands": [],
-      "notes": "Use this for formatters, targeted tests, logging, or metrics."
-    },
-    {
-      "name": "Notification",
-      "matcher": "",
-      "async": true,
-      "timeout": 15,
-      "notes": "Use this for desktop or remote notifications."
+      "notes": "Print additional context for the session; the repo script writes the hookSpecificOutput JSON."
     },
     {
       "name": "Stop",
       "async": false,
-      "timeout": 30,
-      "scripts": [],
+      "timeout": 300,
+      "scripts": [
+        {
+          "label": "shared stop checks",
+          "path": "scripts/agent-stop-checks.sh",
+          "args": [
+            "claude"
+          ],
+          "cwd": "."
+        }
+      ],
       "commands": [],
-      "notes": "Use this when the project needs an end-of-turn quality gate."
+      "notes": "End-of-turn quality gate; skipped when no code changed or stop_hook_active is set."
     }
   ]
 }

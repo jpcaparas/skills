@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "verified_on": "2026-06-10",
+  "verified_on": "2026-11-10",
   "verified_from": [
     "https://docs.github.com/en/copilot/concepts/agents/hooks",
     "https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks",
@@ -16,75 +16,151 @@
     "preToolUse denies through stdout JSON permissionDecision fields; it is fail-closed for command hook crashes and timeouts.",
     "permissionRequest is Copilot CLI only and treats command hook exit code 2 as a deny.",
     "notification is Copilot CLI only and does not fire under cloud agent.",
-    "Matchers are regexes anchored as ^(?:matcher)$ and must match the whole field value."
+    "Matchers are regexes anchored as ^(?:matcher)$ and must match the whole field value.",
+    "Re-verified against https://docs.github.com/en/copilot/reference/hooks-reference on 2026-11-10: userPromptTransformed was added (14 events; mutation-only, rewrites model-facing content via modifiedTransformedPrompt).",
+    "The event name selects the payload format: camelCase names get camelCase fields, PascalCase names get VS Code compatible snake_case fields.",
+    "Copilot CLI also reads inline hooks blocks in .github/copilot/settings.json, .github/copilot/settings.local.json and ~/.copilot/settings.json, plus .claude/settings.json; this scaffold writes .github/hooks/*.json only.",
+    "Command and HTTP config-file userPromptSubmitted hooks have their output dropped, including modifiedPrompt."
   ],
   "events": [
     {
       "name": "sessionStart",
-      "aliases": ["SessionStart"],
+      "aliases": [
+        "SessionStart"
+      ],
       "script_name": "session-start.sh",
       "description": "Runs when a new or resumed session begins.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "source", "initialPrompt"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "source",
+        "initialPrompt"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "additionalContext"
     },
     {
       "name": "sessionEnd",
-      "aliases": ["SessionEnd"],
+      "aliases": [
+        "SessionEnd"
+      ],
       "script_name": "session-end.sh",
       "description": "Runs when the session terminates.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "reason"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "reason"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "none"
     },
     {
       "name": "userPromptSubmitted",
-      "aliases": ["UserPromptSubmit"],
+      "aliases": [
+        "UserPromptSubmit"
+      ],
       "script_name": "user-prompt-submitted.sh",
       "description": "Runs when the user submits a prompt.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "prompt"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "prompt"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires at most once for the job prompt",
       "output_kind": "none"
     },
     {
+      "name": "userPromptTransformed",
+      "aliases": [],
+      "script_name": "user-prompt-transformed.sh",
+      "description": "Runs after the runtime transforms a submitted prompt into its model-facing content, just before it is persisted. Mutation-only; it cannot block the turn.",
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "prompt",
+        "transformedPrompt"
+      ],
+      "matcher_field": "",
+      "cloud_agent": "fires",
+      "output_kind": "modifiedTransformedPrompt"
+    },
+    {
       "name": "preToolUse",
-      "aliases": ["PreToolUse"],
+      "aliases": [
+        "PreToolUse"
+      ],
       "script_name": "pre-tool-use.sh",
       "description": "Runs before each tool executes and can allow, deny, ask, or modify args.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "toolName", "toolArgs"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "toolName",
+        "toolArgs"
+      ],
       "matcher_field": "toolName",
       "cloud_agent": "fires",
       "output_kind": "permissionDecision"
     },
     {
       "name": "postToolUse",
-      "aliases": ["PostToolUse"],
+      "aliases": [
+        "PostToolUse"
+      ],
       "script_name": "post-tool-use.sh",
       "description": "Runs after each successful tool execution.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "toolName", "toolArgs", "toolResult"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "toolName",
+        "toolArgs",
+        "toolResult"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "modifiedResult or additionalContext"
     },
     {
       "name": "postToolUseFailure",
-      "aliases": ["PostToolUseFailure"],
+      "aliases": [
+        "PostToolUseFailure"
+      ],
       "script_name": "post-tool-use-failure.sh",
       "description": "Runs after a tool completes with a failure.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "toolName", "toolArgs", "error"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "toolName",
+        "toolArgs",
+        "error"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "additionalContext"
     },
     {
       "name": "agentStop",
-      "aliases": ["Stop"],
+      "aliases": [
+        "Stop"
+      ],
       "script_name": "agent-stop.sh",
       "description": "Runs when the main agent finishes a turn.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "transcriptPath", "stopReason"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "transcriptPath",
+        "stopReason"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "decision block or allow"
@@ -94,37 +170,70 @@
       "aliases": [],
       "script_name": "subagent-start.sh",
       "description": "Runs when a subagent is spawned before it runs.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "transcriptPath", "agentName"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "transcriptPath",
+        "agentName"
+      ],
       "matcher_field": "agentName",
       "cloud_agent": "fires",
       "output_kind": "additionalContext"
     },
     {
       "name": "subagentStop",
-      "aliases": ["SubagentStop"],
+      "aliases": [
+        "SubagentStop"
+      ],
       "script_name": "subagent-stop.sh",
       "description": "Runs when a subagent completes.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "transcriptPath", "agentName", "stopReason"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "transcriptPath",
+        "agentName",
+        "stopReason"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "decision block or allow"
     },
     {
       "name": "errorOccurred",
-      "aliases": ["ErrorOccurred"],
+      "aliases": [
+        "ErrorOccurred"
+      ],
       "script_name": "error-occurred.sh",
       "description": "Runs when an error occurs during agent execution.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "error", "errorContext", "recoverable"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "error",
+        "errorContext",
+        "recoverable"
+      ],
       "matcher_field": "",
       "cloud_agent": "fires",
       "output_kind": "none"
     },
     {
       "name": "preCompact",
-      "aliases": ["PreCompact"],
+      "aliases": [
+        "PreCompact"
+      ],
       "script_name": "pre-compact.sh",
       "description": "Runs before context compaction begins.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "transcriptPath", "trigger", "customInstructions"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "transcriptPath",
+        "trigger",
+        "customInstructions"
+      ],
       "matcher_field": "trigger",
       "cloud_agent": "fires only with trigger auto",
       "output_kind": "none"
@@ -134,7 +243,13 @@
       "aliases": [],
       "script_name": "permission-request.sh",
       "description": "Copilot CLI only. Runs before the permission service and can allow or deny programmatically.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "toolName", "toolArgs"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "toolName",
+        "toolArgs"
+      ],
       "matcher_field": "toolName",
       "cloud_agent": "does not apply",
       "output_kind": "behavior allow or deny"
@@ -144,7 +259,14 @@
       "aliases": [],
       "script_name": "notification.sh",
       "description": "Copilot CLI only. Runs asynchronously when the CLI emits a system notification.",
-      "stdin_fields": ["sessionId", "timestamp", "cwd", "message", "title", "notification_type"],
+      "stdin_fields": [
+        "sessionId",
+        "timestamp",
+        "cwd",
+        "message",
+        "title",
+        "notification_type"
+      ],
       "matcher_field": "notification_type",
       "cloud_agent": "does not fire",
       "output_kind": "additionalContext"

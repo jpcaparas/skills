@@ -15,7 +15,7 @@ Usage:
 
 Options:
   --project DIR                  Target project root.
-  --plan FILE                    Universal scaffold-hooks plan. Defaults to templates/hook-plan.example.json.
+  --plan FILE                    Universal scaffold-hooks plan. Omit to reuse the plan recorded by the last run, or an empty plan.
   --mode MODE                    additive or overhaul. Overrides plan mode.
   --harnesses LIST               Comma-separated subset: claude,codex,copilot,devin,opencode.
                                   Omit to refresh detected hook surfaces, or all supported harnesses in a clean repo.
@@ -282,58 +282,19 @@ cleanup_legacy_managed_roots() {
     done
 }
 
-cleanup_harness_state() {
-    local harness="$1"
-    local hooks_root_abs="$PROJECT_ROOT/$HOOKS_ROOT"
-
-    case "$harness" in
-        claude|codex|devin)
-            rm -rf "$hooks_root_abs/.state/$harness"
-            if [ -d "$hooks_root_abs" ]; then
-                find "$hooks_root_abs" -mindepth 2 -maxdepth 2 \
-                    \( -name "$harness.sh" -o -name "$harness.json" \) \
-                    -delete 2>/dev/null || true
-            fi
-            ;;
-        opencode|copilot)
-            # OpenCode and Copilot harness scaffolders own their managed cleanup
-            # (.opencode/hook/.managed plus legacy .opencode/plugins/.managed,
-            # and .github/copilot/hooks/generated).
-            ;;
-    esac
-}
-
+# A project's pre-skill plan is migrated; otherwise a harness the universal plan
+# does not mention gets an empty plan and therefore no hooks.
 fallback_plan_for_harness() {
     local harness="$1"
     case "$harness" in
-        claude)
-            if [ -f "$PROJECT_ROOT/.claude/hooks/plan.json" ]; then
-                printf '%s\n' "$PROJECT_ROOT/.claude/hooks/plan.json"
-            else
-                printf '%s\n' "$HARNESSES_ROOT/claude/templates/hook-plan.example.json"
+        claude|codex|devin)
+            if [ -f "$PROJECT_ROOT/.$harness/hooks/plan.json" ]; then
+                printf '%s\n' "$PROJECT_ROOT/.$harness/hooks/plan.json"
+                return
             fi
-            ;;
-        codex)
-            if [ -f "$PROJECT_ROOT/.codex/hooks/plan.json" ]; then
-                printf '%s\n' "$PROJECT_ROOT/.codex/hooks/plan.json"
-            else
-                printf '%s\n' "$HARNESSES_ROOT/codex/templates/hook-plan.example.json"
-            fi
-            ;;
-        devin)
-            if [ -f "$PROJECT_ROOT/.devin/hooks/plan.json" ]; then
-                printf '%s\n' "$PROJECT_ROOT/.devin/hooks/plan.json"
-            else
-                printf '%s\n' "$HARNESSES_ROOT/devin/templates/hook-plan.example.json"
-            fi
-            ;;
-        opencode)
-            printf '%s\n' "$HARNESSES_ROOT/opencode/templates/hook-plan.example.json"
-            ;;
-        copilot)
-            printf '%s\n' "$HARNESSES_ROOT/copilot/templates/hook-plan.example.json"
             ;;
     esac
+    printf '%s\n' "$EMPTY_PLAN"
 }
 
 build_child_plan() {
@@ -441,9 +402,9 @@ write_universal_readme() {
         printf '# Agent Hooks\n\n'
         printf 'Shared repo-owned hook behavior for Claude Code, Codex, Devin CLI, OpenCode, and GitHub Copilot.\n\n'
         printf '## Layout\n\n'
-        printf -- '- `hooks/<event>/script.sh` is the shared editable behavior for an event.\n'
+        printf -- '- `hooks/<event>/script.sh` runs the scripts and commands the plan lists for an event.\n'
         printf -- '- `hooks/<event>/<harness>.sh` is a thin adapter invoked by that harness config.\n'
-        printf -- '- `hooks/<event>/<harness>.json` stores scripts and commands from the plan.\n'
+        printf -- '- `hooks/<event>/<harness>.json` stores that event'"'"'s scripts and commands.\n'
         printf -- '- `hooks/lib/` stores shared runtime helpers and harness output helpers.\n'
         printf -- '- `hooks/.state/<harness>/` stores generated config fragments and manifests.\n\n'
         printf '## Harness Config\n\n'
@@ -633,11 +594,28 @@ require_command bash
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 HARNESSES_ROOT="$SKILL_ROOT/harnesses"
-DEFAULT_PLAN="$SKILL_ROOT/templates/hook-plan.example.json"
 DEFAULT_HARNESSES_JSON='["claude", "codex", "copilot", "devin", "opencode"]'
 
 PROJECT_ROOT="$(resolve_project "$PROJECT_ROOT")"
-PLAN_FILE="$(normalize_plan_path "${PLAN_FILE:-$DEFAULT_PLAN}")"
+
+TEMP_DIR="$(mktemp -d)"
+cleanup() {
+    rm -rf "$TEMP_DIR"
+}
+trap cleanup EXIT
+EMPTY_PLAN="$TEMP_DIR/empty-plan.json"
+printf '{}\n' > "$EMPTY_PLAN"
+
+# Without --plan, refresh from the plan the last run recorded; a project that was
+# never scaffolded has none and gets no hooks.
+PLAN_IS_EXPLICIT="true"
+if [ -z "$PLAN_FILE" ]; then
+    PLAN_IS_EXPLICIT="false"
+    PLAN_FILE="$TEMP_DIR/recorded-plan.json"
+    jq '.plan // {}' "$PROJECT_ROOT/hooks/.state/scaffold-hooks/manifest.json" > "$PLAN_FILE" 2>/dev/null \
+        || cp "$EMPTY_PLAN" "$PLAN_FILE"
+fi
+PLAN_FILE="$(normalize_plan_path "$PLAN_FILE")"
 
 MODE="$(jq -r '.mode // "additive"' "$PLAN_FILE")"
 if [ -n "$MODE_OVERRIDE" ]; then
@@ -658,7 +636,7 @@ validate_scaffold_path "$PROJECT_ROOT" "$HOOKS_ROOT" hooks_root tree
 DETECTED_HARNESSES_JSON="$(detect_existing_harnesses)"
 DETECTED_HARNESS_COUNT="$(printf '%s' "$DETECTED_HARNESSES_JSON" | jq 'length')"
 PLAN_HAS_EXPLICIT_HARNESSES="false"
-if [ "$PLAN_FILE" != "$DEFAULT_PLAN" ] && jq -e 'has("harnesses")' "$PLAN_FILE" >/dev/null 2>&1; then
+if [ "$PLAN_IS_EXPLICIT" = "true" ] && jq -e 'has("harnesses")' "$PLAN_FILE" >/dev/null 2>&1; then
     PLAN_HAS_EXPLICIT_HARNESSES="true"
 fi
 if [ -n "$HARNESSES_OVERRIDE" ]; then
@@ -709,12 +687,6 @@ if contains_harness opencode; then
     require_command bun
 fi
 
-TEMP_DIR="$(mktemp -d)"
-cleanup() {
-    rm -rf "$TEMP_DIR"
-}
-trap cleanup EXIT
-
 # Validate all selected outputs before the first harness or legacy cleanup can
 # mutate the project. A later invalid child must not leave earlier changes.
 for harness in claude codex devin opencode copilot; do
@@ -722,6 +694,16 @@ for harness in claude codex devin opencode copilot; do
         child_plan="$TEMP_DIR/$harness-plan.json"
         build_child_plan "$harness" "$child_plan"
         DRY_RUN=true run_child_scaffold "$harness" "$child_plan" >/dev/null
+    fi
+done
+HOOK_COUNT=0
+for harness in claude codex devin opencode copilot; do
+    if contains_harness "$harness"; then
+        HOOK_COUNT=$((HOOK_COUNT + $(
+            jq '((.enabled_events // []) + (.hooks // []))
+                | map(select(((.scripts // []) + (.commands // []) + (.actions // [])) | length > 0))
+                | length' "$TEMP_DIR/$harness-plan.json"
+        )))
     fi
 done
 for base in .claude/hooks .codex/hooks .devin/hooks; do
@@ -751,11 +733,6 @@ for harness in claude codex devin opencode copilot; do
     fi
 
     child_plan="$TEMP_DIR/$harness-plan.json"
-
-    if [ "$MODE" = "overhaul" ] && [ "$DRY_RUN" != "true" ]; then
-        cleanup_harness_state "$harness"
-    fi
-
     run_child_scaffold "$harness" "$child_plan"
 done
 
@@ -769,6 +746,7 @@ scaffold_all_hooks.sh dry run complete
   harnesses:       $(printf '%s' "$HARNESS_LIST_JSON" | jq -r 'join(",")')
   selection source: $HARNESS_SELECTION_SOURCE
   cleanup legacy:  $CLEANUP_LEGACY
+  hooks to emit:   $HOOK_COUNT
 EOF
     exit 0
 fi
@@ -777,8 +755,20 @@ if [ "$CLEANUP_LEGACY" = "true" ]; then
     cleanup_legacy_managed_roots
 fi
 
-write_universal_readme
-write_universal_manifest
+has_event_adapters() {
+    [ -n "$(find "$PROJECT_ROOT/$HOOKS_ROOT" -mindepth 2 -maxdepth 2 -type f -name '*.sh' \
+        ! -path '*/lib/*' -print -quit 2>/dev/null)" ]
+}
+
+if [ "$HOOK_COUNT" -gt 0 ] || has_event_adapters; then
+    write_universal_readme
+    write_universal_manifest
+else
+    rm -f "$PROJECT_ROOT/$HOOKS_ROOT/README.md"
+    rm -rf "$PROJECT_ROOT/$HOOKS_ROOT/.state/scaffold-hooks"
+    rmdir "$PROJECT_ROOT/$HOOKS_ROOT/.state" "$PROJECT_ROOT/$HOOKS_ROOT" 2>/dev/null || true
+    echo "No plan event has scripts or commands; no hooks were scaffolded." >&2
+fi
 verify_no_legacy_commands
 
 cat <<EOF
@@ -790,4 +780,5 @@ scaffold_all_hooks.sh complete
   harnesses:       $(printf '%s' "$HARNESS_LIST_JSON" | jq -r 'join(",")')
   selection source: $HARNESS_SELECTION_SOURCE
   cleanup legacy:  $CLEANUP_LEGACY
+  hooks emitted:   $HOOK_COUNT
 EOF

@@ -107,6 +107,42 @@ event_dir_name() {
     printf '%s\n' "$script_name" | tr '_' '-'
 }
 
+# Code lines only: comments, blank lines and the event-name default are the parts
+# a hand edit or a regenerated header may legitimately change.
+generated_code() {
+    grep -Ev '^[[:space:]]*(#|$)' "$1" | grep -v 'AGENT_HOOK_EVENT:=' || true
+}
+
+# Removes what an earlier scaffold generated for events that no longer have
+# behaviour: this harness's adapter, then the shared script.sh once no adapter
+# uses it and it is still the untouched generated stub.
+prune_stale_events() {
+    local dir name
+    for dir in "$MANAGED_ROOT_ABS"/*/; do
+        [ -d "$dir" ] || continue
+        name="$(basename "$dir")"
+        case " $KEPT_DIRS " in *" $name "*) continue ;; esac
+        [ "$name" != "lib" ] || continue
+        if grep -qs 'AGENT_HOOK_HARNESS="codex"' "$dir/codex.sh"; then
+            rm -f "$dir/codex.sh" "$dir/codex.json"
+        fi
+        if [ -z "$(find "$dir" -maxdepth 1 -name '*.sh' ! -name script.sh -print -quit)" ] \
+            && [ -f "$dir/script.sh" ] \
+            && [ "$(generated_code "$dir/script.sh")" = "$(generated_code "$EVENT_TEMPLATE")" ]; then
+            rm -f "$dir/script.sh"
+        fi
+        rmdir "$dir" 2>/dev/null || true
+    done
+    if [ -z "$KEPT_DIRS" ]; then
+        rm -rf "$STATE_DIR"
+        rm -f "$LIB_DIR/codex.sh"
+    fi
+    if [ -z "$(find "$MANAGED_ROOT_ABS" -mindepth 2 -maxdepth 2 \( -name codex.sh -o -name codex.sh -o -name devin.sh \) -print -quit 2>/dev/null)" ]; then
+        rm -f "$LIB_DIR/agent-hook-runtime.sh"
+    fi
+    rmdir "$LIB_DIR" 2>/dev/null || true
+}
+
 write_adapter_script() {
     local harness="$1"
     local event_name="$2"
@@ -692,6 +728,7 @@ SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 SCAFFOLD_ROOT="$(cd "$SKILL_ROOT/../.." && pwd -P)"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
 EVENT_TEMPLATE="$SKILL_ROOT/templates/event-script.sh.tmpl"
+KEPT_DIRS=""
 
 PROJECT_ROOT="$(
     cd "$PROJECT_ROOT"
@@ -842,15 +879,23 @@ FEATURE_STATUS_JSON="$(
 )"
 FEATURE_EFFECTIVE="$(printf '%s' "$FEATURE_STATUS_JSON" | jq -r '.effective // "unknown"')"
 TEMP_FEATURE_STATUS="$(mktemp)"
+EFFECTIVE_PLAN="$(mktemp)"
+EMPTY_FRAGMENT="$(mktemp)"
 TEMP_GROUPS_DIR=""
 cleanup() {
-    rm -f "$TEMP_FEATURE_STATUS"
+    rm -f "$TEMP_FEATURE_STATUS" "$EFFECTIVE_PLAN" "$EMPTY_FRAGMENT"
     if [ -n "$TEMP_GROUPS_DIR" ] && [ -d "$TEMP_GROUPS_DIR" ]; then
         rm -rf "$TEMP_GROUPS_DIR"
     fi
 }
 trap cleanup EXIT
 printf '%s\n' "$FEATURE_STATUS_JSON" > "$TEMP_FEATURE_STATUS"
+
+# An event is scaffolded only when the plan gives it scripts or commands. Every
+# later step reads this filtered plan, so a stub is never rendered or wired.
+jq '.enabled_events = [(.enabled_events // [])[] | select(((.scripts // []) + (.commands // [])) | length > 0)]' \
+    "$PLAN_FILE" > "$EFFECTIVE_PLAN"
+EVENT_COUNT="$(jq '.enabled_events | length' "$EFFECTIVE_PLAN")"
 
 if [ "$DRY_RUN" = "true" ]; then
     cat <<EOF
@@ -862,20 +907,41 @@ scaffold_hooks.sh dry run
   hook root:       $MANAGED_ROOT_REL
   ensure feature:  $ENSURE_FEATURE
   feature active:  $FEATURE_EFFECTIVE
+  events:          $EVENT_COUNT
 EOF
-    if [ "$ENSURE_FEATURE" != "off" ] && [ "$FEATURE_EFFECTIVE" != "true" ]; then
+    if [ "$EVENT_COUNT" -gt 0 ] && [ "$ENSURE_FEATURE" != "off" ] && [ "$FEATURE_EFFECTIVE" != "true" ]; then
         printf '  note: would enable hooks in %s scope\n' "$ENSURE_FEATURE"
     fi
     exit 0
 fi
 
+PLAN_FILE="$EFFECTIVE_PLAN"
+
 if ! MANIFEST_ROWS="$(
-    jq -er \
-        '.events[] | [.name, .script_name, .description, .matcher_guidance, .output_guidance, .blocking_guidance] | @tsv' \
-        "$MANIFEST_SOURCE"
+    jq -r --slurpfile plan "$PLAN_FILE" '
+        ($plan[0].enabled_events | map(.name)) as $enabled
+        | .events[]
+        | select(.name as $name | $enabled | index($name))
+        | [.name, .script_name]
+        | @tsv
+    ' "$MANIFEST_SOURCE"
 )"; then
     echo "Failed to read complete Codex hook manifest rows." >&2
     exit 1
+fi
+
+if [ -z "$MANIFEST_ROWS" ]; then
+    prune_stale_events
+    if [ -f "$HOOKS_TARGET_ABS" ]; then
+        printf '{"hooks":{}}\n' > "$EMPTY_FRAGMENT"
+        bash "$SCRIPT_DIR/merge_hooks_json.sh" \
+            --hooks-file "$HOOKS_TARGET_ABS" \
+            --fragment-file "$EMPTY_FRAGMENT" \
+            --managed-root "$MANAGED_ROOT_REL/" \
+            --managed-suffix "/codex.sh"
+    fi
+    echo "No plan event has scripts or commands; no Codex hooks were scaffolded." >&2
+    exit 0
 fi
 
 if [ "$ENSURE_FEATURE" != "off" ] && [ "$FEATURE_EFFECTIVE" != "true" ]; then
@@ -891,17 +957,12 @@ fi
 
 mkdir -p "$PROJECT_ROOT/.codex" "$MANAGED_ROOT_ABS" "$LIB_DIR" "$STATE_DIR"
 
-if [ "$MODE" = "overhaul" ]; then
-    rm -rf "$STATE_DIR"
-    find "$MANAGED_ROOT_ABS" -mindepth 2 -maxdepth 2 \( -name 'codex.sh' -o -name 'codex.json' \) -delete 2>/dev/null || true
-    mkdir -p "$STATE_DIR"
-fi
-
 write_runtime_lib
 write_codex_lib
 
-while IFS=$'\t' read -r event_name script_name description matcher_guidance output_guidance blocking_guidance; do
+while IFS=$'\t' read -r event_name script_name; do
     event_dir="$(event_dir_name "$script_name")"
+    KEPT_DIRS="$KEPT_DIRS $event_dir"
     event_dir_abs="$MANAGED_ROOT_ABS/$event_dir"
     target_script="$event_dir_abs/script.sh"
     adapter_script="$event_dir_abs/codex.sh"
@@ -914,10 +975,6 @@ while IFS=$'\t' read -r event_name script_name description matcher_guidance outp
         sed \
             -e "s|{{SCRIPT_NAME}}|script.sh|g" \
             -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
-            -e "s|{{EVENT_DESCRIPTION}}|$(escape_for_sed "$description")|g" \
-            -e "s|{{MATCHER_GUIDANCE}}|$(escape_for_sed "$matcher_guidance")|g" \
-            -e "s|{{OUTPUT_GUIDANCE}}|$(escape_for_sed "$output_guidance")|g" \
-            -e "s|{{BLOCKING_GUIDANCE}}|$(escape_for_sed "$blocking_guidance")|g" \
             "$EVENT_TEMPLATE" > "$target_script"
 
         chmod +x "$target_script"
@@ -1088,9 +1145,7 @@ bash "$SCRIPT_DIR/merge_hooks_json.sh" \
     --managed-root "$MANAGED_ROOT_REL/" \
     --managed-suffix "/codex.sh"
 
-bash "$SCRIPT_DIR/render_hooks_readme.sh" \
-    --project "$PROJECT_ROOT" \
-    --plan "$PLAN_FILE"
+prune_stale_events
 
 cat <<EOF
 scaffold_hooks.sh complete

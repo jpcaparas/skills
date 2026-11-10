@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "verified_on": "2026-06-12",
+  "verified_on": "2026-11-10",
   "verified_from": [
     "https://code.claude.com/docs/en/hooks",
     "https://code.claude.com/docs/en/hooks-guide",
@@ -14,12 +14,14 @@
     "Only command hooks support async execution.",
     "Claude Code now documents five handler types: command, http, mcp_tool, prompt, and agent.",
     "MessageDisplay is documented in the official hooks reference as of 2026-06-12.",
-    "SessionStart and Setup support command and mcp_tool only."
+    "SessionStart and Setup support command and mcp_tool only.",
+    "Re-verified against the official hooks reference on 2026-11-10: DirectoryAdded, PreModelSwitch and PostModelSwitch were added (33 events), SessionStart gained the `fork` matcher value, and command/http hooks gained `onFailure` (`continue` or `block`, Claude Code v2.1.295+).",
+    "PreModelSwitch and PostModelSwitch require Claude Code v2.1.251 or later.",
+    "PermissionRequest no longer supports agent hooks: Claude Code skips an agent hook there and the permission flow proceeds unchanged (official reference, 2026-11-10)."
   ],
   "hook_type_support": {
     "all_five": [
       "PermissionDenied",
-      "PermissionRequest",
       "PostToolBatch",
       "PostToolUse",
       "PostToolUseFailure",
@@ -32,9 +34,13 @@
       "UserPromptExpansion",
       "UserPromptSubmit"
     ],
+    "command_http_mcp_tool_prompt": [
+      "PermissionRequest"
+    ],
     "command_http_mcp_tool_only": [
       "ConfigChange",
       "CwdChanged",
+      "DirectoryAdded",
       "Elicitation",
       "ElicitationResult",
       "FileChanged",
@@ -42,7 +48,9 @@
       "MessageDisplay",
       "Notification",
       "PostCompact",
+      "PostModelSwitch",
       "PreCompact",
+      "PreModelSwitch",
       "SessionEnd",
       "StopFailure",
       "SubagentStart",
@@ -64,7 +72,8 @@
         "startup",
         "resume",
         "clear",
-        "compact"
+        "compact",
+        "fork"
       ],
       "supports_matcher": true,
       "supports_if": false,
@@ -187,8 +196,7 @@
         "command",
         "http",
         "mcp_tool",
-        "prompt",
-        "agent"
+        "prompt"
       ],
       "async_guidance": "Usually keep sync because the value of this event is the permission decision."
     },
@@ -472,6 +480,24 @@
       "async_guidance": "Usually keep sync when the hook updates the environment before the next Bash command."
     },
     {
+      "name": "DirectoryAdded",
+      "script_name": "directory-added.sh",
+      "description": "Runs after a working directory is added mid-session with /add-dir or the SDK register_repo_root request. It cannot block the add.",
+      "matcher_kind": "how the directory was added",
+      "matcher_examples": [
+        "slash_command",
+        "register_repo_root"
+      ],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
+      "async_guidance": "Claude Code does not wait for it; the hook runs in the background."
+    },
+    {
       "name": "FileChanged",
       "script_name": "file-changed.sh",
       "description": "Runs when a watched file changes on disk.",
@@ -554,6 +580,43 @@
         "mcp_tool"
       ],
       "async_guidance": "Use async for passive logging. Keep sync only when the follow-up state must be ready immediately."
+    },
+    {
+      "name": "PreModelSwitch",
+      "script_name": "pre-model-switch.sh",
+      "description": "Runs before a requested model switch is applied. Exit 2, decision block or permissionDecision deny cancels it; allow and ask are also accepted.",
+      "matcher_kind": "canonical name of the target model",
+      "matcher_examples": [
+        "claude-opus-5",
+        "claude-opus-4-6|claude-opus-5",
+        ".*opus.*"
+      ],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
+      "async_guidance": "Keep sync; a hook that times out blocks the switch (default timeout 30 seconds)."
+    },
+    {
+      "name": "PostModelSwitch",
+      "script_name": "post-model-switch.sh",
+      "description": "Runs after the session's model changes, including automatic fallback and model restore on resume. It cannot block.",
+      "matcher_kind": "canonical name of the target model",
+      "matcher_examples": [
+        "claude-opus-5",
+        ".*opus.*"
+      ],
+      "supports_matcher": true,
+      "supports_if": false,
+      "supported_hook_types": [
+        "command",
+        "http",
+        "mcp_tool"
+      ],
+      "async_guidance": "Usually sync so model-specific guidance lands before the next turn."
     },
     {
       "name": "SessionEnd",

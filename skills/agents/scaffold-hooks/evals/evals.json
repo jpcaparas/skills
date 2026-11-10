@@ -4,7 +4,7 @@
       "id": 1,
       "name": "universal_four_harness_scaffold",
       "prompt": "Run /scaffold-hooks in this repo. Scaffold Claude Code, Codex, Devin CLI, and OpenCode hook configuration into one shared hooks/ directory without duplicating event behavior.",
-      "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh behavior with claude/codex/devin adapters, enables opencode-froggy in opencode.json with hooks in .opencode/hook/hooks.md, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
+      "expected_output": "The response audits existing hook configs, uses the universal scaffold-hooks workflow, creates shared hooks/<event>/script.sh runners with claude/codex/devin adapters only for the events the plan gives scripts or commands, enables opencode-froggy in opencode.json with hooks in .opencode/hook/hooks.md, preserves unrelated custom hooks, and verifies no selected shell harness config points at legacy generated roots.",
       "files": [
         "SKILL.md",
         "scripts/scaffold_all_hooks.sh",
@@ -23,6 +23,9 @@
         },
         {
           "text": "Uses opencode-froggy for OpenCode hook scaffolding"
+        },
+        {
+          "text": "Emits files and config entries only for plan events that have scripts or commands"
         }
       ]
     },
@@ -82,6 +85,68 @@
         },
         {
           "text": "Generated Stop adapters can skip expensive checks when no configured source extensions changed"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "name": "emit_only_behaviour",
+      "prompt": "Run /scaffold-hooks for Claude and Codex. The only things this repo should do on hooks are print session context and run scripts/agent-stop-checks.sh when Claude or Codex stops.",
+      "expected_output": "The response writes a plan with SessionStart and Stop entries that call the repo scripts, dry-runs, then scaffolds. Only hooks/session-start and hooks/stop exist afterwards, and settings carry exactly those two events. It does not add PreToolUse, PostToolUse or other events just because the harness documents them.",
+      "files": [
+        "SKILL.md",
+        "references/plan-format.md",
+        "templates/hook-plan.example.json"
+      ],
+      "assertions": [
+        {
+          "text": "Plan lists only events that have scripts or commands"
+        },
+        {
+          "text": "No stub script, adapter or config entry exists for any other documented event"
+        },
+        {
+          "text": "Stop adapters keep the stop_hook_active guard and the code-change gate"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "name": "refresh_old_stub_scaffold",
+      "prompt": "This repo was scaffolded by an older scaffold-hooks and has dozens of hooks/<event>/ folders that do nothing. Clean it up with /scaffold-hooks but keep our custom hooks.",
+      "expected_output": "The response re-runs the universal scaffold with the real plan so empty events lose their adapters, untouched script.sh stubs and config entries, while custom hooks in harness configs, edited script.sh files and files outside managed roots are preserved. It reports what was removed and what was kept.",
+      "files": [
+        "references/migration.md",
+        "references/collision-policy.md",
+        "references/plan-format.md"
+      ],
+      "assertions": [
+        {
+          "text": "Events without scripts or commands lose their managed files and config entries"
+        },
+        {
+          "text": "A script.sh with edited code and custom config hooks are preserved"
+        },
+        {
+          "text": "Final configs are checked for leftover managed entries"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "name": "no_plan_means_no_hooks",
+      "prompt": "Run /scaffold-hooks on this repo for all harnesses. I haven't decided what the hooks should do yet.",
+      "expected_output": "The response asks for or drafts a plan from the user's real checks instead of generating hooks for every event. It explains that an event with no scripts or commands is not emitted, so a run without behaviour writes nothing.",
+      "files": [
+        "SKILL.md",
+        "references/plan-format.md"
+      ],
+      "assertions": [
+        {
+          "text": "Does not scaffold placeholder hooks for events with no behaviour"
+        },
+        {
+          "text": "States that a scaffold without a plan, or whose events lack behaviour, writes nothing"
         }
       ]
     }

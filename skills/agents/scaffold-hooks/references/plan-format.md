@@ -2,6 +2,19 @@
 
 Start from `templates/hook-plan.example.json`.
 
+## Which Events Are Emitted
+
+An event is scaffolded only when its plan entry has behaviour: at least one item in `scripts` or `commands`. For OpenCode, a `hooks` entry needs at least one item in `actions`. An entry without behaviour (empty arrays, or none of the fields) writes no files and no config entry, so listing an event is not enough to get it. Malformed `scripts`, `commands`, event names or paths still fail the run before any write, whether or not the event would have been emitted.
+
+| Plan | Result |
+| --- | --- |
+| Omitted (`--plan` not given) on a project that was scaffolded before | Reuses the plan in `hooks/.state/scaffold-hooks/manifest.json` |
+| Omitted on a project never scaffolded | Nothing is written |
+| Given, but no event has behaviour | Nothing is written; managed files from earlier runs are removed |
+| Given, some events have behaviour | Only those events are written; managed files of other events are removed |
+
+The dry run prints `hooks to emit`, the number of qualifying events across the selected harnesses.
+
 ## Top-Level Fields
 
 | Field | Meaning |
@@ -37,13 +50,22 @@ Harnesses can add more granular provenance. OpenCode records `managed_file_hashe
 
 ## Per-Harness Plans
 
-The nested `plans.claude`, `plans.codex`, `plans.devin`, and `plans.opencode` objects intentionally mirror the dedicated skill plan files. The universal script injects the shared hook root and mode; keep harness-specific settings inside the nested plan.
+The nested `plans.claude`, `plans.codex`, `plans.copilot`, `plans.devin`, and `plans.opencode` objects intentionally mirror the dedicated skill plan files. The universal script injects the shared hook root and mode; keep harness-specific settings inside the nested plan.
 
 ## Output Paths
 
 Project output fields must be relative to the selected project, without `..` components, `~`, or symlink components. Existing managed output trees must not contain symlinks: generators may rewrite or chmod descendants, and overhaul may remove managed state. Legacy manifests do not authorize output or deletion outside those roots. The universal script validates selected child plans before any migration or overhaul writes.
 
 An authorized OpenCode global plan uses `scope: global` and requires `--allow-global-targets` on either the universal or direct scaffolder. Its config, hooks, and state must stay under `~/.config/opencode/` (or the explicit `--home` override). The flag does not permit arbitrary absolute paths. Without it, the plan cannot widen a project invocation into home-directory writes.
+
+## Removal on Refresh
+
+Every run makes the managed output match the plan:
+
+- Harness config entries for events that no longer qualify are dropped by the merge, and an event key left empty is removed.
+- Per event, the harness adapter pair (`<harness>.sh`, `<harness>.json`) is deleted. `hooks/<event>/script.sh` is deleted only when no other harness adapter remains and it is still the generated runner; a `script.sh` with edited code is kept.
+- `hooks/lib/` helpers are deleted once no adapter needs them. Copilot's generated `events/*.sh` files are deleted when they carry the generated header, and hand-written files beside them are kept.
+- Files outside the managed roots, and config entries that are not managed commands, are never touched.
 
 ## Scripts and Commands
 
@@ -106,7 +128,7 @@ Use `run_on_code_changes: false` when a Stop hook must run on every turn. Use `c
 
 If a nested plan is missing, `scripts/scaffold_all_hooks.sh` falls back in this order:
 
-1. Existing legacy plan in the target project, if present
-2. The dedicated harness skill template
+1. Existing legacy plan in the target project, if present (`.claude|.codex|.devin/hooks/plan.json`)
+2. An empty plan, which emits nothing for that harness
 
-This makes migrations practical without copying old generated files.
+The harness `templates/hook-plan.example.json` files are examples to copy and edit, not defaults.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs"
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { dirname, resolve } from "node:path"
 import { flagValue } from "./opencode_json_utils.ts"
 
@@ -153,6 +153,17 @@ function renderMergedDocument(existing: string, block: string, mode: string, hoo
   return `---\n${nextFrontmatter}\n---\n${body}`
 }
 
+// An empty hook list means the plan has no behaviour: drop the managed block
+// and the file itself when it held nothing else.
+function removeManagedBlock(existing: string): string | null {
+  const parts = splitFrontmatter(existing)
+  if (!parts) return existing
+  const remaining = replaceManagedBlock(parts.frontmatter, "")
+  if (remaining === null) return existing
+  const onlyOurs = parts.body.includes("Managed by scaffold-hooks") && ["", "hooks:"].includes(remaining.trim())
+  return onlyOurs ? null : `---\n${remaining}\n---\n${parts.body}`
+}
+
 function validateHooks(value: unknown): FroggyHook[] {
   if (!Array.isArray(value)) throw new Error("--hooks-json must be an array")
   return value.map((item, index) => {
@@ -195,8 +206,15 @@ if (mode !== "additive" && mode !== "overhaul") {
 
 const hookConfigPath = resolve(hooksFile)
 const hooks = validateHooks(JSON.parse(hooksJson))
-const block = renderManagedBlock(hooks)
 const existing = existsSync(hookConfigPath) ? readFileSync(hookConfigPath, "utf8") : ""
+if (hooks.length === 0) {
+  const remaining = removeManagedBlock(existing)
+  if (remaining === null) rmSync(hookConfigPath)
+  else if (existing) writeFileSync(hookConfigPath, remaining, "utf8")
+  console.log(JSON.stringify({ hooks_file: hookConfigPath, hooks: 0 }, null, 2))
+  process.exit(0)
+}
+const block = renderManagedBlock(hooks)
 const rendered = renderMergedDocument(existing, block, mode, hookConfigPath).replace(
   "Managed by scaffold-hooks.",
   `Managed by scaffold-hooks (${managedID}).`

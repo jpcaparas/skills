@@ -14,9 +14,9 @@ It does not strip prompt hooks, HTTP hooks, MCP hooks, agent hooks, or custom co
 
 ## Shared Scripts
 
-`hooks/<event>/script.sh` is user-editable shared behavior. It is never deleted by universal cleanup and is not rewritten by shell harnesses during universal runs.
+`hooks/<event>/script.sh` is generated once per qualifying event and not rewritten by shell harnesses during universal runs, so a deliberate edit survives. It is deleted only when its event stops qualifying, no other harness adapter remains, and its code is still the generated runner.
 
-Harness adapters are disposable:
+Harness adapters are disposable. They exist only for events the plan gives behaviour, and a refresh deletes the adapter of any event that no longer qualifies:
 
 - `hooks/<event>/claude.sh`
 - `hooks/<event>/claude.json`

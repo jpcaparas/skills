@@ -1,6 +1,6 @@
 # Hook Events
 
-Bundled Devin CLI hook baseline, verified against the official docs on 2026-06-10. The JSON context/decision guidance below was also checked against the official overview on 2026-09-25; this does not re-certify every bundled event field.
+Bundled Devin CLI hook baseline. The event catalog (eight events) and handler format were re-verified against the official overview and lifecycle pages on 2026-11-10; this does not re-certify every bundled event field.
 
 Official sources:
 
@@ -83,7 +83,7 @@ Use exit code `2` for intentional policy gates. Do not use `1` when the hook mus
 | `SessionStart` | When a new session begins | `source` | No `tool_name`; use `""` or omit |
 | `SessionEnd` | When a session ends | `reason` | No `tool_name`; use `""` or omit |
 
-The overview page lists the main lifecycle events and the lifecycle page documents `PostCompaction` in detail. Include `PostCompaction` unless a fresh live-doc check shows the docs changed.
+As of 2026-11-10 both the overview event table and the lifecycle page list `PostCompaction`. `SessionEnd` is not fired in cloud sessions. Handlers can be `command` or `prompt` (an LLM prompt evaluation); the scaffolder emits `command` hooks only.
 
 ## Matcher Rules
 

@@ -5,8 +5,8 @@
 # Render or refresh a managed Devin CLI hook scaffold in a target project.
 #
 # This script is deterministic by design:
-# - it always creates one managed bash stub per documented Devin lifecycle event
-# - it only enables the events listed in the provided plan JSON
+# - it scaffolds only the plan events that have scripts or commands
+# - it removes managed files of events that no longer qualify
 # - it only replaces previously managed hook commands in .devin/hooks.v1.json
 # - it leaves unrelated custom hooks alone
 #
@@ -99,6 +99,42 @@ event_dir_name() {
     local script_name="$1"
     script_name="${script_name%.sh}"
     printf '%s\n' "$script_name" | tr '_' '-'
+}
+
+# Code lines only: comments, blank lines and the event-name default are the parts
+# a hand edit or a regenerated header may legitimately change.
+generated_code() {
+    grep -Ev '^[[:space:]]*(#|$)' "$1" | grep -v 'AGENT_HOOK_EVENT:=' || true
+}
+
+# Removes what an earlier scaffold generated for events that no longer have
+# behaviour: this harness's adapter, then the shared script.sh once no adapter
+# uses it and it is still the untouched generated stub.
+prune_stale_events() {
+    local dir name
+    for dir in "$MANAGED_ROOT_ABS"/*/; do
+        [ -d "$dir" ] || continue
+        name="$(basename "$dir")"
+        case " $KEPT_DIRS " in *" $name "*) continue ;; esac
+        [ "$name" != "lib" ] || continue
+        if grep -qs 'AGENT_HOOK_HARNESS="devin"' "$dir/devin.sh"; then
+            rm -f "$dir/devin.sh" "$dir/devin.json"
+        fi
+        if [ -z "$(find "$dir" -maxdepth 1 -name '*.sh' ! -name script.sh -print -quit)" ] \
+            && [ -f "$dir/script.sh" ] \
+            && [ "$(generated_code "$dir/script.sh")" = "$(generated_code "$EVENT_TEMPLATE")" ]; then
+            rm -f "$dir/script.sh"
+        fi
+        rmdir "$dir" 2>/dev/null || true
+    done
+    if [ -z "$KEPT_DIRS" ]; then
+        rm -rf "$STATE_DIR"
+        rm -f "$LIB_DIR/devin.sh"
+    fi
+    if [ -z "$(find "$MANAGED_ROOT_ABS" -mindepth 2 -maxdepth 2 \( -name devin.sh -o -name codex.sh -o -name devin.sh \) -print -quit 2>/dev/null)" ]; then
+        rm -f "$LIB_DIR/agent-hook-runtime.sh"
+    fi
+    rmdir "$LIB_DIR" 2>/dev/null || true
 }
 
 write_adapter_script() {
@@ -656,6 +692,7 @@ SKILL_ROOT="$(dirname "$SCRIPT_DIR")"
 SCAFFOLD_ROOT="$(cd "$SKILL_ROOT/../.." && pwd -P)"
 MANIFEST_SOURCE="$SKILL_ROOT/assets/hook-events.json"
 EVENT_TEMPLATE="$SKILL_ROOT/templates/event-script.sh.tmpl"
+KEPT_DIRS=""
 
 PROJECT_ROOT="$(
     cd "$PROJECT_ROOT"
@@ -789,31 +826,55 @@ scaffold_hooks.sh dry run
   mode:          $MODE
   hooks target:  $HOOKS_TARGET_REL
   hook root:     $MANAGED_ROOT_REL
+  events:        $(jq '[(.enabled_events // [])[] | select(((.scripts // []) + (.commands // [])) | length > 0)] | length' "$PLAN_FILE")
 EOF
     exit 0
 fi
 
+# An event is scaffolded only when the plan gives it scripts or commands. Every
+# later step reads this filtered plan, so a stub is never rendered or wired.
+EFFECTIVE_PLAN="$(mktemp)"
+EMPTY_FRAGMENT="$(mktemp)"
+trap 'rm -f "$EFFECTIVE_PLAN" "$EMPTY_FRAGMENT"' EXIT
+jq '.enabled_events = [(.enabled_events // [])[] | select(((.scripts // []) + (.commands // [])) | length > 0)]' \
+    "$PLAN_FILE" > "$EFFECTIVE_PLAN"
+PLAN_FILE="$EFFECTIVE_PLAN"
+
 if ! MANIFEST_ROWS="$(
-    jq -er '.events[] | [.name, .script_name, .description, .blocking_guidance] | @tsv' \
-        "$MANIFEST_SOURCE"
+    jq -r --slurpfile plan "$PLAN_FILE" '
+        ($plan[0].enabled_events | map(.name)) as $enabled
+        | .events[]
+        | select(.name as $name | $enabled | index($name))
+        | [.name, .script_name]
+        | @tsv
+    ' "$MANIFEST_SOURCE"
 )"; then
     echo "Failed to read complete Devin hook manifest rows." >&2
     exit 1
 fi
 
-mkdir -p "$PROJECT_ROOT/.devin" "$MANAGED_ROOT_ABS" "$LIB_DIR" "$STATE_DIR"
-
-if [ "$MODE" = "overhaul" ]; then
-    rm -rf "$STATE_DIR"
-    find "$MANAGED_ROOT_ABS" -mindepth 2 -maxdepth 2 \( -name 'devin.sh' -o -name 'devin.json' \) -delete 2>/dev/null || true
-    mkdir -p "$STATE_DIR"
+if [ -z "$MANIFEST_ROWS" ]; then
+    prune_stale_events
+    if [ -f "$HOOKS_TARGET_ABS" ]; then
+        printf '{}\n' > "$EMPTY_FRAGMENT"
+        "$SCRIPT_DIR/merge_hooks_file.sh" \
+            --hooks-file "$HOOKS_TARGET_ABS" \
+            --fragment-file "$EMPTY_FRAGMENT" \
+            --managed-root "$MANAGED_ROOT_REL/" \
+            --managed-suffix "/devin.sh"
+    fi
+    echo "No plan event has scripts or commands; no Devin hooks were scaffolded." >&2
+    exit 0
 fi
+
+mkdir -p "$PROJECT_ROOT/.devin" "$MANAGED_ROOT_ABS" "$LIB_DIR" "$STATE_DIR"
 
 write_runtime_lib
 write_devin_lib
 
-while IFS=$'\t' read -r event_name script_name description blocking_guidance; do
+while IFS=$'\t' read -r event_name script_name; do
     event_dir="$(event_dir_name "$script_name")"
+    KEPT_DIRS="$KEPT_DIRS $event_dir"
     EVENT_DIR="$MANAGED_ROOT_ABS/$event_dir"
     TARGET_SCRIPT="$EVENT_DIR/script.sh"
     ADAPTER_SCRIPT="$EVENT_DIR/devin.sh"
@@ -826,8 +887,6 @@ while IFS=$'\t' read -r event_name script_name description blocking_guidance; do
         sed \
             -e "s|{{SCRIPT_NAME}}|script.sh|g" \
             -e "s|{{EVENT_NAME}}|$(escape_for_sed "$event_name")|g" \
-            -e "s|{{EVENT_DESCRIPTION}}|$(escape_for_sed "$description")|g" \
-            -e "s|{{BLOCKING_GUIDANCE}}|$(escape_for_sed "$blocking_guidance")|g" \
             "$EVENT_TEMPLATE" > "$TARGET_SCRIPT"
 
         chmod +x "$TARGET_SCRIPT"
@@ -959,6 +1018,4 @@ jq \
     --managed-root "$MANAGED_ROOT_REL/" \
     --managed-suffix "/devin.sh"
 
-"$SCRIPT_DIR/render_hooks_readme.sh" \
-    --project "$PROJECT_ROOT" \
-    --plan "$PLAN_FILE"
+prune_stale_events
