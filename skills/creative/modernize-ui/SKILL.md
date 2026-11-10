@@ -7,11 +7,11 @@ description: "Modernises the UI of an existing website or app: faster, better lo
 
 Reworks the interface of an existing project so it is faster, better looking, usable to WCAG 2.2 AA and the same in every browser and viewport, without breaking the browsers it works in today.
 
-The project is edited only after the user approves a catalogue: one page that lists every intended change beside renders of each page before and after. When the user says to skip the catalogue, only the approval is skipped: still capture the untouched site before the first edit, and finish with the comparison in step 6.
+The project is edited only after the user approves a catalogue: one page that lists every intended change beside renders of each page before and after. When the user says to skip the catalogue, only the plan and its approval (steps 2 to 5 below) are skipped. The untouched site is still captured before the first edit, and the finished work is still captured and built with `build_catalogue.py --fail-on-regression`, which is the regression check as well as the page and runs without `--plan`. Both captures are the full default run.
 
 ## Dials
 
-Take each dial from the request when it is there. Before capturing or editing anything, ask for the others in one message, with the host's question tool if it has one. Show the default for each and say in a line what each mode lets change. A default stands in for an answer only when the user says to use the defaults.
+Take each dial from the request. A request that names a mode, asks for an audit or says to use the defaults is enough to start: the dials it leaves out take their defaults, and the first reply says which defaults were used. Any other request gets one message before anything is captured or edited, with the host's question tool if it has one, asking for all four dials, showing each default and saying in a line what each mode lets change.
 
 - **Audit first** (default: no). Capture the site, build the catalogue from that run alone, report what is wrong with the measurements behind it, change nothing, then ask for the mode.
 - **Mode** (default: `refresh`). The mode sets what may visibly change.
@@ -34,7 +34,7 @@ python scripts/build_catalogue.py --before runs/before --after runs/after --plan
 ```
 
 1. Capture the untouched site first. Its numbers are the evidence for every change, and they cannot be recovered after an edit.
-2. Write `plan.json` with one entry for each change the user could approve or strike on its own; a language attribute, a skip link and a moved banner are three entries, not one "landmarks" entry. `why` quotes what the before run measured ("home overflows by 295px at 320 wide"), or the line of the project's source that shows the defect when the manifest has no number for it ("`.col { float: left }` in style.css"), not a general principle. A medium or high risk needs a `risk_note` saying what could break.
+2. Write `plan.json` with one entry per defect and its fix, so the user can strike any one of them. Missing alt text, unlabelled fields and missing `autocomplete` are three entries, not one "forms and images" entry; the same fix on several elements is one entry. A title that joins two fixes with "and" or a semicolon is two entries. `why` quotes what the before run measured ("home overflows by 295px at 320 wide"), or the line of the project's source that shows the defect when the manifest has no number for it ("`.col { float: left }` in style.css"), not a general principle. A medium or high risk needs a `risk_note` saying what could break.
 3. Build the proposal without editing the project's working tree. Inject a stylesheet and script into the live pages with `--overlay-css` and `--overlay-js` when that is enough; otherwise change a copy of the project (a git worktree or a scratch copy), serve it on another port and capture it with `--mockup`. The after renders are real HTML and CSS in real browsers. A generated image or a description is not a dry run.
 4. Build the catalogue and give the user `catalogue/index.html`, served or opened. In the reply, give the totals, the changes by id, two or three before and after pairs, anything that was not rendered, and each number the after run makes worse with its reason, for example transfer size raised by a web font. Ask which ids to drop.
 5. Approval covers the listed ids. A change found later is added to the plan and asked about.

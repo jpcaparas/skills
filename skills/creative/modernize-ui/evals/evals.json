@@ -66,7 +66,7 @@
     {
       "id": 5,
       "name": "old-browser-floor-fallbacks-before-polyfills",
-      "prompt": "modernize-ui refresh. About 6% of our visitors are on Safari 13 and one wholesale customer still orders from Internet Explorer 11. Nothing may break for them.",
+      "prompt": "modernize-ui refresh, all pages, no separate audit. About 6% of our visitors are on Safari 13 and one wholesale customer still orders from Internet Explorer 11. Nothing may break for them.",
       "expected_output": "States the floor (Safari 13, IE 11). Checks the proposal's CSS and script against it statically, uses fallbacks first, a build transform only if the project has tooling, and a runtime polyfill only where the fallback result is not acceptable. Each is a compatibility change with the browsers that load it and its size. Renders in the oldest engines an older Playwright provides and says by name that Safari 13 and IE 11 were checked statically, not rendered, unless the user provides a device or a cloud browser account.",
       "files": ["evals/files/harbour-2020"],
       "assertions": [
@@ -99,12 +99,12 @@
       "id": 7,
       "name": "catalogue-skipped-on-request",
       "prompt": "modernize-ui, preserve mode, and skip the catalogue. I trust you, just fix it. Tell me what you changed afterwards.",
-      "expected_output": "Edits the project without presenting a catalogue for approval, but still captures the site before the first edit, captures it again afterwards, and reports the comparison with --fail-on-regression clean. Accessibility is reported as the checks that were run, not as WCAG conformance.",
+      "expected_output": "Edits the project without presenting a catalogue for approval, but still captures the site in every default browser and viewport before the first edit, captures it the same way afterwards, and reports what build_catalogue.py --fail-on-regression found on the two runs. Accessibility is reported as the checks that were run, not as WCAG conformance.",
       "files": ["evals/files/harbour-2020"],
       "assertions": [
         {"text": "Does not stop to ask for catalogue approval", "type": "negative"},
-        {"text": "Captures the untouched site before the first edit", "type": "verification"},
-        {"text": "Compares a capture of the finished work with the before run and reports no regression, or the regressions that remain", "type": "verification"},
+        {"text": "Captures the untouched site before the first edit, in every default browser and viewport", "type": "verification"},
+        {"text": "Captures the finished work in the same browsers and viewports as the before run, runs build_catalogue.py --fail-on-regression on the two runs, and reports no regression or the regressions that remain", "type": "verification"},
         {"text": "Stays within preserve: no restyling", "type": "negative"},
         {"text": "Reports accessibility as no failures in the checks it names, says which manual checks were and were not done, and does not call the result WCAG compliant", "type": "disclosure"}
       ],
@@ -117,6 +117,7 @@
       "expected_output": "A new visual direction rendered for every page in scope, with content, prices, URLs, the enquiry form's fields and the logo kept. The catalogue lists every change and reports honestly any measure that got worse, with the reason. Any coherent direction passes; no particular palette or layout is required.",
       "files": ["evals/files/harbour-2020"],
       "assertions": [
+        {"text": "Starts without asking for the pages or browser floor the request left out, and says which defaults it used", "type": "functional"},
         {"text": "Both pages are rendered before and after in every default browser and viewport", "type": "verification"},
         {"text": "Copy, prices, product names, link targets and form field names are unchanged in the proposal", "type": "functional"},
         {"text": "A measure that is worse after, such as transfer size, is stated with its reason rather than left out", "type": "disclosure"},
