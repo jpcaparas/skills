@@ -2,7 +2,7 @@
 """Offline tests for firecrawl_guard.py.
 
 Expected credit figures are the values Firecrawl actually billed in the 2026-10-18 spike
-(references/evidence.md), so a pricing regression in the guard fails here. The balance test
+(marked Live in references/pricing.md), so a pricing regression in the guard fails here. The balance test
 uses a local stub server and a fake key; nothing reaches Firecrawl.
 """
 
