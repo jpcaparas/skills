@@ -90,10 +90,9 @@ Use one of those lanes only when repository policy or an explicit user target as
 
 ### Global roots
 
-- `$CODEX_HOME/skills/` when `CODEX_HOME` exists
 - `~/.agents/skills/`
 - `~/.copilot/skills/`
-- `~/.codex/skills/`
+- `$CODEX_HOME/skills/`, which is `~/.codex/skills/` when `CODEX_HOME` is unset
 - `~/.claude/skills/`
 - `~/.cursor/skills/`
 - `~/.gemini/skills/`
@@ -116,7 +115,7 @@ python3 scripts/infer_destination.py --cwd <working-directory> \
   --target-harness copilot --skill-name <skill-name> --format text
 ```
 
-Supported target values are `agents`, `codex`, `copilot`, `gemini`, and `opencode`. These built-ins have repository evidence, observed installed behavior, or current primary documentation; do not add another target mapping from convention alone. The Codex mapping is an observed-environment heuristic rather than a portable format guarantee: confirm the active installation's discovery output, especially for repo-local roots, before relying on it for a write.
+Supported target values are `agents`, `codex`, `copilot`, `gemini`, and `opencode`. These built-ins have repository evidence, observed installed behavior, or current primary documentation; do not add another target mapping from convention alone. The Codex mapping is what one Codex CLI version loaded, not a documented contract: confirm the active installation's discovery output before relying on a `.codex/skills` root for a write.
 
 The helper requires an existing directory for `--cwd`. When `--skill-name` is supplied, it enforces the portable 1–64 character lowercase, digit, and single-hyphen name contract before composing a destination.
 
@@ -130,7 +129,7 @@ Compatibility is a discovery contract, not a branding guess:
 - If neither a target nor a current family resolves compatibility, recommend a shared root and present only neutral alternatives.
 - Other recognized roots may be retained as an existing repository convention or exact current installation family, but the helper does not infer cross-family compatibility for them.
 
-The Copilot, Gemini CLI and OpenCode rows of the compatibility table were re-checked on 2026-11-10 against primary documentation for [GitHub Copilot](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skill-locations), [Gemini CLI](https://geminicli.com/docs/cli/creating-skills/), and [OpenCode](https://opencode.ai/docs/skills/#place-files). The Codex mapping comes from an installed Codex environment observed on 2026-07-12; [OpenAI's Codex skills page](https://developers.openai.com/codex/skills) on 2026-11-10 documents `.agents/skills`, `$HOME/.agents/skills` and `/etc/codex/skills` and lists neither `.codex/skills` root, so confirm on the user's install before placing a skill under `.codex/skills`. Re-check the target harness before expanding it.
+The Copilot, Gemini CLI and OpenCode rows of the compatibility table were re-checked on 2026-11-10 against primary documentation for [GitHub Copilot](https://docs.github.com/en/copilot/reference/copilot-cli-reference/cli-command-reference#skill-locations), [Gemini CLI](https://geminicli.com/docs/cli/creating-skills/), and [OpenCode](https://opencode.ai/docs/skills/#place-files). The Codex mapping comes from Codex CLI 0.167.1 on 2026-11-11, which loaded marker skills from project `.agents/skills` and `.codex/skills`, `~/.agents/skills` and `$CODEX_HOME/skills`, and did not load `~/.codex/skills` when `CODEX_HOME` pointed elsewhere. [OpenAI's Codex skills page](https://developers.openai.com/codex/skills) on 2026-11-10 documents `.agents/skills`, `$HOME/.agents/skills` and `/etc/codex/skills` (not tested here) and lists neither `.codex/skills` root, so confirm on the user's install before placing a skill under `.codex/skills`. Re-check the target harness before expanding it.
 
 ---
 
@@ -181,7 +180,7 @@ Use these only when the earlier checks produce no clear winner:
 2. Use the recognized global root containing this creator when it establishes the current family.
 3. Use `~/.agents/skills/<skill-name>` when neither signal is available.
 
-For Codex, `$CODEX_HOME/skills/` is the target-specific fallback when `CODEX_HOME` is set. For Copilot, use `~/.copilot/skills/`. The other supported target values map to the verified roots listed above.
+For Codex, use `$CODEX_HOME/skills/`, which is `~/.codex/skills/` when `CODEX_HOME` is unset. For Copilot, use `~/.copilot/skills/`. The other supported target values map to the verified roots listed above.
 
 ---
 

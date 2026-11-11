@@ -59,32 +59,25 @@ PROJECT_ROOTS = [
     RootSpec(Path(".goose/skills"), "project-goose", ("goose",)),
 ]
 
-GLOBAL_ROOTS: list[RootSpec] = []
-if os.environ.get("CODEX_HOME"):
-    GLOBAL_ROOTS.append(
-        RootSpec(
-            Path(os.environ["CODEX_HOME"]) / "skills",
-            "global-codex-home",
-            ("codex",),
-        )
-    )
-GLOBAL_ROOTS.extend(
-    [
-        RootSpec(HOME / ".agents/skills", "global-shared", SHARED_HARNESSES),
-        RootSpec(HOME / ".claude/skills", "global-claude", ("claude", "opencode")),
-        RootSpec(HOME / ".codex/skills", "global-codex", ("codex",)),
-        RootSpec(HOME / ".continue/skills", "global-continue", ("continue",)),
-        RootSpec(HOME / ".copilot/skills", "global-copilot", ("copilot",)),
-        RootSpec(HOME / ".cursor/skills", "global-cursor", ("cursor",)),
-        RootSpec(HOME / ".gemini/skills", "global-gemini", ("gemini",)),
-        RootSpec(HOME / ".config/goose/skills", "global-goose", ("goose",)),
-        RootSpec(HOME / ".config/opencode/skills", "global-opencode", ("opencode",)),
-    ]
-)
+# Codex CLI 0.167.1 loaded $CODEX_HOME/skills and ignored ~/.codex/skills when
+# CODEX_HOME pointed elsewhere, so Codex has one global root, not two.
+CODEX_HOME = Path(os.environ.get("CODEX_HOME") or HOME / ".codex")
+
+GLOBAL_ROOTS = [
+    RootSpec(HOME / ".agents/skills", "global-shared", SHARED_HARNESSES),
+    RootSpec(HOME / ".claude/skills", "global-claude", ("claude", "opencode")),
+    RootSpec(CODEX_HOME / "skills", "global-codex", ("codex",)),
+    RootSpec(HOME / ".continue/skills", "global-continue", ("continue",)),
+    RootSpec(HOME / ".copilot/skills", "global-copilot", ("copilot",)),
+    RootSpec(HOME / ".cursor/skills", "global-cursor", ("cursor",)),
+    RootSpec(HOME / ".gemini/skills", "global-gemini", ("gemini",)),
+    RootSpec(HOME / ".config/goose/skills", "global-goose", ("goose",)),
+    RootSpec(HOME / ".config/opencode/skills", "global-opencode", ("opencode",)),
+]
 
 DEFAULT_GLOBAL_SOURCE = {
     "agents": "global-shared",
-    "codex": "global-codex-home" if os.environ.get("CODEX_HOME") else "global-codex",
+    "codex": "global-codex",
     "copilot": "global-copilot",
     "gemini": "global-gemini",
     "opencode": "global-opencode",

@@ -40,77 +40,52 @@ def write_git_directory(path: Path) -> None:
     (path / "HEAD").write_text("ref: refs/heads/main\n", encoding="utf-8")
 
 
-def global_specs(home: Path, codex_home: Path | None = None) -> list[infer_destination.RootSpec]:
-    specs: list[infer_destination.RootSpec] = []
-    if codex_home is not None:
-        specs.append(
-            infer_destination.RootSpec(
-                codex_home / "skills",
-                "global-codex-home",
-                ("codex",),
-            )
-        )
-    specs.extend(
-        [
-            infer_destination.RootSpec(
-                home / ".agents/skills",
-                "global-shared",
-                infer_destination.SHARED_HARNESSES,
-            ),
-            infer_destination.RootSpec(
-                home / ".claude/skills",
-                "global-claude",
-                ("claude", "opencode"),
-            ),
-            infer_destination.RootSpec(
-                home / ".codex/skills",
-                "global-codex",
-                ("codex",),
-            ),
-            infer_destination.RootSpec(
-                home / ".copilot/skills",
-                "global-copilot",
-                ("copilot",),
-            ),
-            infer_destination.RootSpec(
-                home / ".gemini/skills",
-                "global-gemini",
-                ("gemini",),
-            ),
-            infer_destination.RootSpec(
-                home / ".config/opencode/skills",
-                "global-opencode",
-                ("opencode",),
-            ),
-        ]
-    )
-    return specs
+def global_specs(home: Path) -> list[infer_destination.RootSpec]:
+    return [
+        infer_destination.RootSpec(
+            home / ".agents/skills",
+            "global-shared",
+            infer_destination.SHARED_HARNESSES,
+        ),
+        infer_destination.RootSpec(
+            home / ".claude/skills",
+            "global-claude",
+            ("claude", "opencode"),
+        ),
+        infer_destination.RootSpec(
+            home / ".codex/skills",
+            "global-codex",
+            ("codex",),
+        ),
+        infer_destination.RootSpec(
+            home / ".copilot/skills",
+            "global-copilot",
+            ("copilot",),
+        ),
+        infer_destination.RootSpec(
+            home / ".gemini/skills",
+            "global-gemini",
+            ("gemini",),
+        ),
+        infer_destination.RootSpec(
+            home / ".config/opencode/skills",
+            "global-opencode",
+            ("opencode",),
+        ),
+    ]
 
 
 @contextmanager
-def isolated_global_policy(
-    home: Path,
-    *,
-    codex_home: Path | None = None,
-) -> Iterator[None]:
+def isolated_global_policy(home: Path) -> Iterator[None]:
     original_home = infer_destination.HOME
     original_roots = infer_destination.GLOBAL_ROOTS
-    original_defaults = infer_destination.DEFAULT_GLOBAL_SOURCE
     infer_destination.HOME = home
-    infer_destination.GLOBAL_ROOTS = global_specs(home, codex_home)
-    infer_destination.DEFAULT_GLOBAL_SOURCE = {
-        "agents": "global-shared",
-        "codex": "global-codex-home" if codex_home else "global-codex",
-        "copilot": "global-copilot",
-        "gemini": "global-gemini",
-        "opencode": "global-opencode",
-    }
+    infer_destination.GLOBAL_ROOTS = global_specs(home)
     try:
         yield
     finally:
         infer_destination.HOME = original_home
         infer_destination.GLOBAL_ROOTS = original_roots
-        infer_destination.DEFAULT_GLOBAL_SOURCE = original_defaults
 
 
 def select(
@@ -660,28 +635,27 @@ def test_skill_count_uses_immediate_child_packages_only() -> None:
         assert infer_destination.count_skills(root) == 1
 
 
-def test_codex_home_deduplicates_same_resolved_root() -> None:
+def test_codex_home_replaces_the_home_codex_root() -> None:
+    """Codex ignores ~/.codex/skills once CODEX_HOME points somewhere else."""
     with tempfile.TemporaryDirectory(prefix="placement-codex-home-") as temp_dir:
-        home = Path(temp_dir) / "home"
-        codex_home = home / ".codex"
-        write_skill(codex_home / "skills", "creator")
+        base = Path(temp_dir)
+        home = base / "home"
+        codex_home = base / "elsewhere"
+        cwd = base / "workspace"
+        cwd.mkdir()
+        for index in range(5):
+            write_skill(home / ".codex/skills", f"unread-{index}")
 
-        with isolated_global_policy(home, codex_home=codex_home):
-            candidates = infer_destination.build_candidates(None, codex_home / "skills")
-            matching = [
-                candidate
-                for candidate in candidates
-                if Path(candidate.path) == lexical(codex_home / "skills")
-            ]
-            assert len(matching) == 1
-            assert matching[0].source == "global-codex-home"
-            chosen, _, _ = infer_destination.choose_candidate(
-                None,
-                codex_home / "skills",
-                candidates,
-                "codex",
-            )
-            assert chosen.source == "global-codex-home"
+        result = subprocess.run(
+            [sys.executable, str(SCRIPT), "--cwd", str(cwd), "--target-harness", "codex"],
+            capture_output=True,
+            text=True,
+            check=True,
+            env={**os.environ, "HOME": str(home), "CODEX_HOME": str(codex_home)},
+        )
+        payload = json.loads(result.stdout)
+        assert Path(payload["recommended_root"]) == lexical(codex_home / "skills")
+        assert str(lexical(home / ".codex/skills")) not in {candidate["path"] for candidate in payload["candidates"]}
 
 
 def test_name_validation_table_and_cli_containment() -> None:
@@ -924,7 +898,7 @@ def main() -> int:
         test_all_target_compatible_roots_blocked_fails_closed,
         test_dangling_shared_alias_cannot_resurrect_incompatible_root,
         test_skill_count_uses_immediate_child_packages_only,
-        test_codex_home_deduplicates_same_resolved_root,
+        test_codex_home_replaces_the_home_codex_root,
         test_name_validation_table_and_cli_containment,
         test_deterministic_ties_prefer_public_then_lexical_path,
         test_invalid_cwd_table,
