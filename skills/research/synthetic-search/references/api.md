@@ -92,6 +92,8 @@ curl -s https://api.synthetic.new/v2/quotas -H "Authorization: Bearer $SYNTHETIC
 { "limit": 250, "requests": 171, "renewsAt": "2026-10-18T06:42:29.181Z" }
 ```
 
+On 2026-11-11 the same account reported `search.hourly.limit` 250 again, `subscription.limit` 500 (the 2026-10-18 test fixture had 2,750) and a new `planWeeklyLimit` object (`percentRemaining`, `nextRegenAt`, `nextRegenPercent`); 5 searches moved only `search.hourly.requests` (0 → 5). The hard cap at 250 was not re-triggered.
+
 The full response also includes `subscription`, `freeToolCalls`, `weeklyTokenLimit`, and `rollingFiveHourLimit`. Read numbers from the live response; limits vary by account and plan, and Synthetic publishes no per-plan search limit.
 
 ### How searches are counted

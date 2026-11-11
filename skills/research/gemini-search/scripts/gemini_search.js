@@ -9,16 +9,26 @@ const API_ROOT = (process.env.GEMINI_API_ROOT || "https://generativelanguage.goo
 const REQUEST_TIMEOUT_MS = 180_000;
 const DEFAULT_MODEL = "gemini-3.1-flash-lite";
 // Paid Standard tier, USD per 1M tokens, re-read 2026-11-10 from https://ai.google.dev/gemini-api/docs/pricing: valid through 2026 (3.6 and 3.8 Flash double on 2027-01-01).
-// gemini-4-argon doubles to 4.0/20.0 on 2026-12-01; update GATED_MODELS and its test together then.
 const CHEAP_MODELS = {
   "gemini-3.1-flash-lite": { input: 0.25, output: 1.5 },
   "gemini-3.5-flash-lite": { input: 0.3, output: 2.5 },
   "gemini-3.8-flash": { input: 0.75, output: 3.75 },
 };
+// A list of { from, input, output } steps, ordered by `from` (UTC date); the last step whose date has passed applies.
+// gemini-4-argon doubles on 2026-12-01 per https://ai.google.dev/gemini-api/docs/pricing.
 const GATED_MODELS = {
-  "gemini-3.1-pro-preview": { input: 2.0, output: 12.0 },
-  "gemini-4-argon": { input: 2.0, output: 10.0 },
+  "gemini-3.1-pro-preview": [{ from: "0000-01-01", input: 2.0, output: 12.0 }],
+  "gemini-4-argon": [
+    { from: "0000-01-01", input: 2.0, output: 10.0 },
+    { from: "2026-12-01", input: 4.0, output: 20.0 },
+  ],
 };
+// GEMINI_TODAY (YYYY-MM-DD) lets tests pick the pricing date.
+const today = () => process.env.GEMINI_TODAY || new Date().toISOString().slice(0, 10);
+function gatedPrice(model) {
+  const steps = GATED_MODELS[model];
+  return steps?.filter((step) => step.from <= today()).at(-1);
+}
 // Gemini 3 and newer bill each search query the model runs, after 5,000 free per month per project.
 const SEARCH_QUERY_USD = 0.014;
 const DEFAULT_MAX_QUERIES = 3;
@@ -98,7 +108,7 @@ function chooseModel(flags) {
   const model = flags["--model"] ?? DEFAULT_MODEL;
   if (model in CHEAP_MODELS) return model;
   if (!flags["--allow-expensive"]) {
-    const price = GATED_MODELS[model];
+    const price = gatedPrice(model);
     throw new UsageError(
       `${model} is gated${price ? ` ($${price.input}/$${price.output} per 1M tokens)` : " (unknown or unpinned model)"}. ` +
         "Get the user's explicit permission, then pass --allow-expensive.",
@@ -191,7 +201,7 @@ function groundingCoverage(text, supports) {
 }
 
 function tokenCost(model, usage) {
-  const price = CHEAP_MODELS[model] ?? GATED_MODELS[model];
+  const price = CHEAP_MODELS[model] ?? gatedPrice(model);
   if (!price || !usage) return null;
   const input = (usage.promptTokenCount ?? 0) + (usage.toolUsePromptTokenCount ?? 0);
   const output = (usage.candidatesTokenCount ?? 0) + (usage.thoughtsTokenCount ?? 0);

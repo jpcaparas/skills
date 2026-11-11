@@ -36,7 +36,7 @@ Do not hide a required prerequisite in a later step. Do not invent an owner, rev
 - Use a noun phrase for a conceptual heading: `Token expiry behaviour`, not a vague label such as `Overview` when a more specific phrase fits.
 - Keep required articles such as `a`, `an`, and `the` when omitting them would make a heading clipped or ambiguous.
 - Keep heading levels hierarchical. Do not skip levels merely to obtain a visual size.
-- Avoid links, terminal punctuation, and overloaded abbreviations in headings.
+- Avoid links, excess punctuation, `-ing` forms for task headings, and overloaded abbreviations in headings.
 - Define an abbreviation on first use unless the abbreviated form is more familiar to the audience than its expansion.
 
 A reader scanning only the title and headings should understand the page's scope and route through it.
@@ -119,7 +119,9 @@ A documentation or wiki page passes when:
 
 ## Source adaptation
 
-This reference was reviewed against the following official Google developer documentation style pages on 2026-08-19 (all the URLs below still returned HTTP 200 on 2026-11-10; their text was not re-diffed):
+Two rules here go beyond Google's wording: its headings page says to keep punctuation simple and does not ban terminal punctuation, and its procedures page puts the location or goal before the action and has no separate rule for conditions.
+
+This reference was reviewed against the following official Google developer documentation style pages on 2026-08-19 (on 2026-11-11 the headings, procedures, lists, voice, tone and cross-references pages were re-read and this file's claims match them; the Highlights, global audience, accessibility and prescriptive pages were not re-read):
 
 - [About this guide](https://developers.google.com/style/)
 - [Highlights](https://developers.google.com/style/highlights)

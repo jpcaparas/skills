@@ -12,7 +12,7 @@ Examples are REST JSON/form contracts. Replace symbolic voice IDs with accessibl
 
 | Need | Model/route consideration |
 | --- | --- |
-| Newest highest-quality / real-time models | `eleven_v4` (most expressive, 90+ languages, 10,000-character limit) and `eleven_v4_turbo` (about 100 ms median latency); both listed on the [models page](https://elevenlabs.io/docs/overview/models) on 2026-11-10 and not exercised by this skill, so confirm capabilities and `voice_settings` support before copying v3 or v2.5 settings |
+| Newest highest-quality / real-time models | `eleven_v4` (most expressive, 90+ languages, 10,000-character limit) and `eleven_v4_turbo` (about 100 ms median latency); both listed on the [models page](https://elevenlabs.io/docs/overview/models) on 2026-11-10. On 2026-11-11 one `POST /v1/text-to-speech/{voice_id}` with `{"text":"Hi.","model_id":...}` returned HTTP 200 `audio/mpeg` for each, with `character-cost` 3 for `eleven_v4` and 1 for `eleven_v4_turbo` (same 3-character text); the plain request shape matches v3. `voice_settings` support was not probed, so confirm it before copying v3 or v2.5 settings |
 | Consistent long-form narration | `eleven_multilingual_v2` is the documented HTTP default |
 | Low-latency speech | `eleven_flash_v2_5`; check the voice/model capabilities |
 | Expressive delivery/audio tags | `eleven_v3`; use natural-language tags such as `[whispering]` |
@@ -76,7 +76,7 @@ Sources: [STS contract](https://elevenlabs.io/docs/api-reference/speech-to-speec
 {"text":"Light rain tapping on a hollow metal roof, no voices or music.","model_id":"eleven_text_to_sound_v2","duration_seconds":4,"loop":true,"prompt_influence":0.3}
 ```
 
-The models page of 2026-11-10 also lists `eleven_text_to_sound_v3` (closer prompt following); its request contract was not checked here, so keep v2 unless the user asks for v3 and its docs are read. V2 supports loops; duration is 0.5–30 seconds or omitted for automatic selection. Specify the event, environment, texture, perspective, progression and loop requirement rather than a rigid prose template. Listen at the seam to assess whether a requested loop is usable. A low-latency UI cue and a cinematic ambience need different envelopes.
+The models page of 2026-11-10 also lists `eleven_text_to_sound_v3` (closer prompt following); on 2026-11-11 `POST /v1/sound-generation` with `{"text":...,"model_id":"eleven_text_to_sound_v3","duration_seconds":0.5}` returned HTTP 200 `audio/mpeg` (`character-cost` 5 for a 23-character prompt), so the request shape is the same as v2; `loop` and `prompt_influence` were not probed for v3, so keep v2 for loops. V2 supports loops; duration is 0.5–30 seconds or omitted for automatic selection. Specify the event, environment, texture, perspective, progression and loop requirement rather than a rigid prose template. Listen at the seam to assess whether a requested loop is usable. A low-latency UI cue and a cinematic ambience need different envelopes.
 
 Source: [sound effects](https://elevenlabs.io/docs/api-reference/text-to-sound-effects/convert).
 

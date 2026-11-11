@@ -8,7 +8,7 @@ compatibility: "Requires `FIRECRAWL_API_KEY` for live calls (Firecrawl MCP, CLI,
 
 Get the content the user needs from Firecrawl for the fewest credits, and never let one request spend more than the user agreed to.
 
-Prices and behaviour are a **2026-10-18 snapshot** of the billing docs plus paid spikes. The documented plans, credit costs and rate limits were re-read against the billing, pricing and rate-limits pages on 2026-11-10 and are unchanged; the paid-spike observations were not repeated. Firecrawl changes pricing often (its own pages disagreed on four points that day). When a figure matters and looks stale, check `https://docs.firecrawl.dev/billing` and the response's `creditsUsed`, trust those, and report the discrepancy.
+Prices and behaviour are a **2026-10-18 snapshot** of the billing docs plus paid spikes. The documented plans, credit costs and rate limits were re-read against the billing, pricing and rate-limits pages on 2026-11-10 and are unchanged; the paid-spike observations were repeated on 2026-11-11 and matched. Firecrawl changes pricing often (its own pages disagreed on four points that day). When a figure matters and looks stale, check `https://docs.firecrawl.dev/billing` and the response's `creditsUsed`, trust those, and report the discrepancy.
 
 ## Hard rules
 
@@ -48,7 +48,7 @@ Bounded crawl shape: `{"url": ..., "limit": N, "ignoreQueryParameters": true, "i
 - **Options**: `zeroDataRetention` +1; `redactPII`, `checkPromptInjection`, `lockdown` +4 each. They stack: json + ZDR = 6, json + PII = 9.
 - **PDFs**: every parsed page bills (a 15-page paper cost 15). `parsers: []` bills 1 but puts the whole PDF as base64 in `markdown` (2.9 MB); never print that.
 - **Search `scrapeOptions`**: scrapes every result at full scrape price. Billing rounds up per 10 results, counted across all `sources`.
-- **Crawl defaults**: `limit` 10,000 and `sitemap: "include"`. On 2026-10-18 a crawl of the one-page `example.com` with a high limit billed **809 credits** for query-string variants of the same page (`?rl=…`, `?fcbench=…`). `ignoreQueryParameters: true` or `sitemap: "skip"` cut it to 1. Map listed only 1 URL, so map counts do not predict crawl size.
+- **Crawl defaults**: `limit` 10,000 and `sitemap: "include"`. On 2026-10-18 a crawl of the one-page `example.com` with a high limit billed **809 credits** (re-run 2026-11-11 with `limit: 60`: 60 credits, 1 with `ignoreQueryParameters: true`) for query-string variants of the same page (`?rl=…`, `?fcbench=…`). `ignoreQueryParameters: true` or `sitemap: "skip"` cut it to 1. Map listed only 1 URL, so map counts do not predict crawl size.
 - **Pages that error still bill**: 403/404/500 responses cost 1 credit. Only failures with no document (DNS errors, timeouts) are free.
 
 ## Things that do not save credits

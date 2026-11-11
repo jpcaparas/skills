@@ -53,7 +53,7 @@ Interactions are stored by default (`store: true`); pass `store: false` for one-
 | `gemini-4-argon` (gated) | Yes | Yes | 2 / 10 until 2026-11-30, then 4 / 20; paid tier only | 15 s |
 | `gemini-2.5-*` | 404 "no longer available to new users" | | | |
 
-Aliases resolved live: `gemini-flash-lite-latest` → `gemini-3.5-flash-lite`, `gemini-flash-latest` → `gemini-3.8-flash`, `gemini-pro-latest` → `gemini-3.1-pro-preview`. Pin exact names.
+Aliases re-resolved 2026-11-11 by one tiny `generateContent` call each (`modelVersion` in the reply; the models list only says "Latest release of ..."), unchanged from 2026-10-19: `gemini-flash-lite-latest` → `gemini-3.5-flash-lite`, `gemini-flash-latest` → `gemini-3.8-flash`, `gemini-pro-latest` → `gemini-3.1-pro-preview`. Pin exact names.
 
 `thinkingConfig.thinkingLevel`: Flash-Lite accepts `low`, `medium`, `high`; 3.8 Flash rejects `minimal`. Higher thinking on Flash-Lite made it skip search.
 

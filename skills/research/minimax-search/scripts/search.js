@@ -149,7 +149,7 @@ function describeBaseResp(code, message) {
       return `${message}. Check MINIMAX_API_KEY and that MINIMAX_API_HOST matches its region (global keys use https://api.minimax.io).`;
     case 1002:
     case 2062:
-      return `${message}. The plan allows roughly 50 searches per minute; wait about a minute.`;
+      return `${message}. The plan allows a burst of about 50 searches and roughly 65 per minute; wait about a minute.`;
     case 1033:
       return `${message}. MiniMax returns this for empty or over-${MAX_QUERY_CHARS}-character queries.`;
     case 2056:

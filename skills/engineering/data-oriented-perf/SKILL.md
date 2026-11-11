@@ -9,7 +9,7 @@ Make slow code fast by changing how its data is laid out, addressed and traverse
 
 ## The four prompts
 
-Jarred Sumner (@jarredsumner, creator of Bun) posted these as things he often says to Claude during perf work (https://x.com/jarredsumner/status/2117037940031496252, 2026-11-01). Keep them verbatim and attribute no other wording to him:
+Jarred Sumner (@jarredsumner, creator of Bun) posted these as things he often says to Claude during perf work (https://x.com/jarredsumner/status/2117037940031496252, 2026-11-01). Keep them verbatim and attribute no other wording to him. The first quote and the start of the second were checked against the post on 2026-11-11; the rest could not be read without signing in:
 
 > how do we rewrite this to better leverage data-oriented design principles
 

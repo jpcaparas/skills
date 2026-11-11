@@ -10,7 +10,7 @@ Z.ai's three search tools: web search, web reader, and Zread (GitHub repository 
 
 ## Two routes, two budgets
 
-- **MCP** (`api.z.ai/api/mcp/...`): search, reader, Zread. Spends the GLM Coding Plan monthly tool quota (4,000 calls on the tested Max plan). The default.
+- **MCP** (`api.z.ai/api/mcp/...`): search, reader, Zread. Spends the GLM Coding Plan monthly tool quota (4,000 calls a month on the Max plan, read from `zai.js quota` on 2026-11-11). The default.
 - **REST** (`api.z.ai/api/paas/v4/web_search`, `/reader`): spends cash, $0.01 per search or read, about $0.0015 for `search_std`. Use only when the user wants REST features (`publish_date`, the rewritten `search_intent`, many long excerpts) or has no Coding Plan, and say so before spending cash.
 
 That split was measured with a pre-2026-10-16 "Compatible" key. Keys created since are billed by key type on every endpoint (a Standard key spends cash everywhere), so trust `quota` and the balance over this. See `references/configuration.md`.

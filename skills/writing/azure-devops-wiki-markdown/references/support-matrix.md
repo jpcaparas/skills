@@ -9,6 +9,8 @@ Primary sources:
 
 This matrix is the April 9, 2026 baseline, not a permanent support contract. Where capability matters, newer official documentation for the target Services/Server version takes precedence; do not infer Azure support from upstream libraries alone.
 
+The Core Markdown Features table below was compared cell by cell with the Learn page's feature table on 2026-11-11 (all 16 rows, five columns) and matches. The Wiki-First Features table was re-read on 2026-11-10.
+
 ## Core Markdown Features
 
 | Feature | Done | Widget | PR | README | Wiki | Notes |

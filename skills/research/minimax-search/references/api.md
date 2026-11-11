@@ -2,7 +2,7 @@
 
 Use this file for the exact MiniMax search contract: what the endpoint accepts, what it returns, how it fails, and how quota and rate limits work.
 
-Observed live on 2026-10-18; the documented parts (the `query` contract, the Token Plan key requirement, error codes 1002, 1004, 1008, 2013 and 2049) were re-read on 2026-11-10 and are unchanged, but the burst, quota-percentage and length-limit observations were not re-measured because that spends plan quota. Official sources: the [Web search MCP guide](https://platform.minimax.io/docs/m-plan/mcp-guide), the [error codes](https://platform.minimax.io/docs/api-reference/errorcode), and the open-source [MiniMax-Coding-Plan-MCP](https://github.com/MiniMax-AI/MiniMax-Coding-Plan-MCP) and [`mmx` CLI](https://github.com/MiniMax-AI/cli), which both call this endpoint.
+Observed live on 2026-10-18; the documented parts (the `query` contract, the Token Plan key requirement, error codes 1002, 1004, 1008, 2013 and 2049) were re-read on 2026-11-10 and are unchanged, and the burst, rate, quota-percentage and 32-word observations were re-measured on 2026-11-11 (about 340 searches, 5 points of the 5-hour window). Official sources: the [Web search MCP guide](https://platform.minimax.io/docs/m-plan/mcp-guide), the [error codes](https://platform.minimax.io/docs/api-reference/errorcode), and the open-source [MiniMax-Coding-Plan-MCP](https://github.com/MiniMax-AI/MiniMax-Coding-Plan-MCP) and [`mmx` CLI](https://github.com/MiniMax-AI/cli), which both call this endpoint.
 
 ## Hosts and Authentication
 
@@ -106,12 +106,12 @@ Each `model_remains` entry has `model_name` (`general`, `video`, ...), the 5-hou
 ### How searches are counted
 
 - Searches draw on the `general` bucket, which models also use. The count fields stayed at 0; only `current_interval_remaining_percent` moved.
-- About **50 successful searches per 1%** of the 5-hour window (71 → 62 over about 450 searches). The weekly percentage stayed at 100.
+- About **65 successful searches per 1%** of the 5-hour window (93 → 88 over about 340 searches on 2026-11-11; 71 → 62 over about 450 searches on 2026-10-18, which is 50 per 1%; the percentage is an integer, so expect ±1). The weekly percentage stayed at 100.
 - 400 (`2013`) and `1033` responses did not move the percentage.
 
 ### Rate limits
 
-- Behaves like a token bucket of about **45 requests**, refilling at about **0.875 per second (~52 per minute)**.
+- 2026-11-11: 50 simultaneous searches all succeeded (5.8 s), 30 more 40 s later all succeeded, then 100 at once gave 16 successes and 84 `1002`, and 60 more immediately gave 6 successes, 14 `1002` and 40 `2062`. Four workers at roughly 1.1 requests a second (66 a minute) ran 120 searches in 108 s with no throttling. So the bucket is about 50 deep and the sustained rate is at least ~66 a minute; the 2026-10-18 figures were about 45 and 0.875 a second (~52 a minute). Sequential requests take about 2 s each, so a single worker never reaches the limit.
 - 20 concurrent requests: 17 succeeded, 3 returned `1002`. 50 more immediately: 3 succeeded, 44 `1002`, 3 `2062`. 100 at concurrency 50: all `2062`, clearing after 11–23 seconds.
 - Pacing at one request every 1.1–1.25 seconds produced no throttling over about 350 calls.
 - MiniMax's FAQ says rate limits are separate from usage limits and usually recover within about a minute.

@@ -115,10 +115,11 @@ class GeminiHelperTest(unittest.TestCase):
         text = "PostgreSQL 18.6 was released on 2026-08-13. It fixes replication bugs."
         StubGemini.replies = {"generate": [(200, grounded_response(self.root, text, ["postgresql 18.6 release"], [(0, 44)], ["a"]))]}
 
-    def run_helper(self, *args: str, api_key: str | None = FAKE_KEY, script: Path = SCRIPT) -> subprocess.CompletedProcess:
+    def run_helper(self, *args: str, api_key: str | None = FAKE_KEY, script: Path = SCRIPT, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess:
         env = {key: value for key, value in os.environ.items() if key not in ("GEMINI_API_KEY", "GOOGLE_API_KEY", "GEMINI_API_ROOT")}
         env["GEMINI_API_ROOT"] = self.root
         env["GEMINI_RESEARCH_POLL_MS"] = "10"
+        env.update(extra_env or {})
         if api_key is not None:
             env["GEMINI_API_KEY"] = api_key
         return subprocess.run([self.node, str(script), *args], env=env, capture_output=True, text=True, timeout=60)
@@ -203,6 +204,15 @@ class GeminiHelperTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 2)
                 self.assertTrue("--allow-expensive" in result.stderr or "--confirm-cost" in result.stderr, result.stderr)
         self.assertEqual(StubGemini.requests, [])
+
+    def test_argon_price_doubles_on_2026_12_01(self) -> None:
+        # Refusal message quotes the price; the cost estimate uses it too. 1,000 in + 2,000 out tokens.
+        for today, quoted, cost in (("2026-11-30", "$2/$10", 0.022), ("2026-12-01", "$4/$20", 0.044)):
+            with self.subTest(today=today):
+                refused = self.run_helper("search", "--model", "gemini-4-argon", "q", extra_env={"GEMINI_TODAY": today})
+                self.assertIn(quoted, refused.stderr)
+                result = self.run_helper("search", "--allow-expensive", "--json", "--model", "gemini-4-argon", "q", extra_env={"GEMINI_TODAY": today})
+                self.assertEqual(json.loads(result.stdout)["estimated_cost_usd"]["tokens"], cost)
 
     def test_allow_expensive_unlocks_gated_models_and_caps(self) -> None:
         self.assertEqual(self.run_helper("search", "--allow-expensive", "--model", "gemini-4-argon", "--max-queries", "10", "q").returncode, 0)

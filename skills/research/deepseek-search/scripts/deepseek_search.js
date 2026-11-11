@@ -14,8 +14,8 @@ const DEFAULT_FETCH_CHARS = 20_000;
 // The documented retry set: wait and retry 408, 429, and 5xx; never retry other 4xx unchanged.
 const RETRYABLE_STATUSES = new Set([408, 429, 500, 502, 503, 504]);
 const RETRY_DELAYS_MS = [1_000, 2_500, 5_000];
-// Four starts per second stayed under the 5 QPS limit measured on 2026-10-18. The docs listed
-// 100 Search and 25 Fetch QPS on 2026-11-10; that was not re-measured, so the pace is unchanged.
+// Four starts per second sits well under what the account allowed on 2026-11-11: 250 simultaneous
+// searches succeeded, and fetches returned 429 above about 25 at once.
 const BATCH_START_INTERVAL_MS = 250;
 // Non-null `date` values arrive as midnight Beijing time written in UTC (T16:00:00Z the day before).
 const BEIJING_OFFSET_MS = 8 * 60 * 60 * 1000;

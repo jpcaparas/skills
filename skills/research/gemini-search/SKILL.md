@@ -33,7 +33,7 @@ node <skill-dir>/scripts/gemini_search.js read --ask "Release date and first sec
 
 - Deep Research agent: about $0.80 measured, documented $1–3. Unlock: `research --confirm-cost`.
 - Deep Research Max: about $3.28 measured, documented $3–7. Unlock: `research --confirm-cost --max`.
-- `gemini-3.1-pro-preview`, `gemini-4-argon`: $2/$12 and $2/$10 per 1M tokens (Argon doubles 2026-12-01: $4/$20 from then, confirmed on the pricing page 2026-11-10), 15–18 s per answer, same per-query fee, no better coverage. Unlock: `--allow-expensive`.
+- `gemini-3.1-pro-preview`, `gemini-4-argon`: $2/$12 and $2/$10 per 1M tokens (Argon doubles 2026-12-01: $4/$20 from then, confirmed on the pricing page 2026-11-10; the helper switches by date), 15–18 s per answer, same per-query fee, no better coverage. Unlock: `--allow-expensive`.
 - Query caps above 5 (32 queries ran in one call): `--allow-expensive`.
 
 Before unlocking, state the route, expected cost and time, and what the cheap route cannot do, then wait for a yes. A general "go ahead" does not cover a cost you have not stated. Read `references/expensive-routes.md` for the measured details and the raw API equivalents.

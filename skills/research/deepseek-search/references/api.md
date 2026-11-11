@@ -90,9 +90,9 @@ Live `429` bodies said "Too many requests. Please pace your requests reasonably.
 
 ## Rate limits
 
-- Documented on 2026-11-10: Search 100 QPS and Fetch 25 QPS per account, independent of each other, shared by every key on the account, and separate from model concurrency limits. The 2026-10-18 spike measured 5 and 5 (below); treat the live behaviour as unverified since.
+- Documented on 2026-11-10: Search 100 QPS and Fetch 25 QPS per account, independent of each other, shared by every key on the account, and separate from model concurrency limits. Measured 2026-11-11 against that: 15, 30, 60, 110 and then 250 simultaneous searches all returned 200 (no `429`), and 25 simultaneous fetches to different hosts returned 23 `200` and 2 `404`, while 40 returned 29 `200`, 2 `404` and 9 `429`. So Search is far above the old 5 QPS and Fetch is consistent with 25 QPS.
 - Fetch also has an undisclosed per-domain limit. Five concurrent fetches to one domain all succeeded in the spike.
-- Live on 2026-10-18, under the old limits: 15 simultaneous searches gave 5 successes and 10 `429`s; 8 gave 5 and 3. Fetch bursts behaved the same.
+- Live on 2026-10-18, under the old (5 QPS) limits, no longer reproducible: 15 simultaneous searches gave 5 successes and 10 `429`s; 8 gave 5 and 3. Fetch bursts behaved the same.
 
 ## Balance
 
