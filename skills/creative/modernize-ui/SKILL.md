@@ -64,7 +64,7 @@ npm install --prefix tools axe-core
 
 ## Older browsers
 
-The floor is the oldest set of browsers the result must work in. Take it from the user's answer, then the project's browserslist (`npx browserslist` prints it), then its build targets, and otherwise from the engines the current site works in. Modernising never raises the floor on its own: raising it is the user's decision, shown as its own `compatibility` change that says what stops working and for whom.
+The floor is the oldest set of browsers the result must work in. Take it from the user's answer, then the project's browserslist (`npx browserslist` prints it), then its build targets, and otherwise from the engines the current site works in: the oldest browsers that support every feature its CSS and script use now. Write the floor as browser names and versions in the first reply and in the plan. Modernising never raises the floor on its own, and a proposal that uses a feature the floor lacks with nothing covering it has raised it. Raising it is the user's decision, shown as its own `compatibility` change that says what stops working and for whom.
 
 Each feature the floor lacks gets one of these, in this order of preference. The plan change that uses the feature names the feature, the browsers that lack it and which of the three covers them:
 
@@ -83,7 +83,7 @@ A polyfill that loads is not a polyfill that works. Measured on 2026-11-10: `con
 
 Check the floor two ways:
 
-- Statically: `npx doiuse --browsers "<browserslist query>" <css files>` lists the CSS features the floor lacks; a compat lint such as `eslint-plugin-compat` does the same for script APIs. This is the only check available for engines nothing here can run.
+- Statically: `npx doiuse --browsers "<browserslist query>" <css files>` lists the CSS features the floor lacks; a compat lint such as `eslint-plugin-compat` does the same for script APIs. This is the only check available for engines nothing here can run. Run it on the proposal's CSS before the catalogue is shown.
 - Rendered: an older Playwright release bundles older engines. Install it in its own environment and run the same `capture.py` on the site before and after, then pair those two runs in their own catalogue with `--fail-on-regression`.
 
 ```bash

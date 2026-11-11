@@ -119,6 +119,7 @@
       "assertions": [
         {"text": "Starts without asking for the pages or browser floor the request left out, and says which defaults it used", "type": "functional"},
         {"text": "Both pages are rendered before and after in every default browser and viewport", "type": "verification"},
+        {"text": "Names the browser floor as browsers and versions, and each feature that floor lacks is either covered in the proposal or listed as a compatibility change that says the floor rises and for whom", "type": "functional"},
         {"text": "Copy, prices, product names, link targets and form field names are unchanged in the proposal", "type": "functional"},
         {"text": "A measure that is worse after, such as transfer size, is stated with its reason rather than left out", "type": "disclosure"},
         {"text": "The direction is not a stock template: no unrequested gradients, glass panels, glow or emoji decoration", "type": "negative"}
