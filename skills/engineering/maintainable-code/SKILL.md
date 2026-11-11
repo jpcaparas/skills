@@ -46,7 +46,7 @@ Read `references/guardrails-and-quality-gates.md` when choosing strict runtime d
 
 ## Recurring mistakes
 
-When the same mistake keeps coming back, or the user asks to codify a learning, read `references/deterministic-checks.md`. Convert it into a check only when it reduces to an invariant code can inspect; enforce it with the smallest mechanism the repository already has (formatter, schema, linter, check mode) before writing a new one, and leave taste as review guidance.
+When the same mistake keeps coming back, or the user asks to codify a learning or to make model-generated output (art, prose, a scaffold) more repeatable, read `references/deterministic-checks.md`. Convert it into a check only when it reduces to an invariant code can inspect; enforce it with the smallest mechanism the repository already has (formatter, schema, linter, check mode) before writing a new one, and leave taste as review guidance.
 
 ## Reviewing and plans
 
