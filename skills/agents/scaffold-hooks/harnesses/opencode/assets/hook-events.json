@@ -1,8 +1,8 @@
 {
-  "verified_on": "2026-11-10",
+  "verified_on": "2026-11-11",
   "verified_with": {
     "opencode_version": "1.19.5",
-    "checked_via": "npm view opencode-ai version; npm install opencode-ai@1.19.5; opencode --version",
+    "checked_via": "npm view opencode-ai version; npm install opencode-ai@1.19.5; opencode serve + real anthropic/claude-haiku-5-5 turns (2026-11-11)",
     "official_docs": [
       "https://opencode.ai/docs/plugins/",
       "https://opencode.ai/docs/build/plugins",
@@ -12,14 +12,13 @@
     "types": [
       "@opencode-ai/plugin@1.19.5 dist/index.d.ts (V1 Hooks)",
       "@opencode-ai/sdk@1.19.5 dist/gen/types.gen.d.ts (events, session.get, session.promptAsync)"
-    ]
+    ],
+    "live_observed": "1.19.5: session.idle ran once with the failing script and resumed the session once, the next idle was skipped; a failing tool.execute.before made the bash tool return an error without running the command; a failing tool.execute.after logged and the write tool completed. The probe for V2 setup() found nothing: 1.19.5, the beta tag (0.0.0-beta-202608110357) and the dev tag (0.0.0-dev-202611092046) all called server() and none called setup()."
   },
   "mechanism": "native plugin",
   "notes": [
     "The scaffold writes one generated plugin file, .opencode/plugins/scaffold-hooks.ts (global scope: ~/.config/opencode/plugins/scaffold-hooks.ts). OpenCode loads direct .ts and .js files from every plugins/ directory without a config entry (docs, Discover section).",
-    "OpenCode 1.19.5 runs the V1 API: it called the default export's server() (verified by loading a probe plugin with the real CLI) and did not call setup(). The docs describe a V2 API (Plugin.define with setup(ctx)); the generated plugin exports both from one object, as the docs' 'Support V1' section describes. The V2 half is written to the documented signatures and checked with a fake context only, not against a V2 runtime.",
-    "V1 blocks a tool by throwing from tool.execute.before. V2 uses the same throw in ctx.tool.hook('execute.before').",
-    "Neither API has a stop or turn-end hook that can block. session.idle is an event; the plugin turns a failing check into a follow-up prompt on the same session (session.promptAsync in V1, ctx.session.prompt in V2) and skips the next idle of that session, which is the stop_hook_active guard.",
+    "The plugin carries only the V1 entry point, `server(input)`, because it is the only one any OpenCode release ran when probed. The documented V2 API (`Plugin.define` with `setup(ctx)`, package @opencode/plugin) was never called by 1.19.5, beta or dev; add it back only after a release is observed running it.",
     "Subagent sessions have a parentID; the plugin looks the session up (session.get) and ignores sessions that have one. This replaces Froggy's isMainSession condition.",
     "opencode-froggy 1.7.0 (2026-11-01) and later no longer load .opencode/hook/hooks.md, and the config key `plugin` is deprecated in favour of `plugins`; the native plugin needs neither. A refresh removes the managed Froggy block and the plugin entry an earlier scaffold added."
   ],
@@ -28,34 +27,30 @@
       "name": "session.created",
       "description": "A session was created. Only main sessions run it. Output is not injected into the model context; failures are logged.",
       "v1": "event {type: 'session.created', properties.info}",
-      "v2": "ctx.event.subscribe type 'session.created'",
       "can_block": false
     },
     {
       "name": "session.idle",
       "description": "A main session finished its turn. A failing check sends its output back as a prompt once, then the next idle is skipped. Gated by run_on_code_changes.",
       "v1": "event {type: 'session.idle', properties.sessionID}",
-      "v2": "ctx.event.subscribe type 'session.idle'",
       "can_block": "continues the session instead of blocking"
     },
     {
       "name": "tool.execute.before",
       "description": "Before a tool runs. matcher is a regex over the tool name (bash, edit, write, read, ...). A failing check throws and blocks the tool.",
       "v1": "hooks['tool.execute.before'](input {tool, sessionID, callID}, output {args})",
-      "v2": "ctx.tool.hook('execute.before', event {tool, input})",
       "can_block": true
     },
     {
       "name": "tool.execute.after",
       "description": "After a tool ran. matcher as above. A failing check is logged; it cannot undo the tool.",
       "v1": "hooks['tool.execute.after'](input {tool, sessionID, callID, args}, output)",
-      "v2": "ctx.tool.hook('execute.after', event {tool, status})",
       "can_block": false
     }
   ],
   "not_supported": [
-    "permission.ask / ctx.permission.hook('evaluate')",
-    "chat.message / ctx.session.hook('prompt')",
+    "permission.ask",
+    "chat.message",
     "session.deleted, session.error, message and file events",
     "compaction hooks"
   ],

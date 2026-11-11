@@ -538,7 +538,7 @@ run_project_command() {
     (
         cd "$cwd"
         /usr/bin/env bash -lc "$command"
-    )
+    ) <<< "${HOOK_INPUT:-}"
 }
 
 run_project_script() {
@@ -593,16 +593,17 @@ run_project_script() {
     printf '[copilot-hook] cwd: %s\n' "$cwd" >&2
     printf '[copilot-hook] script: %s\n' "$resolved_script" >&2
 
+    # Each effect gets the hook payload on stdin; otherwise it would read the caller's queue of items.
     if [ "${#script_args[@]}" -gt 0 ]; then
         (
             cd "$cwd"
             /usr/bin/env bash "$resolved_script" "${script_args[@]}"
-        )
+        ) <<< "${HOOK_INPUT:-}"
     else
         (
             cd "$cwd"
             /usr/bin/env bash "$resolved_script"
-        )
+        ) <<< "${HOOK_INPUT:-}"
     fi
 }
 

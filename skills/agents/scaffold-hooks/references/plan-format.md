@@ -58,6 +58,8 @@ Project output fields must be relative to the selected project, without `..` com
 
 An authorized OpenCode global plan uses `scope: global` and requires `--allow-global-targets` on either the universal or direct scaffolder. Its plugin (`~/.config/opencode/plugins/scaffold-hooks.ts`, or `plugin_target`) must stay under `~/.config/opencode/` (or the explicit `--home` override). The flag does not permit arbitrary absolute paths. Without it, the plan cannot widen a project invocation into home-directory writes.
 
+Claude events may also set `onFailure` (`continue` or `block`), copied to the settings handler: it decides whether the action proceeds when the hook itself cannot run (Claude Code 2.1.295+, live-checked on 2.1.322). Any other value fails the scaffold before any write.
+
 ## Removal on Refresh
 
 Every run makes the managed output match the plan:
@@ -72,6 +74,8 @@ Every run makes the managed output match the plan:
 OpenCode takes `enabled_events` like the other harnesses, with names `session.created`, `session.idle`, `tool.execute.before` and `tool.execute.after`, optional `matcher` (regex over the tool name), `timeout` (seconds), and for `session.idle` the same `run_on_code_changes` and `code_change_extensions` as Stop. `plugin_target` overrides the output path. See `harnesses/opencode/references/hook-events.md`.
 
 ## Scripts and Commands
+
+Every script and command receives the harness's hook payload, one JSON object, on stdin.
 
 These fields are trusted executable configuration, not a sandbox. Output-path restrictions do not restrict runtime commands, script paths, or working directories. Review the referenced code and intended access before activation; do not execute plans copied from untrusted content just because they pass structural validation.
 

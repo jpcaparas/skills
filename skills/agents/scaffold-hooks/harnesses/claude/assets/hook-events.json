@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "verified_on": "2026-11-10",
+  "verified_on": "2026-11-11",
   "verified_from": [
     "https://code.claude.com/docs/en/hooks",
     "https://code.claude.com/docs/en/hooks-guide",
@@ -17,7 +17,9 @@
     "SessionStart and Setup support command and mcp_tool only.",
     "Re-verified against the official hooks reference on 2026-11-10: DirectoryAdded, PreModelSwitch and PostModelSwitch were added (33 events), SessionStart gained the `fork` matcher value, and command/http hooks gained `onFailure` (`continue` or `block`, Claude Code v2.1.295+).",
     "PreModelSwitch and PostModelSwitch require Claude Code v2.1.251 or later.",
-    "PermissionRequest no longer supports agent hooks: Claude Code skips an agent hook there and the permission flow proceeds unchanged (official reference, 2026-11-10)."
+    "PermissionRequest no longer supports agent hooks: Claude Code skips an agent hook there and the permission flow proceeds unchanged (official reference, 2026-11-10).",
+    "Live-checked on 2026-11-11 with Claude Code 2.1.322 (npm latest), stream-json SDK mode and a generated claude.sh whose script exits 3: a failing PreModelSwitch hook cancelled the set_model request (error_code blocked_by_hook, 'Model switch blocked by a PreModelSwitch hook'), so the {continue:false, stopReason} output claude.sh prints is honoured; a failing DirectoryAdded hook ran and the /add-dir style register_repo_root still succeeded (it cannot block); a failing PostModelSwitch hook ran and the switch still succeeded.",
+    "onFailure was live-checked: with a command hook that cannot start, onFailure \"block\" cancelled the model switch ('blocking because onFailure is \"block\"') and \"continue\" let it through. A plan event may set onFailure to \"continue\" or \"block\"; the scaffolder copies it to the settings handler like async, timeout, if and shell."
   ],
   "hook_type_support": {
     "all_five": [

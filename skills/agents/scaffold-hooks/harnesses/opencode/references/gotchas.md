@@ -1,6 +1,6 @@
 # Gotchas
 
-- **Probe the installed version.** On 2026-11-10 OpenCode 1.19.5 ran the V1 `server()` entry point. A newer release may switch to V2 `setup()`; `opencode debug config` lists loaded plugins, and `opencode serve` plus `POST /session` fires `session.created` without a model call.
+- **Probe the installed version.** On 2026-11-11 OpenCode 1.19.5, the beta tag and the dev tag ran the V1 `server()` entry point and never the V2 `setup()`. `opencode debug config` lists loaded plugins, and `opencode serve` plus `POST /session` fires `session.created` without a model call.
 - **No blocking stop hook.** `session.idle` is an event. A failing check becomes a follow-up prompt once, then the next idle is skipped. The user may still see the agent stop.
 - **Tool hooks block by throwing.** Only `tool.execute.before` blocks. Exit code 2 has no special meaning here: any non-zero exit fails the hook.
 - **Script output is not shown to the model** except the failure text sent back by `session.idle`.

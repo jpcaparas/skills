@@ -1,5 +1,5 @@
 {
-  "verified_on": "2026-11-10",
+  "verified_on": "2026-11-11",
   "verified_with": {
     "codex_cli_version": "codex-cli 0.133.0",
     "codex_source_commit": "8a94430bb273623be42b68f144f1ab1df343bb53",
@@ -45,7 +45,9 @@
       "https://reading.sh/codex-hooks-just-gave-you-back-complete-control-over-your-code-57d044bcae1b"
     ],
     "docs_reviewed_on": "2026-11-10",
-    "baseline_not_reverified": "codex_cli_version and codex_source_commit are the 2026-05-26 baseline. The 2026-11-10 update follows the official hooks page only; no newer Codex CLI or source checkout was available to confirm runtime behaviour."
+    "baseline_not_reverified": "codex_cli_version and codex_source_commit are the 2026-05-26 baseline source reading; the 2026-11-11 live run used 0.167.1.",
+    "live_codex_cli_version": "codex-cli 0.167.1 (npm @openai/codex latest on 2026-11-11)",
+    "live_observed": "Generated hooks fired for 13 of the 14 manifest events: SessionStart, UserPromptSubmit, PreModelRequest, PostModelRequest, PreToolUse, PostToolUse, Stop, SessionEnd (codex exec, gpt-5.4-mini); PreCompact and PostCompact (-c model_auto_compact_token_limit=3000, five each); SubagentStart and SubagentStop (spawn_agent); Interrupt (SIGINT during a running shell command). PermissionRequest was not observed: codex exec runs with approval policy never (the header printed approval: never even with -c approval_policy=on-request), so no approval request is raised. SessionEnd and Interrupt timeouts above 3s are clamped to 3s with a startup warning."
   },
   "feature_flag": {
     "canonical_name": "hooks",

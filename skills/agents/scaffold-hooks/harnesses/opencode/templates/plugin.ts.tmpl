@@ -145,9 +145,8 @@ async function onTool(host: Host, name: "tool.execute.before" | "tool.execute.af
   console.error(`[scaffold-hooks] ${outcome.message}`)
 }
 
-// OpenCode sends session events as { properties } (V1) or { data } (V2).
 function sessionOf(event: any): string {
-  return event.data?.sessionID ?? event.properties?.sessionID ?? event.properties?.info?.id ?? ""
+  return event.properties?.sessionID ?? event.properties?.info?.id ?? ""
 }
 
 async function onEvent(host: Host, event: any) {
@@ -163,7 +162,7 @@ const sessionEvents = () => PLAN.events.map((event) => event.name).filter((name)
 export default {
   id: "scaffold-hooks",
 
-  // OpenCode V1 runtime (verified against OpenCode 1.19.5).
+  // Verified against OpenCode 1.19.5: `server()` is the entry point it runs.
   async server(input: any) {
     const host: Host = {
       root: input.directory,
@@ -177,24 +176,5 @@ export default {
     if (planned("tool.execute.after")) hooks["tool.execute.after"] = (i) => onTool(host, "tool.execute.after", i.tool, i.sessionID, i.args)
     if (sessionEvents().length > 0) hooks.event = ({ event }) => onEvent(host, event)
     return hooks
-  },
-
-  // OpenCode V2 runtime, written to the documented plugin API (https://opencode.ai/docs/build/plugins/server).
-  async setup(ctx: any) {
-    const host: Host = {
-      root: ctx.location.directory,
-      isMain: async (sessionID) => !(await ctx.session.get({ sessionID }).catch(() => undefined))?.parentID,
-      resume: async (sessionID, text) => {
-        await ctx.session.prompt({ sessionID, text })
-      },
-    }
-    if (planned("tool.execute.before")) await ctx.tool.hook("execute.before", (e: any) => onTool(host, "tool.execute.before", e.tool, e.sessionID ?? "", e.input))
-    if (planned("tool.execute.after")) await ctx.tool.hook("execute.after", (e: any) => onTool(host, "tool.execute.after", e.tool, e.sessionID ?? "", e.input))
-    if (sessionEvents().length === 0) return
-    const controller = new AbortController()
-    void (async () => {
-      for await (const event of ctx.event.subscribe({ types: sessionEvents(), signal: controller.signal })) await onEvent(host, event)
-    })().catch((error) => console.error(`[scaffold-hooks] ${error}`))
-    return () => controller.abort()
   },
 }

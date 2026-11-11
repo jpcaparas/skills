@@ -1,6 +1,6 @@
 # Hook Events
 
-Bundled Claude Code hook event baseline, re-verified against the official hooks reference (`https://code.claude.com/docs/en/hooks`) on 2026-11-10; not a claim that later releases have the same catalog.
+Bundled Claude Code hook event baseline, re-verified against the official hooks reference (`https://code.claude.com/docs/en/hooks`) on 2026-11-10 and run live against Claude Code 2.1.322 on 2026-11-11 (a failing `PreModelSwitch` hook cancels the switch, a failing `DirectoryAdded` or `PostModelSwitch` hook neither blocks nor breaks anything); not a claim that later releases have the same catalog.
 
 Official sources:
 
@@ -54,7 +54,7 @@ Events that support `command` and `mcp_tool` only
 - `SessionStart`
 - `Setup`
 
-`onFailure: "continue" | "block"` on a `command` or `http` hook decides whether the triggering action proceeds when the hook fails (Claude Code v2.1.295+); the scaffolder does not emit it.
+`onFailure: "continue" | "block"` on a `command` or `http` hook decides whether the triggering action proceeds when the hook itself fails, for example cannot start (Claude Code v2.1.295+). A plan event may carry it as `onFailure`, and the scaffolder copies it to the settings handler like `timeout` or `shell`; any other value fails the scaffold.
 
 `async: true` is documented in the official reference. It only works on command hooks. Async hooks cannot block or control Claude after the triggering action has already continued.
 

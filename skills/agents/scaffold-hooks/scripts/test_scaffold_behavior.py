@@ -558,35 +558,18 @@ const mod = (await import(file)).default
 const prompts = []
 const results = []
 const sessions = scenario.sessions ?? {}
-if (scenario.api === "v2") {
-  const toolHooks = {}
-  const subscribed = []
-  const ctx = {
-    location: { directory: scenario.directory },
-    session: {
-      get: async ({ sessionID }) => sessions[sessionID],
-      prompt: async (input) => { prompts.push(input) },
-    },
-    tool: { hook: async (name, cb) => { toolHooks[name] = cb } },
-    event: { subscribe: (options) => { subscribed.push(...options.types); return (async function* () { for (const e of scenario.events ?? []) yield e })() } },
+const client = { session: { get: async ({ path }) => ({ data: sessions[path.id] }), promptAsync: async (o) => { prompts.push(o) } } }
+const hooks = await mod.server({ directory: scenario.directory, client })
+for (const call of scenario.calls ?? []) {
+  try {
+    if (call.event) await hooks.event({ event: call.event })
+    else await hooks[call.hook](call.input, call.output ?? {})
+    results.push({ threw: null })
+  } catch (error) {
+    results.push({ threw: String(error.message ?? error) })
   }
-  await mod.setup(ctx)
-  await new Promise((resolve) => setTimeout(resolve, 500))
-  console.log(JSON.stringify({ keys: Object.keys(toolHooks), subscribed, prompts }))
-} else {
-  const client = { session: { get: async ({ path }) => ({ data: sessions[path.id] }), promptAsync: async (o) => { prompts.push(o) } } }
-  const hooks = await mod.server({ directory: scenario.directory, client })
-  for (const call of scenario.calls ?? []) {
-    try {
-      if (call.event) await hooks.event({ event: call.event })
-      else await hooks[call.hook](call.input, call.output ?? {})
-      results.push({ threw: null })
-    } catch (error) {
-      results.push({ threw: String(error.message ?? error) })
-    }
-  }
-  console.log(JSON.stringify({ keys: Object.keys(hooks), results, prompts }))
 }
+console.log(JSON.stringify({ keys: Object.keys(hooks), results, prompts }))
 """
 
 
@@ -876,17 +859,6 @@ class OpenCodePluginTests(unittest.TestCase):
         result = run(["bash", str(SKILL / "harnesses" / "opencode" / "scripts" / "scaffold_hooks.sh"), "--project", str(self.project), "--plan", str(plan)])
         self.assertNotEqual(0, result.returncode)
 
-    def test_v2_runtime_registers_planned_hooks_and_subscribes_to_planned_events(self) -> None:
-        self.scaffold([opencode_event("session.idle", scripts=[self.script()]), opencode_event("tool.execute.before", scripts=[self.script()])])
-        out = self.drive(
-            {"api": "v2", "sessions": {"main": {"id": "main"}}, "events": [{"type": "session.idle", "data": {"sessionID": "main"}}]},
-            env={"CHECK_FAILS": "1"},
-        )
-        self.assertEqual(["execute.before"], out["keys"])
-        self.assertEqual(["session.idle"], out["subscribed"])
-        self.assertEqual(1, len(out["prompts"]))
-        self.assertIn("check failed loudly", out["prompts"][0]["text"])
-
     def test_refusing_to_overwrite_a_plugin_the_user_wrote(self) -> None:
         write(self.project / PLUGIN, "export default {}\n")
         plan = self.tmp / "plan.json"
@@ -928,6 +900,48 @@ class OpenCodePluginTests(unittest.TestCase):
         self.scaffold([opencode_event("session.idle")])
         self.assertFalse((self.project / "opencode.json").exists())
         self.assertFalse((self.project / ".opencode").exists())
+
+
+class LiveObservedHandlerFieldTests(unittest.TestCase):
+    """Fields that real CLI runs showed the harness acts on."""
+
+    def scaffold(self, harness: str, edit) -> Path:
+        tmp = tmp_root(self)
+        project = tmp / "project"
+        project.mkdir()
+        run(["git", "init", "-q"], cwd=project)
+        scaffold_harness(harness, project, plan_with(harness, tmp, edit))
+        return project
+
+    def test_claude_copies_on_failure_to_the_settings_handler(self) -> None:
+        def edit(plan: dict) -> None:
+            event(plan, "Stop")["onFailure"] = "block"
+
+        hooks = load_json(self.scaffold("claude", edit) / ".claude" / "settings.json")["hooks"]
+        self.assertEqual("block", hooks["Stop"][0]["hooks"][0]["onFailure"])
+        self.assertNotIn("onFailure", hooks["SessionStart"][0]["hooks"][0])
+
+    def test_claude_rejects_an_unknown_on_failure_value_before_writing(self) -> None:
+        tmp = tmp_root(self)
+        project = tmp / "project"
+        project.mkdir()
+        plan = plan_with("claude", tmp, lambda plan: event(plan, "Stop").update(onFailure="Block"))
+        result = run(
+            ["bash", str(SKILL / "harnesses" / "claude" / "scripts" / "scaffold_hooks.sh"), "--project", str(project), "--plan", str(plan)]
+        )
+        self.assertNotEqual(0, result.returncode)
+        self.assertIn("invalid onFailure value", result.stderr)
+        self.assertEqual([], list(project.iterdir()))
+
+    def test_codex_caps_session_end_timeout_at_the_three_seconds_codex_enforces(self) -> None:
+        def edit(plan: dict) -> None:
+            plan["enabled_events"].append(
+                {"name": "SessionEnd", "timeout": 30, "scripts": [{"path": "scripts/agent-stop-checks.sh"}], "commands": []}
+            )
+
+        hooks = load_json(self.scaffold("codex", edit) / ".codex" / "hooks.json")["hooks"]
+        self.assertEqual(3, hooks["SessionEnd"][0]["hooks"][0]["timeout"])
+        self.assertEqual(300, hooks["Stop"][0]["hooks"][0]["timeout"])
 
 
 class HarnessSelectionTests(unittest.TestCase):
@@ -1251,6 +1265,44 @@ class HarnessProtocolTests(unittest.TestCase):
         self.assertEqual(2, result.returncode, result.stderr)
         self.assertIn("must block", result.stderr)
         self.assertIn('"decision": "block"', result.stdout)
+
+    def test_every_planned_script_and_command_reads_the_hook_payload_on_stdin(self) -> None:
+        """A script that read stdin used to consume the queue of scripts still to run."""
+        adapters = {
+            "claude": ("Stop", "hooks/stop/claude.sh", {}),
+            "codex": ("Stop", "hooks/stop/codex.sh", {}),
+            "devin": ("Stop", "hooks/stop/devin.sh", {"DEVIN_PROJECT_DIR": "{project}"}),
+            "copilot": ("agentStop", ".github/copilot/hooks/generated/events/agent-stop.sh", {"GITHUB_WORKSPACE": "{project}"}),
+        }
+        for harness, (event_name, adapter, env) in adapters.items():
+            with self.subTest(harness=harness):
+                tmp = tmp_root(self)
+                project = tmp / "project"
+                project.mkdir()
+                run(["git", "init", "-q"], cwd=project)
+                write(project / "src" / "example.ts", "export const example = true;\n")
+                write(project / "scripts" / "keep-stdin.sh", '#!/usr/bin/env bash\ncat > "$1"\n')
+
+                def edit(plan: dict) -> None:
+                    stop = event(plan, event_name)
+                    stop["scripts"] = [
+                        {"label": "first", "path": "scripts/keep-stdin.sh", "args": ["first.json"], "cwd": "."},
+                        {"label": "second", "path": "scripts/keep-stdin.sh", "args": ["second.json"], "cwd": "."},
+                    ]
+                    stop["commands"] = [{"label": "command", "command": "cat > command.json", "cwd": "."}]
+
+                scaffold_harness(harness, project, plan_with(harness, tmp, edit))
+                payload = {"hook_event_name": event_name, "session_id": "s1", "cwd": str(project), "stop_hook_active": False}
+                result = run(
+                    ["bash", str(project / adapter)],
+                    cwd=project,
+                    input_text=json.dumps(payload),
+                    env={name: value.format(project=project) for name, value in env.items()},
+                )
+                self.assertEqual(0, result.returncode, result.stderr)
+                for seen in ("first.json", "second.json", "command.json"):
+                    self.assertTrue((project / seen).exists(), f"{seen} was never written\n{result.stderr}")
+                    self.assertEqual(payload, load_json(project / seen), seen)
 
     def test_copilot_failures_become_deny_decisions_and_custom_hooks_survive(self) -> None:
         tmp = tmp_root(self)
